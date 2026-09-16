@@ -7,6 +7,7 @@ import { SharedModule } from './modules/shared/shared.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { IdentityModule } from './modules/identity/identity.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { AuthorizationModule } from './modules/authorization/authorization.module.js';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
     AuditModule,
     IdentityModule,
     AuthModule,
+    AuthorizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
