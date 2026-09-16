@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import crypto from 'crypto';
-import argon2 from 'argon2';
+import { randomBytes } from 'crypto';
+import * as argon2 from 'argon2';
 import { Role, UserStatus, type User, type OrganizationalAssignment } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -73,7 +73,7 @@ export class IdentityService {
     }
 
     // 3. Generate password sementara yang aman (12 karakter hex acak)
-    const temporaryPassword = crypto.randomBytes(6).toString('hex');
+    const temporaryPassword = randomBytes(6).toString('hex'); // 12 karakter hex
     const passwordHash = await argon2.hash(temporaryPassword, {
       type: argon2.argon2id,
     });

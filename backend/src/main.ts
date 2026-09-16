@@ -46,6 +46,7 @@ async function bootstrap() {
       'Accept',
       'Authorization',
       'X-Requested-With',
+      'X-CSRF-Token',
     ],
   });
 
