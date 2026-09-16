@@ -1,9 +1,35 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { PrismaModule } from './modules/prisma/prisma.module.js';
+import { SharedModule } from './modules/shared/shared.module.js';
+import { AuditModule } from './modules/audit/audit.module.js';
 
 @Module({
-  imports: [],
+  imports: [
+    // Rate Limiting per kategori endpoint (SAD §7.8)
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000,
+        limit: 100, // 100 request/menit per user
+      },
+      {
+        name: 'auth',
+        ttl: 60000,
+        limit: 5, // 5 percobaan/menit per IP
+      },
+      {
+        name: 'upload',
+        ttl: 60000,
+        limit: 10, // 10 request/menit per user
+      },
+    ]),
+    PrismaModule,
+    SharedModule,
+    AuditModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

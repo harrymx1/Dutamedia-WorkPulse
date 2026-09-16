@@ -9,6 +9,11 @@ COPY package*.json ./
 # Install dependencies (including devDependencies for build)
 RUN npm install --legacy-peer-deps
 
+# Copy prisma schema and configs
+COPY prisma/ ./prisma/
+COPY prisma7.config.ts ./
+RUN npx prisma generate --config prisma7.config.ts
+
 # Copy source code and config
 COPY tsconfig*.json nest-cli.json ./
 COPY src/ ./src/
