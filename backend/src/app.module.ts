@@ -5,6 +5,7 @@ import { AppService } from './app.service.js';
 import { PrismaModule } from './modules/prisma/prisma.module.js';
 import { SharedModule } from './modules/shared/shared.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
+import { IdentityModule } from './modules/identity/identity.module.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AuditModule } from './modules/audit/audit.module.js';
     PrismaModule,
     SharedModule,
     AuditModule,
+    IdentityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
