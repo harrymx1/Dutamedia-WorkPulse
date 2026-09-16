@@ -240,7 +240,7 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
       expect(result.record).toBeNull();
       expect(result.availableActions).toContain('morning_checkin');
       expect(result.carryOverDraft).toHaveLength(1);
-      expect(result.carryOverDraft[0].text).toBe('Carry over task');
+      expect(result.carryOverDraft![0].text).toBe('Carry over task');
     });
 
     it('harus menyertakan edit untuk AdditionalWork terlepas dari isLocked (ADR-001)', async () => {
@@ -254,7 +254,7 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
 
       const result = await service.getTodayRecord('user-1');
 
-      expect(result.record.additionalWorks[0].availableActions).toContain('edit');
+      expect(result.record!.additionalWorks[0].availableActions).toContain('edit');
     });
   });
 
@@ -340,7 +340,7 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
         finalStatus: DailyStatus.GREEN, // User memilih GREEN padahal disarankan RED!
       };
 
-      const result = await service.submitEodCheckin(userId, recordId, dto);
+      const result: any = await service.submitEodCheckin(userId, recordId, dto);
 
       expect(result.requiresOverrideConfirmation).toBe(true);
       expect(result.suggestedStatus).toBe(DailyStatus.RED);

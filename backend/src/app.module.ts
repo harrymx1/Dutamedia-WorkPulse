@@ -11,6 +11,7 @@ import { AuthorizationModule } from './modules/authorization/authorization.modul
 import { PolicyModule } from './modules/policy/policy.module.js';
 import { NotificationModule } from './modules/notification/notification.module.js';
 import { DailyAccountabilityModule } from './modules/daily-accountability/daily-accountability.module.js';
+import { BlockerModule } from './modules/blocker/blocker.module.js';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { DailyAccountabilityModule } from './modules/daily-accountability/daily-
     PolicyModule,
     NotificationModule,
     DailyAccountabilityModule,
+    BlockerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
