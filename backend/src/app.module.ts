@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { AuthorizationModule } from './modules/authorization/authorization.module.js';
 import { PolicyModule } from './modules/policy/policy.module.js';
 import { NotificationModule } from './modules/notification/notification.module.js';
+import { DailyAccountabilityModule } from './modules/daily-accountability/daily-accountability.module.js';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { NotificationModule } from './modules/notification/notification.module.j
     AuthorizationModule,
     PolicyModule,
     NotificationModule,
+    DailyAccountabilityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
