@@ -90,10 +90,8 @@
 
       <v-spacer />
 
-      <!-- Notification Bell -->
-      <v-btn to="/notifications" icon variant="text" density="comfortable" class="mr-2">
-        <v-icon icon="mdi-bell-outline" />
-      </v-btn>
+      <!-- Notification Bell (EPIC-18-T6) -->
+      <NotificationBell class="mr-2" />
 
       <!-- User Menu -->
       <v-menu location="bottom end">
@@ -156,6 +154,7 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from './stores/auth.store.js';
 import { useUiStore } from './stores/ui.store.js';
+import NotificationBell from './components/shared/NotificationBell.vue';
 
 const route = useRoute();
 const router = useRouter();

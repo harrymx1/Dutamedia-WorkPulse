@@ -4,6 +4,7 @@ import { createVuetify } from 'vuetify';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import { aliases, mdi } from 'vuetify/iconsets/mdi';
+import { tokens } from '../styles/tokens.js';
 
 export const vuetify = createVuetify({
   components,
@@ -21,17 +22,34 @@ export const vuetify = createVuetify({
       light: {
         dark: false,
         colors: {
-          primary: '#1E40AF',
-          secondary: '#64748B',
-          accent: '#3B82F6',
-          error: '#EF4444',
-          info: '#0284C7',
-          success: '#10B981',
-          warning: '#F59E0B',
-          background: '#F8FAFC',
-          surface: '#FFFFFF',
+          background: tokens.colors.backgroundBase,
+          surface: tokens.colors.surface,
+          primary: tokens.colors.accentPrimary,
+          secondary: tokens.colors.accentSecondary,
+          error: tokens.colors.feedback.danger,
+          warning: tokens.colors.feedback.warning,
+          info: tokens.colors.feedback.info,
+          success: tokens.colors.feedback.success,
         },
       },
+    },
+  },
+  defaults: {
+    VBtn: {
+      rounded: 'lg',
+      elevation: 0,
+    },
+    VCard: {
+      rounded: 'lg',
+      elevation: 0,
+    },
+    VTextField: {
+      variant: 'outlined',
+      density: 'comfortable',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
     },
   },
 });
