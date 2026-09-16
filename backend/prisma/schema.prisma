@@ -1,13 +1,572 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
+// =============================================================================
+// WorkPulse — Daily Accountability & Blocker Log System (Dutamedia)
+// Prisma Database Schema (SAD §5, §13.4 & Product Backlog EPIC-01)
+// =============================================================================
 
 datasource db {
   provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS (SAD §5.3 - §5.10)
+// -----------------------------------------------------------------------------
+
+enum UserStatus {
+  Active
+  Inactive
+}
+
+enum Role {
+  Employee
+  Supervisor_TL
+  Head
+  PM
+  HRGA
+  CEO_Management
+  SystemAdmin
+}
+
+enum DailyStatus {
+  GREEN
+  AMBER
+  RED
+}
+
+enum SubmissionTiming {
+  OnTime
+  Late
+  NoSubmission
+}
+
+enum CommitmentOutcome {
+  Completed
+  PartiallyCompleted
+  NotCompleted
+  Cancelled
+}
+
+enum Continuation {
+  Continue
+  DoNotContinue
+}
+
+enum AdditionalWorkReason {
+  NewlyAssigned
+  MissedInPlanning
+  PriorityChange
+  OperationalIncident
+  Other
+}
+
+enum BlockerSeverity {
+  Low
+  Medium
+  High
+  Critical
+}
+
+enum OwnerNeededType {
+  OrganizationalAuthority
+  ProjectAuthority
+}
+
+enum BlockerStatus {
+  Open
+  Acknowledged
+  InProgress
+  Resolved
+  Closed
+  AcceptedRisk
+}
+
+enum CorrectionClassification {
+  Minor
+  Material
+}
+
+enum CorrectionStatus {
+  Applied
+  Pending
+  Rejected
+}
+
+enum ExceptionType {
+  Leave
+  Holiday
+  Exemption
+}
+
+enum ExceptionStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum ManagerNoteType {
+  Coaching
+  Recognition
+  Corrective
+}
+
+enum ManagerNoteVisibility {
+  PrivateToManagement
+  VisibleToEmployee
+}
+
+enum ComplianceEventType {
+  NoSubmission
+  PatternFlag
+  Coaching
+  RecordedWarning
+  EscalatedFormalProcess
+}
+
+enum PolicyCategory {
+  Cutoff
+  GracePeriod
+  WorkdayCalendar
+  EscalationThreshold
+  CoachingFollowUpPeriod
+  RetentionPeriod
+  ExemptionRule
+  ObjectionWindowDuration
+  MinorMaterialThreshold
+  ParticipationRule
+}
+
+enum PolicyStatus {
+  Active
+  Inactive
+}
+
+enum NotificationChannel {
+  Email
+  BrowserPush
+  WebNotificationCenter
+}
+
+enum NotificationStatus {
+  Sent
+  Read
+  Failed
+}
+
+// -----------------------------------------------------------------------------
+// 1. DOMAIN: IDENTITY & ORGANIZATION (SAD §5.3)
+// -----------------------------------------------------------------------------
+
+model User {
+  id                 String     @id @default(uuid()) @db.Uuid
+  fullName           String     @db.VarChar(255)
+  email              String     @unique @db.VarChar(255)
+  passwordHash       String     @db.VarChar(255)
+  status             UserStatus @default(Active)
+  mustResetPassword  Boolean    @default(true)
+  createdAt          DateTime   @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime   @updatedAt @db.Timestamp(6)
+
+  // Relations
+  sessions                       Session[]
+  organizationalAssignments      OrganizationalAssignment[]      @relation("UserOrgAssignments")
+  createdOrgAssignments          OrganizationalAssignment[]      @relation("CreatedOrgAssignments")
+  managedOrgAssignments          OrganizationalAssignment[]      @relation("DirectManagerOrgAssignments")
+  projectAuthorityMappings       ProjectAuthorityMapping[]       @relation("UserProjectAuthority")
+  createdProjectAuthMappings     ProjectAuthorityMapping[]       @relation("CreatedProjectAuthority")
+  temporaryReviewerAssignments   TemporaryReviewerAssignment[]   @relation("UserTempReviewers")
+  createdTempReviewerAssignments TemporaryReviewerAssignment[]   @relation("CreatedTempReviewers")
+  dailyRecords                   DailyAccountabilityRecord[]
+  assignedAdditionalWorks        AdditionalWork[]                @relation("AssignedByAdditionalWorks")
+  raisedBlockers                 Blocker[]                       @relation("RaisedBlockers")
+  assignedBlockers               Blocker[]                       @relation("AssignedBlockers")
+  supportContributions           SupportContribution[]
+  correctionRequests             CorrectionRequest[]             @relation("RequestedCorrections")
+  reviewedCorrections            CorrectionRequest[]             @relation("ReviewedCorrections")
+  exceptions                     Exception[]                     @relation("EmployeeExceptions")
+  approvedExceptions             Exception[]                     @relation("ApprovedExceptions")
+  createdExceptions              Exception[]                     @relation("CreatedExceptions")
+  managerNotesAbout              ManagerNote[]                   @relation("ManagerNotesAboutUser")
+  createdManagerNotes            ManagerNote[]                   @relation("CreatedManagerNotes")
+  complianceEvents               ComplianceEvent[]
+  createdPolicies                Policy[]                        @relation("CreatedPolicies")
+  policyOwnerAssignments         PolicyOwnerAssignment[]
+  notifications                  Notification[]
+  auditLogs                      AuditLog[]
+
+  @@map("users")
+}
+
+model OrganizationalAssignment {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  role            Role
+  function        String    @db.VarChar(100)
+  directManagerId String?   @db.Uuid
+  effectiveDate   DateTime  @db.Date
+  endDate         DateTime? @db.Date
+  createdByUserId String    @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamp(6)
+
+  user          User  @relation("UserOrgAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  directManager User? @relation("DirectManagerOrgAssignments", fields: [directManagerId], references: [id], onDelete: SetNull)
+  createdBy     User  @relation("CreatedOrgAssignments", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, effectiveDate, endDate])
+  @@index([directManagerId, effectiveDate, endDate])
+  @@map("organizational_assignments")
+}
+
+model ProjectAuthorityMapping {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  scopeReference  String    @db.VarChar(255)
+  effectiveDate   DateTime  @db.Date
+  endDate         DateTime? @db.Date
+  createdByUserId String    @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamp(6)
+
+  user      User @relation("UserProjectAuthority", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreatedProjectAuthority", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, scopeReference, effectiveDate, endDate])
+  @@index([scopeReference, effectiveDate, endDate])
+  @@map("project_authority_mappings")
+}
+
+model TemporaryReviewerAssignment {
+  id              String    @id @default(uuid()) @db.Uuid
+  reviewerUserId  String    @db.Uuid
+  scope           String    @db.VarChar(255)
+  reason          String?   @db.VarChar(255)
+  effectiveDate   DateTime  @db.Date
+  expiryDate      DateTime  @db.Date
+  createdByUserId String    @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamp(6)
+
+  reviewer  User @relation("UserTempReviewers", fields: [reviewerUserId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreatedTempReviewers", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([reviewerUserId, scope, effectiveDate, expiryDate])
+  @@map("temporary_reviewer_assignments")
+}
+
+model Session {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  issuedAt  DateTime  @default(now()) @db.Timestamp(6)
+  expiresAt DateTime  @db.Timestamp(6)
+  revokedAt DateTime? @db.Timestamp(6)
+  userAgent String?   @db.VarChar(500)
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt, revokedAt])
+  @@map("sessions")
+}
+
+// -----------------------------------------------------------------------------
+// 2. DOMAIN: DAILY ACCOUNTABILITY (SAD §5.4)
+// -----------------------------------------------------------------------------
+
+model DailyAccountabilityRecord {
+  id                 String            @id @default(uuid()) @db.Uuid
+  employeeUserId     String            @db.Uuid
+  workDate           DateTime          @db.Date
+  orgContextSnapshot Json              @db.JsonB
+  policySnapshot     Json              @db.JsonB
+  morningSubmittedAt DateTime?         @db.Timestamp(6)
+  eodSubmittedAt     DateTime?         @db.Timestamp(6)
+  morningTiming      SubmissionTiming?
+  eodTiming          SubmissionTiming?
+  cutoffLockedAt     DateTime?         @db.Timestamp(6)
+  initialStatus      DailyStatus?
+  finalStatus        DailyStatus?
+  createdAt          DateTime          @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime          @updatedAt @db.Timestamp(6)
+
+  employee         User              @relation(fields: [employeeUserId], references: [id], onDelete: Cascade)
+  commitments      Commitment[]
+  additionalWorks  AdditionalWork[]
+  complianceEvents ComplianceEvent[]
+
+  @@unique([employeeUserId, workDate])
+  @@index([employeeUserId, workDate])
+  @@index([workDate, initialStatus, finalStatus])
+  @@map("daily_accountability_records")
+}
+
+model Commitment {
+  id                 String             @id @default(uuid()) @db.Uuid
+  dailyRecordId      String             @db.Uuid
+  sequenceNo         Int                @db.SmallInt
+  text               String             @db.Text
+  referenceLink      String?            @db.VarChar(500)
+  initialRisk        DailyStatus
+  knownBlockerNote   String?            @db.Text
+  supportNeeded      String?            @db.Text
+  outcome            CommitmentOutcome?
+  outcomeReason      String?            @db.Text
+  continuation       Continuation?
+  continuationReason String?            @db.Text
+  isMorningLocked    Boolean            @default(false)
+  isEodLocked        Boolean            @default(false)
+  createdAt          DateTime           @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime           @updatedAt @db.Timestamp(6)
+
+  dailyRecord        DailyAccountabilityRecord @relation(fields: [dailyRecordId], references: [id], onDelete: Cascade)
+  blockers           Blocker[]
+  correctionRequests CorrectionRequest[]
+
+  @@unique([dailyRecordId, sequenceNo])
+  @@index([dailyRecordId, sequenceNo])
+  @@map("commitments")
+}
+
+model AdditionalWork {
+  id                 String                @id @default(uuid()) @db.Uuid
+  dailyRecordId      String                @db.Uuid
+  text               String                @db.Text
+  reason             AdditionalWorkReason
+  assignedByUserId   String?               @db.Uuid
+  outcome            CommitmentOutcome?
+  outcomeReason      String?               @db.Text
+  continuation       Continuation?
+  continuationReason String?               @db.Text
+  isLocked           Boolean               @default(false)
+  createdAt          DateTime              @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime              @updatedAt @db.Timestamp(6)
+
+  dailyRecord DailyAccountabilityRecord @relation(fields: [dailyRecordId], references: [id], onDelete: Cascade)
+  assignedBy  User?                     @relation("AssignedByAdditionalWorks", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([dailyRecordId])
+  @@map("additional_works")
+}
+
+// -----------------------------------------------------------------------------
+// 3. DOMAIN: BLOCKER & SUPPORT (SAD §5.5)
+// -----------------------------------------------------------------------------
+
+model Blocker {
+  id                    String          @id @default(uuid()) @db.Uuid
+  raisedByUserId        String          @db.Uuid
+  linkedCommitmentId    String?         @db.Uuid
+  type                  String          @db.VarChar(100)
+  severity              BlockerSeverity
+  impact                String          @db.Text
+  ownerNeededType       OwnerNeededType
+  ownerNeededUserId     String          @db.Uuid
+  relatedScopeReference String?         @db.VarChar(255)
+  status                BlockerStatus   @default(Open)
+  raisedAt              DateTime        @default(now()) @db.Timestamp(6)
+  acknowledgedAt        DateTime?       @db.Timestamp(6)
+  resolvedAt            DateTime?       @db.Timestamp(6)
+  closedAt              DateTime?       @db.Timestamp(6)
+  expectedResolution    DateTime?       @db.Date
+  resolutionNote        String?         @db.Text
+  createdAt             DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime        @updatedAt @db.Timestamp(6)
+
+  raisedBy             User                  @relation("RaisedBlockers", fields: [raisedByUserId], references: [id], onDelete: Cascade)
+  linkedCommitment     Commitment?           @relation(fields: [linkedCommitmentId], references: [id], onDelete: SetNull)
+  ownerNeeded          User                  @relation("AssignedBlockers", fields: [ownerNeededUserId], references: [id], onDelete: Restrict)
+  supportContributions SupportContribution[]
+
+  @@index([status, severity, raisedAt])
+  @@index([ownerNeededUserId, status])
+  @@index([raisedByUserId, status])
+  @@map("blockers")
+}
+
+model SupportContribution {
+  id              String   @id @default(uuid()) @db.Uuid
+  blockerId       String   @db.Uuid
+  supporterUserId String   @db.Uuid
+  action          String   @db.Text
+  resultNote      String?  @db.Text
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+
+  blocker   Blocker @relation(fields: [blockerId], references: [id], onDelete: Cascade)
+  supporter User    @relation(fields: [supporterUserId], references: [id], onDelete: Cascade)
+
+  @@index([blockerId])
+  @@index([supporterUserId])
+  @@map("support_contributions")
+}
+
+// -----------------------------------------------------------------------------
+// 4. DOMAIN: CORRECTION REQUEST (SAD §5.6)
+// -----------------------------------------------------------------------------
+
+model CorrectionRequest {
+  id                   String                   @id @default(uuid()) @db.Uuid
+  targetCommitmentId   String                   @db.Uuid
+  requestedByUserId    String                   @db.Uuid
+  requestedChange      Json                     @db.JsonB
+  reason               String                   @db.Text
+  classification       CorrectionClassification
+  policySnapshot       Json                     @db.JsonB
+  status               CorrectionStatus
+  objectionWindowStart DateTime?                @db.Timestamp(6)
+  objectionWindowEnd   DateTime?                @db.Timestamp(6)
+  reviewedByUserId     String?                  @db.Uuid
+  objectionReason      String?                  @db.Text
+  appliedAt            DateTime?                @db.Timestamp(6)
+  createdAt            DateTime                 @default(now()) @db.Timestamp(6)
+  updatedAt            DateTime                 @updatedAt @db.Timestamp(6)
+
+  targetCommitment Commitment @relation(fields: [targetCommitmentId], references: [id], onDelete: Cascade)
+  requestedBy      User       @relation("RequestedCorrections", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+  reviewedBy       User?      @relation("ReviewedCorrections", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([targetCommitmentId, status])
+  @@index([status, objectionWindowEnd])
+  @@map("correction_requests")
+}
+
+// -----------------------------------------------------------------------------
+// 5. DOMAIN: EXCEPTION (LEAVE/HOLIDAY/EXEMPTION) (SAD §5.7)
+// -----------------------------------------------------------------------------
+
+model Exception {
+  id               String          @id @default(uuid()) @db.Uuid
+  type             ExceptionType
+  employeeUserId   String?         @db.Uuid
+  dateStart        DateTime        @db.Date
+  dateEnd          DateTime        @db.Date
+  status           ExceptionStatus @default(Approved)
+  reason           String?         @db.Text
+  approvedByUserId String?         @db.Uuid
+  createdByUserId  String          @db.Uuid
+  createdAt        DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime        @updatedAt @db.Timestamp(6)
+
+  employee   User? @relation("EmployeeExceptions", fields: [employeeUserId], references: [id], onDelete: Cascade)
+  approvedBy User? @relation("ApprovedExceptions", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  createdBy  User  @relation("CreatedExceptions", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([type, status, dateStart, dateEnd])
+  @@index([employeeUserId, dateStart, dateEnd])
+  @@map("exceptions")
+}
+
+// -----------------------------------------------------------------------------
+// 6. DOMAIN: MANAGER NOTE & COMPLIANCE EVENT (SAD §5.8)
+// -----------------------------------------------------------------------------
+
+model ManagerNote {
+  id                String                @id @default(uuid()) @db.Uuid
+  aboutUserId       String                @db.Uuid
+  createdByUserId   String                @db.Uuid
+  type              ManagerNoteType
+  note              String                @db.Text
+  relatedEntityType String?               @db.VarChar(100)
+  relatedEntityId   String?               @db.Uuid
+  visibility        ManagerNoteVisibility @default(PrivateToManagement)
+  createdAt         DateTime              @default(now()) @db.Timestamp(6)
+
+  aboutUser User @relation("ManagerNotesAboutUser", fields: [aboutUserId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreatedManagerNotes", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([aboutUserId, visibility])
+  @@index([relatedEntityType, relatedEntityId])
+  @@map("manager_notes")
+}
+
+model ComplianceEvent {
+  id                   String              @id @default(uuid()) @db.Uuid
+  userId               String              @db.Uuid
+  eventType            ComplianceEventType
+  eventDate            DateTime            @db.Date
+  relatedDailyRecordId String?             @db.Uuid
+  policySnapshot       Json?               @db.JsonB
+  followUpStatus       String?             @db.VarChar(100)
+  createdAt            DateTime            @default(now()) @db.Timestamp(6)
+
+  user               User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relatedDailyRecord DailyAccountabilityRecord? @relation(fields: [relatedDailyRecordId], references: [id], onDelete: SetNull)
+
+  @@index([userId, eventType, eventDate])
+  @@map("compliance_events")
+}
+
+// -----------------------------------------------------------------------------
+// 7. DOMAIN: POLICY (SAD §5.9)
+// -----------------------------------------------------------------------------
+
+model Policy {
+  id              String         @id @default(uuid()) @db.Uuid
+  category        PolicyCategory
+  value           Json           @db.JsonB
+  effectiveDate   DateTime       @db.Date
+  endDate         DateTime?      @db.Date
+  status          PolicyStatus   @default(Active)
+  createdByUserId String         @db.Uuid
+  createdAt       DateTime       @default(now()) @db.Timestamp(6)
+
+  createdBy User @relation("CreatedPolicies", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([category, effectiveDate, endDate, status])
+  @@map("policies")
+}
+
+model PolicyOwnerAssignment {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  policyCategory PolicyCategory
+  effectiveDate  DateTime       @db.Date
+  endDate        DateTime?      @db.Date
+  createdAt      DateTime       @default(now()) @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, policyCategory, effectiveDate, endDate])
+  @@map("policy_owner_assignments")
+}
+
+// -----------------------------------------------------------------------------
+// 8. DOMAIN: NOTIFICATION & AUDIT LOG (SAD §5.10)
+// -----------------------------------------------------------------------------
+
+model Notification {
+  id                String              @id @default(uuid()) @db.Uuid
+  recipientUserId   String              @db.Uuid
+  triggerType       String              @db.VarChar(100)
+  relatedEntityType String?             @db.VarChar(100)
+  relatedEntityId   String?             @db.Uuid
+  channel           NotificationChannel
+  payload           Json                @db.JsonB
+  status            NotificationStatus  @default(Sent)
+  sentAt            DateTime?           @db.Timestamp(6)
+  readAt            DateTime?           @db.Timestamp(6)
+  createdAt         DateTime            @default(now()) @db.Timestamp(6)
+
+  recipient User @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, status, createdAt])
+  @@index([triggerType, relatedEntityId, channel])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id                String   @id @default(uuid()) @db.Uuid
+  actorUserId       String?  @db.Uuid
+  action            String   @db.VarChar(100)
+  relatedEntityType String   @db.VarChar(100)
+  relatedEntityId   String   @db.Uuid
+  valueBefore       Json?    @db.JsonB
+  valueAfter        Json?    @db.JsonB
+  timestamp         DateTime @default(now()) @db.Timestamp(6)
+
+  // Append-only constraint: No updatedAt, no deletedAt (SAD §5.10 & DoD 5.1)
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([actorUserId, timestamp])
+  @@index([action, timestamp])
+  @@map("audit_logs")
 }
