@@ -9,6 +9,7 @@ import { IdentityModule } from './modules/identity/identity.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { AuthorizationModule } from './modules/authorization/authorization.module.js';
 import { PolicyModule } from './modules/policy/policy.module.js';
+import { NotificationModule } from './modules/notification/notification.module.js';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PolicyModule } from './modules/policy/policy.module.js';
     AuthModule,
     AuthorizationModule,
     PolicyModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
