@@ -8,6 +8,7 @@ import { AuditModule } from './modules/audit/audit.module.js';
 import { IdentityModule } from './modules/identity/identity.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { AuthorizationModule } from './modules/authorization/authorization.module.js';
+import { PolicyModule } from './modules/policy/policy.module.js';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AuthorizationModule } from './modules/authorization/authorization.modul
     IdentityModule,
     AuthModule,
     AuthorizationModule,
+    PolicyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
