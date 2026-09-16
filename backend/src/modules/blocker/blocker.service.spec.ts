@@ -142,8 +142,8 @@ describe('BlockerService (EPIC-08)', () => {
         type: 'Database connection failure',
         severity: BlockerSeverity.Critical,
         status: BlockerStatus.Open,
-        raisedBy: { name: 'Alice' },
-        ownerNeeded: { name: 'Bob' },
+        raisedBy: { fullName: 'Alice' },
+        ownerNeeded: { fullName: 'Bob' },
       });
 
       const dto = {
@@ -371,8 +371,8 @@ describe('BlockerService (EPIC-08)', () => {
           severity: BlockerSeverity.Critical,
           status: BlockerStatus.Open,
           acknowledgedAt: null,
-          raisedBy: { name: 'Reporter Alice' },
-          ownerNeeded: { name: 'Owner Bob' },
+          raisedBy: { fullName: 'Reporter Alice' },
+          ownerNeeded: { fullName: 'Owner Bob' },
           ownerNeededType: OwnerNeededType.OrganizationalAuthority,
           ownerNeededUserId: 'manager-1',
           raisedByUserId: 'user-1',

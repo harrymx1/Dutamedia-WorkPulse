@@ -1066,7 +1066,7 @@ export class DailyAccountabilityService {
         orderBy: { workDate: 'desc' },
         include: {
           employee: {
-            select: { id: true, name: true, email: true },
+            select: { id: true, fullName: true, email: true },
           },
           commitments: true,
           additionalWorks: true,
@@ -1099,7 +1099,7 @@ export class DailyAccountabilityService {
       where: { id },
       include: {
         employee: {
-          select: { id: true, name: true, email: true },
+          select: { id: true, fullName: true, email: true },
         },
         commitments: { orderBy: { sequenceNo: 'asc' } },
         additionalWorks: { orderBy: { createdAt: 'asc' } },

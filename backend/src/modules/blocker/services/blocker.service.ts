@@ -40,7 +40,17 @@ export class BlockerService {
   /**
    * Menghitung daftar aksi yang valid untuk Blocker (SAD §7.12, §9.4, §16.7).
    */
-  computeAvailableActions(blocker: any, userId: string): string[] {
+  computeAvailableActions(
+    blocker:
+      | {
+          status: BlockerStatus;
+          ownerNeededUserId: string;
+          raisedByUserId: string;
+        }
+      | null
+      | undefined,
+    userId: string,
+  ): string[] {
     const actions: string[] = [];
     if (!blocker) return actions;
 
@@ -106,8 +116,8 @@ export class BlockerService {
           status: BlockerStatus.Open,
         },
         include: {
-          raisedBy: { select: { id: true, name: true, email: true } },
-          ownerNeeded: { select: { id: true, name: true, email: true } },
+          raisedBy: { select: { id: true, fullName: true, email: true } },
+          ownerNeeded: { select: { id: true, fullName: true, email: true } },
         },
       });
 
@@ -131,7 +141,7 @@ export class BlockerService {
             recipientUserId: resolvedOwner.ownerNeededUserId,
             payload: {
               title: `[CRITICAL] Blocker Baru Diajukan: ${blocker.type}`,
-              body: `Blocker tingkat Critical dilaporkan oleh ${blocker.raisedBy.name}: ${blocker.impact}`,
+              body: `Blocker tingkat Critical dilaporkan oleh ${blocker.raisedBy.fullName}: ${blocker.impact}`,
               linkPath: `/blockers/${blocker.id}`,
             },
             relatedEntityType: 'Blocker',
@@ -206,11 +216,11 @@ export class BlockerService {
         take: limit,
         orderBy: { raisedAt: 'desc' },
         include: {
-          raisedBy: { select: { id: true, name: true, email: true } },
-          ownerNeeded: { select: { id: true, name: true, email: true } },
-          contributions: {
+          raisedBy: { select: { id: true, fullName: true, email: true } },
+          ownerNeeded: { select: { id: true, fullName: true, email: true } },
+          supportContributions: {
             include: {
-              supporter: { select: { id: true, name: true, email: true } },
+              supporter: { select: { id: true, fullName: true, email: true } },
             },
             orderBy: { createdAt: 'asc' },
           },
@@ -242,12 +252,12 @@ export class BlockerService {
     const blocker = await this.prisma.blocker.findUnique({
       where: { id },
       include: {
-        raisedBy: { select: { id: true, name: true, email: true } },
-        ownerNeeded: { select: { id: true, name: true, email: true } },
+        raisedBy: { select: { id: true, fullName: true, email: true } },
+        ownerNeeded: { select: { id: true, fullName: true, email: true } },
         linkedCommitment: true,
-        contributions: {
+        supportContributions: {
           include: {
-            supporter: { select: { id: true, name: true, email: true } },
+            supporter: { select: { id: true, fullName: true, email: true } },
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -603,7 +613,7 @@ export class BlockerService {
           resultNote: dto.resultNote,
         },
         include: {
-          supporter: { select: { id: true, name: true, email: true } },
+          supporter: { select: { id: true, fullName: true, email: true } },
         },
       });
 
@@ -648,8 +658,8 @@ export class BlockerService {
         raisedAt: { lte: thresholdDate },
       },
       include: {
-        raisedBy: { select: { id: true, name: true, email: true } },
-        ownerNeeded: { select: { id: true, name: true, email: true } },
+        raisedBy: { select: { id: true, fullName: true, email: true } },
+        ownerNeeded: { select: { id: true, fullName: true, email: true } },
       },
     });
 
@@ -716,7 +726,7 @@ export class BlockerService {
             recipientUserId: escalationTarget.targetUserId,
             payload: {
               title: `[AUTO-ESCALATED] Critical Blocker Belum Dikonfirmasi: ${blocker.type}`,
-              body: `Blocker Critical dari ${blocker.raisedBy.name} belum di-acknowledge oleh ${blocker.ownerNeeded.name} dalam waktu ${thresholdHours} jam. Eskalasi diteruskan kepada Anda.`,
+              body: `Blocker Critical dari ${blocker.raisedBy.fullName} belum di-acknowledge oleh ${blocker.ownerNeeded.fullName} dalam waktu ${thresholdHours} jam. Eskalasi diteruskan kepada Anda.`,
               linkPath: `/blockers/${blocker.id}`,
             },
             relatedEntityType: 'Blocker',
