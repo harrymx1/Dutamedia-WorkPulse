@@ -44,6 +44,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/ProfilePage.vue'),
     meta: { requiresAuth: true, title: 'Profil Pengguna — WorkPulse' },
   },
+  {
+    path: '/today/leave-request',
+    name: 'MyLeaveRequest',
+    component: () => import('../pages/MyLeaveRequestPage.vue'),
+    meta: { requiresAuth: true, title: 'My Leave Request — WorkPulse' },
+  },
 
   // 2. Management & Governance Area (UI/UX Spec §3)
   {
@@ -52,7 +58,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/TeamPulsePage.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['Supervisor_TL', 'Head_Dept', 'CEO_Director', 'SystemAdmin'],
+      roles: ['Supervisor_TL', 'Head', 'Head_Dept', 'CEO_Management', 'CEO_Director', 'SystemAdmin', 'PM'],
       title: 'Team Pulse — WorkPulse',
     },
   },
@@ -62,7 +68,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/FunctionPulsePage.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['Head_Dept', 'CEO_Director', 'SystemAdmin'],
+      roles: ['Head', 'Head_Dept', 'CEO_Management', 'CEO_Director', 'SystemAdmin'],
       title: 'Function Pulse — WorkPulse',
     },
   },
@@ -72,7 +78,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/CompliancePage.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['HRGA', 'CEO_Director', 'SystemAdmin'],
+      roles: ['HRGA', 'CEO_Management', 'CEO_Director', 'SystemAdmin'],
       title: 'Compliance & Exemption — WorkPulse',
     },
   },
@@ -82,7 +88,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/ManagementPulsePage.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['CEO_Director', 'SystemAdmin'],
+      roles: ['CEO_Management', 'CEO_Director', 'SystemAdmin'],
       title: 'Management Pulse — WorkPulse',
     },
   },
@@ -92,8 +98,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/ReportsPage.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['Supervisor_TL', 'Head_Dept', 'HRGA', 'CEO_Director', 'SystemAdmin'],
+      roles: ['Supervisor_TL', 'Head', 'Head_Dept', 'HRGA', 'CEO_Management', 'CEO_Director', 'SystemAdmin'],
       title: 'Reports — WorkPulse',
+    },
+  },
+  {
+    path: '/my-scope/project-risk',
+    name: 'ProjectRisk',
+    component: () => import('../pages/ProjectRiskPage.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['PM', 'SystemAdmin', 'CEO_Management', 'CEO_Director', 'Head_Dept', 'Head', 'Supervisor_TL'],
+      title: 'Project Risk View — WorkPulse',
     },
   },
   {

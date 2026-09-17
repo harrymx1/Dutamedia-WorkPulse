@@ -10,6 +10,8 @@ import type {
 } from '../types/daily-records.js';
 
 export interface QueryDailyRecordsParams {
+  date?: string;
+  scope?: string;
   startDate?: string;
   endDate?: string;
   employeeUserId?: string;
@@ -96,6 +98,11 @@ export const dailyRecordsApi = {
     params?: QueryDailyRecordsParams,
   ): Promise<ApiResponse<{ items: DailyAccountabilityRecord[]; total: number }>> {
     const searchParams = new URLSearchParams();
+    if (params?.date) {
+      searchParams.set('startDate', params.date);
+      searchParams.set('endDate', params.date);
+    }
+    if (params?.scope) searchParams.set('scope', params.scope);
     if (params?.startDate) searchParams.set('startDate', params.startDate);
     if (params?.endDate) searchParams.set('endDate', params.endDate);
     if (params?.employeeUserId) searchParams.set('employeeUserId', params.employeeUserId);

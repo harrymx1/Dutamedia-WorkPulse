@@ -1,8 +1,11 @@
 export type Role =
   | 'Employee'
   | 'Supervisor_TL'
+  | 'Head'
   | 'Head_Dept'
+  | 'PM'
   | 'HRGA'
+  | 'CEO_Management'
   | 'CEO_Director'
   | 'SystemAdmin';
 

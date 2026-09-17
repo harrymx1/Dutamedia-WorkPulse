@@ -28,6 +28,9 @@ export interface Commitment {
   knownBlocker?: string | null;
   supportNeeded?: string | null;
   outcomeStatus?: OutcomeStatus | null;
+  outcome?: OutcomeStatus | null;
+  taskDescription?: string;
+  estimatedHours?: number;
   continuation?: ContinuationStatus | null;
   continuationReason?: string | null;
   createdAt: string;
@@ -74,6 +77,7 @@ export interface Blocker {
 export interface DailyAccountabilityRecord {
   id: string;
   employeeUserId: string;
+  userId?: string;
   workDate: string;
   workType?: WorkType | null;
   morningSubmittedAt?: string | null;
@@ -82,12 +86,27 @@ export interface DailyAccountabilityRecord {
   morningCutoffTiming?: SubmissionTiming | null;
   eodCutoffTiming?: SubmissionTiming | null;
   finalStatus?: RiskLevel | null;
+  status?: RiskLevel | null;
   statusSuggested?: RiskLevel | null;
   statusOverridden: boolean;
   statusOverrideReason?: string | null;
   tomorrowPriority?: string | null;
   commitments?: Commitment[];
   additionalWorks?: AdditionalWork[];
+  blockers?: Blocker[];
+  employee?: {
+    id: string;
+    fullName: string;
+    email: string;
+    function?: string;
+  };
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    function?: string;
+  };
+  morningSubmissionTiming?: SubmissionTiming | null;
   createdAt: string;
   updatedAt: string;
 }

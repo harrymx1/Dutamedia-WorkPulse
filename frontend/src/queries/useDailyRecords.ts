@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { type Ref, unref } from 'vue';
+import { computed, toValue, type Ref, unref, type MaybeRefOrGetter } from 'vue';
 import { dailyRecordsApi, type QueryDailyRecordsParams } from '../api/daily-records.api.js';
 import type {
   MorningCheckinPayload,
@@ -126,11 +126,13 @@ export function useCorrectionRequestMutation() {
 /**
  * Hook query riwayat My History dengan filter rentang tanggal.
  */
-export function useDailyRecordsQuery(params?: Ref<QueryDailyRecordsParams> | QueryDailyRecordsParams) {
+export function useDailyRecordsQuery(
+  params?: MaybeRefOrGetter<QueryDailyRecordsParams | undefined>,
+) {
   return useQuery({
-    queryKey: DAILY_RECORDS_KEYS.list(unref(params)),
+    queryKey: computed(() => DAILY_RECORDS_KEYS.list(toValue(params))),
     queryFn: async () => {
-      const p = unref(params);
+      const p = toValue(params);
       const res = await dailyRecordsApi.getDailyRecords(p);
       return res.data;
     },

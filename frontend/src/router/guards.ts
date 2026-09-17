@@ -56,11 +56,9 @@ export function setupRouterGuards(router: Router): void {
         return next({ path: '/today' });
       }
 
-      // SAD §16.4: Pengecekan izin role untuk route tertentu
-      const allowedRoles = to.meta.roles as string[] | undefined;
+      const allowedRoles = to.meta.roles as any;
       if (allowedRoles && allowedRoles.length > 0) {
-        const userRole = authStore.user?.role;
-        if (!userRole || !allowedRoles.includes(userRole)) {
+        if (!authStore.hasRole(allowedRoles)) {
           // Navigasi dibelokkan ke /today untuk mencegah akses rute di luar role
           return next({ path: '/today' });
         }

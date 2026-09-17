@@ -14,10 +14,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { tokens, type SubmissionTiming } from '../../styles/tokens.js';
+import { tokens } from '../../styles/tokens.js';
+
+export type TimingValue =
+  | 'OnTime'
+  | 'Late'
+  | 'NoSubmission'
+  | 'On-Time'
+  | 'No Submission'
+  | 'ON_TIME'
+  | 'LATE'
+  | 'NO_SUBMISSION';
 
 interface Props {
-  timing: SubmissionTiming | 'On-Time' | 'Late' | 'No Submission';
+  timing?: TimingValue | null;
   size?: 'small' | 'default';
 }
 
@@ -25,8 +35,8 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'default',
 });
 
-const normalizedKey = computed<SubmissionTiming>(() => {
-  if (props.timing === 'On-Time' || props.timing === 'ON_TIME') return 'ON_TIME';
+const normalizedKey = computed<'ON_TIME' | 'LATE' | 'NO_SUBMISSION'>(() => {
+  if (props.timing === 'OnTime' || props.timing === 'On-Time' || props.timing === 'ON_TIME') return 'ON_TIME';
   if (props.timing === 'Late' || props.timing === 'LATE') return 'LATE';
   return 'NO_SUBMISSION';
 });

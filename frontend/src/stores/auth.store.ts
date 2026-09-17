@@ -16,11 +16,21 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Pengecekan role pengguna untuk render kondisional (SAD §16.4).
+   * Mendukung normalisasi alias backend ('Head' <-> 'Head_Dept', 'CEO_Management' <-> 'CEO_Director').
    */
   function hasRole(roles: Role | Role[]): boolean {
     if (!user.value || !user.value.role) return false;
     const allowed = Array.isArray(roles) ? roles : [roles];
-    return allowed.includes(user.value.role);
+    const userRole = user.value.role;
+
+    const expandRole = (r: Role): Role[] => {
+      if (r === 'Head' || r === 'Head_Dept') return ['Head', 'Head_Dept'];
+      if (r === 'CEO_Management' || r === 'CEO_Director') return ['CEO_Management', 'CEO_Director'];
+      return [r];
+    };
+
+    const expandedUserRoles = expandRole(userRole);
+    return allowed.some((r) => expandedUserRoles.includes(r));
   }
 
   function setUser(newUser: AuthUser | null): void {
