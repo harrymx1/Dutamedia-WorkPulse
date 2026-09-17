@@ -426,4 +426,63 @@ describe('BlockerService (EPIC-08)', () => {
       expect(result.escalatedCount).toBe(0);
     });
   });
+
+  describe('T1 — Branch coverage tambahan lifecycle & DENY matrix (SAD §9.4, §19.4)', () => {
+    const blockerId = 'blocker-deny-1';
+    const ownerId = 'owner-deny';
+    const reporterId = 'reporter-deny';
+
+    it('close: ditolak dengan ConflictException jika status BUKAN Resolved/AcceptedRisk (SAD §9.4)', async () => {
+      // Mencoba close blocker yang masih berstatus Open — harus gagal
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: blockerId,
+        status: BlockerStatus.Open,
+        ownerNeededUserId: ownerId,
+        raisedByUserId: reporterId,
+      });
+
+      await expect(service.close(reporterId, blockerId)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('resolve: ditolak dengan ConflictException jika Blocker berstatus Closed (DENY #7, SAD §19.4)', async () => {
+      // DENY Skenario #7: ownerNeededUserId mencoba resolve pada Blocker status Closed → 409
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: blockerId,
+        status: BlockerStatus.Closed,
+        ownerNeededUserId: ownerId,
+        raisedByUserId: reporterId,
+      });
+
+      await expect(
+        service.resolve(ownerId, blockerId, { resolutionNote: 'Terlambat' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('evaluateAutoEscalation: tidak dieskalasi jika acknowledgedAt sudah terisi (SAD §9.9 #2)', async () => {
+      const now = new Date();
+      prismaMock.blocker.findMany.mockResolvedValue([
+        {
+          id: 'blocker-already-acked',
+          severity: BlockerSeverity.Critical,
+          status: BlockerStatus.Open,
+          acknowledgedAt: null, // Masuk kandidat saat findMany
+        },
+      ]);
+      // Sudah tidak perlu eskalasi — belum ada AuditLog eskalasi
+      prismaMock.auditLog.findFirst.mockResolvedValue(null);
+      // Namun saat double-check findUnique, acknowledgedAt sudah ada (race: diack di antara findMany dan findUnique)
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: 'blocker-already-acked',
+        acknowledgedAt: new Date(now.getTime() - 1000), // Sudah diack
+        status: BlockerStatus.Acknowledged,
+      });
+
+      const result = await service.evaluateAutoEscalation(now);
+
+      // Meskipun masuk kandidat, tidak boleh dieskalasi karena sudah diack
+      expect(result.escalatedCount).toBe(0);
+    });
+  });
 });

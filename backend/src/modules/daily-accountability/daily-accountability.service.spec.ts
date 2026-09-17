@@ -466,4 +466,34 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('T1 — computeWorstOfStatus — seluruh kombinasi GREEN/AMBER/RED (SAD §9.3, §19.2)', () => {
+    it('worst-of: semua GREEN → GREEN', () => {
+      expect(computeWorstOfStatus([DailyStatus.GREEN, DailyStatus.GREEN, DailyStatus.GREEN])).toBe(DailyStatus.GREEN);
+    });
+
+    it('worst-of: ada satu AMBER di antara GREEN → AMBER', () => {
+      expect(computeWorstOfStatus([DailyStatus.GREEN, DailyStatus.AMBER, DailyStatus.GREEN])).toBe(DailyStatus.AMBER);
+    });
+
+    it('worst-of: semua AMBER → AMBER', () => {
+      expect(computeWorstOfStatus([DailyStatus.AMBER, DailyStatus.AMBER])).toBe(DailyStatus.AMBER);
+    });
+
+    it('worst-of: ada satu RED di antara GREEN dan AMBER → RED', () => {
+      expect(computeWorstOfStatus([DailyStatus.GREEN, DailyStatus.AMBER, DailyStatus.RED])).toBe(DailyStatus.RED);
+    });
+
+    it('worst-of: semua RED → RED', () => {
+      expect(computeWorstOfStatus([DailyStatus.RED, DailyStatus.RED])).toBe(DailyStatus.RED);
+    });
+
+    it('worst-of: array kosong → GREEN (default, tidak ada risiko)', () => {
+      expect(computeWorstOfStatus([])).toBe(DailyStatus.GREEN);
+    });
+
+    it('worst-of: satu item RED → RED', () => {
+      expect(computeWorstOfStatus([DailyStatus.RED])).toBe(DailyStatus.RED);
+    });
+  });
 });

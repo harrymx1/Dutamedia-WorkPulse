@@ -483,6 +483,142 @@ describe('CorrectionRequestService (EPIC-09)', () => {
     });
   });
 
+  describe('determineClassification — branch coverage tambahan (EPIC-09-T2/T3)', () => {
+    const employeeUser = createMockUser({
+      userId: 'emp-1',
+      role: Role.Employee,
+      function: 'Engineering',
+    });
+
+    const mockCommitmentBase = {
+      id: 'comm-2',
+      dailyRecordId: 'rec-2',
+      text: 'Selesaikan modul auth',
+      referenceLink: null,
+      initialRisk: DailyStatus.GREEN,
+      knownBlockerNote: null,
+      supportNeeded: null,
+      outcome: null,
+      outcomeReason: null,
+      continuation: null,
+      continuationReason: null,
+      isMorningLocked: true,
+      isEodLocked: false,
+      dailyRecord: { id: 'rec-2', employeeUserId: 'emp-1' },
+    };
+
+    it('T1-A: riskChangeAlwaysMaterial=false — perubahan initialRisk TETAP MENJADI Minor (SAD §9.6)', async () => {
+      // Policy dikonfigurasi: riskChangeAlwaysMaterial=false → risk change = Minor
+      policyMock.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.MinorMaterialThreshold]: {
+          wordsChangedThreshold: 10,
+          riskChangeAlwaysMaterial: false,
+        },
+        [PolicyCategory.ObjectionWindowDuration]: { durationHours: 24 },
+      });
+
+      prismaMock.commitment.findUnique.mockResolvedValue(mockCommitmentBase);
+      prismaMock.correctionRequest.findFirst.mockResolvedValue(null);
+
+      const createdCorrection = {
+        id: 'cr-risk-minor',
+        classification: CorrectionClassification.Minor,
+        status: CorrectionStatus.Applied,
+        targetCommitment: mockCommitmentBase,
+        requestedBy: { id: 'emp-1', fullName: 'Budi', email: 'budi@dutamedia.com' },
+      };
+      prismaMock.correctionRequest.create.mockResolvedValue(createdCorrection);
+      prismaMock.commitment.update.mockResolvedValue({
+        ...mockCommitmentBase,
+        initialRisk: DailyStatus.AMBER,
+      });
+      prismaMock.commitment.findMany.mockResolvedValue([
+        { id: 'comm-2', initialRisk: DailyStatus.AMBER },
+      ]);
+
+      const result = await service.createCorrectionRequest(employeeUser, {
+        targetCommitmentId: 'comm-2',
+        requestedChange: {
+          initialRisk: DailyStatus.AMBER,
+          knownBlockerNote: 'Menunggu review PR',
+        },
+        reason: 'Risiko meningkat karena review belum selesai',
+      });
+
+      expect(result.classification).toBe(CorrectionClassification.Minor);
+      expect(result.status).toBe(CorrectionStatus.Applied);
+    });
+
+    it('T1-B: perubahan teks melebihi wordsChangedThreshold — harus diklasifikasikan Material (SAD §9.6)', async () => {
+      policyMock.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.MinorMaterialThreshold]: { wordsChangedThreshold: 3 },
+        [PolicyCategory.ObjectionWindowDuration]: { durationHours: 24 },
+      });
+
+      prismaMock.commitment.findUnique.mockResolvedValue({
+        ...mockCommitmentBase,
+        text: 'Satu dua tiga',
+      });
+      prismaMock.correctionRequest.findFirst.mockResolvedValue(null);
+      prismaMock.organizationalAssignment.findFirst.mockResolvedValue({
+        directManagerId: 'spv-1',
+      });
+
+      const createdMaterial = {
+        id: 'cr-text-material',
+        classification: CorrectionClassification.Material,
+        status: CorrectionStatus.Pending,
+        objectionWindowEnd: new Date(Date.now() + 24 * 3600 * 1000),
+        targetCommitment: mockCommitmentBase,
+        requestedBy: { id: 'emp-1', fullName: 'Budi', email: 'budi@dutamedia.com' },
+      };
+      prismaMock.correctionRequest.create.mockResolvedValue(createdMaterial);
+
+      const result = await service.createCorrectionRequest(employeeUser, {
+        targetCommitmentId: 'comm-2',
+        requestedChange: { text: 'Satu dua tiga empat lima enam tujuh delapan' },
+        reason: 'Perbaikan deskripsi lengkap',
+      });
+
+      expect(result.classification).toBe(CorrectionClassification.Material);
+      expect(result.status).toBe(CorrectionStatus.Pending);
+    });
+
+    it('T1-C: perubahan teks di BAWAH wordsChangedThreshold — diklasifikasikan Minor (SAD §9.6)', async () => {
+      policyMock.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.MinorMaterialThreshold]: { wordsChangedThreshold: 10 },
+        [PolicyCategory.ObjectionWindowDuration]: { durationHours: 24 },
+      });
+
+      prismaMock.commitment.findUnique.mockResolvedValue({
+        ...mockCommitmentBase,
+        text: 'Selesaikan modul autentikasi hari ini',
+      });
+      prismaMock.correctionRequest.findFirst.mockResolvedValue(null);
+
+      const createdMinor = {
+        id: 'cr-text-minor',
+        classification: CorrectionClassification.Minor,
+        status: CorrectionStatus.Applied,
+        targetCommitment: mockCommitmentBase,
+        requestedBy: { id: 'emp-1', fullName: 'Budi', email: 'budi@dutamedia.com' },
+      };
+      prismaMock.correctionRequest.create.mockResolvedValue(createdMinor);
+      prismaMock.commitment.update.mockResolvedValue({
+        ...mockCommitmentBase,
+        text: 'Selesaikan modul autentikasi besok',
+      });
+
+      const result = await service.createCorrectionRequest(employeeUser, {
+        targetCommitmentId: 'comm-2',
+        requestedChange: { text: 'Selesaikan modul autentikasi besok' },
+        reason: 'Koreksi jadwal ringan',
+      });
+
+      expect(result.classification).toBe(CorrectionClassification.Minor);
+    });
+  });
+
   describe('evaluateExpiredObjectionWindows (EPIC-09-T6)', () => {
     it('harus memproses auto-apply pada koreksi yang objection window-nya sudah lewat', async () => {
       prismaMock.correctionRequest.findMany.mockResolvedValue([{ id: 'cr-expired-1' }]);

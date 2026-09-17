@@ -687,6 +687,7 @@ export class BlockerService {
         );
 
       // 5. Eksekusi eskalasi dalam transaksi dengan re-check (SAD §9.9 #2)
+      let wasEscalated = false;
       await this.prisma.$transaction(async (tx) => {
         // Re-check: pastikan belum di-acknowledge tepat sebelum eskalasi dieksekusi
         const currentBlocker = await tx.blocker.findUnique({
@@ -738,9 +739,13 @@ export class BlockerService {
           },
           tx,
         );
+
+        wasEscalated = true;
       });
 
-      escalatedCount++;
+      if (wasEscalated) {
+        escalatedCount++;
+      }
     }
 
     return {

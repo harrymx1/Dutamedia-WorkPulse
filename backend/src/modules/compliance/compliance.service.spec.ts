@@ -670,4 +670,83 @@ describe('ComplianceService (EPIC-12)', () => {
       ).rejects.toThrow(ConflictException);
     });
   });
+
+  describe('T1 — AC-19: Leave Pending TIDAK mengecualikan dari NoSubmission (SAD §9.7, §19.3)', () => {
+    it('Leave berstatus Pending tidak mengecualikan employee dari NoSubmission (AC-19)', async () => {
+      const workDate = new Date('2026-09-15T00:00:00.000Z');
+
+      prismaMock.organizationalAssignment.findMany.mockResolvedValue([
+        {
+          userId: 'emp-pending-leave',
+          user: {
+            id: 'emp-pending-leave',
+            status: UserStatus.Active,
+            fullName: 'Candra',
+          },
+        },
+      ]);
+
+      // Leave ada tetapi PENDING — tidak boleh mengecualikan (AC-19)
+      prismaMock.exception.findFirst
+        .mockResolvedValueOnce(null) // Holiday check: tidak ada
+        .mockResolvedValueOnce(null); // Valid exception check: status Pending tidak lolos filter Approved
+
+      prismaMock.complianceEvent.findFirst.mockResolvedValue(null); // Belum ada NoSubmission sebelumnya
+      prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue(null); // Tidak pernah submit
+
+      prismaMock.complianceEvent.create.mockResolvedValue({
+        id: 'ns-pending-leave',
+        eventType: ComplianceEventType.NoSubmission,
+        userId: 'emp-pending-leave',
+      });
+      prismaMock.organizationalAssignment.findFirst.mockResolvedValue({
+        directManagerId: 'mgr-1',
+      });
+
+      const now = new Date(2026, 8, 15, 20, 0, 0);
+      const result = await service.evaluateNoSubmission(workDate, now);
+
+      // Employee dengan Leave Pending tetap mendapat NoSubmission (AC-19)
+      expect(result.newNoSubmissions).toBe(1);
+      expect(prismaMock.complianceEvent.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            eventType: ComplianceEventType.NoSubmission,
+            userId: 'emp-pending-leave',
+          }),
+        }),
+      );
+    });
+
+    it('Leave berstatus Approved mengecualikan employee dari NoSubmission (AC-09)', async () => {
+      const workDate = new Date('2026-09-15T00:00:00.000Z');
+      const now = new Date(2026, 8, 15, 20, 0, 0);
+
+      prismaMock.organizationalAssignment.findMany.mockResolvedValue([
+        {
+          userId: 'emp-approved-leave',
+          user: {
+            id: 'emp-approved-leave',
+            status: UserStatus.Active,
+            fullName: 'Dewi',
+          },
+        },
+      ]);
+
+      prismaMock.exception.findFirst
+        .mockResolvedValueOnce(null) // Holiday check: tidak ada
+        .mockResolvedValueOnce({    // Leave Approved → mengecualikan
+          id: 'exc-leave-approved',
+          type: ExceptionType.Leave,
+          status: ExceptionStatus.Approved,
+        });
+
+      const result = await service.evaluateNoSubmission(workDate, now);
+
+      // Employee dengan Leave Approved TIDAK mendapat NoSubmission (AC-09)
+      expect(result.skippedExempt).toBe(1);
+      expect(result.newNoSubmissions).toBe(0);
+      expect(prismaMock.complianceEvent.create).not.toHaveBeenCalled();
+    });
+  });
 });
