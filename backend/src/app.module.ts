@@ -18,6 +18,7 @@ import { CorrectionRequestModule } from './modules/correction-request/correction
 import { ComplianceModule } from './modules/compliance/compliance.module.js';
 import { FileStorageModule } from './modules/file-storage/file-storage.module.js';
 import { SchedulerModule } from './modules/scheduler/scheduler.module.js';
+import { ReportingModule } from './modules/reporting/reporting.module.js';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module.js';
     ComplianceModule,
     FileStorageModule,
     SchedulerModule,
+    ReportingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
