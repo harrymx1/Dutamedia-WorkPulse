@@ -15,6 +15,7 @@ import { BlockerModule } from './modules/blocker/blocker.module.js';
 import { ExceptionModule } from './modules/exception/exception.module.js';
 import { ManagerNoteModule } from './modules/manager-note/manager-note.module.js';
 import { CorrectionRequestModule } from './modules/correction-request/correction-request.module.js';
+import { ComplianceModule } from './modules/compliance/compliance.module.js';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { CorrectionRequestModule } from './modules/correction-request/correction
     ExceptionModule,
     ManagerNoteModule,
     CorrectionRequestModule,
+    ComplianceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
