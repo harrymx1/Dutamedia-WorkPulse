@@ -16,6 +16,7 @@ import { ExceptionModule } from './modules/exception/exception.module.js';
 import { ManagerNoteModule } from './modules/manager-note/manager-note.module.js';
 import { CorrectionRequestModule } from './modules/correction-request/correction-request.module.js';
 import { ComplianceModule } from './modules/compliance/compliance.module.js';
+import { FileStorageModule } from './modules/file-storage/file-storage.module.js';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ComplianceModule } from './modules/compliance/compliance.module.js';
     ManagerNoteModule,
     CorrectionRequestModule,
     ComplianceModule,
+    FileStorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
