@@ -13,6 +13,7 @@ import { NotificationModule } from './modules/notification/notification.module.j
 import { DailyAccountabilityModule } from './modules/daily-accountability/daily-accountability.module.js';
 import { BlockerModule } from './modules/blocker/blocker.module.js';
 import { ExceptionModule } from './modules/exception/exception.module.js';
+import { ManagerNoteModule } from './modules/manager-note/manager-note.module.js';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ExceptionModule } from './modules/exception/exception.module.js';
     DailyAccountabilityModule,
     BlockerModule,
     ExceptionModule,
+    ManagerNoteModule,
   ],
   controllers: [AppController],
   providers: [AppService],
