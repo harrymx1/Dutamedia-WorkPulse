@@ -26,7 +26,9 @@ export function useTodayRecordQuery() {
       return res.data;
     },
     staleTime: 1000 * 15, // 15 detik
-    refetchInterval: 1000 * 60, // polling setiap 1 menit untuk update cutoff/status
+    refetchInterval: () =>
+      typeof document !== 'undefined' && document.hidden ? false : 60_000, // polling 1 menit saat tab aktif
+    refetchOnWindowFocus: true,
   });
 }
 

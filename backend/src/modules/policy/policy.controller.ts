@@ -18,7 +18,9 @@ import { QueryPoliciesDto } from './dto/query-policies.dto.js';
 import { PolicyOwnerGuard } from './guards/policy-owner.guard.js';
 import { RequireRole } from '../authorization/decorators/require-role.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Policy')
 @Controller('policies')
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
@@ -76,6 +78,7 @@ export class PolicyController {
 /**
  * Controller sekunder untuk path literal /policy-owner-assignments (SAD §10.9)
  */
+@ApiTags('Policy')
 @Controller('policy-owner-assignments')
 export class PolicyOwnerAssignmentController {
   constructor(private readonly policyService: PolicyService) {}

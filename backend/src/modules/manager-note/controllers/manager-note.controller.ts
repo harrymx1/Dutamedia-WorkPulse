@@ -20,7 +20,9 @@ import {
 } from '../../auth/decorators/current-user.decorator.js';
 import { RequireRole } from '../../authorization/decorators/require-role.decorator.js';
 import { RoleGuard } from '../../authorization/guards/role.guard.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('ManagerNote')
 @Controller('manager-notes')
 export class ManagerNoteController {
   constructor(private readonly managerNoteService: ManagerNoteService) {}

@@ -17,7 +17,9 @@ import {
   CurrentUser,
   type CurrentUserPayload,
 } from '../../auth/decorators/current-user.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('CorrectionRequest')
 @Controller('correction-requests')
 export class CorrectionRequestController {
   constructor(

@@ -48,7 +48,7 @@ const isNearDeadline = computed(() => {
 
 const formattedTime = computed(() => {
   if (isExpired.value) {
-    return 'Window Expired';
+    return 'Jendela Kedaluwarsa';
   }
 
   const hours = Math.floor(remainingSeconds.value / 3600);
@@ -60,7 +60,7 @@ const formattedTime = computed(() => {
   if (hours > 24) {
     const days = Math.floor(hours / 24);
     const remHours = hours % 24;
-    return `${days}d ${pad(remHours)}h ${pad(minutes)}m`;
+    return `${days}h ${pad(remHours)}j ${pad(minutes)}m`;
   }
 
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;

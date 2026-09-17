@@ -32,7 +32,9 @@ export function useExceptionSummaryQuery(
       const res = await reportingApi.getExceptionSummary(toValue(scope), toValue(date));
       return res.data;
     },
-    refetchInterval: 1000 * 60, // Refresh setiap 60 detik untuk dashboard
+    refetchInterval: () =>
+      typeof document !== 'undefined' && document.hidden ? false : 60_000, // 60s saat tab aktif (SAD §17.3)
+    refetchOnWindowFocus: true,
   });
 }
 

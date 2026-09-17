@@ -14,7 +14,9 @@ import { PatchCommitmentDto } from '../dto/patch-commitment.dto.js';
 import { RequireRole } from '../../authorization/decorators/require-role.decorator.js';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator.js';
 import { RoleGuard } from '../../authorization/guards/role.guard.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('DailyAccountability')
 @Controller('commitments')
 export class CommitmentController {
   constructor(

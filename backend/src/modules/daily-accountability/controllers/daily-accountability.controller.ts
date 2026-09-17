@@ -22,7 +22,9 @@ import {
   type CurrentUserPayload,
 } from '../../auth/decorators/current-user.decorator.js';
 import { RoleGuard } from '../../authorization/guards/role.guard.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('DailyAccountability')
 @Controller('daily-accountability-records')
 export class DailyAccountabilityController {
   constructor(

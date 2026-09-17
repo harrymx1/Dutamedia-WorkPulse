@@ -18,7 +18,9 @@ import {
   CurrentUser,
   type CurrentUserPayload,
 } from '../../auth/decorators/current-user.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Compliance')
 @Controller('compliance-events')
 export class ComplianceController {
   constructor(private readonly complianceService: ComplianceService) {}

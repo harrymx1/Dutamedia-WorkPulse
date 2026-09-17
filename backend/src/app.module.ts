@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { CustomThrottlerGuard } from './modules/shared/guards/custom-throttler.guard.js';
 import { PrismaModule } from './modules/prisma/prisma.module.js';
 import { SharedModule } from './modules/shared/shared.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
@@ -22,6 +25,7 @@ import { ReportingModule } from './modules/reporting/reporting.module.js';
 
 @Module({
   imports: [
+    SharedModule,
     // Rate Limiting per kategori endpoint (SAD §7.8)
     ThrottlerModule.forRoot([
       {
@@ -40,8 +44,8 @@ import { ReportingModule } from './modules/reporting/reporting.module.js';
         limit: 10, // 10 request/menit per user
       },
     ]),
+    ScheduleModule.forRoot(),
     PrismaModule,
-    SharedModule,
     AuditModule,
     IdentityModule,
     AuthModule,
@@ -59,6 +63,13 @@ import { ReportingModule } from './modules/reporting/reporting.module.js';
     ReportingModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    Reflector,
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

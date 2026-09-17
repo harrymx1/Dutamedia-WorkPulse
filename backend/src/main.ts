@@ -4,6 +4,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { createAppValidationPipe } from './modules/shared/pipes/app-validation.pipe.js';
+import { SwaggerModule } from '@nestjs/swagger';
+import { createOpenApiDocument } from './openapi.config.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -53,9 +55,14 @@ async function bootstrap() {
   // 5. Global Validation Pipe dengan custom exceptionFactory (SAD §7.4, §7.7)
   app.useGlobalPipes(createAppValidationPipe());
 
+  // 6. OpenAPI / Swagger Documentation UI (SAD §17.1, EPIC-21-T1)
+  const openApiDoc = createOpenApiDocument(app);
+  SwaggerModule.setup('api/v1/docs', app, openApiDoc);
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   logger.log(`WorkPulse Backend API v1 berjalan pada port ${port}`);
+  logger.log(`Swagger OpenAPI Documentation tersedia pada http://localhost:${port}/api/v1/docs`);
 }
 
 await bootstrap();

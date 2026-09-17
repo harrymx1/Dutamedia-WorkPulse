@@ -11,7 +11,9 @@ import {
 import { NotificationService } from './notification.service.js';
 import { QueryNotificationsDto } from './dto/query-notifications.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Notification')
 @Controller('notifications')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}

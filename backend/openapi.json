@@ -1,0 +1,1038 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "IdentityController_getUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      },
+      "post": {
+        "operationId": "IdentityController_createUser",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "IdentityController_getUserById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      },
+      "patch": {
+        "operationId": "IdentityController_updateUserStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/organizational-assignments": {
+      "get": {
+        "operationId": "IdentityController_getOrganizationalAssignments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/organizational-assignments": {
+      "post": {
+        "operationId": "IdentityController_createOrganizationalAssignment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/project-authority-mappings": {
+      "post": {
+        "operationId": "IdentityController_createProjectAuthorityMapping",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/project-authority-mappings/{id}": {
+      "patch": {
+        "operationId": "IdentityController_updateProjectAuthorityMapping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/temporary-reviewer-assignments": {
+      "post": {
+        "operationId": "IdentityController_createTemporaryReviewerAssignment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Login berhasil, session cookies diterbitkan"
+          }
+        },
+        "summary": "Login pengguna dan pembentukan sesi (SAD §10.1)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Logout berhasil, session cookies dihapus"
+          }
+        },
+        "summary": "Logout pengguna dan revokasi sesi (SAD §10.1)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Reset password mandiri pengguna (SAD §10.1)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/admin-reset-password/{userId}": {
+      "post": {
+        "operationId": "AuthController_adminResetPassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Reset password pengguna oleh SystemAdmin (SAD §10.1)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Mendapatkan profil dan permission sesi aktif (SAD §10.1)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/policies": {
+      "get": {
+        "operationId": "PolicyController_getActivePolicies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
+        ]
+      },
+      "post": {
+        "operationId": "PolicyController_createPolicy",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/api/v1/policies/{category}/history": {
+      "get": {
+        "operationId": "PolicyController_getPolicyHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/api/v1/policies/owner-assignments": {
+      "post": {
+        "operationId": "PolicyController_createPolicyOwnerAssignment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/api/v1/policy-owner-assignments": {
+      "post": {
+        "operationId": "PolicyOwnerAssignmentController_createPolicyOwnerAssignment",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationController_getNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}/mark-read": {
+      "post": {
+        "operationId": "NotificationController_markRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/api/v1/notifications/mark-all-read": {
+      "post": {
+        "operationId": "NotificationController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/api/v1/daily-accountability-records/morning-checkin": {
+      "post": {
+        "operationId": "DailyAccountabilityController_submitMorningCheckin",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/daily-accountability-records/today": {
+      "get": {
+        "operationId": "DailyAccountabilityController_getTodayRecord",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/daily-accountability-records/{id}/eod-checkin": {
+      "post": {
+        "operationId": "DailyAccountabilityController_submitEodCheckin",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/daily-accountability-records/{id}/eod-checkin/confirm-override": {
+      "post": {
+        "operationId": "DailyAccountabilityController_confirmOverride",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/daily-accountability-records": {
+      "get": {
+        "operationId": "DailyAccountabilityController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/daily-accountability-records/{id}": {
+      "get": {
+        "operationId": "DailyAccountabilityController_findById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/commitments/{id}": {
+      "patch": {
+        "operationId": "CommitmentController_patchCommitment",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/additional-work": {
+      "post": {
+        "operationId": "AdditionalWorkController_createAdditionalWork",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/additional-work/{id}": {
+      "patch": {
+        "operationId": "AdditionalWorkController_patchAdditionalWork",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DailyAccountability"
+        ]
+      }
+    },
+    "/api/v1/blockers": {
+      "post": {
+        "operationId": "BlockerController_createBlocker",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      },
+      "get": {
+        "operationId": "BlockerController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}": {
+      "get": {
+        "operationId": "BlockerController_findById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}/acknowledge": {
+      "post": {
+        "operationId": "BlockerController_acknowledge",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}/update": {
+      "post": {
+        "operationId": "BlockerController_updateProgress",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}/resolve": {
+      "post": {
+        "operationId": "BlockerController_resolve",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}/accept-risk": {
+      "post": {
+        "operationId": "BlockerController_acceptRisk",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}/close": {
+      "post": {
+        "operationId": "BlockerController_close",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/blockers/{id}/support": {
+      "post": {
+        "operationId": "BlockerController_addSupportContribution",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Blocker"
+        ]
+      }
+    },
+    "/api/v1/exceptions/leave": {
+      "post": {
+        "operationId": "ExceptionController_createLeave",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/exceptions/holiday": {
+      "post": {
+        "operationId": "ExceptionController_createHoliday",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/exceptions/exemption": {
+      "post": {
+        "operationId": "ExceptionController_createExemption",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/exceptions": {
+      "get": {
+        "operationId": "ExceptionController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/exceptions/{id}": {
+      "get": {
+        "operationId": "ExceptionController_findById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/exceptions/{id}/approve": {
+      "post": {
+        "operationId": "ExceptionController_approveLeave",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/exceptions/{id}/reject": {
+      "post": {
+        "operationId": "ExceptionController_rejectLeave",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Exception"
+        ]
+      }
+    },
+    "/api/v1/manager-notes": {
+      "post": {
+        "operationId": "ManagerNoteController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ManagerNote"
+        ]
+      },
+      "get": {
+        "operationId": "ManagerNoteController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ManagerNote"
+        ]
+      }
+    },
+    "/api/v1/manager-notes/{id}": {
+      "get": {
+        "operationId": "ManagerNoteController_findById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ManagerNote"
+        ]
+      }
+    },
+    "/api/v1/correction-requests": {
+      "post": {
+        "operationId": "CorrectionRequestController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CorrectionRequest"
+        ]
+      },
+      "get": {
+        "operationId": "CorrectionRequestController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CorrectionRequest"
+        ]
+      }
+    },
+    "/api/v1/correction-requests/{id}": {
+      "get": {
+        "operationId": "CorrectionRequestController_findById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CorrectionRequest"
+        ]
+      }
+    },
+    "/api/v1/correction-requests/{id}/object": {
+      "post": {
+        "operationId": "CorrectionRequestController_objectCorrection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CorrectionRequest"
+        ]
+      }
+    },
+    "/api/v1/compliance-events": {
+      "get": {
+        "operationId": "ComplianceController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance-events/{id}": {
+      "get": {
+        "operationId": "ComplianceController_findById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance-events/{id}/coach": {
+      "post": {
+        "operationId": "ComplianceController_coach",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance-events/{id}/record-warning": {
+      "post": {
+        "operationId": "ComplianceController_recordWarning",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance-events/{id}/escalate-formal": {
+      "post": {
+        "operationId": "ComplianceController_escalateFormal",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/files/upload-url": {
+      "post": {
+        "operationId": "FileStorageController_generateUploadUrl",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "FileStorage"
+        ]
+      }
+    },
+    "/api/v1/files/{fileId}/download-url": {
+      "get": {
+        "operationId": "FileStorageController_generateDownloadUrl",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "FileStorage"
+        ]
+      }
+    },
+    "/api/v1/reports/daily-exception": {
+      "get": {
+        "operationId": "ReportingController_getDailyException",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/api/v1/reports/exception-summary": {
+      "get": {
+        "operationId": "ReportingController_getExceptionSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/api/v1/reports/weekly-team-summary": {
+      "get": {
+        "operationId": "ReportingController_getWeeklyTeamSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/api/v1/reports/monthly-trend": {
+      "get": {
+        "operationId": "ReportingController_getMonthlyTrend",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/api/v1/reports/individual-evidence/{userId}": {
+      "get": {
+        "operationId": "ReportingController_getIndividualEvidence",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/api/v1/reports/blocker-root-cause": {
+      "get": {
+        "operationId": "ReportingController_getBlockerRootCause",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/api/v1/reports/{reportType}/export": {
+      "get": {
+        "operationId": "ReportingController_exportReport",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reporting"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "WorkPulse API",
+    "description": "Kontrak Resmi WorkPulse — Daily Accountability & Blocker Log System API v1.0 (Dutamedia) sesuai SAD Section 10",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Autentikasi dan sesi login (SAD §10.1)"
+    },
+    {
+      "name": "Identity",
+      "description": "Organisasi, pengguna, tim, departemen, dan proyek (SAD §10.2)"
+    },
+    {
+      "name": "DailyAccountability",
+      "description": "Check-in harian pagi & sore, komitmen, dan tugas tambahan (SAD §10.3)"
+    },
+    {
+      "name": "Blocker",
+      "description": "Manajemen blocker, kontribusi bantuan, dan resolusi (SAD §10.4)"
+    },
+    {
+      "name": "CorrectionRequest",
+      "description": "Pengajuan dan review koreksi record (SAD §10.5)"
+    },
+    {
+      "name": "Exception",
+      "description": "Cuti, libur, dan dispensasi kehadiran (SAD §10.6)"
+    },
+    {
+      "name": "ManagerNote",
+      "description": "Catatan manajerial dan coaching (SAD §10.7)"
+    },
+    {
+      "name": "Compliance",
+      "description": "Pelanggaran kompensasi dan progres sanksi (SAD §10.8)"
+    },
+    {
+      "name": "Policy",
+      "description": "Pengaturan kebijakan dan penugasan policy owner (SAD §10.9)"
+    },
+    {
+      "name": "Notification",
+      "description": "Pengaturan notifikasi dan riwayat pemberitahuan (SAD §10.10)"
+    },
+    {
+      "name": "Reporting",
+      "description": "Laporan agregat dan analitik tim/fungsi/manajemen (SAD §10.11)"
+    },
+    {
+      "name": "FileStorage",
+      "description": "Upload signed URL dan unduhan bukti (SAD §10.12)"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token",
+        "description": "Session HttpOnly Cookie JWT Token (SAD §8.1)"
+      },
+      "csrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Double Submit Cookie CSRF Token (SAD §8.5)"
+      }
+    },
+    "schemas": {}
+  }
+}

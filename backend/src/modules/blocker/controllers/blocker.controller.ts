@@ -19,7 +19,9 @@ import {
   CurrentUser,
   type CurrentUserPayload,
 } from '../../auth/decorators/current-user.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Blocker')
 @Controller('blockers')
 export class BlockerController {
   constructor(private readonly blockerService: BlockerService) {}

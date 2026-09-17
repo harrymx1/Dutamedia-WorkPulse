@@ -1,7 +1,14 @@
-import { QueryClient, type VueQueryPluginOptions } from '@tanstack/vue-query';
+import { QueryClient, MutationCache, type VueQueryPluginOptions } from '@tanstack/vue-query';
 import { ApiError } from '../types/api.js';
+import { useApiError } from '../composables/useApiError.js';
 
 export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      const { handleApiError } = useApiError();
+      handleApiError(error);
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 1000 * 30, // 30 detik (SAD §16.3, §17.3)

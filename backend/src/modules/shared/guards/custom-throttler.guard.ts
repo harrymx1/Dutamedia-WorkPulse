@@ -1,9 +1,25 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
-import { ThrottlerGuard, ThrottlerLimitDetail } from '@nestjs/throttler';
+import { Injectable, ExecutionContext, Inject } from '@nestjs/common';
+import {
+  ThrottlerGuard,
+  ThrottlerLimitDetail,
+  ThrottlerModuleOptions,
+  ThrottlerStorage,
+  InjectThrottlerOptions,
+  InjectThrottlerStorage,
+} from '@nestjs/throttler';
+import { Reflector } from '@nestjs/core';
 import { RateLimitedException } from '../exceptions/api.exception.js';
 
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
+  constructor(
+    @InjectThrottlerOptions() options: any,
+    @InjectThrottlerStorage() storageService: any,
+    @Inject(Reflector) reflector: Reflector,
+  ) {
+    super(options, storageService, reflector);
+  }
+
   protected async getTracker(req: Record<string, any>): Promise<string> {
     // Jika user terautentikasi, batasi berdasarkan userId (SAD §7.8)
     if (req.user?.userId || req.user?.id) {

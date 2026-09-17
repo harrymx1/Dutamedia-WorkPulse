@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { DailyAccountabilityModule } from '../daily-accountability/daily-accountability.module.js';
 import { ComplianceModule } from '../compliance/compliance.module.js';
@@ -12,7 +11,6 @@ import { DatabaseBackupService } from './services/database-backup.service.js';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     PrismaModule,
     DailyAccountabilityModule,
     ComplianceModule,

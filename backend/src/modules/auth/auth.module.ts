@@ -20,14 +20,16 @@ import { IdentityModule } from '../identity/identity.module.js';
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthGuard,
+    CsrfGuard,
     // Urutan eksekusi: AuthGuard -> CsrfGuard (SAD §8.8)
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useExisting: AuthGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: CsrfGuard,
+      useExisting: CsrfGuard,
     },
   ],
   exports: [AuthService, JwtModule, AuthGuard, CsrfGuard],

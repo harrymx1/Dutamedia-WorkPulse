@@ -18,7 +18,9 @@ import { Public } from './decorators/public.decorator.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { ThrottleAuth } from '../shared/decorators/throttle.decorator.js';
 import { SkipEnvelope } from '../shared/decorators/skip-envelope.decorator.js';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -27,6 +29,8 @@ export class AuthController {
    * POST /api/v1/auth/login (SAD §8.4, §10.1)
    * Rate limit: 5 perc./menit per IP (@ThrottleAuth)
    */
+  @ApiOperation({ summary: 'Login pengguna dan pembentukan sesi (SAD §10.1)' })
+  @ApiResponse({ status: 200, description: 'Login berhasil, session cookies diterbitkan' })
   @Public()
   @ThrottleAuth()
   @Post('login')
@@ -80,6 +84,8 @@ export class AuthController {
    * POST /api/v1/auth/logout (SAD §8.4, §10.1)
    * 204 No Content + hapus cookie
    */
+  @ApiOperation({ summary: 'Logout pengguna dan revokasi sesi (SAD §10.1)' })
+  @ApiResponse({ status: 204, description: 'Logout berhasil, session cookies dihapus' })
   @SkipEnvelope()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -113,6 +119,7 @@ export class AuthController {
   /**
    * POST /api/v1/auth/reset-password (SAD §8.2, §10.1)
    */
+  @ApiOperation({ summary: 'Reset password mandiri pengguna (SAD §10.1)' })
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(
@@ -125,6 +132,7 @@ export class AuthController {
   /**
    * POST /api/v1/auth/admin-reset-password/:userId (SAD §8.2, §10.1, §15.3)
    */
+  @ApiOperation({ summary: 'Reset password pengguna oleh SystemAdmin (SAD §10.1)' })
   @Post('admin-reset-password/:userId')
   @HttpCode(HttpStatus.OK)
   async adminResetPassword(
@@ -137,6 +145,7 @@ export class AuthController {
   /**
    * GET /api/v1/auth/me (SAD §10.1)
    */
+  @ApiOperation({ summary: 'Mendapatkan profil dan permission sesi aktif (SAD §10.1)' })
   @Get('me')
   async getMe(@CurrentUser('userId') userId: string) {
     return this.authService.getMe(userId);

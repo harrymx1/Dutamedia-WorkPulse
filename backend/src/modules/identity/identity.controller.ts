@@ -18,7 +18,9 @@ import { CreateOrgAssignmentDto } from './dto/create-org-assignment.dto.js';
 import { CreateProjectAuthorityDto } from './dto/create-project-authority.dto.js';
 import { UpdateProjectAuthorityDto } from './dto/update-project-authority.dto.js';
 import { CreateTempReviewerDto } from './dto/create-temp-reviewer.dto.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Identity')
 @Controller()
 export class IdentityController {
   constructor(private readonly identityService: IdentityService) {}

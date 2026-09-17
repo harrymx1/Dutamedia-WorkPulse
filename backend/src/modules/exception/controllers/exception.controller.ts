@@ -23,7 +23,9 @@ import {
 } from '../../auth/decorators/current-user.decorator.js';
 import { RequireRole } from '../../authorization/decorators/require-role.decorator.js';
 import { RoleGuard } from '../../authorization/guards/role.guard.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Exception')
 @Controller('exceptions')
 export class ExceptionController {
   constructor(private readonly exceptionService: ExceptionService) {}

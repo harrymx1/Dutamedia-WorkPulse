@@ -16,7 +16,9 @@ import {
   type CurrentUserPayload,
 } from '../../auth/decorators/current-user.decorator.js';
 import { ThrottleUpload } from '../../shared/decorators/throttle.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('FileStorage')
 @Controller('files')
 export class FileStorageController {
   constructor(private readonly fileStorageService: FileStorageService) {}

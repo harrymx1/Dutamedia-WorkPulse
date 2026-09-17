@@ -22,8 +22,10 @@ export function useNotificationsQuery(
       const res = await notificationsApi.getNotifications(p);
       return res.data;
     },
-    staleTime: 1000 * 10,
-    refetchInterval: 1000 * 15, // 15 detik polling (SAD §17.3)
+    staleTime: 1000 * 30,
+    refetchInterval: () =>
+      typeof document !== 'undefined' && document.hidden ? false : 60_000, // 60 detik polling (SAD §17.3)
+    refetchOnWindowFocus: true,
   });
 }
 

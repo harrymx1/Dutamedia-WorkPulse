@@ -13,7 +13,17 @@
     "build:backend": "npm --prefix backend run build",
     "build:frontend": "npm --prefix frontend run build",
     "build": "npm run build:backend && npm run build:frontend",
+    "openapi:generate": "npm --prefix backend run openapi:generate",
+    "codegen:types": "openapi-typescript backend/openapi.json -o frontend/src/types/schema.d.ts",
+    "pipeline:contract": "npm run openapi:generate && npm run codegen:types",
     "test:backend": "npm --prefix backend run test",
     "lint": "npm --prefix backend run lint"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.0.3",
+    "@nestjs/core": "^12.0.3"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
   }
 }

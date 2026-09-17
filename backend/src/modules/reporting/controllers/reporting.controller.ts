@@ -16,7 +16,9 @@ import { ExportReportQueryDto } from '../dto/export-report-query.dto.js';
 import { RoleGuard } from '../../authorization/guards/role.guard.js';
 import { RequireRole } from '../../authorization/decorators/require-role.decorator.js';
 import { CurrentUser, type CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Reporting')
 @Controller('reports')
 @UseGuards(RoleGuard)
 export class ReportingController {
