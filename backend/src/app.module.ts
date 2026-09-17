@@ -14,6 +14,7 @@ import { DailyAccountabilityModule } from './modules/daily-accountability/daily-
 import { BlockerModule } from './modules/blocker/blocker.module.js';
 import { ExceptionModule } from './modules/exception/exception.module.js';
 import { ManagerNoteModule } from './modules/manager-note/manager-note.module.js';
+import { CorrectionRequestModule } from './modules/correction-request/correction-request.module.js';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ManagerNoteModule } from './modules/manager-note/manager-note.module.js
     BlockerModule,
     ExceptionModule,
     ManagerNoteModule,
+    CorrectionRequestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
