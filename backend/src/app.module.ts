@@ -12,6 +12,7 @@ import { PolicyModule } from './modules/policy/policy.module.js';
 import { NotificationModule } from './modules/notification/notification.module.js';
 import { DailyAccountabilityModule } from './modules/daily-accountability/daily-accountability.module.js';
 import { BlockerModule } from './modules/blocker/blocker.module.js';
+import { ExceptionModule } from './modules/exception/exception.module.js';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { BlockerModule } from './modules/blocker/blocker.module.js';
     NotificationModule,
     DailyAccountabilityModule,
     BlockerModule,
+    ExceptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
