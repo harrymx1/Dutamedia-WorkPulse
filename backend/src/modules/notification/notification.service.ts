@@ -5,6 +5,7 @@ import {
   NotificationStatus,
   Prisma,
   Role,
+  UserStatus,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { BrevoEmailService } from './services/brevo-email.service.js';
@@ -307,7 +308,7 @@ export class NotificationService {
 
       const admins = await client.user.findMany({
         where: {
-          status: 'Active',
+          status: UserStatus.Active,
           organizationalAssignments: {
             some: {
               role: Role.SystemAdmin,

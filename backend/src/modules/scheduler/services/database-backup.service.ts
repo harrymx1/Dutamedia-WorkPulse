@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as zlib from 'node:zlib';
-import { NotificationChannel, NotificationStatus, Role } from '@prisma/client';
+import { NotificationChannel, NotificationStatus, Role, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { S3StorageService } from '../../file-storage/services/s3-storage.service.js';
 
@@ -117,7 +117,7 @@ export class DatabaseBackupService {
     try {
       const admins = await this.prisma.user.findMany({
         where: {
-          status: 'Active',
+          status: UserStatus.Active,
           organizationalAssignments: {
             some: {
               role: Role.SystemAdmin,

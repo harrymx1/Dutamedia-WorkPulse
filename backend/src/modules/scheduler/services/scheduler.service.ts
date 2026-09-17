@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { UserStatus } from '@prisma/client';
 import { DailyAccountabilityService } from '../../daily-accountability/services/daily-accountability.service.js';
 import { ComplianceService } from '../../compliance/services/compliance.service.js';
 import { CorrectionRequestService } from '../../correction-request/services/correction-request.service.js';
@@ -174,7 +175,7 @@ export class SchedulerService {
     this.logger.log(`[WEEKLY SENIN 08:00] Mengirim notifikasi Weekly Summary tersedia...`);
     try {
       const activeUsers = await this.prisma.user.findMany({
-        where: { status: 'Active' },
+        where: { status: UserStatus.Active },
         select: { id: true },
       });
 
