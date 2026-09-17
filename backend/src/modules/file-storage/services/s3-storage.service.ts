@@ -83,4 +83,20 @@ export class S3StorageService {
       expiresIn: expiresInSeconds,
     });
   }
+
+  async uploadBuffer(
+    key: string,
+    buffer: Buffer,
+    contentType: string,
+  ): Promise<{ success: boolean; key: string }> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    });
+
+    await this.s3Client.send(command);
+    return { success: true, key };
+  }
 }

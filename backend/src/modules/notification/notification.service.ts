@@ -308,7 +308,7 @@ export class NotificationService {
       const admins = await client.user.findMany({
         where: {
           status: 'Active',
-          assignments: {
+          organizationalAssignments: {
             some: {
               role: Role.SystemAdmin,
               endDate: null,

@@ -17,6 +17,7 @@ import { ManagerNoteModule } from './modules/manager-note/manager-note.module.js
 import { CorrectionRequestModule } from './modules/correction-request/correction-request.module.js';
 import { ComplianceModule } from './modules/compliance/compliance.module.js';
 import { FileStorageModule } from './modules/file-storage/file-storage.module.js';
+import { SchedulerModule } from './modules/scheduler/scheduler.module.js';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { FileStorageModule } from './modules/file-storage/file-storage.module.js
     CorrectionRequestModule,
     ComplianceModule,
     FileStorageModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
