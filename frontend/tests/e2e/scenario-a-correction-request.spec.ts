@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EPIC-22-T5: Playwright E2E — Skenario A (SAD §17.7)
  * Normal Flow: Morning Check-in → Correction Request Minor/Material → Reviewer Object
  *
@@ -12,7 +12,7 @@
  * CARA MENJALANKAN:
  *   npx playwright test scenario-a-correction-request.spec.ts --headed
  */
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // ===========================================================================
 // Konfigurasi dari environment

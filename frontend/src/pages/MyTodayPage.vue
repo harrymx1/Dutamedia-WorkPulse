@@ -243,11 +243,11 @@
                     <template #selection="{ item }">
                       <v-chip
                         size="small"
-                        :color="item.raw.color"
+                        :color="item.color"
                         variant="flat"
                         class="font-weight-bold"
                       >
-                        {{ item.raw.title }}
+                        {{ item.title }}
                       </v-chip>
                     </template>
                   </v-select>
@@ -283,16 +283,16 @@
               </v-expand-transition>
             </div>
 
-            <!-- Tombol Tambah Slot jika kurang dari 3 -->
+            <!-- Tombol Tambah Slot jika kurang dari batas produk -->
             <div class="d-flex align-center justify-space-between mt-2">
               <v-btn
-                v-if="commitmentSlots.length < 3"
+                v-if="commitmentSlots.length < MAX_DAILY_COMMITMENTS"
                 variant="tonal"
                 size="small"
                 prepend-icon="mdi-plus"
                 @click="addCommitmentSlot"
               >
-                Tambah Slot Komitmen ({{ commitmentSlots.length }}/3)
+                Tambah Slot Komitmen ({{ commitmentSlots.length }}/{{ MAX_DAILY_COMMITMENTS }})
               </v-btn>
               <div v-else />
 
@@ -727,6 +727,7 @@ import type {
   ContinuationStatus,
   Commitment,
 } from '../types/daily-records.js';
+import { MAX_DAILY_COMMITMENTS } from '../constants/daily-records.constants.js';
 
 // 1. Data Query
 const { data: record, isLoading, isError, refetch: refetchToday } = useTodayRecordQuery();
@@ -823,7 +824,7 @@ function getPromptPlaceholder(idx: number): string {
 }
 
 function addCommitmentSlot() {
-  if (commitmentSlots.value.length < 3) {
+  if (commitmentSlots.value.length < MAX_DAILY_COMMITMENTS) {
     commitmentSlots.value.push({
       description: '',
       referenceUrl: '',

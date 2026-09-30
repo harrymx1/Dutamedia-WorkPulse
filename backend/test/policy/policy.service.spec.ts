@@ -331,5 +331,18 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
         DEFAULT_POLICY_VALUES[PolicyCategory.GracePeriod],
       );
     });
+
+    it('harus mengembalikan default nilai untuk ReminderThreshold (ADR-004)', async () => {
+      mockPrisma.policy.findMany.mockResolvedValue([]);
+
+      const snapshot = await service.getActivePolicySnapshot([
+        PolicyCategory.ReminderThreshold,
+      ]);
+
+      expect(snapshot[PolicyCategory.ReminderThreshold]).toEqual({
+        objectionWindowReminderHours: 2,
+        leavePendingReminderHours: 24,
+      });
+    });
   });
 });

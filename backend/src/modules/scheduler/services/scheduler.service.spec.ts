@@ -11,6 +11,8 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
   let blockerMock: any;
   let notificationMock: any;
   let databaseBackupMock: any;
+  let exceptionMock: any;
+  let policyMock: any;
 
   beforeEach(() => {
     prismaMock = {
@@ -20,35 +22,13 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
           { id: 'user-2', status: 'Active' },
         ]),
       },
-      dailyAccountabilityRecord: {
-        findMany: vi.fn().mockResolvedValue([
-          { id: 'rec-1', employeeUserId: 'user-1' },
-        ]),
-      },
-      correctionRequest: {
-        findMany: vi.fn().mockResolvedValue([
-          {
-            id: 'cr-1',
-            targetCommitment: {
-              dailyRecord: {
-                employeeUserId: 'user-1',
-              },
-            },
-          },
-        ]),
-      },
-      exception: {
-        findMany: vi.fn().mockResolvedValue([
-          { id: 'exc-1', employeeUserId: 'user-1' },
-        ]),
-      },
-      organizationalAssignment: {
-        findFirst: vi.fn().mockResolvedValue({ directManagerId: 'mgr-1' }),
-      },
     };
 
     dailyAccountabilityMock = {
       evaluateCutoffLock: vi.fn().mockResolvedValue({ lockedCount: 2 }),
+      findRecordsNearingCutoff: vi.fn().mockResolvedValue([
+        { id: 'rec-1', employeeUserId: 'user-1' },
+      ]),
     };
 
     complianceMock = {
@@ -58,6 +38,9 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
 
     correctionRequestMock = {
       evaluateExpiredObjectionWindows: vi.fn().mockResolvedValue({ processedCount: 1 }),
+      findPendingWithClosingObjectionWindow: vi.fn().mockResolvedValue([
+        { id: 'cr-1', directManagerId: 'mgr-1' },
+      ]),
     };
 
     blockerMock = {
@@ -72,6 +55,21 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
       executeBackup: vi.fn().mockResolvedValue({ success: true, storagePath: 'backups/mock' }),
     };
 
+    exceptionMock = {
+      findPendingLeavesOlderThan: vi.fn().mockResolvedValue([
+        { id: 'exc-1', directManagerId: 'mgr-1' },
+      ]),
+    };
+
+    policyMock = {
+      getActivePolicySnapshot: vi.fn().mockResolvedValue({
+        ReminderThreshold: {
+          objectionWindowReminderHours: 2,
+          leavePendingReminderHours: 24,
+        },
+      }),
+    };
+
     service = new SchedulerService(
       prismaMock,
       dailyAccountabilityMock,
@@ -80,6 +78,8 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
       blockerMock,
       notificationMock,
       databaseBackupMock,
+      exceptionMock,
+      policyMock,
     );
   });
 

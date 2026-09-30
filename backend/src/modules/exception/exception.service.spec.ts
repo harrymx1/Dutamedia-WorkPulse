@@ -349,6 +349,55 @@ describe('ExceptionService (EPIC-10)', () => {
       expect(result.id).toBe('holiday-1');
       expect(result.type).toBe(ExceptionType.Holiday);
     });
+
+    it('findAll (Pola 1): SystemAdmin hanya melihat Holiday dan Exemption', async () => {
+      const admin = { userId: 'admin-1', role: Role.SystemAdmin } as any;
+      prismaMock.exception.count.mockResolvedValue(0);
+      prismaMock.exception.findMany.mockResolvedValue([]);
+
+      await service.findAll(admin, { page: 1, limit: 10 });
+
+      expect(prismaMock.exception.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: { in: [ExceptionType.Holiday, ExceptionType.Exemption] },
+          }),
+        }),
+      );
+    });
+
+    it('findAll (Pola 1): Employee hanya melihat dalam accessibleUserIds ditambah Holiday', async () => {
+      const emp = { userId: 'emp-1', role: Role.Employee } as any;
+      scopeFilterMock.getAccessibleUserIds.mockResolvedValue(['emp-1']);
+      prismaMock.exception.count.mockResolvedValue(0);
+      prismaMock.exception.findMany.mockResolvedValue([]);
+
+      await service.findAll(emp, { page: 1, limit: 10 });
+
+      expect(prismaMock.exception.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { employeeUserId: { in: ['emp-1'] } },
+              { type: ExceptionType.Holiday },
+            ],
+          }),
+        }),
+      );
+    });
+
+    it('findById (Pola 2 / SAD §7.7): SystemAdmin mencoba mengakses permohonan Leave melempar NotFoundException', async () => {
+      const admin = { userId: 'admin-1', role: Role.SystemAdmin } as any;
+      prismaMock.exception.findUnique.mockResolvedValue({
+        id: 'exc-leave-1',
+        type: ExceptionType.Leave,
+        employeeUserId: 'emp-1',
+      });
+
+      await expect(service.findById(admin, 'exc-leave-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 
   describe('EPIC-10-T3: approveLeave & rejectLeave (SAD §10.6, FR-47)', () => {
@@ -414,6 +463,20 @@ describe('ExceptionService (EPIC-10)', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
+    it('approveLeave (Pola 2): menolak jika reviewer berada di luar scope supervisi karyawan sasaran', async () => {
+      prismaMock.exception.findUnique.mockResolvedValue({
+        id: 'exc-leave-1',
+        type: ExceptionType.Leave,
+        status: ExceptionStatus.Pending,
+        employeeUserId: 'emp-other',
+      });
+      scopeFilterMock.isUserInScope.mockResolvedValue(false);
+
+      await expect(service.approveLeave(manager, 'exc-leave-1')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
     it('approveLeave: menolak jika status cuti bukan Pending', async () => {
       prismaMock.exception.findUnique.mockResolvedValue({
         id: 'exc-leave-1',
@@ -471,5 +534,72 @@ describe('ExceptionService (EPIC-10)', () => {
         expect.anything(),
       );
     });
+
+    it('rejectLeave: menolak jika pemohon mencoba menolak cutinya sendiri', async () => {
+      prismaMock.exception.findUnique.mockResolvedValue({
+        id: 'exc-leave-1',
+        type: ExceptionType.Leave,
+        status: ExceptionStatus.Pending,
+        employeeUserId: 'emp-1',
+      });
+
+      await expect(
+        service.rejectLeave(
+          { userId: 'emp-1', role: Role.Supervisor_TL } as any,
+          'exc-leave-1',
+          { rejectionReason: 'Mau batalkan sendiri' },
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('rejectLeave (Pola 2): menolak jika reviewer berada di luar scope supervisi karyawan sasaran', async () => {
+      prismaMock.exception.findUnique.mockResolvedValue({
+        id: 'exc-leave-1',
+        type: ExceptionType.Leave,
+        status: ExceptionStatus.Pending,
+        employeeUserId: 'emp-other',
+      });
+      scopeFilterMock.isUserInScope.mockResolvedValue(false);
+
+      await expect(
+        service.rejectLeave(manager, 'exc-leave-1', {
+          rejectionReason: 'Di luar tim',
+        }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('findPendingLeavesOlderThan (SAD §11.2 #7, §6.4)', () => {
+    it('harus mengambil cuti pending yang lebih lama dari threshold beserta directManagerId', async () => {
+      prismaMock.exception.findMany.mockResolvedValue([
+        {
+          id: 'exc-leave-1',
+          employeeUserId: 'emp-1',
+          type: ExceptionType.Leave,
+          status: ExceptionStatus.Pending,
+        },
+      ]);
+      prismaMock.organizationalAssignment.findFirst.mockResolvedValue({
+        directManagerId: 'mgr-1',
+      });
+
+      const threshold = new Date('2026-09-17T08:00:00Z');
+      const results = await service.findPendingLeavesOlderThan(threshold, 50);
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toEqual({
+        id: 'exc-leave-1',
+        directManagerId: 'mgr-1',
+      });
+      expect(prismaMock.exception.findMany).toHaveBeenCalledWith({
+        where: {
+          type: ExceptionType.Leave,
+          status: ExceptionStatus.Pending,
+          createdAt: { lte: threshold },
+        },
+        take: 50,
+      });
+    });
   });
 });
+

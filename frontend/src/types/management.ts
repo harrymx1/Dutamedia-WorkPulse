@@ -303,7 +303,6 @@ export interface ObjectCorrectionPayload {
 export type PolicyCategory =
   | 'Schedule'
   | 'SubmissionWindow'
-  | 'CommitmentBoundary'
   | 'BlockerSLA'
   | 'ObjectionWindow'
   | 'ComplianceThreshold';

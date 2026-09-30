@@ -11,11 +11,13 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { Role } from '@prisma/client';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { Public } from './decorators/public.decorator.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
+import { RequireRole } from '../authorization/decorators/require-role.decorator.js';
 import { ThrottleAuth } from '../shared/decorators/throttle.decorator.js';
 import { SkipEnvelope } from '../shared/decorators/skip-envelope.decorator.js';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -134,6 +136,7 @@ export class AuthController {
    */
   @ApiOperation({ summary: 'Reset password pengguna oleh SystemAdmin (SAD §10.1)' })
   @Post('admin-reset-password/:userId')
+  @RequireRole(Role.SystemAdmin)
   @HttpCode(HttpStatus.OK)
   async adminResetPassword(
     @Param('userId', ParseUUIDPipe) targetUserId: string,

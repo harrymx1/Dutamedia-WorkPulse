@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { ComplianceService } from '../services/compliance.service.js';
 import { CoachComplianceEventDto } from '../dto/coach-compliance-event.dto.js';
 import { RecordWarningDto } from '../dto/record-warning.dto.js';
@@ -18,6 +19,7 @@ import {
   CurrentUser,
   type CurrentUserPayload,
 } from '../../auth/decorators/current-user.decorator.js';
+import { RequireRole } from '../../authorization/decorators/require-role.decorator.js';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Compliance')
@@ -30,6 +32,7 @@ export class ComplianceController {
    * Daftar compliance event sesuai cakupan wewenang organisasi (Supervisor, Head, HRGA, CEO/Management).
    */
   @Get()
+  @RequireRole(Role.Supervisor_TL, Role.Head, Role.HRGA, Role.CEO_Management)
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QueryComplianceEventsDto,
@@ -42,6 +45,7 @@ export class ComplianceController {
    * Detail compliance event beserta availableActions.
    */
   @Get(':id')
+  @RequireRole(Role.Supervisor_TL, Role.Head, Role.HRGA, Role.CEO_Management)
   async findById(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
@@ -54,6 +58,7 @@ export class ComplianceController {
    * Melakukan pembinaan (Coaching) atas PatternFlag dalam transaksi atomik bersama ManagerNote.
    */
   @Post(':id/coach')
+  @RequireRole(Role.Supervisor_TL, Role.Head)
   @HttpCode(HttpStatus.OK)
   async coach(
     @CurrentUser() user: CurrentUserPayload,
@@ -68,6 +73,7 @@ export class ComplianceController {
    * HRGA mencatat peringatan formal (Recorded Warning) berulang pasca Coaching.
    */
   @Post(':id/record-warning')
+  @RequireRole(Role.HRGA)
   @HttpCode(HttpStatus.OK)
   async recordWarning(
     @CurrentUser() user: CurrentUserPayload,
@@ -82,6 +88,7 @@ export class ComplianceController {
    * HRGA mencatat eskalasi proses formal di luar sistem berulang pasca Recorded Warning.
    */
   @Post(':id/escalate-formal')
+  @RequireRole(Role.HRGA)
   @HttpCode(HttpStatus.OK)
   async escalateFormal(
     @CurrentUser() user: CurrentUserPayload,

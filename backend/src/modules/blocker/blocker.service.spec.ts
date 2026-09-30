@@ -193,6 +193,28 @@ describe('BlockerService (EPIC-08)', () => {
         ),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('findAll: harus memfilter query OR dengan accessibleUserIds dari ScopeFilterService (Pola 1)', async () => {
+      scopeFilterMock.getAccessibleUserIds.mockResolvedValue(['user-1', 'user-2']);
+      prismaMock.blocker.count.mockResolvedValue(1);
+      prismaMock.blocker.findMany.mockResolvedValue([]);
+
+      await service.findAll(
+        { userId: 'user-1', role: Role.Supervisor_TL } as any,
+        { page: 1, limit: 10 },
+      );
+
+      expect(prismaMock.blocker.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { raisedByUserId: { in: ['user-1', 'user-2'] } },
+              { ownerNeededUserId: { in: ['user-1', 'user-2'] } },
+            ],
+          }),
+        }),
+      );
+    });
   });
 
   describe('EPIC-08-T3: Blocker Lifecycle State Machine (SAD §9.4)', () => {
@@ -211,6 +233,45 @@ describe('BlockerService (EPIC-08)', () => {
       await expect(service.acknowledge('intruder', blockerId)).rejects.toThrow(
         ForbiddenException,
       );
+    });
+
+    it('updateProgress: harus ditolak (403) jika bukan owner yang memanggil', async () => {
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: blockerId,
+        status: BlockerStatus.InProgress,
+        ownerNeededUserId: ownerId,
+        raisedByUserId: reporterId,
+      });
+
+      await expect(
+        service.updateProgress('intruder', blockerId, { progressNote: 'Update note' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('resolve: harus ditolak (403) jika bukan owner yang memanggil', async () => {
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: blockerId,
+        status: BlockerStatus.InProgress,
+        ownerNeededUserId: ownerId,
+        raisedByUserId: reporterId,
+      });
+
+      await expect(
+        service.resolve('intruder', blockerId, { resolutionNote: 'Done' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('acceptRisk: harus ditolak (403) jika bukan owner yang memanggil', async () => {
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: blockerId,
+        status: BlockerStatus.InProgress,
+        ownerNeededUserId: ownerId,
+        raisedByUserId: reporterId,
+      });
+
+      await expect(
+        service.acceptRisk('intruder', blockerId, { resolutionNote: 'Risk accepted' }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('acknowledge: harus ditolak jika status bukan Open', async () => {

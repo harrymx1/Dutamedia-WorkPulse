@@ -136,6 +136,7 @@ enum PolicyCategory {
   ObjectionWindowDuration
   MinorMaterialThreshold
   ParticipationRule
+  ReminderThreshold
 }
 
 enum PolicyStatus {

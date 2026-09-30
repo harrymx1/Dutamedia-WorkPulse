@@ -334,6 +334,120 @@ describe('IdentityService (SAD §5.3, §5.11.a, §10.2 - EPIC-04)', () => {
         expect.anything(),
       );
     });
+
+    describe('getTemporaryReviewerAssignments (ADR-002, SAD §10.2, §8.11)', () => {
+      it('SystemAdmin melihat seluruh data delegasi organisasi tanpa pembatasan scope creator/reviewer', async () => {
+        mockPrisma.temporaryReviewerAssignment.findMany.mockResolvedValue([
+          { id: 'tra-1', scope: 'Engineering' },
+          { id: 'tra-2', scope: 'Marketing' },
+        ]);
+
+        const result = await service.getTemporaryReviewerAssignments(
+          'admin-uuid-1',
+          Role.SystemAdmin,
+        );
+
+        expect(result).toHaveLength(2);
+        expect(mockPrisma.temporaryReviewerAssignment.findMany).toHaveBeenCalledWith({
+          where: {},
+          orderBy: { effectiveDate: 'desc' },
+          include: {
+            reviewer: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+            createdBy: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+          },
+        });
+      });
+
+      it('Head HANYA melihat data delegasi dalam scope-nya (createdByUserId atau reviewerUserId miliknya)', async () => {
+        mockPrisma.temporaryReviewerAssignment.findMany.mockResolvedValue([
+          { id: 'tra-head-1', scope: 'Engineering', createdByUserId: 'head-uuid-1' },
+        ]);
+
+        const result = await service.getTemporaryReviewerAssignments(
+          'head-uuid-1',
+          Role.Head,
+        );
+
+        expect(result).toHaveLength(1);
+        expect(mockPrisma.temporaryReviewerAssignment.findMany).toHaveBeenCalledWith({
+          where: {
+            OR: [
+              { createdByUserId: 'head-uuid-1' },
+              { reviewerUserId: 'head-uuid-1' },
+            ],
+          },
+          orderBy: { effectiveDate: 'desc' },
+          include: {
+            reviewer: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+            createdBy: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+          },
+        });
+      });
+
+      it('Head dengan filter activeOnly dan scope tetap mengombinasikan filter scope wewenang Head', async () => {
+        mockPrisma.temporaryReviewerAssignment.findMany.mockResolvedValue([]);
+
+        await service.getTemporaryReviewerAssignments(
+          'head-uuid-1',
+          Role.Head,
+          'Engineering',
+          true,
+        );
+
+        expect(mockPrisma.temporaryReviewerAssignment.findMany).toHaveBeenCalledWith({
+          where: {
+            effectiveDate: { lte: expect.any(Date) },
+            expiryDate: { gte: expect.any(Date) },
+            scope: { contains: 'Engineering', mode: 'insensitive' },
+            OR: [
+              { createdByUserId: 'head-uuid-1' },
+              { reviewerUserId: 'head-uuid-1' },
+            ],
+          },
+          orderBy: { effectiveDate: 'desc' },
+          include: {
+            reviewer: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+            createdBy: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+              },
+            },
+          },
+        });
+      });
+    });
   });
 
   describe('Context Resolution Service (EPIC-04-T5)', () => {

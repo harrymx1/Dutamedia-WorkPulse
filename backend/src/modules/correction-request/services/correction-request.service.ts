@@ -988,4 +988,52 @@ export class CorrectionRequestService {
 
     return this.isAuthorizedReviewer(user, req.requestedByUserId, now);
   }
+
+  /**
+   * Mengambil pengajuan koreksi yang mendekati penutupan objection window beserta directManager (SAD §11.2 #4).
+   * Dipanggil oleh SchedulerService.sendObjectionWindowReminders (SAD §6.4).
+   */
+  async findPendingWithClosingObjectionWindow(
+    now: Date = new Date(),
+    windowEnd: Date = new Date(Date.now() + 2 * 60 * 60 * 1000),
+    limit: number = 50,
+  ): Promise<Array<{ id: string; directManagerId: string | null }>> {
+    const pendingCorrections = await this.prisma.correctionRequest.findMany({
+      where: {
+        status: CorrectionStatus.Pending,
+        objectionWindowEnd: {
+          gt: now,
+          lte: windowEnd,
+        },
+      },
+      include: {
+        targetCommitment: {
+          include: {
+            dailyRecord: true,
+          },
+        },
+      },
+      take: limit,
+    });
+
+    const results: Array<{ id: string; directManagerId: string | null }> = [];
+
+    for (const cr of pendingCorrections) {
+      const employeeId = cr.targetCommitment.dailyRecord.employeeUserId;
+      const assignment = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId: employeeId,
+          endDate: null,
+        },
+        select: { directManagerId: true },
+      });
+
+      results.push({
+        id: cr.id,
+        directManagerId: assignment?.directManagerId ?? null,
+      });
+    }
+
+    return results;
+  }
 }

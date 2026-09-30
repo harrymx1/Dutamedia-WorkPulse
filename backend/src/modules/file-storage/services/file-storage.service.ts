@@ -131,10 +131,44 @@ export class FileStorageService {
       );
     }
 
-    // 3. Generate fileId unik (UUID v4)
+    // 3. Validasi Otorisasi sebelum menerbitkan presigned PUT URL (SAD §10.12, Default Deny)
+    if (dto.purpose === FilePurpose.EXPORTS) {
+      throw new ForbiddenException(
+        'Permintaan upload URL tidak diizinkan untuk purpose exports karena file export hanya dihasilkan oleh sistem',
+      );
+    }
+
+    if (dto.purpose === FilePurpose.MANAGER_NOTE_EVIDENCE) {
+      const allowedRoles: (string | null)[] = [
+        Role.Supervisor_TL,
+        Role.Head,
+        Role.HRGA,
+      ];
+      if (!user.role || !allowedRoles.includes(user.role)) {
+        throw new ForbiddenException(
+          'Hanya Supervisor, Head, atau HRGA yang memiliki wewenang mengunggah manager note evidence',
+        );
+      }
+
+      if (dto.entityId) {
+        await this.authorizeManagerNoteEvidence(user, dto.entityId);
+      }
+    } else if (dto.purpose === FilePurpose.EVIDENCE) {
+      if (dto.entityType && dto.entityType !== 'Blocker') {
+        throw new ForbiddenException(
+          `entityType '${dto.entityType}' tidak didukung untuk evidence`,
+        );
+      }
+
+      if (dto.entityId) {
+        await this.authorizeBlockerEvidence(user, dto.entityId);
+      }
+    }
+
+    // 4. Generate fileId unik (UUID v4)
     const fileId = randomUUID();
 
-    // 4. Bangun storage path sesuai SAD §14.2
+    // 5. Bangun storage path sesuai SAD §14.2
     const extension = this.resolveExtension(dto.contentType, dto.originalFileName);
     const storagePath = this.buildStoragePath(
       dto.purpose,
@@ -144,7 +178,7 @@ export class FileStorageService {
       dto.entityId,
     );
 
-    // 5. Generate signed PUT URL (kedaluwarsa 5 menit = 300 detik, SAD §14.3)
+    // 6. Generate signed PUT URL (kedaluwarsa 5 menit = 300 detik, SAD §14.3)
     const expiresIn = 300;
     const uploadUrl = await this.s3StorageService.createPresignedPutUrl(
       storagePath,
@@ -152,7 +186,7 @@ export class FileStorageService {
       expiresIn,
     );
 
-    // 6. Catat audit trail
+    // 7. Catat audit trail
     await this.auditService.record({
       actorUserId: user.userId,
       action: 'UPLOAD_FILE_URL_GENERATED',
@@ -203,7 +237,7 @@ export class FileStorageService {
       );
     }
 
-    // 2. Resolusi otorisasi mengikuti resource pemilik (SAD §14.4)
+    // 2. Resolusi otorisasi mengikuti resource pemilik (SAD §14.4, Default Deny)
     const storagePath = query?.storagePath;
     const isManagerNote =
       query?.purpose === FilePurpose.MANAGER_NOTE_EVIDENCE ||
@@ -211,7 +245,9 @@ export class FileStorageService {
       storagePath?.includes('manager-note-evidence');
 
     const isBlocker =
-      query?.purpose === FilePurpose.EVIDENCE ||
+      (query?.purpose === FilePurpose.EVIDENCE &&
+        (query?.entityType === 'Blocker' ||
+          (!query?.entityType && storagePath?.includes('evidence/Blocker')))) ||
       query?.entityType === 'Blocker' ||
       storagePath?.includes('evidence/Blocker');
 
@@ -225,6 +261,11 @@ export class FileStorageService {
       await this.authorizeBlockerEvidence(user, query?.entityId, storagePath);
     } else if (isExport) {
       this.authorizeExportDownload(user);
+    } else {
+      // Default Deny: kombinasi purpose / entityType / storagePath tidak dikenali
+      throw new ForbiddenException(
+        'Akses ditolak: tipe resource atau entityType tidak dikenali untuk otorisasi file (Default Deny)',
+      );
     }
 
     // 3. Tentukan key path di storage
@@ -286,41 +327,45 @@ export class FileStorageService {
       }
     }
 
-    if (noteId) {
-      const managerNote = await this.prisma.managerNote.findUnique({
-        where: { id: noteId },
-      });
-
-      if (!managerNote) {
-        throw new NotFoundException('Manager note pemilik file tidak ditemukan');
-      }
-
-      // Aturan BR-14: Employee hanya boleh melihat jika catatan tentang dirinya dan VisibleToEmployee
-      if (user.role === Role.Employee) {
-        if (
-          managerNote.aboutUserId !== user.userId ||
-          managerNote.visibility !== ManagerNoteVisibility.VisibleToEmployee
-        ) {
-          // SAD §10.7: 404 jika di luar visibility
-          throw new NotFoundException('Data tidak ditemukan');
-        }
-      } else if (
-        user.role === Role.Supervisor_TL ||
-        user.role === Role.Head
-      ) {
-        const accessibleUserIds =
-          await this.scopeFilterService.getAccessibleUserIds(user);
-        if (
-          accessibleUserIds &&
-          !accessibleUserIds.includes(managerNote.aboutUserId)
-        ) {
-          throw new ForbiddenException(
-            'Akses ditolak: data di luar scope manajerial Anda',
-          );
-        }
-      }
-      // HRGA dan CEO_Management memiliki wewenang company-wide (PRD §7)
+    if (!noteId) {
+      throw new ForbiddenException(
+        'Akses ditolak: entityId atau storagePath manager note wajib disertakan untuk verifikasi otorisasi (Default Deny)',
+      );
     }
+
+    const managerNote = await this.prisma.managerNote.findUnique({
+      where: { id: noteId },
+    });
+
+    if (!managerNote) {
+      throw new NotFoundException('Manager note pemilik file tidak ditemukan');
+    }
+
+    // Aturan BR-14: Employee hanya boleh melihat jika catatan tentang dirinya dan VisibleToEmployee
+    if (user.role === Role.Employee) {
+      if (
+        managerNote.aboutUserId !== user.userId ||
+        managerNote.visibility !== ManagerNoteVisibility.VisibleToEmployee
+      ) {
+        // SAD §10.7: 404 jika di luar visibility
+        throw new NotFoundException('Data tidak ditemukan');
+      }
+    } else if (
+      user.role === Role.Supervisor_TL ||
+      user.role === Role.Head
+    ) {
+      const accessibleUserIds =
+        await this.scopeFilterService.getAccessibleUserIds(user);
+      if (
+        accessibleUserIds &&
+        !accessibleUserIds.includes(managerNote.aboutUserId)
+      ) {
+        throw new ForbiddenException(
+          'Akses ditolak: data di luar scope manajerial Anda',
+        );
+      }
+    }
+    // HRGA dan CEO_Management memiliki wewenang company-wide (PRD §7)
   }
 
   /**
@@ -340,43 +385,47 @@ export class FileStorageService {
       }
     }
 
-    if (blockerId) {
-      const blocker = await this.prisma.blocker.findUnique({
-        where: { id: blockerId },
-        include: { supportContributions: true },
-      });
+    if (!blockerId) {
+      throw new ForbiddenException(
+        'Akses ditolak: entityId atau storagePath blocker wajib disertakan untuk verifikasi otorisasi evidence (Default Deny)',
+      );
+    }
 
-      if (!blocker) {
-        throw new NotFoundException('Blocker pemilik file tidak ditemukan');
-      }
+    const blocker = await this.prisma.blocker.findUnique({
+      where: { id: blockerId },
+      include: { supportContributions: true },
+    });
 
-      if (user.role === Role.Employee) {
-        const isReporter = blocker.raisedByUserId === user.userId;
-        const isOwnerNeeded = blocker.ownerNeededUserId === user.userId;
-        const isSupporter = blocker.supportContributions.some(
-          (sc) => sc.supporterUserId === user.userId,
+    if (!blocker) {
+      throw new NotFoundException('Blocker pemilik file tidak ditemukan');
+    }
+
+    if (user.role === Role.Employee) {
+      const isReporter = blocker.raisedByUserId === user.userId;
+      const isOwnerNeeded = blocker.ownerNeededUserId === user.userId;
+      const isSupporter = blocker.supportContributions.some(
+        (sc) => sc.supporterUserId === user.userId,
+      );
+
+      if (!isReporter && !isOwnerNeeded && !isSupporter) {
+        throw new ForbiddenException(
+          'Akses ditolak: Anda bukan pelapor, penanggung jawab, maupun kontributor blocker ini',
         );
-
-        if (!isReporter && !isOwnerNeeded && !isSupporter) {
-          throw new ForbiddenException(
-            'Akses ditolak: Anda bukan pelapor, penanggung jawab, maupun kontributor blocker ini',
-          );
-        }
-      } else if (
-        user.role === Role.Supervisor_TL ||
-        user.role === Role.Head
+      }
+    } else if (
+      user.role === Role.Supervisor_TL ||
+      user.role === Role.Head
+    ) {
+      const accessibleUserIds =
+        await this.scopeFilterService.getAccessibleUserIds(user);
+      if (
+        accessibleUserIds &&
+        !accessibleUserIds.includes(blocker.raisedByUserId) &&
+        !accessibleUserIds.includes(blocker.ownerNeededUserId)
       ) {
-        const accessibleUserIds =
-          await this.scopeFilterService.getAccessibleUserIds(user);
-        if (
-          accessibleUserIds &&
-          !accessibleUserIds.includes(blocker.raisedByUserId) &&
-          !accessibleUserIds.includes(blocker.ownerNeededUserId)
-        ) {
-          throw new ForbiddenException(
-            'Akses ditolak: blocker di luar scope organisasi Anda',
-          );
-        }
+        throw new ForbiddenException(
+          'Akses ditolak: blocker di luar scope organisasi Anda',
+        );
       }
     }
   }

@@ -16,9 +16,9 @@ import {
 import { DailyStatus } from '@prisma/client';
 
 export class CreateCommitmentItemDto {
-  @IsInt({ message: 'sequenceNo harus berupa integer 1-3' })
+  @IsInt({ message: 'sequenceNo harus berupa integer 1-10' })
   @Min(1, { message: 'sequenceNo minimal bernilai 1' })
-  @Max(3, { message: 'sequenceNo maksimal bernilai 3' })
+  @Max(10, { message: 'sequenceNo maksimal bernilai 10 (structural guardrail)' })
   sequenceNo!: number;
 
   @IsNotEmpty({ message: 'Teks komitmen tidak boleh kosong' })
@@ -48,7 +48,9 @@ export class CreateCommitmentItemDto {
 export class MorningCheckinDto {
   @IsArray({ message: 'commitments harus berupa array' })
   @ArrayMinSize(1, { message: 'Minimal 1 komitmen wajib diisi' })
-  @ArrayMaxSize(3, { message: 'Maksimal 3 komitmen per hari (BR-01)' })
+  @ArrayMaxSize(10, {
+    message: 'Maksimal 10 komitmen per hari (structural guardrail DTO)',
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateCommitmentItemDto)
   commitments!: CreateCommitmentItemDto[];

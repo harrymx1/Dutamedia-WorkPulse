@@ -736,5 +736,119 @@ describe('CorrectionRequestService (EPIC-09)', () => {
       expect(result.id).toBe('cr-1');
       expect(result.availableActions).toEqual(['object']);
     });
+
+    it('findAll (Pola 1): Supervisor/Head hanya melihat pengajuan koreksi dari bawahan dalam scope', async () => {
+      const supervisorUser = createMockUser({
+        userId: 'spv-1',
+        role: Role.Supervisor_TL,
+        function: 'Engineering',
+      });
+
+      scopeFilterMock.getAccessibleUserIds.mockResolvedValue(['sub-1', 'sub-2']);
+      prismaMock.correctionRequest.count.mockResolvedValue(0);
+      prismaMock.correctionRequest.findMany.mockResolvedValue([]);
+
+      await service.findAll(supervisorUser, { page: 1, limit: 10 });
+
+      expect(scopeFilterMock.getAccessibleUserIds).toHaveBeenCalled();
+      expect(prismaMock.correctionRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            requestedByUserId: { in: ['sub-1', 'sub-2'] },
+          }),
+        }),
+      );
+    });
+
+    it('findById: melempar NotFoundException jika data tidak ditemukan di database', async () => {
+      prismaMock.correctionRequest.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.findById(employeeUser, 'non-existent-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('findById (Pola 2 / SAD §7.7): Employee mengakses koreksi milik orang lain melempar NotFoundException', async () => {
+      prismaMock.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-other',
+        requestedByUserId: 'other-user',
+        status: CorrectionStatus.Pending,
+      });
+
+      await expect(
+        service.findById(employeeUser, 'cr-other'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('findById (Pola 2 / SAD §7.7): Reviewer mengakses koreksi di luar scope supervisi melempar NotFoundException', async () => {
+      const supervisorUser = createMockUser({
+        userId: 'spv-1',
+        role: Role.Supervisor_TL,
+        function: 'Engineering',
+      });
+
+      prismaMock.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-outside',
+        requestedByUserId: 'other-emp',
+        status: CorrectionStatus.Pending,
+      });
+      scopeFilterMock.isUserInScope.mockResolvedValue(false);
+
+      await expect(
+        service.findById(supervisorUser, 'cr-outside'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('findById: SystemAdmin mengakses detail koreksi operasional melempar ForbiddenException (SAD §8.11)', async () => {
+      await expect(
+        service.findById(adminUser, 'cr-1'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('findPendingWithClosingObjectionWindow (SAD §11.2 #4, §6.4)', () => {
+    it('harus mengambil koreksi pending mendekati batas objection window beserta directManagerId', async () => {
+      prismaMock.correctionRequest.findMany.mockResolvedValue([
+        {
+          id: 'cr-1',
+          targetCommitment: {
+            dailyRecord: {
+              employeeUserId: 'emp-1',
+            },
+          },
+        },
+      ]);
+      prismaMock.organizationalAssignment.findFirst.mockResolvedValue({
+        directManagerId: 'mgr-1',
+      });
+
+      const now = new Date();
+      const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      const results = await service.findPendingWithClosingObjectionWindow(now, windowEnd, 50);
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toEqual({
+        id: 'cr-1',
+        directManagerId: 'mgr-1',
+      });
+      expect(prismaMock.correctionRequest.findMany).toHaveBeenCalledWith({
+        where: {
+          status: CorrectionStatus.Pending,
+          objectionWindowEnd: {
+            gt: now,
+            lte: windowEnd,
+          },
+        },
+        include: {
+          targetCommitment: {
+            include: {
+              dailyRecord: true,
+            },
+          },
+        },
+        take: 50,
+      });
+    });
   });
 });
+

@@ -741,4 +741,43 @@ export class ExceptionService {
       };
     });
   }
+
+  /**
+   * Mengambil permohonan cuti pending yang melewati batas waktu tertentu beserta directManager (SAD §11.2 #7).
+   * Dipanggil oleh SchedulerService.sendLeavePendingReminders (SAD §6.4).
+   */
+  async findPendingLeavesOlderThan(
+    threshold: Date,
+    limit: number = 50,
+  ): Promise<Array<{ id: string; directManagerId: string | null }>> {
+    const pendingLeaves = await this.prisma.exception.findMany({
+      where: {
+        type: ExceptionType.Leave,
+        status: ExceptionStatus.Pending,
+        createdAt: { lte: threshold },
+      },
+      take: limit,
+    });
+
+    const results: Array<{ id: string; directManagerId: string | null }> = [];
+
+    for (const leave of pendingLeaves) {
+      if (leave.employeeUserId) {
+        const assignment = await this.prisma.organizationalAssignment.findFirst({
+          where: {
+            userId: leave.employeeUserId,
+            endDate: null,
+          },
+          select: { directManagerId: true },
+        });
+
+        results.push({
+          id: leave.id,
+          directManagerId: assignment?.directManagerId ?? null,
+        });
+      }
+    }
+
+    return results;
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { UserStatus } from '@prisma/client';
+import { PolicyCategory, UserStatus } from '@prisma/client';
 import { DailyAccountabilityService } from '../../daily-accountability/services/daily-accountability.service.js';
 import { ComplianceService } from '../../compliance/services/compliance.service.js';
 import { CorrectionRequestService } from '../../correction-request/services/correction-request.service.js';
@@ -8,6 +8,8 @@ import { BlockerService } from '../../blocker/services/blocker.service.js';
 import { NotificationService } from '../../notification/notification.service.js';
 import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 import { DatabaseBackupService } from './database-backup.service.js';
+import { ExceptionService } from '../../exception/services/exception.service.js';
+import { PolicyService } from '../../policy/policy.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 export interface FrequentCycleResult {
@@ -36,6 +38,8 @@ export class SchedulerService {
     private readonly blockerService: BlockerService,
     private readonly notificationService: NotificationService,
     private readonly databaseBackupService: DatabaseBackupService,
+    private readonly exceptionService: ExceptionService,
+    private readonly policyService: PolicyService,
   ) {}
 
   /**
@@ -201,23 +205,11 @@ export class SchedulerService {
 
   /**
    * Pengingat Mendekati Cutoff (Job #1, SAD §11.2 #1).
+   * Mendelegasikan query ke DailyAccountabilityService (SAD §6.4).
    */
   async sendCutoffReminders(now: Date = new Date()): Promise<number> {
-    // Cari karyawan aktif yang belum mengisi check-in hari ini
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const recordsWithoutSubmission = await this.prisma.dailyAccountabilityRecord.findMany({
-      where: {
-        workDate: today,
-        morningSubmittedAt: null,
-        cutoffLockedAt: null,
-      },
-      select: {
-        id: true,
-        employeeUserId: true,
-      },
-      take: 50,
-    });
+    const recordsWithoutSubmission =
+      await this.dailyAccountabilityService.findRecordsNearingCutoff(now);
 
     for (const record of recordsWithoutSubmission) {
       await this.notificationService.dispatchTrigger(
@@ -239,46 +231,35 @@ export class SchedulerService {
 
   /**
    * Pengingat Objection Window Menjelang Berakhir (Job #4, SAD §11.2 #4).
+   * Mendelegasikan query ke CorrectionRequestService (SAD §6.4).
    */
   async sendObjectionWindowReminders(now: Date = new Date()): Promise<number> {
-    const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const policySnapshot = await this.policyService.getActivePolicySnapshot(
+      [PolicyCategory.ReminderThreshold],
+      now,
+    );
+    const reminderConfig =
+      policySnapshot[PolicyCategory.ReminderThreshold] || {};
+    const objectionReminderHours =
+      reminderConfig.objectionWindowReminderHours ?? 2;
+    const windowEnd = new Date(
+      now.getTime() + objectionReminderHours * 60 * 60 * 1000,
+    );
 
-    const pendingCorrections = await this.prisma.correctionRequest.findMany({
-      where: {
-        status: 'Pending',
-        objectionWindowEnd: {
-          gt: now,
-          lte: twoHoursFromNow,
-        },
-      },
-      include: {
-        targetCommitment: {
-          include: {
-            dailyRecord: true,
-          },
-        },
-      },
-      take: 50,
-    });
+    const pendingCorrections =
+      await this.correctionRequestService.findPendingWithClosingObjectionWindow(
+        now,
+        windowEnd,
+      );
 
     for (const cr of pendingCorrections) {
-      // Temukan manajer/reviewer terkait dari target commitment
-      const employeeId = cr.targetCommitment.dailyRecord.employeeUserId;
-      const assignment = await this.prisma.organizationalAssignment.findFirst({
-        where: {
-          userId: employeeId,
-          endDate: null,
-        },
-        select: { directManagerId: true },
-      });
-
-      if (assignment?.directManagerId) {
+      if (cr.directManagerId) {
         await this.notificationService.dispatchTrigger(
           SystemNotificationTrigger.CORRECTION_REQUEST_OBJECTION_WINDOW_CLOSING,
-          assignment.directManagerId,
+          cr.directManagerId,
           {
             title: 'Objection Window Koreksi Segera Berakhir',
-            body: 'Jendela keberatan untuk koreksi komitmen akan segera ditutup dalam 2 jam.',
+            body: `Jendela keberatan untuk koreksi komitmen akan segera ditutup dalam ${objectionReminderHours} jam.`,
             linkPath: `/team/corrections/${cr.id}`,
             iconType: 'clock-alert',
           },
@@ -293,43 +274,40 @@ export class SchedulerService {
 
   /**
    * Pengingat Cuti Pending (Job #7, SAD §11.2 #7).
+   * Mendelegasikan query ke ExceptionService (SAD §6.4).
+   * Menggunakan ambang jam dari kebijakan aktif ReminderThreshold (ADR-004).
    */
   async sendLeavePendingReminders(now: Date = new Date()): Promise<number> {
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const policySnapshot = await this.policyService.getActivePolicySnapshot(
+      [PolicyCategory.ReminderThreshold],
+      now,
+    );
+    const reminderConfig =
+      policySnapshot[PolicyCategory.ReminderThreshold] || {};
+    const leaveReminderHours =
+      reminderConfig.leavePendingReminderHours ?? 24;
+    const threshold = new Date(
+      now.getTime() - leaveReminderHours * 60 * 60 * 1000,
+    );
 
-    const pendingLeaves = await this.prisma.exception.findMany({
-      where: {
-        type: 'Leave',
-        status: 'Pending',
-        createdAt: { lte: twentyFourHoursAgo },
-      },
-      take: 50,
-    });
+    const pendingLeaves = await this.exceptionService.findPendingLeavesOlderThan(
+      threshold,
+    );
 
     for (const leave of pendingLeaves) {
-      if (leave.employeeUserId) {
-        const assignment = await this.prisma.organizationalAssignment.findFirst({
-          where: {
-            userId: leave.employeeUserId,
-            endDate: null,
+      if (leave.directManagerId) {
+        await this.notificationService.dispatchTrigger(
+          SystemNotificationTrigger.LEAVE_REQUEST_SUBMITTED,
+          leave.directManagerId,
+          {
+            title: 'Pengingat: Permohonan Cuti Masih Pending',
+            body: `Terdapat permohonan cuti yang menunggu persetujuan Anda lebih dari ${leaveReminderHours} jam.`,
+            linkPath: `/team/exceptions/${leave.id}`,
+            iconType: 'calendar-clock',
           },
-          select: { directManagerId: true },
-        });
-
-        if (assignment?.directManagerId) {
-          await this.notificationService.dispatchTrigger(
-            SystemNotificationTrigger.LEAVE_REQUEST_SUBMITTED,
-            assignment.directManagerId,
-            {
-              title: 'Pengingat: Permohonan Cuti Masih Pending',
-              body: 'Terdapat permohonan cuti yang menunggu persetujuan Anda lebih dari 24 jam.',
-              linkPath: `/team/exceptions/${leave.id}`,
-              iconType: 'calendar-clock',
-            },
-            'Exception',
-            leave.id,
-          );
-        }
+          'Exception',
+          leave.id,
+        );
       }
     }
 

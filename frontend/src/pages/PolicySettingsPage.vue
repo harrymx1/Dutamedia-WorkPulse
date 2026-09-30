@@ -222,12 +222,6 @@ const categoryDefinitions: CategoryDefinition[] = [
     icon: 'mdi-timer-sand',
   },
   {
-    key: 'CommitmentBoundary',
-    title: 'Batasan Komitmen (Commitment Boundary)',
-    description: 'Batas jumlah minimum dan maksimum item komitmen kerja per hari untuk setiap karyawan.',
-    icon: 'mdi-format-list-numbered',
-  },
-  {
     key: 'BlockerSLA',
     title: 'SLA Resolusi Blocker (Blocker SLA)',
     description: 'Batas waktu respon penerimaan (acknowledgment) dan penyelesaian blocker per tingkat keparahan.',

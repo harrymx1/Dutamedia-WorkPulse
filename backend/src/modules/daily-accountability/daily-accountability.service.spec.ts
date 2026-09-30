@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  AdditionalWorkReason,
   CommitmentOutcome,
   Continuation,
   DailyStatus,
@@ -132,6 +133,26 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
 
       await expect(
         service.submitMorningCheckin(userId, { commitments: [] as any }),
+      ).rejects.toThrow(BusinessRuleViolationException);
+    });
+
+    it('harus menegakkan aturan tetap produk batas 1-3 komitmen (BR-01, PDD §8)', async () => {
+      prismaMock.organizationalAssignment.findFirst.mockResolvedValue({
+        role: Role.Employee,
+        function: 'Engineering',
+        directManagerId: 'manager-uuid',
+      });
+
+      // 4 komitmen harus ditolak karena batas maksimal produk adalah 3 (BR-01)
+      await expect(
+        service.submitMorningCheckin(userId, {
+          commitments: [
+            { sequenceNo: 1, text: 'Task 1', initialRisk: DailyStatus.GREEN },
+            { sequenceNo: 2, text: 'Task 2', initialRisk: DailyStatus.GREEN },
+            { sequenceNo: 3, text: 'Task 3', initialRisk: DailyStatus.GREEN },
+            { sequenceNo: 4, text: 'Task 4', initialRisk: DailyStatus.GREEN },
+          ],
+        }),
       ).rejects.toThrow(BusinessRuleViolationException);
     });
 
@@ -346,6 +367,35 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
       expect(result.suggestedStatus).toBe(DailyStatus.RED);
       expect(result.requestedStatus).toBe(DailyStatus.GREEN);
     });
+
+    it('harus fallback ke getActivePolicySnapshot jika Cutoff/GracePeriod belum ada di policySnapshot record saat submitEodCheckin', async () => {
+      prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: recordId,
+        employeeUserId: userId,
+        morningSubmittedAt: new Date(),
+        policySnapshot: {}, // KOSONG / tidak ada Cutoff & GracePeriod
+        commitments: [{ id: 'c1', isEodLocked: false }],
+        additionalWorks: [],
+      });
+
+      const dto = {
+        commitmentOutcomes: [
+          {
+            commitmentId: 'c1',
+            outcome: CommitmentOutcome.Completed,
+            continuation: Continuation.DoNotContinue,
+          },
+        ],
+        finalStatus: DailyStatus.GREEN,
+      };
+
+      await service.submitEodCheckin(userId, recordId, dto);
+
+      expect(policyMock.getActivePolicySnapshot).toHaveBeenCalledWith(
+        [PolicyCategory.Cutoff, PolicyCategory.GracePeriod],
+        expect.any(Date),
+      );
+    });
   });
 
   describe('EPIC-07-T4: confirmOverride', () => {
@@ -465,6 +515,111 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
         service.findById({ userId: 'user-1', role: Role.Employee } as any, 'rec-other-user'),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('findAll: harus melempar NotFoundException (404) jika query.employeeUserId di luar scope user (Pola 2)', async () => {
+      scopeFilterMock.isUserInScope.mockResolvedValue(false);
+
+      await expect(
+        service.findAll(
+          { userId: 'spv-1', role: Role.Supervisor_TL } as any,
+          { page: 1, limit: 10, employeeUserId: 'other-emp' },
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('findAll: harus memfilter query dengan buildScopeFilter jika query.employeeUserId tidak dispesifikasikan (Pola 1)', async () => {
+      scopeFilterMock.buildScopeFilter.mockResolvedValue({
+        employeeUserId: { in: ['emp-1', 'emp-2'] },
+      });
+      prismaMock.dailyAccountabilityRecord.count.mockResolvedValue(1);
+      prismaMock.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
+
+      await service.findAll(
+        { userId: 'spv-1', role: Role.Supervisor_TL } as any,
+        { page: 1, limit: 10 },
+      );
+
+      expect(prismaMock.dailyAccountabilityRecord.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            employeeUserId: { in: ['emp-1', 'emp-2'] },
+          }),
+        }),
+      );
+    });
+
+    it('submitEodCheckin: harus melempar NotFoundException (404) jika record milik pengguna lain (Pola 2)', async () => {
+      prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-1',
+        employeeUserId: 'other-user',
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      await expect(
+        service.submitEodCheckin('attacker-user', 'rec-1', {
+          finalStatus: DailyStatus.GREEN,
+          commitmentOutcomes: [],
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('confirmOverride: harus melempar NotFoundException (404) jika record milik pengguna lain (Pola 2)', async () => {
+      prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-1',
+        employeeUserId: 'other-user',
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      await expect(
+        service.confirmOverride('attacker-user', 'rec-1', {
+          finalStatus: DailyStatus.AMBER,
+          overrideReason: 'Alasan override status',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('patchCommitment: harus melempar NotFoundException (404) jika komitmen milik pengguna lain (Pola 2)', async () => {
+      prismaMock.commitment.findUnique.mockResolvedValue({
+        id: 'comm-1',
+        dailyRecord: { employeeUserId: 'other-user' },
+      });
+
+      await expect(
+        service.patchCommitment('attacker-user', 'comm-1', {
+          outcomeReason: 'Catatan komitmen',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('createAdditionalWork: harus melempar NotFoundException (404) jika dailyRecord milik pengguna lain (Pola 2)', async () => {
+      prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-1',
+        employeeUserId: 'other-user',
+      });
+
+      await expect(
+        service.createAdditionalWork('attacker-user', {
+          dailyRecordId: 'rec-1',
+          text: 'Pekerjaan tambahan',
+          reason: AdditionalWorkReason.MissedInPlanning,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('patchAdditionalWork: harus melempar NotFoundException (404) jika additionalWork milik pengguna lain (Pola 2)', async () => {
+      prismaMock.additionalWork.findUnique.mockResolvedValue({
+        id: 'aw-1',
+        dailyRecord: { employeeUserId: 'other-user' },
+      });
+
+      await expect(
+        service.patchAdditionalWork('attacker-user', 'aw-1', {
+          text: 'Update pekerjaan',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('T1 — computeWorstOfStatus — seluruh kombinasi GREEN/AMBER/RED (SAD §9.3, §19.2)', () => {
@@ -496,4 +651,29 @@ describe('DailyAccountabilityService (EPIC-07)', () => {
       expect(computeWorstOfStatus([DailyStatus.RED])).toBe(DailyStatus.RED);
     });
   });
+
+  describe('findRecordsNearingCutoff (SAD §11.2 #1, §6.4)', () => {
+    it('harus mengambil record yang belum submitted dan belum locked mendekati cutoff', async () => {
+      const mockRecords = [{ id: 'rec-1', employeeUserId: 'emp-1' }];
+      prismaMock.dailyAccountabilityRecord.findMany.mockResolvedValue(mockRecords);
+
+      const targetDate = new Date('2026-09-18T08:30:00Z');
+      const result = await service.findRecordsNearingCutoff(targetDate, 50);
+
+      expect(result).toEqual(mockRecords);
+      expect(prismaMock.dailyAccountabilityRecord.findMany).toHaveBeenCalledWith({
+        where: {
+          workDate: expect.any(Date),
+          morningSubmittedAt: null,
+          cutoffLockedAt: null,
+        },
+        select: {
+          id: true,
+          employeeUserId: true,
+        },
+        take: 50,
+      });
+    });
+  });
 });
+

@@ -665,4 +665,55 @@ export class IdentityService {
       },
     });
   }
+
+  /**
+   * ADR-002: Mengambil daftar penugasan Reviewer Sementara (SAD §10.2, §8.11).
+   */
+  async getTemporaryReviewerAssignments(
+    actorUserId?: string,
+    actorRole?: Role,
+    scope?: string,
+    activeOnly: boolean = false,
+  ) {
+    const now = new Date();
+    const where: any = {};
+
+    if (activeOnly) {
+      where.effectiveDate = { lte: now };
+      where.expiryDate = { gte: now };
+    }
+
+    if (scope) {
+      where.scope = { contains: scope, mode: 'insensitive' };
+    }
+
+    if (actorRole === Role.Head && actorUserId) {
+      where.OR = [
+        { createdByUserId: actorUserId },
+        { reviewerUserId: actorUserId },
+      ];
+    }
+
+    return this.prisma.temporaryReviewerAssignment.findMany({
+      where,
+      orderBy: { effectiveDate: 'desc' },
+      include: {
+        reviewer: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
 }
+

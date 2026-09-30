@@ -39,4 +39,16 @@ export const authApi = {
   ): Promise<ApiResponse<{ message: string }>> {
     return apiClient.post<{ message: string }>('auth/reset-password', payload);
   },
+
+  /**
+   * Reset password pengguna target oleh SystemAdmin (SAD §10.1, FR-50).
+   */
+  async adminResetPassword(
+    userId: string,
+  ): Promise<ApiResponse<{ temporaryPassword: string }>> {
+    return apiClient.post<{ temporaryPassword: string }>(
+      `auth/admin-reset-password/${userId}`,
+    );
+  },
 };
+

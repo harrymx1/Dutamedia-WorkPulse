@@ -17,13 +17,14 @@ describe('IdentityController (SAD §10.2)', () => {
       createOrganizationalAssignment: vi.fn(),
       createProjectAuthorityMapping: vi.fn(),
       updateProjectAuthorityMapping: vi.fn(),
+      getTemporaryReviewerAssignments: vi.fn(),
       createTemporaryReviewerAssignment: vi.fn(),
     };
 
     controller = new IdentityController(mockService as unknown as IdentityService);
   });
 
-  const mockReq = { user: { userId: 'admin-1' } } as any;
+  const mockReq = { user: { userId: 'admin-1', role: Role.SystemAdmin } } as any;
 
   it('GET /users mendelegasikan ke service.getUsers', async () => {
     mockService.getUsers.mockResolvedValue({ items: [], pagination: {} });
@@ -115,6 +116,18 @@ describe('IdentityController (SAD §10.2)', () => {
     expect(mockService.createTemporaryReviewerAssignment).toHaveBeenCalledWith(
       dto,
       'admin-1',
+    );
+  });
+
+  it('GET /temporary-reviewer-assignments mendelegasikan ke service.getTemporaryReviewerAssignments (ADR-002)', async () => {
+    mockService.getTemporaryReviewerAssignments.mockResolvedValue([]);
+
+    await controller.getTemporaryReviewerAssignments('Engineering', 'true', mockReq);
+    expect(mockService.getTemporaryReviewerAssignments).toHaveBeenCalledWith(
+      'admin-1',
+      Role.SystemAdmin,
+      'Engineering',
+      true,
     );
   });
 });

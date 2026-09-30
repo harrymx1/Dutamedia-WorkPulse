@@ -47,9 +47,10 @@ export const DEFAULT_POLICY_VALUES: Record<PolicyCategory, Record<string, any>> 
   [PolicyCategory.MinorMaterialThreshold]: {
     wordsChangedThreshold: 10,
   },
-  [PolicyCategory.ParticipationRule]: {
-    minCommitmentCount: 1,
-    maxCommitmentCount: 3,
+  [PolicyCategory.ParticipationRule]: {},
+  [PolicyCategory.ReminderThreshold]: {
+    objectionWindowReminderHours: 2,
+    leavePendingReminderHours: 24,
   },
 };
 

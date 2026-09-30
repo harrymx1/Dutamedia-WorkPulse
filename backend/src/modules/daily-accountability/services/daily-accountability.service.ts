@@ -27,6 +27,10 @@ import type { CreateAdditionalWorkDto } from '../dto/create-additional-work.dto.
 import type { PatchAdditionalWorkDto } from '../dto/patch-additional-work.dto.js';
 import type { QueryDailyRecordsDto } from '../dto/query-daily-records.dto.js';
 import { StatusSuggestionService } from './status-suggestion.service.js';
+import {
+  MIN_DAILY_COMMITMENTS,
+  MAX_DAILY_COMMITMENTS,
+} from '../constants/daily-accountability.constants.js';
 
 export function computeWorstOfStatus(statuses: DailyStatus[]): DailyStatus {
   if (statuses.includes(DailyStatus.RED)) {
@@ -170,11 +174,14 @@ export class DailyAccountabilityService {
       now,
     );
 
-    // 3. Validasi batasan komitmen (BR-01, ParticipationRule)
+    // 3. Validasi batasan komitmen (BR-01, PDD §8 - Aturan Tetap Produk)
     const commitments = dto.commitments;
-    if (commitments.length < 1 || commitments.length > 3) {
+    if (
+      commitments.length < MIN_DAILY_COMMITMENTS ||
+      commitments.length > MAX_DAILY_COMMITMENTS
+    ) {
       throw new BusinessRuleViolationException(
-        'Jumlah komitmen harian harus antara 1 sampai 3 komitmen (BR-01)',
+        `Jumlah komitmen harian harus antara ${MIN_DAILY_COMMITMENTS} sampai ${MAX_DAILY_COMMITMENTS} komitmen (BR-01)`,
       );
     }
 
@@ -182,7 +189,16 @@ export class DailyAccountabilityService {
     const uniqueSequenceNos = new Set(sequenceNos);
     if (uniqueSequenceNos.size !== commitments.length) {
       throw new BusinessRuleViolationException(
-        'sequenceNo untuk setiap komitmen harus unik (1-3)',
+        `sequenceNo untuk setiap komitmen harus unik (1-${MAX_DAILY_COMMITMENTS})`,
+      );
+    }
+
+    const hasInvalidSeq = sequenceNos.some(
+      (s) => s < MIN_DAILY_COMMITMENTS || s > MAX_DAILY_COMMITMENTS,
+    );
+    if (hasInvalidSeq) {
+      throw new BusinessRuleViolationException(
+        `sequenceNo harus berada dalam rentang 1 sampai ${MAX_DAILY_COMMITMENTS}`,
       );
     }
 
@@ -503,10 +519,21 @@ export class DailyAccountabilityService {
 
     // 2. Evaluasi Timing EOD (SAD §9.2)
     const policySnapshot = (record.policySnapshot as Record<string, any>) || {};
-    const cutoffConfig = policySnapshot[PolicyCategory.Cutoff] || {};
-    const graceConfig = policySnapshot[PolicyCategory.GracePeriod] || {};
+    let cutoffConfig = policySnapshot[PolicyCategory.Cutoff];
+    let graceConfig = policySnapshot[PolicyCategory.GracePeriod];
+
+    if (!cutoffConfig || !graceConfig) {
+      const activePolicy = await this.policyService.getActivePolicySnapshot(
+        [PolicyCategory.Cutoff, PolicyCategory.GracePeriod],
+        now,
+      );
+      cutoffConfig = cutoffConfig || activePolicy[PolicyCategory.Cutoff] || {};
+      graceConfig =
+        graceConfig || activePolicy[PolicyCategory.GracePeriod] || {};
+    }
+
     const deadlineStr = cutoffConfig.eodOnTimeDeadline || '18:00';
-    const graceMinutes = graceConfig.eodGraceMinutes || 30;
+    const graceMinutes = graceConfig.eodGraceMinutes ?? 30;
 
     const { timing: eodTiming } = this.evaluateTiming(
       now,
@@ -637,10 +664,21 @@ export class DailyAccountabilityService {
     }
 
     const policySnapshot = (record.policySnapshot as Record<string, any>) || {};
-    const cutoffConfig = policySnapshot[PolicyCategory.Cutoff] || {};
-    const graceConfig = policySnapshot[PolicyCategory.GracePeriod] || {};
+    let cutoffConfig = policySnapshot[PolicyCategory.Cutoff];
+    let graceConfig = policySnapshot[PolicyCategory.GracePeriod];
+
+    if (!cutoffConfig || !graceConfig) {
+      const activePolicy = await this.policyService.getActivePolicySnapshot(
+        [PolicyCategory.Cutoff, PolicyCategory.GracePeriod],
+        now,
+      );
+      cutoffConfig = cutoffConfig || activePolicy[PolicyCategory.Cutoff] || {};
+      graceConfig =
+        graceConfig || activePolicy[PolicyCategory.GracePeriod] || {};
+    }
+
     const deadlineStr = cutoffConfig.eodOnTimeDeadline || '18:00';
-    const graceMinutes = graceConfig.eodGraceMinutes || 30;
+    const graceMinutes = graceConfig.eodGraceMinutes ?? 30;
 
     const { timing: eodTiming } = this.evaluateTiming(
       now,
@@ -1253,4 +1291,29 @@ export class DailyAccountabilityService {
       eodNoSubmissionCount,
     };
   }
+
+  /**
+   * Mengambil record akuntabilitas yang belum submit mendekati batas cutoff (SAD §11.2 #1).
+   * Dipanggil oleh SchedulerService.sendCutoffReminders (SAD §6.4).
+   */
+  async findRecordsNearingCutoff(
+    workDate: Date = new Date(),
+    limit: number = 50,
+  ): Promise<Array<{ id: string; employeeUserId: string }>> {
+    const today = normalizeDate(workDate);
+
+    return this.prisma.dailyAccountabilityRecord.findMany({
+      where: {
+        workDate: today,
+        morningSubmittedAt: null,
+        cutoffLockedAt: null,
+      },
+      select: {
+        id: true,
+        employeeUserId: true,
+      },
+      take: limit,
+    });
+  }
 }
+

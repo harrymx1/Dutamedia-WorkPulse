@@ -71,6 +71,13 @@ describe('FileStorageService (EPIC-14)', () => {
     });
 
     it('harus berhasil membuat signed PUT URL untuk evidence dengan kedaluwarsa 300 detik', async () => {
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: '00000000-0000-0000-0000-000000000001',
+        raisedByUserId: 'emp-1',
+        ownerNeededUserId: 'emp-2',
+        supportContributions: [],
+      });
+
       const dto: GenerateUploadUrlDto = {
         purpose: FilePurpose.EVIDENCE,
         contentType: 'image/png',
@@ -101,11 +108,80 @@ describe('FileStorageService (EPIC-14)', () => {
       );
     });
 
-    it('harus berhasil membuat signed PUT URL untuk manager-note-evidence', async () => {
+    it('Employee minta upload-url untuk entityId blocker milik orang lain harus ditolak (ForbiddenException)', async () => {
+      prismaMock.blocker.findUnique.mockResolvedValue({
+        id: 'blocker-other-id',
+        raisedByUserId: 'other-user',
+        ownerNeededUserId: 'another-user',
+        supportContributions: [],
+      });
+
+      const dto: GenerateUploadUrlDto = {
+        purpose: FilePurpose.EVIDENCE,
+        contentType: 'image/png',
+        fileSize: 1024 * 100,
+        entityType: 'Blocker',
+        entityId: 'blocker-other-id',
+      };
+
+      await expect(service.generateUploadUrl(employeeUser, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('harus menolak permintaan upload URL untuk purpose exports dari role apapun (ForbiddenException)', async () => {
+      const adminUser = createMockUser({ userId: 'admin-1', role: Role.SystemAdmin });
+      const dto: GenerateUploadUrlDto = {
+        purpose: FilePurpose.EXPORTS,
+        contentType: 'application/pdf',
+        fileSize: 1024 * 100,
+      };
+
+      await expect(service.generateUploadUrl(adminUser, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(service.generateUploadUrl(employeeUser, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('harus menolak upload-url manager-note-evidence jika dilakukan oleh Employee (ForbiddenException)', async () => {
+      const dto: GenerateUploadUrlDto = {
+        purpose: FilePurpose.MANAGER_NOTE_EVIDENCE,
+        contentType: 'application/pdf',
+        fileSize: 1024 * 100,
+      };
+
+      await expect(service.generateUploadUrl(employeeUser, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('harus menolak upload-url jika entityType evidence tidak didukung / tidak dikenal (ForbiddenException)', async () => {
+      const dto: GenerateUploadUrlDto = {
+        purpose: FilePurpose.EVIDENCE,
+        contentType: 'image/png',
+        fileSize: 1024 * 100,
+        entityType: 'UnknownEntity',
+      };
+
+      await expect(service.generateUploadUrl(employeeUser, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('harus berhasil membuat signed PUT URL untuk manager-note-evidence oleh Supervisor', async () => {
       const supervisorUser = createMockUser({
         userId: 'spv-1',
         role: Role.Supervisor_TL,
       });
+
+      prismaMock.managerNote.findUnique.mockResolvedValue({
+        id: '11111111-1111-1111-1111-111111111111',
+        aboutUserId: 'sub-1',
+        visibility: ManagerNoteVisibility.PrivateToManagement,
+      });
+      scopeFilterMock.getAccessibleUserIds.mockResolvedValue(['spv-1', 'sub-1']);
 
       const dto: GenerateUploadUrlDto = {
         purpose: FilePurpose.MANAGER_NOTE_EVIDENCE,
@@ -199,17 +275,30 @@ describe('FileStorageService (EPIC-14)', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('harus berhasil membuat signed GET URL untuk evidence umum dengan kedaluwarsa 900 detik (15 menit)', async () => {
-      const result = await service.generateDownloadUrl(employeeUser, 'file-uuid-1', {
-        storagePath: 'evidence/file-uuid-1.png',
-      });
+    it('harus menolak request download-url dengan entityType tidak dikenal / entityId kosong untuk purpose evidence (Default Deny)', async () => {
+      // 1. entityType tidak dikenal
+      await expect(
+        service.generateDownloadUrl(employeeUser, 'file-uuid-1', {
+          purpose: FilePurpose.EVIDENCE,
+          entityType: 'UnknownType',
+        }),
+      ).rejects.toThrow(ForbiddenException);
 
-      expect(result).toHaveProperty('downloadUrl', 'https://storage.test/download-signed-url');
-      expect(result.expiresIn).toBe(900);
-      expect(s3StorageMock.createPresignedGetUrl).toHaveBeenCalledWith(
-        'evidence/file-uuid-1.png',
-        900,
-      );
+      // 2. entityId kosong untuk purpose evidence
+      await expect(
+        service.generateDownloadUrl(employeeUser, 'file-uuid-1', {
+          purpose: FilePurpose.EVIDENCE,
+          entityType: 'Blocker',
+          // entityId tidak diisi
+        }),
+      ).rejects.toThrow(ForbiddenException);
+
+      // 3. storagePath tanpa entity yang valid
+      await expect(
+        service.generateDownloadUrl(employeeUser, 'file-uuid-1', {
+          storagePath: 'evidence/file-uuid-1.png',
+        }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     describe('Otorisasi manager-note-evidence (BR-14)', () => {
@@ -370,6 +459,42 @@ describe('FileStorageService (EPIC-14)', () => {
 
         await expect(
           service.generateDownloadUrl(employeeUser, 'file-1', {
+            purpose: FilePurpose.EVIDENCE,
+            entityType: 'Blocker',
+            entityId: blockerId,
+          }),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('harus mengembalikan 404 jika Blocker tidak ditemukan di database', async () => {
+        prismaMock.blocker.findUnique.mockResolvedValue(null);
+
+        await expect(
+          service.generateDownloadUrl(employeeUser, 'file-1', {
+            purpose: FilePurpose.EVIDENCE,
+            entityType: 'Blocker',
+            entityId: 'non-existent-blocker',
+          }),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('harus menolak Supervisor dengan 403 jika blocker berada di luar scope organisasinya', async () => {
+        const supervisorUser = createMockUser({
+          userId: 'spv-1',
+          role: Role.Supervisor_TL,
+        });
+
+        prismaMock.blocker.findUnique.mockResolvedValue({
+          id: blockerId,
+          raisedByUserId: 'outside-emp-1',
+          ownerNeededUserId: 'outside-emp-2',
+          supportContributions: [],
+        });
+
+        scopeFilterMock.getAccessibleUserIds.mockResolvedValue(['spv-1', 'sub-1']);
+
+        await expect(
+          service.generateDownloadUrl(supervisorUser, 'file-1', {
             purpose: FilePurpose.EVIDENCE,
             entityType: 'Blocker',
             entityId: blockerId,

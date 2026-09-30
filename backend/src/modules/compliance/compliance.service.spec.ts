@@ -569,6 +569,21 @@ describe('ComplianceService (EPIC-12)', () => {
       ).rejects.toThrow(ConflictException);
     });
 
+    it('menolak coaching jika target event berada di luar scope wewenang organisasi supervisor (NotFoundException / SAD §10.8)', async () => {
+      const supervisor = createMockUser({ userId: 'sup-1', role: Role.Supervisor_TL });
+
+      prismaMock.complianceEvent.findUnique.mockResolvedValueOnce({
+        id: 'flag-outside',
+        userId: 'outside-emp',
+        eventType: ComplianceEventType.PatternFlag,
+      });
+      scopeFilterMock.isUserInScope.mockResolvedValueOnce(false);
+
+      await expect(
+        service.coach(supervisor, 'flag-outside', { note: 'Pembinaan luar scope' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
     it('menolak coaching jika PatternFlag sudah berstatus Coached (409 Conflict)', async () => {
       const supervisor = createMockUser({ userId: 'sup-1', role: Role.Supervisor_TL });
 

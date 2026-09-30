@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EPIC-22-T5: Playwright E2E — Skenario B (SAD §17.7)
  * Exception & Blocker Flow: Raise Blocker → Acknowledge → Resolve → Close
  *
@@ -8,7 +8,7 @@
  * CARA MENJALANKAN:
  *   npx playwright test scenario-b-blocker.spec.ts --headed
  */
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173';
 const EMP_EMAIL = process.env.PLAYWRIGHT_EMP_EMAIL ?? 'alice@dutamedia.com';
