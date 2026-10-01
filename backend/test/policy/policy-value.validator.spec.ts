@@ -328,13 +328,16 @@ describe('PolicyValueValidator', () => {
   });
 
   describe('8. RetentionPeriod', () => {
-    it('harus menerima nilai positif', () => {
-      expect(() => {
-        validator.validate(PolicyCategory.RetentionPeriod, {
-          backupRetentionDays: 14,
-          exportRetentionMinutes: 15,
-        });
-      }).not.toThrow();
+    it('harus menerima nilai positif dalam rentang 1 s.d. 60 (ADR-009)', () => {
+      // Nilai batas bawah (1), default (15), batas atas (60), dan fractional
+      for (const val of [1, 1.5, 15, 30, 59.5, 60]) {
+        expect(() => {
+          validator.validate(PolicyCategory.RetentionPeriod, {
+            backupRetentionDays: 14,
+            exportRetentionMinutes: val,
+          });
+        }).not.toThrow();
+      }
     });
 
     it('harus menolak 0 dan nilai negatif untuk kedua field', () => {
@@ -351,6 +354,35 @@ describe('PolicyValueValidator', () => {
           exportRetentionMinutes: -5,
         });
       }).toThrow(BusinessRuleViolationException);
+
+      expect(() => {
+        validator.validate(PolicyCategory.RetentionPeriod, {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 0,
+        });
+      }).toThrow(BusinessRuleViolationException);
+    });
+
+    it('harus menolak exportRetentionMinutes melebihi 60 (ADR-009 Fixed Security Ceiling)', () => {
+      for (const invalidVal of [60.1, 61, 100, 1440]) {
+        expect(() => {
+          validator.validate(PolicyCategory.RetentionPeriod, {
+            backupRetentionDays: 14,
+            exportRetentionMinutes: invalidVal,
+          });
+        }).toThrow(BusinessRuleViolationException);
+      }
+    });
+
+    it('harus menolak tipe data non-number, NaN, dan Infinity untuk exportRetentionMinutes', () => {
+      for (const invalidType of ['15', null, undefined, NaN, Infinity, -Infinity]) {
+        expect(() => {
+          validator.validate(PolicyCategory.RetentionPeriod, {
+            backupRetentionDays: 14,
+            exportRetentionMinutes: invalidType as any,
+          });
+        }).toThrow(BusinessRuleViolationException);
+      }
     });
   });
 

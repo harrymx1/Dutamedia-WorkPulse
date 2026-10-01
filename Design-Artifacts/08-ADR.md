@@ -432,3 +432,121 @@ Namun, field `patternThresholdCount` ini tidak pernah didaftarkan pada `DEFAULT_
 | **PolicyModule** | `CoachingFollowUpPeriod` bersih dari field liar yang tidak terdaftar |
 | **Keamanan Sistem** | Mencegah pelumpuhan deteksi kepatuhan melalui injeksi nilai JSON policy liar |
 | **Frontend UI** | Form `PolicySettingsPage.vue` hanya menampilkan field resmi `coachingWindowDays` |
+
+---
+
+## ADR-009 — Dynamic Export Signed URL TTL dengan Fixed Security Ceiling
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-009 |
+| **Tanggal** | 2026-10-01 |
+| **Status** | ACCEPTED |
+| **Rujukan / Penegasan Aturan** | PDD §5, PRD FR-31, PRD FR-42, SAD §6.3, SAD §13.5, SAD §14.4, SAD §14.6, SAD §14.7, KL-06 |
+| **Berlaku mulai** | EPIC-14 (ReportingModule) & EPIC-06 (PolicyModule) |
+
+### 1. Konteks
+
+1. **Keberadaan Field Kebijakan**: Parameter `RetentionPeriod.exportRetentionMinutes` telah ada di skema sistem sejak implementasi awal modul kebijakan (EPIC-06) dengan nilai default 15 menit.
+2. **Ekspektasi Antarmuka Pengguna**: Antarmuka `PolicySettingsPage.vue` mengekspos field tersebut kepada Admin/Policy Owner dengan label dan deskripsi sebagai durasi masa aktif "tautan ekspor audit (menit)" (PRD FR-31).
+3. **Kondisi Runtime Backend**: Audit stabilisasi S1-T3 menemukan bahwa `ExportGeneratorService` meng-hardcode nilai masa aktif presigned URL unduhan ekspor dengan literal `const expiresIn = 900;` (15 menit = 900 detik). Dokumen arsitektur SAD §13.5 dan §14.4 juga mencatat angka 15 menit (900 detik).
+4. **Broken Traceability**: Nilai `RetentionPeriod.exportRetentionMinutes` di database dan formulir pengaturannya di antarmuka tidak pernah dibaca secara runtime saat signed URL laporan ekspor dibuat. Pengubahan nilai kebijakan oleh admin tidak berdampak apapun terhadap durasi tautan ekspor.
+
+### 2. Keputusan
+
+1. **Adopsi Decision B (Dynamic Export Policy)**: Disetujui bahwa `RetentionPeriod.exportRetentionMinutes` adalah parameter kebijakan dinamis yang mengontrol masa aktif (*TTL signed GET URL*) khusus untuk **REPORT EXPORT**.
+2. **Keterikatan Runtime**: Pembuatan tautan unduh ekspor laporan pada `ExportGeneratorService` wajib membaca nilai kebijakan aktif `RetentionPeriod.exportRetentionMinutes` secara *effective-dated* pada saat request ekspor diproses.
+3. **Pemberlakuan Default**: Nilai bawaan sistem adalah `exportRetentionMinutes = 15` (900 detik).
+4. **Fixed Security Ceiling**: Ditetapkan batas atas keamanan produk (*fixed product security ceiling*) sebesar **60 menit**. Batas ini adalah aturan keamanan internal produk WorkPulse, bukan batasan teknis AWS S3/Object Storage.
+
+### 3. Batas Ruang Lingkup (Scope Boundary)
+
+Kebijakan dinamis ini hanya berlaku pada alur ekspor laporan, dan secara tegas diisolasi dari alur unduhan berkas bukti investigasi (*evidence*):
+
+| Alur / Operasi | Membaca Policy RetentionPeriod? | Durasi Masa Aktif (TTL) | Mekanisme Enforcer |
+|---|---|---|---|
+| **Report Export (PDF)** | **YA** | Dinamis: 1–60 menit (default 15 menit) | `ExportGeneratorService` via `PolicyService` |
+| **Report Export (XLSX)** | **YA** | Dinamis: 1–60 menit (default 15 menit) | `ExportGeneratorService` via `PolicyService` |
+| **Artefak Report Export Lain** | **YA** | Dinamis: 1–60 menit (default 15 menit) | `ExportGeneratorService` via `PolicyService` |
+| **Blocker Evidence Download** | **TIDAK** | Fixed 15 menit (900 detik) | `FileStorageService` (Security Invariant) |
+| **Manager-Note Evidence Download** | **TIDAK** | Fixed 15 menit (900 detik) | `FileStorageService` (Security Invariant) |
+| **Seluruh Download Evidence Lain** | **TIDAK** | Fixed 15 menit (900 detik) | `FileStorageService` (Security Invariant) |
+| **S3 Infrastructure Layer** | **TIDAK** | Ditentukan oleh caller (`expiresInSeconds`) | `S3StorageService` (Infrastruktur Murni) |
+
+### 4. Batasan Keamanan Produk (Security Boundary)
+
+1. **Security Ceiling 60 Menit**:
+   - Tautan presigned URL adalah *bearer token* yang memungkinkan siapa saja yang memiliki tautan untuk mengunduh laporan terkait tanpa login ulang selama tautan masih valid.
+   - Dokumen ekspor (seperti rekapitulasi ketidakhadiran, ringkasan pelanggaran kepatuhan, dan catatan kinerja tim) berisi informasi manajerial dan personalia yang sensitif.
+   - WorkPulse menetapkan bahwa masa aktif tautan ekspor **tidak boleh melebihi 60 menit**, demi membatasi risiko kebocoran data jika tautan dibagikan secara tidak sengaja di luar saluran resmi.
+   - Batasan 60 menit ini adalah **aturan keamanan produk WorkPulse**, bukan batasan teknis AWS SDK / S3 (protokol AWS SigV4 secara teknis mendukung presigned URL hingga 7 hari).
+2. **Lower Bound 1 Menit**:
+   - Nilai minimum kebijakan adalah 1 menit (60 detik) untuk mencegah kegagalan unduh seketika akibat jeda transmisi jaringan.
+3. **Validasi Domain Ketat**:
+   - Kebijakan yang sah harus memenuhi pertidaksamaan:
+     $$\mathbf{1 \le exportRetentionMinutes \le 60}$$
+   - Nilai di luar rentang ini wajib ditolak dengan pesan error `OUT_OF_RANGE` pada lapisan domain validation (`policy-value.validator.ts`) dan tidak boleh disimpan ke database.
+
+### 5. Effective Dating & Immutability Tautan
+
+1. **Resolusi Kebijakan Aktif**: Saat user meminta ekspor laporan, `ExportGeneratorService` memanggil `PolicyService.getActivePolicySnapshot([PolicyCategory.RetentionPeriod])` dengan waktu evaluasi adalah waktu request saat itu (`current request time`).
+2. **Sifat Immutability Presigned URL**:
+   - Presigned URL S3 ditandatangani secara kriptografis menggunakan algoritma HMAC-SHA256 dengan menyertakan timestamp pembuatan dan durasi expiry (`X-Amz-Expires`).
+   - Tautan yang sudah diterbitkan bersifat permanen dan **tidak dapat diubah secara retroaktif**.
+   - Jika Authorized Policy Owner menerbitkan versi kebijakan baru dengan durasi berbeda pada waktu $T_1$, tautan yang sudah diterbitkan pada waktu $T_0 < T_1$ tetap mempertahankan masa berlaku aslinya.
+   - Versi kebijakan baru hanya berlaku bagi tautan ekspor yang diterbitkan sejak waktu efektif kebijakan tersebut.
+
+### 6. Pemisahan Signed URL TTL vs Object Storage Lifecycle Retention
+
+WorkPulse membedakan secara tegas antara masa berlaku tautan dan masa simpan fisik berkas:
+- **`exportRetentionMinutes` (Signed URL TTL)**: Mengatur berapa lama token presigned URL dapat digunakan oleh browser untuk mengunduh file dari Object Storage.
+- **Object Storage Lifecycle Retention**: Mengatur berapa lama berkas biner `.pdf` atau `.xlsx` fisik disimpan di bucket S3 sebelum dihapus secara otomatis. Berdasarkan SAD §14.6, seluruh berkas di folder `exports/` dihapus secara otomatis oleh lifecycle policy S3 setelah 24 jam (ephemeral).
+- `RetentionPeriod.exportRetentionMinutes` **BUKAN** pengatur masa simpan objek di storage bucket, melainkan pengatur masa aktif URL akses unduh.
+
+### 7. Arsitektur Ketergantungan Modul (Module Dependency)
+
+1. **ReportingModule → PolicyModule**:
+   - `ReportingModule` diizinkan menambahkan dependensi satu arah ke `PolicyModule` (NestJS module import) untuk membaca `PolicyService.getActivePolicySnapshot()` secara read-only.
+   - Hal ini selaras 100% dengan prinsip modularitas SAD §6.3 dan §6.4: *"ReportingModule membaca (read-only) dari seluruh module domain, tidak pernah menulis, tidak pernah didependensi balik"*.
+2. **FileStorageModule Tetap Terisolasi**:
+   - `FileStorageModule` tidak boleh mengimpor `PolicyModule`. Seluruh alur download bukti (*evidence*) tetap menggunakan konstanta keamanan 900 detik (15 menit).
+3. **S3StorageService Murni Infrastruktur**:
+   - `S3StorageService` tidak boleh membaca `PolicyService` atau mengetahui konsep domain kebijakan. Service ini hanya menerima parameter angka numerik murni (`expiresInSeconds: number = 900`) dari pemanggilnya.
+
+### 8. Aturan Validasi Kebijakan
+
+1. **Domain Validation**:
+   - File `policy-value.validator.ts` memvalidasi input `exportRetentionMinutes`:
+     - Tipe data wajib `number` bulat positif.
+     - Nilai minimum: `1`.
+     - Nilai maksimum: `60`.
+   - Pelanggaran batas memicu penolakan HTTP 400 Bad Request (`OUT_OF_RANGE`).
+2. **Runtime Defense-in-Depth Clamping**:
+   - Pada `ExportGeneratorService`, nilai yang diperoleh dari policy snapshot tetap melewati fungsi pengaman:
+     `const safeMinutes = Math.min(Math.max(Number(rawMinutes) || 15, 1), 60);`
+     `const expiresIn = safeMinutes * 60;`
+   - Clamping ini berfungsi murni sebagai pertahanan berlapis (*defense-in-depth*) terhadap inkonsistensi data historis, bukan sebagai mekanisme untuk menerima konfigurasi invalid secara diam-diam.
+
+### 9. Alternatif Desain yang Ditolak
+
+| Alternatif | Alasan Penolakan |
+|---|---|
+| **Option A: Mengunci TTL Ekspor Permanen pada 15 Menit (Fixed Rule)** | Ditolak karena field `RetentionPeriod.exportRetentionMinutes` telah diekspos di UI dan didokumentasikan di PRD FR-31. Mengunci nilai secara diam-diam di backend menciptakan ilusi kontrol (*dead configuration*) yang melanggar prinsip transparansi tata kelola. |
+| **Option B Tanpa Batas Keamanan Atas (No Security Ceiling)** | Ditolak karena membuka risiko keamanan serius: admin dapat mengonfigurasi masa berlaku link hingga ribuan menit (misal 24 jam atau 7 hari), mengekspos data laporan sensitif perusahaan pada link publik yang tidak membutuhkan re-autentikasi. |
+| **Menerapkan Policy Dinamis ke Seluruh FileStorage (Global Policy)** | Ditolak karena mencampuradukkan kebutuhan unduh laporan audit berkala dengan unduhan berkas bukti investigasi (*evidence/manager-note-evidence*). Bukti investigasi wajib mematuhi postur keamanan ketat 15 menit sesuai SAD §14.4 dan tidak boleh diperpanjang oleh kebijakan ekspor. Selain itu, hal ini akan merusak batas modularitas utilitas `FileStorageModule` (SAD §6.4). |
+
+### 10. Konsekuensi
+
+#### Dampak Positif
+1. **Penyelesaian Broken Traceability**: Menghubungkan secara utuh konfigurasi kebijakan admin dengan perilaku sistem nyata di level runtime.
+2. **Effective Dating Berfungsi Nyata**: Riwayat versi kebijakan `RetentionPeriod` kini memiliki signifikansi teknis yang dapat diaudit secara nyata.
+3. **Keamanan Terjamin**: Fixed security ceiling 60 menit melindungi sistem dari potensi kebocoran data akibat konfigurasi ekstrem.
+4. **Isolasi Evidence Utuh**: Modul utilitas penyimpanan file dan bukti investigasi tetap terisolasi dan terlindungi.
+
+#### Dampak Negatif & Trade-off
+1. **Dependensi Modul**: `ReportingModule` kini memiliki dependensi read-only ke `PolicyModule`.
+2. **Kebutuhan Pengujian**: Unit test `ExportGeneratorService` harus memelihara mock `PolicyService` dan mencakup skenario variasi masa berlaku kebijakan.
+3. **Pembaruan Dokumentasi**: SAD dan PRD harus diperjelas untuk membedakan secara tegas antara URL TTL dan Storage Object Lifecycle.
+
+### 11. Status Keputusan
+**ACCEPTED** — Mengikat untuk perbaikan implementasi pada S1-T3 dan pengujian regresi terkait.

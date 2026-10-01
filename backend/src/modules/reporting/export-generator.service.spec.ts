@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExportGeneratorService, type ExportPayload } from './services/export-generator.service.js';
-import { Role } from '@prisma/client';
+import { PolicyCategory, Role } from '@prisma/client';
 import type { CurrentUserPayload } from '../auth/decorators/current-user.decorator.js';
 
-describe('ExportGeneratorService', () => {
+describe('ExportGeneratorService (ADR-009 Dynamic Export TTL)', () => {
   let service: ExportGeneratorService;
   let mockS3StorageService: any;
   let mockAuditService: any;
+  let mockPolicyService: any;
 
   const mockUser: CurrentUserPayload = {
     userId: 'user-head-1',
@@ -49,7 +50,20 @@ describe('ExportGeneratorService', () => {
       record: vi.fn().mockResolvedValue({ id: 'audit-1' }),
     };
 
-    service = new ExportGeneratorService(mockS3StorageService, mockAuditService);
+    mockPolicyService = {
+      getActivePolicySnapshot: vi.fn().mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 15,
+        },
+      }),
+    };
+
+    service = new ExportGeneratorService(
+      mockS3StorageService,
+      mockAuditService,
+      mockPolicyService,
+    );
   });
 
   describe('buildPdfBuffer', () => {
@@ -81,8 +95,8 @@ describe('ExportGeneratorService', () => {
     });
   });
 
-  describe('generateAndUploadExport', () => {
-    it('harus mengunggah PDF ke Object Storage dan mengembalikan signed URL 15 menit', async () => {
+  describe('generateAndUploadExport (ADR-009 Contract)', () => {
+    it('harus menggunakan default policy 15 menit (900 detik) jika policy mengembalikan 15', async () => {
       const result = await service.generateAndUploadExport(
         mockUser,
         'daily-exception',
@@ -91,24 +105,34 @@ describe('ExportGeneratorService', () => {
       );
 
       expect(result.format).toBe('pdf');
-      expect(result.expiresIn).toBe(900); // 15 menit (SAD §13.5, §14.4)
-      expect(result.downloadUrl).toBe('https://storage.dutamedia.com/signed-export-url');
-      expect(result.storagePath).toContain('exports/daily-exception/');
-      expect(mockS3StorageService.uploadBuffer).toHaveBeenCalledWith(
+      expect(result.expiresIn).toBe(900); // 15 * 60 = 900 detik
+      expect(mockPolicyService.getActivePolicySnapshot).toHaveBeenCalledWith(
+        [PolicyCategory.RetentionPeriod],
+        expect.any(Date),
+      );
+      expect(mockS3StorageService.createPresignedGetUrl).toHaveBeenCalledWith(
         expect.stringContaining('exports/daily-exception/'),
-        expect.any(Buffer),
-        'application/pdf',
+        900,
       );
       expect(mockAuditService.record).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'REPORT_EXPORTED',
-          relatedEntityType: 'Report',
           relatedEntityId: 'daily-exception',
+          valueAfter: expect.objectContaining({
+            expiresIn: 900,
+          }),
         }),
       );
     });
 
-    it('harus mengunggah XLSX ke Object Storage dan mencatat audit trail', async () => {
+    it('harus mengikuti policy aktif dinamis 30 menit (1800 detik)', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 30,
+        },
+      });
+
       const result = await service.generateAndUploadExport(
         mockUser,
         'weekly-team-summary',
@@ -117,13 +141,173 @@ describe('ExportGeneratorService', () => {
       );
 
       expect(result.format).toBe('xlsx');
-      expect(result.expiresIn).toBe(900);
-      expect(mockS3StorageService.uploadBuffer).toHaveBeenCalledWith(
+      expect(result.expiresIn).toBe(1800); // 30 * 60 = 1800 detik
+      expect(mockS3StorageService.createPresignedGetUrl).toHaveBeenCalledWith(
         expect.stringContaining('exports/weekly-team-summary/'),
-        expect.any(Buffer),
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        1800,
       );
-      expect(mockAuditService.record).toHaveBeenCalled();
+      expect(mockAuditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          valueAfter: expect.objectContaining({
+            expiresIn: 1800,
+          }),
+        }),
+      );
+    });
+
+    it('harus mendukung batas bawah (lower bound) 1 menit (60 detik)', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 1,
+        },
+      });
+
+      const result = await service.generateAndUploadExport(
+        mockUser,
+        'daily-exception',
+        'pdf',
+        samplePayload,
+      );
+
+      expect(result.expiresIn).toBe(60); // 1 * 60 = 60 detik
+      expect(mockS3StorageService.createPresignedGetUrl).toHaveBeenCalledWith(
+        expect.any(String),
+        60,
+      );
+    });
+
+    it('harus mendukung batas atas keamanan produk (security ceiling) 60 menit (3600 detik)', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 60,
+        },
+      });
+
+      const result = await service.generateAndUploadExport(
+        mockUser,
+        'daily-exception',
+        'pdf',
+        samplePayload,
+      );
+
+      expect(result.expiresIn).toBe(3600); // 60 * 60 = 3600 detik
+      expect(mockS3StorageService.createPresignedGetUrl).toHaveBeenCalledWith(
+        expect.any(String),
+        3600,
+      );
+    });
+
+    it('Defense-in-depth: harus membatasi (clamp) nilai di atas 60 menit menjadi 60 menit (3600 detik)', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 120, // Di atas security ceiling
+        },
+      });
+
+      const result = await service.generateAndUploadExport(
+        mockUser,
+        'daily-exception',
+        'pdf',
+        samplePayload,
+      );
+
+      expect(result.expiresIn).toBe(3600); // Dibatasi maksimum 60 menit
+      expect(mockS3StorageService.createPresignedGetUrl).toHaveBeenCalledWith(
+        expect.any(String),
+        3600,
+      );
+    });
+
+    it('Defense-in-depth: harus membatasi (clamp) nilai di bawah 1 menit menjadi 1 menit (60 detik)', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: 0,
+        },
+      });
+
+      const result = await service.generateAndUploadExport(
+        mockUser,
+        'daily-exception',
+        'pdf',
+        samplePayload,
+      );
+
+      expect(result.expiresIn).toBe(60); // Dibatasi minimum 1 menit
+      expect(mockS3StorageService.createPresignedGetUrl).toHaveBeenCalledWith(
+        expect.any(String),
+        60,
+      );
+    });
+
+    it('harus membatalkan ekspor dan mempropagasi error jika PolicyService melempar error saat resolusi policy', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockRejectedValue(
+        new Error('PolicyService resolution failed'),
+      );
+
+      await expect(
+        service.generateAndUploadExport(
+          mockUser,
+          'daily-exception',
+          'pdf',
+          samplePayload,
+        ),
+      ).rejects.toThrow('PolicyService resolution failed');
+
+      expect(mockS3StorageService.uploadBuffer).not.toHaveBeenCalled();
+      expect(mockS3StorageService.createPresignedGetUrl).not.toHaveBeenCalled();
+      expect(mockAuditService.record).not.toHaveBeenCalled();
+    });
+
+    it('harus membatalkan ekspor dan melempar error jika snapshot RetentionPeriod tidak memiliki field exportRetentionMinutes', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          // exportRetentionMinutes tidak ada / undefined
+        },
+      });
+
+      await expect(
+        service.generateAndUploadExport(
+          mockUser,
+          'daily-exception',
+          'pdf',
+          samplePayload,
+        ),
+      ).rejects.toThrow(
+        'Gagal mengurai kebijakan retensi ekspor aktif: RetentionPeriod.exportRetentionMinutes tidak valid atau tidak ditemukan',
+      );
+
+      expect(mockS3StorageService.uploadBuffer).not.toHaveBeenCalled();
+      expect(mockS3StorageService.createPresignedGetUrl).not.toHaveBeenCalled();
+      expect(mockAuditService.record).not.toHaveBeenCalled();
+    });
+
+    it('harus membatalkan ekspor dan melempar error jika exportRetentionMinutes bukan tipe number yang valid (null/NaN)', async () => {
+      mockPolicyService.getActivePolicySnapshot.mockResolvedValue({
+        [PolicyCategory.RetentionPeriod]: {
+          backupRetentionDays: 14,
+          exportRetentionMinutes: null,
+        },
+      });
+
+      await expect(
+        service.generateAndUploadExport(
+          mockUser,
+          'daily-exception',
+          'pdf',
+          samplePayload,
+        ),
+      ).rejects.toThrow(
+        'Gagal mengurai kebijakan retensi ekspor aktif: RetentionPeriod.exportRetentionMinutes tidak valid atau tidak ditemukan',
+      );
+
+      expect(mockS3StorageService.uploadBuffer).not.toHaveBeenCalled();
+      expect(mockS3StorageService.createPresignedGetUrl).not.toHaveBeenCalled();
+      expect(mockAuditService.record).not.toHaveBeenCalled();
     });
   });
 });

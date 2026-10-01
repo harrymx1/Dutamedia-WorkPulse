@@ -378,5 +378,43 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
         leavePendingReminderHours: 24,
       });
     });
+
+    it('ADR-009: harus mengembalikan active snapshot RetentionPeriod sesuai tanggal efektif (future policy diabaikan)', async () => {
+      const pastDate = new Date('2026-09-01');
+      mockPrisma.policy.findMany.mockImplementation(async ({ where }: any) => {
+        const allPolicies = [
+          {
+            id: 'pol-ret-future',
+            category: PolicyCategory.RetentionPeriod,
+            status: PolicyStatus.Active,
+            effectiveDate: new Date('2026-10-15'), // future policy
+            endDate: null,
+            value: { backupRetentionDays: 30, exportRetentionMinutes: 60 },
+          },
+          {
+            id: 'pol-ret-current',
+            category: PolicyCategory.RetentionPeriod,
+            status: PolicyStatus.Active,
+            effectiveDate: new Date('2026-08-01'), // current active policy
+            endDate: null,
+            value: { backupRetentionDays: 14, exportRetentionMinutes: 30 },
+          },
+        ];
+        return allPolicies.filter(
+          (p) => p.effectiveDate <= where.effectiveDate.lte,
+        );
+      });
+
+      const snapshot = await service.getActivePolicySnapshot(
+        [PolicyCategory.RetentionPeriod],
+        pastDate,
+      );
+
+      // Future policy (2026-10-15) tidak digunakan pada request 2026-09-01; yang digunakan adalah 2026-08-01
+      expect(snapshot[PolicyCategory.RetentionPeriod]).toEqual({
+        backupRetentionDays: 14,
+        exportRetentionMinutes: 30,
+      });
+    });
   });
 });

@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import * as zlib from 'node:zlib';
+import { PolicyCategory } from '@prisma/client';
 import { S3StorageService } from '../../file-storage/services/s3-storage.service.js';
 import { AuditService } from '../../audit/audit.service.js';
+import { PolicyService } from '../../policy/policy.service.js';
 import type { CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
 
 export interface ExportTableData {
@@ -37,6 +39,7 @@ export class ExportGeneratorService {
   constructor(
     private readonly s3StorageService: S3StorageService,
     private readonly auditService: AuditService,
+    private readonly policyService: PolicyService,
   ) {}
 
   /**
@@ -66,11 +69,32 @@ export class ExportGeneratorService {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     }
 
+    // Resolusi TTL signed GET URL dari active policy RetentionPeriod (ADR-009)
+    const policySnapshot = await this.policyService.getActivePolicySnapshot(
+      [PolicyCategory.RetentionPeriod],
+      new Date(),
+    );
+    const retentionConfig = policySnapshot?.[PolicyCategory.RetentionPeriod];
+    const rawMinutes = retentionConfig?.exportRetentionMinutes;
+
+    if (
+      rawMinutes === undefined ||
+      rawMinutes === null ||
+      typeof rawMinutes !== 'number' ||
+      Number.isNaN(rawMinutes)
+    ) {
+      throw new Error(
+        'Gagal mengurai kebijakan retensi ekspor aktif: RetentionPeriod.exportRetentionMinutes tidak valid atau tidak ditemukan',
+      );
+    }
+
+    // Defense-in-depth: batasi 1–60 menit (ADR-009 Fixed Security Ceiling)
+    const effectiveMinutes = Math.min(Math.max(rawMinutes, 1), 60);
+    const expiresIn = Math.round(effectiveMinutes * 60);
+
     // Upload buffer ke Object Storage (SAD §13.5)
     await this.s3StorageService.uploadBuffer(storagePath, buffer, contentType);
 
-    // Dapatkan signed GET URL berdurasi 15 menit = 900 detik (SAD §13.5, §14.4)
-    const expiresIn = 900;
     const downloadUrl = await this.s3StorageService.createPresignedGetUrl(
       storagePath,
       expiresIn,

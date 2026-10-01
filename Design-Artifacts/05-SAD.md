@@ -614,7 +614,10 @@ Batas module diturunkan langsung dari batas domain data (Section 5.1) — satu e
   └────────────────┘  └────────────────┘  └──────────────────┘  └──────────────────┘
 
   ReportingModule → membaca (read-only) dari seluruh module domain,
-                     tidak pernah menulis, tidak pernah didependensi balik.
+                     termasuk membaca PolicyModule secara read-only untuk resolusi
+                     TTL signed URL ekspor per ADR-009; tidak pernah menulis,
+                     tidak pernah didependensi balik.
+                     (FileStorageModule dan S3StorageService TIDAK bergantung pada PolicyModule).
 
   ManagerNoteModule → dipanggil manual, membaca relatedEntityType/Id dari
                        DailyAccountabilityModule/BlockerModule/ComplianceModule secara read-only.
@@ -624,7 +627,7 @@ Batas module diturunkan langsung dari batas domain data (Section 5.1) — satu e
 
 | Aturan | Alasan |
 |---|---|
-| `PolicyModule` didependensi lima module domain lewat `getActivePolicySnapshot(category[], date)` | Logic effective-dating Policy hanya hidup satu tempat |
+| `PolicyModule` didependensi module domain dan `ReportingModule` (read-only TTL ekspor, ADR-009) lewat `getActivePolicySnapshot(category[], date)` | Logic effective-dating Policy hanya hidup satu tempat |
 | Arah dependency domain module satu arah, mengikuti diagram 6.3 | Mencegah circular dependency |
 | `AuditModule` dan `NotificationModule` bersifat *sink*, tidak pernah balik memanggil module domain | Mencegah dependency berputar |
 | `ReportingModule` hanya membaca, tidak pernah menulis atau didependensi balik | Mencegah agregasi bercampur dengan business logic transaksional |
@@ -1348,8 +1351,9 @@ Seluruh endpoint `ReportingModule` menerapkan kondisi `WHERE` scope yang sama pe
 | Aspek | Keputusan |
 |---|---|
 | Format | PDF dan XLSX sesuai query param `format` |
-| Mekanisme | File di-generate, upload ke Object Storage, kembalikan signed URL |
-| Retensi file export | Signed URL kedaluwarsa singkat (mis. 15 menit), dihapus via storage lifecycle policy |
+| Mekanisme | File di-generate on-demand, upload ke Object Storage (`exports/`), kembalikan signed GET URL |
+| Signed URL TTL (Masa Aktif Tautan) | Dihitung dinamis dari policy aktif `RetentionPeriod.exportRetentionMinutes` (default 15 menit, rentang izin 1–60 menit, dengan **fixed product security ceiling 60 menit** per ADR-009). Diterbitkan on-demand, tidak dapat diubah retroaktif. |
+| Object Storage Lifecycle Retention | Berkas fisik di bucket S3 folder `exports/` dihapus secara otomatis via storage lifecycle policy setelah **24 jam** (ephemeral, SAD §14.6), terpisah dari masa aktif signed URL. |
 | Konsistensi scope | Query sama dengan tampilan report |
 
 ### 13.6 Individual Review Evidence
@@ -1395,9 +1399,12 @@ Empat folder terpisah memisahkan sensitivitas dan siklus hidup berbeda — `mana
 ### 14.4 Download Flow
 
 ```
-1. Client → GET /api/v1/files/{fileId}/download-url
-2. Backend: resolusi resource pemilik, verifikasi scope (mengikuti otorisasi resource itu sendiri)
-3. Generate signed GET URL (kedaluwarsa 15 menit)
+1. Client → GET /api/v1/files/{fileId}/download-url (evidence/manager-note)
+   atau POST /api/v1/reports/export (report export)
+2. Backend: resolusi resource pemilik, verifikasi scope otorisasi (Default Deny)
+3. Generate signed GET URL:
+   - File Evidence & Manager-Note Evidence (FileStorageService): Tetap (fixed) 15 menit (900 detik) sebagai postur keamanan baku yang tidak dapat diubah oleh konfigurasi runtime.
+   - Report Export (ExportGeneratorService): Dinamis membaca Policy RetentionPeriod.exportRetentionMinutes (default 15 menit, rentang 1–60 menit, fixed product security ceiling 60 menit per ADR-009).
 ```
 
 Otorisasi download selalu mengikuti otorisasi resource pemilik file — tidak ada permission terpisah khusus file.
@@ -1416,11 +1423,14 @@ Otorisasi download selalu mengikuti otorisasi resource pemilik file — tidak ad
 |---|---|---|
 | `evidence/`, `manager-note-evidence/` | Mengikuti Policy `RetentionPeriod`, evidence disciplinary/HR dapat retention terpisah (NFR-09) | Manual/kebijakan — open item Section 23 jika penghapusan otomatis diperlukan |
 | `backups/` | 7–14 hari terakhir | Otomatis, bagian scheduled backup job |
-| `exports/` | Sangat singkat (menit) | Storage lifecycle policy |
+| `exports/` | Ephemeral (24 jam) | Storage lifecycle policy bucket S3 (dihapus otomatis setelah 24 jam). Catatan: `exportRetentionMinutes` mengatur masa aktif signed URL unduhan, bukan masa simpan fisik berkas di storage (ADR-009). |
 
 ### 14.7 Keamanan Tambahan
 
-Tidak ada bucket/folder public — seluruh akses melalui signed URL bertenggat waktu singkat setelah otorisasi backend. `backups/` tidak pernah diekspos lewat endpoint `/files/*` manapun — hanya diakses lewat proses restore manual di luar aplikasi.
+Tidak ada bucket/folder public — seluruh akses melalui signed URL bertenggat waktu singkat setelah otorisasi backend. Prinsip keamanan presigned URL:
+1. **Short-Lived Signed URL**: Seluruh link unduhan bertenggat waktu singkat. Unduhan berkas bukti investigasi (*evidence/manager-note-evidence*) dikunci tetap pada 15 menit (900 detik). Tautan ekspor laporan (*report export*) dibatasi secara ketat oleh **fixed product security ceiling maksimum 60 menit** (ADR-009), untuk meminimalkan risiko kebocoran link laporan operasional sensitif.
+2. **Infrastruktur Terisolasi**: `S3StorageService` beroperasi murni sebagai layer infrastruktur yang menerima parameter TTL dari pemanggil (`expiresInSeconds`), dan tidak pernah membaca modul kebijakan (`PolicyService`).
+3. **Isolasi Backup**: `backups/` tidak pernah diekspos lewat endpoint `/files/*` manapun — hanya diakses lewat proses restore manual di luar aplikasi.
 
 ---
 
@@ -1729,7 +1739,7 @@ Section ini berfungsi sebagai **indeks konsolidasi** — bukan narasi ulang. Kar
 | Rate limiting | 7.8 | Per kategori endpoint, in-process (`@nestjs/throttler`) |
 | CORS | 7.9 | Origin eksplisit via env var, tidak pernah wildcard |
 | XSS (frontend) | 16.8 | Tidak pernah `v-html` untuk konten dari input user |
-| File upload/access security | 14.4, 14.5, 14.7 | Signed URL bertenggat singkat, otorisasi mengikuti resource pemilik, tidak ada bucket public |
+| File upload/access security | 14.4, 14.5, 14.7, ADR-009 | Signed URL bertenggat singkat (evidence fixed 15 min; export dinamis 1–60 min, ceiling 60 min), otorisasi mengikuti resource pemilik, tidak ada bucket public |
 | Audit trail immutability | 15 | Append-only, transactional-linkage, tidak ada endpoint update/delete |
 | Backup & disaster recovery | 4.5, 14.6 | `pg_dump` terjadwal, retensi 7–14 hari, alert ke Admin jika gagal |
 | Password reset (admin-managed) | 8.2, 10.1 | Reset hanya via Admin, disertai `AuditLog(ADMIN_PASSWORD_RESET)` |

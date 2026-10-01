@@ -223,14 +223,14 @@ Seluruh akses langsung database dihilangkan dan digantikan dengan delegasi servi
 | Atribut | Nilai |
 |---|---|
 | **ID** | KL-06 |
-| **Komponen Terkait** | `MorningCheckinDto`, `DailyAccountabilityService`, `S3StorageService` |
-| **Kategori** | Implementation Note & Structural Guardrail |
-| **Tingkat Risiko** | LOW |
-| **Status** | **Active Structural Standard (SAD §9.3, ADR-006)** |
-| **Rujukan Terkait** | PDD §8, PRD BR-01, SAD §9.3, ADR-006 |
+| **Komponen Terkait** | `MorningCheckinDto`, `DailyAccountabilityService`, `ExportGeneratorService`, `FileStorageService`, `S3StorageService` |
+| **Kategori** | Implementation Note, Structural Guardrail & Policy Traceability |
+| **Tingkat Risiko** | LOW TO MODERATE |
+| **Status** | **Active Structural Standard (ADR-006; ADR-009 Implemented — Pending Verification)** |
+| **Rujukan Terkait** | PDD §8, PRD BR-01, PRD FR-31, SAD §6.3, §9.3, §13.5, §14.4, §14.6, §14.7, ADR-006, ADR-009 |
 
 ### Deskripsi & Aturan Desain
-Dalam arsitektur WorkPulse, batasan input HTTP dan validasi bisnis dipisahkan secara tegas untuk menghindari *coupling* yang kaku antara transport layer dan domain logic:
+Dalam arsitektur WorkPulse, batasan input HTTP, validasi bisnis, dan keterikatan kebijakan runtime dipisahkan secara tegas untuk menghindari *coupling* yang kaku antara transport layer dan domain logic:
 1. **DTO Permisif sebagai Structural Guardrail**:
    - `CreateCommitmentItemDto.sequenceNo`: Menggunakan validator `@Max(10)`.
    - `MorningCheckinDto.commitments`: Menggunakan validator `@ArrayMaxSize(10)`.
@@ -238,8 +238,15 @@ Dalam arsitektur WorkPulse, batasan input HTTP dan validasi bisnis dipisahkan se
 2. **Domain Service sebagai Precision Enforcer**:
    - `DailyAccountabilityService.submitMorningCheckin` menegakkan aturan bisnis produk yang sesungguhnya secara presisi menggunakan konstanta `MIN_DAILY_COMMITMENTS = 1` dan `MAX_DAILY_COMMITMENTS = 3` (BR-01, ADR-006).
    - Array komitmen yang dikirimkan dipastikan tepat berisi 1 hingga 3 item dengan sequence number berurutan.
-3. **Presigned URL TTL Alignment**:
-   - Nilai default TTL presigned URL unduhan pada `S3StorageService.createPresignedGetUrl` ditetapkan **900 detik (15 menit)**, selaras 100% dengan parameter `RetentionPeriod.exportRetentionMinutes: 15`.
+3. **Status Audit & Arsitektur Export Signed URL TTL (ADR-009)**:
+   - **Kondisi Awal Runtime**: Pada implementasi awal, baik `ExportGeneratorService` maupun `FileStorageService` meng-hardcode nilai masa aktif presigned URL dengan `expiresIn = 900` (15 menit), sementara kategori kebijakan `RetentionPeriod.exportRetentionMinutes: 15` tersedia di UI/DB tetapi tidak dibaca saat runtime (*broken traceability*).
+   - **Keputusan Arsitektur ADR-009**: Telah diputuskan secara otoritatif untuk mengadopsi **Decision B (Dynamic Export Policy)** dengan *fixed product security ceiling* 60 menit. Parameter `RetentionPeriod.exportRetentionMinutes` didefinisikan sebagai konfigurasi dinamis masa aktif signed URL khusus untuk report export (rentang 1–60 menit, default 15 menit).
+   - **Implementasi S1-T3**:
+     - `ExportGeneratorService` telah dihubungkan ke `PolicyService` untuk membaca snapshot aktif `RetentionPeriod.exportRetentionMinutes` secara dinamis, mengonversi menit ke detik (`minutes * 60`), dengan *defense-in-depth clamping* antara 1 s.d. 60 menit.
+     - `FileStorageService.generateDownloadUrl` untuk evidence dan manager-note tetap dipertahankan *fixed* 900 detik (15 menit) sebagai postur keamanan baku yang tidak bergantung pada kebijakan ekspor.
+     - `S3StorageService` tetap merupakan layer infrastruktur murni tanpa dependensi ke `PolicyService`.
+     - Pembersihan fisik berkas di folder `exports/` tetap diatur oleh S3 Object Lifecycle Policy (24 jam) sebagai mekanisme retensi storage fisik yang terpisah dari masa aktif URL.
+   - *Catatan Kepatuhan*: Implementasi telah selesai dan divalidasi dengan unit/regression test komprehensif, berstatus siap untuk audit verifikasi independen.
 
 ---
 

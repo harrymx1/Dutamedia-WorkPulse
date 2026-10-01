@@ -235,21 +235,35 @@ export class PolicyValueValidator {
       }
 
       case PolicyCategory.RetentionPeriod: {
-        for (const field of ['backupRetentionDays', 'exportRetentionMinutes']) {
-          if (field in value && value[field] !== undefined && value[field] !== null) {
-            if (!isValidNumber(value[field])) {
-              errors.push({
-                field,
-                reason: 'INVALID_TYPE',
-                message: `Field '${field}' harus bertipe number yang valid`,
-              });
-            } else if (value[field] <= 0) {
-              errors.push({
-                field,
-                reason: 'OUT_OF_RANGE',
-                message: `Field '${field}' harus bernilai > 0`,
-              });
-            }
+        if ('backupRetentionDays' in value && value.backupRetentionDays !== undefined && value.backupRetentionDays !== null) {
+          if (!isValidNumber(value.backupRetentionDays)) {
+            errors.push({
+              field: 'backupRetentionDays',
+              reason: 'INVALID_TYPE',
+              message: `Field 'backupRetentionDays' harus bertipe number yang valid`,
+            });
+          } else if (value.backupRetentionDays <= 0) {
+            errors.push({
+              field: 'backupRetentionDays',
+              reason: 'OUT_OF_RANGE',
+              message: `Field 'backupRetentionDays' harus bernilai > 0`,
+            });
+          }
+        }
+
+        if ('exportRetentionMinutes' in value && value.exportRetentionMinutes !== undefined && value.exportRetentionMinutes !== null) {
+          if (!isValidNumber(value.exportRetentionMinutes)) {
+            errors.push({
+              field: 'exportRetentionMinutes',
+              reason: 'INVALID_TYPE',
+              message: `Field 'exportRetentionMinutes' harus bertipe number yang valid`,
+            });
+          } else if (value.exportRetentionMinutes < 1 || value.exportRetentionMinutes > 60) {
+            errors.push({
+              field: 'exportRetentionMinutes',
+              reason: 'OUT_OF_RANGE',
+              message: `Field 'exportRetentionMinutes' harus bernilai antara 1 dan 60 (ADR-009)`,
+            });
           }
         }
         break;

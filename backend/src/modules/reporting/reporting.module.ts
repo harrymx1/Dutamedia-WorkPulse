@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module.js';
 import { AuthorizationModule } from '../authorization/authorization.module.js';
 import { AuditModule } from '../audit/audit.module.js';
 import { FileStorageModule } from '../file-storage/file-storage.module.js';
+import { PolicyModule } from '../policy/policy.module.js';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { FileStorageModule } from '../file-storage/file-storage.module.js';
     AuthorizationModule,
     AuditModule,
     FileStorageModule,
+    PolicyModule,
   ],
   controllers: [ReportingController],
   providers: [ReportingService, ExportGeneratorService],

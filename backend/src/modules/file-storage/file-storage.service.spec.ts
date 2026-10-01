@@ -527,5 +527,47 @@ describe('FileStorageService (EPIC-14)', () => {
         expect(result.downloadUrl).toBe('https://storage.test/download-signed-url');
       });
     });
+
+    describe('ADR-009 Evidence Isolation (Fixed 900s Security Invariant)', () => {
+      it('harus memastikan download evidence blocker selalu mengembalikan expiresIn 900 detik (SAD §14.4)', async () => {
+        prismaMock.blocker.findUnique.mockResolvedValue({
+          id: 'blocker-fixed-1',
+          raisedByUserId: employeeUser.userId,
+          ownerNeededUserId: 'emp-2',
+          supportContributions: [],
+        });
+
+        const result = await service.generateDownloadUrl(employeeUser, 'evidence-file-1', {
+          purpose: FilePurpose.EVIDENCE,
+          entityType: 'Blocker',
+          entityId: 'blocker-fixed-1',
+        });
+
+        expect(result.expiresIn).toBe(900);
+        expect(s3StorageMock.createPresignedGetUrl).toHaveBeenCalledWith(
+          expect.stringContaining('evidence/Blocker/blocker-fixed-1/evidence-file-1'),
+          900,
+        );
+      });
+
+      it('harus memastikan download manager-note-evidence selalu mengembalikan expiresIn 900 detik', async () => {
+        prismaMock.managerNote.findUnique.mockResolvedValue({
+          id: 'note-fixed-1',
+          aboutUserId: employeeUser.userId,
+          visibility: ManagerNoteVisibility.VisibleToEmployee,
+        });
+
+        const result = await service.generateDownloadUrl(employeeUser, 'mn-file-1', {
+          purpose: FilePurpose.MANAGER_NOTE_EVIDENCE,
+          entityId: 'note-fixed-1',
+        });
+
+        expect(result.expiresIn).toBe(900);
+        expect(s3StorageMock.createPresignedGetUrl).toHaveBeenCalledWith(
+          expect.stringContaining('manager-note-evidence/note-fixed-1/mn-file-1'),
+          900,
+        );
+      });
+    });
   });
 });

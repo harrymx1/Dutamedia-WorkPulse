@@ -100,4 +100,15 @@ describe('S3StorageService (S1-T2 Credential Fail-Fast)', () => {
       expect(() => new S3StorageService()).not.toThrow();
     });
   });
+
+  describe('ADR-009 S3 Policy Isolation', () => {
+    it('S3StorageService harus murni infrastructure-only dan bebas dari dependensi PolicyService/PolicyModule', () => {
+      // Inisialisasi tidak membutuhkan parameter domain/policy (0 dependencies injected)
+      const service = new S3StorageService();
+      expect(service).toBeDefined();
+
+      // createPresignedGetUrl menerima expiresInSeconds numerik murni dari caller
+      expect(typeof service.createPresignedGetUrl).toBe('function');
+    });
+  });
 });
