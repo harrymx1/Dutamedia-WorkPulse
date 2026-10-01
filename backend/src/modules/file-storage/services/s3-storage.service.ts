@@ -22,16 +22,52 @@ export class S3StorageService {
       process.env.STORAGE_ENDPOINT || process.env.S3_ENDPOINT || undefined;
     const region =
       process.env.STORAGE_REGION || process.env.S3_REGION || 'us-east-1';
-    const accessKeyId =
+
+    const rawAccessKey =
       process.env.STORAGE_ACCESS_KEY ||
       process.env.S3_ACCESS_KEY_ID ||
-      process.env.AWS_ACCESS_KEY_ID ||
-      'mock-access-key';
-    const secretAccessKey =
+      process.env.AWS_ACCESS_KEY_ID;
+    const rawSecretKey =
       process.env.STORAGE_SECRET_KEY ||
       process.env.S3_SECRET_ACCESS_KEY ||
-      process.env.AWS_SECRET_ACCESS_KEY ||
-      'mock-secret-key';
+      process.env.AWS_SECRET_ACCESS_KEY;
+
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    let accessKeyId: string;
+    let secretAccessKey: string;
+
+    if (isProduction) {
+      const trimmedAccessKey = rawAccessKey?.trim();
+      const trimmedSecretKey = rawSecretKey?.trim();
+
+      if (
+        !trimmedAccessKey ||
+        trimmedAccessKey === 'mock-access-key' ||
+        !trimmedSecretKey ||
+        trimmedSecretKey === 'mock-secret-key'
+      ) {
+        const errMsg =
+          '[S3StorageService] Konfigurasi produksi tidak valid: Kredensial storage (STORAGE_ACCESS_KEY / STORAGE_SECRET_KEY atau alias S3_/AWS_) wajib dikonfigurasi dan tidak boleh bernilai mock pada environment production.';
+        this.logger.error(errMsg);
+        throw new Error(errMsg);
+      }
+
+      accessKeyId = trimmedAccessKey;
+      secretAccessKey = trimmedSecretKey;
+    } else {
+      accessKeyId = rawAccessKey?.trim() || 'mock-access-key';
+      secretAccessKey = rawSecretKey?.trim() || 'mock-secret-key';
+      if (
+        accessKeyId === 'mock-access-key' ||
+        secretAccessKey === 'mock-secret-key'
+      ) {
+        this.logger.warn(
+          'S3StorageService berjalan dengan kredensial mock di lingkungan non-produksi.',
+        );
+      }
+    }
+
     const forcePathStyle =
       process.env.STORAGE_FORCE_PATH_STYLE !== 'false';
 

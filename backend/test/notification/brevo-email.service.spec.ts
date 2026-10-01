@@ -98,4 +98,49 @@ describe('BrevoEmailService (SAD §12.3, EPIC-13-T4)', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe('Connection timed out');
   });
+
+  describe('Production Fail-Fast Validation (S1-T2)', () => {
+    it('harus throw Error saat NODE_ENV=production dan BREVO_API_KEY tidak dikonfigurasi', () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.BREVO_API_KEY;
+
+      expect(() => new BrevoEmailService()).toThrow(
+        /BREVO_API_KEY wajib dikonfigurasi dan tidak boleh bernilai mock pada environment production/,
+      );
+    });
+
+    it('harus throw Error saat NODE_ENV=production dan BREVO_API_KEY berupa string kosong', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.BREVO_API_KEY = '';
+
+      expect(() => new BrevoEmailService()).toThrow(
+        /BREVO_API_KEY wajib dikonfigurasi dan tidak boleh bernilai mock pada environment production/,
+      );
+    });
+
+    it('harus throw Error saat NODE_ENV=production dan BREVO_API_KEY hanya berisi whitespace', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.BREVO_API_KEY = '   ';
+
+      expect(() => new BrevoEmailService()).toThrow(
+        /BREVO_API_KEY wajib dikonfigurasi dan tidak boleh bernilai mock pada environment production/,
+      );
+    });
+
+    it('harus throw Error saat NODE_ENV=production dan BREVO_API_KEY bernilai mock-brevo-key', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.BREVO_API_KEY = 'mock-brevo-key';
+
+      expect(() => new BrevoEmailService()).toThrow(
+        /BREVO_API_KEY wajib dikonfigurasi dan tidak boleh bernilai mock pada environment production/,
+      );
+    });
+
+    it('harus berhasil diinisialisasi saat NODE_ENV=production dan BREVO_API_KEY valid non-mock', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.BREVO_API_KEY = 'valid-production-api-key-test-only';
+
+      expect(() => new BrevoEmailService()).not.toThrow();
+    });
+  });
 });

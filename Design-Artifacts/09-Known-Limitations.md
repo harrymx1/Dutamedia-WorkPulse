@@ -25,6 +25,7 @@
 | **KL-05** | SchedulerService Cross-Module Decoupling | Refactoring & Dependency Record | LOW | Implemented & Monitored |
 | **KL-06** | DTO Structural Guardrail vs Domain Enforcer | Implementation Note | LOW | Active Structural Standard |
 | **KL-07** | Baseline Pengujian Regresi & Pembersihan Mock | Test & Quality Baseline | HIGH ASSURANCE | Active Verification Baseline |
+| **KL-08** | Audit Mock & Data Statis Kode Produksi (S1-T1) | Verification Record & Technical Debt | HIGH (S1-T2 Remediation & Arch Decision) | Active Audit Record (S1-T1 Closed, S1-T2 Resolved) |
 
 ---
 
@@ -268,3 +269,81 @@ Dalam arsitektur WorkPulse, batasan input HTTP dan validasi bisnis dipisahkan se
   - `frontend/tests/admin-organization-and-reviewer.spec.ts`: 10 tests pass.
   - Total test suite frontend: **20 unit tests passed (100% pass)**.
 - **Vite Production Build**: `npm run build` (`tsc && vite build`) berhasil selesai tanpa galat.
+
+---
+
+## KL-08: Hasil Audit Mock & Data Statis Kode Produksi (Task S1-T1)
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | KL-08 |
+| **Komponen Terkait** | `BrevoEmailService`, `S3StorageService`, `ProjectRiskPage.vue`, Test Suites, Support Scripts |
+| **Tanggal Audit** | 1 Oktober 2026 |
+| **Kategori** | Verification Record, Technical Debt & Architectural Decision |
+| **Tingkat Prioritas** | HIGH (Remediasi Kredensial via S1-T2 & Keputusan Arsitektur PM Scope) |
+| **Status** | **Active Audit Record — S1-T1 Closed (CONDITIONALLY CLEAN)** |
+| **Rujukan Terkait** | PDD §8, PRD §7, PRD US-15, SAD §4.2, §8.11, §12.3, §12.4, §19.1, ADR-002, Task S1-T2 |
+
+### 1. Scope, Metodologi & Integritas Audit
+- **Scope Audit S1-T1**:
+  Pemeriksaan menyeluruh pada kode produksi backend (`backend/src/`) dan frontend (`frontend/src/`) untuk mengidentifikasi mock, data statis, fallback palsu, placeholder, dan data yang menyamar sebagai business records.
+- **Metodologi**:
+  1. *Keyword search*: Pola `mock`, `dummy`, `fake`, `stub`, `placeholder`, `hardcode`, `TODO`, `FIXME`, dan `sementara`.
+  2. *Frontend static array audit*: Verifikasi seluruh inisialisasi array objek pada komponen dan 16 halaman frontend.
+  3. *Page data-source classification*: Audit sumber data 16 halaman di `frontend/src/pages/` (13 halaman mengonsumsi data bisnis backend riil, 2 halaman aksi mutasi otentikasi tanpa query data bisnis, 1 halaman error 404 statis murni).
+  4. *Semantic data audit*: Pencarian identitas contoh (`John Doe`, `example.com`), teks `lorem`, dan fallback database.
+- **Integritas Kode**:
+  Audit dilakukan secara murni **READ-ONLY**. Tidak ada kode produksi (`backend/src/`, `frontend/src/`), berkas pengujian (`.spec.ts`, `tests/`), dependensi (`package.json`, `package-lock.json`), atau konfigurasi yang diubah selama proses audit.
+
+---
+
+### 2. Kelompok 1: Legitimate Test Doubles & Support Tooling
+Seluruh test double berikut diklasifikasikan sebagai **SAH (Legitimate)** dan **TIDAK BOLEH** diubah atau dihapus:
+1. **Mock Files pada Test Suites**:
+   Objek tiruan seperti `prismaMock`, `auditMock`, `policyMock`, `scopeFilterMock`, `statusSuggestionMock`, `dailyAccountabilityMock`, `complianceMock`, `correctionRequestMock`, `blockerMock`, `notificationMock`, `databaseBackupMock`, dan `exceptionMock` yang berada pada direktori pengujian (`backend/test/`, `backend/src/**/*.spec.ts`, `frontend/tests/`) adalah implementasi *test double* standar yang sah untuk isolasi unit dan integrasi pengujian otomatis.
+2. **Support & Verification Tooling**:
+   Berkas `backend/src/scripts/verify-restore-live.ts` menggunakan *test double* lokal (`mockS3Storage`, dummy password hashes) secara terisolasi untuk menguji prosedur pemulihan bencana (*real database restore verification*) sesuai mandat SAD §21.6 dan bukan merupakan bagian dari runtime aplikasi produksi (`app.module.ts`).
+3. **Browser Push Stub Resmi**:
+   `BrowserPushService` (`backend/src/modules/notification/services/browser-push.service.ts`) yang berstatus stub merupakan keputusan desain arsitektur resmi yang disepakati untuk rilis MVP sesuai SAD §12.4 dan Product Backlog EPIC-13-T6.
+
+---
+
+### 3. Kelompok 2: Production Findings (Ditunda ke Task S1-T2)
+Dua temuan runtime berikut dicatat secara resmi sebagai utang teknis untuk diperbaiki pada task **S1-T2: Fail-Fast Kredensial**:
+
+#### A. BrevoEmailService — Mock Credential & Simulation Fallback
+- **File**: `backend/src/modules/notification/services/brevo-email.service.ts`
+- **Temuan**:
+  Pada lingkungan runtime produksi sebelumnya, service memiliki percabangan fallback simulasi ketika variabel lingkungan `BREVO_API_KEY` tidak tersedia atau bernilai string `'mock-brevo-key'`.
+- **Dampak Teknis**:
+  Pengiriman email transaksional dialihkan ke mode simulasi log (`[SIMULASI EMAIL]`) dan service mengembalikan status `success: true` disertai ID pesan tiruan (`mock-brevo-${Date.now()}`) tanpa adanya kredensial provider yang valid.
+- **Status Remediasi**: **RESOLVED IN S1-T2**. Constructor kini menerapkan *fail-fast* saat `NODE_ENV === 'production'` dan melempar error fatal jika `BREVO_API_KEY` kosong atau `'mock-brevo-key'`. Di non-produksi (`development`/`test`), mode simulasi tetap dipertahankan.
+
+#### B. S3StorageService — Hardcoded Mock Storage Credentials
+- **File**: `backend/src/modules/file-storage/services/s3-storage.service.ts`
+- **Temuan**:
+  Inisialisasi klien S3 sebelumnya menggunakan fallback string `'mock-access-key'` dan `'mock-secret-key'` tanpa memeriksa environment produksi.
+- **Dampak Teknis**:
+  Kegagalan konfigurasi kredensial tidak memicu *fail-fast* saat aplikasi melakukan bootstrap/startup, melainkan baru melempar exception saat operasi penyimpanan berkas (PutObject/GetObject) dieksekusi saat runtime.
+- **Status Remediasi**: **RESOLVED IN S1-T2**. Constructor kini menerapkan *fail-fast* saat `NODE_ENV === 'production'` dan melempar error fatal jika kredensial hasil resolusi cascade (`STORAGE_*` / `S3_*` / `AWS_*`) kosong atau bernilai `'mock-access-key'` / `'mock-secret-key'`. Di non-produksi, fallback mock tetap diperbolehkan dengan pencatatan warning log.
+
+---
+
+### 4. Kelompok 3: Architectural Decision Item (ProjectRiskPage Scope)
+- **File**: `frontend/src/pages/ProjectRiskPage.vue` (baris 187)
+- **Area Kode**:
+  ```ts
+  scope: 'Company', // Diubah menjadi 'Company' untuk mensimulasikan PM scope lintas fungsi
+  ```
+- **Temuan & Hasil Verifikasi Alur**:
+  1. Frontend mengirimkan query parameter `scope='Company'` saat memanggil `useDailyRecordsQuery()`.
+  2. Kontrak DTO backend `QueryDailyRecordsDto` (`backend/src/modules/daily-accountability/dto/query-daily-records.dto.ts`) tidak mendeklarasikan field `scope`.
+  3. Pipa validasi global `createAppValidationPipe({ whitelist: true })` secara otomatis membuang (*strip*) parameter `scope` tersebut sebelum mencapai controller dan service.
+  4. Otorisasi data operasional harian sepenuhnya ditegakkan di sisi server oleh `ScopeFilterService` berdasarkan peran dalam token JWT pengguna (`user.role`), di mana role `PM` hanya berwenang mengakses `[user.userId]` miliknya sendiri (SAD §8.11).
+- **Kesimpulan Teknis**:
+  - Tidak ditemukan authorization bypass atau kebocoran data melalui parameter `scope` berdasarkan trace alur kode yang diverifikasi.
+  - **Parameter Tidak Efektif**: Parameter `scope: 'Company'` di frontend bersifat *dead / ineffective parameter*.
+  - **Diskrepansi Komentar**: Komentar "mensimulasikan PM scope lintas fungsi" adalah catatan perancangan awal developer dan tidak menggambarkan alur otorisasi aktual backend.
+  - **Kebutuhan PRD US-15**: PRD US-15 mensyaratkan PM memiliki visibilitas atas risiko proyek lintas anggota tim yang mengerjakan tiket terkait. Mekanisme implementasi resmi (apakah menggunakan query endpoint project-scoped tersendiri atau perluasan filter `ProjectAuthorityMapping`) belum diputuskan secara arsitektural.
+- **Status**: **OPEN — ARCHITECTURAL DECISION**.
+- **Batasan**: Parameter tidak dihapus, scope tidak diubah, dan tidak ada modifikasi endpoint/skema pada task S1-T1. Keputusan diserahkan ke pembahasan arsitektur berikutnya.

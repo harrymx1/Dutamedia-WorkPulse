@@ -23,12 +23,22 @@ export class BrevoEmailService {
   private readonly apiUrl = 'https://api.brevo.com/v3/smtp/email';
 
   constructor() {
-    this.apiKey = process.env.BREVO_API_KEY;
+    const rawApiKey = process.env.BREVO_API_KEY;
+    this.apiKey = rawApiKey ? rawApiKey.trim() : undefined;
     this.senderEmail =
       process.env.BREVO_SENDER_EMAIL || 'no-reply@dutamedia.com';
     this.senderName = process.env.BREVO_SENDER_NAME || 'WorkPulse Dutamedia';
 
-    if (!this.apiKey) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      if (!this.apiKey || this.apiKey === 'mock-brevo-key') {
+        const errMsg =
+          '[BrevoEmailService] Konfigurasi produksi tidak valid: BREVO_API_KEY wajib dikonfigurasi dan tidak boleh bernilai mock pada environment production.';
+        this.logger.error(errMsg);
+        throw new Error(errMsg);
+      }
+    } else if (!this.apiKey) {
       this.logger.warn(
         'BREVO_API_KEY tidak dikonfigurasi. BrevoEmailService beroperasi dalam mode simulasi (mock send).',
       );
@@ -39,8 +49,18 @@ export class BrevoEmailService {
    * Mengirim email transaksional melalui Brevo REST API v3 (SAD §12.3).
    */
   async sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
-    // Mode simulasi jika API key tidak tersedia atau mode testing
+    // Mode simulasi jika API key tidak tersedia atau mode testing di non-production
     if (!this.apiKey || this.apiKey === 'mock-brevo-key') {
+      if (process.env.NODE_ENV === 'production') {
+        this.logger.error(
+          '[BrevoEmailService] Upaya pengiriman email di environment production dengan API key yang tidak valid.',
+        );
+        return {
+          success: false,
+          error: 'Brevo API key tidak valid di lingkungan production',
+        };
+      }
+
       this.logger.log(
         `[SIMULASI EMAIL] Kepada: ${options.toEmail} | Subjek: "${options.subject}"`,
       );
