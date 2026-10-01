@@ -376,7 +376,59 @@ Sistem WorkPulse membutuhkan mekanisme pencadangan yang:
 | **Atomisitas Pemulihan** | Script SQL dibungkus dalam blok transaksi `BEGIN ... COMMIT` sehingga kegagalan sintaks atau data di tengah jalan tidak meninggalkan status database parsial |
 | **Skalabilitas Memori (Known Limitation)** | Pada volume data sangat besar (misalnya >100.000 row AuditLog), penggabungan string in-memory berisiko memicu lonjakan memori container 512 MB (tercatat sebagai KL-01 di `09-Known-Limitations.md`) |
 
+---
 
+## ADR-008 — PATTERN_FLAG_THRESHOLD_COUNT (Ambang 3 Kejadian NoSubmission) adalah Konstanta Tetap Produk, Bukan Policy
 
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-008 |
+| **Tanggal** | 2026-10-01 |
+| **Status** | ACCEPTED |
+| **Rujukan / Penegasan Aturan** | PDD §7, PRD BR-12, PRD FR-29, PRD FR-31, SAD §9.7, SAD §5.9 |
+| **Berlaku mulai** | EPIC-12 (ComplianceModule) & EPIC-06 (PolicyModule) |
 
+### Konteks
 
+Pada audit stabilisasi S1-T1, ditemukan bahwa method `evaluatePatternFlag()` pada `ComplianceService` mencoba membaca ambang frekuensi kejadian non-submission melalui ekspresi:
+`const thresholdCount: number = coachingConfig.patternThresholdCount || 3;`
+yang dibaca dari snapshot kebijakan `PolicyCategory.CoachingFollowUpPeriod`.
+
+Namun, field `patternThresholdCount` ini tidak pernah didaftarkan pada `DEFAULT_POLICY_VALUES[PolicyCategory.CoachingFollowUpPeriod]` di `policy.service.ts`, dan tidak pernah didefinisikan sebagai parameter yang dapat diubah di dokumen kebutuhan produk manapun.
+
+### Analisis terhadap PRD, SAD & Risiko Keamanan
+
+1. **Batasan Eksplisit PRD FR-29 & FR-31**:
+   - **PRD FR-29** menyatakan: *"Sistem mendeteksi dan menandai pola repeated non-submission dalam periode configurable, memicu flag untuk coaching."*
+   - FR-29 secara spesifik hanya menetapkan **periode waktu evaluasi** (`windowDays` / `coachingWindowDays: 14`) sebagai parameter yang *configurable*.
+   - PRD FR-31 mendefinisikan kategori kebijakan sebagai `coaching follow-up period` (periode tindak lanjut), BUKAN ambang batas kejadian pelanggaran.
+   - Ambang 3 kejadian merupakan aturan produk baku (product baseline rule) untuk mendefinisikan sebuah "pola" pelanggaran sebelum intervensi manusia (coaching oleh atasan) dipicu.
+
+2. **Risiko Keamanan & Integritas State Machine (Security Vulnerability)**:
+   - DTO `CreatePolicyDto` menerima `value: Record<string, any>` berupa objek JSON terbuka.
+   - Jika `patternThresholdCount` dibiarkan dibaca secara dinamis tanpa skema validasi ketat, Authorized Policy Owner atau aktor berwenang dapat menyusupkan nilai ekstrem (misalnya `patternThresholdCount: 999999` atau `0`), yang secara diam-diam melumpuhkan deteksi pola kepatuhan perusahaan tanpa memicu error atau peringatan sistem.
+
+3. **Konsistensi dengan Keputusan ADR-006 (Fixed Product Rule vs Configurable Policy)**:
+   - Mengikuti preseden ADR-006 (batas 3 komitmen harian BR-01), aturan dasar yang menjadi fondasi state machine produk wajib diproteksi sebagai konstanta kode dan tidak boleh diubah-ubah secara sepihak oleh admin.
+
+### Keputusan
+
+1. **`PATTERN_FLAG_THRESHOLD_COUNT = 3` Ditetapkan sebagai Konstanta Tetap Produk**:
+   Didefinisikan secara terpusat di `backend/src/modules/compliance/constants/compliance.constants.ts` dan digunakan langsung oleh `ComplianceService.evaluatePatternFlag()`.
+2. **Pembersihan Pembacaan Dynamic Policy**:
+   Menghapus pemanggilan `coachingConfig.patternThresholdCount` dari `compliance.service.ts:325`. Evaluasi PatternFlag secara deterministik menggunakan konstanta produk 3.
+3. **`CoachingFollowUpPeriod` Murni Mengatur Periode Jendela Waktu**:
+   Kategori `PolicyCategory.CoachingFollowUpPeriod` murni dan hanya mengelola `coachingWindowDays: 14`.
+4. **Pembersihan Mock Unit Test**:
+   Memperbaiki `compliance.service.spec.ts` dengan menghapus `patternThresholdCount` dari mock policy snapshot agar selaras dengan arsitektur tetap.
+5. **Antarmuka Pengguna Frontend**:
+   Kartu `CoachingFollowUpPeriod` pada `PolicySettingsPage.vue` hanya menampilkan dan membolehkan pengeditan terhadap field `coachingWindowDays`.
+
+### Konsekuensi untuk Implementasi
+
+| Area | Dampak |
+|---|---|
+| **ComplianceModule** | `evaluatePatternFlag` menggunakan `PATTERN_FLAG_THRESHOLD_COUNT = 3` deterministik |
+| **PolicyModule** | `CoachingFollowUpPeriod` bersih dari field liar yang tidak terdaftar |
+| **Keamanan Sistem** | Mencegah pelumpuhan deteksi kepatuhan melalui injeksi nilai JSON policy liar |
+| **Frontend UI** | Form `PolicySettingsPage.vue` hanya menampilkan field resmi `coachingWindowDays` |

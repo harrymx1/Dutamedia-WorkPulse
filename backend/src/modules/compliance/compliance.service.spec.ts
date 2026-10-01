@@ -92,7 +92,6 @@ describe('ComplianceService (EPIC-12)', () => {
         },
         [PolicyCategory.CoachingFollowUpPeriod]: {
           coachingWindowDays: 14,
-          patternThresholdCount: 3,
         },
         [PolicyCategory.EscalationThreshold]: {
           unacknowledgedThresholdHours: 2,

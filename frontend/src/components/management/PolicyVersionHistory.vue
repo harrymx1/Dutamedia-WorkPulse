@@ -51,9 +51,9 @@
             <v-card variant="outlined" class="pa-3 rounded border-subtle mb-3 bg-surface-elevated">
               <div class="d-flex align-center justify-space-between flex-wrap ga-2 mb-1">
                 <div class="d-flex align-center ga-2">
-                  <span class="text-subtitle-2 font-weight-bold">Versi {{ ver.versionNumber }}</span>
+                  <span class="text-subtitle-2 font-weight-bold">Versi #{{ history.length - index }}</span>
                   <v-chip
-                    v-if="index === 0"
+                    v-if="ver.status === 'Active'"
                     size="x-small"
                     color="primary"
                     variant="flat"
@@ -61,31 +61,35 @@
                   >
                     Aktif
                   </v-chip>
+                  <v-chip
+                    v-else
+                    size="x-small"
+                    color="grey"
+                    variant="tonal"
+                  >
+                    Diarsipkan
+                  </v-chip>
                 </div>
                 <span class="text-caption text-medium-emphasis font-mono">
                   Berlaku: {{ formatDate(ver.effectiveDate) }}
+                  <template v-if="ver.endDate"> — {{ formatDate(ver.endDate) }}</template>
                 </span>
-              </div>
-
-              <!-- Alasan Perubahan -->
-              <div v-if="ver.changeReason" class="text-body-2 mb-2 font-weight-medium">
-                Alasan: "{{ ver.changeReason }}"
               </div>
 
               <!-- Author -->
               <div class="text-caption text-medium-emphasis mb-2">
-                Diterbitkan oleh: <strong>{{ ver.createdByName || 'System / Admin' }}</strong>
+                Diterbitkan oleh: <strong>{{ ver.createdBy?.fullName || 'System / Admin' }}</strong>
                 pada {{ formatDateTime(ver.createdAt) }}
               </div>
 
-              <!-- Parameters Viewer -->
+              <!-- Value Snapshot Viewer -->
               <v-expansion-panels variant="accordion">
                 <v-expansion-panel elevation="0" class="border rounded">
                   <v-expansion-panel-title class="text-caption font-weight-bold py-1">
-                    Lihat Snapshot Parameter
+                    Lihat Snapshot Konfigurasi
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
-                    <pre class="text-caption bg-grey-lighten-4 pa-2 rounded overflow-x-auto font-mono">{{ JSON.stringify(ver.parameters, null, 2) }}</pre>
+                    <pre class="text-caption bg-grey-lighten-4 pa-2 rounded overflow-x-auto font-mono">{{ JSON.stringify(ver.value, null, 2) }}</pre>
                   </v-expansion-panel-text>
                 </v-expansion-panel>
               </v-expansion-panels>

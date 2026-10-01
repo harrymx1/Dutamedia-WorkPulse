@@ -19,7 +19,7 @@ export function usePoliciesQuery(category?: MaybeRefOrGetter<PolicyCategory | un
     queryKey: computed(() => POLICY_KEYS.list(category)),
     queryFn: async () => {
       const res = await policiesApi.getPolicies(category ? toValue(category) : undefined);
-      return res.data.policies;
+      return res.data;
     },
   });
 }
@@ -34,7 +34,7 @@ export function usePolicyHistoryQuery(category: MaybeRefOrGetter<PolicyCategory>
       const cat = toValue(category);
       if (!cat) return [];
       const res = await policiesApi.getPolicyHistory(cat);
-      return res.data.history;
+      return res.data;
     },
     enabled: computed(() => !!toValue(category)),
   });

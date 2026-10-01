@@ -27,6 +27,7 @@ import type { CoachComplianceEventDto } from '../dto/coach-compliance-event.dto.
 import type { RecordWarningDto } from '../dto/record-warning.dto.js';
 import type { EscalateFormalDto } from '../dto/escalate-formal.dto.js';
 import type { QueryComplianceEventsDto } from '../dto/query-compliance-events.dto.js';
+import { PATTERN_FLAG_THRESHOLD_COUNT } from '../constants/compliance.constants.js';
 
 export function normalizeDate(dateInput: Date | string): Date {
   const d = new Date(dateInput);
@@ -310,19 +311,16 @@ export class ComplianceService {
   async evaluatePatternFlag(asOfDate: Date = new Date()) {
     const asOf = normalizeDate(asOfDate);
 
-    // 1. Ambil kebijakan CoachingFollowUpPeriod & threshold
+    // 1. Ambil kebijakan CoachingFollowUpPeriod (coachingWindowDays per PRD FR-29, FR-31)
     const policySnapshot = await this.policyService.getActivePolicySnapshot(
-      [
-        PolicyCategory.CoachingFollowUpPeriod,
-        PolicyCategory.EscalationThreshold,
-      ],
+      [PolicyCategory.CoachingFollowUpPeriod],
       asOf,
     );
 
     const coachingConfig =
       policySnapshot[PolicyCategory.CoachingFollowUpPeriod] || {};
     const windowDays: number = coachingConfig.coachingWindowDays || 14;
-    const thresholdCount: number = coachingConfig.patternThresholdCount || 3;
+    const thresholdCount: number = PATTERN_FLAG_THRESHOLD_COUNT;
 
     const windowStart = new Date(
       asOf.getTime() - windowDays * 24 * 60 * 60 * 1000,

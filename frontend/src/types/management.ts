@@ -297,34 +297,43 @@ export interface ObjectCorrectionPayload {
 }
 
 // =============================================================================
-// 4. POLICY TYPES (SAD §10.9)
+// =============================================================================
+// 4. POLICY TYPES (SAD §5.9, §10.9)
 // =============================================================================
 
 export type PolicyCategory =
-  | 'Schedule'
-  | 'SubmissionWindow'
-  | 'BlockerSLA'
-  | 'ObjectionWindow'
-  | 'ComplianceThreshold';
+  | 'Cutoff'
+  | 'GracePeriod'
+  | 'WorkdayCalendar'
+  | 'EscalationThreshold'
+  | 'CoachingFollowUpPeriod'
+  | 'RetentionPeriod'
+  | 'ExemptionRule'
+  | 'ObjectionWindowDuration'
+  | 'MinorMaterialThreshold'
+  | 'ParticipationRule'
+  | 'ReminderThreshold';
 
 export interface PolicyItem {
   id: string;
   category: PolicyCategory;
-  versionNumber: number;
+  value: Record<string, any>;
   effectiveDate: string;
-  parameters: Record<string, any>;
-  changeReason?: string;
-  isCurrent: boolean;
+  endDate?: string | null;
+  status: 'Active' | 'Inactive';
   createdByUserId: string;
-  createdByName?: string;
+  createdBy?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
   createdAt: string;
 }
 
 export interface CreatePolicyPayload {
   category: PolicyCategory;
   effectiveDate: string;
-  parameters: Record<string, any>;
-  changeReason: string;
+  value: Record<string, any>;
 }
 
 // =============================================================================
