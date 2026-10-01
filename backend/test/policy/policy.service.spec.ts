@@ -115,11 +115,11 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
   });
 
   describe('createPolicy (EPIC-06-T2 - SAD §5.9, §10.9)', () => {
-    it('harus membuat versi baru dan menutup endDate versi aktif sebelumnya secara atomic', async () => {
+    it('harus membuat versi baru dan menutup endDate versi aktif sebelumnya secara atomic jika policy value valid', async () => {
       const existingPolicy = {
         id: 'pol-old-1',
         category: PolicyCategory.GracePeriod,
-        value: { morningGraceMinutes: 15 },
+        value: { morningGraceMinutes: 15, eodGraceMinutes: 15 },
         effectiveDate: new Date('2026-01-01'),
         endDate: null,
       };
@@ -127,7 +127,7 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
       const newPolicy = {
         id: 'pol-new-1',
         category: PolicyCategory.GracePeriod,
-        value: { morningGraceMinutes: 30 },
+        value: { morningGraceMinutes: 30, eodGraceMinutes: 30 },
         effectiveDate: new Date('2026-09-01'),
         endDate: null,
         status: PolicyStatus.Active,
@@ -140,7 +140,7 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
       const result = await service.createPolicy(
         {
           category: PolicyCategory.GracePeriod,
-          value: { morningGraceMinutes: 30 },
+          value: { morningGraceMinutes: 30, eodGraceMinutes: 30 },
           effectiveDate: '2026-09-01',
         },
         'owner-1',
@@ -155,7 +155,7 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
       expect(mockPrisma.policy.create).toHaveBeenCalledWith({
         data: {
           category: PolicyCategory.GracePeriod,
-          value: { morningGraceMinutes: 30 },
+          value: { morningGraceMinutes: 30, eodGraceMinutes: 30 },
           effectiveDate: new Date('2026-09-01'),
           endDate: null,
           status: PolicyStatus.Active,
@@ -172,12 +172,12 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
           relatedEntityId: 'pol-new-1',
           valueBefore: {
             id: 'pol-old-1',
-            value: { morningGraceMinutes: 15 },
+            value: { morningGraceMinutes: 15, eodGraceMinutes: 15 },
             effectiveDate: expect.any(Date),
           },
           valueAfter: {
             id: 'pol-new-1',
-            value: { morningGraceMinutes: 30 },
+            value: { morningGraceMinutes: 30, eodGraceMinutes: 30 },
             effectiveDate: expect.any(Date),
           },
         },
@@ -185,6 +185,40 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
       );
 
       expect(result).toEqual(newPolicy);
+    });
+
+    it('harus menolak pembuatan policy jika value tidak valid dan tidak menyimpan ke database', async () => {
+      await expect(
+        service.createPolicy(
+          {
+            category: PolicyCategory.GracePeriod,
+            value: { morningGraceMinutes: -10, eodGraceMinutes: 30 },
+            effectiveDate: '2026-09-01',
+          },
+          'owner-1',
+        ),
+      ).rejects.toThrow(BusinessRuleViolationException);
+
+      // Pastikan tidak ada transaksi database atau audit trail yang dijalankan
+      expect(mockPrisma.policy.create).not.toHaveBeenCalled();
+      expect(mockPrisma.policy.update).not.toHaveBeenCalled();
+      expect(mockAuditService.record).not.toHaveBeenCalled();
+    });
+
+    it('harus menolak pembuatan policy jika terdapat unknown fields (closed schema)', async () => {
+      await expect(
+        service.createPolicy(
+          {
+            category: PolicyCategory.CoachingFollowUpPeriod,
+            value: { coachingWindowDays: 14, patternThresholdCount: 3 },
+            effectiveDate: '2026-09-01',
+          },
+          'owner-1',
+        ),
+      ).rejects.toThrow(BusinessRuleViolationException);
+
+      expect(mockPrisma.policy.create).not.toHaveBeenCalled();
+      expect(mockAuditService.record).not.toHaveBeenCalled();
     });
   });
 

@@ -12,6 +12,7 @@ import {
   BusinessRuleViolationException,
   NotFoundException,
 } from '../shared/exceptions/api.exception.js';
+import { PolicyValueValidator } from './services/policy-value.validator.js';
 import type { CreatePolicyDto } from './dto/create-policy.dto.js';
 import type { CreatePolicyOwnerAssignmentDto } from './dto/create-policy-owner-assignment.dto.js';
 import type { QueryPoliciesDto } from './dto/query-policies.dto.js';
@@ -59,6 +60,7 @@ export class PolicyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly policyValueValidator: PolicyValueValidator = new PolicyValueValidator(),
   ) {}
 
   /**
@@ -102,6 +104,9 @@ export class PolicyService {
    * Menutup versi aktif sebelumnya secara otomatis dalam transaksi.
    */
   async createPolicy(dto: CreatePolicyDto, actorUserId: string): Promise<Policy> {
+    // 0. Validasi nilai domain kebijakan sesuai locked contract
+    this.policyValueValidator.validate(dto.category, dto.value);
+
     const effectiveDate = new Date(dto.effectiveDate);
 
     return this.prisma.$transaction(async (tx) => {
