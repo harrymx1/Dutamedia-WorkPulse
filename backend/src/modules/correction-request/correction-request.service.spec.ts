@@ -308,36 +308,39 @@ describe('CorrectionRequestService (EPIC-09)', () => {
       );
     });
 
-    it('EPIC-09-T5: Recompute initialStatus — jika initialRisk berubah pada jalur Minor, initialStatus parent dihitung ulang', async () => {
-      policyMock.getActivePolicySnapshot.mockResolvedValue({
-        [PolicyCategory.MinorMaterialThreshold]: {
-          wordsChangedThreshold: 100,
-          riskChangeAlwaysMaterial: false,
+    it('EPIC-09-T5: Recompute initialStatus — ketika koreksi Material yang mengubah initialRisk diterapkan, initialStatus parent dihitung ulang (SAD §9.6)', async () => {
+      prismaMock.correctionRequest.findMany.mockResolvedValue([{ id: 'cr-risk-expired' }]);
+      prismaMock.$queryRaw.mockResolvedValue([
+        {
+          id: 'cr-risk-expired',
+          status: CorrectionStatus.Pending,
+          target_commitment_id: 'comm-1',
+          requested_change: {
+            initialRisk: DailyStatus.AMBER,
+            knownBlockerNote: 'Menunggu kredensial API',
+          },
+          requested_by_user_id: 'emp-1',
         },
-        [PolicyCategory.ObjectionWindowDuration]: { durationHours: 24 },
+      ]);
+      prismaMock.commitment.findUnique.mockResolvedValue({
+        id: 'comm-1',
+        initialRisk: DailyStatus.GREEN,
+        dailyRecordId: 'rec-1',
       });
-
-      prismaMock.commitment.findUnique.mockResolvedValue(mockCommitment);
-      prismaMock.correctionRequest.findFirst.mockResolvedValue(null);
+      prismaMock.commitment.update.mockResolvedValue({
+        id: 'comm-1',
+        initialRisk: DailyStatus.AMBER,
+      });
       prismaMock.commitment.findMany.mockResolvedValue([
         { id: 'comm-1', initialRisk: DailyStatus.AMBER },
         { id: 'comm-2', initialRisk: DailyStatus.GREEN },
       ]);
-      prismaMock.commitment.update.mockResolvedValue({ ...mockCommitment, initialRisk: DailyStatus.AMBER });
-      prismaMock.correctionRequest.create.mockResolvedValue({
-        id: 'cr-minor-risk',
-        classification: CorrectionClassification.Minor,
-        status: CorrectionStatus.Applied,
+      prismaMock.dailyAccountabilityRecord.update.mockResolvedValue({
+        id: 'rec-1',
+        initialStatus: DailyStatus.AMBER,
       });
 
-      await service.createCorrectionRequest(employeeUser, {
-        targetCommitmentId: 'comm-1',
-        requestedChange: {
-          initialRisk: DailyStatus.AMBER,
-          knownBlockerNote: 'Menunggu kredensial API',
-        },
-        reason: 'Update risiko dengan blocker',
-      });
+      await service.evaluateExpiredObjectionWindows();
 
       expect(prismaMock.dailyAccountabilityRecord.update).toHaveBeenCalledWith({
         where: { id: 'rec-1' },
@@ -507,8 +510,8 @@ describe('CorrectionRequestService (EPIC-09)', () => {
       dailyRecord: { id: 'rec-2', employeeUserId: 'emp-1' },
     };
 
-    it('T1-A: riskChangeAlwaysMaterial=false — perubahan initialRisk TETAP MENJADI Minor (SAD §9.6)', async () => {
-      // Policy dikonfigurasi: riskChangeAlwaysMaterial=false → risk change = Minor
+    it('T1-A: Perubahan initialRisk SELALU menghasilkan Material meskipun policy mencoba mengonfigurasi riskChangeAlwaysMaterial=false (PDD §7, SAD §9.6)', async () => {
+      // Kebijakan mencoba menyuntikkan riskChangeAlwaysMaterial: false (field tidak resmi/diabaikan)
       policyMock.getActivePolicySnapshot.mockResolvedValue({
         [PolicyCategory.MinorMaterialThreshold]: {
           wordsChangedThreshold: 10,
@@ -519,22 +522,20 @@ describe('CorrectionRequestService (EPIC-09)', () => {
 
       prismaMock.commitment.findUnique.mockResolvedValue(mockCommitmentBase);
       prismaMock.correctionRequest.findFirst.mockResolvedValue(null);
+      prismaMock.organizationalAssignment.findFirst.mockResolvedValue({
+        directManagerId: 'spv-1',
+      });
 
-      const createdCorrection = {
-        id: 'cr-risk-minor',
-        classification: CorrectionClassification.Minor,
-        status: CorrectionStatus.Applied,
+      const createdMaterial = {
+        id: 'cr-risk-material',
+        classification: CorrectionClassification.Material,
+        status: CorrectionStatus.Pending,
+        objectionWindowStart: new Date(),
+        objectionWindowEnd: new Date(Date.now() + 24 * 3600 * 1000),
         targetCommitment: mockCommitmentBase,
         requestedBy: { id: 'emp-1', fullName: 'Budi', email: 'budi@dutamedia.com' },
       };
-      prismaMock.correctionRequest.create.mockResolvedValue(createdCorrection);
-      prismaMock.commitment.update.mockResolvedValue({
-        ...mockCommitmentBase,
-        initialRisk: DailyStatus.AMBER,
-      });
-      prismaMock.commitment.findMany.mockResolvedValue([
-        { id: 'comm-2', initialRisk: DailyStatus.AMBER },
-      ]);
+      prismaMock.correctionRequest.create.mockResolvedValue(createdMaterial);
 
       const result = await service.createCorrectionRequest(employeeUser, {
         targetCommitmentId: 'comm-2',
@@ -545,8 +546,15 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         reason: 'Risiko meningkat karena review belum selesai',
       });
 
-      expect(result.classification).toBe(CorrectionClassification.Minor);
-      expect(result.status).toBe(CorrectionStatus.Applied);
+      expect(result.classification).toBe(CorrectionClassification.Material);
+      expect(result.status).toBe(CorrectionStatus.Pending);
+      expect(prismaMock.commitment.update).not.toHaveBeenCalled();
+      expect(notificationMock.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          triggerType: 'CORRECTION_MATERIAL_REQUESTED',
+          recipientUserId: 'spv-1',
+        }),
+      );
     });
 
     it('T1-B: perubahan teks melebihi wordsChangedThreshold — harus diklasifikasikan Material (SAD §9.6)', async () => {

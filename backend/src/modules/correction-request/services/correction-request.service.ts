@@ -701,18 +701,12 @@ export class CorrectionRequestService {
     requestedChange: Record<string, any>,
     policySnapshot: any,
   ): CorrectionClassification {
-    const thresholdConfig =
-      policySnapshot[PolicyCategory.MinorMaterialThreshold] ?? {};
-
-    // Perubahan initialRisk secara default adalah Material (memengaruhi status harian & eskalasi),
-    // kecuali dikonfigurasikan sebaliknya dalam policy
+    // Perubahan initialRisk selalu Material (PDD §7, SAD §9.6: memengaruhi status harian & eskalasi)
     if (
       requestedChange.initialRisk &&
       requestedChange.initialRisk !== commitment.initialRisk
     ) {
-      if (thresholdConfig.riskChangeAlwaysMaterial !== false) {
-        return CorrectionClassification.Material;
-      }
+      return CorrectionClassification.Material;
     }
 
     // Perubahan outcome selalu Material

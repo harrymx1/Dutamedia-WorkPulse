@@ -38,9 +38,7 @@ export const DEFAULT_POLICY_VALUES: Record<PolicyCategory, Record<string, any>> 
     backupRetentionDays: 14,
     exportRetentionMinutes: 15,
   },
-  [PolicyCategory.ExemptionRule]: {
-    allowLeaveOnProbation: true,
-  },
+  [PolicyCategory.ExemptionRule]: {},
   [PolicyCategory.ObjectionWindowDuration]: {
     durationHours: 24,
   },
