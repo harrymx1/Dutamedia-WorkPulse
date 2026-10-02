@@ -226,8 +226,8 @@ Seluruh akses langsung database dihilangkan dan digantikan dengan delegasi servi
 | **Komponen Terkait** | `MorningCheckinDto`, `DailyAccountabilityService`, `ExportGeneratorService`, `FileStorageService`, `S3StorageService` |
 | **Kategori** | Implementation Note, Structural Guardrail & Policy Traceability |
 | **Tingkat Risiko** | LOW TO MODERATE |
-| **Status** | **Active Structural Standard (ADR-006; ADR-009 Implemented — Pending Verification)** |
-| **Rujukan Terkait** | PDD §8, PRD BR-01, PRD FR-31, SAD §6.3, §9.3, §13.5, §14.4, §14.6, §14.7, ADR-006, ADR-009 |
+| **Status** | **Active Structural Standard (ADR-006, ADR-009 Verified — S1-T3-V & S1-T6 Closed)** |
+| **Rujukan Terkait** | PDD §8, PRD BR-01, PRD FR-31, SAD §6.3, §9.3, §13.5, §14.4, §14.6, §14.7, ADR-006, ADR-009, ADR-011 |
 
 ### Deskripsi & Aturan Desain
 Dalam arsitektur WorkPulse, batasan input HTTP, validasi bisnis, dan keterikatan kebijakan runtime dipisahkan secara tegas untuk menghindari *coupling* yang kaku antara transport layer dan domain logic:
@@ -246,7 +246,7 @@ Dalam arsitektur WorkPulse, batasan input HTTP, validasi bisnis, dan keterikatan
      - `FileStorageService.generateDownloadUrl` untuk evidence dan manager-note tetap dipertahankan *fixed* 900 detik (15 menit) sebagai postur keamanan baku yang tidak bergantung pada kebijakan ekspor.
      - `S3StorageService` tetap merupakan layer infrastruktur murni tanpa dependensi ke `PolicyService`.
      - Pembersihan fisik berkas di folder `exports/` tetap diatur oleh S3 Object Lifecycle Policy (24 jam) sebagai mekanisme retensi storage fisik yang terpisah dari masa aktif URL.
-   - *Catatan Kepatuhan*: Implementasi telah selesai dan divalidasi dengan unit/regression test komprehensif, berstatus siap untuk audit verifikasi independen.
+   - *Catatan Kepatuhan*: Implementasi telah diverifikasi secara independen melalui **S1-T3-V PASS** (verifikasi kontrak ADR-009 terpenuhi pada level kode aktual, test suite, dan clamping logic). Selain itu, diagnosa **S1-T6 PASS** mengonfirmasi separasi baku antara DTO structural guardrail dan precision domain validation (dikodifikasikan resmi pada ADR-011).
 
 ---
 

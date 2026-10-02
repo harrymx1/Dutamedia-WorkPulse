@@ -596,7 +596,7 @@ export class IdentityService {
 
   /**
    * EPIC-04-T5: Service resolusi role/scope aktif "AS OF tanggal".
-   * Dipakai oleh AuthModule (EPIC-03), ScopeGuard (EPIC-05), dan module lain.
+   * Dipakai oleh AuthModule (EPIC-03), ScopeFilterService (EPIC-05), dan module lain.
    */
   async resolveActiveContext(
     userId: string,

@@ -480,8 +480,8 @@ Satu `workDate` dengan Morning dan EOD sama-sama No Submission tetap dihitung ma
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | id | UUID (PK) | |
-| category | ENUM(Cutoff, GracePeriod, WorkdayCalendar, EscalationThreshold, CoachingFollowUpPeriod, RetentionPeriod, ExemptionRule, ObjectionWindowDuration, MinorMaterialThreshold, ParticipationRule) | FR-31 |
-| value | JSONB | Mis. `Cutoff.value = {morningOnTimeDeadline: "09:00", eodOnTimeDeadline: "18:00"}`, `GracePeriod.value = {morningGraceMinutes: 30, eodGraceMinutes: 30}` |
+| category | ENUM(Cutoff, GracePeriod, WorkdayCalendar, EscalationThreshold, CoachingFollowUpPeriod, RetentionPeriod, ExemptionRule, ObjectionWindowDuration, MinorMaterialThreshold, ParticipationRule, ReminderThreshold) | FR-31, ADR-004 |
+| value | JSONB | Nilai konfigurasi sesuai kategori kebijakan (lihat tabel skema & default di bawah) |
 | effectiveDate | DATE | |
 | endDate | DATE (nullable) | |
 | status | ENUM(Active, Inactive) | |
@@ -499,6 +499,25 @@ Satu `workDate` dengan Morning dan EOD sama-sama No Submission tetap dihitung ma
 | endDate | DATE (nullable) | |
 
 Dipisah dari `Policy` karena BR-15 menegaskan kewenangan edit per kategori, bukan melekat pada satu Admin. `policySnapshot` di seluruh entity Section 5.4/5.6/5.8 menyalin nilai dari `Policy` aktif saat event terjadi — bukan `Policy.id` sebagai referensi tunggal, karena satu event umumnya bergantung pada lebih dari satu kategori Policy sekaligus.
+
+#### Struktur & Nilai Default Kebijakan (`Policy.value`)
+
+Nilai konfigurasi kebijakan disimpan dalam format JSONB dengan validasi struktural ketat oleh `PolicyValueValidator` (`backend/src/modules/policy/services/policy-value.validator.ts`) dan nilai default resmi pada `DEFAULT_POLICY_VALUES` (`backend/src/modules/policy/policy.service.ts`):
+
+| Kategori Kebijakan | Skema JSON & Default Aktual | Validasi & Batasan Runtime |
+|---|---|---|
+| `Cutoff` | `{"morningOnTimeDeadline": "09:00", "eodOnTimeDeadline": "18:00"}` | Format string waktu `HH:mm` (00:00–23:59). |
+| `GracePeriod` | `{"morningGraceMinutes": 30, "eodGraceMinutes": 30}` | Integer menit non-negatif (`>= 0`). |
+| `WorkdayCalendar` | `{"workDays": [1, 2, 3, 4, 5]}` | Array integer hari kerja (1=Senin s/d 7=Minggu, maks 7 elemen unik). |
+| `EscalationThreshold` | `{"unacknowledgedThresholdHours": 2}` | Integer jam positif (`> 0`). |
+| `CoachingFollowUpPeriod` | `{"coachingWindowDays": 14}` | Integer hari positif (`> 0`). |
+| `RetentionPeriod` | `{"backupRetentionDays": 14, "exportRetentionMinutes": 15}` | `backupRetentionDays`: Integer hari positif (default **14**, bukan 30).<br>`exportRetentionMinutes`: Integer menit antara 1–60 (default **15**) per ADR-009 / S1-T3. Mengatur masa aktif (TTL) presigned download URL untuk dynamic report export (bukan bukti *evidence* dan bukan S3 object lifecycle). |
+| `ExemptionRule` | `{}` | Objek kosong per ADR-005. Tidak memiliki key konfigurasi yang diizinkan (`{}`). |
+| `ObjectionWindowDuration` | `{"durationHours": 24}` | Integer jam positif (`> 0`). |
+| `MinorMaterialThreshold` | `{"wordsChangedThreshold": 10}` | Integer ambang batas kata non-negatif (`>= 0`). |
+| `ParticipationRule` | `{}` | Objek kosong per ADR-006. Tidak memiliki key konfigurasi yang diizinkan (`{}`). |
+| `ReminderThreshold` | `{"objectionWindowReminderHours": 2, "leavePendingReminderHours": 24}` | Integer jam positif (`> 0`) per ADR-004. |
+
 
 ### 5.10 Domain: Notification & Audit Log
 
@@ -855,19 +874,38 @@ Scope        → OrganizationalAssignment (baseline) ATAU ProjectAuthorityMappin
 Effective Date → implisit tercakup, resolusi selalu "AS OF hari ini"
 ```
 
-Tidak pernah ada permission yang di-hardcode berdasarkan role semata — setiap guard wajib memverifikasi resource berada dalam scope aktif user.
+Tidak pernah ada permission yang di-hardcode berdasarkan role semata — otorisasi menggabungkan role pada transport level dan verifikasi resource/scope di service layer.
 
-### 8.8 Guard Architecture (NestJS)
+### 8.8 Guard Architecture (NestJS) & Scope Enforcement
 
-| Guard | Tingkat | Fungsi |
-|---|---|---|
-| `AuthGuard` | Global | Verifikasi JWT + Session + User.status |
-| `CsrfGuard` | Global, method state-changing | Verifikasi Double Submit Cookie |
-| `RoleGuard` | Per-route | Cek role dalam daftar yang diizinkan |
-| `ScopeGuard` | Per-route | Cek resource dalam scope aktif user, delegasi ke service module pemilik entity |
-| `PolicyOwnerGuard` | Per-route, khusus PolicyModule | Cek PolicyOwnerAssignment |
+Sesuai ADR-010, arsitektur otorisasi WorkPulse memisahkan secara tegas antara kontrol transport HTTP, batasan peran deklaratif (RBAC), dan penegakan kepemilikan sumber daya (*resource ownership*) serta cakupan organisasi (*scope*).
 
-Urutan eksekusi: `AuthGuard` → `CsrfGuard` → `RoleGuard` → `ScopeGuard`/`PolicyOwnerGuard`.
+#### A. Pipeline Guard Lapisan Transport (NestJS)
+
+Secara teknis, NestJS mengonsolidasikan provider bertanda `APP_GUARD` dari seluruh modul yang diimpor ke dalam satu pipeline guard global yang dieksekusi berurutan sebelum request mencapai handler controller.
+
+| Guard | Mekanisme Registrasi | Tingkat Evaluasi | Fungsi Aktual |
+|---|---|---|---|
+| `CustomThrottlerGuard` | `APP_GUARD` pada `AppModule` | Global | Rate limiting dan pencegahan brute force / DoS |
+| `AuthGuard` | `APP_GUARD` pada `AuthModule` | Global | Verifikasi JWT, status Session, dan status keaktifan user (`User.status === Active`) |
+| `CsrfGuard` | `APP_GUARD` pada `AuthModule` | Global (state-changing) | Verifikasi Double Submit Cookie pada method POST, PUT, PATCH, DELETE |
+| `RoleGuard` | `APP_GUARD` pada `AuthorizationModule` | Global (evaluasi per-route) | Mengevaluasi metadata peran `@RequireRole(Role...)`; jika route tidak memiliki decorator, guard meloloskan request (*passthrough*) |
+| `PolicyOwnerGuard` | `@UseGuards(PolicyOwnerGuard)` | Route-level (khusus `PolicyController`) | Memverifikasi `PolicyOwnerAssignment` aktif untuk kategori kebijakan yang dimutasi |
+
+Urutan eksekusi aktual: `CustomThrottlerGuard` → `AuthGuard` → `CsrfGuard` → `RoleGuard` (kemudian `PolicyOwnerGuard` jika rute mendeklarasikan `@UseGuards`).
+
+> **Catatan Registrasi Modul & Penghapusan `ScopeGuard` (ADR-010)**:
+> 1. Pendaftaran `APP_GUARD` di dalam `AuthModule` dan `AuthorizationModule` merupakan mekanisme NestJS Dependency Injection untuk mendaftarkan guard ke pipeline aplikasi global, bukan pembatasan guard hanya untuk rute di dalam modul tersebut.
+> 2. Abstraksi `ScopeGuard` dan decorator `@RequireScope` telah dihapus secara resmi dari sistem (Task S1-T8) karena tidak digunakan di level controller (0 penggunaan pada controller produksi) dan implementasi sebelumnya hanya bersifat passthrough. Sistem **tidak mendokumentasikan `ScopeGuard` sebagai active runtime enforcement**.
+
+
+#### B. Penegakan Resource Ownership & Scope (Service Layer)
+
+Penegakan izin akses terhadap entitas spesifik dan cakupan organisasi/proyek tidak dilakukan pada guard controller, melainkan sepenuhnya dieksekusi di **service/domain layer**:
+1. **`ScopeFilterService`**: Mekanisme sentral untuk resolusi batasan akses (`computeUserScope`), resolusi hierarki bawahan, dan pembentukan klausul filter Prisma (`accessibleUserIds`, filter department, dll.).
+2. **Resource Ownership Checking**: Validasi kepemilikan langsung (`record.userId === currentUser.id`) atau supervisi manajerial dievaluasi pada masing-masing domain service sebelum mutasi atau pembacaan data sensitif.
+3. **Resolusi Project Authority**: Evaluasi kewenangan Project Manager terhadap tiket/blocker terkait dilakukan secara kontekstual di service layer (Section 8.9 dan ADR-002/ADR-010).
+
 
 ### 8.9 Resolusi Project Authority secara Kontekstual
 
@@ -1073,6 +1111,7 @@ Setiap state transition yang bisa dipicu lebih dari satu jalur (user manual vs s
 | `POST /api/v1/organizational-assignments` | `SystemAdmin` | `{ userId, role, function, directManagerId, effectiveDate }` | Assignment baru | BR-10 — menutup endDate lama + insert baru |
 | `POST /api/v1/project-authority-mappings` | `SystemAdmin`, `Head` | `{ userId, scopeReference, effectiveDate, endDate? }` | Mapping baru | Multi-concurrent diizinkan |
 | `PATCH /api/v1/project-authority-mappings/{id}` | `SystemAdmin`, `Head` | `{ endDate }` | Mapping terbarui | Mengakhiri, bukan delete |
+| `GET /api/v1/temporary-reviewer-assignments` | `SystemAdmin`, `Head` | Query: `scope?`, `activeOnly?` | List TemporaryReviewerAssignment | ADR-002 — Head dibatasi assignment yang dibuat olehnya atau di mana dia ditugaskan sebagai reviewer; `activeOnly=true` memfilter `effectiveDate <= now <= expiryDate` |
 | `POST /api/v1/temporary-reviewer-assignments` | `SystemAdmin`, `Head` | `{ reviewerUserId, scope, reason, effectiveDate, expiryDate }` | Assignment baru | BR-11 — expiryDate wajib |
 
 ### 10.3 DailyAccountabilityModule
@@ -2114,33 +2153,47 @@ Butir berikut adalah keputusan yang diambil untuk mengisi celah spesifik di PDD/
 
 ### 23.2 Open Items untuk Product Backlog/Software Implementation Specification
 
-Butir berikut **belum** memiliki keputusan final di level arsitektur — masing-masing perlu dikonfirmasi ke pemilik requirement (Anda/stakeholder) atau divalidasi lewat aktivitas non-arsitektural sebelum atau selama implementasi. Dikelompokkan berdasarkan sifat tindak lanjutnya.
+Butir berikut mencatat status keterbukaan dan resolusi open item arsitektur yang muncul sepanjang perancangan dan fase stabilisasi implementasi (Task S1-T1 s/d S1-T8):
 
-**A. Memerlukan Keputusan/Konfirmasi Requirement**
+**A. Kebutuhan Konfirmasi Requirement & Keputusan Arsitektural**
 
-| # | Open Item | Dampak Jika Tidak Ditindaklanjuti | Section |
+| # | Open Item | Status & Resolusi | Section Terkait |
 |---|---|---|---|
-| 1 | `AdditionalWork` yang sudah `isLocked = true` tidak memiliki mekanisme koreksi apapun — FR-43 secara literal hanya menyebut "Morning Commitment" | Kesalahan input Additional Work pasca-cutoff tidak bisa diperbaiki lewat jalur resmi manapun; perlu diputuskan apakah ini keterbatasan yang disengaja atau gap PRD | 9.8 |
-| 2 | Implementasi penuh Browser Push (VAPID, service worker) belum diputuskan — sementara di-stub, notifikasi tetap tersampaikan via Email + Web Notification Center | Trigger yang secara PRD §8 seharusnya lewat Browser Push tidak benar-benar real-time push ke device; perlu diputuskan apakah ini diterima permanen atau perlu diimplementasikan penuh di iterasi berikutnya | 12.4 |
-| 3 | Mekanisme penghapusan otomatis untuk evidence file (`evidence/`, `manager-note-evidence/`) belum ada — retensi saat ini manual/kebijakan | NFR-09 menyebut retensi "dapat dikonfigurasi", tapi tanpa job otomatis, penegakan retensi bergantung proses manual | 14.6 |
-| 4 | Resolusi eksplisit "escalation chain" untuk trigger Critical/instant blocker (PRD §8, trigger #4) belum didetailkan sebagai mekanisme konkret di luar `ownerNeededType` yang sudah ada | Perlu dipastikan apakah eskalasi Critical sepenuhnya mengikuti resolusi Organizational/Project Authority yang sama (8.9), atau ada jalur eskalasi tambahan yang belum tercakup | 8.9, 12.1 |
+| 1 | `AdditionalWork` yang sudah `isLocked = true` tidak memiliki mekanisme koreksi apapun | **RESOLVED (ADR-001)** — Diputuskan bahwa `AdditionalWork` tidak memiliki lock permanen yang memblokir write/edit, karena bersifat *unpredicted* dan bukan baseline. Integritas historis dijamin melalui pencatatan append-only `AuditService.record()` pada setiap mutasi. | 9.8, ADR-001 |
+| 2 | Implementasi penuh Browser Push (VAPID, service worker) | **OPEN (DEFERRED)** — Status resmi stub untuk MVP sesuai SAD §12.4 dan Product Backlog EPIC-13-T6. Notifikasi tetap tersampaikan via Email (Brevo) dan In-App Notification Center. | 12.4 |
+| 3 | Mekanisme penghapusan otomatis evidence file dan masa aktif export URL | **RESOLVED (ADR-009, ADR-012, S1-T3, S1-T5)** — Masa aktif presigned URL download report export dikonfigurasi dinamis via `RetentionPeriod.exportRetentionMinutes` (1–60 menit, default 15 menit per ADR-009 / S1-T3). Berkas fisik export di S3 dihapus otomatis via S3 Lifecycle Policy (24 jam per SAD §14.6). URL unduh bukti (*evidence*) tetap diisolasi dengan TTL fixed 15 menit per SAD §14.4 / ADR-012. Alur upload bukti memverifikasi *entity binding* dan otorisasi sebelum menerbitkan presigned URL (ADR-012 / S1-T5). | 14.4, 14.6, ADR-009, ADR-012 |
+| 4 | Resolusi eksplisit *escalation chain* untuk trigger Critical/instant blocker | **RESOLVED (EPIC-08-T4)** — Mekanisme auto-escalation blocker telah diimplementasikan secara konkret melalui scheduled job dan event escalation pada BlockerModule. | 8.9, 12.1 |
 
-**B. Memerlukan Validasi/Aktivitas Sebelum Go-Live**
+**B. Validasi/Aktivitas Operasional & Verifikasi**
 
-| # | Open Item | Aktivitas yang Diperlukan | Section |
+| # | Open Item | Status & Resolusi | Section Terkait |
 |---|---|---|---|
-| 5 | Proses restore backup belum pernah diuji secara nyata | Jalankan runbook restore (21.6) terhadap database non-production minimal satu kali sebelum sistem dianggap siap menangani insiden nyata | 20.3, 21.6 |
-| 6 | Target usability NFR-01 (check-in ≤2–3 menit) belum diverifikasi | Usability testing manual terhadap Morning/EOD Check-in, dijadwalkan pada fase Testing & Perbaikan | 19.3 (AC-17), 20.3 |
-| 7 | Efektivitas mekanisme keepalive Supabase (scheduled job 5 menit) belum dipantau di kondisi operasional nyata | Pantau di awal operasional — pastikan project Supabase tidak ter-auto-pause meski job berjalan rutin | 4.5 |
+| 5 | Proses restore backup belum pernah diuji secara nyata | **RESOLVED (ADR-007)** — Telah diverifikasi melalui eksekusi script runbook pemulihan database live non-production (`backend/src/scripts/verify-restore-live.ts`) dengan hasil verifikasi data konsisten. | 20.3, 21.6, ADR-007 |
+| 6 | Target usability NFR-01 (check-in ≤2–3 menit) | **OPEN** — Dijadwalkan untuk usability testing manual terhadap Morning/EOD Check-in pada fase validasi akhir pengguna. | 19.3 (AC-17), 20.3 |
+| 7 | Efektivitas mekanisme keepalive Supabase (scheduled job 5 menit) | **OPEN / MONITORED** — Dipantau pada operasional riil untuk memastikan database tidak auto-pause. | 4.5 |
 
-**C. Perlu Dipertimbangkan Jika Skala/Kebutuhan Berubah (Bukan Prasyarat MVP)**
+**C. Hasil Audit Stabilisasi & Konsolidasi Arsitektur (Task S1-T1 s/d S1-T8)**
 
-| # | Item | Pemicu Potensial |
-|---|---|---|
-| 8 | Precompute/materialized aggregation untuk Reporting (saat ini on-demand) | Jika dataset membesar signifikan dan response time mendekati batas NFR-03 | 13.1 |
-| 9 | Redis untuk session/job jika WorkPulse berkembang melampaui skala 30–60 user | Pertumbuhan user/organisasi signifikan di luar skala MVP | 22.4 |
-| 10 | Layanan error-tracking pihak ketiga (mis. Sentry) | Jika kebutuhan observability melampaui log aplikasi dasar | 21.7 |
-| 11 | Upgrade Brevo ke Starter plan | Jika volume email harian mendekati/melampaui 300/hari secara konsisten | 12.3 |
+| # | Item Temuan / Penyelarasan | Status & Resolusi | Rujukan Teknis |
+|---|---|---|---|
+| 8 | Fail-Fast Mock Credential Fallback (Brevo & S3) | **RESOLVED (S1-T2)** — Constructor menerapkan *fail-fast* saat `NODE_ENV === 'production'` dan melempar error fatal jika kredensial kosong atau bernilai string mock. | KL-08, Task S1-T2 |
+| 9 | Dynamic Report Export Signed URL TTL | **RESOLVED (ADR-009 / S1-T3 / S1-T3-V)** — Menghubungkan konfigurasi `RetentionPeriod.exportRetentionMinutes` secara dinamis ke `ExportGeneratorService` dengan fixed security ceiling 60 menit. Diverifikasi independen (S1-T3-V PASS). | ADR-009, KL-06 |
+| 10 | Pembersihan Legacy Config `allowLeaveOnProbation` | **RESOLVED (S1-T4)** — Terverifikasi 0 penggunaan pada seluruh kode produksi, skema, DTO, dan dokumentasi. Negative test telah digeneralisasi. | Task S1-T4 |
+| 11 | Entity Binding & Pre-Authorization Presigned Upload URL | **RESOLVED (ADR-012 / S1-T5)** — Endpoint `generateUploadUrl` memvalidasi entity existence, entity type, dan ownership sebelum URL diterbitkan. Mendukung two-phase upload. | ADR-012, Task S1-T5 |
+| 12 | Separasi DTO Structural Validation vs Contextual Domain Validation | **RESOLVED (ADR-011 / S1-T6)** — DTO menangani validasi batas struktural dan DoS guardrail; invarian bisnis kontekstual dan validasi partial/merged-state dieksekusi di service layer. | ADR-011, Task S1-T6 |
+| 13 | Prisma Ownership & Resource-Level Scope Sweep | **RESOLVED (S1-T7 / KL-09)** — Audit terhadap 207 operasi Prisma dan 43 mutasi membuktikan tidak ada bypass otorisasi/ownership di kode produksi. | KL-09, Task S1-T7 |
+| 14 | Penghapusan Dead Code `ScopeGuard` & Separasi Transport | **RESOLVED (ADR-010 / S1-T8)** — `ScopeGuard` dan `@RequireScope` dihapus dari kode produksi karena 0 penggunaan. Penegakan scope dikonsolidasikan pada service layer via `ScopeFilterService`. | ADR-010, Task S1-T8 |
+| 15 | Parameter `scope: 'Company'` pada ProjectRiskPage.vue | **OPEN — ARCHITECTURAL DECISION** — Parameter bersifat *dead / ineffective parameter* di frontend; keputusan perluasan visibilitas risiko PM (PRD US-15) diserahkan ke pembahasan arsitektural berikutnya. | KL-08, Task S1-T1 |
+
+**D. Pertimbangan Skalabilitas Jangka Panjang (Bukan Prasyarat MVP)**
+
+| # | Item | Pemicu Potensial | Section |
+|---|---|---|---|
+| 16 | Precompute/materialized aggregation untuk Reporting (saat ini on-demand) | Jika dataset membesar signifikan dan response time mendekati batas NFR-03 | 13.1 |
+| 17 | Redis untuk session/job jika WorkPulse berkembang melampaui skala 30–60 user | Pertumbuhan user/organisasi signifikan di luar skala MVP | 22.4 |
+| 18 | Layanan error-tracking pihak ketiga (mis. Sentry) | Jika kebutuhan observability melampaui log aplikasi dasar | 21.7 |
+| 19 | Upgrade Brevo ke Starter plan | Jika volume email harian mendekati/melampaui 300/hari secara konsisten | 12.3 |
+
 
 ### 23.3 Catatan Penutup Dokumen
 

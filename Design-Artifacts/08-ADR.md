@@ -550,3 +550,182 @@ WorkPulse membedakan secara tegas antara masa berlaku tautan dan masa simpan fis
 
 ### 11. Status Keputusan
 **ACCEPTED** — Mengikat untuk perbaikan implementasi pada S1-T3 dan pengujian regresi terkait.
+
+---
+
+## ADR-010 — Separasi Transport Authorization, Resource Scope Authorization, dan Prisma Ownership Enforcement
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-010 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | SAD §8.8, SAD §8.11, SAD §14, Task S1-T7, Task S1-T8 |
+| **Berlaku mulai** | S1-T8 (Authorization & Architecture Consolidation) |
+
+### 1. Konteks
+
+Selama proses audit arsitektural dan verifikasi integritas kode (Task S1-T1 s/d S1-T7), ditemukan diskrepansi antara dokumentasi perancangan awal dan implementasi runtime aktual mengenai otorisasi:
+1. `ScopeGuard` yang sebelumnya didaftarkan sebagai guard global dan decorator `@RequireScope` memiliki **0 penggunaan** pada controller produksi backend (`backend/src/`).
+2. Global `ScopeGuard` pada praktiknya hanya berfungsi sebagai passthrough (`return true`) jika tidak ada metadata `@RequireScope`.
+3. Mekanisme `ScopeResolverService.registerChecker()` tidak pernah didaftarkan atau diimplementasikan oleh module domain manapun.
+4. Otorisasi scope dan pembatasan kepemilikan data (*resource ownership*) yang sesungguhnya berjalan aktif dan teruji di level service/domain melalui `ScopeFilterService` serta pemeriksaan kepemilikan eksplisit pada method service.
+5. Mempertahankan `ScopeGuard` dan decorator `@RequireScope` menciptakan ilusi pengamanan runtime (*dead enforcement abstraction*) yang menyesatkan audit tata kelola.
+
+Oleh karena itu, diperlukan formalisasi batas otorisasi antara lapisan transport, lapisan domain/service, dan pola akses data pada Prisma Client.
+
+### 2. Prinsip & Keputusan Arsitektural
+
+#### A. Transport/Request Boundary (`AuthGuard`, `CsrfGuard`, `RoleGuard`)
+- `AuthGuard`, `CsrfGuard`, dan `RoleGuard` bekerja murni pada batas transport HTTP/request:
+  - `AuthGuard`: Memverifikasi keabsahan JWT, status sesi, dan status keaktifan user (`User.status === Active`).
+  - `CsrfGuard`: Memvalidasi token CSRF (Double Submit Cookie) untuk seluruh mutasi HTTP state-changing (POST, PUT, PATCH, DELETE).
+  - `RoleGuard`: Memvalidasi peran pengguna secara deklaratif terhadap metadata route (`@RequireRole(Role...)`).
+- Guard lapisan transport **tidak** memverifikasi kepemilikan spesifik suatu ID entitas (*entity instance ownership*) atau relasi organisasi dinamis, karena belum memiliki konteks data entitas dari database.
+
+#### B. Resource Ownership & Scope Ditegakkan di Service/Domain Layer
+- Seluruh penegakan hak akses terhadap data spesifik (*resource-level authorization*) dan cakupan organisasi (*organizational/project scope*) wajib ditegakkan di **service/domain layer**.
+- Pola otorisasi domain mencakup:
+  1. *Direct Ownership*: Memverifikasi apakah `record.userId === currentUser.id`.
+  2. *Managerial / Supervisory Scope*: Memverifikasi apakah user yang ditinjau berada di bawah hierarki pelaporan langsung atau departemen dari manajer/Head peninjau berdasarkan data assignment aktif.
+  3. *Project Authority*: Memverifikasi apakah Project Manager memiliki penugasan aktif (`ProjectAuthorityMapping`) terhadap scope proyek terkait.
+  4. *Temporary Reviewer*: Memverifikasi penugasan delegasi aktif (`TemporaryReviewerAssignment`) yang sah.
+
+#### C. `ScopeFilterService` sebagai Mekanisme Scope Aktual
+- `ScopeFilterService` adalah mekanisme sentral dan resmi untuk resolusi dan pemfilteran scope pengguna pada WorkPulse.
+- Service ini mengomputasi batasan akses pengguna (`computeUserScope`), resolusi hierarki bawahan, dan penyusunan filter query Prisma (`buildDailyRecordsWhereClause`, `buildBlockersWhereClause`, dll.) secara konsisten lintas modul.
+
+#### D. Pola Penegakan Prisma Ownership (Prisma Query Rules)
+- Kueri Prisma Client **TIDAK wajib selalu** memuat klausa `where: { userId }` langsung, asalkan otorisasi sumber daya telah dievaluasi pada service/domain layer sebelum mutasi/pembacaan dieksekusi.
+- Berdasarkan hasil audit menyeluruh S1-T7 (KL-09):
+  - Pola *Two-Phase Verification* (kueri entitas via `findUnique({ where: { id } })`, diikuti validasi domain `if (entity.userId !== currentUser.id && !isAuthorized) throw new ForbiddenException()`) adalah pola yang sah, aman, dan lazim digunakan untuk menghasilkan pesan error bisnis yang bermakna.
+  - Pola *Pre-Scoped Query* (menggunakan filter `userId: { in: accessibleUserIds }` atau delegasi helper `ScopeFilterService`) digunakan secara konsisten pada kueri koleksi/agregasi.
+  - Mengasumsikan bahwa setiap operasi Prisma tanpa filter `userId` adalah kerentanan keamanan adalah anggapan keliru; keamanan data WorkPulse ditegakkan melalui *defense-in-depth* pada domain boundary.
+
+#### E. Pola Agregasi Scoped pada ReportingModule (`accessibleUserIds`)
+- `ReportingModule` menggunakan pola `accessibleUserIds` yang dikomputasi oleh `ScopeFilterService` untuk menarik dan mengagregasi data kehadiran, komitmen, dan blocker lintas entitas.
+- Pola ini memastikan pelaporan eksekutif dan manajerial secara ketat terisolasi pada lingkup anggota tim/organisasi yang menjadi hak akses pemanggil.
+
+#### F. Default Deny & Information Hiding
+- Sesuai prinsip SAD §7.7, §7.12, dan §14, permintaan terhadap entitas yang berada di luar scope pengguna atau tidak ditemukan mengembalikan respon seragam **HTTP 404 Not Found** guna mencegah kebocoran informasi (*information leakage*) dan serangan enumerasi ID (*ID enumeration*), kecuali pada konteks di mana alasan penolakan otorisasi secara eksplisit harus diinformasikan (HTTP 403 Forbidden).
+
+#### G. Penghapusan Dead Code `ScopeGuard` (Option A — REMOVE)
+- Abstraksi `ScopeGuard`, decorator `@RequireScope`, `ScopeResolverService`, dan interface `ScopeChecker` **dihapus secara permanen** dari codebase backend.
+- Keputusan ini diambil karena:
+  1. 0 penggunaan `@RequireScope` pada seluruh controller produksi.
+  2. Implementasi global guard bersifat passthrough (`return true`).
+  3. `ScopeResolverService.registerChecker()` tidak pernah digunakan.
+  4. Scope enforcement aktual ditangani oleh `ScopeFilterService` di service layer.
+- Dokumentasi resmi sistem **dilarang menyatakan `ScopeGuard` sebagai active runtime enforcement**.
+- Urutan pipeline guard NestJS resmi menjadi:
+  `AuthGuard` → `CsrfGuard` → `RoleGuard` (disertai `PolicyOwnerGuard` pada rute kebijakan).
+
+### 3. Konsekuensi
+
+1. **Kejelasan Arsitektural**: Menghilangkan abstraksi mati yang berpotensi menimbulkan salah tafsir saat audit keamanan atau pengembangan lanjutan.
+2. **Dokumentasi Konsisten**: SAD §8.8 dan spesifikasi endpoint diselaraskan dengan kenyataan runtime.
+3. **Pengujian Terarah**: Pengujian otorisasi difokuskan pada unit/integration test service layer dan integrasi `ScopeFilterService`.
+
+---
+
+## ADR-011 — Separasi Structural DTO Validation dan Conditional Domain Validation
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-011 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | SAD §7.4, SAD §16.6, Task S1-T6, Task S1-T8 |
+| **Berlaku mulai** | S1-T8 (Validation Architecture Consolidation) |
+
+### 1. Konteks
+
+Audit Task S1-T6 mengevaluasi penegakan validasi kondisional (*conditional validation*) dan dependensi antar-field pada Data Transfer Object (DTO) dibandingkan validasi di layer domain/service. Ditemukan pola di mana batasan struktural didefinisikan pada DTO, namun validasi bisnis kondisional yang bergantung pada konteks atau state database dieksekusi di service layer.
+
+Perlu ditetapkan batas tanggung jawab formal antara DTO boundary dan Domain Service boundary untuk mencegah *over-engineering* pada DTO validator sekaligus menjaga integritas bisnis.
+
+### 2. Prinsip & Keputusan Arsitektural
+
+#### A. DTO = Structural / API Validation Boundary
+- DTO (menggunakan `class-validator`) berfungsi sebagai pelindung pertama sistem (*structural guardrail*) pada HTTP transport layer:
+  - Memvalidasi tipe data primitif (string, number, boolean, array, object).
+  - Memvalidasi batas panjang string dan batas elemen array (`@MaxLength`, `@ArrayMaxSize`) sebagai penangkal serangan Denial-of-Service (DoS) dan payload flooding (sebagaimana dicatat pada KL-06 / ADR-006).
+  - Memvalidasi format dasar (UUID, ISO 8601 Date, Regex HH:mm).
+  - Memvalidasi nilai enum yang valid.
+- DTO bersifat murni **stateless** dan tidak memiliki dependensi ke database, token sesi, atau riwayat entitas.
+
+#### B. Service / Domain Layer = Contextual & Business Invariant Boundary
+- Seluruh validasi yang memerlukan konteks bisnis dinamis, status entitas saat ini, hubungan antar-entitas, atau data historis database wajib dieksekusi di **service/domain layer**.
+- Menghindari pembuatan custom validator DTO yang melakukan query database atau mengakses konteks request secara tersembunyi.
+
+#### C. Partial Update & Merged-State Validation
+- Pada operasi pembaruan parsial (`PATCH`) atau koreksi data:
+  - Payload DTO hanya berisi field yang hendak diubah oleh klien.
+  - Validasi keabsahan data gabungan (*merged state*) hanya dapat dievaluasi secara akurat setelah entitas eksisting diambil dari database (*fetch-merge-validate*).
+  - Validasi invarian bisnis dilakukan terhadap objek hasil penggabungan (*merged state*) di dalam domain service.
+
+#### D. Contoh Penerapan Konkret di WorkPulse
+1. **`Blocker` & `ProjectAuthority` (`relatedScopeReference`)**:
+   - DTO (`CreateBlockerDto`) memvalidasi batasan struktural `@IsString` dan `@MaxLength(255)`.
+   - Domain Service (`BlockerOwnerResolverService`) menegakkan aturan bisnis kondisional FR-19: jika `ownerNeededType === 'ProjectAuthority'`, maka `relatedScopeReference` wajib diisi (`REQUIRED_WHEN_PROJECT_AUTHORITY`) dan dicocokkan dengan `scopeReference` aktif pada `ProjectAuthorityMapping`.
+2. **Status Harian AMBER / RED**:
+   - DTO memvalidasi field opsional catatan atau blocker reference.
+   - Domain Service memvalidasi bahwa komitmen atau status harian `AMBER` atau `RED` wajib menyertakan `knownBlockerNote` atau ID Blocker aktif terkait.
+3. **EOD Conditional Reasons**:
+   - DTO memvalidasi struktur alasan dan kelanjutan komitmen.
+   - Domain Service memvalidasi bahwa `reason` wajib diisi jika `outcome` komitmen bernilai selain `COMPLETED` (misalnya `PARTIALLY_ACHIEVED`, `CANCELLED`).
+4. **`CorrectionRequest` Merged-State Validation**:
+   - DTO memvalidasi field yang diajukan untuk koreksi.
+   - Domain Service memuat data original `Commitment` yang terkunci, menggabungkan usulan koreksi, dan memverifikasi batas perubahan materiil (`MinorMaterialThreshold.wordsChangedThreshold`) serta kewenangan approval secara akurat.
+
+### 3. Konsekuensi
+
+1. **Arsitektur Ramping**: DTO tetap sederhana, berkinerja tinggi, dan mudah diuji secara unit tanpa *mocking* database.
+2. **Kekuatan Invarian**: Logika bisnis terlindungi di satu tempat (*single source of truth*) pada service layer.
+3. **Dukungan Operasi Asinkron/Internal**: Service method yang sama dapat dipanggil secara aman oleh scheduled job atau event handler internal tanpa bergantung pada decorator DTO.
+
+---
+
+## ADR-012 — Authorization dan Entity Binding untuk Pre-signed Upload URL
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-012 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | SAD §14.3, SAD §14.4, Task S1-T5, Task S1-T8 |
+| **Berlaku mulai** | S1-T8 (Storage Security Consolidation) |
+
+### 1. Konteks
+
+Audit Task S1-T5 meninjau alur kerja penerbitan URL upload pra-tanda tangan (*pre-signed upload URL*) pada `FileStorageController` dan `FileStorageService`, khususnya potensi risiko pengunggahan berkas tanpa otorisasi terhadap entitas bisnis (`entityId`).
+
+Penerbitan presigned upload URL memberikan tiket akses sementara langsung ke Object Storage (S3-compatible). Jika parameter `entityId` diterima tanpa verifikasi keberadaan entitas dan hak akses pengguna, pengguna dapat mengunggah berkas yang diasosiasikan dengan entitas milik pengguna lain.
+
+### 2. Prinsip & Keputusan Arsitektural
+
+#### A. Validasi Entity Type & Purpose
+- Endpoint `generateUploadUrl` wajib memvalidasi bahwa nilai `entityType` dan `purpose` yang diminta oleh klien adalah kombinasi yang sah dan didukung oleh sistem (misalnya bukti investigasi manajer `manager-note-evidence`, lampiran komitmen harian, dll.).
+
+#### B. Pre-Authorization & Entity Existence Verification
+- Otorisasi kepemilikan dan hak akses scope pengguna wajib dilakukan **sebelum** presigned PUT URL diterbitkan oleh `S3StorageService`:
+  1. Jika `entityId` disertakan dalam request, service wajib memeriksa keberadaan record entitas tersebut di database.
+  2. Service wajib memverifikasi bahwa aktor pengguna yang terautentikasi memiliki hak akses (*ownership* atau *managerial scope*) atas entitas tersebut.
+  3. Jika entitas tidak ditemukan atau pengguna tidak memiliki wewenang, permintaan ditolak dengan HTTP 404 / HTTP 403, dan token presigned URL **tidak pernah diterbitkan**.
+
+#### C. Dukungan Two-Phase Upload Flow untuk Entity Creation
+- Sistem mengizinkan alur pengunggahan berkas dua tahap (*two-phase upload*) pada skenario pembuatan entitas baru:
+  - Pada saat formulir baru diisi, ID entitas belum terbentuk di database (`entityId` bernilai `null` atau tidak dikirim).
+  - `generateUploadUrl` menerbitkan upload URL dengan key penyimpanan terisolasi berdasarkan `purpose` dan `userId` aktor.
+  - Verifikasi integritas dan pengikatan berkas (*entity binding*) final ditegakkan saat mutasi pembuatan entitas dijalankan: service pembuat entitas memvalidasi bahwa storage key yang dilaporkan sesuai dengan pengguna yang sedang login.
+
+#### D. Preservasi Runtime Behavior & Isolasi Signed URL TTL
+- Pola implementasi yang sudah ada dipertahankan tanpa perubahan yang merusak alur klien.
+- URL unduh bukti (*evidence download URL*) tetap menggunakan masa aktif *fixed* **900 detik (15 menit)** sesuai SAD §14.4 untuk memastikan keamanan investigasi audit.
+- Kebijakan TTL dinamis (`RetentionPeriod.exportRetentionMinutes`) sebagaimana ditetapkan pada ADR-009 **hanya berlaku** untuk report export pada `ReportingModule`, bukan untuk berkas bukti lampiran (*evidence*).
+
+### 3. Konsekuensi
+
+1. **Integritas Penyimpanan Objek**: Mencegah serangan pengunggahan objek gelap atau pengikatan bukti tidak sah ke entitas pengguna lain.
+2. **Pemisahan Peran Jelas**: `FileStorageService` menangani otorisasi dan penamaan key, sementara `S3StorageService` murni berinteraksi dengan API S3.
+3. **Audit Trail**: Setiap penerbitan presigned upload URL tercatat dalam log aplikasi dengan identitas aktor pemohon.
