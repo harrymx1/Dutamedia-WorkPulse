@@ -393,10 +393,10 @@ describe('PolicyValueValidator', () => {
       }).not.toThrow();
     });
 
-    it('Regression Case C: harus menolak allowLeaveOnProbation sebagai UNKNOWN_FIELD', () => {
+    it('Regression Case C: harus menolak unknownField sebagai UNKNOWN_FIELD', () => {
       try {
         validator.validate(PolicyCategory.ExemptionRule, {
-          allowLeaveOnProbation: true,
+          unknownField: true,
         });
         expect.unreachable('Harus melempar exception');
       } catch (err: any) {
@@ -404,7 +404,7 @@ describe('PolicyValueValidator', () => {
         expect(err.details).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              field: 'allowLeaveOnProbation',
+              field: 'unknownField',
               reason: 'UNKNOWN_FIELD',
             }),
           ]),
