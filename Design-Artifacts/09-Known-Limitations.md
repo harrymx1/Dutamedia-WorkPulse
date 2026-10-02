@@ -354,3 +354,46 @@ Dua temuan runtime berikut dicatat secara resmi sebagai utang teknis untuk diper
   - **Kebutuhan PRD US-15**: PRD US-15 mensyaratkan PM memiliki visibilitas atas risiko proyek lintas anggota tim yang mengerjakan tiket terkait. Mekanisme implementasi resmi (apakah menggunakan query endpoint project-scoped tersendiri atau perluasan filter `ProjectAuthorityMapping`) belum diputuskan secara arsitektural.
 - **Status**: **OPEN — ARCHITECTURAL DECISION**.
 - **Batasan**: Parameter tidak dihapus, scope tidak diubah, dan tidak ada modifikasi endpoint/skema pada task S1-T1. Keputusan diserahkan ke pembahasan arsitektur berikutnya.
+
+---
+
+## KL-09: S1-T7 — Prisma Ownership/Scope Sweep
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | KL-09 |
+| **Komponen Terkait** | Seluruh Prisma Client Calls di Backend (`backend/src/`), `ScopeFilterService`, Guards, Controllers |
+| **Tanggal Audit** | 2 Oktober 2026 |
+| **Kategori** | Verification Record & Application Security Sweep |
+| **Tingkat Risiko** | LOW (Verification Completed) |
+| **Status** | **CLOSED — PASS** |
+| **Rujukan Terkait** | SAD §7.7, §8.8, §8.11, §9, §10, §14, §15, Task S1-T7 |
+
+### 1. Scope
+- Kode produksi backend (`backend/src/`).
+- Penegakan Prisma ownership, scope filter, dan resource authorization.
+- Pola mutasi dan pembacaan resource-sensitive.
+
+### 2. Evidence
+- 207 operasi Prisma terinventarisasi di kode produksi.
+- 173 operasi resource-sensitive diperiksa secara terarah.
+- 43 operasi mutasi (`update`, `updateMany`, `deleteMany`) diperiksa *authorization provenance*-nya.
+- Tidak ditemukan ownership/scope bypass.
+- Tidak ditemukan unauthorized `update`, `delete`, `updateMany`, atau `deleteMany`.
+- Akses sumber daya lintas pengguna (*cross-user resource access*) memiliki pemeriksaan ownership/scope di tingkat resource/service.
+- Global guards (`AuthGuard`, `CsrfGuard`, `RoleGuard`, `ScopeGuard`) tidak dijadikan satu-satunya bukti ownership, melainkan berlapis dengan verifikasi di service layer (*defense-in-depth*).
+- Verifikasi pola akses Prisma membuktikan tidak ada alias Prisma client atau nama parameter callback transaksi alternatif yang terlewat.
+- Tidak ditemukan *nested writes* Prisma (`create:`, `update:`, `connectOrCreate:`) di dalam payload `data: { ... }`.
+- Kueri SQL mentah (*raw SQL*) ditemukan pada 3 lokasi dan masing-masing memiliki konteks yang tervalidasi:
+  1. `CorrectionRequestService.submitObjection`: Pessimistic locking (`FOR UPDATE`) untuk kontrol konkurensi.
+  2. `CorrectionRequestService.applyDueCorrections`: Scheduler row locking untuk auto-application.
+  3. `DatabaseBackupService.verifyRestore`: Tooling verifikasi pemulihan database administratif (non-HTTP).
+- Tidak ditemukan akses model Prisma secara dinamis/reflektif.
+
+### 3. Limitation
+- Audit ini merupakan *application-layer authorization audit* pada tingkat NestJS dan Prisma Client.
+- PostgreSQL Row Level Security (RLS) tidak digunakan oleh WorkPulse; penegakan keamanan berada pada lapisan aplikasi.
+- Akses dinamis reflektif ke model Prisma di masa depan tidak tercakup oleh static sweep jika pola tersebut diperkenalkan.
+
+### 4. Verdict
+Berdasarkan scope, metode sweep, dan verification pass yang dilakukan, tidak ditemukan ownership/scope bypass pada production code yang diaudit.
