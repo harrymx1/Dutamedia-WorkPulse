@@ -10,8 +10,11 @@
 
       <div class="d-flex align-center gap-2">
         <ExportButton
+          :loading="isExporting"
+          :disabled="isLoading || records.length === 0"
           :data="exportableData"
           filename="workpulse-my-history.csv"
+          @export="handleExport"
         />
       </div>
     </div>
@@ -278,6 +281,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useDailyRecordsQuery } from '../queries/useDailyRecords.js';
+import { useExportReportMutation } from '../queries/useReporting.js';
 import { StatusBadge, SubmissionTimingBadge, ExportButton } from '../components/shared/index.js';
 import type { DailyAccountabilityRecord } from '../types/daily-records.js';
 
@@ -352,6 +356,50 @@ const exportableData = computed(() => {
     WaktuEOD: r.eodSubmittedAt || '-',
   }));
 });
+
+// Export Handling (UI/UX Spec §4.6)
+const exportMutation = useExportReportMutation();
+const isExporting = exportMutation.isPending;
+
+function downloadCsv() {
+  if (!exportableData.value.length) return;
+  const headers = Object.keys(exportableData.value[0]);
+  const rows = exportableData.value.map((row) =>
+    headers.map((h) => JSON.stringify((row as any)[h] ?? '')).join(','),
+  );
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', 'workpulse-my-history.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function handleExport(format: 'pdf' | 'xlsx') {
+  try {
+    const sDate = startDate.value || getDefaultStartDate();
+    const eDate = endDate.value || new Date().toISOString().split('T')[0];
+
+    const res = await exportMutation.mutateAsync({
+      reportType: 'individual-evidence',
+      format,
+      startDate: sDate,
+      endDate: eDate,
+    });
+
+    const url = res.downloadUrl || res.signedUrl;
+    if (url) {
+      window.open(url, '_blank');
+    } else {
+      downloadCsv();
+    }
+  } catch (err: any) {
+    console.warn('Backend export failed, falling back to client CSV:', err);
+    downloadCsv();
+  }
+}
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return '-';

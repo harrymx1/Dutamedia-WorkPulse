@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WorkPulse — My History & Weekly Summary</title>
+<style>
+:root{
+ --canvas:#F7FAF9;--surface:#FFFFFF;--subtle:#EFF5F2;--muted:#F1F5F4;
+ --border:#DCE7E2;--border-strong:#A9C7BC;--ink:#0E211B;--secondary:#5C6E68;
+ --disabled:#66736E;--brand:#00674D;--brand-2:#12915F;--brand-tint:#E6F4EE;--focus:#0B8061;
+ --green-bg:#E6F4EC;--green-fg:#145A36;--green-border:#A7D5B8;
+ --amber-bg:#FFF3D9;--amber-fg:#7A4B00;--amber-border:#E8C77A;
+ --red-bg:#FDE9E7;--red-fg:#9B2923;--red-border:#E8B1AC;
+ --neutral-bg:#EFF2F1;--neutral-fg:#46534E;--neutral-border:#C9D2CE;
+ --shadow:0 8px 24px rgba(14,33,27,.05);--r-sm:8px;--r-card:10px;--r-modal:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--canvas);color:var(--ink);font:16px/1.5 "Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+a{color:var(--brand);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-9999px;top:0;background:#fff;padding:12px;z-index:10}
+.skip:focus{left:12px;top:12px}
+.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:32px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand-mark{height:38px;width:38px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:white;font-weight:800;font-size:21px;letter-spacing:-1px}
+.brand-name{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.brand-caption{font-size:11px;color:var(--secondary);margin-top:-3px}
+.nav-label{padding:0 12px;margin-bottom:8px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--secondary);font-weight:750}
+.nav{display:grid;gap:5px}
+.nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:8px;color:var(--secondary);font-weight:650;text-decoration:none;font-size:14px}
+.nav a.active{background:var(--brand-tint);color:var(--brand)}
+.nav-icon{width:20px;text-align:center;font-size:16px}
+.side-bottom{margin-top:auto;border-top:1px solid var(--border);padding:16px 8px 0;display:flex;gap:10px;align-items:center}
+.avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#D8EAE2;color:#1B5B46;font-weight:800;font-size:13px}
+.user-meta{min-width:0}
+.user-name{font-size:13px;font-weight:750}
+.user-role{font-size:12px;color:var(--secondary)}
+.user-scope{font-size:10px;line-height:1.45;color:var(--secondary);margin-top:3px;max-width:175px}
+main{min-width:0}
+.topbar{height:68px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,40px);gap:14px}
+.breadcrumb{font-size:13px;color:var(--secondary)}
+.breadcrumb strong{color:var(--ink)}
+.top-actions{display:flex;align-items:center;gap:10px}
+.icon-button{height:40px;width:40px;display:grid;place-items:center;border:1px solid var(--border);background:#fff;border-radius:9px;color:var(--secondary);position:relative}
+.dot{position:absolute;right:8px;top:7px;width:7px;height:7px;background:#C77A12;border:1px solid #fff;border-radius:50%}
+.mobile-menu{display:none}
+.content{max-width:1120px;margin:0 auto;padding:32px clamp(18px,3vw,40px) 56px}
+.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px}
+.eyebrow{font-size:12px;color:var(--secondary);font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:28px;line-height:1.25;letter-spacing:-.7px;margin:5px 0 8px;font-weight:800}
+h2{font-size:18px;line-height:1.35;letter-spacing:-.25px;margin:0;font-weight:800}
+h3{font-size:16px;line-height:1.4;margin:0;font-weight:800}
+p{margin:0}
+.subtitle{color:var(--secondary);max-width:690px;font-size:14px}
+.heading-side{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:750;white-space:nowrap}
+.pill.neutral{background:var(--neutral-bg);color:var(--neutral-fg);border-color:var(--neutral-border)}
+.pill.brand{background:var(--brand-tint);color:var(--brand);border-color:#B7DCCB}
+.pill.green{background:var(--green-bg);color:var(--green-fg);border-color:var(--green-border)}
+.pill.amber{background:var(--amber-bg);color:var(--amber-fg);border-color:var(--amber-border)}
+.pill.red{background:var(--red-bg);color:var(--red-fg);border-color:var(--red-border)}
+.dot-sm{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--shadow);margin-bottom:18px}
+.panel-head{padding:20px 22px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border)}
+.panel-body{padding:20px 22px}
+.section-kicker{font-size:12px;color:var(--secondary);font-weight:750;margin-bottom:4px}
+.small{font-size:13px;color:var(--secondary)}
+.tiny{font-size:12px;color:var(--secondary)}
+.context-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;padding:16px 22px}
+.context-item{border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:#fff;min-width:0}
+.context-label{font-size:12px;color:var(--secondary);margin-bottom:5px}
+.context-value{font-size:14px;font-weight:750;overflow-wrap:anywhere}
+.context-value .light{font-weight:500;color:var(--secondary)}
+.notice{padding:12px 14px;border-radius:8px;display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.notice.info{background:#EEF5FA;border:1px solid #C5DCEB;color:#234D68}
+.notice.neutral{background:var(--muted);border:1px solid var(--border);color:var(--neutral-fg)}
+.notice.warning{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber-fg)}
+.notice.success{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-fg)}
+.notice.error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red-fg)}
+.notice-icon{font-weight:900;flex:none}
+.status-preview{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--border);background:#FAFCFB;border-radius:8px;padding:14px 16px;margin-bottom:18px}
+.status-title{font-size:13px;color:var(--secondary);margin-bottom:4px}
+.status-main{font-size:15px;font-weight:800}
+.status-desc{font-size:12px;color:var(--secondary);margin-top:3px}
+.cards{display:grid;gap:14px}
+.commit-card{border:1px solid var(--border);border-radius:10px;background:#fff;overflow:hidden}
+.commit-card.invalid{border-color:#D68A83}
+.commit-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#FCFDFC;border-bottom:1px solid var(--border)}
+.commit-title{display:flex;align-items:center;gap:10px}
+.number{width:28px;height:28px;border-radius:8px;background:var(--brand-tint);color:var(--brand);display:grid;place-items:center;font-weight:850;font-size:13px}
+.commit-body{padding:18px 16px}
+.field-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(180px,.7fr);gap:16px}
+.field{display:grid;gap:6px;min-width:0}
+.field label,.field-label{font-size:13px;font-weight:750}
+.required{color:#A12C25}
+.hint{font-size:12px;color:var(--secondary)}
+input[type=text],input[type=url],textarea,select{width:100%;border:1px solid #BFCFC8;border-radius:8px;padding:11px 12px;background:#fff;color:var(--ink);min-height:44px}
+textarea{resize:vertical;min-height:94px}
+input::placeholder,textarea::placeholder{color:#71817B}
+input:focus,textarea:focus,select:focus{border-color:var(--focus)}
+input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{border-color:#A12C25;background:#FFFBFA}
+.field-error{font-size:12px;color:#9B2923;font-weight:650}
+.risk-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.risk-option{position:relative}
+.risk-option input{position:absolute;opacity:0;width:1px;height:1px}
+.risk-option span{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:750;cursor:pointer}
+.risk-option input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.risk-option input:checked+span{border-width:2px;padding:7px}
+.risk-option.green input:checked+span{background:var(--green-bg);border-color:var(--green-border);color:var(--green-fg)}
+.risk-option.amber input:checked+span{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber-fg)}
+.risk-option.red input:checked+span{background:var(--red-bg);border-color:var(--red-border);color:var(--red-fg)}
+.risk-circle{width:9px;height:9px;border-radius:50%;background:currentColor}
+.risk-fields{display:none;grid-template-columns:1fr 1fr;gap:14px;padding-top:16px;margin-top:16px;border-top:1px dashed var(--border)}
+.risk-fields.show{display:grid}
+.card-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:16px;margin-top:16px;border-top:1px solid var(--border)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 15px;border:1px solid transparent;border-radius:8px;font-weight:750;font-size:14px;text-decoration:none;transition:background .15s ease,border-color .15s ease}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover:not(:disabled){background:#00543F}
+.btn-secondary{background:#fff;color:var(--ink);border-color:var(--border-strong)}
+.btn-secondary:hover:not(:disabled){background:var(--subtle)}
+.btn-ghost{background:transparent;color:var(--secondary);border-color:transparent}
+.btn-ghost:hover:not(:disabled){background:var(--muted);color:var(--ink)}
+.btn-danger{background:#fff;color:#9B2923;border-color:#E8B1AC}
+.btn:disabled{opacity:.5}
+.copy-list{display:grid;gap:10px;margin-top:16px}
+.copy-item{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;align-items:start;border:1px solid var(--border);border-radius:8px;padding:13px}
+.copy-item input{width:18px;height:18px;accent-color:var(--brand);margin-top:3px}
+.copy-text{font-size:14px;font-weight:700}
+.copy-meta{font-size:12px;color:var(--secondary);margin-top:4px}
+.copy-tag{font-size:11px;color:var(--secondary);background:var(--muted);border-radius:5px;padding:4px 6px;white-space:nowrap}
+.copy-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.empty-state{border:1px dashed var(--border-strong);border-radius:8px;padding:18px;text-align:center;color:var(--secondary);font-size:13px;background:#FCFDFC}
+.zero-state{display:none}
+.zero-state.show{display:block}
+.form-footer{position:sticky;bottom:0;z-index:4;margin:22px calc(clamp(18px,3vw,40px)*-1) -56px;padding:14px clamp(18px,3vw,40px);background:rgba(255,255,255,.96);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;backdrop-filter:blur(12px)}
+.footer-state{font-size:13px;color:var(--secondary)}
+.footer-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.form-error-summary{display:none;margin-bottom:18px}
+.form-error-summary.show{display:flex}
+.demo-tools{border:1px dashed var(--border-strong);border-radius:10px;padding:14px 16px;margin-top:28px;background:#FDFEFD}
+.demo-tools summary{font-weight:800;font-size:13px;cursor:pointer}
+.demo-tools-content{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.demo-tools select{width:auto;min-width:220px;min-height:40px;padding:7px 10px;font-size:13px}
+.toast{position:fixed;right:22px;bottom:90px;z-index:20;max-width:min(420px,calc(100vw - 32px));display:none;padding:14px 16px;background:#103C2E;color:#fff;border-radius:10px;box-shadow:0 12px 35px #0e211b2b;font-size:14px}
+.toast.show{display:block}
+.modal-backdrop{position:fixed;inset:0;z-index:30;background:rgba(14,33,27,.42);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.show{display:flex}
+.modal{width:min(480px,100%);background:#fff;border-radius:14px;padding:24px;box-shadow:0 20px 60px #0e211b35}
+.modal h2{margin-bottom:8px}
+.modal p{font-size:14px;color:var(--secondary);margin-bottom:20px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.locked-overlay{display:none}
+.locked-overlay.show{display:block}
+[hidden]{display:none!important}
+@media(max-width:900px){.app{grid-template-columns:220px minmax(0,1fr)}.context-grid{grid-template-columns:1fr 1fr}.context-item:first-child{grid-column:1/-1}.field-grid{grid-template-columns:1fr}.risk-fields{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){
+ .app{display:block}.sidebar{display:none}.topbar{height:58px;padding:0 16px}.mobile-menu{display:grid}.breadcrumb{font-size:12px}.content{padding:24px 16px 44px}.page-heading{display:block}.heading-side{justify-content:flex-start;margin-top:14px}h1{font-size:25px}.panel-head{padding:17px 16px 14px}.panel-body{padding:16px}.context-grid{padding:14px 16px;grid-template-columns:1fr}.context-item:first-child{grid-column:auto}.status-preview{align-items:flex-start;flex-direction:column}.commit-body{padding:15px 13px}.commit-top{padding:12px 13px}.risk-fields{grid-template-columns:1fr}.copy-item{grid-template-columns:22px minmax(0,1fr)}.copy-tag{grid-column:2;justify-self:start}.form-footer{margin:20px -16px -44px;padding:12px 16px;align-items:flex-start;flex-direction:column;gap:8px}.footer-buttons{width:100%;display:grid;grid-template-columns:1fr 1fr}.footer-buttons .btn-primary{grid-column:1/-1;grid-row:1}.footer-state{font-size:12px}.demo-tools-content select{width:100%}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Page-specific styles; shared shell and tokens are inherited from Morning Commitment. */
+.form-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:18px}
+.conditional{display:none;margin-top:16px;padding:14px;background:#FCFDFC;border:1px solid var(--border);border-radius:8px}
+.conditional.show{display:grid;gap:10px}
+.conditional p{font-size:13px;color:var(--secondary)}
+.entries{display:grid;gap:14px}
+.work-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.work-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:#FCFDFC;border-bottom:1px solid var(--border)}
+.work-type{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--brand);background:var(--brand-tint);border:1px solid #B7DCCB;border-radius:999px;padding:5px 9px}
+.work-type-mark{width:17px;height:17px;display:grid;place-items:center;border-radius:50%;background:var(--brand);color:white;font-size:13px;line-height:1}
+.work-time{font-size:12px;color:var(--secondary);white-space:nowrap}
+.work-card-body{padding:18px}
+.work-description{font-size:15px;font-weight:650;line-height:1.55;overflow-wrap:anywhere}
+.work-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.reason-chip{display:inline-flex;align-items:center;padding:5px 9px;background:var(--muted);border:1px solid var(--border);border-radius:999px;color:var(--neutral-fg);font-size:12px;font-weight:700}
+.assigned-meta{font-size:12px;color:var(--secondary)}
+.empty-state[hidden]{display:none}
+.empty-state{padding:28px 20px;text-align:center;border:1px dashed var(--border-strong);border-radius:8px;background:#FCFDFC}
+.empty-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;margin:0 auto 12px;background:var(--brand-tint);color:var(--brand);font-size:22px;font-weight:700}
+.empty-state h3{margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--secondary);max-width:420px;margin:0 auto}
+.form-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--border);margin-top:22px;padding-top:18px}
+.toast{position:fixed;right:22px;bottom:28px;z-index:20;max-width:min(420px,calc(100vw - 32px));display:none;padding:14px 16px;background:#103C2E;color:#fff;border-radius:10px;box-shadow:0 12px 35px #0e211b2b;font-size:14px}
+.toast.show{display:block}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.form-actions{align-items:stretch;flex-direction:column-reverse}.form-actions .btn{width:100%}.work-card-head{align-items:flex-start;flex-direction:column}.work-card-body{padding:15px}}
+
+/* Shared daily workflow stepper */
+.daily-workflow-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;border-bottom:1px solid var(--border,#DCE7E2);gap:0;margin:0 0 24px}
+.daily-workflow-step{min-width:0;min-height:72px;display:flex;align-items:center;gap:10px;padding:12px 14px;color:var(--text-secondary,#5C6E68);text-decoration:none;border-bottom:2px solid transparent}
+.daily-workflow-step__number{flex:0 0 28px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#EFF5F2;color:#52665E;font-size:13px;font-weight:700}
+.daily-workflow-step__content{display:flex;flex-direction:column;gap:4px;min-width:0}
+.daily-workflow-step__content strong{color:#53665F;font-size:14px;line-height:1.25;font-weight:700}
+.daily-workflow-step__content small{color:#5C6E68;font-size:12px;line-height:1.3}
+.daily-workflow-step.is-complete .daily-workflow-step__number,.daily-workflow-step.is-active .daily-workflow-step__number{background:#00674D;color:#fff}
+.daily-workflow-step.is-active{border-bottom-color:#00674D}
+.daily-workflow-step.is-active .daily-workflow-step__content strong{color:#00674D}
+.daily-workflow-step:focus-visible{outline:3px solid #0B8061;outline-offset:2px;border-radius:4px}
+@media(max-width:640px){.daily-workflow-steps{grid-template-columns:1fr}.daily-workflow-step{min-height:56px;padding:10px 12px}}
+
+
+/* EOD Outcome components: reuse WorkPulse tokens and shared application shell */
+.blocker-demo-controls{padding:14px 16px;margin-bottom:14px;border:1px dashed var(--border-strong);border-radius:8px;background:#FCFDFC}.blocker-checks{display:flex;gap:16px;flex-wrap:wrap}.blocker-checks label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--secondary)}.blocker-checks input{accent-color:var(--brand)}
+.eod-items{display:grid;gap:16px}
+.eod-item{border:1px solid var(--border);border-radius:10px;background:#fff;overflow:hidden}
+.eod-item-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;background:#FCFDFC;border-bottom:1px solid var(--border)}
+.eod-description{padding:18px 18px 0;font-size:15px;font-weight:650;line-height:1.55}
+.eod-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px}
+.eod-controls .field,.conditional-reason .field{min-width:0}
+.eod-controls select,.field textarea,.field select{width:100%}
+.conditional-reason{padding:0 18px 18px}
+.conditional-reason[hidden]{display:none}
+.optional{font-size:12px;color:var(--secondary);font-weight:500;margin-left:5px}
+.suggestion-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:#FCFDFC}
+.field-label{font-size:13px;font-weight:750;margin-bottom:4px}
+.mismatch-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.form-error-summary{display:none;margin-top:16px}
+.form-error-summary.show{display:flex}
+@media(max-width:700px){.eod-controls{grid-template-columns:1fr}.eod-item-top{align-items:flex-start}.suggestion-row{align-items:flex-start;flex-direction:column}.mismatch-actions .btn{width:100%}}
+
+</style>
+
+<style>
+.authority-options{border:0;padding:0;margin:0;min-width:0}
+.authority-options legend{font-size:13px;font-weight:750;margin-bottom:10px}
+.authority-option{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:8px;margin-top:9px;background:#fff;cursor:pointer}
+.authority-option:has(input:checked){border-color:var(--border-strong);background:#F8FCFA}
+.authority-option input{width:18px;height:18px;accent-color:var(--brand);margin:2px 0 0;flex:none}
+.authority-copy{display:grid;gap:4px}
+.authority-copy strong{font-size:14px}
+.authority-copy small{font-size:12px;color:var(--secondary);line-height:1.45}
+.form-error-summary{display:none}
+.form-error-summary.show{display:flex}
+@media(max-width:700px){.authority-option{padding:12px}}
+</style>
+
+<style>
+
+/* Alignment refinement: paired fields share the same label and control baselines. */
+.field-grid > .field { align-content: start; }
+.field-grid > .field > label { display: block; min-height: 20px; line-height: 20px; }
+.field-grid > .field > input[type="text"],
+.field-grid > .field > input[type="url"],
+.field-grid > .field > select {
+  height: 54px; min-height: 54px; padding: 0 12px; line-height: 1.4; align-self: start;
+}
+
+</style>
+
+<style id="owner-selection-refinement">
+#ownerPerson,#projectContext{width:100%;min-height:44px}
+.authority-options{margin-bottom:4px}
+#ownerPerson:focus-visible,#projectContext:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.route-preview{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;padding:14px;border:1px solid var(--border);border-radius:9px;background:#FAFCFB;margin-top:16px}
+.route-preview-icon{width:40px;height:40px;border-radius:9px;background:var(--brand-tint);color:var(--brand);display:grid;place-items:center;font-weight:900;font-size:18px}
+.route-preview-title{font-size:13px;font-weight:800;margin-bottom:3px}
+.route-preview-person{font-size:14px;font-weight:750;margin-bottom:3px}
+.route-preview-detail{font-size:12px;color:var(--secondary)}
+.route-preview .route-status{display:inline-flex;margin-top:8px;font-size:11px;font-weight:800;border-radius:999px;padding:4px 8px;background:var(--neutral-bg);color:var(--neutral-fg)}
+.route-preview.manual .route-preview-icon{background:#E8F1FC;color:#245A91}
+.route-preview.manual .route-status{background:#E8F1FC;color:#245A91}
+.route-preview[data-state="needs-project"] .route-preview-icon,.route-preview[data-state="unresolved"] .route-preview-icon{background:var(--amber-bg);color:var(--amber-fg)}
+.route-preview[data-state="needs-project"] .route-status,.route-preview[data-state="unresolved"] .route-status{background:var(--amber-bg);color:var(--amber-fg)}
+.route-preview[data-state="error"] .route-preview-icon{background:var(--red-bg);color:var(--red-fg)}
+.route-preview[data-state="error"] .route-status{background:var(--red-bg);color:var(--red-fg)}
+@media(max-width:700px){.route-preview{grid-template-columns:34px minmax(0,1fr);padding:12px}.route-preview-icon{width:34px;height:34px}}
+</style>
+
+<style>
+.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.history-toolbar-left,.history-toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.history-toolbar select{min-width:170px}.summary-grid.period-empty .meter span{width:0!important}
+.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.summary-card{min-width:0;background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:var(--shadow)}
+.summary-card.wide{grid-column:span 2}
+.summary-label{font-size:13px;color:var(--secondary);font-weight:700;margin-bottom:9px}
+.summary-number{font-size:30px;font-weight:850;letter-spacing:-.8px;line-height:1.2}
+.summary-foot{font-size:12px;color:var(--secondary);margin-top:7px;line-height:1.45}
+.metric-rows{display:grid;gap:10px;margin-top:12px}
+.metric-row{display:grid;grid-template-columns:minmax(100px,1fr) minmax(55px,1.1fr) auto;align-items:center;gap:10px;font-size:12px}
+.metric-row .metric-label{color:var(--secondary)}
+.meter{height:7px;background:#EFF5F2;border-radius:999px;overflow:hidden}
+.meter span{display:block;height:100%;border-radius:999px;background:var(--brand)}
+.meter .m-green{background:#2F855A}.meter .m-amber{background:#B7791F}.meter .m-red{background:#B8322A}.meter .m-blue{background:#26749B}
+.history-panel{overflow:hidden}
+.history-panel .panel-head{align-items:center}
+.history-list{display:grid}
+.history-day{display:grid;grid-template-columns:155px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 22px;border-bottom:1px solid var(--border);background:#fff}
+.history-day:last-child{border-bottom:0}
+.day-date{font-weight:800;font-size:14px}
+.day-weekday{font-size:12px;color:var(--secondary);margin-top:3px}
+.day-description{min-width:0}
+.day-title{font-size:14px;font-weight:750;margin-bottom:7px;overflow-wrap:anywhere}
+.day-meta{font-size:12px;color:var(--secondary);margin-top:7px;line-height:1.45}
+.day-badges{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.day-action{white-space:nowrap}
+.pill.timing{background:#E0F2FE;color:#075985;border-color:#7DD3FC}
+.pill.late{background:#FFEDD5;color:#9A3412;border-color:#FDBA74}
+.pill.no-submission{background:#F1F5F9;color:#334155;border-color:#CBD5E1}
+.pill.na{background:#F1F5F9;color:#334155;border-color:#94A3B8}
+.outcome-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.outcome-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:#FCFDFC}
+.outcome-chip strong{font-size:13px}
+.note-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:8px;background:#FCFDFC}
+.note-mark{width:34px;height:34px;border-radius:9px;background:var(--brand-tint);color:var(--brand);display:grid;place-items:center;flex:none;font-weight:850}
+.note-body{min-width:0}.note-title{font-size:13px;font-weight:800}.note-copy{font-size:13px;line-height:1.5;margin-top:4px}.note-meta{font-size:12px;color:var(--secondary);margin-top:6px}
+.detail-view{display:none}.detail-view.show{display:block}.history-overview.hidden{display:none}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.detail-section{margin-bottom:16px}.detail-section .panel-body{display:grid;gap:14px}
+.detail-work{padding:14px;border:1px solid var(--border);border-radius:8px;background:#fff}
+.detail-work-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.detail-work-title{font-size:14px;font-weight:800}.detail-work p{font-size:13px;line-height:1.55;color:var(--secondary)}
+.detail-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.detail-field{padding:12px;border:1px solid var(--border);border-radius:8px;background:#FCFDFC;min-width:0}
+.detail-field label{display:block;font-size:12px;color:var(--secondary);margin-bottom:5px}.detail-field strong{font-size:13px;overflow-wrap:anywhere}
+.timeline{display:grid;gap:0}.timeline-row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}.timeline-row:last-child{border-bottom:0}.timeline-time{font-size:12px;color:var(--secondary)}.timeline-text{font-size:13px;line-height:1.5}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.correction-link{font-size:13px;font-weight:750}
+.empty-filter{display:none;padding:30px 20px;text-align:center;color:var(--secondary)}.empty-filter.show{display:block}
+.toast{z-index:40}
+@media(max-width:900px){.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-card.wide{grid-column:span 2}.history-day{grid-template-columns:130px minmax(0,1fr)}.day-action{grid-column:2;justify-self:start}}
+@media(max-width:700px){.summary-grid{grid-template-columns:1fr}.summary-card.wide{grid-column:auto}.history-day{grid-template-columns:1fr;gap:9px;padding:16px}.day-action{grid-column:auto}.history-toolbar-left,.history-toolbar-right{width:100%}.history-toolbar select{flex:1;min-width:0}.detail-fields{grid-template-columns:1fr}.timeline-row{grid-template-columns:1fr;gap:4px}.summary-card{padding:16px}}
+</style>
+
+</head><body>
+<a class="skip" href="#main">Lewati ke konten utama</a>
+<div class="app">
+<aside class="sidebar" aria-label="Navigasi utama">
+  <div class="brand"><div class="brand-mark" aria-hidden="true">W</div><div><div class="brand-name">WorkPulse</div><div class="brand-caption">Daily Accountability</div></div></div>
+  <div><div class="nav-label">Workspace</div><nav class="nav" aria-label="Workspace">
+    <a href="#today" data-nav="today"><span class="nav-icon" aria-hidden="true">◷</span>My Today</a>
+    <a class="active" href="#main" aria-current="page"><span class="nav-icon" aria-hidden="true">▤</span>My History</a>
+    <a href="#leave" data-nav="leave"><span class="nav-icon" aria-hidden="true">▣</span>My Leave Request</a>
+    <a href="#notifications" data-nav="notifications"><span class="nav-icon" aria-hidden="true">♧</span>Notifications <span class="dot" aria-hidden="true"></span></a>
+    <a href="#profile" data-nav="profile"><span class="nav-icon" aria-hidden="true">○</span>Profile</a>
+  </nav></div>
+  <div class="side-bottom"><div class="avatar" aria-hidden="true">AD</div><div class="user-meta"><div class="user-name">Andi Pratama</div><div class="user-role">Employee</div><div class="user-scope">Cakupan: Data pribadi<br>Izin aktif: Self-service · Raise blocker</div></div><button class="icon-button" style="margin-left:auto;width:34px;height:34px" type="button" aria-label="Menu akun" id="accountMenu">···</button></div>
+</aside>
+<main id="main">
+<header class="topbar"><button class="icon-button mobile-menu" id="mobileMenu" type="button" aria-label="Buka navigasi" aria-expanded="false">☰</button><div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong>My History</strong></div><div class="top-actions"><button class="icon-button" type="button" id="notificationButton" aria-label="Notifikasi, ada notifikasi"><span aria-hidden="true">♧</span><span class="dot" aria-hidden="true"></span></button><div class="avatar" aria-label="Pengguna Andi Pratama">AD</div></div></header>
+<div class="content">
+  <section class="history-overview" id="historyOverview">
+    <div class="page-heading"><div><div class="eyebrow">Catatan pribadi</div><h1>My History &amp; Weekly Summary</h1><p class="subtitle">Tinjau komitmen, hasil kerja, status harian, dan tindak lanjut yang tercatat pada periode yang dipilih.</p></div><div class="heading-side"><button class="btn btn-primary" type="button" id="exportBtn"><span aria-hidden="true">↓</span> Export histori</button></div></div>
+    <div class="history-toolbar"><div class="history-toolbar-left"><div class="field"><label for="periodFilter">Periode</label><select id="periodFilter"><option value="last-week" selected>Minggu sebelumnya · 5–9 Okt</option><option value="this-week">Minggu ini · 12–16 Okt</option><option value="this-month">Bulan ini · Oktober</option></select></div><div class="field"><label for="recordFilter">Tampilkan</label><select id="recordFilter"><option value="all">Semua hari</option><option value="submitted">Ada submission</option><option value="no-submission">No Submission</option></select></div></div><div class="history-toolbar-right"><span class="small" id="periodCaption">Senin, 5 Oktober – Jumat, 9 Oktober 2026</span></div></div>
+    <div class="summary-grid" id="summaryGrid">
+      <article class="summary-card"><div class="summary-label">Commitments</div><div class="summary-number" id="commitmentTotal">7</div><div class="summary-foot">Morning Commitment; Additional Work dicatat terpisah</div></article>
+      <article class="summary-card"><div class="summary-label">Distribusi Outcome</div><div class="metric-rows"><div class="metric-row"><span class="metric-label">Completed</span><div class="meter"><span style="width:78%"></span></div><strong id="completedCount">7</strong></div><div class="metric-row"><span class="metric-label">Partially Completed</span><div class="meter"><span class="m-amber" style="width:22%"></span></div><strong id="partialCount">2</strong></div><div class="metric-row"><span class="metric-label">Not Completed</span><div class="meter"><span class="m-red" style="width:0%"></span></div><strong id="notCompletedCount">0</strong></div></div></article>
+      <article class="summary-card"><div class="summary-label">Final Status · Hari dengan EOD</div><div class="metric-rows"><div class="metric-row"><span class="metric-label"><span class="dot-sm" style="color:#2F855A"></span> GREEN</span><div class="meter"><span class="m-green" style="width:50%"></span></div><strong id="greenDays">2 hari</strong></div><div class="metric-row"><span class="metric-label"><span class="dot-sm" style="color:#B7791F"></span> AMBER</span><div class="meter"><span class="m-amber" style="width:25%"></span></div><strong id="amberDays">1 hari</strong></div><div class="metric-row"><span class="metric-label"><span class="dot-sm" style="color:#B8322A"></span> RED</span><div class="meter"><span class="m-red" style="width:25%"></span></div><strong id="redDays">1 hari</strong></div></div><div class="summary-foot">No Submission ditampilkan terpisah dari Final Status.</div></article>
+      <article class="summary-card"><div class="summary-label">Submission Timing</div><div class="metric-rows"><div class="metric-row"><span class="metric-label">On-Time</span><div class="meter"><span class="m-blue" style="width:60%"></span></div><strong id="onTimeDays">3 hari</strong></div><div class="metric-row"><span class="metric-label">Late</span><div class="meter"><span class="m-amber" style="width:20%"></span></div><strong id="lateDays">1 hari</strong></div><div class="metric-row"><span class="metric-label">No Submission</span><div class="meter"><span style="width:20%;background:#64748B"></span></div><strong id="noSubmissionDays">1 hari</strong></div></div></article>
+      <article class="summary-card"><div class="summary-label">Recurring Continuation</div><div class="summary-number" id="continuationCount">2 hari</div><div class="summary-foot">Pola pekerjaan yang berlanjut pada hari kerja berturut-turut</div><div class="outcome-list"><span class="outcome-chip">Continue <strong id="continueCount">3</strong></span><span class="outcome-chip">Do Not Continue <strong id="stopCount">6</strong></span></div></article>
+      <article class="summary-card"><div class="summary-label">Support &amp; Escalation</div><div class="detail-fields" style="margin-top:8px"><div class="detail-field"><label>Support Given</label><strong id="supportCount">1 aktivitas</strong></div><div class="detail-field"><label>Open Escalations</label><strong id="escalationCount">1 terbuka</strong></div></div><div class="summary-foot">Menampilkan tindak lanjut yang terkait dengan periode ini.</div></article>
+      <article class="summary-card wide"><div class="summary-label">Manager Notes yang dapat kamu lihat</div><div class="note-card"><div class="note-mark" aria-hidden="true">✦</div><div class="note-body"><div class="note-title">Recognition · Budi Santoso</div><div class="note-copy">“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”</div><div class="note-meta">Jumat, 9 Oktober 2026</div></div></div></article>
+    </div>
+    <section class="panel history-panel" aria-labelledby="dailyHistoryTitle"><div class="panel-head"><div><div class="section-kicker">Rincian per hari</div><h2 id="dailyHistoryTitle">Riwayat harian</h2><p class="small" style="margin-top:5px">Pilih satu hari untuk melihat catatan lengkap. Data historis hanya dapat dibaca di halaman ini.</p></div><span class="pill neutral" id="daysCount">5 hari</span></div><div class="history-list" id="dayList"></div><div class="empty-filter" id="emptyFilter">Tidak ada hari yang sesuai dengan filter ini.</div></section>
+  </section>
+  <section class="detail-view" id="detailView" aria-live="polite">
+    <div class="detail-top"><div><button class="btn btn-ghost" type="button" id="backBtn">← Kembali ke histori</button><div class="eyebrow" style="margin-top:18px">Rincian harian</div><h1 id="detailDate" style="margin-bottom:8px">Detail hari</h1><p class="subtitle" id="detailSubtitle">Catatan hari kerja yang dipilih.</p><div class="day-badges" id="detailBadges" style="margin-top:12px"></div></div><div class="detail-actions"><button class="btn btn-secondary" type="button" id="detailExportBtn">Export hari ini</button></div></div>
+    <section class="panel detail-section"><div class="panel-head"><div><div class="section-kicker">Pagi</div><h2>Morning Commitment</h2></div><span class="pill neutral" id="morningState">Tercatat</span></div><div class="panel-body" id="morningDetail"></div></section>
+    <section class="panel detail-section"><div class="panel-head"><div><div class="section-kicker">Akhir hari</div><h2>EOD Outcome &amp; Continuation</h2></div><span class="pill neutral" id="eodState">Tersedia</span></div><div class="panel-body" id="eodDetail"></div></section>
+    <section class="panel detail-section"><div class="panel-head"><div><div class="section-kicker">Tindak lanjut</div><h2>Blocker &amp; support</h2></div></div><div class="panel-body" id="blockerDetail"></div></section>
+    <section class="panel detail-section" id="correctionSection"><div class="panel-head"><div><div class="section-kicker">Riwayat perubahan</div><h2>Correction Request</h2></div></div><div class="panel-body" id="correctionDetail"></div></section>
+    <section class="panel detail-section" id="notesSection"><div class="panel-head"><div><div class="section-kicker">Catatan yang dapat kamu lihat</div><h2>Manager Notes</h2></div></div><div class="panel-body" id="notesDetail"></div></section>
+  </section>
+</div>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const records = {
+ '2026-10-05': {date:'Senin, 5 Oktober 2026',weekday:'Senin',timing:'On-Time',final:'GREEN',initial:'GREEN',morningTime:'08.42',eodTime:'16.48',commitments:[{title:'Menyelesaikan validasi alur checkout',outcome:'Completed',continuation:'Do Not Continue',description:'Validasi skenario checkout utama dan pencatatan temuan selesai.'},{title:'Meninjau bug pada invoice export',outcome:'Completed',continuation:'Continue',description:'Menemukan satu kasus edge yang perlu diverifikasi pada hari berikutnya.'}],additional:[{title:'Membantu QA memeriksa invoice export',outcome:'Completed',continuation:'Do Not Continue'}],blockers:'Tidak ada blocker yang tercatat.',corrections:[],notes:[]},
+ '2026-10-06': {date:'Selasa, 6 Oktober 2026',weekday:'Selasa',timing:'On-Time',final:'AMBER',initial:'AMBER',morningTime:'08.51',eodTime:'17.02',commitments:[{title:'Memperbaiki kasus edge invoice export',outcome:'Partially Completed',continuation:'Continue',description:'Perbaikan utama selesai; verifikasi lintas format masih diperlukan.'},{title:'Menyiapkan catatan pengujian',outcome:'Completed',continuation:'Do Not Continue',description:'Catatan pengujian diperbarui.'}],additional:[],blockers:'Ketergantungan pada konfirmasi format file dari tim terkait; tindak lanjut dicatat.',corrections:[{title:'EOD Correction Request · EOD-2026-1006-01',status:'Applied',detail:'Keterangan Continuation diperjelas setelah pengajuan koreksi.'}],notes:[]},
+ '2026-10-07': {date:'Rabu, 7 Oktober 2026',weekday:'Rabu',timing:'Late',final:'RED',initial:'RED',morningTime:'09.18',eodTime:'17.20',commitments:[{title:'Menyelesaikan perbaikan invoice export',outcome:'Partially Completed',continuation:'Continue',description:'Pekerjaan tertunda karena menunggu keputusan pada format keluaran.'}],additional:[{title:'Investigasi error pada staging',outcome:'Completed',continuation:'Do Not Continue'}],blockers:'Blocker terkait keputusan format keluaran dicatat dan masih terbuka.',corrections:[],notes:[]},
+ '2026-10-08': {date:'Kamis, 8 Oktober 2026',weekday:'Kamis',timing:'On-Time',final:'GREEN',initial:'GREEN',morningTime:'08.39',eodTime:'16.55',commitments:[{title:'Melanjutkan perbaikan invoice export',outcome:'Completed',continuation:'Do Not Continue',description:'Perbaikan dan verifikasi format keluaran selesai.'},{title:'Meninjau regression test',outcome:'Completed',continuation:'Do Not Continue',description:'Regression test untuk alur terkait telah dijalankan.'}],additional:[],blockers:'Blocker sebelumnya diperbarui; keputusan yang dibutuhkan sudah diterima.',corrections:[],notes:[]},
+ '2026-10-09': {date:'Jumat, 9 Oktober 2026',weekday:'Jumat',timing:'No Submission',final:null,initial:null,morningTime:null,eodTime:null,commitments:[],additional:[],blockers:'Tidak ada catatan blocker baru pada hari ini.',corrections:[],notes:[{title:'Recognition · Budi Santoso',detail:'Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.'}]}
+};
+const periodData = {
+ 'last-week': {caption:'Senin, 5 Oktober – Jumat, 9 Oktober 2026',keys:['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09'],commitments:7,completed:7,partial:2,notCompleted:0,green:2,amber:1,red:1,onTime:3,late:1,noSubmission:1,continuation:2,continueCount:3,stopCount:6,support:1,escalations:1},
+ 'this-week': {caption:'Senin, 12 Oktober – Jumat, 16 Oktober 2026',keys:[],commitments:null,completed:null,partial:null,notCompleted:null,green:null,amber:null,red:null,onTime:null,late:null,noSubmission:null,continuation:null,continueCount:null,stopCount:null,support:null,escalations:null},
+ 'this-month': {caption:'1–31 Oktober 2026',keys:['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09'],commitments:7,completed:7,partial:2,notCompleted:0,green:2,amber:1,red:1,onTime:3,late:1,noSubmission:1,continuation:2,continueCount:3,stopCount:6,support:1,escalations:1}
+};
+let currentPeriod='last-week', currentKey=null;
+const $=id=>document.getElementById(id);
+function badge(label,cls='neutral'){return `<span class="pill ${cls}">${label}</span>`}
+function timingBadge(t){if(t==='On-Time')return badge('On-Time','timing');if(t==='Late')return badge('Late','late');return badge('No Submission','no-submission')}
+function statusBadge(s){if(s==='GREEN')return badge('Final Status · GREEN','green');if(s==='AMBER')return badge('Final Status · AMBER','amber');if(s==='RED')return badge('Final Status · RED','red');return badge('Final Status belum tersedia','neutral')}
+function renderSummary(){const d=periodData[currentPeriod],empty=d.keys.length===0; $('periodCaption').textContent=d.caption; $('daysCount').textContent=d.keys.length+' hari';
+ const fields={commitmentTotal:'commitments',completedCount:'completed',partialCount:'partial',notCompletedCount:'notCompleted',greenDays:'green',amberDays:'amber',redDays:'red',onTimeDays:'onTime',lateDays:'late',noSubmissionDays:'noSubmission',continuationCount:'continuation',continueCount:'continueCount',stopCount:'stopCount',supportCount:'support',escalationCount:'escalations'};
+ for(const [id,key] of Object.entries(fields)){const el=$(id); if(!el)continue;let val=d[key]; if(val===null){el.textContent='—';}else if(['greenDays','amberDays','redDays','onTimeDays','lateDays','noSubmissionDays'].includes(id)){el.textContent=val+' hari';}else if(id==='supportCount'){el.textContent=val+' aktivitas';}else if(id==='escalationCount'){el.textContent=val+' terbuka';}else el.textContent=val;}
+ $('summaryGrid').style.opacity=empty?'.72':'1'; $('summaryGrid').classList.toggle('period-empty',empty);
+ if(empty){document.querySelectorAll('#summaryGrid .summary-foot').forEach(x=>{if(!x.dataset.original)x.dataset.original=x.textContent;x.textContent='Belum ada catatan pada periode ini.'});}else{document.querySelectorAll('#summaryGrid .summary-foot').forEach(x=>{if(x.dataset.original)x.textContent=x.dataset.original})}
+ renderList();
+}
+function renderList(){const d=periodData[currentPeriod],filter=$('recordFilter').value;let keys=d.keys.filter(k=>{const r=records[k];if(filter==='submitted')return r.timing!=='No Submission';if(filter==='no-submission')return r.timing==='No Submission';return true;});const list=$('dayList');list.innerHTML='';$('emptyFilter').classList.toggle('show',keys.length===0);$('daysCount').textContent=keys.length+' hari';
+ if(currentPeriod==='this-week'&&keys.length===0){$('emptyFilter').textContent='Belum ada catatan untuk minggu ini.';return;}$('emptyFilter').textContent='Tidak ada hari yang sesuai dengan filter ini.';
+ keys.forEach(k=>{const r=records[k];const count=r.commitments.length+r.additional.length;const title=r.timing==='No Submission'?'Tidak ada submission':count+' item kerja tercatat';const timing=timingBadge(r.timing),status=statusBadge(r.final);const row=document.createElement('article');row.className='history-day';row.innerHTML=`<div><div class="day-date">${r.date}</div><div class="day-weekday">Riwayat harian</div></div><div class="day-description"><div class="day-title">${title}</div><div class="day-badges">${timing}${status}</div><div class="day-meta">${r.timing==='No Submission'?'Final Status tidak tersedia karena EOD tidak tercatat.':`Morning ${r.morningTime||'—'} · EOD ${r.eodTime||'—'} · ${r.commitments.length} commitment${r.additional.length?' · '+r.additional.length+' Additional Work':''}`}</div></div><button class="btn btn-secondary day-action" type="button" data-open-day="${k}">Lihat detail <span aria-hidden="true">→</span></button>`;list.appendChild(row)});
+ list.querySelectorAll('[data-open-day]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.openDay)));
+}
+function openDetail(key){const r=records[key];if(!r)return;currentKey=key;$('historyOverview').classList.add('hidden');$('detailView').classList.add('show');$('detailDate').textContent=r.date;$('detailSubtitle').textContent='Catatan yang tersimpan untuk '+r.weekday.toLowerCase()+'.';$('detailBadges').innerHTML=timingBadge(r.timing)+statusBadge(r.final)+(r.initial?badge('Initial Daily Status · '+r.initial,r.initial.toLowerCase()):'');
+ $('morningState').textContent=r.timing==='No Submission'?'Tidak ada submission':'Tercatat';$('eodState').textContent=r.final?'Tersedia':'Belum tersedia';
+ const morningItems=r.commitments.map((x,i)=>`<div class="detail-work"><div class="detail-work-head"><div class="detail-work-title">${i+1}. ${x.title}</div>${badge('Commitment','brand')}</div><p>${x.description||'Rincian pekerjaan yang tercatat pada hari tersebut.'}</p></div>`).join(''); const additionalItems=r.additional.length?`<div class="small" style="margin-top:8px">Additional Work</div>${r.additional.map(x=>`<div class="detail-work"><div class="detail-work-head"><div class="detail-work-title">${x.title}</div>${badge('Additional Work','neutral')}</div><div class="day-badges">${badge('Outcome · '+x.outcome,'neutral')}${badge('Continuation · '+x.continuation,'neutral')}</div></div>`).join('')}`:''; $('morningDetail').innerHTML=(r.commitments.length?`<div class="small">Morning Commitment</div>${morningItems}`:`<div class="notice neutral"><span class="notice-icon">i</span><div>Tidak ada Morning Commitment yang tercatat untuk hari ini. Hal ini tidak diubah menjadi status GREEN.</div></div>`)+additionalItems;
+ $('eodDetail').innerHTML=r.final?`<div class="detail-fields"><div class="detail-field"><label>Final Status</label><strong>${r.final}</strong></div><div class="detail-field"><label>Waktu submission EOD</label><strong>${r.eodTime||'—'}</strong></div></div>${[...r.commitments,...r.additional].map(x=>`<div class="detail-work"><div class="detail-work-title">${x.title}</div><div class="day-badges" style="margin-top:9px">${badge('Outcome · '+x.outcome,'neutral')}${badge('Continuation · '+x.continuation,'neutral')}</div></div>`).join('')}`:`<div class="notice neutral"><span class="notice-icon">i</span><div>Final Status tidak tersedia karena EOD tidak tercatat pada hari ini.</div></div>`;
+ $('blockerDetail').innerHTML=`<div class="detail-work"><div class="detail-work-title">Catatan blocker &amp; support</div><p style="margin-top:6px">${r.blockers}</p></div>`;
+ $('correctionSection').style.display=r.corrections.length?'':'none';$('correctionDetail').innerHTML=r.corrections.map(c=>`<div class="detail-work"><div class="detail-work-head"><div class="detail-work-title">${c.title}</div>${badge(c.status,c.status==='Applied'?'green':'neutral')}</div><p>${c.detail}</p><a class="correction-link" href="#correction-${key}" data-correction-link> Lihat rincian pengajuan → </a></div>`).join('');$('correctionDetail').querySelectorAll('[data-correction-link]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showToast('Riwayat koreksi',r.corrections[0].title+' · '+r.corrections[0].status)}));
+ const visibleNotes=r.notes||[];$('notesSection').style.display=visibleNotes.length?'':'none';$('notesDetail').innerHTML=visibleNotes.map(n=>`<div class="note-card"><div class="note-mark" aria-hidden="true">✦</div><div class="note-body"><div class="note-title">${n.title}</div><div class="note-copy">${n.detail}</div></div></div>`).join('');window.scrollTo({top:0,behavior:'smooth'});
+}
+function back(){ $('detailView').classList.remove('show');$('historyOverview').classList.remove('hidden');currentKey=null;window.scrollTo({top:0,behavior:'smooth'}); }
+function showToast(title,message){const t=$('toast');t.textContent=title+' — '+message;t.classList.add('show');clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>t.classList.remove('show'),3600)}
+function exportRows(keys,filename){const rows=[['Tanggal','Submission Timing','Initial Daily Status','Final Status','Morning Commitments','Additional Work','Correction Request']];keys.forEach(k=>{const r=records[k];if(!r)return;rows.push([r.date,r.timing,r.initial||'Tidak tersedia',r.final||'Tidak tersedia',r.commitments.map(x=>x.title+' ['+x.outcome+'; '+x.continuation+']').join(' | '),r.additional.map(x=>x.title+' ['+x.outcome+'; '+x.continuation+']').join(' | '),r.corrections.map(x=>x.title+' ('+x.status+')').join(' | ')])});const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);showToast('Export siap',rows.length-1+' hari diekspor sesuai data yang ditampilkan.');}
+$('periodFilter').addEventListener('change',e=>{currentPeriod=e.target.value;renderSummary();});$('recordFilter').addEventListener('change',renderList);$('backBtn').addEventListener('click',back);$('exportBtn').addEventListener('click',()=>exportRows(periodData[currentPeriod].keys,'workpulse-history-'+currentPeriod+'.csv'));$('detailExportBtn').addEventListener('click',()=>{if(currentKey)exportRows([currentKey],'workpulse-history-'+currentKey+'.csv')});
+$('mobileMenu').addEventListener('click',()=>{const side=document.querySelector('.sidebar');side.classList.toggle('open');$('mobileMenu').setAttribute('aria-expanded',side.classList.contains('open')?'true':'false')});$('notificationButton').addEventListener('click',()=>showToast('Notifikasi','Pusat notifikasi tersedia melalui menu Notifications.'));$('accountMenu').addEventListener('click',()=>showToast('Akun','Pengaturan akun tersedia melalui Profile.'));
+document.querySelectorAll('[data-nav]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showToast('Navigasi',a.textContent.trim()+' akan dibuka melalui menu terkait.')}));
+renderSummary();
+</script>
+</body></html>

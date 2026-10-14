@@ -30,7 +30,7 @@
 
     <!-- Search & Filter Card -->
     <v-card variant="outlined" class="border-subtle rounded-lg pa-4 mb-4">
-      <v-row dense align="center">
+      <v-row density="compact" align="center">
         <v-col cols="12" md="6">
           <v-text-field
             v-model="searchQuery"

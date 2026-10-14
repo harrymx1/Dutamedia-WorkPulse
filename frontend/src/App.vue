@@ -19,20 +19,22 @@
 
       <!-- Navigation Links -->
       <div class="d-none d-md-flex align-center gap-1">
-        <v-btn to="/today" variant="text" size="small" prepend-icon="mdi-calendar-check">
+        <v-btn id="nav-my-today" to="/today" variant="text" size="small" prepend-icon="mdi-calendar-check" data-testid="nav-my-today">
           My Today
         </v-btn>
-        <v-btn to="/history" variant="text" size="small" prepend-icon="mdi-history">
+        <v-btn id="nav-history" to="/history" variant="text" size="small" prepend-icon="mdi-history" data-testid="nav-history">
           History
         </v-btn>
 
         <!-- Management Links berbasis Role (SAD §16.4) -->
         <v-btn
           v-if="authStore.hasRole(['Supervisor_TL', 'Head_Dept', 'CEO_Director', 'SystemAdmin'])"
+          id="nav-team"
           to="/team"
           variant="text"
           size="small"
           prepend-icon="mdi-account-group"
+          data-testid="nav-team"
         >
           Team
         </v-btn>

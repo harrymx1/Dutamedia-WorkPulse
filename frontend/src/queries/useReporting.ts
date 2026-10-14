@@ -60,6 +60,7 @@ export function useDailyExceptionQuery(params: MaybeRefOrGetter<{
  * Hook query Weekly Team Summary Report.
  */
 export function useWeeklyTeamSummaryQuery(params: MaybeRefOrGetter<{
+  weekStart?: string;
   weekStartDate?: string;
   teamId?: string;
   function?: string;
@@ -77,8 +78,8 @@ export function useWeeklyTeamSummaryQuery(params: MaybeRefOrGetter<{
  * Hook query Monthly Trend Report.
  */
 export function useMonthlyTrendQuery(params: MaybeRefOrGetter<{
-  year: number;
-  month: number;
+  month?: string | number;
+  year?: number;
   function?: string;
 }>) {
   return useQuery({

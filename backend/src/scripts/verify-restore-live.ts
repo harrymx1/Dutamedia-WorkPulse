@@ -24,6 +24,7 @@ import {
   ExceptionStatus,
   Prisma,
 } from '@prisma/client';
+import { SystemNotificationTrigger } from '../modules/notification/constants/notification-trigger.constants.js';
 
 
 async function main() {
@@ -397,7 +398,7 @@ async function main() {
   await prisma.notification.create({
     data: {
       recipientUserId: userEmployee1.id,
-      triggerType: 'CORRECTION_APPROVED',
+      triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED,
       channel: NotificationChannel.WebNotificationCenter,
       payload: {
         title: 'Koreksi Komitmen Diterapkan',

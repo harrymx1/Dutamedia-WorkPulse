@@ -94,7 +94,7 @@
                 <span class="text-body-2 font-weight-medium">Cutoff Morning Check-in</span>
               </div>
               <v-chip size="small" variant="flat" color="primary">
-                09:30 WIB
+                {{ morningCutoff }}
               </v-chip>
             </v-sheet>
 
@@ -104,7 +104,7 @@
                 <span class="text-body-2 font-weight-medium">Cutoff EOD Check-in</span>
               </div>
               <v-chip size="small" variant="flat" color="secondary">
-                18:00 WIB
+                {{ eodCutoff }}
               </v-chip>
             </v-sheet>
 
@@ -114,7 +114,7 @@
                 <span class="text-body-2 font-weight-medium">Objection Window Koreksi</span>
               </div>
               <v-chip size="small" variant="flat" color="warning">
-                24 Jam
+                {{ objectionWindow }}
               </v-chip>
             </v-sheet>
           </v-card-text>
@@ -220,10 +220,44 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useMyProfileQuery, useChangePasswordMutation } from '../queries/useProfile.js';
+import {
+  useMyProfileQuery,
+  useChangePasswordMutation,
+  useActivePoliciesQuery,
+} from '../queries/useProfile.js';
 
 const { data: profile } = useMyProfileQuery();
 const { mutateAsync: changePassword, isPending: isChangingPassword } = useChangePasswordMutation();
+const { data: policiesData } = useActivePoliciesQuery();
+
+const cutoffPolicy = computed(() => {
+  const policies = policiesData.value;
+  if (!Array.isArray(policies)) return null;
+  const p = policies.find((item: any) => item.category === 'Cutoff');
+  return (p?.value || p?.policyValue) as Record<string, any> | undefined;
+});
+
+const objectionPolicy = computed(() => {
+  const policies = policiesData.value;
+  if (!Array.isArray(policies)) return null;
+  const p = policies.find((item: any) => item.category === 'ObjectionWindowDuration');
+  return (p?.value || p?.policyValue) as Record<string, any> | undefined;
+});
+
+const morningCutoff = computed(() => {
+  const val = cutoffPolicy.value?.morningOnTimeDeadline;
+  return val ? `${val} WIB` : '09:30 WIB';
+});
+
+const eodCutoff = computed(() => {
+  const val = cutoffPolicy.value?.eodOnTimeDeadline;
+  return val ? `${val} WIB` : '18:00 WIB';
+});
+
+const objectionWindow = computed(() => {
+  const val = objectionPolicy.value?.durationHours;
+  return val !== undefined && val !== null ? `${val} Jam` : '24 Jam';
+});
 
 const formRef = ref<any>(null);
 const currentPassword = ref('');

@@ -48,39 +48,60 @@ export const reportingApi = {
   },
 
   /**
-   * GET /api/v1/reports/weekly-team-summary (SAD §13.1, EPIC-16-T2)
+   * GET /api/v1/reports/weekly-team-summary (SAD §13.1, §13.4, EPIC-16-T2)
+   * Backend contract: weekStart (ISO YYYY-MM-DD)
    */
   async getWeeklyTeamSummary(params: {
+    weekStart?: string;
     weekStartDate?: string;
     teamId?: string;
     function?: string;
   } = {}): Promise<ApiResponse<WeeklyTeamSummaryReport>> {
-    const qs = buildQueryString(params);
+    const { weekStartDate, ...rest } = params;
+    const queryParams: Record<string, any> = { ...rest };
+    if (!queryParams.weekStart && weekStartDate) {
+      queryParams.weekStart = weekStartDate;
+    }
+    const qs = buildQueryString(queryParams);
     return apiClient.get<WeeklyTeamSummaryReport>(`/reports/weekly-team-summary${qs}`);
   },
 
   /**
-   * GET /api/v1/reports/monthly-trend (SAD §13.1, EPIC-16-T2)
+   * GET /api/v1/reports/monthly-trend (SAD §13.1, §13.4, EPIC-16-T2)
+   * Backend contract: month (format YYYY-MM)
    */
   async getMonthlyTrend(params: {
-    year: number;
-    month: number;
+    month?: string | number;
+    year?: number;
     function?: string;
   }): Promise<ApiResponse<MonthlyTrendReport>> {
-    const qs = buildQueryString(params);
+    const queryParams: Record<string, any> = {};
+    if (params.year && params.month && typeof params.month === 'number') {
+      const mm = String(params.month).padStart(2, '0');
+      queryParams.month = `${params.year}-${mm}`;
+    } else if (params.month) {
+      queryParams.month = String(params.month);
+    }
+    if (params.function) {
+      queryParams.function = params.function;
+    }
+    const qs = buildQueryString(queryParams);
     return apiClient.get<MonthlyTrendReport>(`/reports/monthly-trend${qs}`);
   },
 
   /**
-   * GET /api/v1/reports/individual-evidence (SAD §13.1, EPIC-16-T2)
+   * GET /api/v1/reports/individual-evidence/:userId (SAD §10.11, §13.6, PRD §9)
    */
   async getIndividualEvidence(params: {
     userId: string;
     startDate: string;
     endDate: string;
   }): Promise<ApiResponse<IndividualEvidenceReport>> {
-    const qs = buildQueryString(params);
-    return apiClient.get<IndividualEvidenceReport>(`/reports/individual-evidence${qs}`);
+    const { userId, ...rest } = params;
+    const qs = buildQueryString(rest);
+    return apiClient.get<IndividualEvidenceReport>(
+      `/reports/individual-evidence/${encodeURIComponent(userId)}${qs}`,
+    );
   },
 
   /**
@@ -96,9 +117,43 @@ export const reportingApi = {
   },
 
   /**
-   * POST /api/v1/reports/export (SAD §13.5, EPIC-16-T3)
+   * GET /api/v1/reports/:reportType/export (SAD §10.11, §13.5, FR-42/AC-20)
    */
-  async exportReport(payload: ExportReportPayload): Promise<ApiResponse<ExportReportResponse>> {
-    return apiClient.post<ExportReportResponse>('/reports/export', payload);
+  async exportReport(
+    payloadOrType: ExportReportPayload | string,
+    extraParams?: Record<string, any>,
+  ): Promise<ApiResponse<ExportReportResponse>> {
+    let reportType: string;
+    let queryParams: Record<string, any>;
+
+    if (typeof payloadOrType === 'string') {
+      reportType = payloadOrType;
+      queryParams = { ...extraParams };
+    } else {
+      const { reportType: rt, ...rest } = payloadOrType;
+      reportType = rt;
+      queryParams = { ...rest, ...extraParams };
+    }
+
+    // Backend ExportReportQueryDto validation: format must be 'pdf' | 'xlsx' (lowercase)
+    if (queryParams.format) {
+      queryParams.format = String(queryParams.format).toLowerCase();
+    }
+    // Backend expects weekStart instead of weekStartDate
+    if (queryParams.weekStartDate && !queryParams.weekStart) {
+      queryParams.weekStart = queryParams.weekStartDate;
+      delete queryParams.weekStartDate;
+    }
+    // Backend expects month as 'YYYY-MM' string instead of separate year/month numbers
+    if (queryParams.year && queryParams.month && typeof queryParams.month === 'number') {
+      const mm = String(queryParams.month).padStart(2, '0');
+      queryParams.month = `${queryParams.year}-${mm}`;
+      delete queryParams.year;
+    }
+
+    const qs = buildQueryString(queryParams);
+    return apiClient.get<ExportReportResponse>(
+      `/reports/${encodeURIComponent(reportType)}/export${qs}`,
+    );
   },
 };

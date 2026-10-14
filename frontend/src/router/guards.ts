@@ -21,7 +21,7 @@ export function setupRouterGuards(router: Router): void {
     }
   });
 
-  router.beforeEach(async (to, _from, next) => {
+  router.beforeEach(async (to, _from) => {
     const authStore = useAuthStore();
 
     // Inisialisasi sesi pengguna pada navigasi awal jika belum dimuat (SAD §16.3)
@@ -33,38 +33,41 @@ export function setupRouterGuards(router: Router): void {
 
     // 1. Skenario belum login dan halaman butuh autentikasi
     if (requiresAuth && !authStore.isAuthenticated) {
-      return next({
+      return {
         path: '/login',
         query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined,
-      });
+      };
     }
 
     // 2. Skenario pengguna terautentikasi
     if (authStore.isAuthenticated) {
       // SAD §17.2: mustResetPassword wajib redirect paksa ke /reset-password
       if (authStore.mustResetPassword && to.path !== '/reset-password') {
-        return next({ path: '/reset-password' });
+        return { path: '/reset-password' };
       }
 
       // Jika password sudah direset, jangan biarkan akses /reset-password
       if (!authStore.mustResetPassword && to.path === '/reset-password') {
-        return next({ path: '/today' });
+        const homePath = authStore.hasRole('Supervisor_TL') ? '/team' : '/today';
+        return { path: homePath };
       }
 
-      // Pengguna aktif mengakses /login dialihkan ke beranda kerja /today
+      // Pengguna aktif mengakses /login atau / dialihkan ke beranda kerja sesuai peran
       if (to.path === '/login' || to.path === '/') {
-        return next({ path: '/today' });
+        const homePath = authStore.hasRole('Supervisor_TL') ? '/team' : '/today';
+        return { path: homePath };
       }
 
       const allowedRoles = to.meta.roles as any;
       if (allowedRoles && allowedRoles.length > 0) {
         if (!authStore.hasRole(allowedRoles)) {
-          // Navigasi dibelokkan ke /today untuk mencegah akses rute di luar role
-          return next({ path: '/today' });
+          // Navigasi dibelokkan ke home role untuk mencegah akses rute di luar role
+          const fallbackPath = authStore.hasRole('Supervisor_TL') ? '/team' : '/today';
+          return { path: fallbackPath };
         }
       }
     }
 
-    next();
+    return true;
   });
 }

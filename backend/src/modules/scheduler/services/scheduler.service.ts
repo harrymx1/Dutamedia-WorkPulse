@@ -1,7 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { PolicyCategory, UserStatus } from '@prisma/client';
-import { DailyAccountabilityService } from '../../daily-accountability/services/daily-accountability.service.js';
+import {
+  PolicyCategory,
+} from '@prisma/client';
+import {
+  DailyAccountabilityService,
+  normalizeDate,
+} from '../../daily-accountability/services/daily-accountability.service.js';
+import {
+  CUTOFF_REMINDER_LEAD_TIME_MINUTES,
+  DEFAULT_MAX_REMINDER_BATCH,
+} from '../../daily-accountability/constants/daily-accountability.constants.js';
 import { ComplianceService } from '../../compliance/services/compliance.service.js';
 import { CorrectionRequestService } from '../../correction-request/services/correction-request.service.js';
 import { BlockerService } from '../../blocker/services/blocker.service.js';
@@ -11,6 +20,7 @@ import { DatabaseBackupService } from './database-backup.service.js';
 import { ExceptionService } from '../../exception/services/exception.service.js';
 import { PolicyService } from '../../policy/policy.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { IdentityService } from '../../identity/identity.service.js';
 
 export interface FrequentCycleResult {
   executedAt: Date;
@@ -29,6 +39,7 @@ export interface FrequentCycleResult {
 @Injectable()
 export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
+  private isProcessingCutoffReminders = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -40,6 +51,7 @@ export class SchedulerService {
     private readonly databaseBackupService: DatabaseBackupService,
     private readonly exceptionService: ExceptionService,
     private readonly policyService: PolicyService,
+    private readonly identityService: IdentityService,
   ) {}
 
   /**
@@ -178,15 +190,12 @@ export class SchedulerService {
   async runWeeklySummaryNotification(): Promise<void> {
     this.logger.log(`[WEEKLY SENIN 08:00] Mengirim notifikasi Weekly Summary tersedia...`);
     try {
-      const activeUsers = await this.prisma.user.findMany({
-        where: { status: UserStatus.Active },
-        select: { id: true },
-      });
+      const activeUserIds = await this.identityService.findActiveUserIds();
 
-      for (const user of activeUsers) {
+      for (const userId of activeUserIds) {
         await this.notificationService.dispatchTrigger(
           SystemNotificationTrigger.WEEKLY_SUMMARY_AVAILABLE,
-          user.id,
+          userId,
           {
             title: 'Weekly Summary Tersedia',
             body: 'Laporan ringkasan mingguan tim Anda untuk minggu lalu telah tersedia untuk ditinjau.',
@@ -196,7 +205,7 @@ export class SchedulerService {
         );
       }
 
-      this.logger.log(`[WEEKLY SENIN 08:00] Notifikasi dikirimkan ke ${activeUsers.length} pengguna aktif.`);
+      this.logger.log(`[WEEKLY SENIN 08:00] Notifikasi dikirimkan ke ${activeUserIds.length} pengguna aktif.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(`[WEEKLY SENIN 08:00] Gagal mengirimkan notifikasi Weekly Summary: ${msg}`);
@@ -204,29 +213,174 @@ export class SchedulerService {
   }
 
   /**
-   * Pengingat Mendekati Cutoff (Job #1, SAD §11.2 #1).
-   * Mendelegasikan query ke DailyAccountabilityService (SAD §6.4).
+   * Pengingat Mendekati Cutoff (Job #1, SAD §11.2 #1, PRD FR-28, ADR-014).
+   * 1. Menentukan workDate = normalizeDate(now).
+   * 2. Resolusi PolicyCategory.Cutoff dan PolicyCategory.WorkdayCalendar as-of now.
+   * 3. Melewati evaluasi jika bukan hari kerja sesuai kalender kerja.
+   * 4. Melewati evaluasi jika hari ini adalah Libur Perusahaan (Holiday status Approved).
+   * 5. Mengevaluasi jendela pengingat simetris untuk Morning dan EOD Check-in:
+   *    [OnTimeDeadline - 60m, OnTimeDeadline).
+   *    Tepat 60m sebelum deadline -> aktif.
+   *    Tepat di deadline atau setelahnya -> tidak aktif. GracePeriod BUKAN bagian dari reminder.
+   * 6. Mendelegasikan query kandidat ke DailyAccountabilityService.findPendingSubmissionEmployeeIds(workDate, phase, limit).
+   * 7. Menerapkan BEST-EFFORT DEDUPLICATION:
+   *    - In-process execution guard (mencegah overlapping run pada instance yang sama).
+   *    - In-run Set<string> untuk mencegah duplikasi dalam iterasi yang sama.
+   *    - Pengecekan riwayat notifikasi pada workDate berjalan dengan payload.metadata.phase.
+   * 8. Mendispatch notifikasi via NotificationService.dispatchTrigger dengan relatedEntityType = undefined, relatedEntityId = undefined.
    */
-  async sendCutoffReminders(now: Date = new Date()): Promise<number> {
-    const recordsWithoutSubmission =
-      await this.dailyAccountabilityService.findRecordsNearingCutoff(now);
-
-    for (const record of recordsWithoutSubmission) {
-      await this.notificationService.dispatchTrigger(
-        SystemNotificationTrigger.MORNING_EOD_CUTOFF_REMINDER,
-        record.employeeUserId,
-        {
-          title: 'Pengingat Cutoff Morning Check-in',
-          body: 'Waktu batas penyerahan Morning Check-in segera berakhir. Silakan serahkan komitmen Anda.',
-          linkPath: '/my-today',
-          iconType: 'clock-outline',
-        },
-        'DailyAccountabilityRecord',
-        record.id,
+  async sendCutoffReminders(
+    now: Date = new Date(),
+    limit: number = DEFAULT_MAX_REMINDER_BATCH,
+  ): Promise<number> {
+    // 0. In-process single-instance concurrency guard (best-effort)
+    if (this.isProcessingCutoffReminders) {
+      this.logger.warn(
+        `[FREQUENT CYCLE] sendCutoffReminders sebelumnya masih berjalan; invocation dilewati.`,
       );
+      return 0;
     }
 
-    return recordsWithoutSubmission.length;
+    this.isProcessingCutoffReminders = true;
+    try {
+      const workDate = normalizeDate(now);
+
+      // 1. Ambil policy Cutoff dan WorkdayCalendar as-of now (FR-28, FR-33)
+      const policySnapshot = await this.policyService.getActivePolicySnapshot(
+        [PolicyCategory.Cutoff, PolicyCategory.WorkdayCalendar],
+        now,
+      );
+
+      const workdayConfig =
+        policySnapshot[PolicyCategory.WorkdayCalendar] || {};
+      const cutoffConfig = policySnapshot[PolicyCategory.Cutoff] || {};
+
+      const workDays: number[] = workdayConfig.workDays || [1, 2, 3, 4, 5];
+      const dayOfWeek = workDate.getUTCDay();
+
+      // Cek apakah hari ini hari kerja
+      if (!workDays.includes(dayOfWeek)) {
+        return 0;
+      }
+
+      // 2. Cek apakah hari ini Libur Perusahaan (Holiday status Approved) (SAD §6.3, S2-T4-JOB-01)
+      const isHoliday = await this.exceptionService.hasApprovedHolidayOnDate(workDate);
+      if (isHoliday) {
+        return 0;
+      }
+
+      // 3. Evaluasi jendela reminder simetris [Deadline - 60m, Deadline)
+      const morningDeadlineStr =
+        cutoffConfig.morningOnTimeDeadline || '09:00';
+      const eodDeadlineStr = cutoffConfig.eodOnTimeDeadline || '18:00';
+
+      const isMorningWindow = this.isWithinReminderWindow(
+        now,
+        morningDeadlineStr,
+        CUTOFF_REMINDER_LEAD_TIME_MINUTES,
+      );
+      const isEodWindow = this.isWithinReminderWindow(
+        now,
+        eodDeadlineStr,
+        CUTOFF_REMINDER_LEAD_TIME_MINUTES,
+      );
+
+      if (!isMorningWindow && !isEodWindow) {
+        return 0;
+      }
+
+      const activePhases: Array<'MORNING' | 'EOD'> = [];
+      if (isMorningWindow) activePhases.push('MORNING');
+      if (isEodWindow) activePhases.push('EOD');
+
+      let totalDispatched = 0;
+      const dispatchedThisRun = new Set<string>();
+
+      const startOfDay = new Date(workDate);
+      const endOfDay = new Date(workDate.getTime() + 24 * 60 * 60 * 1000 - 1);
+      const workDateStr = workDate.toISOString().split('T')[0];
+
+      for (const phase of activePhases) {
+        // 4. Delegasikan seleksi peserta ke DailyAccountabilityService (SAD §6.4)
+        const pendingEmployeeIds =
+          await this.dailyAccountabilityService.findPendingSubmissionEmployeeIds(
+            workDate,
+            phase,
+            limit,
+          );
+
+        for (const employeeUserId of pendingEmployeeIds) {
+          const deduplicationKey = `${employeeUserId}:${phase}:${workDateStr}`;
+          if (dispatchedThisRun.has(deduplicationKey)) {
+            continue;
+          }
+
+          // 5. Best-effort deduplication check terhadap riwayat notifikasi hari ini (SAD §6.3, S2-T4-JOB-01)
+          const alreadySent =
+            await this.notificationService.hasCutoffReminderNotification(
+              employeeUserId,
+              phase,
+              startOfDay,
+              endOfDay,
+            );
+
+          if (alreadySent) {
+            continue;
+          }
+
+          // 6. Dispatch notifikasi (ADR-014: relatedEntityType dan relatedEntityId dibiarkan undefined/null)
+          const isMorning = phase === 'MORNING';
+          await this.notificationService.dispatchTrigger(
+            SystemNotificationTrigger.MORNING_EOD_CUTOFF_REMINDER,
+            employeeUserId,
+            {
+              title: isMorning
+                ? 'Pengingat Cutoff Morning Check-in'
+                : 'Pengingat Cutoff EOD Check-in',
+              body: isMorning
+                ? 'Waktu batas penyerahan Morning Check-in segera berakhir. Silakan serahkan komitmen Anda.'
+                : 'Waktu batas penyerahan EOD Check-in segera berakhir. Silakan laporkan progres kerja Anda.',
+              linkPath: '/my-today',
+              iconType: 'clock-outline',
+              metadata: {
+                phase,
+                workDate: workDateStr,
+              },
+            },
+            undefined,
+            undefined,
+          );
+
+          dispatchedThisRun.add(deduplicationKey);
+          totalDispatched++;
+        }
+      }
+
+      return totalDispatched;
+    } finally {
+      this.isProcessingCutoffReminders = false;
+    }
+  }
+
+  /**
+   * Helper internal untuk evaluasi jendela pengingat:
+   * windowStart <= now < deadline
+   * di mana windowStart = deadline - leadTimeMinutes
+   */
+  private isWithinReminderWindow(
+    now: Date,
+    deadlineStr: string,
+    leadTimeMinutes: number = 60,
+  ): boolean {
+    const [dHours, dMinutes] = deadlineStr.split(':').map(Number);
+    const deadline = new Date(now);
+    deadline.setHours(dHours, dMinutes, 0, 0);
+
+    const windowStart = new Date(
+      deadline.getTime() - leadTimeMinutes * 60 * 1000,
+    );
+
+    return now >= windowStart && now < deadline;
   }
 
   /**

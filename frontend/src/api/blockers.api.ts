@@ -38,7 +38,7 @@ export const blockersApi = {
   /**
    * GET /api/v1/blockers (SAD §10.4, EPIC-08-T2)
    */
-  async getBlockers(params: QueryBlockersParams = {}): Promise<ApiResponse<{ blockers: BlockerItem[]; total: number }>> {
+  async getBlockers(params: QueryBlockersParams = {}): Promise<ApiResponse<BlockerItem[]>> {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
       if (val !== undefined && val !== null && val !== '') {
@@ -46,7 +46,7 @@ export const blockersApi = {
       }
     });
     const queryString = query.toString() ? `?${query.toString()}` : '';
-    return apiClient.get<{ blockers: BlockerItem[]; total: number }>(`/blockers${queryString}`);
+    return apiClient.get<BlockerItem[]>(`/blockers${queryString}`);
   },
 
   /**
@@ -101,7 +101,7 @@ export const blockersApi = {
   /**
    * GET /api/v1/users (untuk dropdown owner blocker)
    */
-  async getPotentialOwners(): Promise<ApiResponse<{ users: BlockerOwnerOption[] }>> {
-    return apiClient.get<{ users: BlockerOwnerOption[] }>('/users?limit=100&status=Active');
+  async getPotentialOwners(): Promise<ApiResponse<{ items?: BlockerOwnerOption[]; users?: BlockerOwnerOption[] } | BlockerOwnerOption[]>> {
+    return apiClient.get('/users?limit=100&status=Active');
   },
 };

@@ -117,7 +117,7 @@ describe('ExportGeneratorService (ADR-009 Dynamic Export TTL)', () => {
       expect(mockAuditService.record).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'REPORT_EXPORTED',
-          relatedEntityId: 'daily-exception',
+          relatedEntityId: expect.any(String),
           valueAfter: expect.objectContaining({
             expiresIn: 900,
           }),

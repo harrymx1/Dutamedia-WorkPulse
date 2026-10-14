@@ -9,5 +9,6 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    exclude: ['**/test/integration-real/**', '**/node_modules/**', '**/dist/**'],
   },
 });

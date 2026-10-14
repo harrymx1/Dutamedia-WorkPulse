@@ -13,6 +13,7 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
   let service: PolicyService;
   let mockPrisma: any;
   let mockAuditService: any;
+  let mockNotificationService: any;
 
   beforeEach(() => {
     mockPrisma = {
@@ -24,6 +25,7 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
       },
       policyOwnerAssignment: {
         findFirst: vi.fn(),
+        findMany: vi.fn().mockResolvedValue([]),
         create: vi.fn(),
         update: vi.fn(),
       },
@@ -37,7 +39,16 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
       record: vi.fn().mockResolvedValue({ id: 'audit-1' }),
     };
 
-    service = new PolicyService(mockPrisma, mockAuditService);
+    mockNotificationService = {
+      dispatch: vi.fn().mockResolvedValue([]),
+    };
+
+    service = new PolicyService(
+      mockPrisma,
+      mockAuditService,
+      undefined,
+      mockNotificationService,
+    );
   });
 
   describe('getActivePolicies (EPIC-06-T1 - SAD §10.9)', () => {
@@ -415,6 +426,79 @@ describe('PolicyService (SAD §5.9, §6.4, §10.9 - EPIC-06)', () => {
         backupRetentionDays: 14,
         exportRetentionMinutes: 30,
       });
+    });
+  });
+
+  describe('POLICY_ASSIGNMENT_CHANGED Trigger #8 (SAD §12.1, PRD FR-52, S2-T4-NOTIF-02)', () => {
+    it('harus mendispatch POLICY_ASSIGNMENT_CHANGED saat versi kebijakan baru dibuat', async () => {
+      mockPrisma.policy.findFirst.mockResolvedValue(null);
+      mockPrisma.policy.create.mockResolvedValue({
+        id: 'pol-new-99',
+        category: PolicyCategory.Cutoff,
+        value: { morningOnTimeDeadline: '08:30', eodOnTimeDeadline: '17:30' },
+        effectiveDate: new Date('2026-11-01'),
+        status: PolicyStatus.Active,
+      });
+      mockPrisma.policyOwnerAssignment.findMany = vi.fn().mockResolvedValue([
+        { userId: 'owner-cutoff-1' },
+      ]);
+
+      await service.createPolicy(
+        {
+          category: PolicyCategory.Cutoff,
+          value: { morningOnTimeDeadline: '08:30', eodOnTimeDeadline: '17:30' },
+          effectiveDate: '2026-11-01',
+        },
+        'admin-creator',
+      );
+
+      expect(mockNotificationService.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          triggerType: 'POLICY_ASSIGNMENT_CHANGED',
+          recipientUserId: 'owner-cutoff-1',
+          relatedEntityType: 'Policy',
+          relatedEntityId: 'pol-new-99',
+          payload: expect.objectContaining({
+            title: expect.stringContaining('Pembaruan Kebijakan'),
+          }),
+        }),
+      );
+    });
+
+    it('harus mendispatch POLICY_ASSIGNMENT_CHANGED ke user penerima saat policy owner baru ditugaskan', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-assigned',
+        status: UserStatus.Active,
+      });
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.policyOwnerAssignment.create.mockResolvedValue({
+        id: 'poa-new-88',
+        userId: 'user-assigned',
+        policyCategory: PolicyCategory.Cutoff,
+        effectiveDate: new Date('2026-11-01'),
+        endDate: null,
+      });
+
+      await service.createPolicyOwnerAssignment(
+        {
+          userId: 'user-assigned',
+          policyCategory: PolicyCategory.Cutoff,
+          effectiveDate: '2026-11-01',
+        },
+        'admin-1',
+      );
+
+      expect(mockNotificationService.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          triggerType: 'POLICY_ASSIGNMENT_CHANGED',
+          recipientUserId: 'user-assigned',
+          relatedEntityType: 'PolicyOwnerAssignment',
+          relatedEntityId: 'poa-new-88',
+          payload: expect.objectContaining({
+            title: expect.stringContaining('Penugasan Pemilik Kebijakan Baru'),
+          }),
+        }),
+      );
     });
   });
 });

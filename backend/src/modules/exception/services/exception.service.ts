@@ -10,6 +10,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { ScopeFilterService } from '../../authorization/services/scope-filter.service.js';
 import { NotificationService } from '../../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 import type { CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
 import {
   BusinessRuleViolationException,
@@ -177,7 +178,7 @@ export class ExceptionService {
       if (recipientUserId) {
         await this.notificationService.dispatch(
           {
-            triggerType: 'LEAVE_REQUEST_SUBMITTED',
+            triggerType: SystemNotificationTrigger.LEAVE_REQUEST_SUBMITTED,
             recipientUserId,
             payload: {
               title: 'Permohonan Cuti Baru Memerlukan Persetujuan',
@@ -597,7 +598,7 @@ export class ExceptionService {
       // Kirim notifikasi hasil persetujuan cuti ke karyawan (SAD §12.1 trigger #13)
       await this.notificationService.dispatch(
         {
-          triggerType: 'LEAVE_REQUEST_RESOLVED',
+          triggerType: SystemNotificationTrigger.LEAVE_REQUEST_RESOLVED,
           recipientUserId: exception.employeeUserId!,
           payload: {
             title: '[DISETUJUI] Permohonan Cuti Disetujui',
@@ -714,7 +715,7 @@ export class ExceptionService {
       // Kirim notifikasi penolakan cuti ke karyawan (SAD §12.1 trigger #13)
       await this.notificationService.dispatch(
         {
-          triggerType: 'LEAVE_REQUEST_RESOLVED',
+          triggerType: SystemNotificationTrigger.LEAVE_REQUEST_RESOLVED,
           recipientUserId: exception.employeeUserId!,
           payload: {
             title: '[DITOLAK] Permohonan Cuti Ditolak',
@@ -779,5 +780,21 @@ export class ExceptionService {
     }
 
     return results;
+  }
+
+  /**
+   * Cek apakah tanggal tertentu merupakan hari libur perusahaan (Holiday Approved) (SAD §6.3, S2-T4-JOB-01).
+   */
+  async hasApprovedHolidayOnDate(date: Date): Promise<boolean> {
+    const holiday = await this.prisma.exception.findFirst({
+      where: {
+        type: ExceptionType.Holiday,
+        status: ExceptionStatus.Approved,
+        dateStart: { lte: date },
+        dateEnd: { gte: date },
+      },
+      select: { id: true },
+    });
+    return !!holiday;
   }
 }

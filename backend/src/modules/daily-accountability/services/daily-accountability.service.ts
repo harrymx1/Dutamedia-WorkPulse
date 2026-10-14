@@ -1,17 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import {
   AdditionalWorkReason,
   CommitmentOutcome,
   Continuation,
   DailyStatus,
+  ExceptionStatus,
+  ExceptionType,
+  NotificationChannel,
   PolicyCategory,
   Prisma,
+  Role,
   SubmissionTiming,
+  UserStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { PolicyService } from '../../policy/policy.service.js';
 import { ScopeFilterService } from '../../authorization/services/scope-filter.service.js';
+import { NotificationService } from '../../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 import type { CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
 import {
   BusinessRuleViolationException,
@@ -30,6 +37,7 @@ import { StatusSuggestionService } from './status-suggestion.service.js';
 import {
   MIN_DAILY_COMMITMENTS,
   MAX_DAILY_COMMITMENTS,
+  DEFAULT_MAX_REMINDER_BATCH,
 } from '../constants/daily-accountability.constants.js';
 
 export function computeWorstOfStatus(statuses: DailyStatus[]): DailyStatus {
@@ -58,6 +66,7 @@ export class DailyAccountabilityService {
     private readonly policyService: PolicyService,
     private readonly scopeFilterService: ScopeFilterService,
     private readonly statusSuggestionService: StatusSuggestionService,
+    @Optional() private readonly notificationService?: NotificationService,
   ) {}
 
   /**
@@ -202,7 +211,7 @@ export class DailyAccountabilityService {
       );
     }
 
-    // 4. Validasi kondisional FR-04: knownBlockerNote wajib jika initialRisk in {AMBER, RED}
+    // 4. Validasi kondisional FR-04: knownBlockerNote & supportNeeded wajib jika initialRisk in {AMBER, RED}
     for (const c of commitments) {
       if (
         (c.initialRisk === DailyStatus.AMBER ||
@@ -214,6 +223,21 @@ export class DailyAccountabilityService {
           [
             {
               field: `commitments[${c.sequenceNo}].knownBlockerNote`,
+              reason: 'REQUIRED_WHEN_CONDITIONAL',
+            },
+          ],
+        );
+      }
+      if (
+        (c.initialRisk === DailyStatus.AMBER ||
+          c.initialRisk === DailyStatus.RED) &&
+        (!c.supportNeeded || c.supportNeeded.trim().length === 0)
+      ) {
+        throw new BusinessRuleViolationException(
+          'supportNeeded wajib diisi jika initialRisk adalah AMBER atau RED',
+          [
+            {
+              field: `commitments[${c.sequenceNo}].supportNeeded`,
               reason: 'REQUIRED_WHEN_CONDITIONAL',
             },
           ],
@@ -242,7 +266,7 @@ export class DailyAccountabilityService {
     const cutoffConfig = policySnapshot[PolicyCategory.Cutoff] || {};
     const graceConfig = policySnapshot[PolicyCategory.GracePeriod] || {};
     const deadlineStr = cutoffConfig.morningOnTimeDeadline || '09:00';
-    const graceMinutes = graceConfig.morningGraceMinutes || 30;
+    const graceMinutes = graceConfig.morningGraceMinutes ?? 30;
 
     const { timing: morningTiming, isPastCutoff } = this.evaluateTiming(
       now,
@@ -262,7 +286,7 @@ export class DailyAccountabilityService {
     );
 
     // 8. Simpan ke database dalam Prisma Transaction + Catat AuditLog
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       let record;
       if (existingRecord) {
         record = await tx.dailyAccountabilityRecord.update({
@@ -339,6 +363,23 @@ export class DailyAccountabilityService {
         ),
       };
     });
+
+    const hasAmberSupportNeeded = commitments.some(
+      (c) =>
+        c.initialRisk === DailyStatus.AMBER &&
+        Boolean(c.supportNeeded && c.supportNeeded.trim().length > 0),
+    );
+
+    await this.dispatchStatusNotifications({
+      recordId: result.id,
+      employeeUserId: userId,
+      directManagerId: orgAssignment.directManagerId,
+      status: initialStatus,
+      phase: 'morning',
+      hasAmberSupportNeeded,
+    });
+
+    return result;
   }
 
   /**
@@ -362,10 +403,7 @@ export class DailyAccountabilityService {
     });
 
     if (!record) {
-      // Periksa carry-over draft dari hari kerja sebelumnya (FR-11)
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
+      // Periksa carry-over draft dari hari kerja sebelumnya (FR-11, ADR-017)
       const previousRecord =
         await this.prisma.dailyAccountabilityRecord.findFirst({
           where: {
@@ -374,33 +412,31 @@ export class DailyAccountabilityService {
           },
           orderBy: { workDate: 'desc' },
           include: {
-            commitments: true,
-            additionalWorks: true,
+            commitments: { orderBy: { sequenceNo: 'asc' } },
           },
         });
 
-      const carryOverDraft: any[] = [];
+      const carryOverDraft: Array<{
+        sourceCommitmentId: string;
+        sourceType: 'Commitment';
+        text: string;
+        referenceLink?: string | null;
+        continuationReason?: string | null;
+      }> = [];
+
       if (previousRecord) {
+        // ADR-017 D1 & D4: Hanya Morning Commitment yang menjadi sumber draft copy-forward
         const carryCommitments = previousRecord.commitments.filter(
           (c) => c.continuation === Continuation.Continue,
-        );
-        const carryAdditional = previousRecord.additionalWorks.filter(
-          (a) => a.continuation === Continuation.Continue,
         );
 
         for (const c of carryCommitments) {
           carryOverDraft.push({
+            sourceCommitmentId: c.id,
             sourceType: 'Commitment',
             text: c.text,
             referenceLink: c.referenceLink,
             continuationReason: c.continuationReason,
-          });
-        }
-        for (const a of carryAdditional) {
-          carryOverDraft.push({
-            sourceType: 'AdditionalWork',
-            text: a.text,
-            continuationReason: a.continuationReason,
           });
         }
       }
@@ -535,11 +571,14 @@ export class DailyAccountabilityService {
     const deadlineStr = cutoffConfig.eodOnTimeDeadline || '18:00';
     const graceMinutes = graceConfig.eodGraceMinutes ?? 30;
 
-    const { timing: eodTiming } = this.evaluateTiming(
-      now,
-      deadlineStr,
-      graceMinutes,
-    );
+    const { timing: eodTiming, isPastCutoff: eodPastCutoff } =
+      this.evaluateTiming(now, deadlineStr, graceMinutes);
+
+    if (eodPastCutoff) {
+      throw new BusinessRuleViolationException(
+        'Batas waktu penyerahan EOD Check-in (Cut-off) telah berakhir',
+      );
+    }
 
     // 3. Evaluasi Status Suggestion Engine (SAD §9.3, PRD §3.3 FR-13/FR-14)
     const allOutcomes = [
@@ -565,7 +604,7 @@ export class DailyAccountabilityService {
     }
 
     // 4. Jika cocok, simpan langsung ke database dalam transaksi + AuditLog
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Update commitments
       for (const co of dto.commitmentOutcomes) {
         await tx.commitment.update({
@@ -625,6 +664,30 @@ export class DailyAccountabilityService {
         availableActions: this.computeAvailableActions(updatedRecord, userId),
       };
     });
+
+    const directManagerId =
+      (record.orgContextSnapshot as any)?.directManagerId ??
+      (
+        await this.prisma.organizationalAssignment.findFirst({
+          where: {
+            userId,
+            effectiveDate: { lte: now },
+            OR: [{ endDate: null }, { endDate: { gte: now } }],
+          },
+          orderBy: { effectiveDate: 'desc' },
+          select: { directManagerId: true },
+        })
+      )?.directManagerId;
+
+    await this.dispatchStatusNotifications({
+      recordId: result.id,
+      employeeUserId: userId,
+      directManagerId,
+      status: dto.finalStatus,
+      phase: 'eod',
+    });
+
+    return result;
   }
 
   /**
@@ -680,13 +743,16 @@ export class DailyAccountabilityService {
     const deadlineStr = cutoffConfig.eodOnTimeDeadline || '18:00';
     const graceMinutes = graceConfig.eodGraceMinutes ?? 30;
 
-    const { timing: eodTiming } = this.evaluateTiming(
-      now,
-      deadlineStr,
-      graceMinutes,
-    );
+    const { timing: eodTiming, isPastCutoff: eodPastCutoff } =
+      this.evaluateTiming(now, deadlineStr, graceMinutes);
 
-    return this.prisma.$transaction(async (tx) => {
+    if (eodPastCutoff) {
+      throw new BusinessRuleViolationException(
+        'Batas waktu penyerahan EOD Check-in (Cut-off) telah berakhir',
+      );
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
       if (dto.commitmentOutcomes) {
         for (const co of dto.commitmentOutcomes) {
           await tx.commitment.update({
@@ -747,6 +813,31 @@ export class DailyAccountabilityService {
         availableActions: this.computeAvailableActions(updatedRecord, userId),
       };
     });
+
+    const directManagerId =
+      (record.orgContextSnapshot as any)?.directManagerId ??
+      (
+        await this.prisma.organizationalAssignment.findFirst({
+          where: {
+            userId,
+            effectiveDate: { lte: now },
+            OR: [{ endDate: null }, { endDate: { gte: now } }],
+          },
+          orderBy: { effectiveDate: 'desc' },
+          select: { directManagerId: true },
+        })
+      )?.directManagerId;
+
+    await this.dispatchStatusNotifications({
+      recordId: result.id,
+      employeeUserId: userId,
+      directManagerId,
+      status: dto.finalStatus,
+      phase: 'eod',
+      overrideReason: dto.overrideReason,
+    });
+
+    return result;
   }
 
   /**
@@ -797,6 +888,27 @@ export class DailyAccountabilityService {
     ) {
       throw new BusinessRuleViolationException(
         'knownBlockerNote wajib diisi jika initialRisk adalah AMBER atau RED (FR-04)',
+      );
+    }
+
+    const targetSupportNeeded =
+      dto.supportNeeded !== undefined
+        ? dto.supportNeeded
+        : commitment.supportNeeded;
+
+    if (
+      (targetInitialRisk === DailyStatus.AMBER ||
+        targetInitialRisk === DailyStatus.RED) &&
+      (!targetSupportNeeded || targetSupportNeeded.trim().length === 0)
+    ) {
+      throw new BusinessRuleViolationException(
+        'supportNeeded wajib diisi jika initialRisk adalah AMBER atau RED (FR-04)',
+        [
+          {
+            field: 'supportNeeded',
+            reason: 'REQUIRED_WHEN_CONDITIONAL',
+          },
+        ],
       );
     }
 
@@ -1187,9 +1299,9 @@ export class DailyAccountabilityService {
     const graceConfig = policySnapshot[PolicyCategory.GracePeriod] || {};
 
     const morningDeadline = cutoffConfig.morningOnTimeDeadline || '09:00';
-    const morningGrace = graceConfig.morningGraceMinutes || 30;
+    const morningGrace = graceConfig.morningGraceMinutes ?? 30;
     const eodDeadline = cutoffConfig.eodOnTimeDeadline || '18:00';
-    const eodGrace = graceConfig.eodGraceMinutes || 30;
+    const eodGrace = graceConfig.eodGraceMinutes ?? 30;
 
     const { isPastCutoff: morningPassed } = this.evaluateTiming(
       now,
@@ -1293,27 +1405,209 @@ export class DailyAccountabilityService {
   }
 
   /**
-   * Mengambil record akuntabilitas yang belum submit mendekati batas cutoff (SAD §11.2 #1).
+   * Mengambil daftar ID karyawan aktif yang wajib namun belum menyerahkan check-in pada fase terkait (SAD §11.2 #1, PRD FR-28).
+   * Menegakkan aturan kanonikal ADR-014:
+   * 1. Karyawan berstatus Active dengan OrganizationalAssignment aktif peran Employee as-of workDate.
+   * 2. Pengecualian Approved Leave/Exemption covering workDate (AC-09, FR-48).
+   * 3. Invarian AC-19: Cuti/izin berstatus Pending TIDAK mengecualikan karyawan.
+   * 4. Pengecualian karyawan yang sudah submit fase terkait (Morning / EOD).
+   * 5. Record database tidak harus ada sebelumnya (karyawan tanpa record tetap terjaring).
    * Dipanggil oleh SchedulerService.sendCutoffReminders (SAD §6.4).
    */
-  async findRecordsNearingCutoff(
+  async findPendingSubmissionEmployeeIds(
     workDate: Date = new Date(),
-    limit: number = 50,
-  ): Promise<Array<{ id: string; employeeUserId: string }>> {
+    phase: 'MORNING' | 'EOD' = 'MORNING',
+    limit: number = DEFAULT_MAX_REMINDER_BATCH,
+  ): Promise<string[]> {
     const today = normalizeDate(workDate);
 
-    return this.prisma.dailyAccountabilityRecord.findMany({
+    // 1. Ambil seluruh penugasan organisasi aktif peran Employee as-of workDate
+    const activeAssignments =
+      await this.prisma.organizationalAssignment.findMany({
+        where: {
+          effectiveDate: { lte: today },
+          OR: [{ endDate: null }, { endDate: { gte: today } }],
+          role: Role.Employee,
+          user: { status: UserStatus.Active },
+        },
+        select: { userId: true },
+      });
+
+    const activeUserIds = Array.from(
+      new Set(activeAssignments.map((a) => a.userId)),
+    );
+    if (activeUserIds.length === 0) {
+      return [];
+    }
+
+    // 2. Ambil seluruh exception valid (Leave atau Exemption berstatus Approved) pada workDate
+    // Invarian AC-19: status Pending TIDAK dimasukkan sehingga karyawan pending tetap menerima reminder
+    const approvedExceptions = await this.prisma.exception.findMany({
       where: {
-        workDate: today,
-        morningSubmittedAt: null,
-        cutoffLockedAt: null,
+        employeeUserId: { in: activeUserIds },
+        status: ExceptionStatus.Approved,
+        type: { in: [ExceptionType.Leave, ExceptionType.Exemption] },
+        dateStart: { lte: today },
+        dateEnd: { gte: today },
       },
-      select: {
-        id: true,
-        employeeUserId: true,
-      },
-      take: limit,
+      select: { employeeUserId: true },
     });
+
+    const exemptUserIds = new Set(
+      approvedExceptions
+        .map((e) => e.employeeUserId)
+        .filter((id): id is string => Boolean(id)),
+    );
+
+    const nonExemptUserIds = activeUserIds.filter(
+      (userId) => !exemptUserIds.has(userId),
+    );
+    if (nonExemptUserIds.length === 0) {
+      return [];
+    }
+
+    // 3. Periksa record check-in yang sudah disubmit untuk fase terkait pada workDate
+    const submittedRecords =
+      await this.prisma.dailyAccountabilityRecord.findMany({
+        where: {
+          workDate: today,
+          employeeUserId: { in: nonExemptUserIds },
+          ...(phase === 'MORNING'
+            ? { morningSubmittedAt: { not: null } }
+            : { eodSubmittedAt: { not: null } }),
+        },
+        select: { employeeUserId: true },
+      });
+
+    const submittedUserIds = new Set(
+      submittedRecords.map((r) => r.employeeUserId),
+    );
+
+    // 4. Karyawan yang belum submit adalah mereka yang tidak ada dalam daftar submitted
+    // Karyawan tanpa record otomatis masuk karena submittedRecords tidak memuat ID mereka
+    const candidateUserIds = nonExemptUserIds.filter(
+      (userId) => !submittedUserIds.has(userId),
+    );
+
+    return candidateUserIds.slice(0, limit);
+  }
+
+  /**
+   * Helper dispatch notifikasi status harian (SAD §12.1, PRD FR-11):
+   * - Trigger #2: AMBER_SUPPORT_NEEDED (Employee + Support Owner/Manager)
+   * - Trigger #3: RED_STATUS (Direct Manager/Supervisor)
+   */
+  private async dispatchStatusNotifications(params: {
+    recordId: string;
+    employeeUserId: string;
+    directManagerId?: string | null;
+    status: DailyStatus;
+    phase: 'morning' | 'eod';
+    hasAmberSupportNeeded?: boolean;
+    overrideReason?: string;
+  }): Promise<void> {
+    if (!this.notificationService) {
+      return;
+    }
+
+    try {
+      // 1. Trigger #3: RED_STATUS (SAD §12.1)
+      if (params.status === DailyStatus.RED && params.directManagerId) {
+        const title =
+          params.phase === 'morning'
+            ? 'Status Harian RED: Morning Check-in Memerlukan Perhatian'
+            : params.overrideReason
+              ? 'Status Harian RED: EOD Status Overridden ke RED'
+              : 'Status Harian RED: EOD Check-in Memerlukan Perhatian';
+        const body =
+          params.phase === 'morning'
+            ? 'Karyawan telah menyerahkan Morning Check-in dengan status RED.'
+            : params.overrideReason
+              ? `Karyawan telah mengonfirmasi status akhir RED dengan alasan: ${params.overrideReason}`
+              : 'Karyawan telah menyerahkan EOD Check-in dengan status akhir RED.';
+
+        await this.notificationService.dispatch({
+          triggerType: SystemNotificationTrigger.RED_STATUS,
+          recipientUserId: params.directManagerId,
+          relatedEntityType: 'DailyAccountabilityRecord',
+          relatedEntityId: params.recordId,
+          channels: [
+            NotificationChannel.Email,
+            NotificationChannel.BrowserPush,
+            NotificationChannel.WebNotificationCenter,
+          ],
+          payload: {
+            title,
+            body,
+            linkPath: '/team/today',
+            iconType: 'alert-octagon',
+            dailyRecordId: params.recordId,
+            employeeUserId: params.employeeUserId,
+            phase: params.phase,
+            status: DailyStatus.RED,
+          },
+        });
+      }
+
+      // 2. Trigger #2: AMBER_SUPPORT_NEEDED (SAD §12.1)
+      if (
+        (params.status === DailyStatus.AMBER || params.hasAmberSupportNeeded) &&
+        params.phase === 'morning'
+      ) {
+        // Dispatch ke Employee
+        await this.notificationService.dispatch({
+          triggerType: SystemNotificationTrigger.AMBER_SUPPORT_NEEDED,
+          recipientUserId: params.employeeUserId,
+          relatedEntityType: 'DailyAccountabilityRecord',
+          relatedEntityId: params.recordId,
+          channels: [
+            NotificationChannel.Email,
+            NotificationChannel.BrowserPush,
+            NotificationChannel.WebNotificationCenter,
+          ],
+          payload: {
+            title: 'Komitmen AMBER Membutuhkan Bantuan Support',
+            body: 'Komitmen harian Anda dengan risiko AMBER tercatat membutuhkan dukungan support.',
+            linkPath: '/my-today',
+            iconType: 'alert-circle',
+            dailyRecordId: params.recordId,
+            employeeUserId: params.employeeUserId,
+            status: DailyStatus.AMBER,
+          },
+        });
+
+        // Dispatch ke Support Owner / Direct Manager jika ada
+        if (
+          params.directManagerId &&
+          params.directManagerId !== params.employeeUserId
+        ) {
+          await this.notificationService.dispatch({
+            triggerType: SystemNotificationTrigger.AMBER_SUPPORT_NEEDED,
+            recipientUserId: params.directManagerId,
+            relatedEntityType: 'DailyAccountabilityRecord',
+            relatedEntityId: params.recordId,
+            channels: [
+              NotificationChannel.Email,
+              NotificationChannel.BrowserPush,
+              NotificationChannel.WebNotificationCenter,
+            ],
+            payload: {
+              title: 'Komitmen AMBER Membutuhkan Bantuan Support',
+              body: 'Karyawan memiliki komitmen dengan risiko AMBER yang memerlukan bantuan support.',
+              linkPath: '/team/today',
+              iconType: 'alert-circle',
+              dailyRecordId: params.recordId,
+              employeeUserId: params.employeeUserId,
+              status: DailyStatus.AMBER,
+            },
+          });
+        }
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Gagal mendispatch notifikasi status harian untuk record ${params.recordId}: ${(err as Error).message}`,
+      );
+    }
   }
 }
 

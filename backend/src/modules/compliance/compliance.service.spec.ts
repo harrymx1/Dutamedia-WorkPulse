@@ -10,6 +10,7 @@ import {
   UserStatus,
 } from '@prisma/client';
 import { ComplianceService } from './services/compliance.service.js';
+import { SystemNotificationTrigger } from '../notification/constants/notification-trigger.constants.js';
 import {
   ConflictException,
   ForbiddenException,
@@ -281,7 +282,111 @@ describe('ComplianceService (EPIC-12)', () => {
       expect(result.newNoSubmissions).toBe(0);
       expect(prismaMock.complianceEvent.create).not.toHaveBeenCalled();
     });
+
+    describe('GracePeriod = 0 dihormati (ADR-018, S2-FR26-GRACE0-1)', () => {
+      const workDate = new Date('2026-09-21T00:00:00.000Z');
+
+      const arrangeGracePolicy = (morningGraceMinutes: number, eodGraceMinutes: number) => {
+        policyMock.getActivePolicySnapshot.mockResolvedValue({
+          [PolicyCategory.Cutoff]: {
+            morningOnTimeDeadline: '09:00',
+            eodOnTimeDeadline: '18:00',
+          },
+          [PolicyCategory.GracePeriod]: { morningGraceMinutes, eodGraceMinutes },
+          [PolicyCategory.WorkdayCalendar]: { workDays: [1, 2, 3, 4, 5] },
+        });
+        prismaMock.exception.findFirst.mockResolvedValue(null);
+        prismaMock.complianceEvent.findFirst.mockResolvedValue(null);
+        prismaMock.organizationalAssignment.findMany.mockResolvedValue([
+          {
+            userId: 'emp-1',
+            role: Role.Employee,
+            user: { id: 'emp-1', status: UserStatus.Active },
+          },
+        ]);
+        prismaMock.complianceEvent.create.mockResolvedValue({
+          id: 'event-grace-0',
+          eventType: ComplianceEventType.NoSubmission,
+        });
+      };
+
+      it('Morning: grace 0, tepat di deadline 09:00:00 => cutoff belum terlewat (CUTOFF_NOT_REACHED)', async () => {
+        arrangeGracePolicy(0, 30);
+
+        const result = await service.evaluateNoSubmission(
+          workDate,
+          new Date(2026, 8, 21, 9, 0, 0),
+        );
+
+        expect(result.reason).toBe('CUTOFF_NOT_REACHED');
+        expect(prismaMock.complianceEvent.create).not.toHaveBeenCalled();
+      });
+
+      it('Morning: grace 0, 09:00:01 => cutoff == deadline sehingga NoSubmission dibuat (bukan fallback +30 menit)', async () => {
+        arrangeGracePolicy(0, 30);
+        prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue(null);
+
+        const result = await service.evaluateNoSubmission(
+          workDate,
+          new Date(2026, 8, 21, 9, 0, 1),
+        );
+
+        expect(result.reason).toBeUndefined();
+        expect(result.newNoSubmissions).toBe(1);
+        expect(prismaMock.complianceEvent.create).toHaveBeenCalledWith({
+          data: expect.objectContaining({
+            userId: 'emp-1',
+            eventType: ComplianceEventType.NoSubmission,
+          }),
+        });
+      });
+
+      it('EOD: grace 0, 18:00:00 dengan Morning sudah submit => tidak ada NoSubmission', async () => {
+        arrangeGracePolicy(30, 0);
+        prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+          id: 'rec-1',
+          morningSubmittedAt: new Date(2026, 8, 21, 8, 30, 0),
+          morningTiming: 'OnTime',
+          eodSubmittedAt: null,
+          eodTiming: null,
+        });
+
+        const result = await service.evaluateNoSubmission(
+          workDate,
+          new Date(2026, 8, 21, 18, 0, 0),
+        );
+
+        expect(result.newNoSubmissions).toBe(0);
+        expect(prismaMock.complianceEvent.create).not.toHaveBeenCalled();
+      });
+
+      it('EOD: grace 0, 18:00:01 dengan Morning sudah submit tanpa EOD => NoSubmission dibuat (bukan fallback +30 menit)', async () => {
+        arrangeGracePolicy(30, 0);
+        prismaMock.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+          id: 'rec-1',
+          morningSubmittedAt: new Date(2026, 8, 21, 8, 30, 0),
+          morningTiming: 'OnTime',
+          eodSubmittedAt: null,
+          eodTiming: null,
+        });
+
+        const result = await service.evaluateNoSubmission(
+          workDate,
+          new Date(2026, 8, 21, 18, 0, 1),
+        );
+
+        expect(result.newNoSubmissions).toBe(1);
+        expect(prismaMock.complianceEvent.create).toHaveBeenCalledWith({
+          data: expect.objectContaining({
+            userId: 'emp-1',
+            eventType: ComplianceEventType.NoSubmission,
+            relatedDailyRecordId: 'rec-1',
+          }),
+        });
+      });
+    });
   });
+
 
   describe('EPIC-12-T2: evaluatePatternFlag()', () => {
     it('harus menerbitkan PatternFlag baru jika jumlah NoSubmission mencapai threshold (FR-29)', async () => {
@@ -325,7 +430,7 @@ describe('ComplianceService (EPIC-12)', () => {
       expect(notificationMock.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
           recipientUserId: 'manager-1',
-          triggerType: 'PATTERN_FLAG_DETECTED',
+          triggerType: SystemNotificationTrigger.REPEATED_NO_SUBMISSION_FLAG,
         }),
       );
     });
@@ -543,14 +648,8 @@ describe('ComplianceService (EPIC-12)', () => {
         prismaMock,
       );
 
-      // Verifikasi dispatch notifikasi ke karyawan
-      expect(notificationMock.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recipientUserId: 'emp-1',
-          triggerType: 'MANAGER_NOTE_CREATED',
-        }),
-        prismaMock,
-      );
+      // Verifikasi tidak ada dispatch notifikasi ad-hoc (SAD §10.8, §12.1, S2-T4-NOTIF-03)
+      expect(notificationMock.dispatch).not.toHaveBeenCalled();
     });
 
     it('menolak coaching jika target event bukan PatternFlag (409 Conflict)', async () => {

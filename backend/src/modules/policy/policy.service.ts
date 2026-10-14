@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import {
   PolicyCategory,
   PolicyStatus,
@@ -8,6 +8,8 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
+import { NotificationService } from '../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../notification/constants/notification-trigger.constants.js';
 import {
   BusinessRuleViolationException,
   NotFoundException,
@@ -61,6 +63,7 @@ export class PolicyService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly policyValueValidator: PolicyValueValidator = new PolicyValueValidator(),
+    @Optional() private readonly notificationService?: NotificationService,
   ) {}
 
   /**
@@ -174,6 +177,44 @@ export class PolicyService {
         `Versi baru kebijakan ${dto.category} berhasil dibuat (${newPolicy.id}) oleh user ${actorUserId}`,
       );
 
+      // 5. Notifikasi Trigger #8: POLICY_ASSIGNMENT_CHANGED (SAD §12.1, PRD FR-52)
+      if (this.notificationService) {
+        try {
+          const activeOwners = await tx.policyOwnerAssignment.findMany({
+            where: {
+              policyCategory: dto.category,
+              effectiveDate: { lte: effectiveDate },
+              OR: [{ endDate: null }, { endDate: { gte: effectiveDate } }],
+            },
+            select: { userId: true },
+          });
+
+          const recipients =
+            activeOwners.length > 0
+              ? activeOwners.map((o) => o.userId)
+              : [actorUserId];
+
+          for (const recipientUserId of recipients) {
+            await this.notificationService.dispatch({
+              triggerType: SystemNotificationTrigger.POLICY_ASSIGNMENT_CHANGED,
+              recipientUserId,
+              relatedEntityType: 'Policy',
+              relatedEntityId: newPolicy.id,
+              payload: {
+                title: `Pembaruan Kebijakan: ${dto.category}`,
+                body: `Versi baru kebijakan ${dto.category} telah aktif efektif per ${dto.effectiveDate}.`,
+                linkPath: '/settings/policies',
+              },
+            });
+          }
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.warn(
+            `Gagal mengirim notifikasi POLICY_ASSIGNMENT_CHANGED untuk policy: ${msg}`,
+          );
+        }
+      }
+
       return newPolicy;
     });
   }
@@ -254,6 +295,28 @@ export class PolicyService {
       this.logger.log(
         `User ${dto.userId} berhasil ditugaskan sebagai Policy Owner untuk kategori ${dto.policyCategory}`,
       );
+
+      // 4. Notifikasi Trigger #8: POLICY_ASSIGNMENT_CHANGED (SAD §12.1, PRD FR-52)
+      if (this.notificationService) {
+        try {
+          await this.notificationService.dispatch({
+            triggerType: SystemNotificationTrigger.POLICY_ASSIGNMENT_CHANGED,
+            recipientUserId: dto.userId,
+            relatedEntityType: 'PolicyOwnerAssignment',
+            relatedEntityId: newAssignment.id,
+            payload: {
+              title: 'Penugasan Pemilik Kebijakan Baru',
+              body: `Anda telah ditugaskan sebagai pemilik kebijakan kategori ${dto.policyCategory} efektif per ${dto.effectiveDate}.`,
+              linkPath: '/settings/policies',
+            },
+          });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.warn(
+            `Gagal mengirim notifikasi POLICY_ASSIGNMENT_CHANGED untuk assignment: ${msg}`,
+          );
+        }
+      }
 
       return newAssignment;
     });

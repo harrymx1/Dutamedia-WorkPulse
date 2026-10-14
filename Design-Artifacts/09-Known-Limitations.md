@@ -26,6 +26,8 @@
 | **KL-06** | DTO Structural Guardrail vs Domain Enforcer | Implementation Note | LOW | Active Structural Standard |
 | **KL-07** | Baseline Pengujian Regresi & Pembersihan Mock | Test & Quality Baseline | HIGH ASSURANCE | Active Verification Baseline |
 | **KL-08** | Audit Mock & Data Statis Kode Produksi (S1-T1) | Verification Record & Technical Debt | HIGH (S1-T2 Remediation & Arch Decision) | Active Audit Record (S1-T1 Closed, S1-T2 Resolved) |
+| **KL-09** | S1-T7 — Prisma Ownership/Scope Sweep | Verification Record & Security Baseline | LOW (Verification Completed) | CLOSED — PASS |
+| **KL-10** | Risiko Starvasi Batch Pengingat Cutoff (>200 User) | Known Limitation (Skalabilitas Batch Scheduler) & Technical Debt | LOW (Aman untuk skala MVP 30–60 user) | Known Limitation — Documented & Accepted (ADR-015) |
 
 ---
 
@@ -397,3 +399,63 @@ Dua temuan runtime berikut dicatat secara resmi sebagai utang teknis untuk diper
 
 ### 4. Verdict
 Berdasarkan scope, metode sweep, dan verification pass yang dilakukan, tidak ditemukan ownership/scope bypass pada production code yang diaudit.
+
+---
+
+## KL-10: Analisis Risiko Starvasi Batch Pengingat Cutoff pada Populasi Karyawan Melebihi Ambang Batch Defensif (DEFAULT_MAX_REMINDER_BATCH = 200)
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | KL-10 |
+| **Komponen Terkait** | `SchedulerService.sendCutoffReminders()` & `DailyAccountabilityService.findPendingSubmissionEmployeeIds()` |
+| **Kategori** | Known Limitation — Skalabilitas Batch Scheduler & Technical Debt |
+| **Tingkat Risiko** | LOW (Aman untuk skala MVP 30–60 user; menjadi risiko operasional hanya jika populasi aktif yang belum submit melebihi 200 user) |
+| **Status** | **Known Limitation — Documented & Accepted (ADR-015)** |
+| **Rujukan Terkait** | PRD FR-28, SAD §11.2 (Job #1), SAD §12.1, PDD §3, SAD §2.2, ADR-014, ADR-015, Finding S2-PERF-FR28-1 |
+
+### Konteks & Deskripsi Mekanisme Batching
+Pada implementasi remediasi pengingat batas waktu penyerahan (*Cutoff Reminder*, PRD FR-28, ADR-014), sistem menerapkan batas batch defensif pada lapisan konstanta:
+```typescript
+export const DEFAULT_MAX_REMINDER_BATCH = 200;
+```
+Batas ini dirancang untuk mencegah alokasi memori tak terbatas (*unbounded in-memory allocation*) dan payload lonjakan email/notifikasi yang berlebihan dalam satu siklus scheduled job.
+
+Pada `DailyAccountabilityService.findPendingSubmissionEmployeeIds(workDate, phase, limit = 200)`:
+1. Layanan mengambil seluruh penugasan organisasi aktif peran `Employee` as-of `workDate`.
+2. Mengecualikan karyawan yang memiliki `Exception` (Leave/Exemption) berstatus `Approved`.
+3. Mengecualikan karyawan yang telah menyerahkan laporan check-in pada fase terkait (`morningSubmittedAt != null` atau `eodSubmittedAt != null`).
+4. Memotong array kandidat yang belum submit menggunakan in-memory slice:
+   ```typescript
+   return candidateUserIds.slice(0, limit);
+   ```
+
+### Analisis Kondisi Starvasi (Batch Starvation Mechanism)
+Berdasarkan hasil verifikasi dan triage independen (S2-T1), ditemukan kondisi di mana kandidat karyawan dapat mengalami starvasi pengingat:
+1. **Kondisi Pemicu**: Terjadi **hanya jika** jumlah karyawan aktif yang belum menyerahkan check-in pada hari kalender tersebut **melebihi 200 user** ($N > 200$).
+2. **Mekanisme Starvasi**:
+   - Pada siklus eksekusi pertama ($T_0$), `findPendingSubmissionEmployeeIds` mengembalikan 200 karyawan pertama ($E_1 \dots E_{200}$). `SchedulerService` mendispatch reminder ke 200 karyawan tersebut.
+   - Pada siklus eksekusi berikutnya ($T_1$, misalnya 5 menit kemudian dalam jendela pengingat 60 menit), jika karyawan $E_1 \dots E_{200}$ belum melakukan submit, kueri di `DailyAccountabilityService` kembali mengevaluasi seluruh karyawan yang belum submit ($E_1 \dots E_N$) dan kembali memotong slice 200 teratas ($E_1 \dots E_{200}$).
+   - `SchedulerService` menerima $E_1 \dots E_{200}$, memeriksa riwayat tabel `notifications`, mendeteksi bahwa mereka sudah menerima reminder pada hari ini, dan mengeksekusi `continue;` (skip).
+   - Karyawan $E_{201} \dots E_N$ **tidak pernah diteruskan** ke `SchedulerService`, tidak pernah diperiksa riwayat notifikasinya, dan **sama sekali tidak menerima pengingat** selama karyawan $E_1 \dots E_{200}$ belum melakukan submit.
+3. **Penyebab Akar**: Pemeriksaan deduplikasi notifikasi dilakukan *downstream* di `SchedulerService` setelah pemotongan *slice* terjadi di *upstream* `DailyAccountabilityService`, alih-alih mengecualikan user yang sudah menerima notifikasi sebelum pemotongan limit.
+
+### Evaluasi terhadap Batasan Skala Operasional MVP
+Keterbatasan ini dianalisis secara ketat terhadap profil operasional WorkPulse:
+1. **Skala Operasional Terdokumentasi**:
+   - PDD §3 secara eksplisit menyatakan: *"Single Organization — satu deployment untuk Dutamedia, skala awal ±30 karyawan seluruh fungsi operasional."*
+   - SAD §2.2 #2, §3.1, §9.9, §12.3, §21.7, ADR-002, dan KL-01 menegaskan bahwa sistem dirancang dan dioptimalkan untuk skala **30–60 user**.
+2. **Ketiadaan Dampak di Lingkungan Produksi MVP**:
+   - Pada skala 30–60 karyawan, total seluruh populasi pengguna ($N \le 60$) berada jauh di bawah ambang 200 ($60 \ll 200$).
+   - Seluruh karyawan yang wajib check-in akan diproses dan dikirimkan pengingat secara lengkap pada eksekusi pertama di awal jendela pengingat. Kondisi starvasi **secara matematis dan operasional mustahil terjadi** pada deployment MVP.
+3. **Klarifikasi Batasan Angka 200**:
+   - Angka 200 **BUKAN** batas maksimal kapasitas organisasi (*organizational maximum*), melainkan batas defensif memori batch tunggal (*single-tick memory ceiling*).
+4. **Integritas Akseptasi FR-28**:
+   - Temuan ini diklasifikasikan sebagai *scalability technical debt* untuk pertumbuhan pasca-MVP, bukan kegagalan akseptasi (*acceptance failure*) fungsional FR-28 pada skala MVP saat ini.
+
+### Rencana Mitigasi Pasca-MVP (Scale-Up Roadmap)
+Jika di masa mendatang WorkPulse dikembangkan untuk melayani organisasi berskala enterprise atau multi-organisasi dengan populasi karyawan aktif > 150 user:
+1. **Upstream Exclusion Parameter**:
+   `SchedulerService` mengambil ID karyawan yang telah menerima notifikasi pada hari berjalan untuk fase terkait, dan meneruskannya sebagai parameter `excludeUserIds: string[]` ke `DailyAccountabilityService.findPendingSubmissionEmployeeIds()`. Dengan demikian, kandidat yang sudah menerima reminder dikeluarkan *sebelum* `slice(0, limit)` diterapkan.
+2. **Database-Level Set Difference & Pagination**:
+   Menggantikan seleksi bertahap di memori dengan kueri set-difference SQL tunggal berbasis indeks (`NOT EXISTS notifications`) dengan pagination kursor database.
+

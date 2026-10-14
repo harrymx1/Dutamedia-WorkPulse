@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WorkPulse — Masuk ke Sistem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM TOKENS (04-Design-System.md v1.4.0 FINAL)
+       ========================================================================== */
+    :root {
+      --color-canvas: #F7FAF9;
+      --color-surface: #FFFFFF;
+      --color-surface-subtle: #EFF5F2;
+      --color-surface-muted: #F1F5F4;
+      --color-border-subtle: #DCE7E2;
+      --color-border-strong: #A9C7BC;
+      --color-text-primary: #0E211B;
+      --color-text-secondary: #5C6E68;
+      --color-text-disabled: #66736E;
+      --color-brand-primary: #00674D;
+      --color-brand-hover: #00523E;
+      --color-brand-secondary: #12915F;
+      --color-brand-tint: #E6F4EE;
+      --color-brand-focus: #0B8061;
+
+      /* Status Tokens */
+      --color-status-green-bg: #E6F4EC;
+      --color-status-green-fg: #145A36;
+      --color-status-green-border: #A7D5B8;
+      --color-status-amber-bg: #FFF3D9;
+      --color-status-amber-fg: #7A4B00;
+      --color-status-amber-border: #E8C77A;
+      --color-status-red-bg: #FDE9E7;
+      --color-status-red-fg: #9B2923;
+      --color-status-red-border: #E8B1AC;
+      --color-status-neutral-bg: #EFF2F1;
+      --color-status-neutral-fg: #46534E;
+      --color-status-neutral-border: #C9D2CE;
+
+      /* Geometry & Elevation */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-subtle: 0 4px 20px rgba(14, 33, 27, 0.05);
+      --shadow-elevated: 0 16px 36px rgba(14, 33, 27, 0.1);
+      --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--color-canvas);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button, input, select {
+      font-family: inherit;
+    }
+
+    button, a {
+      cursor: pointer;
+    }
+
+    a {
+      color: var(--color-brand-primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--color-brand-focus);
+      outline-offset: 2px;
+    }
+
+    /* ==========================================================================
+       LAYOUT STRUCTURE (STRICT 1-SCREEN VIEWPORT 100VH)
+       ========================================================================== */
+    .app-container {
+      height: 100vh;
+      max-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(360px, 0.92fr) minmax(500px, 1.08fr);
+      overflow: hidden;
+    }
+
+    /* Left Hero / Brand Narrative */
+    .brand-story {
+      background: linear-gradient(165deg, #0B3327 0%, #06221A 100%);
+      color: #FFFFFF;
+      padding: clamp(28px, 4vh, 44px) clamp(32px, 4.5vw, 64px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+      height: 100%;
+    }
+
+    .brand-story::before {
+      content: "";
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+      left: -280px;
+      top: 20%;
+      box-shadow: 0 0 0 60px rgba(255, 255, 255, 0.03), 0 0 0 120px rgba(255, 255, 255, 0.02);
+      pointer-events: none;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+    }
+
+    .brand-tagline {
+      font-size: 11px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #A9C9BC;
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    .brand-content {
+      position: relative;
+      z-index: 2;
+      padding: clamp(16px, 2.5vh, 28px) 0;
+      max-width: 480px;
+    }
+
+    .badge-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 800;
+      color: #BDE8D7;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: #52D8A1;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(82, 216, 161, 0.25);
+    }
+
+    .brand-content h1 {
+      font-size: clamp(28px, 3.2vw, 42px);
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+      margin-bottom: 14px;
+      font-weight: 800;
+    }
+
+    .brand-content p {
+      color: #D0E4DC;
+      line-height: 1.6;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .feature-pillars {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pillar-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 13px;
+      color: #BFD9CE;
+    }
+
+    .pillar-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 7px;
+      color: #BDE8D7;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .pillar-text strong {
+      display: block;
+      color: #FFFFFF;
+      font-size: 13.5px;
+      margin-bottom: 2px;
+    }
+
+    .brand-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: #A9C9BC;
+      font-size: 11px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Right Form Area */
+    .interactive-main {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: var(--color-canvas);
+      overflow-y: auto;
+      box-sizing: border-box;
+      padding: clamp(16px, 3vh, 32px);
+    }
+
+    .card-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .form-card {
+      width: min(100%, 440px);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(24px, 3.5vh, 36px);
+      box-shadow: var(--shadow-subtle);
+      position: relative;
+    }
+
+    /* Screen Transitions */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0.6; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen-tag {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-brand-primary);
+      font-weight: 800;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    h2 {
+      font-size: 26px;
+      line-height: 1.25;
+      letter-spacing: -0.035em;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      margin-bottom: 8px;
+    }
+
+    .lead-text {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* Form Inputs */
+    .field-group {
+      margin-bottom: 20px;
+    }
+
+    .field-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    .input-container {
+      position: relative;
+    }
+
+    input:not([type="checkbox"]) {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:not([type="checkbox"]):hover {
+      border-color: #6F9C8B;
+    }
+
+    input:not([type="checkbox"]):focus {
+      outline: none;
+      border-color: var(--color-brand-focus);
+      box-shadow: 0 0 0 3px rgba(11, 128, 97, 0.15);
+    }
+
+    input[aria-invalid="true"] {
+      border-color: #DC2626 !important;
+      background: #FFFBFB;
+    }
+
+    .input-icon-btn {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .input-icon-btn:hover {
+      background: var(--color-surface-subtle);
+      color: var(--color-brand-primary);
+    }
+
+    .field-error-msg {
+      display: none;
+      color: #B91C1C;
+      font-size: 12px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .field-error-msg.show {
+      display: block;
+    }
+
+    /* Alerts and Feedback */
+    .alert-banner {
+      display: none;
+      gap: 10px;
+      align-items: flex-start;
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .alert-banner.show {
+      display: flex;
+    }
+
+    .alert-banner.error {
+      background: var(--color-status-red-bg);
+      border: 1px solid var(--color-status-red-border);
+      color: var(--color-status-red-fg);
+    }
+
+    .alert-banner.warning {
+      background: var(--color-status-amber-bg);
+      border: 1px solid var(--color-status-amber-border);
+      color: var(--color-status-amber-fg);
+    }
+
+    .alert-banner.info {
+      background: var(--color-brand-tint);
+      border: 1px solid var(--color-brand-secondary);
+      color: var(--color-brand-primary);
+    }
+
+    .alert-banner.neutral {
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border-subtle);
+      color: var(--color-text-secondary);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: background 0.15s, transform 0.05s;
+      border: 0;
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-primary {
+      background: var(--color-brand-primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-brand-hover);
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-strong);
+      color: var(--color-text-primary);
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-surface-subtle);
+    }
+
+    /* Form Extras */
+    .form-options-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      font-size: 13px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-brand-primary);
+      cursor: pointer;
+    }
+
+    .divider-rule {
+      height: 1px;
+      background: var(--color-border-subtle);
+      margin: 24px 0 18px;
+    }
+
+    .help-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .account-preview-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface-subtle);
+      padding: 14px;
+      border-radius: var(--radius-md);
+      margin-bottom: 22px;
+    }
+
+    .user-avatar-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #D5EDE2;
+      color: var(--color-brand-primary);
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .account-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .account-name-txt {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .account-detail-txt {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .role-badge-tag {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: #FFFFFF;
+      border: 1px solid var(--color-border-strong);
+      color: var(--color-text-secondary);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    /* Result State Card */
+    .result-state-card {
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: 28px 20px;
+      text-align: center;
+      margin: 16px 0 24px;
+    }
+
+    .result-circle-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--color-status-green-bg);
+      color: var(--color-status-green-fg);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .result-circle-icon.warning {
+      background: var(--color-status-amber-bg);
+      color: var(--color-status-amber-fg);
+    }
+
+    .result-circle-icon.danger {
+      background: var(--color-status-red-bg);
+      color: var(--color-status-red-fg);
+    }
+
+    .result-state-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .result-state-card p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+    }
+
+    /* Password Strength Indicator */
+    .strength-wrapper {
+      margin-top: 8px;
+      margin-bottom: 14px;
+    }
+
+    .strength-bars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      height: 4px;
+      margin-bottom: 6px;
+    }
+
+    .strength-bar {
+      background: var(--color-border-subtle);
+      border-radius: 2px;
+      transition: background 0.2s;
+    }
+
+    .strength-caption {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Modal for UF-03 (Session Timeout) */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 33, 27, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: grid;
+    }
+
+    .modal-box {
+      width: min(100%, 420px);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-elevated);
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 900px) {
+      html, body {
+        height: auto;
+        overflow-y: auto;
+      }
+      .app-container {
+        height: auto;
+        max-height: none;
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+      .brand-story {
+        display: none;
+      }
+      .interactive-main {
+        height: auto;
+        min-height: 100vh;
+      }
+      .card-wrapper {
+        padding: 24px 16px 40px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- LEFT PANEL: Brand Narrative & Workspace Identity -->
+    <aside class="brand-story">
+      <div class="brand-header">
+        <div class="brand-mark">W</div>
+        <div>
+          <div class="brand-title">WorkPulse</div>
+          <div class="brand-tagline">Daily Accountability & Blocker Log</div>
+        </div>
+      </div>
+
+      <div class="brand-content">
+        <div class="badge-eyebrow">
+          <span class="pulse-dot"></span> Sistem Akuntabilitas Internal
+        </div>
+        <h1>Kerja terarah.<br>Kolaborasi yang sehat.</h1>
+        <p>
+          Mulai hari dengan prioritas terukur, identifikasi risiko lebih awal, dan pastikan kendala tim mendapat dukungan nyata tanpa birokrasi berbelit.
+        </p>
+
+        <div class="feature-pillars">
+          <div class="pillar-item">
+            <div class="pillar-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="pillar-text">
+              <strong>Komitmen Pagi Terfokus (Slot 1–3)</strong>
+              <span>Tentukan 1 hingga 3 komitmen harian yang berdampak dan realistis.</span>
+            </div>
+          </div>
+          <div class="pillar-item">
+            <div class="pillar-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div class="pillar-text">
+              <strong>Pelaporan Blocker Cepat</strong>
+              <span>Transparansi kendala teknis atau dependensi agar segera mendapat eskalasi bantuan.</span>
+            </div>
+          </div>
+          <div class="pillar-item">
+            <div class="pillar-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="pillar-text">
+              <strong>Kemitraan & Dukungan Tim</strong>
+              <span>Bukan alat pengawasan otoriter, melainkan ruang sinkronisasi ritme kerja tim.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brand-footer">
+        <span>WorkPulse v1.5 · PT Dutamedia</span>
+        <span>Internal Workspace Environment</span>
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL: Authentication Views -->
+    <main class="interactive-main">
+      <div class="card-wrapper">
+        <div class="form-card">
+
+          <!-- ==============================================================
+               SCREEN 1: LOGIN UTAMA (UF-01)
+               ============================================================== -->
+          <section class="screen active" id="login-screen">
+            <span class="screen-tag">Akses Ruang Kerja</span>
+            <h2>Masuk ke WorkPulse</h2>
+            <p class="lead-text">Masukkan akun email kerja yang telah diaktifkan oleh organisasi.</p>
+
+            <!-- Status Banners -->
+            <div class="alert-banner error" id="login-alert-error" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <div id="login-alert-error-txt">Email atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.</div>
+            </div>
+
+            <div class="alert-banner warning" id="login-alert-lockout" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div>
+                <strong>Batas Percobaan Terlampaui</strong><br>
+                Akun sementara terkunci demi keamanan. Silakan coba lagi dalam <span id="lockout-countdown">60</span> detik.
+              </div>
+            </div>
+
+            <div class="alert-banner info" id="login-alert-notice" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div id="login-alert-notice-txt">Sesi Anda telah berakhir dengan aman. Silakan masuk kembali.</div>
+            </div>
+
+            <form id="login-form" novalidate>
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="login-email">Email Kerja</label>
+                </div>
+                <div class="input-container">
+                  <input id="login-email" type="email" autocomplete="username" placeholder="nama@dutamedia.com" value="budi.pratama@dutamedia.com" required>
+                </div>
+                <div class="field-error-msg" id="login-email-error">Masukkan alamat email kerja yang valid (@dutamedia.com).</div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="login-password">Kata Sandi</label>
+                  <a href="#" id="link-forgot-pass">Lupa kata sandi?</a>
+                </div>
+                <div class="input-container">
+                  <input id="login-password" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="Dutamedia#2026" required>
+                  <button class="input-icon-btn" type="button" id="btn-toggle-pwd" aria-label="Tampilkan kata sandi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+                <div class="field-error-msg" id="login-password-error">Kata sandi wajib diisi.</div>
+              </div>
+
+              <div class="form-options-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="remember-me" checked>
+                  <span>Ingat email di perangkat ini</span>
+                </label>
+              </div>
+
+              <button class="btn btn-primary" type="submit" id="btn-submit-login">
+                <span>Masuk ke Dashboard</span>
+              </button>
+            </form>
+
+            <div class="divider-rule"></div>
+            <div class="help-hint">
+              <span>Kendala akses akun? Hubungi Tim IT Support atau HRGA organisasi.</span>
+            </div>
+          </section>
+
+          <!-- ==============================================================
+               SCREEN 2: AKTIVASI AKUN PERTAMA KALI (UF-01 / AC-05 s/d AC-08)
+               ============================================================== -->
+          <section class="screen" id="activation-screen">
+            <span class="screen-tag">Aktivasi Akun Baru</span>
+            <h2>Tetapkan Kata Sandi</h2>
+            <p class="lead-text">Akun Anda telah didaftarkan oleh Administrator. Tetapkan kata sandi pribadi Anda untuk mulai menggunakan WorkPulse.</p>
+
+            <div class="account-preview-card">
+              <div class="user-avatar-circle" id="act-avatar">AR</div>
+              <div class="account-info">
+                <div class="account-name-txt" id="act-name">Ayu Rahmadani</div>
+                <div class="account-detail-txt" id="act-detail">ayu.rahmadani@dutamedia.com · Product Design</div>
+              </div>
+              <span class="role-badge-tag">UNDANGAN AKTIF</span>
+            </div>
+
+            <div class="alert-banner error" id="act-alert-error" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <div id="act-alert-error-txt">Kata sandi belum memenuhi kriteria keamanan minimum.</div>
+            </div>
+
+            <form id="activation-form" novalidate>
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="act-newpass">Kata Sandi Baru</label>
+                </div>
+                <div class="input-container">
+                  <input id="act-newpass" type="password" placeholder="Minimal 8 karakter kombinasi" required>
+                  <button class="input-icon-btn" type="button" data-toggle-target="act-newpass" aria-label="Lihat kata sandi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+                <!-- Strength indicator -->
+                <div class="strength-wrapper">
+                  <div class="strength-bars">
+                    <div class="strength-bar" id="str-1"></div>
+                    <div class="strength-bar" id="str-2"></div>
+                    <div class="strength-bar" id="str-3"></div>
+                    <div class="strength-bar" id="str-4"></div>
+                  </div>
+                  <div class="strength-caption">
+                    <span>Kekuatan: <strong id="str-label">Belum diisi</strong></span>
+                    <span>Min. 8 karakter (huruf besar, kecil, angka)</span>
+                  </div>
+                </div>
+                <div class="field-error-msg" id="act-newpass-error">Kata sandi minimal 8 karakter dengan kombinasi angka/huruf.</div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="act-confirmpass">Konfirmasi Kata Sandi</label>
+                </div>
+                <div class="input-container">
+                  <input id="act-confirmpass" type="password" placeholder="Ketik ulang kata sandi baru" required>
+                </div>
+                <div class="field-error-msg" id="act-confirmpass-error">Konfirmasi kata sandi tidak cocok.</div>
+              </div>
+
+              <button class="btn btn-primary" type="submit" id="btn-submit-activate">
+                Aktifkan Akun & Masuk
+              </button>
+              <button class="btn btn-secondary" type="button" data-screen-target="login">
+                Batal dan Kembali
+              </button>
+            </form>
+          </section>
+
+          <!-- ==============================================================
+               SCREEN 3: ATUR ULANG KATA SANDI
+               ============================================================== -->
+          <section class="screen" id="reset-screen">
+            <span class="screen-tag">Pemulihan Akses</span>
+            <h2>Atur Ulang Kata Sandi</h2>
+            <p class="lead-text">Masukkan email kerja terdaftar Anda. Tautan pemulihan akan dikirimkan jika akun Anda valid.</p>
+
+            <form id="reset-form" novalidate>
+              <div class="field-group">
+                <div class="field-label-row">
+                  <label for="reset-email">Email Kerja</label>
+                </div>
+                <div class="input-container">
+                  <input id="reset-email" type="email" placeholder="nama@dutamedia.com" required>
+                </div>
+                <div class="field-error-msg" id="reset-email-error">Masukkan email terdaftar yang valid.</div>
+              </div>
+
+              <div class="alert-banner neutral">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div>Pemulihan hanya berlaku untuk akun yang telah aktif sebelumnya. Tindakan ini tidak membuat akun baru.</div>
+              </div>
+
+              <button class="btn btn-primary" type="submit">Kirim Tautan Pemulihan</button>
+              <button class="btn btn-secondary" type="button" data-screen-target="login">Kembali ke Login</button>
+            </form>
+          </section>
+
+          <!-- ==============================================================
+               SCREEN 4: INSTRUKSI PEMULIHAN TERKIRIM
+               ============================================================== -->
+          <section class="screen" id="reset-success-screen">
+            <span class="screen-tag">Instruksi Terkirim</span>
+            <div class="result-state-card">
+              <div class="result-circle-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <h3>Periksa Kotak Masuk Anda</h3>
+              <p>
+                Jika alamat email terdaftar di sistem WorkPulse, kami telah mengirimkan instruksi pemulihan kata sandi. Silakan ikuti tautan pada email tersebut.
+              </p>
+            </div>
+            <button class="btn btn-primary" type="button" data-screen-target="login">Kembali ke Halaman Login</button>
+          </section>
+
+          <!-- ==============================================================
+               SCREEN 5: AKTIVASI SUKSES
+               ============================================================== -->
+          <section class="screen" id="act-success-screen">
+            <span class="screen-tag">Aktivasi Selesai</span>
+            <div class="result-state-card">
+              <div class="result-circle-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <h3>Akun Anda Telah Aktif</h3>
+              <p>
+                Kata sandi baru telah berhasil ditetapkan. Anda kini dapat masuk ke WorkPulse dan memulai akuntabilitas harian.
+              </p>
+            </div>
+            <button class="btn btn-primary" type="button" id="btn-goto-login-after-act">Lanjut Masuk ke Sistem</button>
+          </section>
+
+          <!-- ==============================================================
+               SCREEN 6: TAUTAN KEDALUWARSA / TIDAK BERLAKU
+               ============================================================== -->
+          <section class="screen" id="invalid-token-screen">
+            <span class="screen-tag">Tautan Tidak Berlaku</span>
+            <div class="result-state-card">
+              <div class="result-circle-icon warning"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+              <h3 id="invalid-token-heading">Undangan Kedaluwarsa</h3>
+              <p id="invalid-token-desc">
+                Tautan aktivasi ini sudah melewati batas waktu berlaku atau telah digunakan sebelumnya. Hubungi Administrator untuk meminta undangan baru.
+              </p>
+            </div>
+            <button class="btn btn-primary" type="button" data-screen-target="login">Kembali ke Halaman Utama</button>
+          </section>
+
+          <!-- ==============================================================
+               SCREEN 7: AKSES DITOLAK (UF-04 / 403 RESTRICTED)
+               ============================================================== -->
+          <section class="screen" id="access-denied-screen">
+            <span class="screen-tag">Otoritas Tidak Memadai</span>
+            <div class="result-state-card">
+              <div class="result-circle-icon danger"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+              <h3>403 — Akses Dibatasi</h3>
+              <p>
+                Akun Anda tidak memiliki wewenang untuk mengakses modul ini. Seluruh batasan peran dijaga ketat sesuai kebijakan organisasi.
+              </p>
+            </div>
+            <button class="btn btn-primary" type="button" data-screen-target="login">Kembali ke Dashboard Utama</button>
+          </section>
+
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ==============================================================
+       MODAL DIALOG: SESI KEDALUWARSA (UF-03)
+       ============================================================== -->
+  <div class="modal-backdrop" id="modal-session-timeout" role="dialog" aria-modal="true" aria-labelledby="modal-session-title">
+    <div class="modal-box">
+      <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #B91C1C; margin-bottom: 6px;">Keamanan Sesi</div>
+      <h3 id="modal-session-title" style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Sesi Telah Berakhir</h3>
+      <p style="font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); margin-bottom: 20px;">
+        Sesi kerja Anda telah kedaluwarsa demi melindungi keamanan data internal. Masukkan kata sandi akun untuk melanjutkan tanpa kehilangan draf yang sedang diketik.
+      </p>
+
+      <form id="reauth-form" novalidate>
+        <div class="field-group">
+          <label for="reauth-pass" style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Kata Sandi Akun</label>
+          <input id="reauth-pass" type="password" placeholder="Masukkan kata sandi untuk verifikasi" required>
+          <div class="field-error-msg" id="reauth-pass-error">Kata sandi verifikasi tidak sesuai.</div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Pulihkan Sesi & Lanjut Kerja</button>
+        <button class="btn btn-secondary" type="button" id="btn-reauth-logout">Keluar Saja</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==============================================================
+       JAVASCRIPT LOGIC (PRODUCTION LOGIC)
+       ============================================================== -->
+  <script>
+    // DOM Helpers
+    const $ = id => document.getElementById(id);
+    const eyeSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const eyeOffSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    const $$ = selector => document.querySelectorAll(selector);
+
+    // Screen Switcher Helper
+    function showScreen(screenId) {
+      $$('.screen').forEach(s => s.classList.remove('active'));
+      const target = $(screenId + '-screen');
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const firstInput = target.querySelector('input');
+        if (firstInput) setTimeout(() => firstInput.focus(), 50);
+      }
+    }
+
+    // Clear Errors & Alerts
+    function clearAlerts() {
+      $$('.alert-banner').forEach(a => a.classList.remove('show'));
+      $$('.field-error-msg').forEach(e => e.classList.remove('show'));
+      $$('input').forEach(i => i.removeAttribute('aria-invalid'));
+    }
+
+    // Screen Navigation Links
+    $$('[data-screen-target]').forEach(btn => {
+      btn.onclick = () => {
+        clearAlerts();
+        showScreen(btn.dataset.screenTarget);
+      };
+    });
+
+    // Password Visibility Toggle
+    $('btn-toggle-pwd').onclick = () => {
+      const input = $('login-password');
+      const isPwd = input.type === 'password';
+      input.type = isPwd ? 'text' : 'password';
+      $('btn-toggle-pwd').innerHTML = isPwd ? eyeOffSvg : eyeSvg;
+    };
+
+    $$('[data-toggle-target]').forEach(btn => {
+      btn.onclick = () => {
+        const input = $(btn.dataset.toggleTarget);
+        if (!input) return;
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        btn.innerHTML = isPwd ? eyeOffSvg : eyeSvg;
+      };
+    });
+
+    // Forgot Password Link
+    $('link-forgot-pass').onclick = (e) => {
+      e.preventDefault();
+      clearAlerts();
+      $('reset-email').value = $('login-email').value;
+      showScreen('reset');
+    };
+
+    // ==============================================================
+    // LOGIN FORM SUBMISSION (UF-01)
+    // ==============================================================
+    let failedAttempts = 0;
+    let lockoutTimer = null;
+
+    $('login-form').onsubmit = (e) => {
+      e.preventDefault();
+      clearAlerts();
+
+      const email = $('login-email').value.trim();
+      const password = $('login-password').value;
+      let valid = true;
+
+      if (!email || !email.includes('@')) {
+        $('login-email-error').classList.add('show');
+        $('login-email').setAttribute('aria-invalid', 'true');
+        valid = false;
+      }
+
+      if (!password) {
+        $('login-password-error').classList.add('show');
+        $('login-password').setAttribute('aria-invalid', 'true');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // Realistic Account Matcher (Recognizes roles organically based on email)
+      let activeUser = {
+        name: 'Budi Pratama',
+        email: email,
+        role: 'EMPLOYEE',
+        roleLabel: 'Software Engineer',
+        function: 'Engineering',
+        department: 'Technology Squad A',
+        isExempt: false,
+        avatar: 'BP',
+        targetPage: '02-Morning-Commitment.html'
+      };
+
+      const emailLower = email.toLowerCase();
+      if (emailLower.includes('bambang') || emailLower.includes('ceo') || emailLower.includes('direksi')) {
+        activeUser = {
+          name: 'Ir. Bambang Soedirgo',
+          email: email,
+          role: 'CEO',
+          roleLabel: 'Chief Executive Officer',
+          function: 'Management',
+          department: 'Executive Board',
+          isExempt: true, // INDEFINITE ROLE EXEMPTION (FR-35, BR-07)
+          avatar: 'BS',
+          targetPage: '02-Morning-Commitment.html'
+        };
+      } else if (emailLower.includes('siti') || emailLower.includes('lead') || emailLower.includes('spv')) {
+        activeUser = {
+          name: 'Siti Aminah',
+          email: email,
+          role: 'SUPERVISOR',
+          roleLabel: 'Supervisor / Team Lead',
+          function: 'Engineering',
+          department: 'Technology Squad A',
+          isExempt: false,
+          avatar: 'SA',
+          targetPage: '08-Pulse-Dashboard.html'
+        };
+      } else if (emailLower.includes('hendra') || emailLower.includes('head')) {
+        activeUser = {
+          name: 'Hendra Gunawan',
+          email: email,
+          role: 'HEAD_OF_DEPARTMENT',
+          roleLabel: 'Head of Technology',
+          function: 'Management',
+          department: 'Delivery & Tech Division',
+          isExempt: false,
+          avatar: 'HG',
+          targetPage: '08-Pulse-Dashboard.html'
+        };
+      } else if (emailLower.includes('dewi') || emailLower.includes('hrga')) {
+        activeUser = {
+          name: 'Dewi Anggraeni',
+          email: email,
+          role: 'HRGA',
+          roleLabel: 'HRGA & Compliance Officer',
+          function: 'HRGA',
+          department: 'Human Resources & General Affairs',
+          isExempt: false,
+          avatar: 'DA',
+          targetPage: '11-Compliance-Queue-HRGA.html'
+        };
+      }
+
+      // Save user session to localStorage for cross-page persistence
+      localStorage.setItem('workpulse_active_user', JSON.stringify(activeUser));
+
+      // Visual feedback & redirection
+      $('btn-submit-login').innerHTML = '<span>Memverifikasi Sesi...</span>';
+      $('btn-submit-login').disabled = true;
+
+      setTimeout(() => {
+        window.location.href = activeUser.targetPage;
+      }, 450);
+    };
+
+    function triggerLockout() {
+      $('login-alert-lockout').classList.add('show');
+      $('btn-submit-login').disabled = true;
+      let seconds = 60;
+      $('lockout-countdown').textContent = seconds;
+
+      if (lockoutTimer) clearInterval(lockoutTimer);
+      lockoutTimer = setInterval(() => {
+        seconds--;
+        $('lockout-countdown').textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(lockoutTimer);
+          $('login-alert-lockout').classList.remove('show');
+          $('btn-submit-login').disabled = false;
+          failedAttempts = 0;
+        }
+      }, 1000);
+    }
+
+    // ==============================================================
+    // RESET PASSWORD FORM
+    // ==============================================================
+    $('reset-form').onsubmit = (e) => {
+      e.preventDefault();
+      clearAlerts();
+      const email = $('reset-email').value.trim();
+      if (!email || !email.includes('@')) {
+        $('reset-email-error').classList.add('show');
+        $('reset-email').setAttribute('aria-invalid', 'true');
+        return;
+      }
+      showScreen('reset-success');
+    };
+
+    // ==============================================================
+    // ACCOUNT ACTIVATION (UF-01 / AC-05 s/d AC-08)
+    // ==============================================================
+    const newPassInput = $('act-newpass');
+    newPassInput.oninput = () => {
+      const val = newPassInput.value;
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const bars = [$('str-1'), $('str-2'), $('str-3'), $('str-4')];
+      const colors = ['#EF4444', '#F59E0B', '#10B981', '#059669'];
+      const labels = ['Sangat Lemah', 'Cukup', 'Kuat', 'Sangat Aman'];
+
+      bars.forEach((b, idx) => {
+        if (idx < score) {
+          b.style.background = colors[score - 1];
+        } else {
+          b.style.background = 'var(--color-border-subtle)';
+        }
+      });
+
+      $('str-label').textContent = val.length === 0 ? 'Belum diisi' : (labels[score - 1] || 'Terlalu Lemah');
+      if (score >= 2) {
+        $('act-newpass-error').classList.remove('show');
+        newPassInput.removeAttribute('aria-invalid');
+      }
+    };
+
+    $('activation-form').onsubmit = (e) => {
+      e.preventDefault();
+      clearAlerts();
+      const pass = $('act-newpass').value;
+      const confirm = $('act-confirmpass').value;
+      let ok = true;
+
+      if (pass.length < 8) {
+        $('act-newpass-error').classList.add('show');
+        $('act-newpass').setAttribute('aria-invalid', 'true');
+        ok = false;
+      }
+
+      if (pass !== confirm) {
+        $('act-confirmpass-error').classList.add('show');
+        $('act-confirmpass').setAttribute('aria-invalid', 'true');
+        ok = false;
+      }
+
+      if (ok) {
+        showScreen('act-success');
+      }
+    };
+
+    $('btn-goto-login-after-act').onclick = () => {
+      clearAlerts();
+      $('login-email').value = 'ayu.rahmadani@dutamedia.com';
+      $('login-password').value = '';
+      showScreen('login');
+      $('login-alert-notice').classList.add('show');
+      $('login-alert-notice-txt').textContent = 'Aktivasi berhasil! Silakan masuk dengan kata sandi baru Anda.';
+    };
+
+    // ==============================================================
+    // RE-AUTHENTICATION & SESSION TIMEOUT (UF-03)
+    // ==============================================================
+    $('reauth-form').onsubmit = (e) => {
+      e.preventDefault();
+      const pwd = $('reauth-pass').value;
+      if (!pwd) {
+        $('reauth-pass-error').classList.add('show');
+        return;
+      }
+      $('modal-session-timeout').classList.remove('show');
+    };
+
+    $('btn-reauth-logout').onclick = () => {
+      $('modal-session-timeout').classList.remove('show');
+      showScreen('login');
+    };
+
+    // Check URL parameters for direct state viewing (?view=activation, etc.)
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view');
+      if (view === 'activation') {
+        showScreen('activation');
+      } else if (view === 'expired') {
+        $('invalid-token-heading').textContent = 'Undangan Telah Kedaluwarsa';
+        showScreen('invalid-token');
+      } else if (view === '403') {
+        showScreen('access-denied');
+      }
+    });
+  </script>
+</body>
+</html>

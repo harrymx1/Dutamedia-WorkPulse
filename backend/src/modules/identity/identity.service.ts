@@ -1,14 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as argon2 from 'argon2';
 import { Role, UserStatus, type User, type OrganizationalAssignment } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
+import { NotificationService } from '../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../notification/constants/notification-trigger.constants.js';
 import {
   BusinessRuleViolationException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '../shared/exceptions/api.exception.js';
+import type { CurrentUserPayload } from '../auth/decorators/current-user.decorator.js';
 import type { CreateUserDto } from './dto/create-user.dto.js';
 import type { UpdateUserStatusDto } from './dto/update-user-status.dto.js';
 import type { QueryUsersDto } from './dto/query-users.dto.js';
@@ -38,6 +42,7 @@ export class IdentityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    @Optional() private readonly notificationService?: NotificationService,
   ) {}
 
   /**
@@ -321,11 +326,29 @@ export class IdentityService {
   }
 
   /**
-   * EPIC-04-T2: Mengambil riwayat assignment organisasi user.
+   * EPIC-04-T2: Mengambil riwayat assignment organisasi user (SAD §10.2).
+   * Otorisasi: SystemAdmin, HRGA, atau pemilik akun (caller.userId === targetUserId).
    */
   async getOrganizationalAssignments(
     userId: string,
+    caller?: CurrentUserPayload,
   ): Promise<OrganizationalAssignment[]> {
+    if (!caller) {
+      throw new ForbiddenException(
+        'Akses ditolak: Konteks pengguna autentikasi wajib disertakan',
+      );
+    }
+
+    const isSystemAdmin = caller.role === Role.SystemAdmin;
+    const isHrga = caller.role === Role.HRGA;
+    const isOwner = caller.userId === userId;
+
+    if (!isSystemAdmin && !isHrga && !isOwner) {
+      throw new ForbiddenException(
+        'Akses ditolak: Hanya SystemAdmin, HRGA, atau pemilik akun yang dapat melihat riwayat penugasan organisasi (SAD §10.2)',
+      );
+    }
+
     await this.getUserById(userId);
 
     return this.prisma.organizationalAssignment.findMany({
@@ -435,6 +458,26 @@ export class IdentityService {
       this.logger.log(
         `Assignment baru untuk user ${dto.userId}: ${dto.role} (${dto.function}) efektif ${dto.effectiveDate}`,
       );
+
+      // 5. Notifikasi Trigger #8: POLICY_ASSIGNMENT_CHANGED (SAD §12.1, PRD FR-52)
+      if (this.notificationService) {
+        try {
+          await this.notificationService.dispatch({
+            triggerType: SystemNotificationTrigger.POLICY_ASSIGNMENT_CHANGED,
+            recipientUserId: dto.userId,
+            relatedEntityType: 'OrganizationalAssignment',
+            relatedEntityId: newAssignment.id,
+            payload: {
+              title: 'Perubahan Penugasan Organisasi',
+              body: `Penugasan organisasi Anda telah diperbarui menjadi ${dto.role} (${dto.function.trim()}) efektif per ${dto.effectiveDate}.`,
+              linkPath: '/profile',
+            },
+          });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.warn(`Gagal mengirim notifikasi POLICY_ASSIGNMENT_CHANGED: ${msg}`);
+        }
+      }
 
       return newAssignment;
     });
@@ -714,6 +757,17 @@ export class IdentityService {
         },
       },
     });
+  }
+
+  /**
+   * Mengambil daftar ID seluruh user aktif untuk orkestrasi background jobs (SAD §6.3, S2-T4-JOB-01).
+   */
+  async findActiveUserIds(): Promise<string[]> {
+    const activeUsers = await this.prisma.user.findMany({
+      where: { status: UserStatus.Active },
+      select: { id: true },
+    });
+    return activeUsers.map((u) => u.id);
   }
 }
 

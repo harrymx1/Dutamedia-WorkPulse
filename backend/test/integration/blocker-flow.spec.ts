@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EPIC-22-T2: Integration Test — Skenario B (SAD §17.7)
  * Blocker full lifecycle: Create→Acknowledge→Resolve→Close + AutoEscalation
  */
@@ -12,6 +12,7 @@ import {
   Role,
 } from '@prisma/client';
 import { BlockerService } from '../../src/modules/blocker/services/blocker.service.js';
+import { SystemNotificationTrigger } from '../../src/modules/notification/constants/notification-trigger.constants.js';
 import {
   ConflictException,
   ForbiddenException,
@@ -89,7 +90,7 @@ describe('EPIC-22-T2: Skenario B — Blocker Lifecycle (SAD §17.7)', () => {
     expect(result.status).toBe(BlockerStatus.Open);
     expect(notificationMock.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
-        triggerType: 'BLOCKER_CRITICAL_RAISED',
+        triggerType: SystemNotificationTrigger.CRITICAL_INSTANT_BLOCKER,
         recipientUserId: ownerId,
         channels: expect.arrayContaining([NotificationChannel.Email]),
       }),
@@ -173,12 +174,12 @@ describe('EPIC-22-T2: Skenario B — Blocker Lifecycle (SAD §17.7)', () => {
 
     expect(result.escalatedCount).toBe(1);
     expect(auditMock.record).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'BLOCKER_AUTO_ESCALATED', actorUserId: 'SYSTEM' }),
+      expect.objectContaining({ action: 'BLOCKER_AUTO_ESCALATED', actorUserId: undefined }),
       expect.anything(),
     );
     expect(notificationMock.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
-        triggerType: 'BLOCKER_UNACKNOWLEDGED_THRESHOLD',
+        triggerType: SystemNotificationTrigger.BLOCKER_UNACKNOWLEDGED_ESCALATION,
         recipientUserId: headId,
       }),
       expect.anything(),

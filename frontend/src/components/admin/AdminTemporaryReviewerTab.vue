@@ -166,7 +166,7 @@
               :rules="[(v: string) => !!v?.trim() || 'Alasan wajib diisi']"
             />
 
-            <v-row dense>
+            <v-row density="compact">
               <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="form.effectiveDate"

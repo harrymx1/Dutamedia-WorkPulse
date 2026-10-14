@@ -6,7 +6,7 @@
           <div class="d-flex align-center">
             <v-icon icon="mdi-alert-octagon" color="error" class="mr-2" />
             <v-card-title class="text-subtitle-1 font-weight-bold text-error">
-              Raise Instant Blocker
+              {{ modalTitle }}
             </v-card-title>
           </div>
           <v-btn icon="mdi-close" variant="text" size="small" @click="closeModal" />
@@ -17,6 +17,19 @@
         <p class="text-body-2 text-medium-emphasis mb-4">
           Ajukan blocker operasional atau hambatan kritis secara langsung. Blocker akan memicu eskalasi notifikasi ke pihak pemilik wewenang yang dipilih.
         </p>
+
+        <v-alert
+          v-if="commitmentId"
+          type="info"
+          variant="tonal"
+          density="compact"
+          class="mb-4"
+          prepend-icon="mdi-link-variant"
+          data-testid="commitment-context-alert"
+        >
+          <div class="text-caption text-medium-emphasis">Menautkan ke Komitmen:</div>
+          <div class="font-weight-medium text-body-2">{{ commitmentDescription }}</div>
+        </v-alert>
 
         <v-alert
           v-if="errorMessage"
@@ -31,7 +44,7 @@
         </v-alert>
 
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-row dense>
+          <v-row density="compact">
             <v-col cols="12" sm="6">
               <v-select
                 v-model="blockerType"
@@ -42,6 +55,7 @@
                 variant="outlined"
                 density="comfortable"
                 :rules="[rules.required]"
+                data-testid="blocker-type-select"
               />
             </v-col>
 
@@ -55,13 +69,14 @@
                 variant="outlined"
                 density="comfortable"
                 :rules="[rules.required]"
+                data-testid="blocker-severity-select"
               >
                 <template #item="{ props: itemProps, item }">
                   <v-list-item v-bind="itemProps">
                     <template #prepend>
                       <v-icon
-                        :icon="item.raw.value === 'Critical' ? 'mdi-alert' : 'mdi-circle-slice-8'"
-                        :color="item.raw.color"
+                        :icon="getSeverityValue(item) === 'Critical' ? 'mdi-alert' : 'mdi-circle-slice-8'"
+                        :color="getSeverityColor(item)"
                         size="small"
                         class="mr-2"
                       />
@@ -72,48 +87,71 @@
             </v-col>
           </v-row>
 
-          <v-autocomplete
-            v-model="targetOwnerUserId"
-            label="Pemilik Wewenang Tindak Lanjut (Owner Needed) *"
-            :items="ownerOptions"
-            item-title="fullName"
-            item-value="id"
+          <v-radio-group
+            v-model="ownerNeededType"
+            label="Pihak Berwenang / Jalur Eskalasi (Owner Needed) *"
+            class="mt-2 mb-1"
+            data-testid="blocker-authority-type-radio"
+          >
+            <v-radio
+              value="OrganizationalAuthority"
+              label="Atasan Langsung (Organizational Authority)"
+              color="primary"
+            />
+            <v-radio
+              value="ProjectAuthority"
+              label="Pemilik Wewenang Proyek (Project Authority)"
+              color="primary"
+            />
+          </v-radio-group>
+
+          <div
+            v-if="ownerNeededType === 'OrganizationalAuthority'"
+            class="text-caption text-medium-emphasis mb-3 px-1"
+            data-testid="org-authority-hint"
+          >
+            Sistem akan menugaskan blocker secara otomatis ke atasan langsung (Direct Manager) Anda sesuai struktur organisasi aktif.
+          </div>
+          <div
+            v-else
+            class="text-caption text-medium-emphasis mb-2 px-1"
+            data-testid="project-authority-hint"
+          >
+            Sistem akan menugaskan blocker ke Project Manager / PIC yang berwenang atas ruang lingkup pekerjaan ini.
+          </div>
+
+          <v-text-field
+            v-if="ownerNeededType === 'ProjectAuthority'"
+            v-model="relatedScopeReference"
+            label="Referensi Ruang Lingkup Proyek (Scope Reference) *"
+            placeholder="Contoh: PROJ-ALPHA, JIRA-102, atau Nama Inisiatif"
             variant="outlined"
             density="comfortable"
-            prepend-inner-icon="mdi-account-search"
-            :loading="isLoadingOwners"
             :rules="[rules.required]"
-            class="mt-2 mb-3"
-          >
-            <template #item="{ props: itemProps, item }">
-              <v-list-item v-bind="itemProps" :subtitle="item.raw.email">
-                <template #append>
-                  <v-chip size="x-small" variant="tonal" color="primary">
-                    {{ item.raw.role || 'User' }}
-                  </v-chip>
-                </template>
-              </v-list-item>
-            </template>
-          </v-autocomplete>
+            class="mb-3"
+            data-testid="blocker-scope-reference-input"
+          />
 
           <v-textarea
-            v-model="impactDescription"
+            v-model="impact"
             label="Deskripsi Dampak & Rincian Hambatan *"
             placeholder="Jelaskan apa yang terhambat, mengapa terjadi, dan dampaknya terhadap target..."
             rows="3"
             variant="outlined"
             density="comfortable"
-            :rules="[rules.required]"
+            :rules="[rules.required, rules.minLength(5)]"
             class="mb-3"
+            data-testid="blocker-impact-input"
           />
 
           <v-text-field
             v-model="expectedResolution"
-            label="Ekspektasi Solusi / Bantuan yang Diharapkan (Opsional)"
-            placeholder="Contoh: Approval akses VPN staging dari tim IT Security"
+            label="Target Tanggal Resolusi (Opsional)"
+            type="date"
             variant="outlined"
             density="comfortable"
             class="mb-2"
+            data-testid="blocker-expected-resolution-input"
           />
         </v-form>
       </v-card-text>
@@ -130,6 +168,7 @@
           variant="elevated"
           :loading="isPending"
           prepend-icon="mdi-send"
+          data-testid="blocker-submit-button"
           @click="handleSubmit"
         >
           Kirim Blocker
@@ -141,12 +180,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useCreateBlockerMutation, useBlockerOwnersQuery } from '../../queries/useBlockers.js';
-import type { BlockerType, BlockerSeverity } from '../../types/daily-records.js';
+import { useCreateBlockerMutation } from '../../queries/useBlockers.js';
+import type { BlockerType, BlockerSeverity, OwnerNeededType } from '../../types/daily-records.js';
 
 const props = defineProps<{
   modelValue: boolean;
+  commitmentId?: string;
+  commitmentDescription?: string;
 }>();
+
+const modalTitle = computed(() => {
+  return props.commitmentId ? 'Laporkan Blocker untuk Komitmen' : 'Raise Instant Blocker';
+});
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: boolean): void;
@@ -161,8 +206,9 @@ const isOpen = computed({
 const formRef = ref<any>(null);
 const blockerType = ref<BlockerType>('Technical');
 const severity = ref<BlockerSeverity>('Medium');
-const targetOwnerUserId = ref('');
-const impactDescription = ref('');
+const ownerNeededType = ref<OwnerNeededType>('OrganizationalAuthority');
+const relatedScopeReference = ref('');
+const impact = ref('');
 const expectedResolution = ref('');
 const errorMessage = ref('');
 
@@ -182,12 +228,19 @@ const severityOptions = [
   { title: 'Critical — Terhenti total (Eskalasi Cepat)', value: 'Critical', color: 'error' },
 ];
 
+function getSeverityValue(item: any): string {
+  return item?.raw?.value ?? item?.value ?? '';
+}
+
+function getSeverityColor(item: any): string {
+  return item?.raw?.color ?? item?.color ?? 'grey';
+}
+
 const rules = {
   required: (v: string) => !!v || 'Field ini wajib diisi',
+  minLength: (min: number) => (v: string) =>
+    (v && v.trim().length >= min) || `Minimal ${min} karakter`,
 };
-
-const { data: owners, isLoading: isLoadingOwners } = useBlockerOwnersQuery();
-const ownerOptions = computed(() => owners.value || []);
 
 const { mutateAsync: createBlocker, isPending } = useCreateBlockerMutation();
 
@@ -195,8 +248,9 @@ function closeModal() {
   isOpen.value = false;
   blockerType.value = 'Technical';
   severity.value = 'Medium';
-  targetOwnerUserId.value = '';
-  impactDescription.value = '';
+  ownerNeededType.value = 'OrganizationalAuthority';
+  relatedScopeReference.value = '';
+  impact.value = '';
   expectedResolution.value = '';
   errorMessage.value = '';
 }
@@ -211,14 +265,29 @@ async function handleSubmit() {
     await createBlocker({
       type: blockerType.value,
       severity: severity.value,
-      targetOwnerUserId: targetOwnerUserId.value,
-      impactDescription: impactDescription.value.trim(),
-      expectedResolution: expectedResolution.value.trim() || undefined,
+      impact: impact.value.trim(),
+      ownerNeededType: ownerNeededType.value,
+      relatedScopeReference:
+        ownerNeededType.value === 'ProjectAuthority'
+          ? relatedScopeReference.value.trim()
+          : undefined,
+      expectedResolution: expectedResolution.value ? expectedResolution.value : undefined,
+      linkedCommitmentId: props.commitmentId || undefined,
     });
     emit('success');
     closeModal();
   } catch (err: any) {
-    errorMessage.value = err?.message || 'Gagal mengajukan blocker.';
+    if (err?.response?.data?.message) {
+      if (Array.isArray(err.response.data.message)) {
+        errorMessage.value = err.response.data.message.join(', ');
+      } else {
+        errorMessage.value = err.response.data.message;
+      }
+    } else if (err?.message) {
+      errorMessage.value = err.message;
+    } else {
+      errorMessage.value = 'Gagal mengajukan blocker.';
+    }
   }
 }
 </script>

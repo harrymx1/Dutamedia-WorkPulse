@@ -23,16 +23,16 @@ export const notificationsApi = {
   },
 
   /**
-   * PATCH /api/v1/notifications/:id/read
+   * POST /api/v1/notifications/:id/mark-read (SAD §10.10)
    */
   async markAsRead(id: string): Promise<ApiResponse<NotificationItem>> {
-    return apiClient.patch<NotificationItem>(`/notifications/${id}/read`, {});
+    return apiClient.post<NotificationItem>(`/notifications/${id}/mark-read`);
   },
 
   /**
-   * PATCH /api/v1/notifications/read-all
+   * POST /api/v1/notifications/mark-all-read (SAD §10.10)
    */
   async markAllAsRead(): Promise<ApiResponse<{ count: number }>> {
-    return apiClient.patch<{ count: number }>('/notifications/read-all', {});
+    return apiClient.post<{ count: number }>('/notifications/mark-all-read');
   },
 };

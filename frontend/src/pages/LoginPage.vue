@@ -25,6 +25,7 @@
 
         <v-form @submit.prevent="handleLogin">
           <v-text-field
+            id="login-email-input"
             v-model="email"
             label="Email Kantor"
             placeholder="nama@dutamedia.com"
@@ -34,9 +35,11 @@
             prepend-inner-icon="mdi-email-outline"
             required
             :disabled="authStore.isLoading"
+            data-testid="login-email-input"
           />
 
           <v-text-field
+            id="login-password-input"
             v-model="password"
             label="Password"
             type="password"
@@ -45,15 +48,18 @@
             prepend-inner-icon="mdi-lock-outline"
             required
             :disabled="authStore.isLoading"
+            data-testid="login-password-input"
           />
 
           <v-btn
+            id="login-submit-button"
             type="submit"
             color="primary"
             block
             size="large"
             class="mt-4 font-weight-bold"
             :loading="authStore.isLoading"
+            data-testid="login-submit-button"
           >
             Masuk
           </v-btn>
@@ -100,7 +106,14 @@ async function handleLogin() {
       return;
     }
 
-    const redirectPath = (route.query.redirect as string) || '/today';
+    const defaultPath = authStore.hasRole('Supervisor_TL') ? '/team' : '/today';
+    const rawRedirect = route.query.redirect as string;
+    const redirectPath =
+      rawRedirect &&
+      rawRedirect !== '/' &&
+      !(authStore.hasRole('Supervisor_TL') && rawRedirect.startsWith('/today'))
+        ? rawRedirect
+        : defaultPath;
     await router.push(redirectPath);
   } catch (err: any) {
     errorMessage.value =

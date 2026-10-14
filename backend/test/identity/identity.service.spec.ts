@@ -4,12 +4,15 @@ import { IdentityService } from '../../src/modules/identity/identity.service.js'
 import {
   BusinessRuleViolationException,
   ConflictException,
+  ForbiddenException,
+  NotFoundException,
 } from '../../src/modules/shared/exceptions/api.exception.js';
 
 describe('IdentityService (SAD §5.3, §5.11.a, §10.2 - EPIC-04)', () => {
   let service: IdentityService;
   let mockPrisma: any;
   let mockAuditService: any;
+  let mockNotificationService: any;
 
   beforeEach(() => {
     mockPrisma = {
@@ -48,7 +51,11 @@ describe('IdentityService (SAD §5.3, §5.11.a, §10.2 - EPIC-04)', () => {
       record: vi.fn().mockResolvedValue({ id: 'audit-log-id' }),
     };
 
-    service = new IdentityService(mockPrisma, mockAuditService);
+    mockNotificationService = {
+      dispatch: vi.fn().mockResolvedValue([]),
+    };
+
+    service = new IdentityService(mockPrisma, mockAuditService, mockNotificationService);
   });
 
   describe('createUser (EPIC-04-T1)', () => {
@@ -224,6 +231,165 @@ describe('IdentityService (SAD §5.3, §5.11.a, §10.2 - EPIC-04)', () => {
         }),
         expect.anything(),
       );
+    });
+
+    describe('directManagerId branch (S2-TEST-GAP-8, FR-22)', () => {
+      const targetUserId = '11111111-1111-4111-8111-111111111111';
+      const managerId = '22222222-2222-4222-8222-222222222222';
+
+      const arrangeUsers = (users: Record<string, any>) => {
+        mockPrisma.user.findUnique.mockImplementation(async (args: any) => {
+          return users[args.where.id] ?? null;
+        });
+      };
+
+      it('directManagerId valid => assignment dibuat dengan directManagerId tersimpan & tercatat di audit log', async () => {
+        arrangeUsers({
+          [targetUserId]: { id: targetUserId },
+          [managerId]: { id: managerId },
+        });
+        mockPrisma.organizationalAssignment.findFirst.mockResolvedValue(null);
+        const created = {
+          id: 'new-org-id',
+          userId: targetUserId,
+          role: Role.Employee,
+          function: 'Engineering',
+          directManagerId: managerId,
+          effectiveDate: new Date('2026-09-01'),
+          endDate: null,
+        };
+        mockPrisma.organizationalAssignment.create.mockResolvedValue(created);
+
+        const result = await service.createOrganizationalAssignment(
+          {
+            userId: targetUserId,
+            role: Role.Employee,
+            function: 'Engineering',
+            directManagerId: managerId,
+            effectiveDate: '2026-09-01',
+          },
+          'admin-uuid-1',
+        );
+
+        expect(result).toEqual(created);
+        // Target user dan manager sama-sama divalidasi lewat lookup
+        expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+          where: { id: targetUserId },
+        });
+        expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+          where: { id: managerId },
+        });
+        // Payload persistence
+        expect(mockPrisma.organizationalAssignment.create).toHaveBeenCalledWith({
+          data: {
+            userId: targetUserId,
+            role: Role.Employee,
+            function: 'Engineering',
+            directManagerId: managerId,
+            effectiveDate: new Date('2026-09-01'),
+            endDate: null,
+            createdByUserId: 'admin-uuid-1',
+          },
+        });
+        // Audit log
+        expect(mockAuditService.record).toHaveBeenCalledWith(
+          expect.objectContaining({
+            action: 'ORGANIZATIONAL_ASSIGNMENT_CREATED',
+            relatedEntityId: 'new-org-id',
+            valueAfter: expect.objectContaining({
+              directManagerId: managerId,
+            }),
+          }),
+          expect.anything(),
+        );
+      });
+
+      it('directManagerId tidak ditemukan => NotFoundException dan assignment TIDAK dibuat', async () => {
+        arrangeUsers({ [targetUserId]: { id: targetUserId } });
+
+        const promise = service.createOrganizationalAssignment(
+          {
+            userId: targetUserId,
+            role: Role.Employee,
+            function: 'Engineering',
+            directManagerId: managerId,
+            effectiveDate: '2026-09-01',
+          },
+          'admin-uuid-1',
+        );
+
+        await expect(promise).rejects.toBeInstanceOf(NotFoundException);
+        await expect(promise).rejects.toThrow(
+          'Direct manager yang dipilih tidak ditemukan',
+        );
+
+        expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+        expect(mockPrisma.organizationalAssignment.create).not.toHaveBeenCalled();
+        expect(mockPrisma.organizationalAssignment.update).not.toHaveBeenCalled();
+        expect(mockAuditService.record).not.toHaveBeenCalled();
+      });
+
+      it('target userId tidak ditemukan => NotFoundException, validasi manager tidak dilanjutkan, assignment TIDAK dibuat', async () => {
+        arrangeUsers({ [managerId]: { id: managerId } });
+
+        const promise = service.createOrganizationalAssignment(
+          {
+            userId: targetUserId,
+            role: Role.Employee,
+            function: 'Engineering',
+            directManagerId: managerId,
+            effectiveDate: '2026-09-01',
+          },
+          'admin-uuid-1',
+        );
+
+        await expect(promise).rejects.toBeInstanceOf(NotFoundException);
+        await expect(promise).rejects.toThrow(
+          `Pengguna dengan ID '${targetUserId}' tidak ditemukan`,
+        );
+
+        // Hanya lookup target user; lookup manager tidak pernah dilakukan
+        expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1);
+        expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+          where: { id: targetUserId },
+        });
+        expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+        expect(mockPrisma.organizationalAssignment.create).not.toHaveBeenCalled();
+      });
+
+      it('tanpa directManagerId (undefined) => assignment tetap berhasil, directManagerId dipersist null, tanpa lookup manager', async () => {
+        arrangeUsers({ [targetUserId]: { id: targetUserId } });
+        mockPrisma.organizationalAssignment.findFirst.mockResolvedValue(null);
+        mockPrisma.organizationalAssignment.create.mockResolvedValue({
+          id: 'new-org-id-2',
+          directManagerId: null,
+          role: Role.Employee,
+          function: 'Engineering',
+        });
+
+        await service.createOrganizationalAssignment(
+          {
+            userId: targetUserId,
+            role: Role.Employee,
+            function: 'Engineering',
+            directManagerId: undefined,
+            effectiveDate: '2026-09-01',
+          },
+          'admin-uuid-1',
+        );
+
+        // Hanya satu lookup (target user); tidak ada lookup manager
+        expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1);
+        expect(
+          mockPrisma.organizationalAssignment.create.mock.calls[0][0].data,
+        ).toEqual(expect.objectContaining({ directManagerId: null }));
+        expect(mockAuditService.record).toHaveBeenCalledWith(
+          expect.objectContaining({
+            valueAfter: expect.objectContaining({ directManagerId: null }),
+          }),
+          expect.anything(),
+        );
+      });
     });
   });
 
@@ -495,6 +661,148 @@ describe('IdentityService (SAD §5.3, §5.11.a, §10.2 - EPIC-04)', () => {
       );
 
       expect(scopes).toEqual(['Project Alpha', 'Project Beta']);
+    });
+  });
+
+  describe('getOrganizationalAssignments (SAD §10.2, E6/E7-1 Remediation)', () => {
+    const targetUserId = 'target-user-uuid-1';
+    const mockAssignments = [
+      {
+        id: 'org-1',
+        userId: targetUserId,
+        role: Role.Employee,
+        function: 'Engineering',
+        effectiveDate: new Date('2026-01-01'),
+        endDate: null,
+      },
+    ];
+
+    beforeEach(() => {
+      mockPrisma.user.findUnique.mockImplementation(async (args: any) => {
+        if (args.where.id === targetUserId) {
+          return {
+            id: targetUserId,
+            fullName: 'Target User',
+            email: 'target@dutamedia.com',
+            organizationalAssignments: [],
+          };
+        }
+        return null;
+      });
+      mockPrisma.organizationalAssignment.findMany.mockResolvedValue(mockAssignments);
+    });
+
+    it('Case A: SystemAdmin berwenang melihat riwayat assignment user lain (ALLOW)', async () => {
+      const caller = { userId: 'admin-uuid', role: Role.SystemAdmin } as any;
+
+      const result = await service.getOrganizationalAssignments(targetUserId, caller);
+      expect(result).toEqual(mockAssignments);
+      expect(mockPrisma.organizationalAssignment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: targetUserId } }),
+      );
+    });
+
+    it('Case B: HRGA berwenang melihat riwayat assignment user lain (ALLOW)', async () => {
+      const caller = { userId: 'hrga-uuid', role: Role.HRGA } as any;
+
+      const result = await service.getOrganizationalAssignments(targetUserId, caller);
+      expect(result).toEqual(mockAssignments);
+    });
+
+    it('Case C: Pemilik akun (Employee) berwenang melihat riwayat assignment miliknya sendiri (ALLOW)', async () => {
+      const caller = { userId: targetUserId, role: Role.Employee } as any;
+
+      const result = await service.getOrganizationalAssignments(targetUserId, caller);
+      expect(result).toEqual(mockAssignments);
+    });
+
+    it('Case D: Employee lain yang bukan pemilik ditolak dengan ForbiddenException (DENY)', async () => {
+      const caller = { userId: 'other-employee-uuid', role: Role.Employee } as any;
+
+      await expect(
+        service.getOrganizationalAssignments(targetUserId, caller),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('Case E: Role lain (Supervisor_TL, Head, CEO_Management) yang bukan pemilik ditolak (DENY)', async () => {
+      const supervisorCaller = { userId: 'spv-uuid', role: Role.Supervisor_TL } as any;
+      const headCaller = { userId: 'head-uuid', role: Role.Head } as any;
+      const ceoCaller = { userId: 'ceo-uuid', role: Role.CEO_Management } as any;
+
+      await expect(
+        service.getOrganizationalAssignments(targetUserId, supervisorCaller),
+      ).rejects.toThrow(ForbiddenException);
+
+      await expect(
+        service.getOrganizationalAssignments(targetUserId, headCaller),
+      ).rejects.toThrow(ForbiddenException);
+
+      await expect(
+        service.getOrganizationalAssignments(targetUserId, ceoCaller),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('Case F: Pemanggilan tanpa konteks caller ditolak dengan ForbiddenException', async () => {
+      await expect(
+        service.getOrganizationalAssignments(targetUserId, undefined),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('Target user tidak ditemukan pada caller yang berwenang melempar NotFoundException', async () => {
+      const caller = { userId: 'admin-uuid', role: Role.SystemAdmin } as any;
+
+      await expect(
+        service.getOrganizationalAssignments('non-existent-user-uuid', caller),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('S2-T4 Remediation: S2-T4-JOB-01 & S2-T4-NOTIF-02', () => {
+    it('findActiveUserIds: harus mengembalikan array ID dari seluruh user berstatus Active', async () => {
+      mockPrisma.user.findMany.mockResolvedValue([
+        { id: 'user-active-1' },
+        { id: 'user-active-2' },
+      ]);
+
+      const ids = await service.findActiveUserIds();
+      expect(ids).toEqual(['user-active-1', 'user-active-2']);
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+        where: { status: UserStatus.Active },
+        select: { id: true },
+      });
+    });
+
+    it('createOrganizationalAssignment: harus mendispatch trigger POLICY_ASSIGNMENT_CHANGED ke user terkait', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'target-u1' });
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.organizationalAssignment.create.mockResolvedValue({
+        id: 'new-org-id',
+        userId: 'target-u1',
+        role: Role.Employee,
+        function: 'Engineering',
+        directManagerId: null,
+        effectiveDate: new Date('2026-10-01'),
+        endDate: null,
+      });
+
+      await service.createOrganizationalAssignment({
+        userId: 'target-u1',
+        role: Role.Employee,
+        function: 'Engineering',
+        effectiveDate: '2026-10-01',
+      });
+
+      expect(mockNotificationService.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          triggerType: 'POLICY_ASSIGNMENT_CHANGED',
+          recipientUserId: 'target-u1',
+          relatedEntityType: 'OrganizationalAssignment',
+          relatedEntityId: 'new-org-id',
+          payload: expect.objectContaining({
+            title: expect.stringContaining('Perubahan Penugasan Organisasi'),
+          }),
+        }),
+      );
     });
   });
 });

@@ -32,6 +32,28 @@
         </v-col>
       </v-row>
 
+      <!-- Error State (NFR-04 Network Resilience) -->
+      <v-alert
+        v-else-if="isError"
+        type="error"
+        variant="tonal"
+        class="mb-4"
+        title="Gagal Memuat Ringkasan Pengecualian"
+        text="Terjadi kendala jaringan saat menghubungi server."
+      >
+        <template #append>
+          <v-btn
+            data-testid="retry-exception-summary-btn"
+            variant="outlined"
+            size="small"
+            color="error"
+            @click="() => refetch()"
+          >
+            Coba Lagi
+          </v-btn>
+        </template>
+      </v-alert>
+
       <!-- Metrics Cards -->
       <v-row v-else-if="summary">
         <!-- 1. Total Karyawan Diharapkan -->
@@ -217,7 +239,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const showExceptions = ref<boolean>(false);
 
-const { data: summary, isLoading, isFetching, refetch } = useExceptionSummaryQuery(
+const { data: summary, isLoading, isFetching, isError, refetch } = useExceptionSummaryQuery(
   () => props.scope,
   () => props.date,
 );

@@ -28,8 +28,9 @@ export interface ResetPasswordPayload {
 export interface PolicyItem {
   id: string;
   category: string;
-  policyKey: string;
-  policyValue: Record<string, unknown> | string | number | boolean;
-  version: number;
-  effectiveDate: string;
+  policyKey?: string;
+  policyValue?: Record<string, unknown> | string | number | boolean;
+  value?: Record<string, unknown> | string | number | boolean;
+  version?: number;
+  effectiveDate?: string;
 }

@@ -26,7 +26,9 @@
           variant="tonal"
           prepend-icon="mdi-alert-octagon"
           class="font-weight-medium"
-          @click="showRaiseBlockerModal = true"
+          data-testid="btn-raise-instant-blocker"
+          id="raise-blocker-button"
+          @click="openInstantBlocker"
         >
           Raise Instant Blocker
         </v-btn>
@@ -81,25 +83,124 @@
         </div>
       </v-card>
 
-      <!-- Draft Copy-Forward Banner jika ada -->
-      <v-alert
-        v-if="!isMorningSubmitted && draftCopyForwardText"
-        type="info"
+      <!-- Draft Copy-Forward Banner (FR-11, ADR-017) jika ada -->
+      <v-card
+        v-if="!isMorningSubmitted && carryOverDrafts.length > 0"
         variant="tonal"
-        class="mb-6 border"
-        closable
+        color="info"
+        class="mb-6 border rounded-lg pa-4"
+        data-testid="draft-banner"
       >
-        <template #title>
-          <span class="font-weight-bold">Draft Copy-Forward Terdeteksi</span>
-        </template>
-        Ditemukan catatan <em>Tomorrow Priority</em> dari hari kemarin:
-        <strong class="d-block my-1">"{{ draftCopyForwardText }}"</strong>
-        <div class="mt-2 d-flex gap-2">
-          <v-btn size="small" color="primary" variant="flat" @click="applyDraftToSlot">
-            Gunakan Sebagai Komitmen 1
-          </v-btn>
+        <div class="d-flex align-center justify-space-between mb-3">
+          <div class="d-flex align-center">
+            <v-icon icon="mdi-history" color="info" class="mr-2" />
+            <span class="text-subtitle-1 font-weight-bold">
+              Draft Komitmen Lanjutan dari Hari Kemarin ({{ carryOverDrafts.length }})
+            </span>
+          </div>
+          <v-chip size="small" variant="outlined" color="info">
+            Sisa Kuota: {{ remainingCommitmentCapacity }}/{{ MAX_DAILY_COMMITMENTS }}
+          </v-chip>
         </div>
-      </v-alert>
+
+        <p class="text-caption text-medium-emphasis mb-3">
+          Terdapat komitmen berstatus <em>Continue</em> dari hari kerja sebelumnya. Pilih untuk mengonfirmasi atau menyunting draft ke dalam slot komitmen pagi ini.
+        </p>
+
+        <v-alert
+          v-if="isMaxCapacityReached"
+          type="warning"
+          variant="tonal"
+          density="compact"
+          class="mb-3 text-caption"
+          data-testid="max-capacity-alert"
+        >
+          Kapasitas komitmen harian telah mencapai batas maksimum ({{ MAX_DAILY_COMMITMENTS }} komitmen terisi). Kosongkan atau hapus slot jika ingin menggunakan draft lain.
+        </v-alert>
+
+        <div class="d-flex flex-column gap-3">
+          <v-card
+            v-for="draft in carryOverDrafts"
+            :key="draft.sourceCommitmentId"
+            variant="outlined"
+            class="pa-3 bg-surface rounded"
+            :data-testid="`draft-card-${draft.sourceCommitmentId}`"
+          >
+            <div class="d-flex flex-wrap align-start justify-space-between gap-2">
+              <div class="flex-grow-1 mr-3">
+                <div class="d-flex align-center gap-2 mb-1">
+                  <v-chip size="x-small" color="primary" variant="flat">
+                    Komitmen Lanjutan
+                  </v-chip>
+                  <v-chip
+                    v-if="appliedDraftIds.has(draft.sourceCommitmentId)"
+                    size="x-small"
+                    color="success"
+                    variant="tonal"
+                    prepend-icon="mdi-check"
+                    data-testid="badge-applied"
+                  >
+                    Sudah Dimasukkan
+                  </v-chip>
+                </div>
+                <div class="text-body-2 font-weight-medium text-high-emphasis">
+                  "{{ draft.text }}"
+                </div>
+                <div
+                  v-if="draft.continuationReason"
+                  class="text-caption text-medium-emphasis mt-1"
+                >
+                  <v-icon icon="mdi-comment-text-outline" size="x-small" class="mr-1" />
+                  Alasan: {{ draft.continuationReason }}
+                </div>
+                <div
+                  v-if="draft.referenceLink"
+                  class="text-caption text-primary mt-1"
+                >
+                  <v-icon icon="mdi-link-variant" size="x-small" class="mr-1" />
+                  {{ draft.referenceLink }}
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 align-center">
+                <template v-if="!appliedDraftIds.has(draft.sourceCommitmentId)">
+                  <v-btn
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    :disabled="isMaxCapacityReached"
+                    @click="applyDraftToSlot(draft)"
+                    :data-testid="`btn-confirm-${draft.sourceCommitmentId}`"
+                  >
+                    Gunakan (Confirm as-is)
+                  </v-btn>
+                  <v-btn
+                    size="small"
+                    color="secondary"
+                    variant="outlined"
+                    :disabled="isMaxCapacityReached"
+                    @click="applyDraftToSlot(draft)"
+                    :data-testid="`btn-edit-${draft.sourceCommitmentId}`"
+                  >
+                    Gunakan & Edit
+                  </v-btn>
+                </template>
+                <template v-else>
+                  <v-btn
+                    size="small"
+                    color="error"
+                    variant="text"
+                    @click="removeDraftFromSlot(draft.sourceCommitmentId)"
+                    :data-testid="`btn-remove-${draft.sourceCommitmentId}`"
+                  >
+                    Lepas dari Slot
+                  </v-btn>
+                </template>
+              </div>
+            </div>
+          </v-card>
+        </div>
+      </v-card>
 
       <!-- ================================================================= -->
       <!-- SECTION 1: MORNING COMMITMENT                                      -->
@@ -121,6 +222,7 @@
                 size="small"
                 prepend-icon="mdi-check-circle"
                 variant="flat"
+                data-testid="morning-submission-status"
               >
                 Terserahkan
               </v-chip>
@@ -143,7 +245,7 @@
 
         <v-card-text class="pa-6">
           <!-- State A: Form Input Morning Check-in -->
-          <div v-if="!isMorningSubmitted">
+          <div v-if="!isMorningSubmitted" data-testid="morning-checkin-form">
             <p class="text-body-2 text-medium-emphasis mb-4">
               Tentukan moda kerja dan ajukan 1 hingga 3 komitmen utama sebelum batas waktu cutoff pagi.
             </p>
@@ -190,7 +292,7 @@
 
             <!-- 3 Commitment Slots -->
             <div
-              v-for="(slot, idx) in commitmentSlots"
+              v-for="(commitmentSlot, idx) in commitmentSlots"
               :key="idx"
               class="pa-4 mb-4 rounded-lg border bg-surface"
             >
@@ -209,21 +311,22 @@
               </div>
 
               <v-textarea
-                v-model="slot.description"
+                v-model="commitmentSlot.description"
                 :label="`Deskripsi Komitmen ${idx + 1}`"
-                :placeholder="getPromptPlaceholder(idx)"
+                :placeholder="commitmentPromptPlaceholder"
                 rows="2"
                 variant="outlined"
                 density="comfortable"
                 class="mb-2"
+                :data-testid="`commitment-text-input-${idx}`"
               />
 
-              <v-row dense>
+              <v-row density="compact">
                 <v-col cols="12" sm="7">
                   <v-text-field
-                    v-model="slot.referenceUrl"
+                    v-model="commitmentSlot.referenceUrl"
                     label="Reference / Task Link (Opsional)"
-                    placeholder="https://jira... atau #PROJ-123"
+                    :placeholder="'https:\/\/jira... atau #PROJ-123'"
                     prepend-inner-icon="mdi-link-variant"
                     variant="outlined"
                     density="comfortable"
@@ -232,35 +335,24 @@
 
                 <v-col cols="12" sm="5">
                   <v-select
-                    v-model="slot.initialRisk"
+                    v-model="commitmentSlot.initialRisk"
                     label="Initial Risk *"
                     :items="riskOptions"
                     item-title="title"
                     item-value="value"
                     variant="outlined"
                     density="comfortable"
-                  >
-                    <template #selection="{ item }">
-                      <v-chip
-                        size="small"
-                        :color="item.color"
-                        variant="flat"
-                        class="font-weight-bold"
-                      >
-                        {{ item.title }}
-                      </v-chip>
-                    </template>
-                  </v-select>
+                  />
                 </v-col>
               </v-row>
 
               <!-- Conditional Blocker & Support Needed saat Initial Risk AMBER/RED -->
               <v-expand-transition>
-                <div v-if="slot.initialRisk === 'AMBER' || slot.initialRisk === 'RED'" class="mt-2">
-                  <v-row dense>
+                <div v-if="commitmentSlot.initialRisk === 'AMBER' || commitmentSlot.initialRisk === 'RED'" class="mt-2">
+                  <v-row density="compact">
                     <v-col cols="12" sm="6">
                       <v-text-field
-                        v-model="slot.knownBlocker"
+                        v-model="commitmentSlot.knownBlocker"
                         label="Known Blocker (Hambatan yang Diantisipasi) *"
                         placeholder="Contoh: Menunggu review PR dari senior engineer"
                         variant="outlined"
@@ -270,7 +362,7 @@
                     </v-col>
                     <v-col cols="12" sm="6">
                       <v-text-field
-                        v-model="slot.supportNeeded"
+                        v-model="commitmentSlot.supportNeeded"
                         label="Support Needed (Bantuan yang Dibutuhkan) *"
                         placeholder="Contoh: Pairing review 15 menit dengan TL"
                         variant="outlined"
@@ -302,6 +394,7 @@
                 size="large"
                 prepend-icon="mdi-send"
                 :loading="isSubmittingMorning"
+                data-testid="morning-submit-button"
                 @click="handleMorningSubmit"
               >
                 Serahkan Morning Commitment
@@ -325,7 +418,7 @@
 
             <div class="d-flex flex-column gap-3">
               <v-card
-                v-for="(item, idx) in record?.commitments || []"
+                v-for="(item, idx) in recordedCommitments"
                 :key="item.id"
                 variant="outlined"
                 class="pa-4 rounded-lg bg-surface"
@@ -336,12 +429,24 @@
                       #{{ idx + 1 }}
                     </span>
                     <span class="text-body-1 font-weight-medium">
-                      {{ item.description }}
+                      {{ item.description || (item as any).text }}
                     </span>
                   </div>
 
                   <div class="d-flex align-center gap-2">
                     <StatusBadge :status="item.initialRisk" />
+                    <!-- Tombol Laporkan Blocker kontekstual (S2-FR-15-1) -->
+                    <v-btn
+                      v-if="!record?.eodSubmittedAt"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      prepend-icon="mdi-alert-circle-outline"
+                      :data-testid="`btn-raise-blocker-${item.id}`"
+                      @click="openBlockerForCommitment(item)"
+                    >
+                      Laporkan Blocker
+                    </v-btn>
                     <!-- Tombol Ajukan Koreksi jika baseline locked -->
                     <v-btn
                       v-if="isCutoffLocked && !record?.eodSubmittedAt"
@@ -349,6 +454,7 @@
                       size="small"
                       color="primary"
                       prepend-icon="mdi-pencil"
+                      :data-testid="`correction-request-button-${idx}`"
                       @click="openCorrectionModal(item)"
                     >
                       Ajukan Koreksi
@@ -407,14 +513,14 @@
         </v-card-item>
 
         <v-card-text class="pa-6">
-          <div v-if="!record?.additionalWorks || record.additionalWorks.length === 0" class="text-center py-6 text-medium-emphasis">
+          <div v-if="recordedAdditionalWorks.length === 0" class="text-center py-6 text-medium-emphasis">
             <v-icon icon="mdi-playlist-plus" size="36" class="mb-2" />
             <p class="text-body-2">Belum ada pekerjaan tambahan yang dicatat hari ini.</p>
           </div>
 
           <div v-else class="d-flex flex-column gap-3">
             <v-card
-              v-for="(work, wIdx) in record.additionalWorks"
+              v-for="(work, wIdx) in recordedAdditionalWorks"
               :key="work.id"
               variant="outlined"
               class="pa-4 rounded-lg bg-surface"
@@ -510,7 +616,7 @@
                   {{ item.description }}
                 </div>
 
-                <v-row dense class="align-center mt-2">
+                <v-row density="compact" class="align-center mt-2">
                   <v-col cols="12" sm="6">
                     <v-select
                       v-model="eodForm[item.id].outcomeStatus"
@@ -565,7 +671,7 @@
               <label class="text-caption font-weight-bold text-medium-emphasis d-block mb-2">
                 FINAL STATUS HARI INI (ACCOUNTABILITY DAY STATUS) *
               </label>
-              <v-row dense>
+              <v-row density="compact">
                 <v-col
                   v-for="opt in statusDayOptions"
                   :key="opt.value"
@@ -686,6 +792,9 @@
 
     <RaiseBlockerModal
       v-model="showRaiseBlockerModal"
+      :commitment-id="selectedBlockerCommitment?.id"
+      :commitment-description="selectedBlockerCommitment?.description"
+      @update:model-value="(val) => { if (!val) selectedBlockerCommitment = null; }"
       @success="refetchToday"
     />
 
@@ -701,7 +810,7 @@
       v-if="selectedCorrectionCommitment"
       v-model="showCorrectionModal"
       :commitment-id="selectedCorrectionCommitment.id"
-      :current-description="selectedCorrectionCommitment.description"
+      :current-description="selectedCorrectionCommitment.description || (selectedCorrectionCommitment as any).text"
       @success="refetchToday"
     />
   </v-container>
@@ -721,16 +830,39 @@ import RaiseBlockerModal from '../components/self-service/RaiseBlockerModal.vue'
 import ValidationPromptModal from '../components/self-service/ValidationPromptModal.vue';
 import CorrectionRequestModal from '../components/self-service/CorrectionRequestModal.vue';
 import type {
+  DailyAccountabilityRecord,
   WorkType,
   RiskLevel,
   OutcomeStatus,
   ContinuationStatus,
   Commitment,
+  AdditionalWork,
+  CarryOverDraftItem,
+  MorningCommitmentInput,
 } from '../types/daily-records.js';
-import { MAX_DAILY_COMMITMENTS } from '../constants/daily-records.constants.js';
+import {
+  MAX_DAILY_COMMITMENTS,
+  getRoleBasedPrompt,
+} from '../constants/daily-records.constants.js';
+import { useAuthStore } from '../stores/auth.store.js';
 
-// 1. Data Query
-const { data: record, isLoading, isError, refetch: refetchToday } = useTodayRecordQuery();
+const authStore = useAuthStore();
+const commitmentPromptPlaceholder = computed(() =>
+  getRoleBasedPrompt(authStore.user?.function),
+);
+
+// 1. Data Query (ADR-017)
+const { data: todayData, isLoading, isError, refetch: refetchToday } = useTodayRecordQuery();
+const record = computed<DailyAccountabilityRecord | null>(() => {
+  if (!todayData.value) return null;
+  if ('record' in todayData.value) {
+    return todayData.value.record;
+  }
+  return todayData.value as unknown as DailyAccountabilityRecord;
+});
+
+const recordedCommitments = computed<Commitment[]>(() => record.value?.commitments || []);
+const recordedAdditionalWorks = computed<AdditionalWork[]>(() => record.value?.additionalWorks || []);
 
 // 2. Computed State
 const isMorningSubmitted = computed(() => !!record.value?.morningSubmittedAt);
@@ -785,20 +917,36 @@ const countdownDisplay = computed(() => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 });
 
-// 4. Morning Form State
+// 4. Morning Form State (ADR-017)
+interface CommitmentSlotState {
+  description: string;
+  referenceUrl: string;
+  initialRisk: RiskLevel;
+  knownBlocker: string;
+  supportNeeded: string;
+  sourceCommitmentId?: string; // transient UI identity/reference (never submitted)
+}
+
 const workType = ref<WorkType>('WFO');
 const morningError = ref('');
-const draftCopyForwardText = ref('');
 
-const commitmentSlots = ref<
-  Array<{
-    description: string;
-    referenceUrl: string;
-    initialRisk: RiskLevel;
-    knownBlocker: string;
-    supportNeeded: string;
-  }>
->([
+const carryOverDrafts = computed<CarryOverDraftItem[]>(() => {
+  if (isMorningSubmitted.value) return [];
+  const drafts = todayData.value?.carryOverDraft;
+  if (!drafts || !Array.isArray(drafts)) return [];
+
+  // Contract verification: setiap item wajib memiliki sourceCommitmentId (ADR-017)
+  for (const item of drafts) {
+    if (!item.sourceCommitmentId) {
+      console.error('API Contract Violation: CarryOverDraftItem missing sourceCommitmentId', item);
+      throw new Error('API Contract Violation: CarryOverDraftItem missing sourceCommitmentId');
+    }
+  }
+
+  return drafts;
+});
+
+const commitmentSlots = ref<CommitmentSlotState[]>([
   {
     description: '',
     referenceUrl: '',
@@ -808,20 +956,31 @@ const commitmentSlots = ref<
   },
 ]);
 
+const appliedDraftIds = computed<Set<string>>(() => {
+  return new Set(
+    commitmentSlots.value
+      .map((s) => s.sourceCommitmentId)
+      .filter((id): id is string => Boolean(id)),
+  );
+});
+
+const filledCommitmentCount = computed(() => {
+  return commitmentSlots.value.filter((s) => s.description.trim().length > 0).length;
+});
+
+const remainingCommitmentCapacity = computed(() => {
+  return Math.max(0, MAX_DAILY_COMMITMENTS - filledCommitmentCount.value);
+});
+
+const isMaxCapacityReached = computed(() => {
+  return filledCommitmentCount.value >= MAX_DAILY_COMMITMENTS;
+});
+
 const riskOptions = [
   { title: 'GREEN (Sesuai Rencana)', value: 'GREEN' as RiskLevel, color: 'success' },
   { title: 'AMBER (Ada Potensi Risiko)', value: 'AMBER' as RiskLevel, color: 'warning' },
   { title: 'RED (Terhambat Kritis)', value: 'RED' as RiskLevel, color: 'error' },
 ];
-
-function getPromptPlaceholder(idx: number): string {
-  const prompts = [
-    'Contoh: Menyelesaikan integrasi modul payment gateway dan push ke staging',
-    'Contoh: Menulis unit test coverage minimal 80% untuk auth controller',
-    'Contoh: Koordinasi sprint review dengan PM dan stakeholder',
-  ];
-  return prompts[idx] || 'Tuliskan deskripsi komitmen...';
-}
 
 function addCommitmentSlot() {
   if (commitmentSlots.value.length < MAX_DAILY_COMMITMENTS) {
@@ -837,11 +996,58 @@ function addCommitmentSlot() {
 
 function removeCommitmentSlot(idx: number) {
   commitmentSlots.value.splice(idx, 1);
+  if (commitmentSlots.value.length === 0) {
+    commitmentSlots.value.push({
+      description: '',
+      referenceUrl: '',
+      initialRisk: 'GREEN',
+      knownBlocker: '',
+      supportNeeded: '',
+    });
+  }
 }
 
-function applyDraftToSlot() {
-  if (draftCopyForwardText.value && commitmentSlots.value.length > 0) {
-    commitmentSlots.value[0].description = draftCopyForwardText.value;
+function applyDraftToSlot(draft: CarryOverDraftItem) {
+  if (isMaxCapacityReached.value) return;
+  if (appliedDraftIds.value.has(draft.sourceCommitmentId)) return;
+
+  // 1. Cari slot yang masih kosong
+  const emptySlotIdx = commitmentSlots.value.findIndex((s) => !s.description.trim());
+
+  let targetIdx = emptySlotIdx;
+  if (targetIdx !== -1) {
+    const slot = commitmentSlots.value[targetIdx];
+    slot.description = draft.text;
+    slot.referenceUrl = draft.referenceLink || slot.referenceUrl || '';
+    slot.sourceCommitmentId = draft.sourceCommitmentId;
+  } else if (commitmentSlots.value.length < MAX_DAILY_COMMITMENTS) {
+    targetIdx = commitmentSlots.value.length;
+    commitmentSlots.value.push({
+      description: draft.text,
+      referenceUrl: draft.referenceLink || '',
+      initialRisk: 'GREEN',
+      knownBlocker: '',
+      supportNeeded: '',
+      sourceCommitmentId: draft.sourceCommitmentId,
+    });
+  }
+}
+
+function removeDraftFromSlot(sourceCommitmentId: string) {
+  const slotIdx = commitmentSlots.value.findIndex((s) => s.sourceCommitmentId === sourceCommitmentId);
+  if (slotIdx !== -1) {
+    if (commitmentSlots.value.length > 1) {
+      commitmentSlots.value.splice(slotIdx, 1);
+    } else {
+      commitmentSlots.value[0] = {
+        description: '',
+        referenceUrl: '',
+        initialRisk: 'GREEN',
+        knownBlocker: '',
+        supportNeeded: '',
+        sourceCommitmentId: undefined,
+      };
+    }
   }
 }
 
@@ -870,19 +1076,19 @@ async function handleMorningSubmit() {
 
   morningError.value = '';
 
-  const validCommitments = commitmentSlots.value
+  const validCommitments: MorningCommitmentInput[] = commitmentSlots.value
     .filter((s) => s.description.trim())
-    .map((s) => ({
-      description: s.description.trim(),
-      referenceUrl: s.referenceUrl.trim() || undefined,
+    .map((s, index) => ({
+      sequenceNo: index + 1,
+      text: s.description.trim(),
+      referenceLink: s.referenceUrl.trim() || undefined,
       initialRisk: s.initialRisk,
-      knownBlocker: s.knownBlocker.trim() || undefined,
+      knownBlockerNote: s.knownBlocker.trim() || undefined,
       supportNeeded: s.supportNeeded.trim() || undefined,
     }));
 
   try {
     await submitMorning({
-      workType: workType.value,
       commitments: validCommitments,
     });
   } catch (err: any) {
@@ -1052,6 +1258,17 @@ const showAdditionalWorkModal = ref(false);
 const showRaiseBlockerModal = ref(false);
 const showCorrectionModal = ref(false);
 const selectedCorrectionCommitment = ref<Commitment | null>(null);
+const selectedBlockerCommitment = ref<Commitment | null>(null);
+
+function openInstantBlocker() {
+  selectedBlockerCommitment.value = null;
+  showRaiseBlockerModal.value = true;
+}
+
+function openBlockerForCommitment(commitment: Commitment) {
+  selectedBlockerCommitment.value = commitment;
+  showRaiseBlockerModal.value = true;
+}
 
 function openCorrectionModal(commitment: Commitment) {
   selectedCorrectionCommitment.value = commitment;
@@ -1077,5 +1294,10 @@ function formatTime(isoStr?: string | null): string {
 }
 .cursor-pointer {
   cursor: pointer;
+}
+:deep(.v-textarea textarea::placeholder) {
+  font-style: italic;
+  color: rgb(var(--v-theme-secondary, 92, 110, 104)) !important;
+  opacity: 0.8;
 }
 </style>

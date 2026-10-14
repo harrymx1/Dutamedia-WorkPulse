@@ -77,15 +77,20 @@ describe('EPIC-22-T4 Race #1: Reviewer object vs Scheduler auto-apply bersamaan 
       .mockResolvedValueOnce([ // Panggilan pertama dari auto-apply (findMany yang terlampaui, ini fallback)
         {
           id: 'cr-race-1', status: CorrectionStatus.Pending,
+          targetCommitmentId: 'comm-race',
           target_commitment_id: 'comm-race',
+          requestedChange: { referenceLink: 'https://race' },
           requested_change: { referenceLink: 'https://race' },
+          requestedByUserId: 'emp-race',
           requested_by_user_id: 'emp-race',
         },
       ])
       .mockResolvedValueOnce([ // Panggilan kedua dari objectCorrection — status sudah Applied
         {
           id: 'cr-race-1', status: CorrectionStatus.Applied, // Scheduler sudah proses
+          requestedByUserId: 'emp-race',
           requested_by_user_id: 'emp-race',
+          objectionWindowEnd: new Date(Date.now() + 100_000),
           objection_window_end: new Date(Date.now() + 100_000),
         },
       ]);

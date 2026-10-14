@@ -1106,8 +1106,9 @@ Setiap state transition yang bisa dipicu lebih dari satu jalur (user manual vs s
 |---|---|---|---|---|
 | `GET /api/v1/users` | `SystemAdmin`, `HRGA` | Filter, pagination | List User + assignment aktif | FR-22 |
 | `POST /api/v1/users` | `SystemAdmin` | `{ fullName, email, initialRole, function, directManagerId, effectiveDate }` | User + Assignment + `temporaryPassword` | FR-22, FR-50, satu transaction |
+| `GET /api/v1/users/{id}` | Terautentikasi | — | User detail | Query profil pengguna aktif/inaktif by UUID |
 | `PATCH /api/v1/users/{id}` | `SystemAdmin` | `{ status }` | User terbarui | Deactivate memicu revocation seluruh Session aktif |
-| `GET /api/v1/users/{id}/organizational-assignments` | `SystemAdmin`, `HRGA`, pemilik | — | Riwayat assignment | 5.11.a |
+| `GET /api/v1/users/{id}/organizational-assignments` | `SystemAdmin`, `HRGA`, pemilik | — | Riwayat assignment | 5.11.a, caller role atau ownership divalidasi server-side |
 | `POST /api/v1/organizational-assignments` | `SystemAdmin` | `{ userId, role, function, directManagerId, effectiveDate }` | Assignment baru | BR-10 — menutup endDate lama + insert baru |
 | `POST /api/v1/project-authority-mappings` | `SystemAdmin`, `Head` | `{ userId, scopeReference, effectiveDate, endDate? }` | Mapping baru | Multi-concurrent diizinkan |
 | `PATCH /api/v1/project-authority-mappings/{id}` | `SystemAdmin`, `Head` | `{ endDate }` | Mapping terbarui | Mengakhiri, bukan delete |
@@ -1159,6 +1160,7 @@ Setiap state transition yang bisa dipicu lebih dari satu jalur (user manual vs s
 | `POST /api/v1/exceptions/holiday` | `SystemAdmin`, `HRGA` | `{ dateStart, dateEnd, reason }` | `Holiday`, valid langsung | BR-18 |
 | `POST /api/v1/exceptions/exemption` | `SystemAdmin`, `HRGA` | `{ employeeUserId, dateStart, dateEnd, reason }` | `Exemption`, valid langsung | BR-18 |
 | `GET /api/v1/exceptions` | Sesuai scope | Filter, pagination | List | 8.11 |
+| `GET /api/v1/exceptions/{id}` | Sesuai scope | — | Detail Exception | 7.7, 8.11, 404 jika di luar scope |
 | `POST /api/v1/exceptions/{id}/approve` | Authorized Reviewer | — | `Approved` | FR-47 |
 | `POST /api/v1/exceptions/{id}/reject` | Authorized Reviewer | `{ rejectionReason }` | `Rejected` | FR-47 |
 
@@ -1192,6 +1194,7 @@ Setiap state transition yang bisa dipicu lebih dari satu jalur (user manual vs s
 | `POST /api/v1/policies` | `PolicyOwnerGuard` (8.10) | `{ category, value, effectiveDate }` | Policy versi baru | BR-15, effective-dating |
 | `GET /api/v1/policies/{category}/history` | Terautentikasi | — | Riwayat versi | `PolicyVersionHistory` (Design System) |
 | `POST /api/v1/policy-owner-assignments` | `SystemAdmin` | `{ userId, policyCategory, effectiveDate, endDate? }` | Assignment baru | BR-15 |
+| `POST /api/v1/policies/owner-assignments` | `SystemAdmin` | `{ userId, policyCategory, effectiveDate, endDate? }` | Assignment baru | Alias/compatibility route untuk `POST /policy-owner-assignments` (BR-15) |
 
 ### 10.10 NotificationModule
 
@@ -1208,6 +1211,7 @@ Setiap state transition yang bisa dipicu lebih dari satu jalur (user manual vs s
 | Method & Path | Role | Request | Response | Business Rule |
 |---|---|---|---|---|
 | `GET /api/v1/reports/daily-exception` | `Head`, `CEO/Management` | `date` | Snapshot exception hari itu | PRD §9 |
+| `GET /api/v1/reports/exception-summary` | `Supervisor`, `Head`, `HRGA`, `CEO/Management` | `date?` | Agregat ringkasan exception harian | SAD §13.2, melayani `ExceptionSummaryWidget` pada dashboard |
 | `GET /api/v1/reports/weekly-team-summary` | `Supervisor`, `Head` | `weekStart` | Agregat mingguan | FR-41 |
 | `GET /api/v1/reports/monthly-trend` | `CEO/Management` | `month` | Trend bulanan | FR-41 |
 | `GET /api/v1/reports/individual-evidence/{userId}` | Sesuai scope | `dateRange` | Evidence individual | PRD §9 |

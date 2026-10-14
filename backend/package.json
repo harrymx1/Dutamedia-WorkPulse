@@ -20,7 +20,17 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
-    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "test:db:up": "docker compose -f ../docker-compose.test.yml up -d test-db",
+    "test:db:wait": "tsx src/scripts/test-db-lifecycle.ts wait",
+    "test:db:migrate": "tsx src/scripts/test-db-lifecycle.ts migrate",
+    "test:db:seed": "tsx src/scripts/test-db-lifecycle.ts seed",
+    "test:db:reset": "tsx src/scripts/test-db-lifecycle.ts reset",
+    "test:db:down": "docker compose -f ../docker-compose.test.yml down",
+    "test:db:safety-check": "tsx src/scripts/test-db-lifecycle.ts safety-check",
+    "test:integration:real": "vitest run --config ./vitest.config.integration.ts",
+    "test:load:morning-checkin": "tsx test/load/morning-checkin-load.ts",
+    "test:benchmark": "tsx test/load/nfr03-reporting-benchmark.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1133.0",

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { blockersApi, type QueryBlockersParams } from '../api/blockers.api.js';
+import { blockersApi, type QueryBlockersParams, type BlockerOwnerOption } from '../api/blockers.api.js';
 import type { CreateBlockerPayload } from '../types/daily-records.js';
 import type {
   UpdateBlockerProgressPayload,
@@ -35,13 +35,25 @@ export function useCreateBlockerMutation() {
 
 /**
  * Hook query opsi target pemilik wewenang blocker (Organizational & Project Authority).
+ * @deprecated Tidak lagi digunakan pada RaiseBlockerModal karena resolusi owner dilakukan di server berdasarkan ownerNeededType.
+ * Dipertahankan untuk komponen administratif/manajemen dengan penanganan error transparan tanpa masking.
  */
 export function useBlockerOwnersQuery() {
-  return useQuery({
+  return useQuery<BlockerOwnerOption[]>({
     queryKey: BLOCKER_KEYS.owners(),
-    queryFn: async () => {
+    queryFn: async (): Promise<BlockerOwnerOption[]> => {
       const res = await blockersApi.getPotentialOwners();
-      return res.data.users;
+      const data = res.data as any;
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if (data?.items && Array.isArray(data.items)) {
+        return data.items;
+      }
+      if (data?.users && Array.isArray(data.users)) {
+        return data.users;
+      }
+      return [];
     },
     staleTime: 1000 * 60 * 5, // 5 menit
   });

@@ -11,6 +11,7 @@ import { AuditService } from '../../audit/audit.service.js';
 import { PolicyService } from '../../policy/policy.service.js';
 import { ScopeFilterService } from '../../authorization/services/scope-filter.service.js';
 import { NotificationService } from '../../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 import type { CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
 import {
   ConflictException,
@@ -90,7 +91,34 @@ export class BlockerService {
   async createBlocker(userId: string, dto: CreateBlockerDto) {
     const now = new Date();
 
-    // 1. Resolusi Owner Needed (SAD §8.9, FR-19)
+    // 1. Validasi Kepemilikan Komitmen jika linkedCommitmentId diberikan (S2-SEC-FR15-1 & PRD FR-15)
+    if (dto.linkedCommitmentId) {
+      const commitment = await this.prisma.commitment.findUnique({
+        where: { id: dto.linkedCommitmentId },
+        select: {
+          id: true,
+          dailyRecord: {
+            select: {
+              employeeUserId: true,
+            },
+          },
+        },
+      });
+
+      if (!commitment) {
+        throw new NotFoundException(
+          `Komitmen dengan ID '${dto.linkedCommitmentId}' tidak ditemukan`,
+        );
+      }
+
+      if (commitment.dailyRecord.employeeUserId !== userId) {
+        throw new ForbiddenException(
+          'Anda tidak memiliki wewenang untuk menautkan komitmen milik pengguna lain',
+        );
+      }
+    }
+
+    // 2. Resolusi Owner Needed (SAD §8.9, FR-19)
     const resolvedOwner = await this.blockerOwnerResolver.resolveOwnerNeeded(
       userId,
       dto.ownerNeededType,
@@ -98,7 +126,7 @@ export class BlockerService {
       now,
     );
 
-    // 2. Simpan ke database dalam transaksi + Catat AuditLog
+    // 3. Simpan ke database dalam transaksi + Catat AuditLog
     return this.prisma.$transaction(async (tx) => {
       const blocker = await tx.blocker.create({
         data: {
@@ -137,7 +165,7 @@ export class BlockerService {
       if (dto.severity === BlockerSeverity.Critical) {
         await this.notificationService.dispatch(
           {
-            triggerType: 'BLOCKER_CRITICAL_RAISED',
+            triggerType: SystemNotificationTrigger.CRITICAL_INSTANT_BLOCKER,
             recipientUserId: resolvedOwner.ownerNeededUserId,
             payload: {
               title: `[CRITICAL] Blocker Baru Diajukan: ${blocker.type}`,
@@ -706,7 +734,7 @@ export class BlockerService {
         // Catat AuditLog (sebagai bukti & penanda level eskalasi per SAD §9.4)
         await this.auditService.record(
           {
-            actorUserId: 'SYSTEM',
+            actorUserId: undefined, // Diterapkan oleh sistem scheduler (SAD §15.2: NULL jika system-triggered)
             action: 'BLOCKER_AUTO_ESCALATED',
             relatedEntityType: 'Blocker',
             relatedEntityId: blocker.id,
@@ -723,7 +751,8 @@ export class BlockerService {
         // Dispatch Notification ke level eskalasi berikutnya (SAD §12.1 trigger #5)
         await this.notificationService.dispatch(
           {
-            triggerType: 'BLOCKER_UNACKNOWLEDGED_THRESHOLD',
+            triggerType:
+              SystemNotificationTrigger.BLOCKER_UNACKNOWLEDGED_ESCALATION,
             recipientUserId: escalationTarget.targetUserId,
             payload: {
               title: `[AUTO-ESCALATED] Critical Blocker Belum Dikonfirmasi: ${blocker.type}`,

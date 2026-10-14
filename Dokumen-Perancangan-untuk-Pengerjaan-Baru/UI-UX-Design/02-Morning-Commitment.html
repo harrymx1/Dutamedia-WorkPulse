@@ -2002,7 +2002,7 @@
                 </div>
                 <div class="copy-amber-warning">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                  <span>Status awal minimal AMBER (tidak dapat langsung dimulai GREEN).</span>
+                  <span>Status awal minimal AMBER (tidak dapat dilanjutkan dengan status GREEN).</span>
                 </div>
               </div>
               <div class="copy-item-side">
@@ -2031,7 +2031,7 @@
                 </div>
                 <div class="copy-amber-warning">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                  <span>Status awal minimal AMBER (tidak dapat langsung dimulai GREEN).</span>
+                  <span>Status awal minimal AMBER (tidak dapat dilanjutkan dengan status GREEN).</span>
                 </div>
               </div>
               <div class="copy-item-side">
@@ -2082,150 +2082,7 @@
           <div class="panel-body">
             <div id="cards-container">
               <!-- Dynamically populated commitment cards -->
-            <div class="commit-card" id="slot-1791970304171-1">
-          <div class="commit-top">
-            <div class="commit-title-wrap">
-              <span class="slot-num">1</span>
-              <strong style="font-size: 14px;">Komitmen Slot 1</strong>
-              
             </div>
-            <button type="button" class="btn-remove-card" title="Hapus Slot Komitmen">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-              <span>Hapus</span>
-            </button>
-          </div>
-          <div class="commit-body">
-            <!-- Input Teks Komitmen -->
-            <div class="form-group">
-              <label class="form-label">
-                <span>Rencana Hasil Kerja (Deliverable) <span style="color:#DC2626;">*</span></span>
-              </label>
-              <textarea class="commit-textarea" rows="2" placeholder="Apa hasil kerja spesifik yang akan Anda selesaikan hari ini?" required="">Implementasi integrasi endpoint user profile dan validasi sesi</textarea>
-              
-              <!-- Role-Based Prompt Hint (FR-12 / AC-37) -->
-              <div class="role-prompt-hint show">Contoh: Implementasi endpoint API login, refactor query optimasi, atau perbaikan bug ticket #123</div>
-
-              <!-- Quality Warning Badge (FR-63 / AC-72 / UF-07) -->
-              <div class="quality-warning-badge">
-                <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>Peringatan Kualitas: Komitmen terdeteksi sangat singkat atau generik. Pastikan menyebutkan deliverable terukur agar progres EOD dapat dievaluasi secara akurat.</span>
-              </div>
-            </div>
-
-            <div class="grid-2col">
-              <!-- Initial Risk Radio -->
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Tingkat Risiko Awal (Initial Risk) <span style="color:#DC2626;">*</span></span>
-                </label>
-                <div class="risk-selector">
-                  <label class="risk-label green-opt ">
-                    <input type="radio" name="risk-slot-1791970304171-1" value="GREEN" checked="">
-                    <span class="status-indicator-dot" style="background: currentColor;"></span>
-                    <span>GREEN</span>
-                  </label>
-                  <label class="risk-label amber-opt">
-                    <input type="radio" name="risk-slot-1791970304171-1" value="AMBER">
-                    <span class="status-indicator-dot" style="background: currentColor;"></span>
-                    <span>AMBER</span>
-                  </label>
-                  <label class="risk-label red-opt">
-                    <input type="radio" name="risk-slot-1791970304171-1" value="RED">
-                    <span class="status-indicator-dot" style="background: currentColor;"></span>
-                    <span>RED</span>
-                  </label>
-                </div>
-                
-              </div>
-
-              <!-- Reference Link (Optional) with Attached Blocker Quick-Picker -->
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Tautan Referensi / Tiket Tugas <span style="font-weight: 500; color: var(--color-text-secondary);">(Opsional)</span></span>
-                </label>
-                <div class="input-picker-group">
-                  <input type="text" class="commit-link" placeholder="https://jira... atau pilih blocker tim →" value="">
-                  <div class="picker-dropdown-wrap">
-                    <button type="button" class="btn-picker-trigger" title="Pilih tiket blocker aktif yang sedang ditangani">
-                      <span>Pilih Blocker Aktif</span>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </button>
-                    <div class="picker-dropdown-menu">
-                      <div class="picker-menu-header">
-                        <span>Blocker Tim Aktif (3)</span>
-                        <span style="font-size: 10px; font-weight: 600; text-transform: none; color: var(--color-text-secondary);">Klik untuk menautkan</span>
-                      </div>
-                      <button type="button" class="picker-menu-item" data-code="#BLK-014" data-title="Keterlambatan respons spesifikasi API dari klien X">
-                        <div class="picker-item-top">
-                          <span class="picker-item-code">#BLK-014</span>
-                          <span class="badge-mini open">Open</span>
-                        </div>
-                        <div class="picker-item-title">Keterlambatan respons spesifikasi API dari klien X</div>
-                      </button>
-                      <button type="button" class="picker-menu-item" data-code="#BLK-011" data-title="Staging server staging-db02 tidak dapat diakses">
-                        <div class="picker-item-top">
-                          <span class="picker-item-code">#BLK-011</span>
-                          <span class="badge-mini ack">Acknowledged</span>
-                        </div>
-                        <div class="picker-item-title">Staging server staging-db02 tidak dapat diakses</div>
-                      </button>
-                      <button type="button" class="picker-menu-item" data-code="#BLK-009" data-title="Dependensi modul otentikasi dari Squad Core belum siap">
-                        <div class="picker-item-top">
-                          <span class="picker-item-code">#BLK-009</span>
-                          <span class="badge-mini in-prog">In Progress</span>
-                        </div>
-                        <div class="picker-item-title">Dependensi modul otentikasi dari Squad Core belum siap</div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Penjelasan Risiko & Kebutuhan Dukungan (Kondisional Wajib saat AMBER/RED) -->
-            <div class="blocker-detail-section  ">
-              <div class="risk-section-title" style="font-size: 13px; font-weight: 800; color: #92400E; margin-bottom: 12px;">
-                Penjelasan Risiko &amp; Kebutuhan Dukungan
-              </div>
-
-              <!-- Tautkan Blocker Terkait (Opsional di dalam panel risiko) -->
-              <div style="margin-bottom: 12px;">
-                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">
-                  Tautkan Blocker Terkait <span style="font-weight: 500; color: var(--color-text-secondary);">(Opsional)</span>
-                </label>
-                <select class="commit-blocker-link-select">
-                  <option value="">-- Tidak ada tiket blocker terkait --</option>
-                  <option value="BLK-014">[#BLK-014] Keterlambatan respons spesifikasi API dari klien X (Open)</option>
-                  <option value="BLK-011">[#BLK-011] Staging server staging-db02 tidak dapat diakses (Acknowledged)</option>
-                  <option value="BLK-009">[#BLK-009] Dependensi modul otentikasi dari Squad Core belum siap (In Progress)</option>
-                </select>
-              </div>
-
-              <div class="grid-2col">
-                <div>
-                  <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">
-                    Faktor Risiko yang Diantisipasi 
-                    <span class="risk-req-star" style="color:#DC2626;">*</span>
-                    <span class="risk-req-hint" style="font-size: 11px; font-weight: 500; color: var(--color-text-secondary);">(Wajib jika tidak memilih tiket blocker)</span>
-                  </label>
-                  <textarea class="known-blocker-txt" rows="2" placeholder="Jelaskan faktor apa yang membuat target ini berisiko atau berpotensi tertunda..."></textarea>
-                </div>
-                <div>
-                  <label class="support-label-txt" style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">
-                    Dukungan yang Diperlukan <span style="font-weight: 500; color: var(--color-text-secondary);">(Opsional)</span>
-                  </label>
-                  <textarea class="support-needed-txt" rows="2" placeholder="Tuliskan jika ada kebutuhan dukungan spesifik dari lead/tim..."></textarea>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div></div>
           </div>
         </section>
 
@@ -2405,12 +2262,13 @@
 
       // Fungsi Buat Kartu Komitmen Baru (Slot 1–3)
       function createCommitmentCard(initialData = {}) {
-        if (slotCount >= 3) {
+        const currentCards = $$('.commit-card');
+        if (currentCards.length >= 3) {
           alert('Batas maksimum komitmen harian adalah 3 item.');
           return;
         }
 
-        slotCount++;
+        slotCount = currentCards.length + 1;
         const cardId = `slot-${Date.now()}-${slotCount}`;
         const card = document.createElement('div');
         card.className = 'commit-card';
@@ -2483,7 +2341,7 @@
                     <span>RED</span>
                   </label>
                 </div>
-                ${isLockedAmber ? '<p style="font-size: 11px; color: #B45309; margin-top: 4px;">Status awal minimal AMBER (tidak dapat langsung dimulai GREEN).</p>' : ''}
+                ${isLockedAmber ? '<p style="font-size: 11px; color: #B45309; margin-top: 4px;">Status awal minimal AMBER (tidak dapat dilanjutkan dengan status GREEN).</p>' : ''}
               </div>
 
               <!-- Reference Link (Optional) with Attached Blocker Quick-Picker -->
@@ -2579,11 +2437,14 @@
 
       // Event Binding per Kartu
       function bindCardEvents(card) {
-        // Tombol Hapus
+        // Tombol Hapus (Aturan 7.3: Minimal 1 slot wajib tersisa)
         card.querySelector('.btn-remove-card').onclick = () => {
           if (isSubmitted) return;
+          if ($$('.commit-card').length <= 1) {
+            alert('Minimal 1 slot komitmen wajib diisi. Jika Anda tidak memiliki pekerjaan proyek hari ini, silakan centang opsi "Tanpa Komitmen Khusus (Zero Commitment)".');
+            return;
+          }
           card.remove();
-          slotCount--;
           renumberCards();
           updateInterfaceState();
         };
@@ -2741,8 +2602,23 @@
       }
 
       function updateInterfaceState() {
+        const cards = $$('.commit-card');
+        slotCount = cards.length;
         $('slot-counter-txt').textContent = slotCount;
         $('btn-add-slot').disabled = slotCount >= 3 || isSubmitted || $('zero-commitment-toggle').checked;
+        
+        // Aturan 7.3: Jika hanya tersisa 1 slot, tombol hapus dinonaktifkan
+        cards.forEach(c => {
+          const btnRemove = c.querySelector('.btn-remove-card');
+          if (btnRemove) {
+            const isOnlyOne = slotCount <= 1;
+            btnRemove.disabled = isOnlyOne || isSubmitted || $('zero-commitment-toggle').checked;
+            btnRemove.style.opacity = isOnlyOne ? '0.35' : '1';
+            btnRemove.style.cursor = isOnlyOne ? 'not-allowed' : 'pointer';
+            btnRemove.title = isOnlyOne ? 'Minimal 1 komitmen wajib terisi (gunakan opsi No Commitment jika tanpa tugas proyek)' : 'Hapus Slot Komitmen';
+          }
+        });
+
         updateAggregation();
       }
 

@@ -20,6 +20,7 @@ import { CreateProjectAuthorityDto } from './dto/create-project-authority.dto.js
 import { UpdateProjectAuthorityDto } from './dto/update-project-authority.dto.js';
 import { CreateTempReviewerDto } from './dto/create-temp-reviewer.dto.js';
 import { RequireRole } from '../authorization/decorators/require-role.decorator.js';
+import { CurrentUser, type CurrentUserPayload } from '../auth/decorators/current-user.decorator.js';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Identity')
@@ -70,12 +71,14 @@ export class IdentityController {
 
   /**
    * GET /api/v1/users/:id/organizational-assignments (SAD §10.2)
+   * Otorisasi: SystemAdmin, HRGA, atau pemilik akun
    */
   @Get('users/:id/organizational-assignments')
   async getOrganizationalAssignments(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() caller: CurrentUserPayload,
   ) {
-    return this.identityService.getOrganizationalAssignments(id);
+    return this.identityService.getOrganizationalAssignments(id, caller);
   }
 
   /**

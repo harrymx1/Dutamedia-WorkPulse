@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Holiday &amp; Exemption Management — WorkPulse</title>
+<style>
+:root{--canvas:#F7FAF9;--surface:#fff;--subtle:#EFF5F2;--muted:#F1F5F4;--border:#DCE7E2;--border-strong:#A9C7BC;--ink:#0E211B;--secondary:#5C6E68;--brand:#00674D;--brand-tint:#E6F4EE;--focus:#0B8061;--blue-bg:#E0F2FE;--blue-fg:#075985;--amber-bg:#FFF3D9;--amber-fg:#7A4B00;--green-bg:#E6F4EC;--green-fg:#145A36;--red-bg:#FDE9E7;--red-fg:#9B2923;--neutral-bg:#EFF2F1;--neutral-fg:#46534E;--shadow:0 8px 24px rgba(14,33,27,.05)}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px 18px;display:flex;flex-direction:column;gap:0;min-height:100vh;box-sizing:border-box}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px;flex-shrink:0;margin:0 8px 30px!important}.brand-mark{height:42px;width:42px;border-radius:12px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:850;font-size:23px}.brand-name{font-size:19px;font-weight:850;letter-spacing:-.5px;line-height:1.2}.brand-caption{font-size:12px;color:var(--secondary);margin-top:3px}
+.nav-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:28px!important;margin:0!important;align-content:start}.nav-section{display:grid;gap:0;min-width:0}.nav-label{display:block;margin:0 0 10px!important;padding:0 12px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--secondary);font-weight:800}.nav{display:grid;gap:5px}.nav a{min-height:44px;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#50645D;font-weight:700}.nav a:hover{background:#F4F8F6}.nav a.active{background:var(--brand-tint);color:var(--brand)}.nav-icon{width:18px;text-align:center;font-size:16px;flex:0 0 18px}.side-bottom{margin-top:auto!important;padding:16px 8px 0!important;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0}.avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#D9ECE4;color:var(--brand);font-weight:800;flex:0 0 auto}.user-name{font-weight:800;font-size:13px}.user-role{color:var(--secondary);font-size:12px}.user-scope{color:var(--secondary);font-size:11px;line-height:1.45;margin-top:3px;max-width:190px;overflow-wrap:anywhere}
+main{min-width:0}.topbar{height:68px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.88);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,40px);gap:14px}.topbar-left,.top-actions{display:flex;align-items:center;gap:10px}.breadcrumb{font-size:13px;color:var(--secondary)}.breadcrumb strong{color:var(--ink)}.icon-button{height:40px;width:40px;display:grid;place-items:center;border:1px solid var(--border);background:#fff;border-radius:9px;color:var(--secondary)}.mobile-menu{display:none}
+.content{max-width:1320px;margin:0 auto;padding:32px clamp(18px,3vw,40px) 56px}.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}.eyebrow{font-size:12px;color:var(--secondary);font-weight:800;letter-spacing:.06em;text-transform:uppercase}h1{font-size:28px;line-height:1.25;letter-spacing:-.7px;margin:5px 0 8px;font-weight:850}.subtitle{color:var(--secondary);max-width:760px;margin:0}.heading-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{min-height:40px;padding:9px 15px;border:1px solid var(--border-strong);background:#fff;border-radius:10px;font-weight:750;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn:hover{background:#F6FAF8}.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}.btn.primary:hover{background:#00563F}.btn.small{min-height:32px;padding:5px 10px;font-size:12px;border-radius:8px}.btn.link{border-color:transparent;background:transparent;color:var(--brand);padding:5px 7px}
+.notice{border:1px solid #B9DCCF;background:#F0F8F4;border-radius:12px;padding:13px 15px;display:flex;gap:11px;align-items:flex-start;margin-bottom:20px}.notice-icon{height:24px;width:24px;display:grid;place-items:center;border-radius:50%;background:#D6EEE3;color:var(--brand);font-weight:850;flex:0 0 auto}.notice strong{display:block;margin-bottom:2px}.notice p{margin:0;color:#47645A;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}.stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;min-width:0}.stat-label{font-size:12px;color:var(--secondary);font-weight:700}.stat-value{font-size:26px;line-height:1.2;font-weight:850;margin-top:7px;letter-spacing:-.5px}.stat-foot{font-size:12px;color:var(--secondary);margin-top:4px}
+.panel{background:#fff;border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow);margin-bottom:20px;min-width:0}.panel-head{padding:18px 20px 14px;border-bottom:1px solid #E9F0ED;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.panel-title{font-size:16px;font-weight:850;margin:0}.panel-subtitle{font-size:12px;color:var(--secondary);margin-top:4px}.panel-body{padding:18px 20px}
+.filters{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(2,minmax(150px,1fr));gap:12px;align-items:end}.field{display:grid;gap:6px;min-width:0}.field label{font-size:12px;font-weight:800;color:#40564D}.field input,.field select,.field textarea{width:100%;min-height:42px;border:1px solid #C9D8D1;border-radius:9px;background:#fff;padding:9px 11px;color:var(--ink)}.field textarea{min-height:86px;resize:vertical}.field-help{font-size:11px;color:var(--secondary)}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--focus);outline:3px solid #D8EEE5}
+.table-wrap{overflow:auto;width:100%}table{width:100%;border-collapse:separate;border-spacing:0;min-width:780px}th{background:#F7FAF9;color:#60736B;text-align:left;font-size:11px;letter-spacing:.045em;text-transform:uppercase;font-weight:850;padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:14px 16px;border-bottom:1px solid #EAF0ED;vertical-align:top}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#FBFDFC}.primary-cell{font-weight:800}.secondary-cell{font-size:12px;color:var(--secondary);margin-top:3px}.type-badge,.status-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800;white-space:nowrap}.type-badge.holiday{background:#E0F2FE;color:#075985}.type-badge.exemption{background:#F0EAFE;color:#5B3CA5}.status-badge.active{background:var(--green-bg);color:var(--green-fg)}.status-badge.upcoming{background:var(--blue-bg);color:var(--blue-fg)}.status-badge.ended{background:var(--neutral-bg);color:var(--neutral-fg)}.empty{padding:40px 20px;text-align:center;color:var(--secondary)}.empty strong{display:block;color:var(--ink);margin-bottom:4px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(8,28,21,.38);z-index:40;display:none;align-items:center;justify-content:center;padding:20px}.modal-backdrop.open{display:flex}.modal{width:min(680px,100%);max-height:min(90vh,900px);overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.2)}.modal-head{padding:20px 22px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.modal-head h2{margin:0;font-size:19px}.modal-head p{margin:4px 0 0;color:var(--secondary);font-size:12px}.modal-body{padding:20px 22px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.full{grid-column:1/-1}.modal-foot{padding:15px 22px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--border)}.modal-foot-note{font-size:11px;color:var(--secondary)}.modal-actions{display:flex;gap:8px}.segmented{display:flex;gap:8px;flex-wrap:wrap}.segmented label{border:1px solid var(--border-strong);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:700;flex:1;min-width:160px}.segmented input{accent-color:var(--brand)}.toast{position:fixed;right:22px;bottom:22px;z-index:60;background:#103B2F;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);max-width:min(420px,calc(100vw - 44px));display:none}.toast.show{display:block}.hidden{display:none!important}
+@media(max-width:1100px){.app{grid-template-columns:248px minmax(0,1fr)}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters .field:first-child{grid-column:1/-1}}
+@media(max-width:760px){.app{display:block}.sidebar{display:none;position:fixed;inset:0 auto 0 0;width:260px;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,.12);overflow:auto}.sidebar.mobile-open{display:flex}.mobile-menu{display:grid}.topbar{height:60px;padding:0 16px}.content{padding:24px 16px 42px}.page-heading{display:block}h1{font-size:25px}.heading-actions{margin-top:15px}.stats{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.filters .field:first-child{grid-column:auto}.panel-head,.panel-body{padding-left:15px;padding-right:15px}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.modal-backdrop{padding:10px}.modal-head,.modal-body{padding-left:16px;padding-right:16px}.modal-foot{padding:14px 16px;align-items:flex-start;flex-direction:column}.modal-actions{width:100%;justify-content:flex-end}}
+@media(max-height:650px){.sidebar{min-height:100vh}.nav-groups{gap:22px!important}.brand{margin-bottom:22px!important}}
+</style>
+</head>
+<body>
+<a href="#main" onfocus="this.style.left='12px';this.style.top='12px';this.style.zIndex='100';this.style.background='#fff';this.style.padding='10px'" style="position:absolute;left:-9999px;top:auto">Lewati ke konten utama</a>
+<div class="app">
+<aside aria-label="Navigasi utama" class="sidebar" id="sidebar">
+<div class="brand"><div aria-hidden="true" class="brand-mark">W</div><div><div class="brand-name">WorkPulse</div><div class="brand-caption">Daily Accountability</div></div></div>
+<div class="nav-groups">
+<div class="nav-section"><div class="nav-label">Workspace</div><nav aria-label="Workspace" class="nav">
+<a href="#today"><span aria-hidden="true" class="nav-icon">◷</span>My Today</a>
+<a href="#history"><span aria-hidden="true" class="nav-icon">▤</span>My History</a>
+<a href="#leave"><span aria-hidden="true" class="nav-icon">▣</span>My Leave Request</a>
+<a href="#notifications"><span aria-hidden="true" class="nav-icon">♧</span>Notifications</a>
+<a href="#profile"><span aria-hidden="true" class="nav-icon">◉</span>Profile</a>
+</nav></div>
+<div class="nav-section"><div class="nav-label">Management</div><nav aria-label="Management" class="nav">
+<a href="#compliance"><span aria-hidden="true" class="nav-icon">▤</span>Compliance Queue</a>
+<a href="#leave-approvals"><span aria-hidden="true" class="nav-icon">✓</span>Leave Approval</a>
+<a aria-current="page" class="active" href="#exemptions"><span aria-hidden="true" class="nav-icon">▣</span>Holiday / Exemption</a>
+<a href="#records"><span aria-hidden="true" class="nav-icon">▥</span>Coaching / Warning Records</a>
+<a href="#reports"><span aria-hidden="true" class="nav-icon">▤</span>Reports</a>
+</nav></div>
+</div>
+<div class="side-bottom"><div aria-hidden="true" class="avatar">HR</div><div><div class="user-name">Rina Puspita</div><div class="user-role">HRGA / Authorized Admin</div><div class="user-scope">Cakupan: Company-wide Holiday &amp; Individual Exemption<br/>Izin aktif: Holiday &amp; Exemption Management</div></div></div>
+</aside>
+<main id="main">
+<header class="topbar"><div class="topbar-left"><button aria-expanded="false" aria-label="Buka navigasi" class="icon-button mobile-menu" id="mobileMenu" type="button">☰</button><div class="breadcrumb">Management <span aria-hidden="true">/</span> <strong>Holiday &amp; Exemption Management</strong></div></div><div class="top-actions"><button aria-label="Notifications" class="icon-button" type="button">♧</button><button aria-label="Account" class="icon-button" type="button">HR</button></div></header>
+<div class="content">
+<div class="page-heading"><div><div class="eyebrow">HRGA · Holiday &amp; individual exemption</div><h1>Exemption Management</h1><p class="subtitle">Kelola hari libur perusahaan dan pengecualian submission individual berdasarkan periode berlaku. Gunakan pengecualian untuk konteks seperti dinas atau offsite, bukan untuk menggantikan proses pengajuan cuti.</p></div><div class="heading-actions"><button class="btn primary" id="addRecord" type="button"><span aria-hidden="true">＋</span> Tambah Holiday / Exemption</button></div></div>
+
+<section aria-label="Ringkasan periode" class="stats">
+<div class="stat"><div class="stat-label">Company Holidays</div><div class="stat-value" id="holidayCount">2</div><div class="stat-foot">Hari libur perusahaan pada daftar</div></div>
+<div class="stat"><div class="stat-label">Individual Exemptions</div><div class="stat-value" id="exemptionCount">3</div><div class="stat-foot">Pengecualian per individu pada daftar</div></div>
+<div class="stat"><div class="stat-label">Currently Effective</div><div class="stat-value" id="activeCount">3</div><div class="stat-foot">Periode mencakup tanggal hari ini</div></div>
+</section>
+<section aria-labelledby="filtersTitle" class="panel">
+<div class="panel-head"><div><h2 class="panel-title" id="filtersTitle">Daftar Holiday &amp; Exemption</h2><div class="panel-subtitle">Cakupan, periode berlaku, dan konteks setiap catatan.</div></div><span class="status-badge active" id="resultCount">5 catatan</span></div>
+<div class="panel-body"><div class="filters">
+<div class="field"><label for="searchInput">Cari catatan</label><input id="searchInput" placeholder="Nama, judul, atau alasan…" type="search"/></div>
+<div class="field"><label for="typeFilter">Jenis</label><select id="typeFilter"><option value="all">Semua jenis</option><option value="holiday">Company Holiday</option><option value="exemption">Individual Exemption</option></select></div>
+<div class="field"><label for="statusFilter">Periode</label><select id="statusFilter"><option value="all">Semua periode</option><option value="active">Sedang berlaku</option><option value="upcoming">Akan berlaku</option><option value="ended">Periode berakhir</option></select></div>
+</div></div>
+<div class="table-wrap"><table><thead><tr><th>Catatan</th><th>Jenis</th><th>Cakupan</th><th>Periode berlaku</th><th>Status periode</th><th>Aksi</th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty hidden" id="emptyState"><strong>Tidak ada catatan yang cocok</strong>Ubah kata pencarian atau filter untuk melihat catatan lainnya.</div></div>
+</section>
+<p class="field-help">Status periode dihitung dari tanggal mulai dan akhir. Status ini bukan status approval. Penyimpanan Holiday / Exemption tidak memerlukan approval tambahan.</p>
+</div>
+</main>
+</div>
+<div class="modal-backdrop" id="recordModal" role="presentation">
+<section aria-labelledby="modalTitle" aria-modal="true" class="modal" role="dialog">
+<div class="modal-head"><div><h2 id="modalTitle">Tambah Holiday / Exemption</h2><p>Perubahan berlaku langsung setelah disimpan.</p></div><button aria-label="Tutup dialog" class="icon-button" id="closeModal" type="button">×</button></div>
+<form id="recordForm">
+<div class="modal-body">
+<div class="field full"><label>Jenis catatan</label><div class="segmented">
+<label><input checked="" name="recordType" type="radio" value="holiday"/> Company Holiday</label>
+<label><input name="recordType" type="radio" value="exemption"/> Individual Exemption</label>
+</div><div class="field-help">Company Holiday berlaku company-wide. Individual Exemption berlaku untuk satu karyawan.</div></div>
+<div class="form-grid" style="margin-top:16px">
+<div class="field full"><label for="recordTitle" id="titleLabel">Nama hari libur</label><input id="recordTitle" maxlength="120" name="title" placeholder="Contoh: Hari Kemerdekaan" required=""/></div>
+<div class="field full hidden" id="employeeField"><label for="employeeName">Karyawan</label><select id="employeeName" name="employee"><option value="">Pilih karyawan</option><option>Andi Pratama</option><option>Raka Aditya</option><option>Dina Maharani</option><option>Bima Pratama</option><option>Nadia Safitri</option><option>Fajar Nugroho</option></select></div>
+<div class="field"><label for="startDate">Tanggal mulai</label><input id="startDate" name="startDate" required="" type="date"/></div>
+<div class="field"><label for="endDate">Tanggal akhir</label><input id="endDate" name="endDate" required="" type="date"/></div>
+<div class="field full"><label for="reason">Konteks / alasan</label><textarea id="reason" maxlength="500" name="reason" placeholder="Jelaskan konteks pengecualian secara singkat."></textarea><div class="field-help">Catatan konteks membantu penelusuran. Jangan memasukkan data sensitif yang tidak diperlukan.</div></div>
+</div>
+<div class="notice" style="margin:18px 0 0"><div aria-hidden="true" class="notice-icon">i</div><div><strong>Tidak ada approval tambahan</strong><p>Pastikan jenis, cakupan, dan periode benar sebelum menyimpan. Data ini digunakan dalam deteksi No Submission sesuai periode yang berlaku.</p></div></div>
+</div>
+<div class="modal-foot"><div class="modal-foot-note">Perubahan langsung berlaku setelah disimpan.</div><div class="modal-actions"><button class="btn" id="cancelForm" type="button">Batal</button><button class="btn primary" type="submit">Simpan perubahan</button></div></div>
+</form>
+</section>
+</div>
+<div aria-live="polite" class="toast" id="toast" role="status"></div>
+<script>
+(() => {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const isoOffset = d => { const x = new Date(d); const pad=n=>String(n).padStart(2,'0'); return `${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}`; };
+  const todayISO = isoOffset(today);
+  const addDays = n => { const d=new Date(today); d.setDate(d.getDate()+n); return isoOffset(d); };
+  let nextId=13;
+  let editingId=null;
+  let records=[
+    {id:'EX-012',type:'holiday',title:'Hari libur perusahaan',employee:'',start:addDays(-56),end:addDays(-56),reason:'Hari libur perusahaan.',created:'2026-10-12'},
+    {id:'EX-011',type:'holiday',title:'Hari libur perusahaan — periode mendatang',employee:'',start:addDays(74),end:addDays(74),reason:'Mengacu pada kalender hari libur perusahaan yang disahkan.',created:'2026-10-12'},
+    {id:'EX-010',type:'exemption',title:'Kegiatan offsite',employee:'Raka Aditya',start:addDays(0),end:addDays(1),reason:'Kegiatan offsite.',created:'2026-10-12'},
+    {id:'EX-009',type:'exemption',title:'Dinas luar kantor',employee:'Dina Maharani',start:addDays(-2),end:addDays(-1),reason:'Penugasan dinas luar kantor.',created:'2026-10-12'},
+    {id:'EX-008',type:'exemption',title:'Penugasan eksternal',employee:'Bima Pratama',start:addDays(7),end:addDays(8),reason:'Penugasan eksternal.',created:'2026-10-12'}
+  ];
+  const $=id=>document.getElementById(id);
+  const fmt=d=>new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(d+'T00:00:00'));
+  const periodStatus=r=>r.start>todayISO?'upcoming':r.end<todayISO?'ended':'active';
+  const statusLabel=s=>({active:'Sedang berlaku',upcoming:'Akan berlaku',ended:'Periode berakhir'}[s]);
+  const typeLabel=t=>t==='holiday'?'Company Holiday':'Individual Exemption';
+  const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function render(){
+    const q=$('searchInput').value.trim().toLowerCase(),tf=$('typeFilter').value,sf=$('statusFilter').value;
+    const filtered=records.filter(r=>{
+      const text=[r.id,r.title,r.employee,r.reason].join(' ').toLowerCase();
+      return (!q||text.includes(q))&&(tf==='all'||r.type===tf)&&(sf==='all'||periodStatus(r)===sf);
+    }).sort((a,b)=>a.start.localeCompare(b.start));
+    $('recordRows').innerHTML=filtered.map(r=>{
+      const status=periodStatus(r);
+      const scope=r.type==='holiday'?'Company-wide':r.employee;
+      const period=`${fmt(r.start)}${r.end===r.start?'':` – ${fmt(r.end)}`}`;
+      return `<tr><td><div class="primary-cell">${escapeHtml(r.title)}</div><div class="secondary-cell">${escapeHtml(r.id)}${r.reason?` · ${escapeHtml(r.reason)}`:''}</div></td><td><span class="type-badge ${r.type}">${typeLabel(r.type)}</span></td><td><div class="primary-cell">${escapeHtml(scope)}</div>${r.employee?'<div class="secondary-cell">Individual</div>':'<div class="secondary-cell">Seluruh perusahaan</div>'}</td><td>${period}</td><td><span class="status-badge ${status}">${statusLabel(status)}</span></td><td><button class="btn small" type="button" data-edit="${r.id}">Lihat / Edit</button></td></tr>`;
+    }).join('');
+    $('emptyState').classList.toggle('hidden',filtered.length>0);
+    $('recordRows').parentElement.classList.toggle('hidden',filtered.length===0);
+    $('resultCount').textContent=`${filtered.length} catatan`;
+    $('holidayCount').textContent=records.filter(r=>r.type==='holiday').length;
+    $('exemptionCount').textContent=records.filter(r=>r.type==='exemption').length;
+    $('activeCount').textContent=records.filter(r=>periodStatus(r)==='active').length;
+  }
+  function showToast(msg){$('toast').textContent=msg;$('toast').classList.add('show');window.setTimeout(()=>$('toast').classList.remove('show'),2800);}
+  function setType(type){
+    const isEx=type==='exemption';
+    $('employeeField').classList.toggle('hidden',!isEx);
+    $('employeeName').required=isEx;
+    $('titleLabel').textContent=isEx?'Nama / konteks exemption':'Nama hari libur';
+    $('recordTitle').placeholder=isEx?'Contoh: Dinas atau kegiatan offsite':'Contoh: Hari libur perusahaan';
+  }
+  function openModal(record=null){
+    editingId=record?.id??null;
+    $('recordForm').reset();
+    document.querySelector(`input[name="recordType"][value="${record?.type??'holiday'}"]`).checked=true;
+    setType(record?.type??'holiday');
+    $('modalTitle').textContent=record?'Lihat / Edit Holiday / Exemption':'Tambah Holiday / Exemption';
+    $('recordTitle').value=record?.title??'';
+    $('employeeName').value=record?.employee??'';
+    $('startDate').value=record?.start??todayISO;
+    $('endDate').value=record?.end??todayISO;
+    $('reason').value=record?.reason??'';
+    $('recordModal').classList.add('open');
+    $('recordTitle').focus();
+  }
+  function closeModal(){$('recordModal').classList.remove('open');editingId=null;}
+  $('addRecord').addEventListener('click',()=>openModal());
+  $('closeModal').addEventListener('click',closeModal);
+  $('cancelForm').addEventListener('click',closeModal);
+  $('recordModal').addEventListener('click',e=>{if(e.target===$('recordModal'))closeModal();});
+  document.querySelectorAll('input[name="recordType"]').forEach(r=>r.addEventListener('change',()=>setType(r.value)));
+  ['searchInput','typeFilter','statusFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',render));
+  $('recordRows').addEventListener('click',e=>{
+    const b=e.target.closest('[data-edit]');if(!b)return;
+    const r=records.find(x=>x.id===b.dataset.edit);if(r)openModal(r);
+  });
+  $('recordForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const type=document.querySelector('input[name="recordType"]:checked').value;
+    const title=$('recordTitle').value.trim(),employee=$('employeeName').value,start=$('startDate').value,end=$('endDate').value,reason=$('reason').value.trim();
+    if(!title||!start||!end){showToast('Lengkapi nama dan periode berlaku.');return;}
+    if(end<start){$('endDate').setCustomValidity('Tanggal akhir tidak boleh sebelum tanggal mulai.');$('endDate').reportValidity();$('endDate').setCustomValidity('');return;}
+    if(type==='exemption'&&!employee){$('employeeName').setCustomValidity('Pilih karyawan untuk Individual Exemption.');$('employeeName').reportValidity();$('employeeName').setCustomValidity('');return;}
+    const item={id:editingId??`EX-${String(nextId++).padStart(3,'0')}`,type,title,employee:type==='exemption'?employee:'',start,end,reason,created:'2026-10-12'};
+    if(editingId){records=records.map(r=>r.id===editingId?item:r);showToast('Holiday / Exemption diperbarui. Perubahan langsung berlaku.');}
+    else{records.push(item);showToast('Holiday / Exemption disimpan. Berlaku langsung.');}
+    closeModal();render();
+  });
+  $('mobileMenu').addEventListener('click',()=>{
+    const open=$('sidebar').classList.toggle('mobile-open');
+    $('mobileMenu').setAttribute('aria-expanded',String(open));
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+  render();
+})();
+</script>
+</body>
+</html>

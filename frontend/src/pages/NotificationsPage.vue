@@ -33,6 +33,19 @@
       </div>
     </div>
 
+    <!-- Error Alert -->
+    <v-alert
+      v-if="errorMessage"
+      type="error"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+      closable
+      @click:close="errorMessage = ''"
+    >
+      {{ errorMessage }}
+    </v-alert>
+
     <!-- Category Filter Tabs -->
     <v-tabs v-model="activeTab" color="primary" class="mb-6 border-b">
       <v-tab value="all">
@@ -141,6 +154,7 @@ import type { NotificationItem } from '../types/notifications.js';
 
 const router = useRouter();
 const activeTab = ref<'all' | 'unread' | 'alerts'>('all');
+const errorMessage = ref('');
 
 const { data: notificationsData, isLoading } = useNotificationsQuery({ limit: 100 });
 const { mutateAsync: markAsRead } = useMarkNotificationReadMutation();
@@ -173,8 +187,8 @@ async function handleClickNotification(item: NotificationItem) {
   if (item.status === 'Sent' || item.status === 'Pending') {
     try {
       await markAsRead(item.id);
-    } catch {
-      // Abaikan error background mark read
+    } catch (err: any) {
+      errorMessage.value = err?.message || 'Gagal menandai notifikasi telah dibaca.';
     }
   }
 
@@ -184,10 +198,11 @@ async function handleClickNotification(item: NotificationItem) {
 }
 
 async function handleMarkAllRead() {
+  errorMessage.value = '';
   try {
     await markAllRead();
-  } catch (err) {
-    console.error('Gagal menandai semua dibaca:', err);
+  } catch (err: any) {
+    errorMessage.value = err?.message || 'Gagal menandai seluruh notifikasi telah dibaca.';
   }
 }
 

@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>WorkPulse — Profil & Pengaturan Akun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM TOKENS (04-Design-System.md v1.4.0 FINAL)
+       ========================================================================== */
+    :root {
+      --color-canvas: #F7FAF9;
+      --color-surface: #FFFFFF;
+      --color-surface-subtle: #EFF5F2;
+      --color-surface-muted: #F1F5F4;
+      --color-border-subtle: #DCE7E2;
+      --color-border-strong: #A9C7BC;
+      --color-text-primary: #0E211B;
+      --color-text-secondary: #5C6E68;
+      --color-text-disabled: #66736E;
+      --color-brand-primary: #00674D;
+      --color-brand-hover: #00523E;
+      --color-brand-secondary: #12915F;
+      --color-brand-tint: #E6F4EE;
+      --color-brand-focus: #0B8061;
+
+      /* Status Tokens */
+      --color-status-green-bg: #E6F4EC;
+      --color-status-green-fg: #145A36;
+      --color-status-green-border: #A7D5B8;
+      --color-status-amber-bg: #FFF3D9;
+      --color-status-amber-fg: #7A4B00;
+      --color-status-amber-border: #E8C77A;
+      --color-status-red-bg: #FDE9E7;
+      --color-status-red-fg: #9B2923;
+      --color-status-red-border: #E8B1AC;
+      --color-status-neutral-bg: #EFF2F1;
+      --color-status-neutral-fg: #46534E;
+      --color-status-neutral-border: #C9D2CE;
+
+      /* Geometry & Elevation */
+      --radius-sm: 8px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-subtle: 0 4px 16px rgba(14, 33, 27, 0.04);
+      --shadow-card: 0 8px 24px rgba(14, 33, 27, 0.05);
+      --shadow-modal: 0 16px 36px rgba(14, 33, 27, 0.12);
+      --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--color-canvas);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+    }
+
+    button, a {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    a {
+      color: var(--color-brand-primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--color-brand-focus);
+      outline-offset: 2px;
+    }
+
+    /* App Shell */
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border-subtle);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px;
+    }
+
+    .brand-mark {
+      height: 38px;
+      width: 38px;
+      border-radius: 10px;
+      background: var(--color-brand-primary);
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--color-text-primary);
+    }
+
+    .brand-caption {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 1px;
+      font-weight: 500;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 4px;
+    }
+
+    .nav-label {
+      padding: 0 12px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-secondary);
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-link:hover {
+      background: var(--color-surface-subtle);
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+
+    .nav-link.active {
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      stroke: currentColor;
+    }
+
+    /* Sidebar Footer / Account Area */
+    .side-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--color-border-subtle);
+      padding: 16px 8px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .user-profile-link {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+      flex: 1;
+      text-decoration: none;
+      color: inherit;
+      padding: 6px;
+      margin: -6px;
+      border-radius: var(--radius-sm);
+      background: var(--color-brand-tint);
+      transition: background 0.15s;
+    }
+
+    .user-profile-link:hover {
+      background: #D8EAE2;
+      text-decoration: none;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #D8EAE2;
+      color: var(--color-brand-primary);
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .user-meta {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: var(--color-brand-primary);
+      font-weight: 700;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 0;
+      color: var(--color-text-secondary);
+      padding: 6px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+    }
+
+    .logout-btn:hover {
+      background: var(--color-surface-subtle);
+      color: #DC2626;
+    }
+
+    /* Main Area */
+    main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 64px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(20px, 3.5vw, 48px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    .breadcrumb strong {
+      color: var(--color-text-primary);
+      font-weight: 750;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-button {
+      height: 38px;
+      width: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--color-border-subtle);
+      background: #FFFFFF;
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      position: relative;
+    }
+
+    .icon-button:hover {
+      background: var(--color-surface-subtle);
+      color: var(--color-text-primary);
+    }
+
+    .badge-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      background: #B45309;
+      border: 1.5px solid #FFFFFF;
+      border-radius: 50%;
+    }
+
+    .content {
+      max-width: 980px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px clamp(20px, 3.5vw, 48px) 72px;
+    }
+
+    .page-heading {
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      font-size: 11.5px;
+      color: var(--color-brand-primary);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      max-width: 680px;
+    }
+
+    /* Cards & Panels */
+    .panel {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-head h2 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-text-primary);
+    }
+
+    .panel-head p {
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .panel-body {
+      padding: 24px;
+    }
+
+    /* Profile Header Card */
+    .profile-hero-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: #FFFFFF;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .hero-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 800;
+      border: 2px solid var(--color-border-strong);
+      flex-shrink: 0;
+    }
+
+    .hero-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hero-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .hero-name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 750;
+      background: var(--color-status-green-bg);
+      color: var(--color-status-green-fg);
+      border: 1px solid var(--color-status-green-border);
+    }
+
+    .status-indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    .hero-meta {
+      font-size: 13.5px;
+      color: var(--color-text-secondary);
+    }
+
+    /* Info Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px 24px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-label {
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .info-value {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    .info-note-box {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--color-surface-subtle);
+      border: 1px solid var(--color-border-subtle);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .info-note-box svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--color-brand-primary);
+      margin-top: 1px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+
+    .input-container {
+      position: relative;
+    }
+
+    input[type="text"], input[type="password"], input[type="email"] {
+      width: 100%;
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--color-text-primary);
+      background: #FFFFFF;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--color-brand-focus);
+      box-shadow: 0 0 0 3px rgba(11, 128, 97, 0.12);
+    }
+
+    .input-icon-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: 0;
+      color: var(--color-text-secondary);
+      padding: 4px;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+    }
+
+    .input-icon-btn:hover {
+      color: var(--color-text-primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 750;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--color-brand-primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-brand-hover);
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      border-color: var(--color-border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-surface-subtle);
+    }
+
+    /* Switch Toggles for Notifications */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .setting-row:first-child {
+      padding-top: 0;
+    }
+
+    .setting-meta strong {
+      display: block;
+      font-size: 14px;
+      color: var(--color-text-primary);
+    }
+
+    .setting-meta span {
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--color-status-neutral-border);
+      border-radius: 24px;
+      transition: 0.2s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-brand-primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: #0E211B;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-modal);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      z-index: 99;
+    }
+
+    .toast.show {
+      display: flex;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- ==============================================================
+         SIDEBAR NAVIGATION (RESMI MY TODAY - BEBAS EMOTICON)
+         ============================================================== -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">W</div>
+        <div>
+          <div class="brand-name">WorkPulse</div>
+          <div class="brand-caption">PT Dutamedia</div>
+        </div>
+      </div>
+
+      <!-- Workspace Menu (Self-Service) -->
+      <div class="nav-group">
+        <div class="nav-label">Workspace</div>
+        <a class="nav-link" href="02-Morning-Commitment.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>My Today</span>
+        </a>
+        <a class="nav-link" href="06-My-History-Weekly-Summary.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>My History</span>
+        </a>
+        <a class="nav-link" href="20-My Leave Request (Employee).html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>My Leave</span>
+        </a>
+        <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span>Notifications</span>
+        </a>
+      </div>
+
+      <!-- Management Menu (Dynamic for Supervisor / Head / HRGA / CEO) -->
+      <div class="nav-group" id="mgmt-nav-group" style="display: none;">
+        <div class="nav-label">Management</div>
+        <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Blocker Queue</span>
+        </a>
+        <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Coaching Notes</span>
+        </a>
+        <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+          <span>Compliance Queue</span>
+        </a>
+        <a class="nav-link" href="21-Leave Approval Queue (ReviewerHRGA).html" id="link-leave-approval" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Leave Approvals</span>
+        </a>
+        <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Exemptions</span>
+        </a>
+        <a class="nav-link" href="23-Reports.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          <span>Reports</span>
+        </a>
+      </div>
+
+      <!-- Account Bottom Area (Aktif di Halaman Profil) -->
+      <div class="side-bottom">
+        <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
+          <div class="avatar" id="side-avatar">BP</div>
+          <div class="user-meta">
+            <div class="user-name" id="side-user-name">Budi Pratama</div>
+            <div class="user-role" id="side-user-role">Software Engineer</div>
+          </div>
+        </a>
+        <a href="01-Login-Activation.html" class="logout-btn" title="Keluar / Ganti Akun" aria-label="Keluar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ==============================================================
+         MAIN CONTENT AREA
+         ============================================================== -->
+    <main>
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="breadcrumb">
+          Akun & Pengaturan <span style="color: #A9C7BC;">/</span> <strong>Profil Pengguna</strong>
+        </div>
+        <div class="top-actions">
+          <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="badge-dot"></span>
+          </a>
+          <a class="avatar" href="24-Profile-Settings.html" id="top-avatar" title="Buka Profil Saya">BP</a>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- Page Heading -->
+        <div class="page-heading">
+          <div class="eyebrow">Identitas & Konteks Akun</div>
+          <h1>Profil Pengguna</h1>
+          <p class="subtitle">
+            Informasi identitas kerja, penugasan organisasi terdaftar, preferensi notifikasi, dan pengaturan keamanan akses akun Anda.
+          </p>
+        </div>
+
+        <!-- 1. Hero Identity Card -->
+        <div class="profile-hero-card">
+          <div class="hero-avatar" id="hero-avatar">BP</div>
+          <div class="hero-info">
+            <div class="hero-title-row">
+              <span class="hero-name" id="hero-name">Budi Pratama</span>
+              <span class="status-badge">
+                <span class="status-indicator-dot"></span>
+                <span>Aktif · Terdaftar</span>
+              </span>
+            </div>
+            <div class="hero-meta" id="hero-meta">
+              budi.pratama@dutamedia.com · Software Engineer · Technology Squad A
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Organizational Context Panel (Read-only / Master Data) -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Konteks & Struktur Organisasi</h2>
+              <p>Struktur penugasan resmi yang tercatat pada setiap komitmen dan evaluasi harian Anda.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Peran Sistem (Role)</span>
+                <span class="info-value" id="profile-role-val">Employee</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Fungsi / Divisi</span>
+                <span class="info-value" id="profile-function-val">Engineering</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Departemen / Squad</span>
+                <span class="info-value" id="profile-dept-val">Technology Squad A</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Atasan Langsung (Direct Reviewer)</span>
+                <span class="info-value" id="profile-reviewer-val">Siti Aminah (Supervisor)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Status Kebijakan Partisipasi</span>
+                <span class="info-value" id="profile-policy-val">Standar Wajib (Baseline 1–3 Komitmen)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Tanggal Aktif Organisasi</span>
+                <span class="info-value">05 Januari 2026</span>
+              </div>
+            </div>
+
+            <div class="info-note-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div>
+                Data struktur organisasi dan pelaporan diatur secara terpusat melalui Organization Master Data oleh HRGA. Jika terdapat mutasi, perubahan squad, atau perbedaan atasan reviewer, silakan hubungi tim HRGA organisasi.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Notification Preferences (FR-27 / FR-28) -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Preferensi Notifikasi</h2>
+              <p>Atur saluran pengingat untuk jadwal Cut-Off dan eskalasi blocker harian.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="setting-row">
+              <div class="setting-meta">
+                <strong>Pengingat Browser Push (Cut-Off Pagi & Sore)</strong>
+                <span>Menerima peringatan otomatis 30 menit sebelum batas waktu komitmen (08:30 WIB) dan EOD (17:30 WIB).</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="pref-push" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-meta">
+                <strong>Notifikasi Feedback & Manager Notes</strong>
+                <span>Pemberitahuan instan saat atasan memberikan coaching note atau umpan balik pada komitmen harian Anda.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="pref-notes" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-meta">
+                <strong>Eskalasi Blocker Tim</strong>
+                <span>Pemberitahuan bila ada pembaruan resolusi terhadap blocker teknis atau dependensi yang Anda laporkan.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="pref-blocker" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Account Security & Password -->
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Keamanan & Kata Sandi</h2>
+              <p>Perbarui kata sandi akun secara berkala untuk menjaga keamanan akses kerja Anda.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <form id="pwd-form" style="max-width: 520px;">
+              <div class="form-group">
+                <label class="form-label" for="curr-pwd">Kata Sandi Saat Ini</label>
+                <div class="input-container">
+                  <input type="password" id="curr-pwd" placeholder="Masukkan kata sandi saat ini" required>
+                  <button type="button" class="input-icon-btn" data-toggle="curr-pwd" aria-label="Lihat kata sandi">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="new-pwd">Kata Sandi Baru</label>
+                <div class="input-container">
+                  <input type="password" id="new-pwd" placeholder="Minimal 8 karakter kombinasi" required>
+                  <button type="button" class="input-icon-btn" data-toggle="new-pwd" aria-label="Lihat kata sandi">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="confirm-pwd">Konfirmasi Kata Sandi Baru</label>
+                <div class="input-container">
+                  <input type="password" id="confirm-pwd" placeholder="Ulangi kata sandi baru" required>
+                  <button type="button" class="input-icon-btn" data-toggle="confirm-pwd" aria-label="Lihat kata sandi">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="btn-save-pwd">
+                Simpan Kata Sandi Baru
+              </button>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification Feedback -->
+  <div class="toast" id="profile-toast" role="status" aria-live="polite">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A7D5B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toast-text">Pengaturan berhasil diperbarui.</span>
+  </div>
+
+  <script>
+    // SVGs for Password Toggle
+    const eyeSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const eyeOffSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+    // Password Visibility Toggles
+    document.querySelectorAll('[data-toggle]').forEach(btn => {
+      btn.onclick = () => {
+        const input = document.getElementById(btn.dataset.toggle);
+        if (!input) return;
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        btn.innerHTML = isPwd ? eyeOffSvg : eyeSvg;
+      };
+    });
+
+    // Reactive Session Management from localStorage
+    function loadActiveUserSession() {
+      let user = null;
+      try {
+        const stored = localStorage.getItem('workpulse_active_user');
+        if (stored) user = JSON.parse(stored);
+      } catch (e) {
+        console.warn('Failed parsing active user', e);
+      }
+
+      if (!user) {
+        user = {
+          name: 'Budi Pratama',
+          email: 'budi.pratama@dutamedia.com',
+          role: 'EMPLOYEE',
+          roleLabel: 'Software Engineer',
+          function: 'Engineering',
+          department: 'Technology Squad A',
+          isExempt: false,
+          avatar: 'BP'
+        };
+      }
+
+      // Update UI elements
+      document.getElementById('side-avatar').textContent = user.avatar || 'BP';
+      document.getElementById('top-avatar').textContent = user.avatar || 'BP';
+      document.getElementById('side-user-name').textContent = user.name;
+      document.getElementById('side-user-role').textContent = user.roleLabel || user.role;
+
+      document.getElementById('hero-avatar').textContent = user.avatar || 'BP';
+      document.getElementById('hero-name').textContent = user.name;
+      document.getElementById('hero-meta').textContent = `${user.email} · ${user.roleLabel || user.role} · ${user.department}`;
+
+      document.getElementById('profile-role-val').textContent = user.roleLabel || user.role;
+      document.getElementById('profile-function-val').textContent = user.function || 'General';
+      document.getElementById('profile-dept-val').textContent = user.department || '-';
+
+      if (user.isExempt || user.role === 'CEO') {
+        document.getElementById('profile-policy-val').textContent = 'Pengecualian Terbuka (Indefinite Role Exemption)';
+        document.getElementById('profile-reviewer-val').textContent = 'Direksi / Dewan Pengawas';
+      } else if (user.role === 'SUPERVISOR') {
+        document.getElementById('profile-reviewer-val').textContent = 'Hendra Gunawan (Head of Technology)';
+      } else if (user.role === 'HEAD_OF_DEPARTMENT') {
+        document.getElementById('profile-reviewer-val').textContent = 'Ir. Bambang Soedirgo (Chief Executive Officer)';
+      } else if (user.role === 'HRGA') {
+        document.getElementById('profile-reviewer-val').textContent = 'Head of HRGA & Operations';
+      } else {
+        document.getElementById('profile-reviewer-val').textContent = 'Siti Aminah (Supervisor)';
+      }
+
+      // Show Management Nav Group if applicable
+      const mgmtNav = document.getElementById('mgmt-nav-group');
+      if (['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HRGA', 'CEO'].includes(user.role)) {
+        mgmtNav.style.display = 'grid';
+        if (['SUPERVISOR', 'HEAD_OF_DEPARTMENT'].includes(user.role)) {
+          const c = document.getElementById('link-coaching');
+          if (c) c.style.display = 'flex';
+          const la = document.getElementById('link-leave-approval');
+          if (la) la.style.display = 'flex';
+        }
+        if (user.role === 'HRGA') {
+          const cp = document.getElementById('link-compliance');
+          if (cp) cp.style.display = 'flex';
+          const ex = document.getElementById('link-exemptions');
+          if (ex) ex.style.display = 'flex';
+          const la = document.getElementById('link-leave-approval');
+          if (la) la.style.display = 'flex';
+        }
+      } else {
+        mgmtNav.style.display = 'none';
+      }
+    }
+
+    // Toast Feedback Helper
+    function showToast(msg) {
+      const toast = document.getElementById('profile-toast');
+      document.getElementById('toast-text').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Handle Password Submit
+    document.getElementById('pwd-form').onsubmit = (e) => {
+      e.preventDefault();
+      const newP = document.getElementById('new-pwd').value;
+      const confP = document.getElementById('confirm-pwd').value;
+      if (newP !== confP) {
+        alert('Konfirmasi kata sandi baru tidak cocok. Periksa kembali.');
+        return;
+      }
+      document.getElementById('pwd-form').reset();
+      showToast('Kata sandi berhasil diperbarui.');
+    };
+
+    // Handle Switch Changes
+    ['pref-push', 'pref-notes', 'pref-blocker'].forEach(id => {
+      document.getElementById(id).onchange = () => {
+        showToast('Preferensi notifikasi disimpan.');
+      };
+    });
+
+    // Run on load
+    loadActiveUserSession();
+  </script>
+</body>
+</html>

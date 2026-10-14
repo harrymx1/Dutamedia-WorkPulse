@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { PolicyCategory } from '@prisma/client';
 import { SchedulerService } from './scheduler.service.js';
 import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 
@@ -13,6 +14,7 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
   let databaseBackupMock: any;
   let exceptionMock: any;
   let policyMock: any;
+  let identityMock: any;
 
   beforeEach(() => {
     prismaMock = {
@@ -22,6 +24,12 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
           { id: 'user-2', status: 'Active' },
         ]),
       },
+      exception: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+      notification: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
     };
 
     dailyAccountabilityMock = {
@@ -29,6 +37,7 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
       findRecordsNearingCutoff: vi.fn().mockResolvedValue([
         { id: 'rec-1', employeeUserId: 'user-1' },
       ]),
+      findPendingSubmissionEmployeeIds: vi.fn().mockResolvedValue(['user-1']),
     };
 
     complianceMock = {
@@ -49,6 +58,7 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
 
     notificationMock = {
       dispatchTrigger: vi.fn().mockResolvedValue([]),
+      hasCutoffReminderNotification: vi.fn().mockResolvedValue(false),
     };
 
     databaseBackupMock = {
@@ -59,14 +69,34 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
       findPendingLeavesOlderThan: vi.fn().mockResolvedValue([
         { id: 'exc-1', directManagerId: 'mgr-1' },
       ]),
+      hasApprovedHolidayOnDate: vi.fn().mockResolvedValue(false),
+    };
+
+    identityMock = {
+      findActiveUserIds: vi.fn().mockResolvedValue(['user-1', 'user-2']),
     };
 
     policyMock = {
-      getActivePolicySnapshot: vi.fn().mockResolvedValue({
-        ReminderThreshold: {
-          objectionWindowReminderHours: 2,
-          leavePendingReminderHours: 24,
-        },
+      getActivePolicySnapshot: vi.fn().mockImplementation((cats: any[]) => {
+        const result: any = {};
+        if (cats.includes(PolicyCategory.Cutoff)) {
+          result[PolicyCategory.Cutoff] = {
+            morningOnTimeDeadline: '09:00',
+            eodOnTimeDeadline: '18:00',
+          };
+        }
+        if (cats.includes(PolicyCategory.WorkdayCalendar)) {
+          result[PolicyCategory.WorkdayCalendar] = {
+            workDays: [1, 2, 3, 4, 5],
+          };
+        }
+        if (cats.includes(PolicyCategory.ReminderThreshold)) {
+          result[PolicyCategory.ReminderThreshold] = {
+            objectionWindowReminderHours: 2,
+            leavePendingReminderHours: 24,
+          };
+        }
+        return Promise.resolve(result);
       }),
     };
 
@@ -80,6 +110,7 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
       databaseBackupMock,
       exceptionMock,
       policyMock,
+      identityMock,
     );
   });
 
@@ -184,10 +215,7 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
     it('harus mengirim notifikasi Weekly Summary ke seluruh user aktif pada Senin 08:00', async () => {
       await service.runWeeklySummaryNotification();
 
-      expect(prismaMock.user.findMany).toHaveBeenCalledWith({
-        where: { status: 'Active' },
-        select: { id: true },
-      });
+      expect(identityMock.findActiveUserIds).toHaveBeenCalled();
 
       expect(notificationMock.dispatchTrigger).toHaveBeenCalledTimes(2);
       expect(notificationMock.dispatchTrigger).toHaveBeenCalledWith(
@@ -201,19 +229,108 @@ describe('SchedulerService (SAD §11.1 - §11.6, EPIC-15)', () => {
   });
 
   describe('Reminders dispatching (Job #1, #4, #7)', () => {
-    it('sendCutoffReminders harus mendispatch MORNING_EOD_CUTOFF_REMINDER ke user yang belum submit', async () => {
-      const count = await service.sendCutoffReminders(new Date());
-
-      expect(count).toBe(1);
-      expect(notificationMock.dispatchTrigger).toHaveBeenCalledWith(
-        SystemNotificationTrigger.MORNING_EOD_CUTOFF_REMINDER,
-        'user-1',
-        expect.objectContaining({
-          title: expect.stringContaining('Pengingat Cutoff'),
-        }),
-        'DailyAccountabilityRecord',
-        'rec-1',
+    describe('sendCutoffReminders (Job #1, SAD §11.2 #1, PRD FR-28, ADR-014)', () => {
+      it.each([
+        { timeStr: '07:59:00.000', h: 7, m: 59, s: 0, ms: 0, expected: 0, desc: 'sebelum window dimulai (T - 61m)' },
+        { timeStr: '08:00:00.000', h: 8, m: 0, s: 0, ms: 0, expected: 1, desc: 'tepat batas awal window 60m (T - 60m)' },
+        { timeStr: '08:30:00.000', h: 8, m: 30, s: 0, ms: 0, expected: 1, desc: 'di dalam window aktif (T - 30m)' },
+        { timeStr: '08:59:59.999', h: 8, m: 59, s: 59, ms: 999, expected: 1, desc: 'sesaat sebelum batas deadline (T - 1ms)' },
+        { timeStr: '09:00:00.000', h: 9, m: 0, s: 0, ms: 0, expected: 0, desc: 'tepat di batas deadline On-Time (T)' },
+        { timeStr: '09:15:00.000', h: 9, m: 15, s: 0, ms: 0, expected: 0, desc: 'setelah deadline / dalam Grace Period (T + 15m)' },
+      ])(
+        'Morning Cutoff Boundary: pada $timeStr ($desc) harus return $expected reminder',
+        async ({ h, m, s, ms, expected }) => {
+          const simTime = new Date(2026, 8, 16, h, m, s, ms); // 16 September 2026 adalah Rabu (workday 3)
+          const count = await service.sendCutoffReminders(simTime);
+          expect(count).toBe(expected);
+        },
       );
+
+      it.each([
+        { timeStr: '16:59:00.000', h: 16, m: 59, s: 0, ms: 0, expected: 0, desc: 'sebelum window EOD dimulai (T - 61m)' },
+        { timeStr: '17:00:00.000', h: 17, m: 0, s: 0, ms: 0, expected: 1, desc: 'tepat batas awal window EOD 60m (T - 60m)' },
+        { timeStr: '17:30:00.000', h: 17, m: 30, s: 0, ms: 0, expected: 1, desc: 'di dalam window aktif EOD (T - 30m)' },
+        { timeStr: '17:59:59.999', h: 17, m: 59, s: 59, ms: 999, expected: 1, desc: 'sesaat sebelum batas deadline EOD (T - 1ms)' },
+        { timeStr: '18:00:00.000', h: 18, m: 0, s: 0, ms: 0, expected: 0, desc: 'tepat di batas deadline EOD (T)' },
+        { timeStr: '18:15:00.000', h: 18, m: 15, s: 0, ms: 0, expected: 0, desc: 'setelah deadline EOD (T + 15m)' },
+      ])(
+        'EOD Cutoff Boundary: pada $timeStr ($desc) harus return $expected reminder',
+        async ({ h, m, s, ms, expected }) => {
+          const simTime = new Date(2026, 8, 16, h, m, s, ms); // 16 September 2026 adalah Rabu (workday 3)
+          const count = await service.sendCutoffReminders(simTime);
+          expect(count).toBe(expected);
+        },
+      );
+
+      it('sendCutoffReminders harus mendispatch notifikasi dengan payload deterministic dan relatedEntityId null/undefined', async () => {
+        const simTime = new Date(2026, 8, 16, 8, 30, 0);
+        const count = await service.sendCutoffReminders(simTime);
+
+        expect(count).toBe(1);
+        expect(notificationMock.dispatchTrigger).toHaveBeenCalledWith(
+          SystemNotificationTrigger.MORNING_EOD_CUTOFF_REMINDER,
+          'user-1',
+          expect.objectContaining({
+            title: 'Pengingat Cutoff Morning Check-in',
+            linkPath: '/my-today',
+            iconType: 'clock-outline',
+            metadata: {
+              phase: 'MORNING',
+              workDate: '2026-09-16',
+            },
+          }),
+          undefined,
+          undefined,
+        );
+      });
+
+      it('sendCutoffReminders harus skip dan return 0 jika hari bukan hari kerja', async () => {
+        const sunday = new Date(2026, 8, 20, 8, 30, 0); // 20 September 2026 adalah Minggu (day 0)
+        const count = await service.sendCutoffReminders(sunday);
+        expect(count).toBe(0);
+        expect(notificationMock.dispatchTrigger).not.toHaveBeenCalled();
+      });
+
+      it('sendCutoffReminders harus skip dan return 0 jika ada approved Company Holiday', async () => {
+        exceptionMock.hasApprovedHolidayOnDate.mockResolvedValueOnce(true);
+        const simTime = new Date(2026, 8, 16, 8, 30, 0);
+        const count = await service.sendCutoffReminders(simTime);
+        expect(count).toBe(0);
+        expect(notificationMock.dispatchTrigger).not.toHaveBeenCalled();
+      });
+
+      it('sendCutoffReminders harus skip jika seluruh karyawan sudah submit (kandidat kosong)', async () => {
+        dailyAccountabilityMock.findPendingSubmissionEmployeeIds.mockResolvedValueOnce([]);
+        const simTime = new Date(2026, 8, 16, 8, 30, 0);
+        const count = await service.sendCutoffReminders(simTime);
+        expect(count).toBe(0);
+        expect(notificationMock.dispatchTrigger).not.toHaveBeenCalled();
+      });
+
+      it('sendCutoffReminders harus skip user yang sudah pernah menerima reminder pada workDate dan fase tersebut', async () => {
+        notificationMock.hasCutoffReminderNotification.mockResolvedValueOnce(true);
+        const simTime = new Date(2026, 8, 16, 8, 30, 0);
+        const count = await service.sendCutoffReminders(simTime);
+        expect(count).toBe(0);
+        expect(notificationMock.dispatchTrigger).not.toHaveBeenCalled();
+      });
+
+      it('sendCutoffReminders harus menolak eksekusi tumpang tindih dalam satu proses (concurrency guard)', async () => {
+        const simTime = new Date(2026, 8, 16, 8, 30, 0);
+        let slowResolve: () => void;
+        const slowPromise = new Promise<string[]>((res) => {
+          slowResolve = () => res(['user-1']);
+        });
+        dailyAccountabilityMock.findPendingSubmissionEmployeeIds.mockReturnValueOnce(slowPromise);
+
+        const firstCall = service.sendCutoffReminders(simTime);
+        const secondCall = await service.sendCutoffReminders(simTime);
+        expect(secondCall).toBe(0);
+
+        slowResolve!();
+        const firstResult = await firstCall;
+        expect(firstResult).toBe(1);
+      });
     });
 
     it('sendObjectionWindowReminders harus mendispatch ke direct manager saat window mendekati akhir', async () => {

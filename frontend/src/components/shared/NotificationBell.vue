@@ -8,6 +8,7 @@
         density="comfortable"
         class="notification-bell"
         aria-label="Lihat Notifikasi"
+        data-testid="notification-bell"
       >
         <v-badge
           v-if="unreadCount > 0"
@@ -23,7 +24,7 @@
       </v-btn>
     </template>
 
-    <v-card class="elevation-4 border rounded-lg">
+    <v-card class="elevation-4 border rounded-lg" data-testid="notification-panel">
       <v-card-item class="py-3 px-4 border-b">
         <div class="d-flex align-center justify-space-between">
           <span class="text-subtitle-2 font-weight-bold">Notifikasi</span>
@@ -39,6 +40,7 @@
             v-for="item in notifications.slice(0, 5)"
             :key="item.id"
             :class="{ 'notification-item--unread': item.status === 'Sent' }"
+            :data-testid="'notification-item-' + item.triggerType"
             class="py-2 px-4 border-b"
             @click="handleNotificationClick(item)"
           >
@@ -82,10 +84,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuery } from '@tanstack/vue-query';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { apiClient } from '../../api/client.js';
 
 const router = useRouter();
+const queryClient = useQueryClient();
 
 interface NotificationPayload {
   title: string;
@@ -139,8 +142,10 @@ async function handleNotificationClick(item: NotificationItem) {
   if (item.status === 'Sent') {
     try {
       await apiClient.post(`notifications/${item.id}/mark-read`);
-    } catch {
-      // Abaikan jika network error saat mark-read
+      queryClient.invalidateQueries({ queryKey: ['notifications-bell'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    } catch (err) {
+      console.error('Notification mark-read error:', err);
     }
   }
 

@@ -600,6 +600,27 @@ describe('ExceptionService (EPIC-10)', () => {
         take: 50,
       });
     });
+
+    it('harus memeriksa apakah tanggal tertentu merupakan hari libur perusahaan (Holiday Approved)', async () => {
+      const testDate = new Date('2026-12-25');
+      prismaMock.exception.findFirst.mockResolvedValue({ id: 'holiday-1' });
+
+      const isHoliday = await service.hasApprovedHolidayOnDate(testDate);
+      expect(isHoliday).toBe(true);
+      expect(prismaMock.exception.findFirst).toHaveBeenCalledWith({
+        where: {
+          type: ExceptionType.Holiday,
+          status: ExceptionStatus.Approved,
+          dateStart: { lte: testDate },
+          dateEnd: { gte: testDate },
+        },
+        select: { id: true },
+      });
+
+      prismaMock.exception.findFirst.mockResolvedValue(null);
+      const isNotHoliday = await service.hasApprovedHolidayOnDate(new Date('2026-10-06'));
+      expect(isNotHoliday).toBe(false);
+    });
   });
 });
 

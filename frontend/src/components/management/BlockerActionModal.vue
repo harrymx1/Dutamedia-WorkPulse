@@ -64,6 +64,7 @@
             rows="2"
             :rules="[(v: string) => !!v || 'Akar masalah wajib diisi']"
             class="mb-3"
+            data-testid="blocker-root-cause-input"
           />
           <v-textarea
             v-model="resolutionSummary"
@@ -72,6 +73,7 @@
             variant="outlined"
             rows="3"
             :rules="[(v: string) => !!v || 'Rangkuman penyelesaian wajib diisi']"
+            data-testid="blocker-resolution-note-input"
           />
         </div>
 
@@ -127,6 +129,7 @@
           variant="elevated"
           :loading="isPending"
           :disabled="!isSubmitEnabled"
+          data-testid="blocker-action-confirm-button"
           @click="handleSubmit"
         >
           {{ submitLabel }}

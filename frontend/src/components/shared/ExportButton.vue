@@ -53,6 +53,8 @@ interface Props {
   format?: 'pdf' | 'xlsx' | 'all';
   loading?: boolean;
   disabled?: boolean;
+  data?: any[];
+  filename?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {

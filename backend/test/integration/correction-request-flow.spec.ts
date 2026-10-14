@@ -16,6 +16,7 @@ import {
   ConflictException,
   ForbiddenException,
 } from '../../src/modules/shared/exceptions/api.exception.js';
+import { SystemNotificationTrigger } from '../../src/modules/notification/constants/notification-trigger.constants.js';
 
 function createUser(userId: string, role: Role, overrides = {}): CurrentUserPayload {
   return {
@@ -110,7 +111,7 @@ describe('EPIC-22-T2: Skenario A — Correction Request Lifecycle (SAD §17.7)',
       expect.objectContaining({ action: 'CORRECTION_APPLIED', actorUserId: 'emp-alice' }), prismaMock,
     );
     expect(notificationMock.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ triggerType: 'CORRECTION_APPLIED', recipientUserId: 'emp-alice' }),
+      expect.objectContaining({ triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED, recipientUserId: 'emp-alice' }),
     );
   });
 
@@ -136,14 +137,16 @@ describe('EPIC-22-T2: Skenario A — Correction Request Lifecycle (SAD §17.7)',
     expect(result.classification).toBe(CorrectionClassification.Material);
     expect(prismaMock.commitment.update).not.toHaveBeenCalled();
     expect(notificationMock.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ triggerType: 'CORRECTION_MATERIAL_REQUESTED', recipientUserId: 'spv-bob' }),
+      expect.objectContaining({ triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_MATERIAL_SUBMITTED, recipientUserId: 'spv-bob' }),
     );
   });
 
   it('A-3 [OBJECT PATH]: Reviewer menolak → Rejected, AuditLog(CORRECTION_REJECTED), notif ke employee (SAD §17.7)', async () => {
     prismaMock.$queryRaw.mockResolvedValue([{
       id: 'cr-material', status: CorrectionStatus.Pending,
+      requestedByUserId: 'emp-alice',
       requested_by_user_id: 'emp-alice',
+      objectionWindowEnd: new Date(Date.now() + 24 * 3600 * 1000),
       objection_window_end: new Date(Date.now() + 24 * 3600 * 1000),
     }]);
     prismaMock.correctionRequest.update.mockResolvedValue({
@@ -158,7 +161,7 @@ describe('EPIC-22-T2: Skenario A — Correction Request Lifecycle (SAD §17.7)',
       expect.objectContaining({ action: 'CORRECTION_REJECTED', actorUserId: 'spv-bob' }), prismaMock,
     );
     expect(notificationMock.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ triggerType: 'CORRECTION_REJECTED', recipientUserId: 'emp-alice' }),
+      expect.objectContaining({ triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED, recipientUserId: 'emp-alice' }),
     );
   });
 
@@ -166,8 +169,11 @@ describe('EPIC-22-T2: Skenario A — Correction Request Lifecycle (SAD §17.7)',
     prismaMock.correctionRequest.findMany.mockResolvedValue([{ id: 'cr-expired' }]);
     prismaMock.$queryRaw.mockResolvedValue([{
       id: 'cr-expired', status: CorrectionStatus.Pending,
+      targetCommitmentId: 'comm-scenario-a',
       target_commitment_id: 'comm-scenario-a',
+      requestedChange: { referenceLink: 'https://auto' },
       requested_change: { referenceLink: 'https://auto' },
+      requestedByUserId: 'emp-alice',
       requested_by_user_id: 'emp-alice',
     }]);
     prismaMock.commitment.findUnique.mockResolvedValue({ id: 'comm-scenario-a', text: 'Old', dailyRecordId: 'rec-scenario-a' });
@@ -187,7 +193,9 @@ describe('EPIC-22-T2: Skenario A — Correction Request Lifecycle (SAD §17.7)',
   it('A-5 [DENY #8]: Reviewer object setelah auto-apply → 409 CONFLICT (SAD §19.4 #8)', async () => {
     prismaMock.$queryRaw.mockResolvedValue([{
       id: 'cr-applied', status: CorrectionStatus.Applied,
+      requestedByUserId: 'emp-alice',
       requested_by_user_id: 'emp-alice',
+      objectionWindowEnd: new Date(Date.now() + 24 * 3600 * 1000),
       objection_window_end: new Date(Date.now() + 24 * 3600 * 1000),
     }]);
 
@@ -199,7 +207,9 @@ describe('EPIC-22-T2: Skenario A — Correction Request Lifecycle (SAD §17.7)',
   it('A-6 [DENY #1]: Employee object pada pengajuannya sendiri → 403 FORBIDDEN (SAD §19.4 #1)', async () => {
     prismaMock.$queryRaw.mockResolvedValue([{
       id: 'cr-self', status: CorrectionStatus.Pending,
+      requestedByUserId: 'emp-alice',
       requested_by_user_id: 'emp-alice',
+      objectionWindowEnd: new Date(Date.now() + 24 * 3600 * 1000),
       objection_window_end: new Date(Date.now() + 24 * 3600 * 1000),
     }]);
 

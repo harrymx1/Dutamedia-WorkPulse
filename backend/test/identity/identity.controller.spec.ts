@@ -130,4 +130,15 @@ describe('IdentityController (SAD §10.2)', () => {
       true,
     );
   });
+
+  it('GET /users/:id/organizational-assignments mendelegasikan ke service.getOrganizationalAssignments dengan id dan caller (SAD §10.2)', async () => {
+    mockService.getOrganizationalAssignments.mockResolvedValue([]);
+    const mockCaller = { userId: 'admin-1', role: Role.SystemAdmin } as any;
+
+    await controller.getOrganizationalAssignments('target-user-1', mockCaller);
+    expect(mockService.getOrganizationalAssignments).toHaveBeenCalledWith(
+      'target-user-1',
+      mockCaller,
+    );
+  });
 });

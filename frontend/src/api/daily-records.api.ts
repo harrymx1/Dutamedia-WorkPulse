@@ -2,6 +2,7 @@ import { apiClient } from './client.js';
 import type { ApiResponse } from '../types/api.js';
 import type {
   DailyAccountabilityRecord,
+  TodayRecordResponse,
   MorningCheckinPayload,
   EodCheckinPayload,
   ConfirmOverridePayload,
@@ -23,8 +24,8 @@ export const dailyRecordsApi = {
   /**
    * GET /api/v1/daily-accountability-records/today
    */
-  async getTodayRecord(): Promise<ApiResponse<DailyAccountabilityRecord | null>> {
-    return apiClient.get<DailyAccountabilityRecord | null>(
+  async getTodayRecord(): Promise<ApiResponse<TodayRecordResponse>> {
+    return apiClient.get<TodayRecordResponse>(
       '/daily-accountability-records/today',
     );
   },
@@ -77,18 +78,21 @@ export const dailyRecordsApi = {
   },
 
   /**
-   * POST /api/v1/commitments/:id/request-correction
+   * POST /api/v1/correction-requests (SAD §10.5, §9.6, FR-43)
    */
   async requestCorrection(
     payload: CorrectionRequestPayload,
   ): Promise<ApiResponse<unknown>> {
-    return apiClient.post(
-      `/commitments/${payload.commitmentId}/request-correction`,
-      {
-        proposedDescription: payload.proposedDescription,
-        reason: payload.reason,
-      },
-    );
+    const targetCommitmentId = payload.targetCommitmentId || payload.commitmentId || '';
+    const requestedChange =
+      payload.requestedChange ||
+      (payload.proposedDescription ? { text: payload.proposedDescription } : {});
+
+    return apiClient.post('/correction-requests', {
+      targetCommitmentId,
+      requestedChange,
+      reason: payload.reason,
+    });
   },
 
   /**

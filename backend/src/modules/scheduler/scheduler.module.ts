@@ -8,6 +8,7 @@ import { NotificationModule } from '../notification/notification.module.js';
 import { FileStorageModule } from '../file-storage/file-storage.module.js';
 import { ExceptionModule } from '../exception/exception.module.js';
 import { PolicyModule } from '../policy/policy.module.js';
+import { IdentityModule } from '../identity/identity.module.js';
 import { SchedulerService } from './services/scheduler.service.js';
 import { DatabaseBackupService } from './services/database-backup.service.js';
 
@@ -22,6 +23,7 @@ import { DatabaseBackupService } from './services/database-backup.service.js';
     FileStorageModule,
     ExceptionModule,
     PolicyModule,
+    IdentityModule,
   ],
   providers: [SchedulerService, DatabaseBackupService],
   exports: [SchedulerService, DatabaseBackupService],

@@ -46,7 +46,7 @@
           class="mb-3"
         />
 
-        <v-row dense>
+        <v-row density="compact">
           <v-col cols="6">
             <v-text-field
               v-model="startDate"

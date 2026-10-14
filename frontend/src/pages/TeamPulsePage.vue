@@ -38,15 +38,15 @@
     <!-- 2. Main Workspace Navigation Tabs -->
     <v-card variant="outlined" class="rounded-lg border-subtle mb-6">
       <v-tabs v-model="activeTab" color="primary" class="border-b">
-        <v-tab value="roster" class="text-none font-weight-bold">
+        <v-tab value="roster" class="text-none font-weight-bold" data-testid="tab-roster">
           <v-icon icon="mdi-format-list-checks" class="mr-2" />
           Roster Akuntabilitas Tim ({{ rosterList.length }})
         </v-tab>
-        <v-tab value="blockers" class="text-none font-weight-bold">
+        <v-tab value="blockers" class="text-none font-weight-bold" data-testid="tab-blockers">
           <v-icon icon="mdi-alert-octagon-outline" class="mr-2" />
           Blocker Terbuka ({{ openBlockers.length }})
         </v-tab>
-        <v-tab value="reviews" class="text-none font-weight-bold">
+        <v-tab value="reviews" class="text-none font-weight-bold" data-testid="tab-reviews">
           <v-icon icon="mdi-clipboard-check-outline" class="mr-2" />
           Review Koreksi &amp; Cuti
           <v-chip
@@ -81,6 +81,28 @@
             <v-progress-circular indeterminate color="primary" />
             <div class="text-caption text-medium-emphasis mt-2">Memuat data anggota tim...</div>
           </div>
+
+          <!-- Error Roster (NFR-04 Network Resilience) -->
+          <v-alert
+            v-else-if="isErrorRoster"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            title="Gagal Memuat Data Anggota Tim"
+            text="Terjadi kendala jaringan saat menghubungi server."
+          >
+            <template #append>
+              <v-btn
+                data-testid="retry-roster-btn"
+                variant="outlined"
+                size="small"
+                color="error"
+                @click="() => refetchRoster()"
+              >
+                Coba Lagi
+              </v-btn>
+            </template>
+          </v-alert>
 
           <!-- Empty Roster -->
           <div
@@ -221,9 +243,31 @@
             />
           </div>
 
+          <!-- Error State (NFR-04 Network Resilience) -->
+          <v-alert
+            v-if="isErrorBlockers"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            title="Gagal Memuat Antrean Blocker"
+            text="Terjadi kendala jaringan saat menghubungi server."
+          >
+            <template #append>
+              <v-btn
+                data-testid="retry-blockers-btn"
+                variant="outlined"
+                size="small"
+                color="error"
+                @click="() => refetchBlockers()"
+              >
+                Coba Lagi
+              </v-btn>
+            </template>
+          </v-alert>
+
           <!-- Empty State -->
           <div
-            v-if="openBlockers.length === 0"
+            v-else-if="openBlockers.length === 0"
             class="py-12 text-center text-medium-emphasis border rounded-lg"
           >
             <v-icon icon="mdi-check-circle-outline" color="success" size="48" class="mb-2" />
@@ -232,7 +276,7 @@
           </div>
 
           <!-- Blocker List -->
-          <div v-else class="d-flex flex-column ga-3">
+          <div v-else class="d-flex flex-column ga-3" data-testid="blocker-list">
             <v-card
               v-for="blocker in openBlockers"
               :key="blocker.id"
@@ -241,6 +285,7 @@
                 'pa-4 rounded-lg border-subtle',
                 blocker.severity === 'Critical' ? 'border-red-subtle bg-red-lighten-5' : 'bg-surface'
               ]"
+              :data-testid="'blocker-card-' + blocker.status"
             >
               <div class="d-flex align-start justify-space-between flex-wrap ga-3">
                 <div class="d-flex align-start ga-3">
@@ -258,10 +303,11 @@
                         size="x-small"
                         :color="blocker.severity === 'Critical' ? 'error' : 'warning'"
                         class="font-weight-bold text-uppercase"
+                        data-testid="blocker-severity-badge"
                       >
                         {{ blocker.severity }}
                       </v-chip>
-                      <v-chip size="x-small" variant="outlined">
+                      <v-chip size="x-small" variant="outlined" data-testid="blocker-card-status">
                         Status: {{ blocker.status }}
                       </v-chip>
                     </div>
@@ -279,6 +325,7 @@
                     size="small"
                     color="primary"
                     variant="tonal"
+                    data-testid="blocker-acknowledge-button"
                     @click="openBlockerAction(blocker, 'acknowledge')"
                   >
                     Akui (Acknowledge)
@@ -287,17 +334,30 @@
                     size="small"
                     variant="outlined"
                     color="primary"
+                    data-testid="blocker-update-button"
                     @click="openBlockerAction(blocker, 'update')"
                   >
                     Perbarui Progres
                   </v-btn>
                   <v-btn
+                    v-if="blocker.status === 'Open' || blocker.status === 'Acknowledged'"
                     size="small"
                     color="success"
                     variant="elevated"
+                    data-testid="blocker-resolve-button"
                     @click="openBlockerAction(blocker, 'resolve')"
                   >
                     Selesaikan
+                  </v-btn>
+                  <v-btn
+                    v-if="blocker.status === 'Resolved' && blocker.raisedByUserId === authStore.user?.userId"
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    data-testid="blocker-close-button"
+                    @click="openBlockerAction(blocker, 'close')"
+                  >
+                    Tutup Blocker
                   </v-btn>
                 </div>
               </div>
@@ -324,25 +384,26 @@
               Tidak ada permohonan koreksi pending saat ini.
             </div>
 
-            <div v-else class="d-flex flex-column ga-2">
+            <div v-else class="d-flex flex-column ga-2" data-testid="correction-request-list">
               <v-card
                 v-for="req in pendingCorrections"
                 :key="req.id"
                 variant="outlined"
                 class="pa-3 rounded border-subtle bg-surface"
+                data-testid="correction-request-item-pending"
               >
                 <div class="d-flex align-center justify-space-between flex-wrap ga-2">
                   <div>
                     <div class="d-flex align-center ga-2 mb-1">
-                      <span class="text-subtitle-2 font-weight-bold">{{ req.userName || 'Karyawan' }}</span>
+                      <span class="text-subtitle-2 font-weight-bold">{{ req.requestedBy?.fullName || req.userName || 'Karyawan' }}</span>
                       <ClassificationTag :classification="req.classification" />
                       <ObjectionWindowIndicator
-                        v-if="req.objectionWindowDeadline"
-                        :target-date="req.objectionWindowDeadline"
+                        v-if="req.objectionWindowEnd || req.objectionWindowDeadline"
+                        :target-date="req.objectionWindowEnd || req.objectionWindowDeadline || ''"
                       />
                     </div>
                     <div class="text-caption text-medium-emphasis">
-                      Perubahan yang diminta: {{ JSON.stringify(req.requestedChanges) }}
+                      Perubahan yang diminta: {{ req.requestedChange || (req.requestedChanges ? JSON.stringify(req.requestedChanges) : '-') }}
                     </div>
                   </div>
 
@@ -351,6 +412,7 @@
                     color="error"
                     variant="tonal"
                     prepend-icon="mdi-hand-back-right-outline"
+                    data-testid="correction-object-button"
                     @click="openObjectCorrection(req)"
                   >
                     Ajukan Keberatan
@@ -449,6 +511,7 @@
             variant="outlined"
             rows="3"
             :rules="[(v: string) => !!v || 'Alasan keberatan wajib diisi']"
+            data-testid="objection-reason-input"
           />
         </v-card-text>
         <v-card-actions class="px-4 pb-3">
@@ -459,6 +522,7 @@
             variant="elevated"
             :disabled="!objectionReason.trim()"
             :loading="isObjectingCorrection"
+            data-testid="objection-submit-button"
             @click="submitObjectCorrection"
           >
             Kirim Keberatan
@@ -492,7 +556,9 @@ import {
   useRejectLeaveMutation,
 } from '../queries/useExceptions.js';
 import type { BlockerItem, CorrectionRequestItem } from '../types/management.js';
+import { useAuthStore } from '../stores/auth.store.js';
 
+const authStore = useAuthStore();
 const todayStr = new Date().toISOString().slice(0, 10);
 const selectedDate = ref<string>(todayStr);
 const activeTab = ref<'roster' | 'blockers' | 'reviews'>('roster');
@@ -518,6 +584,7 @@ const {
   data: dailyData,
   isLoading: isLoadingRoster,
   isFetching: isFetchingRoster,
+  isError: isErrorRoster,
   refetch: refetchRoster,
 } = useDailyRecordsQuery(() => ({
   date: selectedDate.value,
@@ -527,6 +594,7 @@ const {
 const {
   data: blockersData,
   isFetching: isFetchingBlockers,
+  isError: isErrorBlockers,
   refetch: refetchBlockers,
 } = useBlockersListQuery({
   status: 'Open',
@@ -553,8 +621,12 @@ const isApprovingLeave = computed(() => approveLeaveMutation.isPending.value);
 const isRejectingLeave = computed(() => rejectLeaveMutation.isPending.value);
 
 const rosterList = computed(() => dailyData.value?.items || []);
-const openBlockers = computed(() => blockersData.value?.blockers || []);
-const pendingCorrections = computed(() => correctionsData.value?.requests || []);
+const openBlockers = computed<BlockerItem[]>(() => {
+  return Array.isArray(blockersData.value) ? blockersData.value : [];
+});
+const pendingCorrections = computed<CorrectionRequestItem[]>(() => {
+  return Array.isArray(correctionsData.value) ? correctionsData.value : [];
+});
 const pendingLeaves = computed(() => exceptionsData.value?.exceptions || []);
 
 function toggleExpandRecord(recordId: string) {

@@ -53,6 +53,7 @@
             density="comfortable"
             :rules="[rules.required]"
             class="mb-3"
+            data-testid="correction-description-input"
           />
 
           <v-textarea
@@ -64,6 +65,7 @@
             density="comfortable"
             :rules="[rules.required]"
             class="mb-2"
+            data-testid="correction-reason-input"
           />
         </v-form>
       </v-card-text>
@@ -79,6 +81,7 @@
           color="primary"
           variant="elevated"
           :loading="isPending"
+          data-testid="correction-submit-button"
           @click="handleSubmit"
         >
           Kirim Pengajuan Koreksi
@@ -134,8 +137,10 @@ async function handleSubmit() {
 
   try {
     await requestCorrection({
-      commitmentId: props.commitmentId,
-      proposedDescription: proposedDescription.value.trim(),
+      targetCommitmentId: props.commitmentId,
+      requestedChange: {
+        text: proposedDescription.value.trim(),
+      },
       reason: reason.value.trim(),
     });
     emit('success');

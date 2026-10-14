@@ -1,0 +1,1583 @@
+DUTAMEDIA WORK PULSE
+
+Daily Accountability & Blocker Log
+
+Product Requirements Document (PRD)
+
+Document
+
+Value
+
+Document Owner
+
+Management / Product Owner Dutamedia
+
+Version
+
+1.0 - Discussion Draft
+
+Status
+
+Proposed / Ready for Management & Technical Review
+
+Date
+
+1 September 2026
+
+Classification
+
+Internal & Confidential
+
+Initial Scope
+
+±30 employees / all operational functions
+
+Core Principle: Sistem mengukur visibility, accountability, early escalation, dan reliability terhadap commitment. Sistem bukan timesheet, bukan alat menghitung jam sibuk, dan belum menjadi KPI formal pada fase awal.
+
+1. Executive Summary
+
+Dutamedia Work Pulse adalah sistem internal ringan untuk mencatat commitment harian, output aktual, carry-over, blocker, kebutuhan dukungan, dan status risiko pekerjaan. Sistem dirancang sebagai operating discipline selama masa pembenahan organisasi, ketika KPI formal disederhanakan atau ditunda sementara.
+
+Work Pulse harus memberikan data objektif untuk coaching, evaluasi, early escalation, dan pembentukan KPI di masa depan tanpa mendorong budaya micromanagement. Fokus utamanya adalah apakah orang memenuhi commitment, menghasilkan output berkualitas, mengeskalasi masalah lebih awal, mendokumentasikan pekerjaan, serta berkolaborasi sesuai rule organisasi.
+
+2. Background & Problem Statement
+
+Keterlambatan project sering diketahui setelah risiko sudah menjadi masalah besar.
+
+Tidak ada satu sumber data sederhana yang menunjukkan apa yang dikomit, selesai, carry-over, dan blocker per orang.
+
+Evaluasi performance berisiko berbasis persepsi ketika KPI formal sedang tidak menjadi fokus utama.
+
+Blocker dan kebutuhan cross-team support belum selalu terlihat dan tereskalasi dengan cepat.
+
+Dokumentasi dan accountability perlu dibentuk menjadi kebiasaan operasional, bukan aktivitas menjelang evaluasi.
+
+Dibutuhkan mekanisme pembinaan dan konsekuensi yang terdokumentasi tanpa mengubah organisasi menjadi fear culture.
+
+3. Product Objectives
+
+Objective
+
+Outcome yang Diharapkan
+
+Daily visibility
+
+Management/Head dapat melihat commitment, outcome, blocker, dan risiko tanpa meminta laporan manual.
+
+Early escalation
+
+Status AMBER/RED dan blocker penting segera masuk jalur eskalasi yang tepat.
+
+Accountability evidence
+
+Tersedia histori objektif tentang commitment, completion, carry-over, support, dan non-submission.
+
+Low administration
+
+Pengisian maksimal ±2-3 menit per check-in dan tidak menjadi timesheet.
+
+Fair evaluation
+
+Data membantu coaching dan evaluasi; tidak otomatis menghukum satu kegagalan atau satu hari buruk.
+
+Future KPI foundation
+
+Data historis dapat dipakai untuk merancang KPI yang lebih relevan setelah organisasi stabil.
+
+4. Non-Goals / Batasan Produk
+
+Bukan attendance system dan bukan pengganti absensi.
+
+Bukan timesheet per jam dan tidak mencatat aktivitas 08:00-09:00, 09:00-10:00, dan seterusnya.
+
+Bukan employee surveillance atau screen/activity monitoring.
+
+Bukan sistem payroll atau HRIS penuh.
+
+Bukan project management system pengganti Jira/Trello/GitHub; integrasi dapat dilakukan kemudian.
+
+Pada fase 1, Work Pulse bukan kalkulator KPI otomatis dan tidak boleh menghasilkan ranking produktivitas berbasis jumlah task.
+
+5. Guiding Principles
+
+Principle
+
+Rule
+
+Output over activity
+
+Yang dicatat adalah output/commitment, bukan terlihat sibuk.
+
+No Surprise Rule
+
+Masalah boleh terjadi; risiko yang sudah diketahui harus di-escalate sebelum menjadi kejutan.
+
+Primary ownership ≠ exclusive ownership
+
+Cross-project support tetap wajib sesuai kompetensi dan prioritas.
+
+Evidence before consequence
+
+Konsekuensi diberikan atas pola/kelalaian yang jelas dan terdokumentasi.
+
+Coaching before punishment
+
+Capability issue diarahkan ke coaching/support; disciplinary issue mengikuti jalur peringatan.
+
+Exception-based management
+
+Head/management fokus pada AMBER, RED, carry-over berulang, dan no submission.
+
+Role-based relevance
+
+Template dasar sama, tetapi detail output disesuaikan dengan fungsi.
+
+6. User Scope & Roles
+
+Role Sistem
+
+Cakupan
+
+Kewenangan Utama
+
+Employee
+
+Seluruh karyawan aktif yang diwajibkan mengikuti Work Pulse
+
+Create/edit own daily check-in sebelum cutoff; lihat histori sendiri.
+
+Supervisor / Technical Lead
+
+Role yang memiliki fungsi supervisi teknis/operasional
+
+Lihat tim/assigned scope; acknowledge blocker; memberi support note.
+
+Head / Function Owner
+
+Head Engineering, Head Ops & Infra, Head Sales Enablement, Head Delivery nantinya
+
+Lihat fungsi; review exception; assign/escalate support; coaching note.
+
+PM
+
+PM 1 & PM 2
+
+Log sendiri; melihat project risk yang menjadi tanggung jawabnya; menerima project-impact escalation.
+
+HRGA / People Admin
+
+HRGA
+
+Kelola policy compliance, exemption, coaching/warning record sesuai authority.
+
+CEO / Management
+
+CEO dan role yang diberi hak
+
+Portfolio dashboard lintas fungsi; trend; decision/escalation.
+
+System Admin
+
+Admin aplikasi
+
+Master data, role mapping, schedule/cutoff, notification, policy configuration.
+
+Default participation: Semua karyawan operasional wajib mengikuti Work Pulse. CEO/Board atau role khusus dapat dikecualikan melalui policy configuration, bukan hard-coded.
+
+7. Organizational Mapping (Initial Dutamedia)
+
+Function
+
+Current Composition
+
+Reporting / Review
+
+Engineering
+
+Head Engineering; 2 Technical Lead; 3 Developer
+
+Head Engineering
+
+Quality
+
+1 QA/QC
+
+Independent quality function; escalates project risk to PM/Delivery/CEO as configured
+
+Operations & Infrastructure
+
+Head Ops & Infra; Ops Supervisor; Infra Specialist; 2 Ops Staff
+
+Head Ops & Infra
+
+R&D
+
+1 Principal/R&D Engineer
+
+Direct/independent technical advisory as defined by organization
+
+Delivery
+
+PM 1; PM 2; Head of Delivery vacant
+
+Temporary management review until Head of Delivery appointed
+
+Business Development
+
+1 BD
+
+Commercial/CEO as configured
+
+Sales Enablement & Presales
+
+Head + Presales + Marketing
+
+Head Sales Enablement & Presales
+
+Finance
+
+Senior Finance + 1 Finance Intern
+
+Senior Finance / CEO
+
+HRGA
+
+1 HRGA Staff
+
+CEO / Management
+
+8. Core Daily Workflow
+
+8.1 Morning Check-in: Commitment
+
+Karyawan mengisi maksimal 3 commitment/output utama pada awal hari kerja. Commitment harus spesifik, dapat diamati hasilnya, dan sebisa mungkin terhubung dengan assigned work.
+
+Field
+
+Required
+
+Rule
+
+Date
+
+Auto
+
+Tanggal kerja.
+
+Employee / Role
+
+Auto
+
+Dari user profile.
+
+Commitment 1-3
+
+Yes
+
+Maksimal 3 output utama; bukan daftar aktivitas.
+
+Reference / Task Link
+
+Optional → recommended
+
+Task/project/ticket/opportunity/reference id.
+
+Initial Risk
+
+Yes
+
+GREEN / AMBER / RED.
+
+Known Blocker
+
+Conditional
+
+Wajib jika AMBER/RED.
+
+Support Needed
+
+Conditional
+
+Siapa/jenis support yang dibutuhkan.
+
+8.2 End-of-Day Check-in: Outcome
+
+Field
+
+Required
+
+Rule
+
+Outcome per Commitment
+
+Yes
+
+Completed / Partial / Carry Over / Cancelled with reason.
+
+Completed Output
+
+Yes
+
+Ringkas apa yang benar-benar selesai.
+
+Carry Over Reason
+
+Conditional
+
+Wajib jika ada Partial/Carry Over.
+
+Blocker / Risk
+
+Conditional
+
+Masalah, risiko, dependency, atau waiting decision.
+
+Support Needed
+
+Conditional
+
+Role/person/function yang diperlukan.
+
+Final Status
+
+Yes
+
+GREEN / AMBER / RED.
+
+Tomorrow Priority
+
+Optional
+
+Dapat menjadi draft commitment hari berikutnya.
+
+UX target: Morning dan EOD check-in masing-masing harus dapat diselesaikan dalam ±2-3 menit. Sistem harus menyediakan quick-select, recent task, template per role, dan copy-forward secara terkontrol.
+
+9. Status Model: GREEN / AMBER / RED
+
+Status
+
+Meaning
+
+Expected Action
+
+GREEN
+
+Commitment on track; tidak ada blocker material.
+
+Tidak ada escalation. Head cukup melihat secara agregat.
+
+AMBER
+
+Ada risiko terhadap commitment/timeline/quality tetapi masih recoverable.
+
+Blocker/risiko wajib dijelaskan; owner support menerima notification bila dipilih.
+
+RED
+
+Commitment/project/operational outcome terancam atau sudah gagal tanpa intervention.
+
+Immediate escalation ke jalur yang dikonfigurasi; acknowledgement dan action owner wajib.
+
+9.1 Status Suggestion Engine
+
+Sistem dapat menyarankan status berdasarkan data, tetapi user tetap dapat memilih status dengan alasan. Contoh rule awal:
+
+Carry-over kedua berturut-turut pada item yang sama → suggest AMBER.
+
+Critical blocker / production incident / hard deadline at risk → suggest RED.
+
+Tidak ada blocker dan seluruh commitment completed → suggest GREEN.
+
+User memilih GREEN tetapi mencatat critical blocker → sistem meminta konfirmasi atau menyarankan AMBER/RED.
+
+10. Role-Based Output Templates
+
+Role / Function
+
+Prompt Tambahan / Contoh Output
+
+Developer
+
+Feature/task completed; code review; documentation; bug fixed; technical blocker.
+
+Technical Lead
+
+Primary technical ownership; review; mentoring; cross-project support; architecture/decision blocker.
+
+Head Engineering
+
+Resource/priority decision; delivery risk; technical governance; unresolved escalations.
+
+QA/QC
+
+Feature tested; defect severity; regression status; release blocker; test evidence.
+
+PM / Delivery
+
+Milestone; client dependency; scope change; risk; escalation; UAT/release readiness.
+
+Ops Staff / Supervisor
+
+Incident/ticket; deployment; recurring issue; unresolved escalation; runbook update.
+
+Infra Specialist / Head Ops
+
+Capacity; infrastructure change; availability; backup/security/production readiness.
+
+R&D / Principal Engineer
+
+Research/PoC; technical advisory; L3 escalation; architecture improvement; knowledge transfer.
+
+Business Development
+
+Opportunity progress; meeting/follow-up; proposal; negotiation; next action.
+
+Sales Enablement / Presales
+
+Solution/proposal/demo/pricing support; collateral; bid/tender support.
+
+Marketing
+
+Campaign/collateral/content/lead support; output not merely number of posts.
+
+Finance
+
+Invoice/payment/tax/reconciliation/cashflow issue; finance dependency requiring decision.
+
+Finance Intern
+
+Prepared documents/data/reconciliation support; pending review by Senior Finance.
+
+HRGA
+
+Recruitment/employee lifecycle/GA/legal administration; policy or management decision needed.
+
+11. Blocker & Escalation Management
+
+11.1 Blocker Record
+
+Field
+
+Description
+
+Blocker Type
+
+Technical / Requirement / Client / Vendor / Resource / Approval / Infra / Finance / Legal / Other
+
+Severity
+
+Low / Medium / High / Critical
+
+Impact
+
+Task / milestone / project / production / client / financial / compliance
+
+Owner Needed
+
+Person/role/function yang harus membantu atau mengambil keputusan
+
+Raised At
+
+Timestamp otomatis
+
+Expected Resolution
+
+Opsional; target resolution bila diketahui
+
+Status
+
+Open / Acknowledged / In Progress / Resolved / Accepted Risk
+
+Resolution Note
+
+Wajib saat ditutup
+
+11.2 Example Escalation Paths
+
+Source
+
+Initial Escalation
+
+Next Level / Trigger
+
+Developer
+
+Technical Lead
+
+Head Engineering jika conflict priority / unresolved / project impact
+
+Technical Lead
+
+Head Engineering
+
+R&D/Principal Engineer untuk L3 technical advisory jika diperlukan
+
+Ops Staff
+
+Ops Supervisor
+
+Head Ops/Infra → Engineering/R&D sesuai root cause
+
+QA/QC
+
+PM + Technical Owner
+
+Head Delivery/CEO jika release/project commitment at risk
+
+PM
+
+Head Delivery (future)
+
+CEO sementara jika Head Delivery belum ada atau decision material diperlukan
+
+Commercial
+
+Head Sales Enablement/Commercial owner
+
+CEO/Finance/Engineering sesuai jenis decision
+
+Finance / HRGA
+
+Senior/Management owner
+
+CEO bila approval/policy exposure material
+
+11.3 Escalation SLA (Configurable)
+
+Condition
+
+Default Rule
+
+AMBER
+
+Notification ke owner support; review pada working day yang sama.
+
+RED
+
+Immediate notification ke supervisor/head/PM yang relevan.
+
+Critical production blocker
+
+Tidak menunggu EOD; user dapat raise instant blocker kapan saja.
+
+Unacknowledged RED
+
+Auto-escalate ke next level setelah configurable threshold.
+
+Repeated carry-over
+
+Flag pada weekly review dan manager dashboard.
+
+12. Submission Policy & Compliance
+
+12.1 Mandatory Rule
+
+Semua karyawan yang termasuk scope wajib melakukan check-in pada hari kerja, kecuali berstatus cuti, sakit, dinas/offsite yang dikecualikan sesuai konfigurasi, atau exemption yang disetujui.
+
+Event
+
+System Action
+
+Management Action
+
+Morning belum submit mendekati cutoff
+
+Reminder otomatis
+
+Tidak ada sanksi.
+
+Morning missed / EOD missed pertama kali
+
+Marked No Submission + reminder
+
+Tidak otomatis menjadi disciplinary action.
+
+Repeated non-submission dalam periode pendek
+
+Flag pattern
+
+Supervisor/Head coaching.
+
+Berulang setelah coaching
+
+Compliance exception
+
+Recorded warning / corrective action sesuai policy.
+
+Terus berulang / sengaja menghindari pencatatan
+
+Escalated compliance case
+
+Formal disciplinary process sesuai Peraturan Perusahaan dan ketentuan yang berlaku.
+
+12.2 Important Distinction
+
+Case
+
+Classification
+
+Default Response
+
+Tidak selesai karena technical complexity, sudah eskalasi lebih awal
+
+Performance / delivery issue
+
+Support, replanning, coaching bila perlu; bukan otomatis punishment.
+
+Tahu akan terlambat tetapi tidak eskalasi sampai deadline
+
+Accountability issue
+
+Recorded review; corrective action jika pattern.
+
+Bypass mandatory QA/release process secara sengaja
+
+Discipline/process violation
+
+Escalate sesuai severity dan policy.
+
+Tidak mengisi sekali karena lupa
+
+Administrative miss
+
+Reminder.
+
+Berulang tidak mengisi setelah coaching
+
+Accountability/discipline pattern
+
+Recorded warning → formal process jika terus berulang.
+
+Policy safeguard: System tidak boleh secara otomatis menerbitkan SP atau memotong insentif. Sistem hanya menghasilkan evidence/flag. Keputusan disciplinary tetap melalui authorized management/HRGA dan harus sesuai Peraturan Perusahaan/ketentuan ketenagakerjaan.
+
+13. Performance Transition Framework
+
+Selama KPI formal belum menjadi fokus, Work Pulse mendukung penilaian transisi berbasis empat dimensi. Sistem tidak perlu memberi skor numerik otomatis pada fase awal.
+
+Dimension
+
+Question
+
+Delivery
+
+Apakah commitment yang realistis diselesaikan atau dikelola dengan baik ketika berisiko?
+
+Quality
+
+Apakah output memenuhi standar role, Definition of Done, dan tidak melempar defect/pekerjaan setengah jadi ke fungsi berikutnya?
+
+Accountability
+
+Apakah blocker/risk diangkat lebih awal dan action/decision terdokumentasi?
+
+Collaboration
+
+Apakah user memenuhi cross-team support dan tidak berlindung di balik “bukan scope saya” ketika support relevan?
+
+Manager dapat memberikan period review sederhana: Strong / Meets / Needs Improvement / Unacceptable, disertai evidence dari Work Pulse dan konteks pekerjaan. Rating tidak boleh dihasilkan hanya dari jumlah task atau jumlah GREEN days.
+
+14. Incentive Relationship
+
+Skema insentif existing tetap berjalan sesuai kebijakan perusahaan.
+
+Work Pulse dapat menjadi salah satu evidence eligibility/behavioral compliance tetapi bukan satu-satunya dasar insentif.
+
+Satu RED day atau satu carry-over tidak otomatis menghilangkan insentif.
+
+Perusahaan dapat mendefinisikan minimum eligibility seperti tidak sedang menjalani serious disciplinary action dan memenuhi mandatory company process.
+
+Perubahan formula insentif harus menjadi policy terpisah dari PRD Work Pulse.
+
+15. Dashboard Requirements
+
+15.1 Employee Dashboard
+
+Today commitment & EOD status
+
+Open blockers
+
+Recent carry-over
+
+Submission streak/compliance (non-gamified)
+
+Weekly personal summary
+
+Manager/coaching notes yang user berhak lihat sesuai policy
+
+15.2 Head / Supervisor Dashboard
+
+Widget
+
+Purpose
+
+Team status summary
+
+Count GREEN / AMBER / RED / NO SUBMISSION.
+
+Exceptions first
+
+Daftar RED, AMBER, repeated carry-over, unacknowledged blocker, no submission.
+
+Open blockers by owner
+
+Mengetahui siapa yang perlu mengambil keputusan/support.
+
+Carry-over trend
+
+Identifikasi task/area berulang dan potential capability/process issue.
+
+Cross-project support
+
+Evidence support yang diberikan lintas project/fungsi.
+
+Weekly summary
+
+Commitment reliability trend dan notable exceptions; bukan leaderboard.
+
+15.3 CEO / Management Dashboard
+
+Company-wide exception overview by function.
+
+RED/AMBER trend per function dan project.
+
+Top recurring blockers by category (requirement, resource, client, technical, approval, vendor, dll.).
+
+No-submission trend dan repeated compliance cases.
+
+Unresolved escalation aging.
+
+Project-impact blockers dan client-impact incidents.
+
+Aggregate trend; tidak default menampilkan leaderboard individual.
+
+16. Weekly Accountability Summary
+
+Metric / Section
+
+Description
+
+Commitments
+
+Jumlah commitment periode.
+
+Completed / Partial / Carry Over
+
+Distribusi outcome dengan konteks.
+
+Status Days
+
+GREEN / AMBER / RED / No Submission.
+
+Recurring Blocker
+
+Blocker kategori/issue yang muncul berulang.
+
+Support Given
+
+Cross-team support yang tercatat.
+
+Open Escalations
+
+Yang belum resolved/accepted risk.
+
+Manager Notes
+
+Coaching/corrective/recognition notes jika ada.
+
+Anti-gaming: Tidak ada leaderboard “siapa paling banyak menyelesaikan task”. Kompleksitas output berbeda antar role dan tidak dapat dibandingkan hanya dengan count.
+
+17. Functional Requirements
+
+ID
+
+Feature
+
+Requirement
+
+FR-001
+
+Authentication & user profile
+
+User login dan profile role/function terpetakan.
+
+FR-002
+
+Morning commitment
+
+Create/update maksimal 3 commitment sebelum cutoff.
+
+FR-003
+
+EOD outcome
+
+Update outcome per commitment dan final status.
+
+FR-004
+
+Role templates
+
+Prompt/template tambahan berdasarkan role.
+
+FR-005
+
+Blocker creation
+
+Create blocker dari daily log atau instant blocker di luar EOD.
+
+FR-006
+
+Blocker assignment
+
+Assign owner needed ke person/role/function.
+
+FR-007
+
+Escalation rules
+
+Notification dan escalation berdasarkan severity/status/aging.
+
+FR-008
+
+Submission compliance
+
+Track submitted/missed/exempted untuk morning & EOD.
+
+FR-009
+
+Leave/exemption
+
+Hari non-working yang valid tidak dihitung no-submission.
+
+FR-010
+
+Reminder engine
+
+Reminder configurable sebelum/ketika cutoff terlewat.
+
+FR-011
+
+Employee history
+
+User melihat histori sendiri.
+
+FR-012
+
+Manager dashboard
+
+Head/supervisor melihat scoped team exceptions & trends.
+
+FR-013
+
+Management dashboard
+
+Cross-function aggregate dan exception monitoring.
+
+FR-014
+
+Weekly summary
+
+Generate weekly accountability summary.
+
+FR-015
+
+Manager notes
+
+Authorized manager membuat coaching/recognition/corrective note.
+
+FR-016
+
+Compliance flag
+
+Flag repeated non-submission/carry-over; tidak auto-SP.
+
+FR-017
+
+Audit trail
+
+Record perubahan commitment/status/blocker/manager note.
+
+FR-018
+
+Search/filter
+
+By employee, function, project, date, status, blocker category.
+
+FR-019
+
+Reference linking
+
+Attach project/task/ticket/opportunity reference.
+
+FR-020
+
+Export
+
+Authorized roles export summary/evidence CSV/PDF/print view sesuai permission.
+
+FR-021
+
+Policy configuration
+
+Cutoff, workdays, escalation threshold, exemption, role mapping configurable.
+
+FR-022
+
+Notification center
+
+In-app notification; channel integration future-ready.
+
+FR-023
+
+Acknowledgement
+
+Owner dapat acknowledge blocker dan memberi action/ETA.
+
+FR-024
+
+Resolution
+
+Blocker closure dengan resolution note.
+
+FR-025
+
+Status consistency
+
+Warn jika status vs blocker/outcome tidak konsisten.
+
+18. Business Rules
+
+ID
+
+Rule
+
+BR-001
+
+Maksimal 3 daily commitments agar fokus tidak berubah menjadi task dump.
+
+BR-002
+
+Commitment dapat diedit sebelum configurable lock/cutoff; perubahan setelah cutoff harus masuk audit trail.
+
+BR-003
+
+Carry-over wajib memiliki reason.
+
+BR-004
+
+AMBER/RED wajib memiliki blocker/risk note atau reason.
+
+BR-005
+
+RED dapat dibuat kapan saja; tidak harus menunggu EOD.
+
+BR-006
+
+No submission tidak berlaku pada leave/holiday/exemption valid.
+
+BR-007
+
+Satu missed submission tidak otomatis menghasilkan disciplinary consequence.
+
+BR-008
+
+Sistem tidak menerbitkan SP otomatis.
+
+BR-009
+
+Manager tidak boleh mengubah log employee tanpa audit trail; koreksi idealnya request-back atau add note.
+
+BR-010
+
+Cross-project support dapat dicatat sebagai contribution dan ditautkan ke blocker/request.
+
+BR-011
+
+Status harian bukan KPI score dan tidak boleh dipakai sebagai leaderboard.
+
+BR-012
+
+Data disciplinary/coaching memiliki permission lebih ketat daripada daily log biasa.
+
+19. Notification Requirements
+
+Trigger
+
+Recipient
+
+Default Notification
+
+Morning not submitted near cutoff
+
+Employee
+
+Reminder
+
+EOD not submitted near cutoff
+
+Employee
+
+Reminder
+
+AMBER + support needed
+
+Assigned support owner + employee
+
+Support request
+
+RED
+
+Supervisor/Head + relevant PM/owner
+
+Immediate risk escalation
+
+Critical blocker
+
+Configured escalation chain
+
+Immediate
+
+Blocker unacknowledged beyond threshold
+
+Next escalation level
+
+Escalation
+
+Repeated no-submission flag
+
+Supervisor/Head; HRGA if policy threshold met
+
+Review required
+
+Weekly summary available
+
+Employee + Manager as configured
+
+Summary notification
+
+20. Data Model - Conceptual
+
+Entity
+
+Key Data
+
+User
+
+user_id, employee_id, name, role, function, manager_id, status
+
+Workday
+
+date, workday flag, holiday, exemption rules
+
+DailyLog
+
+log_id, user_id, date, morning_submitted_at, eod_submitted_at, initial_status, final_status
+
+Commitment
+
+commitment_id, log_id, text, reference_type/id, outcome, carryover_reason
+
+Blocker
+
+blocker_id, log_id/commitment_id, type, severity, impact, owner, status, timestamps, resolution
+
+SupportContribution
+
+request/blocker_id, supporter_id, action, effort note, outcome
+
+ManagerNote
+
+note_id, user_id, period/date, type: recognition/coaching/corrective, evidence refs, visibility
+
+ComplianceEvent
+
+user_id, event_type, date, policy_rule, status, review/action
+
+Notification
+
+recipient, trigger, channel, delivery/read status
+
+AuditLog
+
+actor, action, entity, before/after reference, timestamp
+
+21. Permission & Visibility Model
+
+Data
+
+Employee
+
+TL/Supervisor
+
+Head
+
+HRGA
+
+CEO/Management
+
+Own daily log
+
+R/W
+
+-
+
+-
+
+Policy view only
+
+As authorized
+
+Scoped team daily log
+
+-
+
+R
+
+R
+
+As policy
+
+R
+
+Blocker assigned to user
+
+R/W action
+
+R/W action
+
+R/W action
+
+As policy
+
+R
+
+Manager coaching note
+
+Own visible notes only
+
+Create scoped if authorized
+
+Create scoped
+
+R/administrative
+
+R
+
+Disciplinary record
+
+Limited/notification
+
+No default
+
+Limited
+
+R/W authorized
+
+R
+
+Company dashboard
+
+-
+
+Scoped
+
+Function
+
+Compliance view
+
+R
+
+Policy config
+
+-
+
+-
+
+-
+
+Limited
+
+Admin/authorized
+
+22. Non-Functional Requirements
+
+Category
+
+Requirement
+
+Usability
+
+Mobile-responsive; daily entry <3 minutes per check-in; minimal typing.
+
+Performance
+
+Core dashboard and daily entry target response <2 seconds under normal company load.
+
+Availability
+
+Business-hours reliability; graceful handling of temporary network failure.
+
+Security
+
+Role-based access control, secure authentication, encrypted transport, least privilege.
+
+Auditability
+
+Immutable audit trail for material edits/status/escalation/manager notes.
+
+Privacy
+
+Collect only work-related data required for accountability; avoid surveillance telemetry.
+
+Retention
+
+Configurable retention; HR/disciplinary evidence may follow separate retention policy.
+
+Backup
+
+Regular database backup and tested restore process.
+
+Configurability
+
+Workday, cutoff, role, escalation, reminder, exception rules not hard-coded.
+
+Exportability
+
+Authorized export for management/HR review without exposing unrelated sensitive data.
+
+23. Audit, Integrity & Anti-Gaming Controls
+
+Timestamp morning/EOD submission disimpan otomatis.
+
+Perubahan commitment setelah cutoff menyimpan before/after value.
+
+Manager tidak dapat diam-diam mengubah employee statement; gunakan manager note atau correction workflow.
+
+Copy-forward dari hari sebelumnya harus ditandai dan user wajib confirm/edit.
+
+Repeated generic commitment seperti “development”, “meeting”, “follow-up” dapat diberi quality warning karena terlalu abstrak.
+
+Dashboard tidak menggunakan gamification yang mendorong user memecah pekerjaan menjadi banyak task kecil.
+
+Status GREEN yang bertentangan dengan critical blocker memicu validation prompt.
+
+24. Reports & Analytics
+
+Report
+
+Audience
+
+Content
+
+Daily Exception Report
+
+Head / Management
+
+RED, AMBER, no-submission, critical blockers, overdue acknowledgement.
+
+Weekly Team Summary
+
+Head + Team as configured
+
+Outcome distribution, recurring blockers, carry-over, support, exceptions.
+
+Monthly Management Trend
+
+CEO/Management
+
+Function trends, recurring root causes, escalation aging, compliance pattern.
+
+Individual Review Evidence
+
+Employee + authorized manager/HR
+
+Selected period history, notes, evidence for coaching/evaluation.
+
+Blocker Root Cause Report
+
+Head/Management
+
+Most frequent blocker categories and systemic bottlenecks.
+
+25. Future Integrations (Not Required for MVP)
+
+Project/task tools: Jira, GitHub/GitLab, Trello or internal project system.
+
+CRM / commercial pipeline for Business Development and Presales reference.
+
+Helpdesk/ticketing for Ops incidents.
+
+HR leave/attendance system to auto-exempt leave/sick/holiday.
+
+Telegram/Slack/WhatsApp internal notification channel where appropriate.
+
+SSO / company identity provider.
+
+AI summary to cluster recurring blockers and draft weekly management insight, with human review.
+
+26. MVP Scope
+
+Must Have (MVP)
+
+Should / Later
+
+User/role/function setup
+
+External integrations
+
+Morning commitment
+
+AI-generated management summary
+
+EOD outcome
+
+Advanced analytics / root-cause clustering
+
+GREEN/AMBER/RED
+
+Custom mobile app
+
+Blocker + support request
+
+Automated KPI calculation
+
+Reminder + basic escalation
+
+Complex incentive engine
+
+Employee history
+
+Full HR disciplinary workflow
+
+Head/Management dashboard
+
+Cross-company benchmarking
+
+No-submission tracking
+
+Gamification / leaderboard (not recommended)
+
+Weekly summary
+
+Audit log
+
+27. Suggested MVP Screens
+
+Login / Home
+
+My Today - Morning Commitment
+
+My Today - End-of-Day Outcome
+
+Raise Blocker / Request Support
+
+My History & Weekly Summary
+
+Team Pulse Dashboard
+
+Blocker & Escalation Queue
+
+Management Pulse Dashboard
+
+Manager Note / Coaching Record
+
+Admin: User, Role, Workday, Cutoff, Policy & Escalation Configuration
+
+28. Acceptance Criteria - MVP
+
+ID
+
+Acceptance Criteria
+
+AC-01
+
+Employee dapat submit morning commitment maksimum 3 item dengan status awal.
+
+AC-02
+
+Employee dapat melakukan EOD update dan outcome per commitment.
+
+AC-03
+
+Carry-over/AMBER/RED memaksa reason/blocker sesuai rule.
+
+AC-04
+
+Employee dapat raise RED/critical blocker sebelum EOD.
+
+AC-05
+
+Assigned support owner menerima notification dan dapat acknowledge/update.
+
+AC-06
+
+Head melihat hanya tim/scope yang berhak dilihat.
+
+AC-07
+
+CEO/Management dashboard menampilkan exceptions company-wide sesuai permission.
+
+AC-08
+
+Leave/exempt workday tidak ditandai no-submission.
+
+AC-09
+
+Missed submission tercatat dan reminder berjalan; tidak ada auto-SP.
+
+AC-10
+
+Weekly summary tersedia untuk period yang dipilih.
+
+AC-11
+
+Material edits menghasilkan audit trail.
+
+AC-12
+
+System tidak menampilkan leaderboard task completion.
+
+AC-13
+
+User dapat mengisi normal check-in dalam ≤3 menit pada usability test internal.
+
+29. Rollout Plan
+
+Phase
+
+Duration / Target
+
+Scope
+
+Phase 0 - Policy Alignment
+
+Before build / pilot
+
+Finalisasi rule, cutoff, escalation, exception, coaching/disciplinary boundary.
+
+Phase 1 - MVP Pilot
+
+2-4 weeks pilot
+
+Engineering + QA + PM + Ops/Infra; kelompok yang paling membutuhkan blocker visibility.
+
+Phase 2 - Company Rollout
+
+After pilot fixes
+
+Commercial, Finance, HRGA, seluruh karyawan scope.
+
+Phase 3 - Management Review
+
+After 4-8 weeks data
+
+Review usability, gaming risk, admin burden, recurring blocker, fairness.
+
+Phase 4 - KPI Integration
+
+After organization stabilizes
+
+Pilih indikator yang valid; jangan otomatis menjadikan semua Work Pulse data sebagai KPI.
+
+30. Pilot Success Metrics
+
+≥90% required daily submissions after stabilization period, excluding valid exemptions.
+
+Median check-in completion time ≤3 minutes.
+
+Penurunan kasus keterlambatan yang baru terdeteksi pada atau setelah deadline.
+
+≥80% RED/high blockers acknowledged dalam target internal yang disepakati.
+
+Head/manager menyatakan dashboard mengurangi kebutuhan meminta status manual.
+
+Tidak ada evidence kuat bahwa sistem mendorong task-count gaming atau excessive administrative burden.
+
+User memahami bahwa AMBER/RED bukan otomatis punishment.
+
+31. Key Risks & Mitigations
+
+Risk
+
+Impact
+
+Mitigation
+
+Menjadi micromanagement
+
+Demotivasi; laporan palsu
+
+Batasi field; output-based; exception management; komunikasi tujuan.
+
+Semua user memilih GREEN
+
+Data tidak berguna
+
+Status validation, manager review, No Surprise Rule.
+
+Task-count gaming
+
+Produktivitas semu
+
+No leaderboard; max 3 commitment; context-based review.
+
+Sanksi terlalu cepat
+
+Fear culture; blocker disembunyikan
+
+Reminder → coaching → recorded warning → formal process only if repeated/serious.
+
+Manager overload
+
+Tidak ada yang membaca data
+
+Dashboard exception-first; bukan baca 30 laporan satu per satu.
+
+Blocker menjadi dumping ground
+
+Semua masalah dilempar ke Head
+
+Owner, severity, escalation SLA, acknowledgement, resolution responsibility.
+
+Role template tidak relevan
+
+User mengisi asal
+
+Role-based prompts dan pilot per function.
+
+Data dipakai sebagai KPI mentah
+
+Penilaian tidak adil
+
+Phase 1 explicitly non-KPI; management governance sebelum KPI integration.
+
+32. Decisions Required in Next Discussion
+
+Nama final produk: “Dutamedia Work Pulse” vs nama lain.
+
+Morning cutoff dan EOD cutoff (hard cutoff vs grace period).
+
+Apakah dua check-in wajib sejak MVP atau morning commitment dapat auto-open dari prior day draft.
+
+Siapa reviewer sementara untuk PM selama Head of Delivery belum terisi.
+
+Exact threshold repeated non-submission yang memicu coaching/recorded warning.
+
+Apakah coaching/corrective record dibangun dalam MVP atau cukup link/notes sederhana.
+
+Channel notification MVP: in-app saja atau ditambah Telegram/email.
+
+Apakah task/project reference manual terlebih dahulu atau langsung integrasi dengan sistem internal existing.
+
+Retention policy daily logs dan manager/disciplinary notes.
+
+Role/exemption khusus untuk pekerjaan lapangan, dinas client, atau jadwal tidak reguler.
+
+33. Recommended Policy Statement (for Management Discussion)
+
+Proposed statement: Work Pulse diberlakukan sebagai mekanisme visibility dan accountability kerja. Karyawan tidak dinilai dari banyaknya aktivitas yang dicatat. Karyawan diharapkan membuat commitment yang realistis, memperbarui hasilnya, dan mengeskalasi risiko lebih awal. Masalah yang diangkat secara jujur bukan otomatis pelanggaran. Pengabaian berulang terhadap kewajiban pencatatan, proses kerja wajib, atau penyembunyian risiko yang sudah diketahui dapat menjadi accountability issue dan diproses melalui coaching hingga mekanisme disiplin sesuai kebijakan perusahaan.
+
+34. Summary of Product Philosophy
+
+Work Pulse harus membuat masalah terlihat lebih cepat, bukan membuat karyawan terlihat lebih sibuk. Produk dianggap berhasil bila management memperoleh early warning yang lebih baik, karyawan memahami commitment dan dependency mereka, cross-team support dapat dibuktikan, dan evaluasi kinerja memiliki evidence yang lebih objektif tanpa membangun budaya ketakutan.
+
+END OF PRD • VERSION 1.0

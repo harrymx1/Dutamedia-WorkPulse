@@ -443,4 +443,28 @@ export class NotificationService {
 
     return { updatedCount: result.count };
   }
+
+  /**
+   * Cek apakah notifikasi pengingat cutoff sudah pernah dikirimkan ke karyawan pada fase dan hari terkait (SAD §6.3, S2-T4-JOB-01).
+   */
+  async hasCutoffReminderNotification(
+    recipientUserId: string,
+    phase: 'MORNING' | 'EOD',
+    startOfDay: Date,
+    endOfDay: Date,
+  ): Promise<boolean> {
+    const existingNotification = await this.prisma.notification.findFirst({
+      where: {
+        recipientUserId,
+        triggerType: SystemNotificationTrigger.MORNING_EOD_CUTOFF_REMINDER,
+        createdAt: { gte: startOfDay, lte: endOfDay },
+        payload: {
+          path: ['metadata', 'phase'],
+          equals: phase,
+        },
+      },
+      select: { id: true },
+    });
+    return !!existingNotification;
+  }
 }

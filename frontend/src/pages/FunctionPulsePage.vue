@@ -263,7 +263,7 @@ const {
 
 const records = computed(() => dailyData.value?.items || []);
 const escalationBlockers = computed(() => {
-  const all = blockersData.value?.blockers || [];
+  const all = Array.isArray(blockersData.value) ? blockersData.value : [];
   return all.filter((b) => b.severity === 'Critical' || b.severity === 'High' || b.status === 'Open');
 });
 

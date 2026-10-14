@@ -105,7 +105,7 @@ export class ExportGeneratorService {
       actorUserId: user.userId,
       action: 'REPORT_EXPORTED',
       relatedEntityType: 'Report',
-      relatedEntityId: reportType,
+      relatedEntityId: fileId,
       valueAfter: {
         reportType,
         format,

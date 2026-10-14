@@ -729,3 +729,620 @@ Penerbitan presigned upload URL memberikan tiket akses sementara langsung ke Obj
 1. **Integritas Penyimpanan Objek**: Mencegah serangan pengunggahan objek gelap atau pengikatan bukti tidak sah ke entitas pengguna lain.
 2. **Pemisahan Peran Jelas**: `FileStorageService` menangani otorisasi dan penamaan key, sementara `S3StorageService` murni berinteraksi dengan API S3.
 3. **Audit Trail**: Setiap penerbitan presigned upload URL tercatat dalam log aplikasi dengan identitas aktor pemohon.
+
+---
+
+## ADR-013 — Rekonsiliasi Status Suggestion Engine sebagai Deterministic Product Heuristic
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-013 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | PRD FR-13, PRD FR-31, SAD §5.9, SAD §6.4, Finding S2-FR-13-1 |
+| **Berlaku mulai** | S2 (Decision Gate Reconciliation) |
+
+### 1. Konteks & Deskripsi Konflik Spesifikasi
+
+Pada penelusuran audit S2-T1, ditemukan ketidakselarasan normatif tekstual antar-dokumen:
+1. **PRD FR-13**: Menyatakan bahwa sistem memberikan *suggestion* status harian (GREEN/AMBER/RED) berbasis aturan yang *configurable* ("Sistem memberikan suggestion status harian berbasis rule configurable...").
+2. **PRD FR-31**: Secara komprehensif dan *exhaustive* mendefinisikan seluruh kategori kebijakan yang dapat dikonfigurasi oleh *Authorized Policy Owner* tanpa mengubah kode (Cutoff, GracePeriod, WorkdayCalendar, EscalationThreshold, CoachingFollowUpPeriod, RetentionPeriod, ExemptionRule, ObjectionWindowDuration, MinorMaterialThreshold, ParticipationRule, serta ReminderThreshold via ADR-004). Kategori `StatusSuggestion` **tidak tercantum** di dalamnya.
+3. **SAD §5.9 & §6.4**: Skema `PolicyCategory` di tingkat arsitektur data dan Prisma schema mendaftarkan 11 kategori kebijakan resmi, di mana tidak ada kategori untuk rule penentuan Status Suggestion.
+4. **Implementasi Aktual**: Aturan penentuan saran status diimplementasikan di `StatusSuggestionService` (`backend/src/modules/daily-accountability/services/status-suggestion.service.ts`) sebagai mesin inferensi logika deterministik (*heuristic engine*) yang mengevaluasi input komitmen, durasi blocker, dan riwayat eskalasi.
+
+### 2. Keputusan Arsitektural
+
+Berdasarkan keputusan Human Authority pada Decision Gate S2-T1:
+
+1. **Status Suggestion Ditetapkan sebagai Fixed Product Heuristic**:
+   Status Suggestion Engine diakui dan dikukuhkan secara formal sebagai aturan baku produk (*fixed, deterministic product heuristic*), bukan sebagai entitas kebijakan operasional yang dapat diubah saat runtime oleh Policy Owner.
+
+2. **Rekonsiliasi Semantik Kata "Configurable" pada FR-13**:
+   Frasa "rule configurable" pada PRD FR-13 direkonsiliasi dan ditafsirkan sebagai *rule-based product heuristic* (logika penentuan status berbasis aturan terstruktur, deterministik, dan terisolasi dalam *domain service* khusus), bukan *Authorized Policy Owner runtime configuration* melalui antarmuka `PolicySettingsPage` atau tabel `policies`.
+
+3. **Peniadaan Perluasan PolicyCategory**:
+   Sistem **tidak** menambahkan `StatusSuggestion` ke dalam enum `PolicyCategory`, tidak menambahkan tabel konfigurasi baru di Prisma, dan tidak mengubah antarmuka manajemen kebijakan `PolicySettingsPage.vue`.
+
+4. **Peniadaan Siklus Hidup Policy**:
+   Tidak diperlukan fungsionalitas CRUD kebijakan, penugasan *Policy Owner* (`PolicyOwnerAssignment`), penanggalan berlaku (*effective dating*), maupun pembuatan *policy snapshot* untuk aturan Status Suggestion.
+
+5. **Kewajiban Pengujian Komprehensif (Unit Test)**:
+   Karena heuristik ini merupakan aturan produk yang mengikat dan membantu pengguna dalam check-in harian, seluruh cabang logika deterministik pada `StatusSuggestionService` (saran GREEN, AMBER, RED beserta kondisi pembobotan blocker dan komitmen) **wajib diuji secara eksplisit** melalui automated unit test mandiri (`status-suggestion.service.spec.ts`) guna menutup finding `S2-TEST-GAP-4`.
+
+### 3. Konsekuensi Arsitektural & Integritas Dokumen
+
+1. **Fidelitas Requirement**: Menghilangkan ambiguitas antara FR-13 dan FR-31 secara resmi dan terdokumentasi.
+2. **Stabilitas Skema Database**: Skema Prisma, tabel `policies`, dan enum `PolicyCategory` tetap bersih dan stabil tanpa migrasi skema yang tidak perlu.
+3. **Preservasi Runtime Behavior**: Tidak ada perubahan kode pada algoritma logika inferensi `StatusSuggestionService`; pengguna tetap menerima saran status deterministik yang dapat dikonfirmasi atau di-override dengan alasan.
+
+---
+
+## ADR-014 — Aturan Baku Produk untuk Ambang Pengingat Cutoff (Lead-Time 60 Menit) dan Idempotensi Scheduler
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-014 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | PRD FR-28, PRD §6, SAD §11.2 (Job #1), SAD §12.1, Finding S2-TEST-GAP-7, Finding S2-FR-28-1 |
+| **Berlaku mulai** | S2 (Decision Gate Reconciliation) |
+
+### 1. Konteks & Latar Belakang
+
+PRD FR-28 dan SAD §12.1 (Job #1 / `MORNING_EOD_CUTOFF_REMINDER`) mengamanatkan pengiriman reminder otomatis menjelang batas waktu penyerahan (*cutoff*) untuk Morning Check-in dan EOD Check-in. Pada audit S2-T1, ditemukan dua kesenjangan kritis:
+1. **Specification Gap (Lead-Time Undefined)**: Seluruh dokumen persyaratan awal (PDD, PRD, SAD, UI-UX Spec) hanya menyatakan *"mendekati deadline/cutoff"* tanpa mendefinisikan batas waktu awal pengingat (*lead-time window*). Kategori kebijakan `ReminderThreshold` (ADR-004) hanya mendefinisikan ambang jam untuk Objection Window (2 jam) dan Leave Pending (24 jam), tanpa mengatur pengingat cutoff.
+2. **Ketiadaan Entitas Database Sebelum Check-in**: Record `DailyAccountabilityRecord` dibuat secara *on-demand* saat pengguna melakukan check-in. Karyawan yang belum menyerahkan laporan belum memiliki baris database, sehingga kolom `relatedEntityId UUID` pada tabel `notifications` tidak dapat merujuk ke record yang belum ada.
+
+Human Authority telah menetapkan keputusan produk final untuk menyelesaikan kesenjangan tersebut.
+
+### 2. Keputusan Arsitektural & Produk
+
+1. **Ambang Lead-Time Pengingat Cutoff 60 Menit (Fixed MVP Product Rule)**:
+   - Jendela pengingat aktif dimulai tepat **60 menit sebelum On-Time Deadline** yang berlaku dan **berakhir tepat saat On-Time Deadline**:
+     $$\text{OnTimeDeadline} - 60\text{m} \le \text{now} < \text{OnTimeDeadline} \quad \text{atau} \quad [\text{Deadline} - 60\text{m}, \text{Deadline})$$
+   - Jendela pengingat **berakhir tepat di On-Time Deadline** dan **TIDAK berlanjut ke dalam Grace Period**.
+   - Aturan ini berlaku **simetris dan identik untuk Morning Check-in dan EOD Check-in**:
+     - **Morning Check-in**: Dengan `morningOnTimeDeadline = "09:00"`, jendela pengingat aktif adalah:
+       $$08:00 \le \text{now} < 09:00$$
+     - **EOD Check-in**: Dengan `eodOnTimeDeadline = "18:00"`, jendela pengingat aktif adalah:
+       $$17:00 \le \text{now} < 18:00$$
+   - Ambang 60 menit ini ditetapkan sebagai **aturan baku produk MVP** (*fixed product constant*), **bukan** kategori kebijakan runtime (`PolicyCategory`). Sistem tidak menambahkan kategori kebijakan baru dan tidak mengubah antarmuka `PolicySettingsPage.vue`.
+
+2. **Diferensiasi Tegas dari Grace Period**:
+   - *Reminder Lead-Time* (60 menit sebelum On-Time Deadline) adalah tindakan preventif murni untuk mendorong karyawan menyerahkan komitmen tepat waktu (*On-Time*).
+   - Pengiriman reminder **tidak menandakan bahwa karyawan terlambat** dan **tidak mengubah status submission**.
+   - Segera setelah waktu mencapai atau melewati On-Time Deadline (`now >= OnTimeDeadline`):
+     - Jendela Reminder Lead-Time **telah resmi berakhir**.
+     - Sistem **dilarang memperlakukan Grace Period sebagai bagian dari jendela pengingat**.
+     - *Grace Period* (`PolicyCategory.GracePeriod`) tetap merupakan konsep independen pasca-deadline (misalnya 09:00 s/d 09:30 atau 18:00 s/d 18:30) di mana submission diklasifikasikan sebagai `Late` sesuai kebijakan cutoff yang berlaku.
+
+3. **Domain-Level Idempotency di Scheduler (`relatedEntityId = null`)**:
+   - Kolom `relatedEntityId` pada tabel `notifications` secara semantik adalah *foreign key* entitas domain. Sistem **dilarang mengisi `relatedEntityId` dengan UUID sintetis/palsu** demi memicu deduplikasi internal `NotificationService`.
+   - Idempotensi diselesaikan di level domain query scheduler: sebelum mendispatch notifikasi, `SchedulerService` memeriksa riwayat pengiriman pada hari kalender `workDate` berjalan untuk `triggerType = MORNING_EOD_CUTOFF_REMINDER` dan fase terkait (`MORNING` atau `EOD`).
+   - Setiap karyawan berhak menerima maksimum 1 kali reminder Morning dan 1 kali reminder EOD per hari kerja.
+   - Kolom `relatedEntityType` dan `relatedEntityId` pada record notifikasi dibiarkan `null` (atau tidak disertakan).
+
+4. **Kanonikal Populasi Peserta Wajib & Aturan Pengecualian**:
+   - Populasi target pengingat pada tanggal $D$ adalah:
+     `User (status: Active)` + `OrganizationalAssignment (role: Employee, effectiveDate <= D, endDate IS NULL OR endDate >= D)`
+     - Dikurangi: Hari bukan hari kerja sesuai `WorkdayCalendar`.
+     - Dikurangi: Hari libur resmi perusahaan (`Exception(type: Holiday, status: Approved)`).
+     - Dikurangi: Karyawan dengan izin/cuti yang telah disetujui (`Exception(type IN [Leave, Exemption], status: Approved)`).
+     - Dikurangi: Karyawan yang telah melakukan submit pada fase terkait.
+   - **Invarian AC-19**: Permohonan izin/cuti berstatus `Pending` **TIDAK** mengecualikan karyawan; karyawan dengan permohonan pending tetap wajib menerima reminder.
+
+### 3. Konsekuensi Arsitektural
+
+1. **Penutupan Specification Gap**: Menghilangkan ketidakpastian lead-time pengingat secara resmi tanpa mengubah skema database `policies`.
+2. **Zero Schema Migration**: Skema database PostgreSQL dan Prisma tetap stabil tanpa penambahan kolom atau modifikasi tipe data.
+3. **Pemisahan Tanggung Jawab yang Rapi**:
+   - `S2-TEST-GAP-7` difokuskan untuk perbaikan kueri populasi dan pengujian unit pengingat Morning Check-in.
+   - `S2-FR-28-1` difokuskan untuk implementasi fungsional kueri dan pengiriman pengingat EOD Check-in.
+
+---
+
+## ADR-015 — Penerimaan Risiko Keterbatasan Skalabilitas Batch Pengingat Cutoff (Starvasi Kandidat > 200 User) sebagai Utang Teknis MVP
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-015 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | PRD FR-28, SAD §11.2 (Job #1), Finding S2-PERF-FR28-1, KL-10 |
+| **Berlaku mulai** | S2 (Decision Gate / MVP Stabilization) |
+
+### 1. Konteks & Latar Belakang
+
+Pada implementasi remediasi PRD FR-28 (ADR-014), sistem menerapkan batas batch defensif `DEFAULT_MAX_REMINDER_BATCH = 200` pada method `DailyAccountabilityService.findPendingSubmissionEmployeeIds()`. Seleksi kandidat dilakukan melalui tahapan penyaringan penugasan organisasi aktif peran Employee, pengurangan karyawan dengan cuti/izin yang disetujui, pengurangan karyawan yang telah submit, dan diakhiri dengan pemotongan array in-memory:
+```typescript
+return candidateUserIds.slice(0, limit); // limit = 200
+```
+Selanjutnya, `SchedulerService.sendCutoffReminders()` mengiterasi kandidat yang dikembalikan dan memeriksa riwayat tabel `notifications` hari berjalan untuk fase terkait. Jika karyawan telah menerima pengingat, scheduler mengeksekusi `continue;` (skip).
+
+Pada verifikasi audit independen pasca-implementasi (S2-T1), dilakukan penelaahan alur konkurensi dan batching (*triage*), yang membuktikan adanya keterbatasan fungsional dan skalabilitas (Finding `S2-PERF-FR28-1`).
+
+### 2. Hasil Verifikasi Perilaku Starvasi (*Verified Starvation Behavior*)
+
+Audit membuktikan secara deterministik bahwa:
+1. **Mekanisme Starvasi**: Jika populasi karyawan aktif yang wajib check-in namun belum menyerahkan laporan pada hari berjalan melebihi 200 orang ($N > 200$), maka:
+   - Pada siklus cron pertama ($T_0$), sistem mengirimkan reminder kepada 200 karyawan pertama ($E_1 \dots E_{200}$).
+   - Pada siklus cron berikutnya ($T_1$, misalnya 5 menit kemudian dalam jendela pengingat 60 menit), kueri `findPendingSubmissionEmployeeIds` kembali mengevaluasi seluruh karyawan yang belum submit ($E_1 \dots E_N$) dan kembali memotong slice 200 teratas ($E_1 \dots E_{200}$).
+   - `SchedulerService` menerima $E_1 \dots E_{200}$, mendeteksi notifikasi yang sudah terkirim dari siklus $T_0$, dan mengabaikan (*skip*) mereka.
+   - Karyawan $E_{201} \dots E_N$ **tidak pernah dikembalikan** oleh `DailyAccountabilityService`, **tidak pernah dievaluasi** oleh `SchedulerService`, dan **mengalami starvasi total** (tidak pernah menerima pengingat) selama karyawan $E_1 \dots E_{200}$ belum melakukan submit.
+2. **Akar Permasalahan**: Deduplikasi notifikasi dilakukan *downstream* di `SchedulerService` setelah pemotongan *slice* terjadi di *upstream* `DailyAccountabilityService`, bukan mengecualikan karyawan yang sudah dinotifikasi sebelum pemotongan limit diterapkan.
+
+### 3. Skala Operasional Terdokumentasi MVP (*Documented MVP Scale*)
+
+Berdasarkan penelaahan seluruh dokumen spesifikasi dan arsitektur fondasi WorkPulse:
+1. **PDD §3**: Secara eksplisit menyatakan: *"Single Organization — satu deployment untuk Dutamedia, skala awal ±30 karyawan seluruh fungsi operasional. Tidak ada konsep multi-tenant."*
+2. **SAD §2.2 #2, §3.1, §9.9, §12.3, §21.7**: Secara konsisten menetapkan batasan arsitektur sistem dirancang dan dioptimalkan untuk skala operasional **30–60 user**.
+3. **ADR-002 & KL-01**: Mengonfirmasi asumsi skala awal 30–60 user untuk manajemen mapping authority, lock contention, dan alokasi memori container.
+4. **Ketiadaan Batas Organisasi pada Angka 200**:
+   - Angka 200 adalah batas defensif memori batch aplikasi (*defensive batch ceiling*), **BUKAN batas maksimal kapasitas organisasi (*organizational maximum*)**. Sistem tidak mengasumsikan organisasi tidak dapat berkembang melampaui 60 atau 200 pengguna.
+
+### 4. Keputusan Arsitektural (*Architectural Decision*)
+
+Berdasarkan pertimbangan Human Authority:
+
+1. **Menerima Keterbatasan sebagai Utang Teknis MVP (*Accept as MVP Technical Debt*)**:
+   - Keterbatasan batching dan risiko starvasi ini **diterima secara resmi sebagai Technical Debt / Known Limitation** (`KL-10`) untuk rilis MVP.
+   - Sistem **TIDAK melakukan refactoring kode atau modifikasi query** pada tahap S2-T1.
+2. **Rasional Keputusan**:
+   - Pada skala operasional MVP yang terdokumentasi (maksimum 60 user), total seluruh karyawan aktif berada jauh di bawah ambang batas batch ($60 \ll 200$).
+   - Seluruh karyawan diproses dalam satu kali batch pada eksekusi pertama di awal jendela pengingat. Kondisi starvasi **secara matematis dan operasional mustahil terjadi pada deployment MVP**.
+   - Melakukan refactoring query cross-module atau menambahkan cursor pagination pada tahap stabilisasi akhir menambah risiko regresi yang tidak perlu terhadap fitur yang sudah 100% lulus uji (538/538 tests pass).
+3. **Integritas Akseptasi FR-28**:
+   - Implementasi FR-28 dan penyelesaian finding `S2-TEST-GAP-7` serta `S2-FR-28-1` dinyatakan **TETAP SAH DAN TERVERIFIKASI (VERIFIED)** untuk target rilis MVP. Finding `S2-PERF-FR28-1` bukan merupakan kegagalan akseptasi fungsional MVP.
+
+### 5. Pemicu Evaluasi Ulang Masa Depan (*Trigger for Future Reassessment*)
+
+Mitigasi teknis wajib diimplementasikan apabila salah satu kondisi berikut terpenuhi di masa pasca-MVP:
+1. Jumlah karyawan aktif perusahaan bertambah melampaui **150 user** (mendekati ambang batas defensif 200).
+2. Sistem diekspansi untuk mendukung arsitektur multi-organisasi atau deployment enterprise skala besar.
+
+**Rencana Remediasi Skala Penuh**:
+- Mengimplementasikan *upstream exclusion*: `SchedulerService` mengambil daftar ID penerima reminder hari berjalan pada fase terkait, lalu meneruskannya sebagai parameter `excludeUserIds: string[]` ke `DailyAccountabilityService` agar dikeluarkan *sebelum* `slice(0, limit)`.
+- Atau mengadopsi *cursor-based batch pagination* dengan kueri set-difference SQL di level database (`NOT EXISTS notifications`).
+
+### 6. Konsekuensi Arsitektural
+
+1. **Zero Code Churn**: Tidak ada perubahan kode backend, test, skema Prisma, atau migrasi database pada rilis MVP saat ini.
+2. **Dokumentasi Terpadu & Transparan**: Keterbatasan tercatat secara resmi pada `09-Known-Limitations.md` (`KL-10`) dan `10-S2-Audit-Findings-Register.md` (`S2-PERF-FR28-1` berstatus `ACCEPTED RISK / ADR`).
+3. **Kepastian Operasional**: Tim operasional dan pemilik produk memiliki batas metrik yang jelas (ambang 150 user) untuk memicu peningkatan skalabilitas batching.
+
+---
+
+## ADR-016 — Rekonsiliasi Role-Based Output Prompt (FR-12) Berbasis Fungsi Organisasi dan Kamus Statis Frontend
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-016 |
+| **Tanggal** | 2026-10-02 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | PRD FR-12, PDD §5, UI/UX Spec §4.2, 04-DESIGN §3.2, SAD §5.1, SAD §10.1, SAD §16.3, Finding S2-FR-12-1 |
+| **Berlaku mulai** | S2 (Decision Gate S2-B2) |
+
+> **Catatan Tata Kelola**: Keputusan arsitektural dan produk dalam ADR ini **bukan** merupakan klaim temuan artefak lama yang sudah ada sebelumnya, melainkan **keputusan produk baru dan mengikat yang ditetapkan secara resmi oleh Human Authority pada Decision Gate S2-B2** guna menutup kesenjangan spesifikasi, ambiguitas taksonomi, dan konflik perancangan terkait pemenuhan PRD FR-12 (finding `S2-FR-12-1`).
+
+---
+
+### 1. Konteks & Latar Belakang
+
+PRD FR-12 mengamanatkan: *"Sistem menampilkan Role-Based Output Template/prompt tambahan sesuai fungsi user saat pengisian check-in."* Pada rangkaian dokumen desain WorkPulse, kebutuhan ini dielaborasi pada beberapa artefak:
+1. **PDD v1.1 §5 (halaman 63)**: Menyebutkan *"Role-Based Output Templates — prompt/contoh output tambahan sesuai fungsi (Developer, QA, PM, Ops, Finance, HRGA, dll.)"*.
+2. **UI/UX Specification & Flow Document v1.2 §4.2 (Line 109)**: Menyatakan bahwa saat user mengetik teks komitmen, sistem menampilkan *"Role-Based Output Prompt sebagai contoh/placeholder kontekstual sesuai fungsi user (mis. Developer melihat contoh 'Feature X completed', QA melihat contoh 'Test case Y executed') — bersifat inline suggestion, tidak mengunci format; user tetap bebas menulis bebas."*
+3. **Design System (04-DESIGN.md §3.2)**: Mengatur komponen `RoleBasedPromptHint` sebagai *"Placeholder-style inline text inside the commitment input (italic, text-secondary), disappears on focus/typing — never a separate required field"*.
+4. **SAD v1.0 (§5.1, §8.4, §10.1, §16.3)**: Memodelkan penugasan organisasi pada tabel `OrganizationalAssignment` dengan kolom `role` (ENUM: Employee, Supervisor_TL, Head, PM, HRGA, CEO_Management, SystemAdmin) dan `function` (VARCHAR: mis. Engineering, Ops & Infra, Finance, dst.), di mana endpoint `GET /api/v1/auth/me` mengembalikan `{ userId, role, function }` yang disimpan di Pinia `auth.store` untuk keperluan render kondisional antarmuka pengguna.
+5. **Interactive Prototype (02-morning-commitment.html)**: Mengimplementasikan kamus `roleHints` berbasis `currentUserFunction` dengan pemetaan departemen (`Engineering`, `Ops & Infra`, `Sales Enablement`, `Delivery`, `HRGA`) serta teks fallback umum.
+
+Pada penelusuran audit S2, tercatat finding **`S2-FR-12-1`** pada `10-S2-Audit-Findings-Register.md`: implementasi frontend eksisting (`frontend/src/pages/MyTodayPage.vue:817-824`) hanya mengevaluasi nomor urut indeks komitmen (#1, #2, #3) dan mengembalikan contoh peran Developer secara hardcoded (`getPromptPlaceholder(idx)`), sehingga pengguna dari fungsi lain tidak mendapatkan diferensiasi kontekstual.
+
+---
+
+### 2. Deskripsi Masalah & Kesenjangan Spesifikasi
+
+Berdasarkan hasil audit komprehensif terhadap seluruh Design Artifacts, ditemukan lima kesenjangan spesifikasi yang belum pernah diselesaikan secara definitif dalam dokumen kontrak terdahulu:
+1. **Ketidakselarasan Taksonomi (Taxonomy Alignment Gap)**: Teks naratif PDD §5 dan UI/UX Spec §4.2 menyebut peran teknis (`Developer`, `QA`) dan role (`PM`), padahal dalam arsitektur data SAD §5.1, peran `Developer` dan `QA` tidak dimodelkan sebagai entitas atau nilai `function` tersendiri, sedangkan `PM` dimodelkan sebagai sistem `role`, bukan `function`. Sebaliknya, master data organisasi dan prototype resmi berbasis pada departemen operasional (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`).
+2. **Diskrepansi Bahasa (Language Gap)**: UI/UX Spec dan prototype resmi menggunakan Bahasa Inggris (mis. *"Feature X completed"*, *"Complete payment gateway integration..."*), sedangkan aplikasi WorkPulse secara keseluruhan dan kode produksi eksisting menggunakan Bahasa Indonesia.
+3. **Ambiguitas Gaya Kalimat (Prompt Style Ambiguity)**: UI/UX Spec §4.2 menulis contoh dalam bentuk lampau/selesai (*outcome style*: *"Feature X completed"*, *"Test case Y executed"*), padahal Morning Check-in adalah perencanaan komitmen kerja harian (*planning/action style*).
+4. **Ambiguitas Variasi Slot (Slot Granularity Ambiguity)**: Implementasi eksisting dan register finding merujuk pada variasi per indeks slot komitmen (#1, #2, #3), sedangkan prototype resmi menerapkan satu prompt yang seragam untuk seluruh slot berdasarkan fungsi pengguna.
+5. **Ketiadaan Teks Resmi untuk Sebagian Fungsi & Fallback (Missing Copy & Fallback Gap)**: Dokumen terdahulu tidak menyediakan copy resmi untuk fungsi `Finance` dan `Management`, serta tidak mendefinisikan teks fallback baku di tingkat PRD/UI-UX Spec jika fungsi pengguna kosong atau tidak dikenal.
+
+Konsisten dengan preseden tata kelola repositori pada ADR-006, ADR-013, ADR-014, dan ADR-015, kesenjangan ini tidak boleh diinterpretasikan atau ditentukan secara sepihak oleh pengembang saat penulisan kode, melainkan harus diputuskan secara resmi oleh **Human Authority pada Decision Gate**.
+
+---
+
+### 3. Bukti & Rujukan Dokumen (*Evidence & References*)
+
+1. **PDD v1.1 Section 5 (Lingkup MVP)**: Halaman 63, butir *Role-Based Output Templates*.
+2. **PRD v1.1 Section 3.2 (Daily Accountability Record)**: Requirement `FR-12`.
+3. **UI/UX Specification & Flow Document v1.2**: Section 4.2 (My Today — Morning Commitment), Section 6 (Komponen Reusable `RoleBasedPromptHint`), Section 7.1 (Flow Morning Check-in).
+4. **Design System (04-DESIGN.md)**: Section 3.2 `RoleBasedPromptHint`.
+5. **System Architecture Design v1.0**: Section 5.1 (Tabel `OrganizationalAssignment`), Section 5.4 (Tabel `Commitment`), Section 8.4 (AuthGuard request context), Section 10.1 (`GET /api/v1/auth/me`), Section 16.2 & 16.3 (`auth.store.ts` dan pemisahan client vs server state).
+6. **Prototype Resmi**: `Design-Artifacts/UI-UX-Design/02-morning-commitment.html` baris 431–439, 786–806, 901, 956–959.
+7. **Mockup Master Data**: `Design-Artifacts/UI-UX-Design/28-organization-mapping.html` baris 356–363, 415–420.
+8. **Register Finding**: `Design-Artifacts/10-S2-Audit-Findings-Register.md` butir finding `S2-FR-12-1`.
+9. **Preseden Tata Kelola**: ADR-006 (Pembedaan Aturan Tetap Produk vs Nilai Kebijakan Konfigurabel), ADR-013, ADR-014, ADR-015 (Resolusi Gap melalui Decision Gate oleh Human Authority).
+
+---
+
+### 4. Keputusan Arsitektural & Produk (*Architectural & Product Decisions*)
+
+Berdasarkan keputusan Human Authority pada Decision Gate S2-B2, ditetapkan 10 keputusan produk dan arsitektural yang final, definitif, dan mengikat:
+
+#### DECISION 1 — Taksonomi Fungsi Organisasi (*Function Taxonomy*)
+1. FR-12 menggunakan atribut `function` dari `OrganizationalAssignment` pengguna aktif sebagai **satu-satunya dasar pemilihan** Role-Based Output Prompt.
+2. FR-12 **TIDAK** menggunakan:
+   - System `role` sebagai kunci pencarian (*key lookup*) prompt;
+   - *Job title* atau posisi jabatan sebagai kunci pencarian prompt;
+   - Taksonomi baru yang dibuat khusus untuk FR-12.
+3. Fungsi kanonikal (*Canonical Functions*) yang secara resmi didukung dan dipetakan pada FR-12 mencakup 7 departemen:
+   - `Engineering`
+   - `Ops & Infra`
+   - `Finance`
+   - `Sales Enablement`
+   - `Delivery`
+   - `HRGA`
+   - `Management`
+4. Ketentuan khusus taksonomi:
+   - `Developer` dan `QA` tidak menjadi key prompt FR-12 karena FR-12 menggunakan atribut `function` dari OrganizationalAssignment; istilah tersebut tetap dicatat sebagai contoh yang muncul dalam PDD/UI-UX Specification.
+   - `PM` **TIDAK** menjadi key prompt karena dalam arsitektur data SAD §5.1, PM adalah `role` (sistem kewenangan peran), bukan `function`.
+   - Nilai `function` tetap merupakan tipe data terbuka `VARCHAR` di basis data organisasi, bukan `ENUM` tertutup yang kaku.
+   - Fungsi baru atau nilai di luar 7 fungsi kanonikal di atas secara otomatis menggunakan mekanisme fallback.
+
+#### DECISION 2 — Sumber Data Fungsi (*Source of Function*)
+Aliran data resolusi fungsi untuk FR-12 ditetapkan secara strictly un-directional melalui rantai arsitektur resmi:
+$$\text{OrganizationalAssignment.function} \longrightarrow \text{Active Context (AuthGuard)} \longrightarrow \text{GET /api/v1/auth/me} \longrightarrow \text{auth.store} \longrightarrow \text{FR-12 RoleBasedPromptHint}$$
+Komponen UI mengonsumsi fungsi dari `authStore.user.function`. Pemilihan prompt FR-12 tidak menggunakan `role`; lookup prompt harus menggunakan `authStore.user.function`.
+
+#### DECISION 3 — Granularitas Prompt (*Prompt Granularity*)
+Satu fungsi organisasi memiliki tepat **satu** teks `RoleBasedPromptHint`. Teks prompt yang sama ditampilkan pada:
+- Slot Commitment #1
+- Slot Commitment #2
+- Slot Commitment #3
+
+Tidak ada variasi teks prompt berdasarkan nomor urut slot atau indeks (`idx`). Nomor indeks slot tidak memiliki bobot semantik berbeda dalam produk dan bukan merupakan bagian dari kontrak pemilihan prompt FR-12.
+
+#### DECISION 4 — Bahasa Resmi (*Language Standard*)
+Bahasa resmi untuk seluruh teks `RoleBasedPromptHint` adalah **Bahasa Indonesia**. Pertimbangan: WorkPulse adalah alat operasional internal Dutamedia dengan antarmuka utama berbahasa Indonesia, dokumen requirement ditulis dalam Bahasa Indonesia, dan implementasi produksi berjalan menggunakan Bahasa Indonesia. Contoh berbahasa Inggris pada prototype diperlakukan sebagai percontohan visual desain, bukan bahasa rilis aplikasi.
+
+#### DECISION 5 — Gaya Bahasa Prompt (*Prompt Style*)
+Teks prompt wajib menggunakan format **action-oriented (berorientasi rencana tindakan)**, bukan format lampau/selesai (*outcome-oriented* / *past-tense* seperti *"Feature X completed"*). Prompt bertujuan membimbing karyawan merumuskan pekerjaan yang direncanakan untuk diselesaikan hari itu, dengan pola baku:
+$$\text{"Contoh: [aksi konkret yang akan dilakukan hari ini]"}$$
+Prompt tetap berstatus sebagai *inline suggestion* / *hint* murni:
+- Tidak wajib diisi/diikuti;
+- Tidak mengunci format kalimat pengguna;
+- Tidak memvalidasi konten teks yang diketik;
+- Tidak ikut tersimpan sebagai bagian dari isi komitmen resmi.
+
+#### DECISION 6 — Salinan Teks Prompt Resmi (*Official Prompt Copy*)
+Ditetapkan salinan teks baku (*exact copy*) untuk 7 fungsi kanonikal sebagai berikut:
+
+| Fungsi Organisasi (`function`) | Salinan Teks Baku Resmi (`RoleBasedPromptHint`) |
+|---|---|
+| **Engineering** | `"Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji"` |
+| **Ops & Infra** | `"Contoh: Menyelesaikan konfigurasi atau pekerjaan infrastruktur yang direncanakan hari ini"` |
+| **Finance** | `"Contoh: Menyelesaikan rekonsiliasi atau proses administrasi keuangan yang menjadi prioritas hari ini"` |
+| **Sales Enablement** | `"Contoh: Menyelesaikan materi atau kebutuhan pendukung aktivitas penjualan hari ini"` |
+| **Delivery** | `"Contoh: Menyelesaikan koordinasi atau pekerjaan yang mendukung delivery proyek hari ini"` |
+| **HRGA** | `"Contoh: Menyelesaikan proses administrasi atau kebutuhan operasional karyawan hari ini"` |
+| **Management** | `"Contoh: Menyelesaikan prioritas koordinasi atau keputusan yang perlu ditindaklanjuti hari ini"` |
+
+*Catatan: Rumusan teks di atas adalah ketetapan produk final dan tidak boleh diubah susunan katanya.*
+
+#### DECISION 7 — Mekanisme dan Salinan Teks Fallback (*Fallback Copy*)
+Jika nilai fungsi pengguna memenuhi salah satu kondisi berikut:
+- Bernilai `null`;
+- Berupa string kosong (`""`);
+- Tidak dikenali;
+- Belum memiliki pemetaan prompt khusus;
+
+maka sistem wajib menampilkan teks fallback resmi berikut secara *exact*:
+$$\text{"Contoh: Tuliskan rencana pekerjaan yang ingin Anda selesaikan hari ini"}$$
+Kondisi fallback bukan merupakan kondisi error aplikasi, bukan nilai komitmen default, dan murni bertindak sebagai placeholder netral.
+
+#### DECISION 8 — Bentuk Arsitektural (*Architectural Form*)
+FR-12 diimplementasikan murni sebagai **kamus statis di sisi frontend (*frontend static dictionary*)**.
+Sistem **DILARANG** membuat:
+- Tabel basis data baru `prompt_templates`;
+- Backend service untuk pengelolaan prompt;
+- Operasi CRUD prompt;
+- Endpoint API baru untuk pengambilan prompt;
+- Kategori baru pada enum `PolicyCategory`;
+- Integrasi ke dalam `PolicyModule` atau `PolicyOwnerAssignment`;
+- Penanggalan berlaku (*effective dating*) pada teks prompt;
+- Pengambilan data via TanStack Query untuk template;
+- Penyimpanan relasi prompt ke entitas `Commitment`.
+
+*Rasional*: Selaras dengan SAD §5.9, ADR-006, dan implementasi prototype resmi `02-morning-commitment.html:797–806`. Prompt adalah teks panduan antarmuka (*UI static copy*), bukan data transaksional dan bukan kebijakan operasional yang dapat diubah saat runtime.
+
+#### DECISION 9 — Perilaku Antarmuka Pengguna (*UI Behavior*)
+Kontrak visual dan interaksi komponen `RoleBasedPromptHint` sesuai [04-DESIGN.md §3.2](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Design-Artifacts/04-DESIGN.md#L151) dan prototype wajib dipertahankan:
+- Berupa teks *inline placeholder* di dalam elemen textarea input komitmen;
+- Berformat miring (*italic*);
+- Menggunakan warna sekunder (`color: var(--text-secondary)`);
+- Muncul secara pasif saat textarea bernilai kosong;
+- Menghilang seketika saat elemen menerima fokus pengguna (`focus`) atau saat pengguna mulai mengetik (`typing`);
+- **Bukan** merupakan field input tersendiri (*"never a separate required field"*);
+- Tidak pernah memblokir aksi submit pengguna;
+- Tidak memodifikasi state nilai komitmen yang diketik pengguna.
+
+#### DECISION 10 — Persistensi Data (*Persistence*)
+Teks prompt **TIDAK disimpan ke dalam basis data**. Kolom `Commitment.text` pada skema database murni hanya menyimpan teks yang secara sadar diketikkan atau diserahkan oleh pengguna.
+
+---
+
+### 5. Alternatif yang Dipertimbangkan & Alasan Penolakan
+
+| Alternatif yang Dipertimbangkan | Evaluasi & Alasan Penolakan |
+|---|---|
+| **Alternatif A: Menggunakan Jabatan Teknis (`Developer`, `QA`) sebagai Kunci Prompt** | **Ditolak**. Konsep spesifik *job title* atau spesialisasi teknis tidak dimodelkan dalam arsitektur basis data WorkPulse (SAD §5.1 hanya memodelkan `Role` dan `Function`). Memaksa pembuatan taksonomi baru akan merusak konsistensi data master organisasi dan menuntut migrasi skema yang tidak direncanakan. |
+| **Alternatif B: Memasukkan Template ke dalam `PolicyCategory`** | **Ditolak**. Melanggar prinsip arsitektural SAD §5.9 dan preseden ADR-006. PolicyModule hanya mengelola aturan kebijakan operasional dengan siklus versi formal (seperti Cutoff dan Grace Period). Menjadikan prompt sebagai policy akan membebani database dan menimbulkan ilusi konfigurasi yang tidak perlu. |
+| **Alternatif C: Layanan Dinamis Backend (Database Table & CRUD API)** | **Ditolak**. Merupakan *over-engineering* yang tidak memiliki rujukan dalam SAD maupun PRD. Prototype resmi membuktikan bahwa kebutuhan panduan kontekstual check-in cukup diselesaikan secara elegan di sisi klien melalui kamus statis. |
+| **Alternatif D: Membedakan Teks Berdasarkan Indeks Slot (#1, #2, #3)** | **Ditolak**. Teks PRD FR-12 secara eksplisit berbunyi *"sesuai fungsi user"*, bukan sesuai urutan komitmen. Slot komitmen #1, #2, dan #3 memiliki bobot setara dan tidak memiliki perbedaan semantik dalam pemenuhan akuntabilitas harian. |
+| **Alternatif E: Mempertahankan Teks Bahasa Inggris Sesuai Prototype** | **Ditolak**. Mengakibatkan inkonsistensi bahasa yang buruk (*poor UX localization*), karena seluruh label form, pesan validasi, dan alur aplikasi menggunakan Bahasa Indonesia. |
+
+---
+
+### 6. Rasional Keputusan (*Rationale*)
+
+1. **Integritas Prinsip Waterfall WorkPulse**: Menutup gap interpretasi finding `S2-FR-12-1` secara definitif sebelum penulisan kode dimulai, mencegah pengembang membuat asumsi sendiri saat implementasi.
+2. **Kesesuaian dengan Arsitektur Data SAD**: Menjaga agar pemilihan prompt sepenuhnya bersumber dari atribut `function` pengguna yang sah dari `GET /api/v1/auth/me`, tanpa menambah kolom basis data atau mengubah skema Prisma.
+3. **Penyelarasan UX & Lokalisasi**: Menjamin keseragaman bahasa dan gaya kalimat yang relevan dengan fungsi Morning Check-in sebagai sarana komitmen harian kerja.
+4. **Efisiensi Implementasi & Zero Overhead**: Menghilangkan dependensi jaringan, query database, atau state management yang kompleks untuk kebutuhan yang pada hakikatnya adalah petunjuk visual pengisian form (*placeholder hint*).
+
+---
+
+### 7. Konsekuensi Arsitektural (*Consequences*)
+
+1. **Backend & Database**:
+   - Nol perubahan pada skema database PostgreSQL dan Prisma (`schema.prisma`).
+   - Nol migrasi database baru.
+   - Nol perubahan pada modul backend (`DailyAccountabilityModule`, `IdentityModule`, `PolicyModule`).
+2. **Frontend UI**:
+   - Berkas konstanta frontend baru atau pembaruan pada `daily-records.constants.ts` untuk memuat kamus statis resmi `ROLE_BASED_PROMPT_HINTS` dan `DEFAULT_PROMPT_HINT`.
+   - Modifikasi pada fungsi resolusi prompt di `frontend/src/pages/MyTodayPage.vue` untuk mengonsumsi `authStore.user?.function` dan menghapus evaluasi berbasis indeks slot (#1, #2, #3).
+   - Pengujian komponen / unit test frontend untuk memastikan resolusi prompt berjalan deterministik untuk ke-7 fungsi kanonikal dan kondisi fallback.
+3. **Status Audit & Temuan**:
+   - Finding `S2-FR-12-1` pada `10-S2-Audit-Findings-Register.md` beralih dari status ambigu menjadi memiliki kriteria penutupan yang objektif dan terukur.
+
+---
+
+### 8. Risiko & Mitigasi Batasan Desain (*Risks & Limitations*)
+
+1. **Penambahan Fungsi Organisasi Baru di Masa Depan**:
+   - *Risiko*: Jika System Admin menambahkan nama departemen baru di master data organisasi yang belum terdaftar di kamus statis, pengguna fungsi tersebut akan melihat teks fallback.
+   - *Mitigasi*: Diterima sebagai batasan desain yang wajar (*graceful degradation*). Teks fallback dirumuskan secara profesional dan cukup luas untuk memandu pengisian komitmen harian pada departemen apa pun. Pembaruan kamus fungsi dapat dilakukan melalui rilis frontend minor berkala.
+2. **Pengguna Multi-Peran**:
+   - *Risiko*: Pengguna dengan peran ganda atau peran manajerial yang mengisi komitmen harian.
+   - *Mitigasi*: Resolusi tetap merujuk secara konsisten pada atribut penugasan organisasi aktifnya (`function`).
+
+---
+
+### 9. Tindakan Lanjutan (*Follow-up Actions*)
+
+1. Menyusun rencana remediasi teknis (*Remediation Plan*) untuk implementasi finding `S2-FR-12-1` pada frontend.
+2. Mengimplementasikan konstanta kamus statis dan menghubungkannya dengan `MyTodayPage.vue`.
+3. Menulis automated unit test frontend pada test suite Vitest guna memverifikasi:
+   - Evaluasi setiap fungsi kanonikal (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`);
+   - Evaluasi saat `function` bernilai null, kosong, atau tidak dikenal (memverifikasi teks fallback);
+   - Verifikasi keseragaman teks di seluruh slot komitmen (indeks 0, 1, 2);
+   - Verifikasi perilaku UI (teks tidak mengontaminasi submitted data).
+4. Melakukan verifikasi independen terhadap finding `S2-FR-12-1` sebelum penutupan administratif pada register temuan.
+
+---
+
+### 10. Persyaratan & Temuan Terkait (*Related Requirements*)
+
+- **PRD**: `FR-12` (Role-Based Output Template/prompt tambahan).
+- **PDD**: Section 5 (Role-Based Output Templates).
+- **UI/UX Spec**: Section 4.2 & Section 6 (`RoleBasedPromptHint`).
+- **Product Backlog**: `EPIC-19-T1` (Halaman My Today — Morning Check-in).
+- **Findings Register**: `S2-FR-12-1`.
+
+---
+
+## ADR-017 — Penetapan Semantik Copy-Forward Draft (FR-11) Berbasis Continuation Komitmen Hari Sebelumnya
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-017 |
+| **Tanggal** | 2026-10-04 |
+| **Status** | **ACCEPTED** |
+| **Menutup Open Item / Ref** | PRD FR-11, UI/UX Spec §4.2, UI/UX Spec §7.1, Finding S2-FR-11-1 |
+| **Berlaku mulai** | S2 (Decision Gate S2-B4) |
+
+> **Catatan Tata Kelola**: Keputusan arsitektural dan produk dalam ADR ini ditetapkan secara normatif dan mengikat oleh **Human Authority pada Decision Gate S2-B4**, bukan keputusan sepihak (*autonomous agent*), guna menyelesaikan kesenjangan arsitektural, diskrepansi kontrak API, dan ambiguitas semantik pada implementasi Copy-Forward Draft (PRD FR-11 / finding `S2-FR-11-1`).
+
+---
+
+### 1. Konteks & Latar Belakang
+
+PRD FR-11 mengamanatkan: *"Sistem menyediakan copy-forward draft dari hari sebelumnya yang wajib dikonfirmasi/diedit user sebelum berlaku sebagai commitment resmi."*
+UI/UX Specification §4.2 dan Flow §7.1 menetapkan bahwa saat check-in pagi, jika draft copy-forward tersedia, sistem menampilkannya sebagai *draft bertanda jelas* dengan opsi *Confirm* atau *Edit*, dan *tidak pernah submit otomatis tanpa aksi user*.
+
+Pada audit investigasi independen S2 terhadap finding **`S2-FR-11-1`**, ditemukan sejumlah kesenjangan kritis pada implementasi eksisting:
+1. **Backend Telah Menghasilkan Draft Namun Tidak Tersambung**: Layanan backend (`DailyAccountabilityService.getTodayRecord`) telah memfilter komitmen hari sebelumnya dan menyusun array `carryOverDraft`.
+2. **Diskrepansi Envelope Kontrak API**: Backend mengembalikan struktur payload berbentuk `{ record, carryOverDraft, availableActions }`. Namun, antarmuka tipe pada frontend (`dailyRecordsApi.getTodayRecord`) mendefinisikan return type sebagai `ApiResponse<DailyAccountabilityRecord | null>`, sehingga layer query (`useTodayRecordQuery`) dan konsumen mengabaikan envelope `carryOverDraft`.
+3. **Frontend Tidak Mengonsumsi Draft & UI Draft Banner Mati (*Dead Banner*)**: Komponen `frontend/src/pages/MyTodayPage.vue` menginisialisasi ref `draftCopyForwardText = ref('')` tanpa pernah memetakannya dari data query API. Akibatnya, blok alert `v-if="!isMorningSubmitted && draftCopyForwardText"` tidak pernah aktif dan tidak pernah dirender di antarmuka pengguna.
+4. **Keterbatasan Semantik Single-String**: Desain UI eksisting pada `MyTodayPage.vue` berasumsi bahwa draft hanyalah string tunggal (`draftCopyForwardText`) yang langsung ditimpa ke Slot Komitmen #1 (`commitmentSlots[0].description = draftCopyForwardText`), padahal seorang karyawan dapat memiliki lebih dari satu komitmen yang berstatus lanjutan dari hari sebelumnya.
+5. **Percampuran Domain Komitmen dan Additional Work di Backend**: Backend sebelumnya mencampur komitmen resmi dan pekerjaan tambahan (`commitments` dan `additionalWorks`) dengan `continuation === Continue` ke dalam `carryOverDraft` untuk Morning Commitment. Hal ini bertentangan dengan prinsip pemisahan domain pada PRD FR-07 (Additional Work tidak mengubah baseline Morning Commitment dan tidak menjadi komitmen ke-4).
+6. **Ambiguitas Sumber Draft (Continuation vs. Tomorrow Priority)**: UI/UX Spec §4.4 dan §7.3 menyebutkan bahwa pengisian field opsional *Tomorrow Priority* pada EOD menyiapkan draft copy-forward besok. Namun, field tersebut tidak pernah disimpan atau dimodelkan di basis data backend (karena DTO dan skema Prisma tidak memiliki field `tomorrowPriority`, sehingga nilai yang dikirim frontend terbuang oleh whitelist validation pipe).
+
+---
+
+### 2. Keputusan Arsitektural & Produk (*Architectural & Product Decisions*)
+
+Berdasarkan persetujuan resmi Human Authority pada Decision Gate S2-B4, ditetapkan empat keputusan normatif yang final dan mengikat:
+
+#### DECISION 1 (D1) — Sumber Kebenaran Copy-Forward (*Source of Truth*)
+1. Sumber kebenaran resmi (*source of truth*) untuk draft copy-forward Morning Check-in (FR-11) adalah **Continuation-based**, yaitu item dari hari kerja sebelumnya milik karyawan terkait yang memiliki status:
+   $$\text{continuation} == \text{'Continue'}$$
+2. Sumber item draft yang sah **hanya berasal dari Morning Commitment** hari kerja sebelumnya.
+3. `Additional Work` hari kerja sebelumnya **TIDAK** menjadi sumber draft untuk Morning Commitment (diatur khusus pada D4).
+4. `Tomorrow Priority` **BUKAN** merupakan sumber kebenaran FR-11.
+5. Form dan tampilan UI `Tomorrow Priority` pada EOD Check-in **TIDAK BOLEH** dihapus atau diubah pada tahap remediasi FR-11 saat ini. Kesenjangan dan konflik antara requirement `Tomorrow Priority` dengan rancangan eksisting dicatat secara terpisah sebagai *follow-up design debt*, bukan diselesaikan secara diam-diam (*silent resolution*) di dalam remediasi FR-11.
+
+#### DECISION 2 (D2) — Pengelolaan Multiple Drafts (*Draft Collection*)
+1. Seluruh item Morning Commitment sebelumnya yang eligible (`continuation === 'Continue'`) **wajib dipertahankan sebagai koleksi draft** (`array/collection`).
+2. Sistem dan antarmuka dilarang keras:
+   - Membuang item ke-2 atau ke-3 secara diam-diam (*silent drop*);
+   - Menggabungkan (*collapse*) beberapa draft menjadi satu string tunggal;
+   - Memilih satu item secara sepihak (*arbitrary selection*).
+3. Antarmuka pengguna (UI) harus mampu menampilkan daftar seluruh draft yang tersedia dan memungkinkan pengguna memilih/memasukkan draft tersebut ke dalam slot Morning Commitment yang tersedia.
+4. Batas resmi kapasitas komitmen harian tetap mengikat: **maksimal 3 komitmen** (`MAX_DAILY_COMMITMENTS = 3`).
+5. Jika jumlah eligible draft melebihi slot komitmen yang tersedia (atau jika pengguna sudah mengisi sebagian slot secara manual), pengguna memiliki kendali penuh untuk memilih dan mengelola draft mana yang digunakan; sistem dilarang membuat komitmen ke-4 atau membuang draft secara diam-diam.
+
+#### DECISION 3 (D3) — Semantik Konfirmasi & Pengeditan (*Confirm / Edit Semantics*)
+1. Aksi *Confirm as-is* maupun *Edit* pada banner draft **hanya bertindak mempersiapkan form (*form preparation*) dan TIDAK PERNAH melakukan submit otomatis ke backend**:
+   - **Confirm as-is**: Memasukkan teks dan referensi draft ke slot komitmen yang dipilih tanpa mengubah teks.
+   - **Edit**: Memasukkan teks dan referensi draft ke slot komitmen yang dipilih sehingga pengguna dapat langsung menyunting teksnya.
+2. Pengguna **tetap wajib** menentukan `Initial Risk` (GREEN / AMBER / RED) untuk setiap komitmen yang diisi dari draft.
+3. Validasi bersyarat risiko `AMBER` dan `RED` (kewajiban mengisi `knownBlocker` dan `supportNeeded`) tetap berlaku penuh.
+4. Pengguna **tetap wajib** menekan tombol resmi *"Serahkan Morning Commitment"* untuk menyelesaikan check-in.
+5. Hanya penyerahan resmi oleh pengguna yang membentuk komitmen baseline di basis data:
+   $$\text{Draft} \longrightarrow \text{Confirm / Edit (Populate Form)} \longrightarrow \text{User Review \& Input Risk} \longrightarrow \text{User Submit} \longrightarrow \text{Official Commitment Baseline}$$
+   *(Bukan: Draft $\rightarrow$ Confirm $\rightarrow$ Automatic Backend Submission).*
+
+#### DECISION 4 (D4) — Pemisahan Domain Additional Work
+1. Item `Additional Work` hari kerja sebelumnya dengan status `continuation === 'Continue'` **TIDAK BOLEH** menghasilkan draft yang masuk ke slot komitmen Morning Commitment (Commitment 1–3).
+2. Mekanisme copy-forward FR-11 untuk Morning Commitment secara eksklusif hanya mengonsumsi item bertipe `Commitment`.
+3. Keputusan ini menjaga integritas pemisahan domain akuntabilitas WorkPulse:
+   - **Morning Commitment**: Baseline pekerjaan terencana hari itu yang dilindungi cutoff dan correction request;
+   - **Additional Work**: Pekerjaan tambahan material tak terencana yang muncul di siang/sore hari, yang tidak boleh bertransformasi menjadi komitmen #4.
+4. Siklus hidup (*lifecycle*) dan perilaku `Additional Work` lainnya tidak diubah di luar kebutuhan spesifik pemisahan draft FR-11 ini.
+
+---
+
+### 3. Batasan Eksplisit Non-Goals (*Explicit Non-Goals*)
+
+Untuk membatasi risiko regresi dan menjaga integritas arsitektural, hal-hal berikut ditetapkan sebagai **Non-Goals** pada remediasi FR-11:
+1. **Tidak Memperbaiki Tomorrow Priority**: Tidak mengubah skema database, DTO, atau alur penyimpanan `Tomorrow Priority` pada siklus EOD dalam lingkup penyelesaian FR-11.
+2. **Tidak Membuat Layanan Prompt/Template Backend**: Template output tetap mengikuti tata kelola frontend statis sesuai ADR-016.
+3. **Tidak Menambah Entitas PolicyCategory**: Draft copy-forward adalah fungsi operasional bawaan sistem (*built-in core feature*), bukan aturan kebijakan yang dikonfigurasi melalui `PolicyModule`.
+4. **Tidak Mengubah Lifecycle Additional Work**: Tidak memodifikasi aturan pengeditan, batas waktu, atau alur EOD dari Additional Work yang telah diatur pada ADR-001.
+5. **Tidak Melakukan Perubahan Skema Basis Data (Schema Change)**: Tidak ada migrasi database atau penambahan kolom/tabel baru pada Prisma schema, karena struktur data entitas `Commitment` dan `DailyAccountabilityRecord` yang ada telah memadai untuk mendukung logika continuation FR-11.
+
+---
+
+### 4. Konsekuensi Arsitektural (*Consequences*)
+
+1. **Backend Response Envelope & Service**:
+   - Backend `DailyAccountabilityService.getTodayRecord` diperbarui untuk memfilter secara murni `Commitment` saja (`sourceType: 'Commitment'`) dan mengeluarkan `AdditionalWork` dari array `carryOverDraft`.
+   - Menjamin integritas isolasi pengguna (`employeeUserId: userId`) dan pemilihan tanggal sebelumnya (`workDate: { lt: today }`, `orderBy: { workDate: 'desc' }`).
+   - Kontrak canonical response `GET /api/v1/daily-accountability-records/today` diformalkan:
+     ```typescript
+     export interface TodayRecordResponse {
+       record: DailyAccountabilityRecord | null;
+       carryOverDraft?: CarryOverDraftItem[];
+       availableActions?: string[];
+     }
+     ```
+2. **Frontend Type System & API Client**:
+   - Berkas `frontend/src/types/daily-records.ts` diperkaya dengan antarmuka tipe `CarryOverDraftItem` dan `TodayRecordResponse`.
+   - Klien `dailyRecordsApi.getTodayRecord()` mengembalikan `Promise<ApiResponse<TodayRecordResponse>>`.
+   - Hook `useTodayRecordQuery()` mengembalikan `TodayRecordResponse` secara utuh.
+3. **Frontend Component & State (`MyTodayPage.vue`)**:
+   - State `draftCopyForwardText: Ref<string>` direfaktor menjadi koleksi terstruktur `carryOverDrafts = computed(() => todayData.value?.carryOverDraft || [])`.
+   - Properti pembantu `record` dialihkan merujuk pada `todayData.value?.record` agar seluruh komputasi turunan (`isMorningSubmitted`, `isCutoffLocked`, `allEodItems`) tetap berfungsi tanpa regresi.
+   - Komponen banner draft dirombak untuk menampilkan seluruh draft yang tersedia, dengan tombol aksi untuk memasukkan item ke dalam slot komitmen yang tersedia (*Confirm as-is* atau *Edit*).
+   - Validasi kapasitas slot (`max 3`) diterapkan secara interaktif; tombol aksi draft dinonaktifkan atau memberikan panduan visual jika seluruh 3 slot telah terisi.
+4. **Semantik Penyerahan & Integritas Baseline**:
+   - Memastikan tidak ada pengiriman payload jaringan saat tombol draft diklik; seluruh mutasi draft bersifat murni *in-memory form state*.
+   - Integritas aturan risiko `initialRisk` dan field `knownBlocker` / `supportNeeded` tetap terjaga utuh sebelum penyerahan.
+5. **Strategi Pengujian (*Testing Rigor*)**:
+   - Unit test backend wajib mencakup skenario komprehensif: ketiadaan record sebelumnya, komitmen non-Continue, multiple eligible commitments, pemisahan Additional Work Continue, isolasi antar-user, dan verifikasi ketiadaan mutasi basis data otomatis.
+   - Component test frontend wajib memverifikasi render banner koleksi draft, aksi Confirm as-is, aksi Edit, perlindungan batas 3 slot, dan keterikatan penyerahan manual.
+
+---
+
+### 5. Catatan Kesenjangan Terbuka (*Open Issue: Tomorrow Priority*)
+
+Tercatat secara formal bahwa terdapat pertentangan spesifikasi desain:
+- **UI/UX Spec §4.4 & §7.3**: Menyatakan bahwa input *Tomorrow Priority* pada EOD Check-in berfungsi menyiapkan draft copy-forward esok hari.
+- **PRD FR-11 & SAD §10.3**: Menekankan copy-forward draft dari hasil evaluasi akuntabilitas hari sebelumnya.
+- **Implementasi Backend & Skema Prisma**: Kolom `tomorrowPriority` tidak didefinisikan pada tabel basis data `DailyAccountabilityRecord` maupun DTO `EodCheckinDto`.
+- **Keputusan S2-B4**: Menetapkan kelanjutan komitmen (*continuation-based*) sebagai sumber kebenaran sah untuk pemenuhan FR-11.
+
+*Status*: Isu ini dicatat sebagai **Follow-Up Design Debt**. Investigasi dan penyelarasan menyeluruh terhadap fungsionalitas `Tomorrow Priority` akan dijadwalkan pada siklus desain/refinement berikutnya tanpa mengganggu stabilitas remediasi FR-11.
+
+---
+
+### 6. Persyaratan & Rujukan Dokumen (*Related Requirements*)
+
+- **PRD**: `FR-03`, `FR-04`, `FR-07`, `FR-09`, `FR-11` (Copy-forward draft dengan konfirmasi/edit wajib).
+- **UI/UX Spec**: Section 4.2 (Morning Commitment Draft Banner), Section 7.1 (Flow Morning Check-in), Section 6 (`DraftBanner`).
+- **SAD**: Section 5.4 (`Commitment`), Section 7.12, Section 10.3 (`DailyAccountabilityModule`).
+- **Findings Register**: `S2-FR-11-1` (Status: OPEN).
+- **Keputusan Terkait**: ADR-001 (Karakteristik AdditionalWork), ADR-006 (Aturan Tetap Produk vs Kebijakan), ADR-016 (Role-Based Output Prompt).
+
+---
+
+## ADR-018 - EOD Post-Cutoff Submission Semantics
+
+| Atribut | Nilai |
+|---|---|
+| **ID** | ADR-018 |
+| **Tanggal** | 2026-10-05 |
+| **Status** | **ACCEPTED** |
+| **Sumber Keputusan** | Human Authority Decision Gate (S2 — FR-26) |
+| **Menutup Open Item / Ref** | PRD FR-26, SAD §9.2, SAD §9.8, Finding S2-TEST-GAP-6, Finding S2-FR26-GRACE0-1 |
+| **Berlaku mulai** | S2 (Remediasi FR-26) |
+
+### 1. Konteks & Latar Belakang
+
+PRD FR-26 dan SAD §9.2 mendefinisikan klasifikasi timing submission: `OnTime` (`submittedAt ≤ onTimeDeadline`) dan `Late` (`onTimeDeadline < submittedAt ≤ cutOff`), serta `NoSubmission` bila tidak ada submission sampai `cutOff` (dievaluasi oleh scheduled job). UI/UX Spec §7.1 secara eksplisit menyatakan bahwa submit Morning Check-in setelah Cut-Off **ditolak**.
+
+Dokumen desain yang ada **tidak secara eksplisit menyatakan perilaku EOD Check-in setelah cutoff**. Implementasi sebelumnya menolak Morning setelah cutoff, tetapi tetap menerima EOD setelah cutoff sehingga validitas submission EOD bergantung pada kapan scheduler `evaluateCutoffLock()` kebetulan mengunci record (race window). Audit juga menemukan bahwa nilai `GracePeriod = 0` (valid menurut SAD §5.9: integer menit `>= 0`) diperlakukan sebagai "tidak ada" akibat operator `|| 30` sehingga cutoff bergeser +30 menit.
+
+> **Catatan Dokumentasi**: Keputusan ini berasal dari **Human Decision Gate** karena dokumen desain yang ada mendefinisikan `Late` sampai cutoff tetapi tidak menyatakan perilaku EOD setelah cutoff. ADR ini adalah *source of decision* untuk ambiguitas tersebut. PRD/PDD/UI-UX/SAD tidak diubah.
+
+### 2. Keputusan
+
+**A. Kontrak timing** (berlaku untuk Morning dan EOD, dievaluasi per request terhadap waktu saat ini):
+
+| Kondisi | Hasil |
+|---|---|
+| `submittedAt ≤ deadline` | `OnTime` |
+| `deadline < submittedAt ≤ cutoff` | `Late` |
+| `submittedAt > cutoff` | **Ditolak** (`BusinessRuleViolationException`), tanpa penulisan data |
+
+**B. Cakupan**: Morning Check-in, EOD Check-in, dan jalur override/konfirmasi EOD (`confirmOverride`) yang menerima/menyelesaikan submission EOD.
+
+**C. Cutoff**: `cutoff = deadline + GracePeriod` terkonfigurasi (Morning dan EOD dievaluasi independen).
+
+**D. GracePeriod**:
+- `0` adalah nilai valid dan **wajib dipertahankan** (cutoff = deadline).
+- Nilai `undefined`/hilang tetap memakai default yang sudah ada pada perilaku policy existing (30 menit). Operator fallback wajib berupa nullish (`??`), bukan truthiness (`||`).
+- Kontrak validasi policy tidak diubah (`>= 0` tetap valid).
+- Berlaku pada seluruh penggunaan produksi: submit Morning, submit EOD, `confirmOverride`, `evaluateCutoffLock`, dan `ComplianceService.evaluateNoSubmission`.
+
+**E. Scheduler**: Scheduler **bukan** sumber kebenaran validitas submission. Validasi submission memakai waktu request terhadap deadline/cutoff. Scheduler hanya melakukan *cutoff locking* dan penandaan `NoSubmission` sesuai desain yang ada.
+
+### 3. Rasional
+
+- Validitas submission tidak boleh bergantung pada timing scheduler.
+- Menghilangkan *race window* setelah cutoff.
+- Menjadikan cutoff batas bisnis yang deterministik dan *auditable*.
+- Menyelaraskan perilaku EOD dengan Morning.
+
+### 4. Non-Goals (Eksplisit)
+
+- Tidak mengubah kadens scheduler.
+- Tidak mengubah nilai default maupun nilai policy GracePeriod.
+- Tidak mengubah skema database.
+- Tidak mengubah otorisasi existing.
+- Tidak membuat tindakan disipliner otomatis.
+
+### 5. Konsekuensi
+
+- **Positif**: kontrak timing konsisten dan teruji untuk Morning dan EOD; nilai grace 0 dihormati di seluruh modul.
+- **Trade-off yang diketahui**: user yang menerima prompt konfirmasi override EOD sebelum cutoff dan menekan konfirmasi setelah cutoff akan ditolak oleh `confirmOverride`, karena jalur tersebut menyelesaikan submission EOD.
+
+### 6. Rujukan
+
+- **PRD**: FR-26, FR-27, FR-31.
+- **SAD**: §5.9 (nilai Policy `GracePeriod >= 0`), §9.2, §9.8.
+- **UI/UX Spec**: Section 7.1 (submit setelah Cut-Off ditolak).
+- **Findings Register**: `S2-TEST-GAP-6`, `S2-FR26-GRACE0-1`.
+- **Keputusan Terkait**: ADR-006 (Aturan Tetap Produk vs Kebijakan), ADR-014 (Grace Period tidak termasuk jendela reminder).

@@ -19,6 +19,15 @@
     "test:backend": "npm --prefix backend run test",
     "test:frontend": "npm --prefix frontend test",
     "test": "npm run test:backend && npm run test:frontend",
+    "test:integration:real": "npm --prefix backend run test:integration:real",
+    "test:db:up": "npm --prefix backend run test:db:up",
+    "test:db:wait": "npm --prefix backend run test:db:wait",
+    "test:db:migrate": "npm --prefix backend run test:db:migrate",
+    "test:db:seed": "npm --prefix backend run test:db:seed",
+    "test:db:reset": "npm --prefix backend run test:db:reset",
+    "test:db:down": "npm --prefix backend run test:db:down",
+    "test:db:safety-check": "npm --prefix backend run test:db:safety-check",
+    "test:load:morning-checkin": "npm --prefix backend run test:load:morning-checkin",
     "lint": "npm --prefix backend run lint"
   },
 

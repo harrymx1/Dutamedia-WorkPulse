@@ -1,10 +1,18 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { setupRouterGuards } from './guards.js';
+import { useAuthStore } from '../stores/auth.store.js';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/today',
+    redirect: () => {
+      try {
+        const authStore = useAuthStore();
+        return authStore.hasRole('Supervisor_TL') ? '/team' : '/today';
+      } catch {
+        return '/today';
+      }
+    },
   },
   {
     path: '/login',

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed, toValue, type Ref, unref, type MaybeRefOrGetter } from 'vue';
 import { dailyRecordsApi, type QueryDailyRecordsParams } from '../api/daily-records.api.js';
 import type {
+  TodayRecordResponse,
   MorningCheckinPayload,
   EodCheckinPayload,
   ConfirmOverridePayload,
@@ -16,12 +17,12 @@ export const DAILY_RECORDS_KEYS = {
 };
 
 /**
- * Hook untuk memuat DailyAccountabilityRecord hari ini (SAD §16, §17.3).
+ * Hook untuk memuat DailyAccountabilityRecord hari ini (SAD §16, §17.3, ADR-017).
  */
 export function useTodayRecordQuery() {
   return useQuery({
     queryKey: DAILY_RECORDS_KEYS.today(),
-    queryFn: async () => {
+    queryFn: async (): Promise<TodayRecordResponse> => {
       const res = await dailyRecordsApi.getTodayRecord();
       return res.data;
     },
@@ -121,6 +122,7 @@ export function useCorrectionRequestMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DAILY_RECORDS_KEYS.today() });
       queryClient.invalidateQueries({ queryKey: DAILY_RECORDS_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ['correction-requests'] });
     },
   });
 }

@@ -21,7 +21,7 @@ export const correctionRequestsApi = {
    */
   async getCorrectionRequests(
     params: QueryCorrectionRequestsParams = {},
-  ): Promise<ApiResponse<{ requests: CorrectionRequestItem[]; total: number }>> {
+  ): Promise<ApiResponse<{ data: CorrectionRequestItem[]; meta: any }>> {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
       if (val !== undefined && val !== null && val !== '') {
@@ -29,7 +29,7 @@ export const correctionRequestsApi = {
       }
     });
     const qs = query.toString() ? `?${query.toString()}` : '';
-    return apiClient.get<{ requests: CorrectionRequestItem[]; total: number }>(`/correction-requests${qs}`);
+    return apiClient.get<{ data: CorrectionRequestItem[]; meta: any }>(`/correction-requests${qs}`);
   },
 
   /**

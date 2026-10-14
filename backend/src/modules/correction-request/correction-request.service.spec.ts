@@ -9,6 +9,7 @@ import {
   Role,
 } from '@prisma/client';
 import { CorrectionRequestService } from './services/correction-request.service.js';
+import { SystemNotificationTrigger } from '../notification/constants/notification-trigger.constants.js';
 import {
   BusinessRuleViolationException,
   ConflictException,
@@ -302,7 +303,8 @@ describe('CorrectionRequestService (EPIC-09)', () => {
       expect(prismaMock.commitment.update).not.toHaveBeenCalled();
       expect(notificationMock.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          triggerType: 'CORRECTION_MATERIAL_REQUESTED',
+          triggerType:
+            SystemNotificationTrigger.CORRECTION_REQUEST_MATERIAL_SUBMITTED,
           recipientUserId: 'spv-1',
         }),
       );
@@ -314,11 +316,17 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-risk-expired',
           status: CorrectionStatus.Pending,
+          targetCommitmentId: 'comm-1',
           target_commitment_id: 'comm-1',
+          requestedChange: {
+            initialRisk: DailyStatus.AMBER,
+            knownBlockerNote: 'Menunggu kredensial API',
+          },
           requested_change: {
             initialRisk: DailyStatus.AMBER,
             knownBlockerNote: 'Menunggu kredensial API',
           },
+          requestedByUserId: 'emp-1',
           requested_by_user_id: 'emp-1',
         },
       ]);
@@ -371,7 +379,9 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-1',
           status: CorrectionStatus.Applied,
+          requestedByUserId: 'emp-1',
           requested_by_user_id: 'emp-1',
+          objectionWindowEnd: new Date(Date.now() + 100000),
           objection_window_end: new Date(Date.now() + 100000),
         },
       ]);
@@ -388,8 +398,10 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-1',
           status: CorrectionStatus.Pending,
+          requestedByUserId: 'emp-1',
           requested_by_user_id: 'emp-1',
-          objection_window_end: new Date(Date.now() - 5000), // Sudah expired
+          objectionWindowEnd: new Date(Date.now() - 5000), // Sudah expired
+          objection_window_end: new Date(Date.now() - 5000),
         },
       ]);
 
@@ -405,7 +417,9 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-1',
           status: CorrectionStatus.Pending,
-          requested_by_user_id: 'spv-1', // User sama
+          requestedByUserId: 'spv-1', // User sama
+          requested_by_user_id: 'spv-1',
+          objectionWindowEnd: new Date(Date.now() + 100000),
           objection_window_end: new Date(Date.now() + 100000),
         },
       ]);
@@ -422,7 +436,9 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-1',
           status: CorrectionStatus.Pending,
+          requestedByUserId: 'emp-outside',
           requested_by_user_id: 'emp-outside',
+          objectionWindowEnd: new Date(Date.now() + 100000),
           objection_window_end: new Date(Date.now() + 100000),
         },
       ]);
@@ -440,7 +456,9 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-1',
           status: CorrectionStatus.Pending,
+          requestedByUserId: 'emp-1',
           requested_by_user_id: 'emp-1',
+          objectionWindowEnd: new Date(Date.now() + 100000),
           objection_window_end: new Date(Date.now() + 100000),
         },
       ]);
@@ -479,7 +497,7 @@ describe('CorrectionRequestService (EPIC-09)', () => {
       );
       expect(notificationMock.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          triggerType: 'CORRECTION_REJECTED',
+          triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED,
           recipientUserId: 'emp-1',
         }),
       );
@@ -551,7 +569,8 @@ describe('CorrectionRequestService (EPIC-09)', () => {
       expect(prismaMock.commitment.update).not.toHaveBeenCalled();
       expect(notificationMock.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          triggerType: 'CORRECTION_MATERIAL_REQUESTED',
+          triggerType:
+            SystemNotificationTrigger.CORRECTION_REQUEST_MATERIAL_SUBMITTED,
           recipientUserId: 'spv-1',
         }),
       );
@@ -634,8 +653,11 @@ describe('CorrectionRequestService (EPIC-09)', () => {
         {
           id: 'cr-expired-1',
           status: CorrectionStatus.Pending,
+          targetCommitmentId: 'comm-1',
           target_commitment_id: 'comm-1',
+          requestedChange: { text: 'Teks diperbarui' },
           requested_change: { text: 'Teks diperbarui' },
+          requestedByUserId: 'emp-1',
           requested_by_user_id: 'emp-1',
         },
       ]);

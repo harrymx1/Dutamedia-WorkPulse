@@ -79,7 +79,7 @@
             <div class="text-caption text-medium-emphasis mt-2">Memuat laporan pengecualian harian...</div>
           </div>
 
-          <div v-else-if="!dailyReport || dailyReport.items.length === 0" class="py-12 text-center text-medium-emphasis border rounded-lg">
+          <div v-else-if="!dailyReport?.items || dailyReport.items.length === 0" class="py-12 text-center text-medium-emphasis border rounded-lg">
             <v-icon icon="mdi-check-circle-outline" color="success" size="48" class="mb-2" />
             <div class="font-weight-bold">Tidak Ada Pengecualian</div>
             <div class="text-caption">Seluruh karyawan memenuhi komitmen pengisian pada tanggal ini.</div>
@@ -156,7 +156,7 @@
             <div class="text-caption text-medium-emphasis mt-2">Memuat ringkasan mingguan...</div>
           </div>
 
-          <div v-else-if="weeklyReport" class="d-flex flex-column ga-4">
+          <div v-else-if="weeklyReport && weeklyReport.totalSubmissions !== undefined" class="d-flex flex-column ga-4">
             <!-- Metrics Overview -->
             <v-row>
               <v-col cols="6" sm="3">
@@ -194,6 +194,12 @@
                 <div class="text-h4 font-weight-bold text-primary">{{ weeklyReport.continuationRate }}%</div>
               </div>
             </v-card>
+          </div>
+
+          <div v-else class="py-12 text-center text-medium-emphasis border rounded-lg">
+            <v-icon icon="mdi-calendar-blank-outline" size="48" class="mb-2" />
+            <div class="font-weight-bold">Tidak Ada Data Mingguan</div>
+            <div class="text-caption">Tidak ditemukan ringkasan aktivitas tim pada minggu yang dipilih.</div>
           </div>
         </div>
 
@@ -236,27 +242,39 @@
             <div class="text-caption text-medium-emphasis mt-2">Memuat tren bulanan...</div>
           </div>
 
-          <div v-else-if="monthlyReport" class="d-flex flex-column ga-4">
+          <div v-else-if="monthlyReport && (monthlyReport.summary || monthlyReport.totalWorkingDays !== undefined || monthlyReport.functionalTrends?.length)" class="d-flex flex-column ga-4">
             <v-row>
               <v-col cols="12" sm="4">
                 <v-card variant="flat" class="pa-4 border rounded bg-surface-elevated text-center">
-                  <div class="text-caption text-medium-emphasis font-weight-bold">HARI KERJA EFEKTIF</div>
-                  <div class="text-h4 font-weight-bold mt-1">{{ monthlyReport.totalWorkingDays }} Hari</div>
+                  <div class="text-caption text-medium-emphasis font-weight-bold">TOTAL RECORD BULAN INI</div>
+                  <div class="text-h4 font-weight-bold mt-1">
+                    {{ monthlyReport.summary?.totalRecords ?? monthlyReport.totalWorkingDays ?? 0 }}
+                  </div>
                 </v-card>
               </v-col>
               <v-col cols="12" sm="4">
                 <v-card variant="flat" class="pa-4 border rounded bg-surface-elevated text-center">
-                  <div class="text-caption text-medium-emphasis font-weight-bold">TINGKAT PENYELESAIAN KOMITMEN</div>
-                  <div class="text-h4 font-weight-bold text-success mt-1">{{ monthlyReport.completionRate }}%</div>
+                  <div class="text-caption text-medium-emphasis font-weight-bold">TOTAL BLOCKER TERDATA</div>
+                  <div class="text-h4 font-weight-bold text-success mt-1">
+                    {{ monthlyReport.summary?.totalBlockers ?? monthlyReport.completionRate ?? 0 }}
+                  </div>
                 </v-card>
               </v-col>
               <v-col cols="12" sm="4">
                 <v-card variant="flat" class="pa-4 border rounded bg-surface-elevated text-center">
-                  <div class="text-caption text-medium-emphasis font-weight-bold">TINGKAT KETEPATAN WAKTU CHECK-IN</div>
-                  <div class="text-h4 font-weight-bold text-primary mt-1">{{ monthlyReport.onTimeRate }}%</div>
+                  <div class="text-caption text-medium-emphasis font-weight-bold">PERISTIWA KEPATUHAN</div>
+                  <div class="text-h4 font-weight-bold text-primary mt-1">
+                    {{ monthlyReport.summary?.totalComplianceEvents ?? monthlyReport.onTimeRate ?? 0 }}
+                  </div>
                 </v-card>
               </v-col>
             </v-row>
+          </div>
+
+          <div v-else class="py-12 text-center text-medium-emphasis border rounded-lg">
+            <v-icon icon="mdi-chart-line" size="48" class="mb-2" />
+            <div class="font-weight-bold">Belum Ada Data Tren Historis</div>
+            <div class="text-caption">Tidak ditemukan data riwayat agregat untuk periode bulan yang dipilih.</div>
           </div>
         </div>
 
@@ -429,7 +447,7 @@
             <div class="text-caption text-medium-emphasis mt-2">Memuat analisis akar masalah blocker...</div>
           </div>
 
-          <div v-else-if="rootCauseReport" class="d-flex flex-column ga-4">
+          <div v-else-if="rootCauseReport && rootCauseReport.totalBlockers !== undefined" class="d-flex flex-column ga-4">
             <v-row>
               <v-col cols="12" sm="6">
                 <v-card variant="flat" class="pa-4 border rounded bg-surface-elevated text-center">
@@ -468,6 +486,12 @@
                 </tbody>
               </v-table>
             </v-card>
+          </div>
+
+          <div v-else class="py-12 text-center text-medium-emphasis border rounded-lg">
+            <v-icon icon="mdi-wrench-clock" size="48" class="mb-2" />
+            <div class="font-weight-bold">Belum Ada Data Blocker</div>
+            <div class="text-caption">Tidak ditemukan rekam kendala operasional pada rentang tanggal yang dipilih.</div>
           </div>
         </div>
       </v-card-text>
@@ -533,7 +557,7 @@ const { data: dailyReport, isLoading: isLoadingDaily } = useDailyExceptionQuery(
 }));
 
 const { data: weeklyReport, isLoading: isLoadingWeekly } = useWeeklyTeamSummaryQuery(() => ({
-  weekStartDate: weeklyStartDate.value,
+  weekStart: weeklyStartDate.value,
 }));
 
 const { data: monthlyReport, isLoading: isLoadingMonthly } = useMonthlyTrendQuery(() => ({
@@ -581,8 +605,9 @@ async function triggerExport(reportType: ExportReportPayload['reportType'], form
     }
 
     const res = await exportMutation.mutateAsync(payload);
-    if (res.signedUrl) {
-      window.open(res.signedUrl, '_blank');
+    const downloadUrl = res.downloadUrl || res.signedUrl;
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank');
     }
   } catch (err: any) {
     alert(err.message || 'Gagal mengekspor laporan.');

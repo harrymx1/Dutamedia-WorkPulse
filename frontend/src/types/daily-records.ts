@@ -59,6 +59,7 @@ export interface Blocker {
   impactDescription: string;
   expectedResolution?: string | null;
   status: BlockerStatus;
+  linkedCommitmentId?: string | null;
   resolutionNote?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -111,16 +112,30 @@ export interface DailyAccountabilityRecord {
   updatedAt: string;
 }
 
+export interface CarryOverDraftItem {
+  sourceCommitmentId: string;
+  sourceType: 'Commitment';
+  text: string;
+  referenceLink?: string | null;
+  continuationReason?: string | null;
+}
+
+export interface TodayRecordResponse {
+  record: DailyAccountabilityRecord | null;
+  carryOverDraft?: CarryOverDraftItem[];
+  availableActions?: string[];
+}
+
 export interface MorningCommitmentInput {
-  description: string;
-  referenceUrl?: string;
+  sequenceNo: number;
+  text: string;
+  referenceLink?: string;
   initialRisk: RiskLevel;
-  knownBlocker?: string;
+  knownBlockerNote?: string;
   supportNeeded?: string;
 }
 
 export interface MorningCheckinPayload {
-  workType: WorkType;
   commitments: MorningCommitmentInput[];
 }
 
@@ -149,16 +164,24 @@ export interface AdditionalWorkPayload {
   assignedBy?: string;
 }
 
+export type OwnerNeededType = 'OrganizationalAuthority' | 'ProjectAuthority';
+
 export interface CreateBlockerPayload {
   type: BlockerType;
   severity: BlockerSeverity;
-  impactDescription: string;
-  targetOwnerUserId: string;
+  impact: string;
+  ownerNeededType: OwnerNeededType;
+  relatedScopeReference?: string;
   expectedResolution?: string;
+  linkedCommitmentId?: string;
 }
 
 export interface CorrectionRequestPayload {
-  commitmentId: string;
-  proposedDescription: string;
+  targetCommitmentId: string;
+  requestedChange: Record<string, any>;
   reason: string;
+  // Optional legacy fields for backwards compatibility
+  commitmentId?: string;
+  proposedDescription?: string;
 }
+

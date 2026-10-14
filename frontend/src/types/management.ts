@@ -81,12 +81,27 @@ export interface WeeklyTeamSummaryReport {
 }
 
 export interface MonthlyTrendReport {
-  year: number;
-  month: number;
-  totalWorkingDays: number;
-  completionRate: number;
-  onTimeRate: number;
-  statusTrend: Array<{
+  month: string | number;
+  summary?: {
+    totalRecords: number;
+    totalBlockers: number;
+    totalComplianceEvents: number;
+  };
+  functionalTrends?: Array<{
+    function: string;
+    totalRecords?: number;
+    completionRate?: number;
+    onTimeRate?: number;
+    [key: string]: any;
+  }>;
+  rootCauseDistribution?: Record<string, number>;
+  escalationAging?: Record<string, number>;
+  compliancePatterns?: Record<string, number>;
+  year?: number;
+  totalWorkingDays?: number;
+  completionRate?: number;
+  onTimeRate?: number;
+  statusTrend?: Array<{
     date: string;
     green: number;
     amber: number;
@@ -160,11 +175,12 @@ export interface BlockerRootCauseReport {
 
 export interface ExportReportPayload {
   reportType: 'daily-exception' | 'weekly-team-summary' | 'monthly-trend' | 'individual-evidence' | 'blocker-root-cause';
-  format: 'PDF' | 'XLSX';
+  format: 'PDF' | 'XLSX' | 'pdf' | 'xlsx';
   date?: string;
   weekStartDate?: string;
+  weekStart?: string;
   year?: number;
-  month?: number;
+  month?: number | string;
   userId?: string;
   startDate?: string;
   endDate?: string;
@@ -174,10 +190,14 @@ export interface ExportReportPayload {
 }
 
 export interface ExportReportResponse {
-  signedUrl: string;
-  fileKey: string;
-  format: 'PDF' | 'XLSX';
-  expiresInMinutes: number;
+  downloadUrl?: string;
+  signedUrl?: string;
+  filename?: string;
+  format?: 'PDF' | 'XLSX' | 'pdf' | 'xlsx';
+  expiresIn?: number;
+  expiresInMinutes?: number;
+  storagePath?: string;
+  fileKey?: string;
 }
 
 // =============================================================================
@@ -278,16 +298,38 @@ export type CorrectionStatus = 'Pending' | 'Approved' | 'Objected' | 'AutoApprov
 
 export interface CorrectionRequestItem {
   id: string;
-  dailyRecordId: string;
+  dailyRecordId?: string;
   commitmentId?: string | null;
-  userId: string;
+  targetCommitmentId?: string;
+  targetCommitment?: {
+    id: string;
+    text: string;
+    sequenceNo?: number;
+    initialRisk?: string;
+  };
+  userId?: string;
+  requestedByUserId?: string;
   userName?: string;
   userFunction?: string;
+  requestedBy?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  reviewedBy?: {
+    id: string;
+    fullName: string;
+    email: string;
+  } | null;
   classification: CorrectionClassification;
   status: CorrectionStatus;
-  requestedChanges: Record<string, unknown>;
+  requestedChange?: string;
+  requestedChanges?: Record<string, unknown>;
+  reason?: string;
   objectionReason?: string | null;
-  objectionWindowDeadline: string;
+  objectionWindowStart?: string | null;
+  objectionWindowEnd?: string | null;
+  objectionWindowDeadline?: string;
   createdAt: string;
   availableActions?: string[];
 }
@@ -380,6 +422,7 @@ export type BlockerStatus =
 export interface BlockerItem {
   id: string;
   dailyRecordId?: string;
+  linkedCommitmentId?: string | null;
   description: string;
   severity: BlockerSeverity;
   status: BlockerStatus;

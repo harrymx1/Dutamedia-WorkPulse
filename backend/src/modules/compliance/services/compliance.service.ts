@@ -16,6 +16,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { ScopeFilterService } from '../../authorization/services/scope-filter.service.js';
 import { NotificationService } from '../../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 import { PolicyService } from '../../policy/policy.service.js';
 import type { CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
 import {
@@ -180,14 +181,14 @@ export class ComplianceService {
       this.isPastCutoff(
         now,
         cutoffConfig.morningOnTimeDeadline || '09:00',
-        graceConfig.morningGraceMinutes || 30,
+        graceConfig.morningGraceMinutes ?? 30,
       );
     const eodPassed =
       isPastToday ||
       this.isPastCutoff(
         now,
         cutoffConfig.eodOnTimeDeadline || '18:00',
-        graceConfig.eodGraceMinutes || 30,
+        graceConfig.eodGraceMinutes ?? 30,
       );
 
     if (!morningPassed && !eodPassed) {
@@ -410,7 +411,7 @@ export class ComplianceService {
 
         if (orgAssignment?.directManagerId) {
           await this.notificationService.dispatch({
-            triggerType: 'PATTERN_FLAG_DETECTED',
+            triggerType: SystemNotificationTrigger.REPEATED_NO_SUBMISSION_FLAG,
             recipientUserId: orgAssignment.directManagerId,
             payload: {
               title: 'Pola Non-Submission Terdeteksi (Perlu Pembinaan)',
@@ -719,26 +720,6 @@ export class ComplianceService {
           relatedEntityType: 'ManagerNote',
           relatedEntityId: managerNote.id,
           valueAfter: managerNote,
-        },
-        tx,
-      );
-
-      // 5e. Dispatch notifikasi ke karyawan
-      await this.notificationService.dispatch(
-        {
-          triggerType: 'MANAGER_NOTE_CREATED',
-          recipientUserId: targetEvent.userId,
-          payload: {
-            title: 'Catatan Pembinaan (Coaching) Baru',
-            body: `${user.email} telah mendokumentasikan sesi pembinaan (Coaching) untuk Anda.`,
-            linkPath: `/history`,
-          },
-          relatedEntityType: 'ManagerNote',
-          relatedEntityId: managerNote.id,
-          channels: [
-            NotificationChannel.Email,
-            NotificationChannel.WebNotificationCenter,
-          ],
         },
         tx,
       );

@@ -124,6 +124,18 @@
       }
     },
     "/api/v1/temporary-reviewer-assignments": {
+      "get": {
+        "operationId": "IdentityController_getTemporaryReviewerAssignments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Identity"
+        ]
+      },
       "post": {
         "operationId": "IdentityController_createTemporaryReviewerAssignment",
         "parameters": [],
@@ -134,6 +146,48 @@
         },
         "tags": [
           "Identity"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationController_getNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}/mark-read": {
+      "post": {
+        "operationId": "NotificationController_markRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/api/v1/notifications/mark-all-read": {
+      "post": {
+        "operationId": "NotificationController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
         ]
       }
     },
@@ -277,48 +331,6 @@
         },
         "tags": [
           "Policy"
-        ]
-      }
-    },
-    "/api/v1/notifications": {
-      "get": {
-        "operationId": "NotificationController_getNotifications",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/api/v1/notifications/{id}/mark-read": {
-      "post": {
-        "operationId": "NotificationController_markRead",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/api/v1/notifications/mark-all-read": {
-      "post": {
-        "operationId": "NotificationController_markAllRead",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Notification"
         ]
       }
     },

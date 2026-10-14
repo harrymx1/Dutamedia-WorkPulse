@@ -577,4 +577,42 @@ describe('NotificationService (SAD §5.10, §10.10, §12.1 - §12.6, EPIC-13)', 
       });
     });
   });
+
+  describe('hasCutoffReminderNotification (SAD §6.3, S2-T4-JOB-01)', () => {
+    it('harus memeriksa keberadaan notifikasi cutoff reminder untuk recipient dan phase tertentu', async () => {
+      const startOfDay = new Date('2026-10-05T00:00:00.000Z');
+      const endOfDay = new Date('2026-10-05T23:59:59.999Z');
+
+      mockPrisma.notification.findFirst.mockResolvedValue({ id: 'notif-exist' });
+
+      const hasSent = await notificationService.hasCutoffReminderNotification(
+        'user-1',
+        'MORNING',
+        startOfDay,
+        endOfDay,
+      );
+      expect(hasSent).toBe(true);
+      expect(mockPrisma.notification.findFirst).toHaveBeenCalledWith({
+        where: {
+          recipientUserId: 'user-1',
+          triggerType: SystemNotificationTrigger.MORNING_EOD_CUTOFF_REMINDER,
+          createdAt: { gte: startOfDay, lte: endOfDay },
+          payload: {
+            path: ['metadata', 'phase'],
+            equals: 'MORNING',
+          },
+        },
+        select: { id: true },
+      });
+
+      mockPrisma.notification.findFirst.mockResolvedValue(null);
+      const hasNotSent = await notificationService.hasCutoffReminderNotification(
+        'user-2',
+        'EOD',
+        startOfDay,
+        endOfDay,
+      );
+      expect(hasNotSent).toBe(false);
+    });
+  });
 });

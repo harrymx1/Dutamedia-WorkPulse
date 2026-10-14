@@ -238,7 +238,7 @@ const functionSummaries = computed(() => {
 });
 
 const criticalAgingBlockers = computed(() => {
-  const all = blockersData.value?.blockers || [];
+  const all = Array.isArray(blockersData.value) ? blockersData.value : [];
   return all.filter((b) => b.severity === 'Critical' || b.severity === 'High');
 });
 </script>

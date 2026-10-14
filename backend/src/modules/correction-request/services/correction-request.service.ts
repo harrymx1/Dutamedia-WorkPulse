@@ -14,6 +14,7 @@ import { AuditService } from '../../audit/audit.service.js';
 import { PolicyService } from '../../policy/policy.service.js';
 import { ScopeFilterService } from '../../authorization/services/scope-filter.service.js';
 import { NotificationService } from '../../notification/notification.service.js';
+import { SystemNotificationTrigger } from '../../notification/constants/notification-trigger.constants.js';
 import { computeWorstOfStatus } from '../../daily-accountability/services/daily-accountability.service.js';
 import type { CurrentUserPayload } from '../../auth/decorators/current-user.decorator.js';
 import type { CreateCorrectionRequestDto } from '../dto/create-correction-request.dto.js';
@@ -278,7 +279,7 @@ export class CorrectionRequestService {
     // 5. Notifikasi trigger #11 ke pengguna pengaju (WebNotificationCenter)
     try {
       await this.notificationService.dispatch({
-        triggerType: 'CORRECTION_APPLIED',
+        triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED,
         recipientUserId: user.userId,
         relatedEntityType: 'CorrectionRequest',
         relatedEntityId: result.id,
@@ -320,46 +321,59 @@ export class CorrectionRequestService {
       now.getTime() + durationHours * 60 * 60 * 1000,
     );
 
-    const correction = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.correctionRequest.create({
-        data: {
-          targetCommitmentId: commitment.id,
-          requestedByUserId: user.userId,
-          requestedChange: dto.requestedChange,
-          reason: dto.reason.trim(),
-          classification: CorrectionClassification.Material,
-          policySnapshot,
-          status: CorrectionStatus.Pending,
-          objectionWindowStart,
-          objectionWindowEnd,
-        },
-        include: {
-          targetCommitment: true,
-          requestedBy: { select: { id: true, fullName: true, email: true } },
-        },
-      });
-
-      await this.auditService.record(
-        {
-          actorUserId: user.userId,
-          action: 'CORRECTION_REQUESTED',
-          relatedEntityType: 'CorrectionRequest',
-          relatedEntityId: created.id,
-          valueAfter: {
-            id: created.id,
+    let correction: any;
+    try {
+      correction = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.correctionRequest.create({
+          data: {
             targetCommitmentId: commitment.id,
+            requestedByUserId: user.userId,
             requestedChange: dto.requestedChange,
             reason: dto.reason.trim(),
             classification: CorrectionClassification.Material,
+            policySnapshot,
+            status: CorrectionStatus.Pending,
             objectionWindowStart,
             objectionWindowEnd,
           },
-        },
-        tx,
-      );
+          include: {
+            targetCommitment: true,
+            requestedBy: { select: { id: true, fullName: true, email: true } },
+          },
+        });
 
-      return created;
-    });
+        await this.auditService.record(
+          {
+            actorUserId: user.userId,
+            action: 'CORRECTION_REQUESTED',
+            relatedEntityType: 'CorrectionRequest',
+            relatedEntityId: created.id,
+            valueAfter: {
+              id: created.id,
+              targetCommitmentId: commitment.id,
+              requestedChange: dto.requestedChange,
+              reason: dto.reason.trim(),
+              classification: CorrectionClassification.Material,
+              objectionWindowStart,
+              objectionWindowEnd,
+            },
+          },
+          tx,
+        );
+
+        return created;
+      });
+    } catch (err: any) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Masih terdapat pengajuan koreksi yang berstatus Pending untuk komitmen ini',
+        );
+      }
+      throw err;
+    }
 
     // Notifikasi trigger #9 ke Authorized Reviewer (SAD §12.1 trigger #9)
     try {
@@ -376,7 +390,8 @@ export class CorrectionRequestService {
       const reviewerUserId = orgAssignment?.directManagerId;
       if (reviewerUserId) {
         await this.notificationService.dispatch({
-          triggerType: 'CORRECTION_MATERIAL_REQUESTED',
+          triggerType:
+            SystemNotificationTrigger.CORRECTION_REQUEST_MATERIAL_SUBMITTED,
           recipientUserId: reviewerUserId,
           relatedEntityType: 'CorrectionRequest',
           relatedEntityId: correction.id,
@@ -417,7 +432,7 @@ export class CorrectionRequestService {
     return this.prisma.$transaction(async (tx) => {
       // 1. Pessimistic lock row via raw SQL (SAD §9.9 #1)
       const lockedRows: any[] = await tx.$queryRaw`
-        SELECT id, status, objection_window_end, requested_by_user_id
+        SELECT id, status, "objectionWindowEnd", "requestedByUserId"
         FROM correction_requests
         WHERE id = ${id}::uuid
         FOR UPDATE;
@@ -428,6 +443,8 @@ export class CorrectionRequestService {
       }
 
       const cr = lockedRows[0];
+      const objectionWindowEnd = cr.objectionWindowEnd ?? cr.objection_window_end;
+      const requestedByUserId = cr.requestedByUserId ?? cr.requested_by_user_id;
 
       // 2. Cek status harus masih Pending
       if (cr.status !== CorrectionStatus.Pending) {
@@ -437,14 +454,14 @@ export class CorrectionRequestService {
       }
 
       // 3. Cek objection window belum berakhir
-      if (cr.objection_window_end && new Date(cr.objection_window_end) <= now) {
+      if (objectionWindowEnd && new Date(objectionWindowEnd) <= now) {
         throw new ConflictException(
           'Objection window telah berakhir, pengajuan koreksi telah atau sedang diterapkan secara otomatis',
         );
       }
 
       // 4. Pemohon tidak boleh mengajukan keberatan atas pengajuannya sendiri
-      if (user.userId === cr.requested_by_user_id) {
+      if (user.userId === requestedByUserId) {
         throw new ForbiddenException(
           'Pemohon koreksi tidak dapat mengajukan keberatan atas pengajuannya sendiri',
         );
@@ -453,7 +470,7 @@ export class CorrectionRequestService {
       // 5. Cek otorisasi reviewer
       const isAuthorized = await this.isAuthorizedReviewer(
         user,
-        cr.requested_by_user_id,
+        requestedByUserId,
         now,
       );
 
@@ -498,8 +515,8 @@ export class CorrectionRequestService {
       // 8. Notifikasi trigger #11 ke pengguna pengaju
       try {
         await this.notificationService.dispatch({
-          triggerType: 'CORRECTION_REJECTED',
-          recipientUserId: cr.requested_by_user_id,
+          triggerType: SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED,
+          recipientUserId: requestedByUserId,
           relatedEntityType: 'CorrectionRequest',
           relatedEntityId: id,
           payload: {
@@ -546,7 +563,7 @@ export class CorrectionRequestService {
         await this.prisma.$transaction(async (tx) => {
           // Kunci baris dengan SELECT FOR UPDATE
           const lockedRows: any[] = await tx.$queryRaw`
-            SELECT id, status, target_commitment_id, requested_change, requested_by_user_id
+            SELECT id, status, "targetCommitmentId", "requestedChange", "requestedByUserId"
             FROM correction_requests
             WHERE id = ${item.id}::uuid
             FOR UPDATE;
@@ -557,12 +574,16 @@ export class CorrectionRequestService {
 
           if (cr.status !== CorrectionStatus.Pending) return;
 
+          const targetCommitmentId = cr.targetCommitmentId ?? cr.target_commitment_id;
+          const requestedChangeRaw = cr.requestedChange ?? cr.requested_change;
+          const requestedByUserId = cr.requestedByUserId ?? cr.requested_by_user_id;
+
           const commitment = await tx.commitment.findUnique({
-            where: { id: cr.target_commitment_id },
+            where: { id: targetCommitmentId },
           });
           if (!commitment) return;
 
-          const requestedChange = cr.requested_change as Record<string, any>;
+          const requestedChange = requestedChangeRaw as Record<string, any>;
           const isRiskChanged =
             requestedChange.initialRisk &&
             requestedChange.initialRisk !== commitment.initialRisk;
@@ -634,8 +655,9 @@ export class CorrectionRequestService {
           // Notifikasi trigger #11 ke pengguna pengaju
           try {
             await this.notificationService.dispatch({
-              triggerType: 'CORRECTION_APPLIED',
-              recipientUserId: cr.requested_by_user_id,
+              triggerType:
+                SystemNotificationTrigger.CORRECTION_REQUEST_RESOLVED,
+              recipientUserId: requestedByUserId,
               relatedEntityType: 'CorrectionRequest',
               relatedEntityId: item.id,
               payload: {

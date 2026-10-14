@@ -20,7 +20,7 @@
 
     <!-- Filter & Search Controls -->
     <v-card variant="outlined" class="border-subtle rounded-lg pa-3 mb-4 bg-surface">
-      <v-row dense align="center">
+      <v-row density="compact" align="center">
         <v-col cols="12" sm="5" md="6">
           <v-text-field
             v-model="searchQuery"
@@ -213,7 +213,7 @@
               ]"
             />
 
-            <v-row dense>
+            <v-row density="compact">
               <v-col cols="12" sm="6">
                 <v-select
                   v-model="createForm.initialRole"
