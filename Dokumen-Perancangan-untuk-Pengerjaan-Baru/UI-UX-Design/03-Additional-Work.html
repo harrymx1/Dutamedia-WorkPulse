@@ -1036,37 +1036,38 @@
       display: flex;
     }
 
-    /* Empty State Box */
+    /* Empty State Box (Opsi 1: Horizontal Mini-Strip Ramping) */
     .empty-state-box {
-      border: 1.5px dashed var(--color-border-strong);
-      border-radius: var(--radius-md);
-      padding: 36px 20px;
-      text-align: center;
-      background: #FCFDFC;
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #F8FAFC;
     }
 
     .empty-icon-circle {
-      width: 44px;
-      height: 44px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: var(--color-brand-tint);
       color: var(--color-brand-primary);
       display: grid;
       place-items: center;
-      margin: 0 auto 12px;
+      flex-shrink: 0;
+      margin: 0;
     }
 
-    .empty-state-box h3 {
-      font-size: 15px;
-      font-weight: 750;
-      margin-bottom: 4px;
-    }
-
-    .empty-state-box p {
+    .empty-state-text {
       font-size: 13px;
+      line-height: 1.45;
       color: var(--color-text-secondary);
-      max-width: 480px;
-      margin: 0 auto;
+    }
+
+    .empty-state-text strong {
+      color: var(--color-text-primary);
+      font-weight: 700;
     }
 
     /* Metadata Tag / Mini-Tags (Opsi 3 Design Standards) */
@@ -1692,18 +1693,17 @@
             <div id="entries-container">
             </div>
 
-            <!-- Empty State Elegan -->
+            <!-- Empty State Elegan (Opsi 1: Horizontal Mini-Strip Ramping) -->
             <div class="empty-state-box" id="empty-state-box" style="display: none;">
               <div class="empty-icon-circle" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
               </div>
-              <h3>Belum Ada Additional Work Hari Ini</h3>
-              <p>
-                Jika di sela jam kerja muncul tugas mendadak di luar rencana komitmen pagi, silakan catat melalui tombol Tambah Pekerjaan Tambahan di atas.
-              </p>
+              <div class="empty-state-text">
+                <strong>Belum ada pekerjaan tambahan hari ini.</strong> Jika di sela jam kerja muncul tugas mendadak di luar rencana komitmen pagi, silakan catat melalui tombol <em>Tambah Pekerjaan Tambahan</em> di atas.
+              </div>
             </div>
 
           </div>
@@ -2060,7 +2060,7 @@
         countTxt.textContent = additionalItems.length;
 
         if (additionalItems.length === 0) {
-          emptyBox.style.display = 'block';
+          emptyBox.style.display = 'flex';
           return;
         }
 
