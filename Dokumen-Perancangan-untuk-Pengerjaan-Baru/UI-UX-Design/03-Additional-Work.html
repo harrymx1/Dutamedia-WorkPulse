@@ -1570,12 +1570,12 @@
 
                 <form id="form-add-work" novalidate>
                   
-                  <!-- Input Deliverable / Deskripsi Pekerjaan -->
+                  <!-- Input Target Hasil Kerja / Deskripsi Pekerjaan -->
                   <div class="form-group">
                     <label class="form-label" for="work-desc">
-                      <span>Rencana Hasil Kerja (Deliverable) <span style="color:#DC2626;">*</span></span>
+                      <span>Target Hasil Kerja <span style="color:#DC2626;">*</span></span>
                     </label>
-                    <textarea id="work-desc" class="commit-textarea" rows="2" placeholder="Apa hasil kerja spesifik dari tugas mendadak atau pekerjaan baru ini?" required></textarea>
+                    <textarea id="work-desc" class="commit-textarea" rows="2" placeholder="Apa hasil nyata atau wujud selesai dari tugas tambahan ini?" required></textarea>
                     
                     <!-- Role-Based Prompt Hint (FR-12 / AC-37) -->
                     <div class="role-prompt-hint show" id="role-prompt-hint">
@@ -2109,7 +2109,7 @@
             </div>
             <div class="commit-body">
               <div style="font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
-                Rencana Hasil Kerja (Deliverable)
+                Target Hasil Kerja
               </div>
               <div style="font-size: 14.5px; font-weight: 600; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 8px;">
                 ${escapeHtml(item.description)}
@@ -2334,7 +2334,7 @@
         const ref = refInput.value.trim();
 
         if (!desc) {
-          errorTxt.textContent = 'Rencana hasil kerja (Deliverable) pekerjaan tambahan wajib diisi.';
+          errorTxt.textContent = 'Target hasil kerja pekerjaan tambahan wajib diisi.';
           errorAlert.classList.add('show');
           descInput.focus();
           return;

@@ -342,6 +342,7 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - **Default State Cerdas:** Jika sudah terdapat item tersimpan, formulir default tertutup agar karyawan langsung melihat daftar log tugas yang tercatat tanpa perlu scroll.
       - **Bebas Redundansi Judul Kartu:** Menghilangkan pengulangan simbol ganda `#1`, diformat baku menjadi `[ 1 ] Pekerjaan Tambahan #1`.
       - **Penamaan Badge Form:** Mengganti jargon *Pra-EOD Ad-hoc* menjadi `Tugas Tambahan Baru` (mode baru) dan `Mode Sunting` (mode edit).
+      - **Standarisasi Label 'Target Hasil Kerja':** Mengganti istilah kaku *Rencana Hasil Kerja (Deliverable)* menjadi **`Target Hasil Kerja`** (menghapus kata 'Rencana' yang tidak cocok untuk tugas ad-hoc siang hari serta menghapus jargon asing dalam tanda kurung agar ramah bagi seluruh divisi kerja).
       - **Aksen Kondisional 'Assigned By':** Panel pemberi tugas muncul secara dinamis saat alasan `Newly Assigned` dipilih, dengan aksen visual border kiri hijau (`#0B8061`).
 
 ### Halaman 04: My Today — EOD Outcome
