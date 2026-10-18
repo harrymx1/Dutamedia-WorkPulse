@@ -326,6 +326,11 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
   8. **Kartu Transisi Alur Kerja Menuju EOD Outcome:** Di bawah log tugas terdapat kartu transisi berpenampilan elegan yang menghubungkan langsung karyawan ke `04-EOD-Outcome.html` dengan informasi kesetaraan evaluasi capaian (*outcome*) sore hari.
   9. **Integrasi Tiket Blocker Tanpa Simbol Petir:** Tombol `Pilih Blocker Aktif ▾` menyediakan quick-picker tiket blocker tim aktif dengan smart auto-fill deskripsi.
   10. **Kesiapan Penyaluran ke EOD (Halaman 04):** Seluruh item yang tersimpan di `localStorage: workpulse_additional_work_items` siap dimuat otomatis di Halaman 04 untuk evaluasi capaian (*Outcome*) setara dengan Morning Commitment.
+  11. **Panel Referensi Komitmen Pagi Terkunci (Collapsible by Default & Zero Emoji):**
+      - Judul bersih **`Komitmen Pagi Terkunci`** tanpa eyebrow berulang, badge ringkas `1 Komitmen`, dan penanda kartu `Terkunci`.
+      - **Nol emoticon/emoji:** Murni menggunakan tipografi profesional dan ikon inline SVG monokrom (ikon gembok dan chevron).
+      - **Default tertutup (*collapsed by default*):** Menghemat ruang layar vertikal secara drastis sehingga fokus karyawan langsung mengarah ke formulir *Additional Work*, disertai tombol interaktif *Lihat Komitmen* / *Tutup Komitmen*.
+      - **Penanganan Empty State:** Tampilan netral dan suportif jika sesi pagi terlewat (*No Submission*) atau *Zero Commitment*.
 
 ### Halaman 04: My Today — EOD Outcome
 *(Akan diisi saat pengerjaan Halaman 04)*

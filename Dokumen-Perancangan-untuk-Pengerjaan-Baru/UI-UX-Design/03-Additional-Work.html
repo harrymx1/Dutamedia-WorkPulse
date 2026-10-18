@@ -486,6 +486,11 @@
       border-top-right-radius: var(--radius-md);
     }
 
+    .panel.is-collapsed .panel-head {
+      border-bottom: none;
+      border-radius: var(--radius-md);
+    }
+
     .panel-body {
       padding: 20px 22px;
     }
@@ -1538,20 +1543,27 @@
         </div>
 
         <!-- ==============================================================
-             PANEL 3: RINGKASAN BASELINE KOMITMEN PAGI (TERKUNCI)
+             PANEL 3: RINGKASAN KOMITMEN PAGI TERKUNCI (READ-ONLY)
              ============================================================== -->
-        <section class="panel" id="morning-baseline-section" style="margin-bottom: 24px;">
-          <div class="panel-head">
+        <section class="panel is-collapsed" id="morning-baseline-section" style="margin-bottom: 24px;">
+          <div class="panel-head" style="cursor: pointer;" id="baseline-toggle-head">
             <div>
-              <div class="section-kicker">Komitmen Pagi Terkunci</div>
-              <h2>Komitmen Pagi Hari Ini (Terkunci)</h2>
+              <h2>Komitmen Pagi Terkunci</h2>
             </div>
-            <span class="pill green" id="baseline-status-pill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span id="baseline-count-txt">1 Komitmen Terkunci</span>
-            </span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="pill green" id="baseline-status-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span id="baseline-count-txt">1 Komitmen</span>
+              </span>
+              <button type="button" class="btn btn-secondary" id="btn-toggle-baseline" aria-expanded="false" style="padding: 5px 12px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-sm); height: 30px;">
+                <span id="btn-toggle-baseline-txt">Lihat Komitmen</span>
+                <svg id="baseline-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s ease;">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="panel-body">
+          <div class="panel-body" id="baseline-panel-body" style="display: none;">
             <div id="baseline-cards-container">
               <!-- Render Dinamis Kartu Baseline Komitmen Pagi -->
             </div>
@@ -1922,7 +1934,15 @@
           }
         } catch (e) {}
 
-        if (!baselineItems || baselineItems.length === 0) {
+        let morningStatus = 'ON_TIME';
+        try {
+          const storedStatus = localStorage.getItem('workpulse_morning_status');
+          if (storedStatus) morningStatus = storedStatus;
+        } catch (e) {}
+
+        if (morningStatus === 'NO_SUBMISSION') {
+          baselineItems = [];
+        } else if (!baselineItems || baselineItems.length === 0) {
           baselineItems = [
             {
               id: 'slot-1',
@@ -1934,7 +1954,24 @@
           ];
         }
 
-        $('baseline-count-txt').textContent = `${baselineItems.length} Komitmen Terkunci`;
+        const baselineCountTxt = $('baseline-count-txt');
+        const baselineStatusPill = $('baseline-status-pill');
+
+        if (baselineItems.length === 0) {
+          if (baselineCountTxt) baselineCountTxt.textContent = '0 Komitmen';
+          if (baselineStatusPill) baselineStatusPill.className = 'pill neutral';
+
+          container.innerHTML = `
+            <div style="padding: 18px 20px; background: #F8FAFC; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-secondary); font-size: 13.5px; line-height: 1.6;">
+              <strong style="color: var(--color-text-primary); display: block; margin-bottom: 4px;">Tidak ada komitmen pagi yang tercatat untuk hari ini.</strong>
+              <div>Seluruh pekerjaan yang Anda catat pada formulir Additional Work di bawah akan tetap dievaluasi secara adil saat EOD Outcome sore nanti.</div>
+            </div>
+          `;
+          return;
+        }
+
+        if (baselineCountTxt) baselineCountTxt.textContent = `${baselineItems.length} Komitmen`;
+        if (baselineStatusPill) baselineStatusPill.className = 'pill green';
 
         // Update Status Risiko Hari Ini secara dinamis
         const statusMainEl = $('initial-status-txt');
@@ -1981,7 +2018,7 @@
               </div>
               <span class="pill neutral" style="font-size: 11px; color: var(--color-text-secondary);">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Komitmen Terkunci</span>
+                <span>Terkunci</span>
               </span>
             </div>
             <div class="commit-body">
@@ -2003,6 +2040,44 @@
           `;
           container.appendChild(card);
         });
+      }
+
+      // Toggle Kolapsibel Komitmen Pagi (Default: Tertutup)
+      const baselineSection = $('morning-baseline-section');
+      const baselineBody = $('baseline-panel-body');
+      const btnToggleBaseline = $('btn-toggle-baseline');
+      const btnToggleBaselineTxt = $('btn-toggle-baseline-txt');
+      const baselineChevron = $('baseline-chevron-icon');
+      const baselineHead = $('baseline-toggle-head');
+      let isBaselineOpen = false;
+
+      function toggleBaseline() {
+        isBaselineOpen = !isBaselineOpen;
+        if (isBaselineOpen) {
+          baselineSection.classList.remove('is-collapsed');
+          baselineBody.style.display = 'block';
+          btnToggleBaselineTxt.textContent = 'Tutup Komitmen';
+          baselineChevron.style.transform = 'rotate(180deg)';
+          btnToggleBaseline.setAttribute('aria-expanded', 'true');
+        } else {
+          baselineSection.classList.add('is-collapsed');
+          baselineBody.style.display = 'none';
+          btnToggleBaselineTxt.textContent = 'Lihat Komitmen';
+          baselineChevron.style.transform = 'rotate(0deg)';
+          btnToggleBaseline.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      if (btnToggleBaseline) {
+        btnToggleBaseline.onclick = (e) => {
+          e.stopPropagation();
+          toggleBaseline();
+        };
+      }
+      if (baselineHead) {
+        baselineHead.onclick = () => {
+          toggleBaseline();
+        };
       }
 
       // 4. Data Storage & Render Daftar Additional Work Tercatat
