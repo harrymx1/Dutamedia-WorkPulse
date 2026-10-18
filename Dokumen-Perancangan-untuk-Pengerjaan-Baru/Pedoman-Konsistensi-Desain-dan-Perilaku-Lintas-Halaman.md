@@ -24,7 +24,7 @@
    - [Halaman 01: Login & Aktivasi Akun](#halaman-01-login--aktivasi-akun)
    - [Halaman 02: My Today — Morning Commitment](#halaman-02-my-today--morning-commitment)
    - [Halaman 03: My Today — Additional Work (Siap Diisi)](#halaman-03-my-today--additional-work)
-   - [Halaman 04: My Today — EOD Check-out (Siap Diisi)](#halaman-04-my-today--eod-check-out)
+   - [Halaman 04: My Today — EOD Outcome (Siap Diisi)](#halaman-04-my-today--eod-outcome)
    - [Halaman 05 s.d. 24: (Area Registri Bertahap)](#halaman-berikutnya-registri-bertahap)
 10. [Checklist Wajib Sebelum Memulai Halaman Baru](#10-checklist-wajib-sebelum-memulai-halaman-baru)
 
@@ -94,7 +94,7 @@ Seluruh halaman wajib mematuhi sistem warna terkurasi berikut:
 Setiap halaman kerja harian (Halaman 02, 03, dan 04) wajib menampilkan bilah progres interaktif di bagian atas:
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│  [1] Morning Commitment   ──>   [2] Additional Work   ──>   [3] EOD Check-out  │
+│  [1] Morning Commitment   ──>   [2] Additional Work   ──>   [3] EOD Outcome    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 - Menandai langkah aktif dengan warna hijau brand (`.daily-step.active`).
@@ -102,7 +102,7 @@ Setiap halaman kerja harian (Halaman 02, 03, dan 04) wajib menampilkan bilah pro
 
 ### 4.3 Breadcrumb Topbar
 - Format baku: `Workspace / [Modul Utama] / [Nama Halaman]`
-- Contoh: `My Today / Morning Commitment`, `My Today / Additional Work`, `My Today / EOD Check-out`.
+- Contoh: `My Today / Morning Commitment`, `My Today / Additional Work`, `My Today / EOD Outcome`.
 
 ### 4.4 Tombol Aksi Cepat Header Kanan (*Quick CTA*)
 - Pada seluruh halaman kerja harian, sudut kanan atas header secara konsisten menyediakan tombol darurat: **`Lapor Blocker`** (warna merah bata `#991B1B` / latar lembut `#FFF8F8` atau tombol solid) yang langsung membuka modal atau rute `05-Raise-Instant-Blocker.html`.
@@ -312,16 +312,21 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
 - **Berkas Prototipe:** [`03-Additional-Work.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/03-Additional-Work.html)
 - **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-03-Additional-Work.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-03-Additional-Work.md)
 - **Keputusan Utama yang Diambil:**
-  1. **Independensi dari Morning Baseline (FR-07 & BR-01):** Additional Work dicatat terpisah dan bukan merupakan slot komitmen ke-4, sehingga tidak pernah mengubah atau merusak baseline komitmen pagi yang telah dikunci.
+  1. **Independensi dari Komitmen Pagi (FR-07 & BR-01):** Additional Work dicatat terpisah dan bukan merupakan slot komitmen ke-4, sehingga tidak pernah mengubah atau merusak komitmen pagi yang telah dikunci.
   2. **Taksonomi Alasan Resmi (5 Enum PRD FR-06):** Menerapkan 5 alasan baku (`Newly Assigned`, `Missed in Planning`, `Priority Change`, `Operational-Incident`, `Other`).
   3. **Panel Kondisional 'Assigned By':** Field nama pemberi tugas wajib muncul dan wajib diisi hanya jika alasan `Newly Assigned` dipilih.
   4. **Penyelarasan Fluid Grid Seimbang Non-Statis:** Mengadopsi padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis `px`, menjaga sumbu kiri dan kanan sejajar lurus dengan Halaman 02.
-  5. **Fitur Sunting (Edit) & Pembatalan:** Setiap kartu Additional Work yang tersimpan dapat disunting kembali (*inline edit mode*) sebelum EOD dengan tombol `Edit` dan `Hapus` yang ergonomis.
-  6. **Kartu Transisi Alur Kerja Menuju EOD Check-out:** Di bawah log tugas terdapat kartu transisi berpenampilan elegan yang menghubungkan langsung karyawan ke `04-EOD-Outcome.html` dengan informasi kesetaraan evaluasi capaian sore hari.
-  7. **Integrasi Tiket Blocker Tanpa Simbol Petir:** Tombol `Pilih Blocker Aktif ▾` menyediakan quick-picker tiket blocker tim aktif dengan smart auto-fill deskripsi.
-  8. **Kesiapan Penyaluran ke EOD (Halaman 04):** Seluruh item yang tersimpan di `localStorage: workpulse_additional_work_items` siap dimuat otomatis di Halaman 04 untuk evaluasi capaian (*Outcome*) setara dengan Morning Commitment.
+  5. **Panel Konteks Harian Humanis & Adil:**
+     - Penamaan *Jendela Pencatatan (09:30 – 17:00 WIB)* dengan subteks *Fleksibel · Hanya Jika Ada Tugas Baru*.
+     - Pengenalan status komitmen pagi multi-state adil: pembedaan jelas antara terlambat (`● Terlambat (Tetap Terisi)` dengan jam submit) vs tidak mengisi (`● Tidak Ada Komitmen Pagi` netral), menghindari kata kaku "Baseline".
+     - Subtitle ramah: *"Bersifat opsional — catat pekerjaan baru atau tugas mendadak yang muncul setelah komitmen pagi dikunci..."*
+  6. **Standarisasi Istilah 'EOD Outcome':** Mengganti istilah sempit *"EOD Check-out"* (yang bias presensi kehadiran) menjadi **`EOD Outcome`** di seluruh alur navigasi step bar dan kartu transisi alur kerja.
+  7. **Fitur Sunting (Edit) & Pembatalan:** Setiap kartu Additional Work yang tersimpan dapat disunting kembali (*inline edit mode*) sebelum EOD dengan tombol `Edit` dan `Hapus` yang ergonomis.
+  8. **Kartu Transisi Alur Kerja Menuju EOD Outcome:** Di bawah log tugas terdapat kartu transisi berpenampilan elegan yang menghubungkan langsung karyawan ke `04-EOD-Outcome.html` dengan informasi kesetaraan evaluasi capaian (*outcome*) sore hari.
+  9. **Integrasi Tiket Blocker Tanpa Simbol Petir:** Tombol `Pilih Blocker Aktif ▾` menyediakan quick-picker tiket blocker tim aktif dengan smart auto-fill deskripsi.
+  10. **Kesiapan Penyaluran ke EOD (Halaman 04):** Seluruh item yang tersimpan di `localStorage: workpulse_additional_work_items` siap dimuat otomatis di Halaman 04 untuk evaluasi capaian (*Outcome*) setara dengan Morning Commitment.
 
-### Halaman 04: My Today — EOD Check-out
+### Halaman 04: My Today — EOD Outcome
 *(Akan diisi saat pengerjaan Halaman 04)*
 - **Rencana Berkas:** `04-EOD-Outcome.html`
 - **Keterkaitan dengan Halaman Sebelumnya:**
