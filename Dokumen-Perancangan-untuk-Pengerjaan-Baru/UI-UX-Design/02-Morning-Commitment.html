@@ -663,11 +663,23 @@
       margin: 0;
     }
 
-    /* Context Grid */
+    /* Context Grid (4-Kolom Terpadu) */
     .context-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .context-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .context-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .context-item {
@@ -727,38 +739,6 @@
       border-radius: var(--radius-md);
       background: #FFF8F8;
       border: 1px solid #FECDCA;
-    }
-
-    /* Initial Daily Status Preview Card */
-    .status-preview {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      border: 1px solid var(--color-border-subtle);
-      background: #FAFCFB;
-      border-radius: var(--radius-sm);
-      padding: 16px 20px;
-      margin-bottom: 20px;
-    }
-
-    .status-title {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-      margin-bottom: 3px;
-      font-weight: 600;
-    }
-
-    .status-main {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--color-text-primary);
-    }
-
-    .status-desc {
-      font-size: 12.5px;
-      color: var(--color-text-secondary);
-      margin-top: 3px;
     }
 
     /* Commitment Cards */
@@ -1515,10 +1495,10 @@
         display: inline-flex;
       }
       .context-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       .context-grid > div:first-child {
-        grid-column: 1 / -1;
+        grid-column: auto;
       }
       .grid-2col {
         grid-template-columns: 1fr;
@@ -1897,6 +1877,17 @@
                 </div>
                 <div class="context-subtext" id="submission-status-sub">Sebelum batas tepat waktu</div>
               </div>
+              <div class="context-item">
+                <div class="context-label">Status Risiko Hari Ini</div>
+                <div class="context-value" id="risk-status-pill-wrap" style="display: flex; align-items: center; min-height: 28px;">
+                  <span class="pill green" id="initial-status-badge">
+                    <span class="status-indicator-dot"></span>
+                    <span id="initial-status-badge-txt">GREEN</span>
+                  </span>
+                </div>
+                <div class="context-subtext" id="initial-status-desc">Terkendali Mandiri</div>
+                <span id="initial-status-txt" style="display: none;">GREEN — Terkendali</span>
+              </div>
             </div>
           </div>
         </section>
@@ -1914,16 +1905,6 @@
           <div>
             <strong>Pengisian Melewati Masa Toleransi (Terlambat):</strong> Batas toleransi pengisian (09:30 WIB) telah berakhir. Anda tetap wajib menetapkan komitmen hari ini, namun Anda diminta mencantumkan alasan keterlambatan pada formulir sebelum mengirim.
           </div>
-        </div>
-
-        <!-- Initial Daily Status Live Preview -->
-        <div class="status-preview">
-          <div>
-            <div class="status-title">Status Risiko Hari Ini</div>
-            <div class="status-main" id="initial-status-txt">GREEN — Terkendali</div>
-            <div class="status-desc" id="initial-status-desc">Seluruh komitmen berstatus aman (GREEN) dan dapat dieksekusi secara mandiri.</div>
-          </div>
-          <span class="pill green" id="initial-status-badge">GREEN</span>
         </div>
 
         <!-- Zero Commitment Option Panel (UF-10) -->
@@ -2572,40 +2553,50 @@
       // 4. Kalkulasi Status Risiko Hari Ini (Heuristik Risiko Tertinggi)
       function updateAggregation() {
         const isZero = $('zero-commitment-toggle').checked;
+        const statusBadge = $('initial-status-badge');
+        const statusBadgeTxt = $('initial-status-badge-txt');
+        const statusDesc = $('initial-status-desc');
+        const statusTxt = $('initial-status-txt');
+
+        const setBadgeText = (text) => {
+          if (statusBadgeTxt) statusBadgeTxt.textContent = text;
+          else if (statusBadge) statusBadge.textContent = text;
+        };
+
         if (isZero) {
-          $('initial-status-txt').textContent = 'Tanpa Komitmen Khusus (Alasan Resmi)';
-          $('initial-status-desc').textContent = 'Opsi tanpa komitmen dipilih dengan alasan operasional resmi. Status dicatat netral dan tidak dihitung sebagai No Submission.';
-          $('initial-status-badge').className = 'pill neutral';
-          $('initial-status-badge').textContent = 'Netral';
+          if (statusTxt) statusTxt.textContent = 'Tanpa Komitmen Khusus (Alasan Resmi)';
+          if (statusDesc) statusDesc.textContent = 'Alasan Operasional Resmi';
+          if (statusBadge) statusBadge.className = 'pill neutral';
+          setBadgeText('Netral');
           return;
         }
 
         const cards = $$('.commit-card');
         if (cards.length === 0) {
-          $('initial-status-txt').textContent = 'Belum Ada Komitmen';
-          $('initial-status-desc').textContent = 'Belum ada komitmen aktif yang dimasukkan ke slot formulir.';
-          $('initial-status-badge').className = 'pill neutral';
-          $('initial-status-badge').textContent = 'Belum Diisi';
+          if (statusTxt) statusTxt.textContent = 'Belum Ada Komitmen';
+          if (statusDesc) statusDesc.textContent = 'Belum ada komitmen aktif';
+          if (statusBadge) statusBadge.className = 'pill neutral';
+          setBadgeText('Belum Diisi');
           return;
         }
 
         const risks = cards.map(c => c.querySelector('input[type="radio"]:checked')?.value || 'GREEN');
 
         if (risks.includes('RED')) {
-          $('initial-status-txt').textContent = 'RED — Risiko Tinggi';
-          $('initial-status-desc').textContent = 'Terdapat komitmen dengan risiko tinggi (RED). Dukungan pimpinan diperlukan segera.';
-          $('initial-status-badge').className = 'pill red';
-          $('initial-status-badge').textContent = 'RED';
+          if (statusTxt) statusTxt.textContent = 'RED — Risiko Tinggi';
+          if (statusDesc) statusDesc.textContent = 'Risiko Tinggi (Eskalasi Diperlukan)';
+          if (statusBadge) statusBadge.className = 'pill red';
+          setBadgeText('RED');
         } else if (risks.includes('AMBER')) {
-          $('initial-status-txt').textContent = 'AMBER — Perlu Perhatian';
-          $('initial-status-desc').textContent = 'Terdapat komitmen dengan potensi kendala (AMBER) atau dependensi antar-tim.';
-          $('initial-status-badge').className = 'pill amber';
-          $('initial-status-badge').textContent = 'AMBER';
+          if (statusTxt) statusTxt.textContent = 'AMBER — Perlu Perhatian';
+          if (statusDesc) statusDesc.textContent = 'Perhatian (Pantau Berkala)';
+          if (statusBadge) statusBadge.className = 'pill amber';
+          setBadgeText('AMBER');
         } else {
-          $('initial-status-txt').textContent = 'GREEN — Terkendali';
-          $('initial-status-desc').textContent = 'Seluruh komitmen berstatus aman (GREEN) dan dapat dieksekusi secara mandiri.';
-          $('initial-status-badge').className = 'pill green';
-          $('initial-status-badge').textContent = 'GREEN';
+          if (statusTxt) statusTxt.textContent = 'GREEN — Terkendali';
+          if (statusDesc) statusDesc.textContent = 'Terkendali Mandiri';
+          if (statusBadge) statusBadge.className = 'pill green';
+          setBadgeText('GREEN');
         }
       }
 
@@ -2893,6 +2884,25 @@
         if ($('late-submission-reason')) {
           $('late-submission-reason').disabled = true;
         }
+
+        // Simpan ke localStorage agar terintegrasi dengan Halaman 03 (Additional Work) & 04 (EOD)
+        try {
+          if ($('zero-commitment-toggle').checked) {
+            localStorage.setItem('workpulse_morning_status', 'NO_SUBMISSION');
+            localStorage.setItem('workpulse_morning_commitments', JSON.stringify([]));
+          } else {
+            const cardsData = $$('.commit-card').map((c, idx) => ({
+              id: `slot-${idx + 1}`,
+              title: `Komitmen Slot ${idx + 1}`,
+              deliverable: c.querySelector('textarea')?.value || '',
+              risk: c.querySelector('input[type="radio"]:checked')?.value || 'GREEN',
+              reference: c.querySelector('.picker-trigger-input')?.value || ''
+            }));
+            localStorage.setItem('workpulse_morning_commitments', JSON.stringify(cardsData));
+            localStorage.setItem('workpulse_morning_status', currentTimingState);
+            localStorage.setItem('workpulse_morning_time', '08:45');
+          }
+        } catch (e) {}
 
         $('footer-summary-txt').textContent = 'Submission berhasil tercatat. Baseline komitmen telah terkunci untuk hari ini.';
         $('next-actions-panel').classList.add('show');

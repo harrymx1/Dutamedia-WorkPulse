@@ -26,7 +26,7 @@ Halaman **Morning Commitment** adalah gerbang pertama akuntabilitas harian bagi 
 
 ## 2. ANATOMI & KOMPONEN ANTARMUKA (UI COMPONENTS)
 
-Halaman ini tersusun atas 12 blok komponen terintegrasi:
+Halaman ini tersusun atas 11 blok komponen terintegrasi:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -34,27 +34,26 @@ Halaman ini tersusun atas 12 blok komponen terintegrasi:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. EXEMPTION BANNER (Opsional: Hanya untuk Akun Pengecualian Terbuka / C-Level)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. PANEL JADWAL & BATAS PENGISIAN HARI INI (3 Kolom: Tanggal, Batas, Status)│
+│ 3. PANEL KONTEKS HARI INI (Grid 4-Kolom Terpadu: Tanggal, Batas Waktu,       │
+│    Status Pengisian, dan Live Agregasi Status Risiko Hari Ini)              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. TIMING ALERT BANNER (Dinamis: Masa Toleransi Amber / Keterlambatan Merah) │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 5. STATUS RISIKO HARI INI (Agregasi Heuristik Live: GREEN / AMBER / RED)    │
+│ 5. ZERO COMMITMENT TOGGLE & PANEL ALASAN RESMI (Training, Dinas, Townhall)  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. ZERO COMMITMENT TOGGLE & PANEL ALASAN RESMI (Training, Dinas, Townhall)  │
+│ 6. DRAF PEKERJAAN BERLANJUT (Pool Carry-over dengan Formula Metadata Seragam)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 7. DRAF PEKERJAAN BERLANJUT (Pool Carry-over dengan Formula Metadata Seragam)│
+│ 7. FOKUS PRIORITAS HARI INI (Catatan Konteks Non-binding dari EOD Kemarin)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 8. FOKUS PRIORITAS HARI INI (Catatan Konteks Non-binding dari EOD Kemarin)   │
+│ 8. FORMULIR SLOT KOMITMEN (1-3 Slot: Deliverable, Prompt Hint, Risiko, Link)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 9. FORMULIR SLOT KOMITMEN (1-3 Slot: Deliverable, Prompt Hint, Risiko, Link)│
+│ 9. INPUT ALASAN KETERLAMBATAN (Kondisional: Wajib jika Pengisian > 09:30)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 10. INPUT ALASAN KETERLAMBATAN (Kondisional: Wajib jika Pengisian > 09:30)  │
+│ 10. ACTION FOOTER BAR (Simpan Draf Lokal & Tombol Kirim Komitmen)           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 11. ACTION FOOTER BAR (Simpan Draf Lokal & Tombol Kirim Komitmen)           │
+│ 11. MODAL KONFIRMASI (Konfirmasi Pengiriman & Modal Hentikan Pekerjaan Draf)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 12. MODAL KONFIRMASI (Konfirmasi Pengiriman & Modal Hentikan Pekerjaan Draf)│
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 13. DRAWER NAVIGASI MOBILE (Hamburger Topbar, Sidebar Off-Canvas, Backdrop) │
+│ 12. DRAWER NAVIGASI MOBILE (Hamburger Topbar, Sidebar Off-Canvas, Backdrop) │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -273,11 +272,13 @@ Berikut adalah dokumentasi detail dari seluruh 33 skenario yang terbagi dalam 9 
   4. Panel penjelasan risiko otomatis terbuka dan wajib diisi.
 
 ### Skenario 5.5: Agregasi Status Risiko Hari Ini (*Initial Daily Status Heuristic*)
+- **Penyajian UI:** Ditampilkan secara elegan di **kolom ke-4 Panel Konteks Hari Ini** (`repeat(4, 1fr)`), menggantikan kotak preview terpisah agar menghemat ruang vertikal dan selaras 100% dengan Halaman 03.
 - **Kondisi:** Dihitung secara *real-time* berbasis aturan heuristik risiko tertinggi:
-  - Jika ada minimal satu slot RED $\rightarrow$ **RED — Risiko Tinggi** *(Pill Merah)*.
-  - Jika tidak ada RED tetapi ada minimal satu AMBER $\rightarrow$ **AMBER — Perlu Perhatian** *(Pill Amber)*.
-  - Jika seluruh slot terisi berstatus GREEN $\rightarrow$ **GREEN — Terkendali** *(Pill Hijau)*.
-  - Jika opsi Zero Commitment aktif $\rightarrow$ **Netral — Tanpa Komitmen Khusus (Alasan Resmi)** *(Pill Netral)*.
+  - Jika ada minimal satu slot RED $\rightarrow$ **RED — Risiko Tinggi** *(Pill Merah: RED · Subteks: Risiko Tinggi (Eskalasi Diperlukan))*.
+  - Jika tidak ada RED tetapi ada minimal satu AMBER $\rightarrow$ **AMBER — Perlu Perhatian** *(Pill Amber: AMBER · Subteks: Perhatian (Pantau Berkala))*.
+  - Jika seluruh slot terisi berstatus GREEN $\rightarrow$ **GREEN — Terkendali** *(Pill Hijau: GREEN · Subteks: Terkendali Mandiri)*.
+  - Jika opsi Zero Commitment aktif $\rightarrow$ **Netral — Tanpa Komitmen Khusus** *(Pill Netral: Netral · Subteks: Alasan Operasional Resmi)*.
+  - Jika belum ada komitmen aktif $\rightarrow$ **Netral — Belum Diisi** *(Pill Netral: Belum Diisi · Subteks: Belum ada komitmen aktif)*.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
