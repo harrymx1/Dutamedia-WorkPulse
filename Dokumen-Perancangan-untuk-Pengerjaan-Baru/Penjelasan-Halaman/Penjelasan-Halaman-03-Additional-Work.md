@@ -14,7 +14,7 @@
 Halaman **Additional Work** adalah ruang kerja fleksibel yang dirancang untuk menangkap dinamika pekerjaan riil di lapangan tanpa merusak integritas komitmen awal. Halaman ini berfungsi untuk:
 1. **Mencatat Pekerjaan Tak Terduga (*Ad-hoc & Mid-day Tasks*):** Memfasilitasi karyawan mencatat penugasan mendadak dari atasan, insiden operasional, atau perubahan prioritas yang terjadi setelah batas pengisian komitmen pagi (*Morning Commitment*) terkunci.
 2. **Menjaga Kemurnian Baseline Pagi (PRD FR-07 & BR-01):** Menegaskan prinsip tata kelola bahwa pekerjaan tambahan **bukan merupakan slot komitmen ke-4** dan **tidak pernah mengubah atau membatalkan baseline Morning Commitment** yang sudah dikunci.
-3. **Penyetaraan Bobot Evaluasi Sore Hari (PRD FR-08 & 4.4):** Seluruh item yang dicatat di halaman ini secara otomatis disalurkan ke layar evaluasi sore (**Halaman 04: EOD Check-out**) dengan bobot perlakuan capaian (*Outcome & Continuation*) yang setara dengan komitmen utama.
+3. **Penyetaraan Bobot Evaluasi Sore Hari (PRD FR-08 & 4.4):** Seluruh item yang dicatat di halaman ini secara otomatis disalurkan ke layar evaluasi sore (**Halaman 04: EOD Outcome**) dengan bobot perlakuan capaian (*Outcome & Continuation*) yang setara dengan komitmen utama.
 
 ### 1.2 Prinsip Desain & Batasan Ketat
 - **Sifat Asinkron & Non-Mandatory:** Halaman ini bersifat opsional. Karyawan tidak diwajibkan mengisi jika sepanjang hari kerja tidak ada penugasan tambahan di luar rencana pagi.

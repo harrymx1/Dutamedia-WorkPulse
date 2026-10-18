@@ -344,7 +344,7 @@ Berikut adalah dokumentasi detail dari seluruh 33 skenario yang terbagi dalam 9 
   1. Seluruh kartu komitmen berubah menjadi *read-only* (input teks, radio risiko, tombol hapus terkunci permanen).
   2. Tombol `Kirim Morning Commitment`, `Simpan Draf`, `Tambah Slot`, dan daftar draf dinonaktifkan.
   3. Status pengisian pada panel jadwal terkunci menjadi `Tersimpan · Tepat Waktu` (atau `Tersimpan · Masa Toleransi` / `Tersimpan · Terlambat`).
-  4. Layar otomatis melakukan *smooth scroll* ke bawah dan menampilkan **`Next Actions Panel`** (jalan pintas ke *Additional Work*, *Lapor Blocker*, atau info *EOD Check-out* sore nanti).
+  4. Layar otomatis melakukan *smooth scroll* ke bawah dan menampilkan **`Next Actions Panel`** (jalan pintas ke *Additional Work*, *Lapor Blocker*, atau info *EOD Outcome* sore nanti).
 
 ### Skenario 8.5: Pengajuan Koreksi Baseline Pasca-Kirim (*Morning Correction Request*)
 - **Kondisi:** Karyawan menyadari ada kesalahan fatal pada komitmen yang sudah terlanjur dikirim dan terkunci.
