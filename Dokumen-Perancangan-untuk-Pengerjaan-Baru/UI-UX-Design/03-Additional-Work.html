@@ -11,6 +11,7 @@
   <style>
     /* ==========================================================================
        DESIGN SYSTEM TOKENS (04-Design-System.md v1.4.0 FINAL & Pedoman Konsistensi)
+       100% Identik dengan 02-Morning-Commitment.html
        ========================================================================== */
     :root {
       --color-canvas: #F7FAF9;
@@ -96,7 +97,7 @@
     }
 
     /* ==========================================================================
-       APP SHELL & SIDEBAR NAVIGATION (PRD / UI/UX SPEC v1.9.0)
+       APP SHELL & SIDEBAR NAVIGATION
        ========================================================================== */
     .app {
       min-height: 100vh;
@@ -341,7 +342,7 @@
       border-radius: 50%;
     }
 
-    /* Daily Workflow Navigation Bar */
+    /* Daily Workflow Navigation Bar (100% Identik dengan Halaman 2: Tanpa Kotak Blok Hijau!) */
     .daily-workflow-bar {
       display: flex;
       border-bottom: 1px solid var(--color-border-subtle);
@@ -359,7 +360,7 @@
       text-decoration: none;
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
-      transition: all 0.15s;
+      transition: color 0.15s, border-color 0.15s;
     }
 
     .daily-step:hover {
@@ -367,16 +368,16 @@
       text-decoration: none;
     }
 
-    .daily-step.completed {
-      color: var(--color-brand-secondary);
-      font-weight: 600;
-    }
-
     .daily-step.active {
       color: var(--color-brand-primary);
       border-bottom-color: var(--color-brand-primary);
       font-weight: 700;
-      background: var(--color-brand-tint);
+      background: transparent !important; /* Tetap putih polos identik dengan Halaman 2 */
+    }
+
+    .daily-step.completed {
+      color: var(--color-text-secondary);
+      font-weight: 600;
     }
 
     .step-num {
@@ -391,14 +392,14 @@
       color: var(--color-text-secondary);
     }
 
-    .daily-step.completed .step-num {
-      background: var(--color-status-green-bg);
-      color: var(--color-brand-secondary);
+    .daily-step.active .step-num {
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
     }
 
-    .daily-step.active .step-num {
-      background: var(--color-brand-primary);
-      color: #FFFFFF;
+    .daily-step.completed .step-num {
+      background: #E6F4EC;
+      color: #12915F;
     }
 
     /* Content Area */
@@ -462,9 +463,107 @@
       text-decoration: none;
     }
 
-    .btn-danger-cta:focus-visible {
-      outline: 3px solid #B42318;
-      outline-offset: 2px;
+    /* Panels & Context Grid (Identik dengan 02-Morning-Commitment.html) */
+    .panel {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 24px;
+    }
+
+    .panel-head {
+      padding: 18px 22px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      border-top-left-radius: var(--radius-md);
+      border-top-right-radius: var(--radius-md);
+    }
+
+    .panel-body {
+      padding: 20px 22px;
+    }
+
+    .section-kicker {
+      font-size: 11.5px;
+      color: var(--color-text-secondary);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 3px;
+    }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--color-text-primary);
+    }
+
+    .context-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .context-item {
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      background: var(--color-surface);
+    }
+
+    .context-label {
+      font-size: 11.5px;
+      color: var(--color-text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .context-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--color-text-primary);
+    }
+
+    .context-subtext {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      margin-top: 3px;
+    }
+
+    /* Live Status Preview (Identik dengan 02-Morning-Commitment.html) */
+    .status-preview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border: 1px solid var(--color-border-subtle);
+      background: #FAFCFB;
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+
+    .status-title {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 3px;
+      font-weight: 600;
+    }
+
+    .status-main {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-text-primary);
+    }
+
+    .status-desc {
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      margin-top: 3px;
     }
 
     /* Context Notice Banner (FR-07) */
@@ -478,8 +577,8 @@
       gap: 12px;
       align-items: flex-start;
       font-size: 13.5px;
-      line-height: 1.5;
-      margin-bottom: 22px;
+      line-height: 1.55;
+      margin-bottom: 24px;
       box-shadow: var(--shadow-subtle);
     }
 
@@ -601,46 +700,7 @@
       color: #7F1D1D;
     }
 
-    /* Panels & Cards */
-    .panel {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-card);
-      margin-bottom: 24px;
-    }
-
-    .panel-head {
-      padding: 18px 22px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid var(--color-border-subtle);
-      border-top-left-radius: var(--radius-md);
-      border-top-right-radius: var(--radius-md);
-    }
-
-    .panel-body {
-      padding: 20px 22px;
-    }
-
-    .section-kicker {
-      font-size: 11.5px;
-      color: var(--color-text-secondary);
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 3px;
-    }
-
-    h2 {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--color-text-primary);
-    }
-
-    /* Standard Card Structure (Identical to 02-Morning-Commitment.html) */
+    /* Standard Card Structure (Identik dengan 02-Morning-Commitment.html) */
     .commit-card {
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-md);
@@ -1000,45 +1060,6 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
-    /* Modal System */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(14, 33, 27, 0.45);
-      backdrop-filter: blur(4px);
-      z-index: 1000;
-      place-items: center;
-      padding: 20px;
-    }
-
-    .modal-backdrop.show {
-      display: grid;
-    }
-
-    .modal-box {
-      background: var(--color-surface);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-modal);
-      max-width: 480px;
-      width: 100%;
-      padding: 24px;
-      border: 1px solid var(--color-border-subtle);
-      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes modalPop {
-      from { transform: scale(0.96); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
     /* Drawer Mobile & Off-Canvas Navigation */
     .sidebar-backdrop {
       display: none;
@@ -1107,6 +1128,12 @@
       .mobile-close-sidebar-btn {
         display: inline-flex;
       }
+      .context-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .context-grid > div:first-child {
+        grid-column: 1 / -1;
+      }
       .grid-2col {
         grid-template-columns: 1fr;
         gap: 14px;
@@ -1149,6 +1176,14 @@
       .heading-side .btn-danger-cta {
         width: 100%;
         justify-content: center;
+      }
+      .context-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 8px;
+      }
+      .context-grid > div:first-child {
+        grid-column: auto;
       }
       .panel-head {
         padding: 14px 16px;
@@ -1302,21 +1337,21 @@
         </div>
       </header>
 
-      <!-- Daily Step Bar -->
+      <!-- Daily Step Bar (Identik dengan Halaman 2: Putih Bersih, Tanpa Blok Hijau Persegi!) -->
       <nav class="daily-workflow-bar" aria-label="Alur Akuntabilitas Harian">
         <a class="daily-step completed" href="02-Morning-Commitment.html" title="Komitmen Pagi Telah Dikunci">
           <span class="step-num">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </span>
-          <span>1. Morning Commitment</span>
+          <span>Morning Commitment</span>
         </a>
         <a class="daily-step active" href="03-Additional-Work.html" aria-current="step">
           <span class="step-num">2</span>
-          <span>2. Additional Work</span>
+          <span>Additional Work</span>
         </a>
         <a class="daily-step" href="04-EOD-Outcome.html">
           <span class="step-num">3</span>
-          <span>3. EOD Check-out</span>
+          <span>EOD Check-out</span>
         </a>
       </nav>
 
@@ -1338,6 +1373,54 @@
           </div>
         </div>
 
+        <!-- ==============================================================
+             PANEL 1: KONTEKS HARI INI (Identik dengan 02-Morning-Commitment)
+             ============================================================== -->
+        <section class="panel" style="margin-bottom: 24px;">
+          <div class="panel-head">
+            <div>
+              <div class="section-kicker">Konteks Hari Ini</div>
+              <h2>Jadwal &amp; Status Pengisian Hari Ini</h2>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="context-grid">
+              <div class="context-item">
+                <div class="context-label">Tanggal Kerja</div>
+                <div class="context-value">Senin, 13 Oktober 2026</div>
+                <div class="context-subtext">Hari Kerja Reguler</div>
+              </div>
+              <div class="context-item">
+                <div class="context-label">Batas Waktu Pengisian</div>
+                <div class="context-value">09:30 – 17:00 WIB</div>
+                <div class="context-subtext">Jendela Fleksibel Mid-Day</div>
+              </div>
+              <div class="context-item">
+                <div class="context-label">Status Baseline Pagi</div>
+                <div class="context-value" style="display: flex; align-items: center; min-height: 28px;">
+                  <span class="pill green">
+                    <span class="status-indicator-dot"></span>
+                    <span>Tersimpan · Tepat Waktu</span>
+                  </span>
+                </div>
+                <div class="context-subtext">Diserahkan sebelum 09:00 WIB</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANEL 2: STATUS RISIKO HARI INI (Identik dengan 02-Morning-Commitment)
+             ============================================================== -->
+        <div class="status-preview">
+          <div>
+            <div class="status-title">Status Risiko Hari Ini</div>
+            <div class="status-main" id="initial-status-txt">GREEN — Terkendali</div>
+            <div class="status-desc" id="initial-status-desc">Status risiko harian berjalan mengikuti komitmen pagi dan siap dimutakhirkan bila ada eskalasi kendala.</div>
+          </div>
+          <span class="pill green" id="initial-status-badge">GREEN</span>
+        </div>
+
         <!-- Konteks Aturan Sistem (FR-07 / Non-binding baseline) -->
         <div class="notice-box">
           <div class="notice-icon" aria-hidden="true">
@@ -1349,12 +1432,12 @@
         </div>
 
         <!-- ==============================================================
-             PANEL 1: RINGKASAN BASELINE KOMITMEN PAGI (TERKUNCI)
+             PANEL 3: RINGKASAN BASELINE KOMITMEN PAGI (TERKUNCI)
              ============================================================== -->
-        <section class="panel" id="morning-baseline-section">
+        <section class="panel" id="morning-baseline-section" style="margin-bottom: 24px;">
           <div class="panel-head">
             <div>
-              <div class="section-kicker">Rangkuman Pagi</div>
+              <div class="section-kicker">Komitmen Pagi Terkunci</div>
               <h2>Komitmen Pagi Hari Ini (Baseline Terkunci)</h2>
             </div>
             <span class="pill green" id="baseline-status-pill">
@@ -1370,15 +1453,21 @@
         </section>
 
         <!-- ==============================================================
-             PANEL 2: FORMULIR PENCATATAN PEKERJAAN BARU (AD-HOC)
+             PANEL 4: DAFTAR ADDITIONAL WORK & FORMULIR PENCATATAN
              ============================================================== -->
-        <section class="panel" id="add-work-form-section">
+        <section class="panel" id="adw-section">
           <div class="panel-head">
             <div>
-              <div class="section-kicker">Formulir Pekerjaan Baru (Ad-hoc)</div>
-              <h2>Catat Pekerjaan Tambahan Hari Ini</h2>
+              <div class="section-kicker">Slot Pekerjaan Tambahan (Mid-Day Ad-hoc)</div>
+              <h2>Daftar Additional Work Hari Ini (<span id="adw-counter-txt">0</span> Item)</h2>
             </div>
-            <span class="pill neutral">Bersifat Opsional / Fleksibel</span>
+            <button class="btn btn-secondary" type="button" id="btn-toggle-add-form">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span id="btn-toggle-form-txt">Tambah Pekerjaan Tambahan</span>
+            </button>
           </div>
           <div class="panel-body">
             
@@ -1389,11 +1478,11 @@
             </div>
 
             <!-- Form Card Wrapper (Identik dengan format Commit Card) -->
-            <div class="commit-card" style="margin-bottom: 0;">
-              <div class="commit-top">
+            <div class="commit-card" id="form-card-wrap" style="margin-bottom: 20px; border-color: var(--color-brand-primary);">
+              <div class="commit-top" style="background: var(--color-surface-subtle);">
                 <div class="commit-title-wrap">
                   <span class="slot-num" style="background: var(--color-brand-primary); color: #FFFFFF;">+</span>
-                  <strong style="font-size: 14px;">Entri Pekerjaan Tambahan Baru</strong>
+                  <strong style="font-size: 14px;">Formulir Pekerjaan Tambahan Baru</strong>
                 </div>
                 <span class="pill brand" style="font-size: 11px;">Pra-EOD Ad-hoc</span>
               </div>
@@ -1503,7 +1592,7 @@
                   <!-- Form Action Buttons -->
                   <div class="form-actions-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border-subtle);">
                     <button class="btn btn-secondary" type="button" id="btn-reset-form">
-                      <span>Kosongkan Isian</span>
+                      <span>Batal / Kosongkan</span>
                     </button>
                     <button class="btn btn-primary" type="submit" id="btn-submit-work">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1518,28 +1607,12 @@
               </div>
             </div>
 
-          </div>
-        </section>
-
-        <!-- ==============================================================
-             PANEL 3: DAFTAR ADDITIONAL WORK YANG TELAH DICATAT HARI INI
-             ============================================================== -->
-        <section class="panel" id="logged-adw-section">
-          <div class="panel-head">
-            <div>
-              <div class="section-kicker">Catatan Hari Ini</div>
-              <h2>Daftar Additional Work yang Telah Dicatat (<span id="adw-counter-txt">0</span> Item)</h2>
-            </div>
-            <span class="pill brand" id="adw-status-pill">Siap untuk Evaluasi EOD</span>
-          </div>
-          <div class="panel-body">
-            
+            <!-- Kontainer Kartu Additional Work yang Telah Disimpan -->
             <div id="entries-container">
-              <!-- Render Dinamis Kartu Pekerjaan Tambahan Tercatat -->
             </div>
 
             <!-- Empty State Elegan -->
-            <div class="empty-state-box" id="empty-state-box">
+            <div class="empty-state-box" id="empty-state-box" style="display: none;">
               <div class="empty-icon-circle" aria-hidden="true">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -1548,7 +1621,7 @@
               </div>
               <h3>Belum Ada Additional Work Hari Ini</h3>
               <p>
-                Jika di sela jam kerja muncul tugas mendadak di luar rencana komitmen pagi, silakan catat melalui formulir di atas. Seluruh catatan akan tersimpan aman untuk dievaluasi capaiannya pada EOD sore nanti.
+                Jika di sela jam kerja muncul tugas mendadak di luar rencana komitmen pagi, silakan catat melalui tombol Tambah Pekerjaan Tambahan di atas.
               </p>
             </div>
 
@@ -1568,29 +1641,6 @@
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
     <span id="toast-text">Pekerjaan tambahan berhasil dicatat.</span>
-  </div>
-
-  <!-- ==============================================================
-       MODAL RE-AUTENTIKASI SESI (UF-03: Perlindungan Draf saat Sesi Habis)
-       ============================================================== -->
-  <div class="modal-backdrop" id="modal-session-timeout" role="dialog" aria-modal="true" aria-labelledby="modal-session-title">
-    <div class="modal-box">
-      <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #991B1B; margin-bottom: 6px;">Keamanan Sesi</div>
-      <h3 id="modal-session-title" style="font-size: 19px; font-weight: 800; margin-bottom: 8px;">Sesi Telah Berakhir</h3>
-      <p style="font-size: 13.5px; line-height: 1.6; color: var(--color-text-secondary); margin-bottom: 18px;">
-        Sesi kerja Anda kedaluwarsa demi keamanan. Masukkan kata sandi akun Anda untuk memulihkan sesi tanpa kehilangan teks formulir yang sedang Anda ketik.
-      </p>
-      <form id="reauth-form" novalidate>
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label class="form-label" for="reauth-pass">Kata Sandi Akun</label>
-          <input id="reauth-pass" type="password" placeholder="Masukkan kata sandi untuk verifikasi" required>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" type="button" onclick="window.location.href='01-Login-Activation.html'">Keluar Saja</button>
-          <button class="btn btn-primary" type="submit">Pulihkan Sesi</button>
-        </div>
-      </form>
-    </div>
   </div>
 
   <!-- ==============================================================
@@ -1659,7 +1709,6 @@
         const container = $('baseline-cards-container');
         container.innerHTML = '';
 
-        // Baca dari localStorage jika ada, fallback ke baseline standar realistis
         let baselineItems = [];
         try {
           const storedCommitments = localStorage.getItem('workpulse_morning_commitments');
@@ -1685,17 +1734,17 @@
         baselineItems.forEach((item, idx) => {
           const card = document.createElement('div');
           card.className = 'commit-card';
-          card.style.background = '#FCFDFC';
+          card.style.background = '#FFFFFF';
 
           const riskBadgeClass = item.risk === 'RED' ? 'pill red' : (item.risk === 'AMBER' ? 'pill amber' : 'pill green');
 
           card.innerHTML = `
-            <div class="commit-top" style="background: #F8FAFC;">
+            <div class="commit-top">
               <div class="commit-title-wrap">
                 <span class="slot-num">${idx + 1}</span>
                 <strong style="font-size: 14px;">${item.title || `Komitmen Slot ${idx + 1}`}</strong>
                 <span class="${riskBadgeClass}" style="font-size: 11px;">
-                  <span class="status-indicator-dot" style="background: currentColor;"></span>
+                  <span class="status-indicator-dot"></span>
                   <span>${item.risk || 'GREEN'}</span>
                 </span>
               </div>
@@ -1704,8 +1753,11 @@
                 <span>Baseline Terkunci</span>
               </span>
             </div>
-            <div class="commit-body" style="padding: 14px 18px;">
-              <div style="font-size: 14px; font-weight: 600; color: var(--color-text-primary); line-height: 1.5;">
+            <div class="commit-body">
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                Rencana Hasil Kerja (Deliverable)
+              </div>
+              <div style="font-size: 14.5px; font-weight: 600; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 8px;">
                 ${escapeHtml(item.deliverable || item.text || '')}
               </div>
               ${item.reference ? `
@@ -1778,7 +1830,10 @@
                 <span>Hapus</span>
               </button>
             </div>
-            <div class="commit-body" style="padding: 16px 18px;">
+            <div class="commit-body">
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                Rencana Hasil Kerja (Deliverable)
+              </div>
               <div style="font-size: 14.5px; font-weight: 600; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 8px;">
                 ${escapeHtml(item.description)}
               </div>
@@ -1842,7 +1897,21 @@
         }, 3200);
       }
 
-      // 5. Interaksi Formulir Pencatatan
+      // 5. Interaksi Formulir Pencatatan & Toggle Form
+      const formCardWrap = $('form-card-wrap');
+      const btnToggleAdd = $('btn-toggle-add-form');
+      const btnToggleTxt = $('btn-toggle-form-txt');
+      let isFormOpen = true;
+
+      btnToggleAdd.onclick = () => {
+        isFormOpen = !isFormOpen;
+        formCardWrap.style.display = isFormOpen ? 'block' : 'none';
+        btnToggleTxt.textContent = isFormOpen ? 'Tutup Formulir' : 'Tambah Pekerjaan Tambahan';
+        if (isFormOpen) {
+          $('work-desc').focus();
+        }
+      };
+
       const form = $('form-add-work');
       const descInput = $('work-desc');
       const reasonSelect = $('work-reason');
@@ -1876,7 +1945,6 @@
           refInput.value = `[${code}] ${title}`;
           pickerMenu.classList.remove('show');
 
-          // Smart Helper: Jika deskripsi masih kosong, tawarkan otomatis
           if (!descInput.value.trim()) {
             descInput.value = `Menyelesaikan kendala ${code}: ${title}`;
             checkQuality();
@@ -1964,8 +2032,8 @@
         warningBadge.classList.remove('show');
         showToast('Pekerjaan tambahan berhasil disimpan ke log hari ini.');
 
-        // Smooth scroll ke daftar catatan
-        $('logged-adw-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll ke log
+        $('adw-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
 
       // Reset Button
@@ -1975,13 +2043,6 @@
         warningBadge.classList.remove('show');
         errorAlert.classList.remove('show');
         descInput.focus();
-      };
-
-      // In-Place Re-auth Form (UF-03)
-      $('reauth-form').onsubmit = (e) => {
-        e.preventDefault();
-        $('modal-session-timeout').classList.remove('show');
-        showToast('Sesi Anda berhasil dipulihkan.');
       };
 
       // Navigasi Drawer Mobile & Tablet (<= 992px)
