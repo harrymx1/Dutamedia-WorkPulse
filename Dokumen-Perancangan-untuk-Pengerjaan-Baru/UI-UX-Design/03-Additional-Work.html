@@ -1538,11 +1538,11 @@
         <section class="panel" id="adw-section">
           <div class="panel-head">
             <div>
-              <div class="section-kicker">Slot Pekerjaan Tambahan (Mid-Day Ad-hoc)</div>
+              <div class="section-kicker">Pekerjaan di Luar Komitmen Pagi</div>
               <h2>Daftar Additional Work Hari Ini (<span id="adw-counter-txt">0</span> Item)</h2>
             </div>
             <button class="btn btn-secondary" type="button" id="btn-toggle-add-form">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg id="btn-toggle-form-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
@@ -1564,7 +1564,7 @@
                   <span class="slot-num" id="form-card-icon" style="background: var(--color-brand-primary); color: #FFFFFF;">+</span>
                   <strong id="form-card-title" style="font-size: 14px;">Formulir Pekerjaan Tambahan Baru</strong>
                 </div>
-                <span class="pill brand" id="form-card-badge" style="font-size: 11px;">Pra-EOD Ad-hoc</span>
+                <span class="pill brand" id="form-card-badge" style="font-size: 11px;">Tugas Tambahan Baru</span>
               </div>
               <div class="commit-body">
 
@@ -1658,7 +1658,7 @@
                   </div>
 
                   <!-- Panel Kondisional: Assigned By (Wajib jika Newly Assigned) -->
-                  <div id="assigned-by-panel" style="display: none; margin-bottom: 16px; padding: 14px 16px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: var(--radius-sm);">
+                  <div id="assigned-by-panel" style="display: none; margin-bottom: 16px; padding: 14px 16px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3px solid var(--color-brand-primary); border-radius: var(--radius-sm);">
                     <div class="form-group" style="margin-bottom: 0;">
                       <label class="form-label" for="work-assigned-by">
                         <span>Pemberi Tugas (Assigned By) <span style="color:#DC2626;">*</span></span>
@@ -1673,7 +1673,7 @@
                   <!-- Form Action Buttons -->
                   <div class="form-actions-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border-subtle);">
                     <button class="btn btn-secondary" type="button" id="btn-reset-form">
-                      <span id="btn-reset-txt">Batal / Kosongkan</span>
+                      <span id="btn-reset-txt">Batal / Tutup</span>
                     </button>
                     <button class="btn btn-primary" type="submit" id="btn-submit-work">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2082,9 +2082,9 @@
             <div class="commit-top">
               <div class="commit-title-wrap">
                 <span class="slot-num" style="background: var(--color-brand-tint); color: var(--color-brand-primary); font-weight: 800;">
-                  #${index + 1}
+                  ${index + 1}
                 </span>
-                <strong style="font-size: 14px;">Additional Work #${index + 1}</strong>
+                <strong style="font-size: 14px;">Pekerjaan Tambahan #${index + 1}</strong>
                 <span class="pill neutral" style="font-size: 11px;">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   <span>Dicatat ${escapeHtml(item.time)} WIB</span>
@@ -2156,22 +2156,17 @@
             refInput.value = targetItem.reference || '';
 
             // Update UI Form Card
-            $('form-card-title').textContent = 'Ubah Detail Additional Work';
+            $('form-card-title').textContent = 'Ubah Detail Pekerjaan Tambahan';
             $('form-card-icon').textContent = '✎';
             $('form-card-badge').className = 'pill amber';
             $('form-card-badge').textContent = 'Mode Sunting';
             $('btn-submit-txt').textContent = 'Perbarui Pekerjaan Tambahan';
-            $('btn-reset-txt').textContent = 'Batal Edit';
+            $('btn-reset-txt').textContent = 'Batal Sunting';
 
-            // Pastikan form terbuka
-            if (!isFormOpen) {
-              isFormOpen = true;
-              formCardWrap.style.display = 'block';
-              btnToggleTxt.textContent = 'Tutup Formulir';
-            }
+            // Pastikan form terbuka dan fokus
+            setFormOpenState(true, true);
 
             formCardWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            descInput.focus();
             checkQuality();
             showToast('Mode sunting aktif. Silakan sesuaikan rincian lalu klik Perbarui.');
           };
@@ -2220,15 +2215,31 @@
       const formCardWrap = $('form-card-wrap');
       const btnToggleAdd = $('btn-toggle-add-form');
       const btnToggleTxt = $('btn-toggle-form-txt');
-      let isFormOpen = true;
+      const btnToggleIcon = $('btn-toggle-form-icon');
+      
+      // Default: Jika sudah ada item, form ditutup agar daftar tugas langsung tampak di atas lipatan layar
+      let isFormOpen = additionalItems.length === 0;
+
+      function setFormOpenState(open, shouldFocus = false) {
+        isFormOpen = open;
+        formCardWrap.style.display = open ? 'block' : 'none';
+        if (open) {
+          btnToggleTxt.textContent = 'Tutup Formulir';
+          btnToggleIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+          if (shouldFocus) {
+            descInput.focus();
+          }
+        } else {
+          btnToggleTxt.textContent = 'Tambah Pekerjaan Tambahan';
+          btnToggleIcon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>';
+        }
+      }
+
+      // Terapkan state awal saat halaman dimuat
+      setFormOpenState(isFormOpen, false);
 
       btnToggleAdd.onclick = () => {
-        isFormOpen = !isFormOpen;
-        formCardWrap.style.display = isFormOpen ? 'block' : 'none';
-        btnToggleTxt.textContent = isFormOpen ? 'Tutup Formulir' : 'Tambah Pekerjaan Tambahan';
-        if (isFormOpen) {
-          descInput.focus();
-        }
+        setFormOpenState(!isFormOpen, !isFormOpen);
       };
 
       const form = $('form-add-work');
@@ -2250,9 +2261,9 @@
         $('form-card-title').textContent = 'Formulir Pekerjaan Tambahan Baru';
         $('form-card-icon').textContent = '+';
         $('form-card-badge').className = 'pill brand';
-        $('form-card-badge').textContent = 'Pra-EOD Ad-hoc';
+        $('form-card-badge').textContent = 'Tugas Tambahan Baru';
         $('btn-submit-txt').textContent = 'Simpan Pekerjaan Tambahan';
-        $('btn-reset-txt').textContent = 'Batal / Kosongkan';
+        $('btn-reset-txt').textContent = 'Batal / Tutup';
       }
 
       // Dropdown Picker Blocker Aktif
@@ -2372,15 +2383,28 @@
         saveToStorage();
         renderAdditionalEntries();
         resetFormToDefault();
+        // Tutup formulir setelah berhasil menyimpan agar pengguna langsung melihat item yang baru tersimpan di log
+        setFormOpenState(false);
 
         // Scroll ke log
         $('adw-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
 
-      // Reset Button
+      // Reset Button (Batal / Tutup)
       $('btn-reset-form').onclick = () => {
+        const wasEditing = editingId !== null;
         resetFormToDefault();
-        descInput.focus();
+        if (wasEditing) {
+          showToast('Mode sunting dibatalkan.');
+          if (additionalItems.length > 0) {
+            setFormOpenState(false);
+          }
+        } else if (additionalItems.length > 0) {
+          // Jika membatalkan penambahan baru dan sudah ada item, tutup formulir
+          setFormOpenState(false);
+        } else {
+          descInput.focus();
+        }
       };
 
       // Navigasi Drawer Mobile & Tablet (<= 992px)

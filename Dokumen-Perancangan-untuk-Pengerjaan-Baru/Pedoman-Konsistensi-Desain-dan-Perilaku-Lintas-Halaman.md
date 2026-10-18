@@ -336,6 +336,13 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - Mengintegrasikan *Status Risiko Hari Ini* langsung ke dalam **Panel 1 (Konteks Jadwal)** sebagai kolom ke-4 pada grid 4-kolom (`repeat(4, 1fr)`).
       - Menempatkan maklumat aturan sistem (*Governance Notice FR-07*) sebagai catatan kaki terpadu (*integrated footer notice*) yang bersih dan tipis di bagian dasar Panel 1.
       - Menghemat lebih dari 150px ruang vertikal kanvas kerja, menciptakan alur tatap muka yang ringkas, terpadu, dan langsung mengarahkan atensi karyawan ke formulir pencatatan.
+  13. **Standarisasi Formulir & Log Slot Pekerjaan Tambahan (Panel 4):**
+      - **Kicker Baku:** Menggunakan `PEKERJAAN DI LUAR KOMITMEN PAGI` (menghapus istilah teknis *Mid-Day Ad-hoc*).
+      - **Sinkronisasi Tombol Header:** Tombol di kanan atas selalu sinkron dengan kondisi formulir (`+ Tambah Pekerjaan Tambahan` saat formulir tertutup vs `Tutup Formulir` saat formulir terbuka).
+      - **Default State Cerdas:** Jika sudah terdapat item tersimpan, formulir default tertutup agar karyawan langsung melihat daftar log tugas yang tercatat tanpa perlu scroll.
+      - **Bebas Redundansi Judul Kartu:** Menghilangkan pengulangan simbol ganda `#1`, diformat baku menjadi `[ 1 ] Pekerjaan Tambahan #1`.
+      - **Penamaan Badge Form:** Mengganti jargon *Pra-EOD Ad-hoc* menjadi `Tugas Tambahan Baru` (mode baru) dan `Mode Sunting` (mode edit).
+      - **Aksen Kondisional 'Assigned By':** Panel pemberi tugas muncul secara dinamis saat alasan `Newly Assigned` dipilih, dengan aksen visual border kiri hijau (`#0B8061`).
 
 ### Halaman 04: My Today — EOD Outcome
 *(Akan diisi saat pengerjaan Halaman 04)*
