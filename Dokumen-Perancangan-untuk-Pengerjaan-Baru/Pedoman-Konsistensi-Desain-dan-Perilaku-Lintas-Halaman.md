@@ -317,6 +317,7 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
   3. **Panel Kondisional 'Assigned By':** Field nama pemberi tugas wajib muncul dan wajib diisi hanya jika alasan `Newly Assigned` dipilih.
   4. **Penyelarasan Fluid Grid Seimbang Non-Statis:** Mengadopsi padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis `px`, menjaga sumbu kiri dan kanan sejajar lurus dengan Halaman 02.
   5. **Panel Konteks Harian Humanis & Adil:**
+     - Penamaan Tanggal Kerja dengan subteks adaptif **`Hari Kerja Aktif`** (menggantikan istilah pasif *Hari Kerja Reguler*, didukung adaptasi multi-state kalender: *Hari Kerja Aktif*, *Libur Nasional*, *Akhir Pekan*, *Cuti Disetujui*, dan *Dispensasi Khusus*).
      - Penamaan *Jendela Pencatatan (09:30 – 17:00 WIB)* dengan subteks *Fleksibel · Hanya Jika Ada Tugas Baru*.
      - Pengenalan status komitmen pagi multi-state adil: pembedaan jelas antara terlambat (`● Terlambat (Tetap Terisi)` dengan jam submit) vs tidak mengisi (`● Tidak Ada Komitmen Pagi` netral), menghindari kata kaku "Baseline".
      - Subtitle ramah: *"Bersifat opsional — catat pekerjaan baru atau tugas mendadak yang muncul setelah komitmen pagi dikunci..."*

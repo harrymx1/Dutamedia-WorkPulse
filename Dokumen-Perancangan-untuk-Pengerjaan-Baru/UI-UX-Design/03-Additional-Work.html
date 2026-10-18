@@ -1491,7 +1491,7 @@
               <div class="context-item">
                 <div class="context-label">Tanggal Kerja</div>
                 <div class="context-value">Senin, 13 Oktober 2026</div>
-                <div class="context-subtext">Hari Kerja Reguler</div>
+                <div class="context-subtext" id="workday-type-txt">Hari Kerja Aktif</div>
               </div>
               <div class="context-item">
                 <div class="context-label">Jendela Pencatatan</div>
@@ -1833,7 +1833,30 @@
       const userHintText = PROMPT_HINTS[activeUser.function] || 'Contoh: Tuliskan rincian hasil kerja spesifik dari tugas mendadak yang dikerjakan';
       $('role-prompt-hint').textContent = userHintText;
 
-      // 2b. Render Status Komitmen Pagi Dinamis Adaptif
+      // 2b. Render Status Konteks Kalender Hari Kerja Adaptif
+      function renderWorkdayContext() {
+        const workdayEl = $('workday-type-txt');
+        if (!workdayEl) return;
+
+        let workdayType = 'ACTIVE_WORKDAY';
+        try {
+          const stored = localStorage.getItem('workpulse_workday_type');
+          if (stored) workdayType = stored;
+        } catch (e) {}
+
+        const WORKDAY_LABELS = {
+          'ACTIVE_WORKDAY': 'Hari Kerja Aktif',
+          'PUBLIC_HOLIDAY': 'Libur Nasional',
+          'WEEKEND': 'Akhir Pekan (Non-Hari Kerja)',
+          'LEAVE_APPROVED': 'Cuti Disetujui (Bebas Pengisian)',
+          'EXEMPTION_APPROVED': 'Dispensasi Khusus (Exempted)',
+          'OVERTIME_SHIFT': 'Hari Kerja Khusus / Lembur'
+        };
+
+        workdayEl.textContent = WORKDAY_LABELS[workdayType] || 'Hari Kerja Aktif';
+      }
+
+      // 2c. Render Status Komitmen Pagi Dinamis Adaptif
       function renderMorningStatus() {
         const pillWrap = $('morning-status-pill-wrap');
         const subtext = $('morning-status-subtext');
@@ -2318,6 +2341,7 @@
       if (backdropEl) backdropEl.onclick = closeDrawer;
 
       // Inisialisasi awal
+      renderWorkdayContext();
       renderMorningStatus();
       renderMorningBaseline();
       renderAdditionalEntries();
