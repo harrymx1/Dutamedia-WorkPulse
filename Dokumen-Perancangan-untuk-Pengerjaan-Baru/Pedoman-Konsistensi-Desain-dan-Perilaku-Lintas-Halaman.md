@@ -115,9 +115,9 @@ Setiap halaman WorkPulse wajib mengadopsi sistem layout responsif adaptif di sel
 
 1. **Sistem Breakpoint Baku:**
    - **Ultrawide & Large Desktop (> 1440px):**  
-     Container `.content` menganut **Left-Aligned Flow** (`max-width: 1140px; margin: 0; padding: 32px clamp(20px, 3.5vw, 48px) 60px;`) sehingga tepi kiri judul halaman dan kartu-kartu panel tegak lurus satu garis vertikal (*unified vertical reading axis*) dengan teks Breadcrumb dan Tab Navigasi Alur Harian, tanpa celah sela kosong canggung di antara sidebar dan konten.
+     Container `.content` menganut **Symmetrical Balanced Flow** (`max-width: 1140px; margin: 0 auto; padding: 32px clamp(20px, 3.5vw, 48px) 60px;`) sehingga jarak sela dari tepi kanan sidebar ke sisi kiri konten sama persis dengan jarak dari sisi kanan kartu/tombol Lapor Blocker ke ujung kanan layar, menghadirkan estetika kanvas kerja yang simetris, seimbang, dan proporsional.
    - **Desktop Reguler (993px – 1440px):**  
-     Layout 2 kolom: Sidebar statis 260px di kiri, konten utama fluid dengan batas `max-width: 1140px; margin: 0;` di kanan.
+     Layout 2 kolom: Sidebar statis 260px di kiri, konten utama fluid berbatas `max-width: 1140px; margin: 0 auto;` dengan margin simetris seimbang di kanan.
    - **Tablet / Layar Sedang (681px – 992px):**  
      Sidebar beralih menjadi **Off-Canvas Drawer** (`position: fixed; left: -290px; width: 280px; z-index: 500;`). Tombol hamburger (`#btn-open-sidebar`) muncul di topbar kiri, dan elemen backdrop (`#sidebar-backdrop`) menutupi konten saat drawer dibuka. Grid 2 kolom di area konten mulai bertumpuk menjadi 1 kolom.
    - **Smartphone / Mobile ($\le$ 680px):**  
