@@ -115,10 +115,12 @@ Setiap halaman WorkPulse wajib mengadopsi sistem layout responsif adaptif di sel
 
 1. **Sistem Breakpoint Baku:**
    - **Ultrawide & Large Desktop (> 1440px) & Desktop Reguler (993px – 1440px):**  
-     Bilah Atas (`.topbar`), Navigasi Alur (`.daily-workflow-bar`), dan Konten (`.content`) menganut **Fluid Grid Seimbang** (`width: 100%; margin: 0; padding: 0 clamp(20px, 3.5vw, 48px);`):
-     - **Tepi Kiri:** Teks *Breadcrumb*, tab *Step Bar* (`.daily-step:first-child { padding-left: 0; }`), teks judul halaman (*H1*), dan tepi kiri kartu panel jatuh di satu garis lurus vertikal yang sama (48px dari sidebar).
-     - **Tepi Kanan:** Ikon notifikasi & avatar profil, tombol *Lapor Blocker*, dan tepi kanan kartu panel jatuh di satu garis lurus vertikal yang sama (48px dari tepi kanan layar).
-     - **Keseimbangan Simetris:** Jarak sela dari sidebar ke konten (48px) sama persis dengan jarak sela dari kartu ke tepi kanan layar (48px), membentang proporsional tanpa kekosongan mengambang.
+     Bilah Atas (`.topbar`), Navigasi Alur (`.daily-workflow-bar`), dan Konten (`.content`) menganut **Fluid Grid Seimbang Responsif** menggunakan unit relatif modern non-statis (`padding: 0 clamp(1.5rem, 4vw, 3.75rem);` dan pada konten: `padding: 2.25rem clamp(1.5rem, 4vw, 3.75rem) 4rem; width: 100%; margin: 0;`):
+     - **Tanpa Satuan Statis `px`:** Menggunakan kombinasi unit `rem` (skalabilitas aksesibilitas font pengguna) dan `vw` (proporsi viewport dinamis) untuk menghindari layout yang kaku/statis.
+     - **Breathing Room Lebih Lega:** Skala ideal `4vw` dengan batas maksimum `3.75rem` (~60px) memberikan ruang napas yang lebih luas dan elegan dibandingkan nilai kaku 48px sebelumnya, tanpa membuat kanvas tampak kopong.
+     - **Tepi Kiri:** Teks *Breadcrumb*, tab *Step Bar* (`.daily-step:first-child { padding-left: 0; }`), teks judul halaman (*H1*), dan tepi kiri kartu panel jatuh tepat di satu sumbu garis lurus vertikal yang sama dari batas kanan sidebar.
+     - **Tepi Kanan:** Ikon notifikasi & avatar profil, tombol *Lapor Blocker*, dan tepi kanan kartu panel jatuh tepat di satu garis lurus vertikal yang sama dari tepi kanan layar.
+     - **Keseimbangan Simetris:** Jarak sela dari sidebar ke konten selalu sama persis dengan jarak sela dari kartu ke tepi kanan layar di setiap resolusi layar desktop.
    - **Tablet / Layar Sedang (681px – 992px):**  
      Sidebar beralih menjadi **Off-Canvas Drawer** (`position: fixed; left: -290px; width: 280px; z-index: 500;`). Tombol hamburger (`#btn-open-sidebar`) muncul di topbar kiri, dan elemen backdrop (`#sidebar-backdrop`) menutupi konten saat drawer dibuka. Grid 2 kolom di area konten mulai bertumpuk menjadi 1 kolom.
    - **Smartphone / Mobile ($\le$ 680px):**  
