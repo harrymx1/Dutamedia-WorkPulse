@@ -344,6 +344,7 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - **Penamaan Badge Form:** Mengganti jargon *Pra-EOD Ad-hoc* menjadi `Tugas Tambahan Baru` (mode baru) dan `Mode Sunting` (mode edit).
       - **Standarisasi Label 'Target Hasil Kerja':** Mengganti istilah kaku *Rencana Hasil Kerja (Deliverable)* menjadi **`Target Hasil Kerja`** (menghapus kata 'Rencana' yang tidak cocok untuk tugas ad-hoc siang hari serta menghapus jargon asing dalam tanda kurung agar ramah bagi seluruh divisi kerja).
       - **Aksen Kondisional 'Assigned By':** Panel pemberi tugas muncul secara dinamis saat alasan `Newly Assigned` dipilih, dengan aksen visual border kiri hijau (`#0B8061`).
+      - **Empty State Mini-Strip Ramping (Opsi 1):** Mengganti kotak vertikal bertumpuk (~190px) dengan *Horizontal Mini-Strip* setinggi $\approx 50\text{px}$ (ikon lingkaran plus 32px di kiri dan teks penjelas 1 baris di kanan), menghemat ruang vertikal hingga 75% saat belum ada data.
 
 ### Halaman 04: My Today — EOD Outcome
 *(Akan diisi saat pengerjaan Halaman 04)*
