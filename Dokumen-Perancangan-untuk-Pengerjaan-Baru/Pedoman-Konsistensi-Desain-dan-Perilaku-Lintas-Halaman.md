@@ -323,7 +323,7 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
      - Subtitle ramah: *"Bersifat opsional — catat pekerjaan baru atau tugas mendadak yang muncul setelah komitmen pagi dikunci..."*
   6. **Standarisasi Istilah 'EOD Outcome':** Mengganti istilah sempit *"EOD Check-out"* (yang bias presensi kehadiran) menjadi **`EOD Outcome`** di seluruh alur navigasi step bar dan kartu transisi alur kerja.
   7. **Fitur Sunting (Edit) & Pembatalan:** Setiap kartu Additional Work yang tersimpan dapat disunting kembali (*inline edit mode*) sebelum EOD dengan tombol `Edit` dan `Hapus` yang ergonomis.
-  8. **Kartu Transisi Alur Kerja Menuju EOD Outcome:** Di bawah log tugas terdapat kartu transisi berpenampilan elegan yang menghubungkan langsung karyawan ke `04-EOD-Outcome.html` dengan informasi kesetaraan evaluasi capaian (*outcome*) sore hari.
+  8. **Kartu Transisi Alur Kerja Menuju EOD Outcome:** Di bawah log tugas terdapat kartu transisi berpenampilan elegan yang menghubungkan langsung karyawan ke `04-EOD-Outcome.html` dengan badge jam mulai `Mulai 16:30 WIB`, tipografi bersih tanpa tanda bintang mentah markdown, dan penegasan bahwa seluruh komitmen pagi dan pekerjaan tambahan akan dievaluasi capaian hasilnya secara setara.
   9. **Integrasi Tiket Blocker Tanpa Simbol Petir:** Tombol `Pilih Blocker Aktif ▾` menyediakan quick-picker tiket blocker tim aktif dengan smart auto-fill deskripsi.
   10. **Kesiapan Penyaluran ke EOD (Halaman 04):** Seluruh item yang tersimpan di `localStorage: workpulse_additional_work_items` siap dimuat otomatis di Halaman 04 untuk evaluasi capaian (*Outcome*) setara dengan Morning Commitment.
   11. **Panel Referensi Komitmen Pagi Terkunci (Collapsible by Default & Zero Emoji):**
