@@ -71,12 +71,11 @@ Untuk menjaga konsistensi 100% dan menghilangkan ambiguitas serta redundansi, dr
      - **`Tertunda`** $\rightarrow$ jika pekerjaan kemarin tidak dimasukkan ke komitmen / sempat jeda.
    - *Catatan Penting:* Badge **tidak boleh mencantumkan tanggal atau total hari** (misal bukan *"Tertunda sejak 12 Okt"* atau *"Total 3 Hari"*), karena seluruh rincian tanggal dan akumulasi durasi sudah tertata rapi di baris metadata.
 
-2. **Baris Metadata & Catatan (Tersusun Seragam & Memanjang Penuh):**
-   - **Baris Header:** Sisi kiri [Checkbox] + Judul Tugas, Sisi kanan Status Amber + Tombol Aksi (pada desktop/tablet $\ge$ 681px). Pada mobile $\le$ 680px, status dan tombol pindah ke baris paling bawah dengan pemisah bertitik.
-   - **Baris Metadata:** Kapsul/Tag mini abu-abu (`[Terakhir: ...] [Status: ...] [Total: ...]`) membentang penuh selebar kartu di bawah judul.
-   - **Baris Catatan Karyawan:** Callout Box lembut bersudut tumpul (`#F8FAFC`, border `#E2E8F0`) membentang penuh selebar kartu sampai batas padding kanan, dengan label `CATATAN:` di atas dan kutipan miring di bawahnya.
-   - **Baris Aturan Sistem (jika Hari Kerja $\ge 2$):**  
-     `ⓘ Status awal minimal AMBER (tidak dapat dilanjutkan dengan status GREEN).` membentang penuh di bawah Callout Catatan.
+2. **Tata Letak Baris Ramping Terpadu (*Compact Horizontal Rows*):**
+   - **Tinggi Terkendali & Hemat Ruang:** Tinggi per kartu dirampingkan secara drastis dari $\approx 125\text{px}$ menjadi hanya $\approx 46\text{px}$ (menghemat ruang vertikal $\approx 65\%$), sehingga seluruh panel draf tidak lagi memakan layar vertikal berlebih.
+   - **Baris Judul & Warning Inline:** Checkbox di sisi paling kiri, diikuti Judul Pekerjaan tebal, serta badge peringatan aturan sistem (*Minimal AMBER*) yang disematkan secara inline dan ringkas di sebelah judul bila pekerjaan telah berjalan $\ge 2$ hari.
+   - **Subteks Tipis Terpadu:** Seluruh metadata waktu dan catatan evaluasi dipadatkan menjadi subteks 1 baris yang bersih dan elegan di bawah judul (`Tanggal · Status · Total Hari Kerja · "Kutipan Catatan"`), mengeliminasi kotak callout abu-abu tebal yang sebelumnya memakan ruang vertikal tersendiri.
+   - **Sisi Kanan:** Memuat badge status Amber (`Tertunda` / `Berlanjut`) dan tombol aksi merah halus `Hentikan Pekerjaan`. Pada smartphone ($\le 680\text{px}$), sisi kanan ini terlipat rapi ke baris bawah dengan pemisah bertitik.
 
 ### 3.2 Aturan Penegakan Risiko Minimal AMBER (*Amber Lock Engine*)
 Sistem secara matematis mengevaluasi atribut `active_days_count` pada setiap pekerjaan:
