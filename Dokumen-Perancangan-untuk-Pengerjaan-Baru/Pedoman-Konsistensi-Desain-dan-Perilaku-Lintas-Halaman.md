@@ -315,9 +315,11 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
   1. **Independensi dari Morning Baseline (FR-07 & BR-01):** Additional Work dicatat terpisah dan bukan merupakan slot komitmen ke-4, sehingga tidak pernah mengubah atau merusak baseline komitmen pagi yang telah dikunci.
   2. **Taksonomi Alasan Resmi (5 Enum PRD FR-06):** Menerapkan 5 alasan baku (`Newly Assigned`, `Missed in Planning`, `Priority Change`, `Operational-Incident`, `Other`).
   3. **Panel Kondisional 'Assigned By':** Field nama pemberi tugas wajib muncul dan wajib diisi hanya jika alasan `Newly Assigned` dipilih.
-  4. **Penyelarasan Shell & Sesi Pengguna:** Header bersih tanpa eyebrow redundan, tombol aksi cepat `Lapor Blocker` konsisten di kanan atas, Daily Step Bar aktif di langkah ke-2, dan identitas user membaca `workpulse_active_user` otomatis dari `localStorage`.
-  5. **Integrasi Tiket Blocker Tanpa Simbol Petir:** Tombol `Pilih Blocker Aktif ▾` menyediakan quick-picker tiket blocker tim aktif dengan smart auto-fill deskripsi.
-  6. **Kesiapan Penyaluran ke EOD (Halaman 04):** Seluruh item yang tersimpan di `localStorage: workpulse_additional_work_items` siap dimuat otomatis di Halaman 04 untuk evaluasi capaian (*Outcome*) setara dengan Morning Commitment.
+  4. **Penyelarasan Fluid Grid Seimbang Non-Statis:** Mengadopsi padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis `px`, menjaga sumbu kiri dan kanan sejajar lurus dengan Halaman 02.
+  5. **Fitur Sunting (Edit) & Pembatalan:** Setiap kartu Additional Work yang tersimpan dapat disunting kembali (*inline edit mode*) sebelum EOD dengan tombol `Edit` dan `Hapus` yang ergonomis.
+  6. **Kartu Transisi Alur Kerja Menuju EOD Check-out:** Di bawah log tugas terdapat kartu transisi berpenampilan elegan yang menghubungkan langsung karyawan ke `04-EOD-Outcome.html` dengan informasi kesetaraan evaluasi capaian sore hari.
+  7. **Integrasi Tiket Blocker Tanpa Simbol Petir:** Tombol `Pilih Blocker Aktif ▾` menyediakan quick-picker tiket blocker tim aktif dengan smart auto-fill deskripsi.
+  8. **Kesiapan Penyaluran ke EOD (Halaman 04):** Seluruh item yang tersimpan di `localStorage: workpulse_additional_work_items` siap dimuat otomatis di Halaman 04 untuk evaluasi capaian (*Outcome*) setara dengan Morning Commitment.
 
 ### Halaman 04: My Today — EOD Check-out
 *(Akan diisi saat pengerjaan Halaman 04)*
