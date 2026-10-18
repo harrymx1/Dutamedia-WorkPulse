@@ -115,9 +115,12 @@ Setiap halaman WorkPulse wajib mengadopsi sistem layout responsif adaptif di sel
 
 1. **Sistem Breakpoint Baku:**
    - **Ultrawide & Large Desktop (> 1440px):**  
-     Container `.content` menganut **Symmetrical Balanced Flow** (`max-width: 1140px; margin: 0 auto; padding: 32px clamp(20px, 3.5vw, 48px) 60px;`) sehingga jarak sela dari tepi kanan sidebar ke sisi kiri konten sama persis dengan jarak dari sisi kanan kartu/tombol Lapor Blocker ke ujung kanan layar, menghadirkan estetika kanvas kerja yang simetris, seimbang, dan proporsional.
+     Bilah Atas (`.topbar-inner`), Navigasi Alur (`.daily-workflow-inner`), dan Konten (`.content`) menganut **Symmetrical Unified-Axis Flow** (`max-width: 1140px; margin: 0 auto; padding: 0 clamp(20px, 3.5vw, 48px);`):
+     - **Tepi Kiri:** Teks *Breadcrumb*, tab *Step Bar*, teks judul halaman (*H1*), dan tepi kiri kartu panel jatuh di satu garis lurus vertikal yang sama.
+     - **Tepi Kanan:** Ikon notifikasi & avatar profil, tombol *Lapor Blocker*, dan tepi kanan kartu panel jatuh di satu garis lurus vertikal yang sama.
+     - **Keseimbangan Sisi:** Jarak sela dari sidebar ke konten sama persis dengan jarak sela dari kartu ke tepi kanan layar monitor.
    - **Desktop Reguler (993px – 1440px):**  
-     Layout 2 kolom: Sidebar statis 260px di kiri, konten utama fluid berbatas `max-width: 1140px; margin: 0 auto;` dengan margin simetris seimbang di kanan.
+     Layout 2 kolom: Sidebar statis 260px di kiri, area kerja utama fluid dengan pembungkus terpadu `max-width: 1140px; margin: 0 auto;`.
    - **Tablet / Layar Sedang (681px – 992px):**  
      Sidebar beralih menjadi **Off-Canvas Drawer** (`position: fixed; left: -290px; width: 280px; z-index: 500;`). Tombol hamburger (`#btn-open-sidebar`) muncul di topbar kiri, dan elemen backdrop (`#sidebar-backdrop`) menutupi konten saat drawer dibuka. Grid 2 kolom di area konten mulai bertumpuk menjadi 1 kolom.
    - **Smartphone / Mobile ($\le$ 680px):**  

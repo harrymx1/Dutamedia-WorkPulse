@@ -285,13 +285,20 @@
       border-bottom: 1px solid var(--color-border-subtle);
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar-inner {
+      max-width: 1140px;
+      width: 100%;
+      margin: 0 auto;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 clamp(20px, 3.5vw, 48px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
 
     .breadcrumb {
@@ -342,9 +349,15 @@
 
     /* Daily Workflow Navigation Bar */
     .daily-workflow-bar {
-      display: flex;
       border-bottom: 1px solid var(--color-border-subtle);
       background: #FFFFFF;
+    }
+
+    .daily-workflow-inner {
+      max-width: 1140px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
       padding: 0 clamp(20px, 3.5vw, 48px);
     }
 
@@ -358,6 +371,10 @@
       text-decoration: none;
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
+    }
+
+    .daily-step:first-child {
+      padding-left: 0;
     }
 
     .daily-step:hover {
@@ -1530,10 +1547,15 @@
       }
       .topbar {
         height: 58px;
+      }
+      .topbar-inner {
         padding: 0 12px;
       }
       .daily-workflow-bar {
         font-size: 11px;
+      }
+      .daily-workflow-inner {
+        padding: 0 12px;
       }
       .daily-step {
         padding: 8px 4px;
@@ -1795,37 +1817,41 @@
     <main>
       <!-- Topbar Header -->
       <header class="topbar">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="mobile-hamburger-btn" type="button" id="btn-open-sidebar" aria-label="Buka navigasi menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          </button>
-          <div class="breadcrumb">
-            My Today <span style="color: #A9C7BC;">/</span> <strong>Morning Commitment</strong>
+        <div class="topbar-inner">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="mobile-hamburger-btn" type="button" id="btn-open-sidebar" aria-label="Buka navigasi menu">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div class="breadcrumb">
+              My Today <span style="color: #A9C7BC;">/</span> <strong>Morning Commitment</strong>
+            </div>
           </div>
-        </div>
-        <div class="top-actions">
-          <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-            <span class="badge-dot"></span>
-          </a>
-          <a class="avatar" href="24-Profile-Settings.html" id="top-avatar" title="Buka Profil Saya">BP</a>
+          <div class="top-actions">
+            <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <span class="badge-dot"></span>
+            </a>
+            <a class="avatar" href="24-Profile-Settings.html" id="top-avatar" title="Buka Profil Saya">BP</a>
+          </div>
         </div>
       </header>
 
       <!-- Daily Step Bar -->
       <nav class="daily-workflow-bar" aria-label="Alur Akuntabilitas Harian">
-        <a class="daily-step active" href="02-Morning-Commitment.html">
-          <span class="step-num">1</span>
-          <span>Morning Commitment</span>
-        </a>
-        <a class="daily-step" href="03-Additional-Work.html">
-          <span class="step-num">2</span>
-          <span>Additional Work</span>
-        </a>
-        <a class="daily-step" href="04-EOD-Outcome.html">
-          <span class="step-num">3</span>
-          <span>EOD Check-out</span>
-        </a>
+        <div class="daily-workflow-inner">
+          <a class="daily-step active" href="02-Morning-Commitment.html">
+            <span class="step-num">1</span>
+            <span>Morning Commitment</span>
+          </a>
+          <a class="daily-step" href="03-Additional-Work.html">
+            <span class="step-num">2</span>
+            <span>Additional Work</span>
+          </a>
+          <a class="daily-step" href="04-EOD-Outcome.html">
+            <span class="step-num">3</span>
+            <span>EOD Check-out</span>
+          </a>
+        </div>
       </nav>
 
       <div class="content">
