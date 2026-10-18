@@ -331,6 +331,11 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - **Nol emoticon/emoji:** Murni menggunakan tipografi profesional dan ikon inline SVG monokrom (ikon gembok dan chevron).
       - **Default tertutup (*collapsed by default*):** Menghemat ruang layar vertikal secara drastis sehingga fokus karyawan langsung mengarah ke formulir *Additional Work*, disertai tombol interaktif *Lihat Komitmen* / *Tutup Komitmen*.
       - **Penanganan Empty State:** Tampilan netral dan suportif jika sesi pagi terlewat (*No Submission*) atau *Zero Commitment*.
+  12. **Penyederhanaan Status Risiko & Notice Tata Kelola (Opsi 1 Terpilih):**
+      - Menghilangkan 2 kotak besar bertumpuk yang sebelumnya memakan ruang vertikal berlebih di antara Panel 1 dan Panel 3.
+      - Mengintegrasikan *Status Risiko Hari Ini* langsung ke dalam **Panel 1 (Konteks Jadwal)** sebagai kolom ke-4 pada grid 4-kolom (`repeat(4, 1fr)`).
+      - Menempatkan maklumat aturan sistem (*Governance Notice FR-07*) sebagai catatan kaki terpadu (*integrated footer notice*) yang bersih dan tipis di bagian dasar Panel 1.
+      - Menghemat lebih dari 150px ruang vertikal kanvas kerja, menciptakan alur tatap muka yang ringkas, terpadu, dan langsung mengarahkan atensi karyawan ke formulir pencatatan.
 
 ### Halaman 04: My Today — EOD Outcome
 *(Akan diisi saat pengerjaan Halaman 04)*
