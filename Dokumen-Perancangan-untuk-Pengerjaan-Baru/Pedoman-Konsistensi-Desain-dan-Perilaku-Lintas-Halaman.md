@@ -42,6 +42,10 @@
    - Gunakan terminologi perkantoran yang manusiawi: *Karyawan, Komitmen Kerja, Hasil Kerja Terukur (Deliverable), Kendala / Blocker, Tautan Referensi, Rekap Evaluasi Sore*.
 4. **Tidak Mengulang Informasi yang Sama (*Zero Redundancy*):**
    - Jika suatu informasi (misal tanggal evaluasi atau total hari kerja) sudah tertata di subteks metadata, informasi tersebut **dilarang diulang kembali** di dalam badge atau judul kartu.
+5. **100% Mirip Hasil Jadi Nyata & Nol Unsur Prototipe (*Pure Production-Authentic UI*):**
+   - Setiap halaman wajib dirancang dan disajikan 100% identik dengan hasil jadi (*production-ready*) aplikasi enterprise sesungguhnya di mata pengguna akhir.
+   - **DILARANG KERAS** menyematkan unsur atau *gimmick* prototipe apa pun ke dalam antarmuka, seperti: bilah pilih akun demo (*quick demo role pills/bars*), tombol pintas pengujian (*test shortcuts*), watermark *"Prototype / Draft"*, atau teks penguji buatan.
+   - Pengujian skenario multi-peran, kondisi waktu, atau variasi *state* sistem wajib dilakukan secara organik melalui kredensial akun riil (misal login menggunakan email karyawan yang bersangkutan), parameter URL bawaan (*query params*), atau *state* di balik layar (*backend / localStorage*), tanpa pernah menodai atau mengorbankan otentisitas kanvas antarmuka kerja pengguna.
 
 ---
 
@@ -297,7 +301,6 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
   6. **Penyelarasan Simbol Blocker (Bebas Ikon Petir):** Mengganti ikon petir (`⚡`) pada pilar nilai kerja sisi kiri menjadi ikon bendera (*flag*) monokrom yang tenang, selaras 100% dengan Halaman 02 dan Halaman 03.
   7. **Standarisasi Label Tombol Submit:** Mengubah `Masuk ke Dashboard` menjadi **`Masuk ke Ruang Kerja`** agar inklusif dan akurat untuk seluruh peran (terutama kontributor yang diarahkan ke Morning Commitment, bukan dashboard).
   8. **Identitas Brand Mobile Header:** Menyematkan logo mini WorkPulse di atas formulir login yang otomatis tampil pada layar ponsel/tablet ($\le 900\text{px}$) saat panel kiri disembunyikan.
-  9. **Bilah Uji Peran Cepat (*Quick Role Selector*):** Menyematkan strip pill pengujian peran (Budi/Staff, Siti/Team Lead, Dewi/HRGA, Bambang/CEO) di bawah kartu login untuk mempermudah demonstrasi dan evaluasi alur routing peran.
 
 ### Halaman 02: My Today — Morning Commitment
 - **Berkas Prototipe:** [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html)
@@ -389,15 +392,16 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
 
 Sebelum menulis atau mengedit berkas HTML/CSS halaman baru, lakukan pemeriksaan mandiri (*self-check*):
 
-- [ ] **1. Apakah Bebas Emoji?** Pastikan tidak ada karakter emoji sama sekali. Gunakan SVG monokrom.
-- [ ] **2. Apakah Warna Merah Lembut?** Pastikan semua elemen error/warning/bahaya menggunakan latar `#FFF8F8`, border `#FECDCA`, dan teks `#991B1B`.
-- [ ] **3. Apakah Header Bersih?** Pastikan tidak ada eyebrow teks yang redundan dengan breadcrumb atau step bar.
-- [ ] **4. Apakah Format Metadata 3-Baris Dipatuhi?** Pisahkan metadata, catatan, dan aturan sistem secara vertikal dengan pembatas vertikal yang jelas.
-- [ ] **5. Apakah Badge Singkat & Padat?** Jangan masukkan tanggal atau hitungan hari ke dalam badge status jika sudah ada di subteks.
-- [ ] **6. Apakah Aturan Amber Lock Terintegrasi?** Jika ada penanganan tugas $\ge 2$ hari, pastikan radio GREEN terkunci dan penjelasan risiko wajib diisi.
-- [ ] **7. Apakah Bahasa Bebas Jargon?** Periksa teks placeholder, alert, dan label agar mudah dimengerti karyawan non-teknis.
-- [ ] **8. Apakah Tombol Aksi Bersih dari Simbol Petir?** Gunakan teks lugas dan panah navigasi standar.
-- [ ] **9. Apakah Terkoneksi dengan Halaman Terkait?** Periksa rute tautan (`href`), state navigasi, dan kontrak data antar-halaman.
+- [ ] **1. Apakah 100% Mirip Hasil Jadi & Bebas Unsur Prototipe?** Pastikan antarmuka bersih mutlak dari tombol demo, bilah pemilih peran uji coba (*role selector tooling*), watermark dummy, atau gimmick penguji. Seluruh interaksi harus mencerminkan produk enterprise yang nyata.
+- [ ] **2. Apakah Bebas Emoji?** Pastikan tidak ada karakter emoji sama sekali. Gunakan SVG monokrom.
+- [ ] **3. Apakah Warna Merah Lembut?** Pastikan semua elemen error/warning/bahaya menggunakan latar `#FFF8F8`, border `#FECDCA`, dan teks `#991B1B`.
+- [ ] **4. Apakah Header Bersih?** Pastikan tidak ada eyebrow teks yang redundan dengan breadcrumb atau step bar.
+- [ ] **5. Apakah Format Metadata 3-Baris Dipatuhi?** Pisahkan metadata, catatan, dan aturan sistem secara vertikal dengan pembatas vertikal yang jelas.
+- [ ] **6. Apakah Badge Singkat & Padat?** Jangan masukkan tanggal atau hitungan hari ke dalam badge status jika sudah ada di subteks.
+- [ ] **7. Apakah Aturan Amber Lock Terintegrasi?** Jika ada penanganan tugas $\ge 2$ hari, pastikan radio GREEN terkunci dan penjelasan risiko wajib diisi.
+- [ ] **8. Apakah Bahasa Bebas Jargon?** Periksa teks placeholder, alert, dan label agar mudah dimengerti karyawan non-teknis.
+- [ ] **9. Apakah Tombol Aksi Bersih dari Simbol Petir?** Gunakan teks lugas dan panah navigasi standar.
+- [ ] **10. Apakah Terkoneksi dengan Halaman Terkait?** Periksa rute tautan (`href`), state navigasi, dan kontrak data antar-halaman.
 
 ---
 *Dokumen ini diperbarui secara berkala dan wajib dijaga kelengkapannya.*

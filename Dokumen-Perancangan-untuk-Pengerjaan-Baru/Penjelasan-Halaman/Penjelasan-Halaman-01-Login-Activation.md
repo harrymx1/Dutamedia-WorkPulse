@@ -20,6 +20,7 @@
 - **Split-Screen Enterprise (45% Kiri : 55% Kanan):** Sisi kiri untuk narasi brand hijau hutan (`#0B3327`), sisi kanan untuk interaksi formulir di atas kanvas abu-abu lembut (`#F7FAF9`).
 - **Nol Emoticon / Emoji & Bebas Ikon Petir:** Murni menggunakan tipografi profesional dan ikon inline SVG monokrom. Seluruh pilar blocker menggunakan ikon bendera kendala (*flag*) yang tenang, konsisten dengan Halaman 02 dan Halaman 03.
 - **Label Inklusif:** Tombol utama menggunakan teks **`Masuk ke Ruang Kerja`** (menggantikan istilah bias `Masuk ke Dashboard`), mencerminkan rute tujuan riil karyawan.
+- **100% Otentik Hasil Jadi Produksi & Nol Unsur Prototipe:** Bersih mutlak dari elemen pengujian/demo seperti tombol switcher peran (*demo role pills*), watermark prototipe, atau teks testing buatan. Semua interaksi berjalan otentik layaknya sistem enterprise nyata.
 
 ---
 
@@ -36,7 +37,7 @@
 │ • 3 Pilar Nilai Kerja:                │   - Input Email & Kata Sandi + Toggle │
 │   1. Komitmen Pagi Terfokus (Slot 1–3)│   - Opsi "Ingat email" & Lupa Sandi   │
 │   2. Pelaporan Blocker Cepat (Flag SVG│   - Tombol: [Masuk ke Ruang Kerja]    │
-│   3. Kemitraan & Dukungan Tim (Shield)│   - Quick Role Selector (Demo Bar)    │
+│   3. Kemitraan & Dukungan Tim (Shield)│   - Panduan Bantuan IT Support / HRGA │
 │ • Footer: v1.5 PT Dutamedia           ├───────────────────────────────────────┤
 │                                       │ [Screen 2] Aktivasi Akun Baru         │
 │                                       │   - Preview Akun & Password Meter 4-Bar│
@@ -70,19 +71,15 @@ Saat autentikasi berhasil, sistem menyusun objek `workpulse_active_user` di `loc
 | **HRGA** (Compliance) | `dewi.anggraeni@dutamedia.com` | [`11-Compliance-Queue-HRGA.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/11-Compliance-Queue-HRGA.html) | `false` |
 | **CEO / DIREKSI** | `bambang.soedirgo@dutamedia.com` | [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html) | `true` (*Exemption Aktif*) |
 
-### 3.2 Bilah Uji Peran Cepat (*Quick Role Selector Tooling*)
-- **Fungsi:** Menyematkan 4 pill interaktif di bawah form login: `[Budi (Staff)]`, `[Siti (Team Lead)]`, `[Dewi (HRGA)]`, dan `[Bambang (CEO)]`.
-- **Perilaku:** Mengklik pill otomatis mengisi email dan kata sandi baku, memperbarui state visual pill aktif, dan mempermudah pengujian alur navigasi multi-peran secara instan tanpa perlu mengetik manual.
-
-### 3.3 Penyesuaian Responsif & Mobile Brand Header
+### 3.2 Penyesuaian Responsif & Mobile Brand Header
 - **Layar Desktop (> 900px):** Layout 2 kolom split-screen 100vh.
 - **Layar Mobile ($\le$ 900px):** Panel kiri disembunyikan (`display: none`). Logo mini WorkPulse (`.mobile-brand-header`) otomatis muncul tepat di atas kartu form dengan lebar `width: min(100%, 440px)` yang sejajar presisi, menjaga identitas brand tetap utuh di smartphone.
 
-### 3.4 Protokol Keamanan Anti Brute-Force
+### 3.3 Protokol Keamanan Anti Brute-Force
 - **Ambang Batas:** Maksimal 5 kali kegagalan kombinasi kredensial berturut-turut.
 - **Aksi Sistem:** Tombol submit dinonaktifkan (`disabled`), banner peringatan amber muncul, dan timer hitung mundur 60 detik berjalan otomatis. Form dibuka kembali setelah 60 detik berlalu.
 
-### 3.5 Meteran Kekuatan Kata Sandi (*Password Strength Meter*)
+### 3.4 Meteran Kekuatan Kata Sandi (*Password Strength Meter*)
 Dievaluasi secara *real-time* pada layar aktivasi dengan skor 1 s.d. 4 (panjang $\ge 8$ karakter, kombinasi huruf besar-kecil, angka, simbol):
 - **1 Bar (Merah `#EF4444`):** Terlalu Lemah $\rightarrow$ Tombol submit diblokir.
 - **2 Bar (Amber `#F59E0B`):** Cukup $\rightarrow$ Ambang batas minimal valid.
