@@ -680,11 +680,23 @@
     }
 
     .eod-task-deliverable {
-      font-size: 12.5px;
-      color: var(--color-text-secondary);
+      margin-top: 10px;
+      padding: 9px 12px;
+      background: var(--color-surface-subtle);
+      border: 1px solid var(--color-border-subtle);
+      border-left: 3px solid var(--color-brand-primary);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--color-text-primary);
       display: flex;
-      align-items: center;
-      gap: 6px;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.45;
+    }
+
+    .eod-task-deliverable strong {
+      color: var(--color-brand-primary);
+      font-weight: 750;
     }
 
     .eod-task-blocker-info {
@@ -1789,7 +1801,7 @@
       $('badge-morning-count').textContent = `${morningList.length} Komitmen Terdaftar`;
 
       morningList.forEach(item => {
-        const card = createCardElement(item, 'Morning Commitment');
+        const card = createCardElement(item, 'Komitmen Pagi');
         morningContainer.appendChild(card);
       });
 
@@ -1807,7 +1819,7 @@
         `;
       } else {
         additionalList.forEach(item => {
-          const card = createCardElement(item, 'Pekerjaan Tambahan');
+          const card = createCardElement(item, 'Tugas Tambahan');
           additionalContainer.appendChild(card);
         });
       }
@@ -1851,7 +1863,7 @@
           <div class="eod-card-title">
             <span class="eod-slot-badge">
               <span>[ ${item.slotNumber} ]</span>
-              <span>${kindLabel} #${item.slotNumber}</span>
+              <span>${kindLabel}</span>
             </span>
           </div>
           <div class="eod-card-meta">
@@ -1865,8 +1877,11 @@
           <div class="eod-task-content">
             <div class="eod-task-desc">${item.title}</div>
             <div class="eod-task-deliverable">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              <span><strong>Target Deliverable:</strong> ${item.deliverable}</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary); flex-shrink: 0; margin-top: 1px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <div>
+                <strong>Target Deliverable:</strong>
+                <span>${item.deliverable}</span>
+              </div>
             </div>
             ${blockerHtml}
           </div>
@@ -1893,7 +1908,7 @@
                 <span class="required-mark">*</span>
               </label>
               <select class="form-select continuation-select" id="continuation-${item.id}" required>
-                <option value="">Pilih Kelanjutan</option>
+                <option value="">Pilih Kelanjutan Operasional...</option>
                 <option value="Continue" ${item.continuation === 'Continue' ? 'selected' : ''}>Continue (Lanjut Besok — Masuk Draf Pagi)</option>
                 <option value="Do Not Continue" ${item.continuation === 'Do Not Continue' ? 'selected' : ''}>Do Not Continue (Tidak Dilanjutkan)</option>
               </select>
@@ -1911,8 +1926,9 @@
           </div>
 
           <!-- Optional Evidence Link Input (FR-08) -->
-          <div class="field-group" style="margin-top: 12px;">
+          <div class="field-group" style="margin-top: 14px;">
             <label class="field-label" for="link-${item.id}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
               <span>Tautan Bukti Kerja / Deliverable</span>
               <span style="font-size: 11.5px; font-weight: 500; color: var(--color-text-secondary);">(Opsional — PR Git, Dokumen, Tiket)</span>
             </label>
