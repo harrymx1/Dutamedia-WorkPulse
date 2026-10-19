@@ -87,6 +87,10 @@ main{min-width:0;display:flex;flex-direction:column}
 
 /* Main Content Container */
 .content{max-width:1140px;margin:0 auto;width:100%;padding:28px clamp(1.5rem,4vw,3.75rem) 64px}
+.back-nav-link{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--color-brand-primary);text-decoration:none;margin-bottom:12px;padding:4px 0;transition:color .15s ease}
+.back-nav-link:hover{color:var(--color-brand-hover);text-decoration:none}
+.back-nav-link svg{transition:transform .15s ease}
+.back-nav-link:hover svg{transform:translateX(-3px)}
 .page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px}
 .eyebrow{font-size:12px;color:var(--color-text-secondary);font-weight:750;letter-spacing:.06em;text-transform:uppercase}
 h1{font-size:26px;line-height:1.25;letter-spacing:-.03em;margin:4px 0 6px;font-weight:800;color:var(--color-text-primary)}
@@ -349,7 +353,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
         <div class="breadcrumb">
-          My Today <span style="color:#A9C7BC">/</span> <strong>Raise Instant Blocker</strong>
+          <a href="02-Morning-Commitment.html" style="color:inherit;text-decoration:none">My Today</a> <span style="color:#A9C7BC">/</span> <strong>Raise Instant Blocker</strong>
         </div>
       </div>
       <div class="top-actions">
@@ -362,23 +366,18 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     </header>
 
     <div class="content">
+      <!-- Back Navigation Link (Kiri Atas Sesuai Kaidah UX) -->
+      <a href="02-Morning-Commitment.html" class="back-nav-link" title="Kembali ke Ruang Kerja My Today">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        <span>Kembali ke Ruang Kerja</span>
+      </a>
+
       <!-- Page Heading -->
       <div class="page-heading">
         <div>
           <div class="eyebrow">Blocker &amp; Escalation Management</div>
           <h1>Raise Instant Blocker</h1>
           <p class="subtitle">Laporkan hambatan operasional, dependensi tertahan, atau risiko kritis segera tanpa menunggu jadwal evaluasi sore. Blocker berstatus Critical/High langsung memicu notifikasi instan kepada penanggung jawab berwenang.</p>
-        </div>
-        <div class="heading-side">
-          <a href="02-Morning-Commitment.html" class="btn btn-secondary" style="padding: 7px 13px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Kembali ke Ruang Kerja Harian">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>Batal / Kembali</span>
-          </a>
-          <span class="pill brand"><span class="dot-sm"></span> Akses Kapan Saja (24/7)</span>
-          <span class="pill neutral">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Tiket Resmi
-          </span>
         </div>
       </div>
 
