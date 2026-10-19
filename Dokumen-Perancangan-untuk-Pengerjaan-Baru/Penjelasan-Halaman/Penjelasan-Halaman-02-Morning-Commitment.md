@@ -43,17 +43,16 @@ Halaman ini tersusun atas 11 blok komponen terintegrasi:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 6. DRAF PEKERJAAN BERLANJUT (Panel Kolapsibel Default Tertutup, Kartu Asli Callout Abu)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 7. FOKUS PRIORITAS HARI INI (Catatan Konteks Non-binding dari EOD Kemarin)   │
+│ 7. FORMULIR SLOT KOMITMEN (1-3 Slot) DENGAN EMBEDDED CONTEXT HINT PRIORITAS │
+│    KEMARIN SORE (Deliverable, Prompt Hint, Risiko, Link)                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 8. FORMULIR SLOT KOMITMEN (1-3 Slot: Deliverable, Prompt Hint, Risiko, Link)│
+│ 8. INPUT ALASAN KETERLAMBATAN (Kondisional: Wajib jika Pengisian > 09:30)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 9. INPUT ALASAN KETERLAMBATAN (Kondisional: Wajib jika Pengisian > 09:30)   │
+│ 9. ACTION FOOTER BAR (Simpan Draf Lokal & Tombol Kirim Komitmen)            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 10. ACTION FOOTER BAR (Simpan Draf Lokal & Tombol Kirim Komitmen)           │
+│ 10. MODAL KONFIRMASI (Konfirmasi Pengiriman & Modal Hentikan Pekerjaan Draf)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 11. MODAL KONFIRMASI (Konfirmasi Pengiriman & Modal Hentikan Pekerjaan Draf)│
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 12. DRAWER NAVIGASI MOBILE (Hamburger Topbar, Sidebar Off-Canvas, Backdrop) │
+│ 11. DRAWER NAVIGASI MOBILE (Hamburger Topbar, Sidebar Off-Canvas, Backdrop) │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
