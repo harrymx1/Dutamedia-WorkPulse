@@ -142,6 +142,17 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .char-counter.valid{color:#0B8061}
 .char-counter.invalid{color:#B91C1C}
 
+/* Attachment Upload Dropzone */
+.attachment-dropzone{border:1.5px dashed #BFCFC8;border-radius:8px;padding:14px 18px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:all .15s ease;text-align:center}
+.attachment-dropzone:hover,.attachment-dropzone.dragover{border-color:var(--color-brand-primary);background:#F0FDF4}
+.attachment-dropzone-icon{width:36px;height:36px;border-radius:8px;background:#E2E8F0;display:grid;place-items:center;color:var(--color-text-secondary);flex-shrink:0}
+.attachment-dropzone:hover .attachment-dropzone-icon{background:var(--color-brand-tint);color:var(--color-brand-primary)}
+.attachment-file-preview{display:none;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid #CBD5E1;border-radius:8px;margin-top:8px}
+.attachment-file-preview.show{display:flex}
+.attachment-file-info{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--color-text-primary)}
+.attachment-remove-btn{background:none;border:none;color:#DC2626;cursor:pointer;padding:4px;display:flex;align-items:center;border-radius:4px}
+.attachment-remove-btn:hover{background:#FEE2E2}
+
 /* Segmented Severity Cards (4 Enum PRD) */
 .severity-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:2px}
 .severity-card{position:relative;border:1px solid var(--color-border-subtle);border-radius:10px;padding:14px 12px;background:#fff;cursor:pointer;transition:all .15s ease;display:flex;flex-direction:column;gap:6px}
@@ -383,20 +394,20 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       <!-- Form Utama Blocker -->
       <form id="blockerForm" novalidate>
         
-        <!-- PANEL 1: DETAIL HAMBATAN & INFORMASI UTAMA -->
+        <!-- PANEL 1: DETAIL KENDALA & INFORMASI UTAMA -->
         <section class="panel" aria-labelledby="blockerDetailsHeading">
           <div class="panel-head">
             <div>
-              <div class="section-kicker">Taksonomi Kendala &amp; Tingkat Urgensi</div>
-              <h2 id="blockerDetailsHeading">Detail Kendala & Dampak</h2>
-              <p class="small" style="margin-top:3px">Jelaskan akar masalah, kategori taksonomi, serta tingkat urgensi kendala.</p>
+              <div class="section-kicker">Kategori &amp; Tingkat Urgensi</div>
+              <h2 id="blockerDetailsHeading">Detail Kendala &amp; Dampak</h2>
+              <p class="small" style="margin-top:3px">Jelaskan akar kendala, tingkat urgensi penanganan, serta bantuan spesifik yang Anda butuhkan.</p>
             </div>
             <span class="pill red"><span class="dot-sm"></span> Wajib Dilengkapi</span>
           </div>
           <div class="panel-body">
             
             <!-- Tautan Komitmen Hari Ini (Opsional) -->
-            <div class="field" style="margin-bottom:16px">
+            <div class="field" style="margin-bottom:18px">
               <label for="linkedCommitment">Tautkan ke Komitmen Hari Ini <span class="tiny">(opsional)</span></label>
               <select id="linkedCommitment" name="linkedCommitment">
                 <option value="">-- Tidak menautkan ke tugas spesifik (Kendala Umum / Proyek) --</option>
@@ -407,37 +418,18 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <span class="hint">Menautkan blocker ke tugas harian mempermudah verifikasi keterlambatan dan penilaian status EOD sore hari.</span>
             </div>
 
-            <!-- Baris 1: Judul Blocker & Tipe Taksonomi Resmi (10 Enum PRD) -->
-            <div class="field-grid">
-              <div class="field">
-                <div class="counter-box">
-                  <label for="blockerTitle">Judul Blocker <span class="required">*</span></label>
-                  <span class="char-counter" id="titleCounter">0 / 140</span>
-                </div>
-                <input id="blockerTitle" name="title" type="text" required maxlength="140" placeholder="Misal: Kredensial API Payment Gateway Sandbox Kadaluarsa">
-                <span class="field-error" id="blockerTitleError" hidden></span>
+            <!-- Judul Blocker (Lebar Penuh 100%) -->
+            <div class="field" style="margin-bottom:18px">
+              <div class="counter-box">
+                <label for="blockerTitle">Judul Blocker <span class="required">*</span></label>
+                <span class="char-counter" id="titleCounter">0 / 140</span>
               </div>
-              <div class="field">
-                <label for="blockerType">Tipe Kendala (Taksonomi Resmi) <span class="required">*</span></label>
-                <select id="blockerType" name="type" required>
-                  <option value="">Pilih Tipe Blocker...</option>
-                  <option value="Technical">Technical (Masalah Teknis / Bug / Arsitektur)</option>
-                  <option value="Requirement">Requirement (Ambiguitas / Ketidakjelasan Spesifikasi)</option>
-                  <option value="Client">Client (Ketergantungan Masukan / Keputusan Klien)</option>
-                  <option value="Vendor">Vendor (Ketergantungan Pihak Ketiga / Vendor)</option>
-                  <option value="Resource">Resource (Kapasitas Tim / Personil / Alat)</option>
-                  <option value="Approval">Approval (Menunggu Izin / Persetujuan Manajerial)</option>
-                  <option value="Infra">Infra (Infrastruktur / Cloud / Server / Staging)</option>
-                  <option value="Finance">Finance (Anggaran / Pembayaran / Pengadaan)</option>
-                  <option value="Legal">Legal (Aspek Hukum / Kepatuhan / Kontrak)</option>
-                  <option value="Other">Other (Kendala Operasional Lainnya)</option>
-                </select>
-                <span class="field-error" id="blockerTypeError" hidden></span>
-              </div>
+              <input id="blockerTitle" name="title" type="text" required maxlength="140" placeholder="Misal: Kredensial API Payment Gateway Sandbox Kadaluarsa">
+              <span class="field-error" id="blockerTitleError" hidden></span>
             </div>
 
-            <!-- Baris 2: Tingkat Keparahan (Severity - 4 Visual Cards PRD FR-16) -->
-            <div class="field" style="margin-top:18px">
+            <!-- Tingkat Keparahan (Severity - 4 Visual Cards Tanpa Auto-Select) -->
+            <div class="field" style="margin-bottom:18px">
               <label>Tingkat Keparahan (Severity) <span class="required">*</span></label>
               <div class="severity-grid" role="radiogroup" aria-label="Tingkat Keparahan Blocker">
                 
@@ -449,7 +441,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </span>
                   </div>
-                  <span class="severity-desc">Pekerjaan terhenti total, memicu eskalasi langsung &amp; push alert.</span>
+                  <span class="severity-desc">Pekerjaan terhenti total, memicu notifikasi darurat instan.</span>
                 </label>
 
                 <label class="severity-card high" id="card-high">
@@ -460,11 +452,11 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </span>
                   </div>
-                  <span class="severity-desc">Hambatan berat pada jadwal atau target utama harian/mingguan.</span>
+                  <span class="severity-desc">Hambatan berat pada jadwal atau target utama harian.</span>
                 </label>
 
-                <label class="severity-card medium active" id="card-medium">
-                  <input type="radio" name="blockerSeverity" value="Medium" checked>
+                <label class="severity-card medium" id="card-medium">
+                  <input type="radio" name="blockerSeverity" value="Medium">
                   <div class="severity-top">
                     <span class="severity-badge medium">Medium</span>
                     <span class="circle-mark">
@@ -489,44 +481,43 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <span class="field-error" id="blockerSeverityError" hidden></span>
             </div>
 
-            <!-- Baris 3: Kategori Dampak (7 Enum PRD) & Rincian Deskripsi Dampak -->
-            <div class="field-grid" style="margin-top:18px">
-              <div class="field">
-                <label for="impactCategory">Kategori Dampak Utama <span class="required">*</span></label>
-                <select id="impactCategory" name="impactCategory" required>
-                  <option value="">Pilih Kategori Dampak...</option>
-                  <option value="Task">Task (Tugas spesifik terhambat)</option>
-                  <option value="Milestone">Milestone (Target fase / sprint tertunda)</option>
-                  <option value="Project">Project (Jadwal proyek menyeluruh terancam)</option>
-                  <option value="Production">Production (Layanan live / operasional live down)</option>
-                  <option value="Client">Client (Ekspektasi atau kepuasan klien terganggu)</option>
-                  <option value="Financial">Financial (Potensi kerugian finansial / biaya bengkak)</option>
-                  <option value="Compliance">Compliance (Pelanggaran SLA atau kepatuhan regulasi)</option>
-                </select>
-                <span class="field-error" id="impactCategoryError" hidden></span>
-              </div>
-              <div class="field">
-                <label for="expectedResolutionDate">Target Waktu Penyelesaian <span class="tiny">(opsional)</span></label>
-                <input id="expectedResolutionDate" name="expectedResolutionDate" type="date">
-                <span class="hint">Perkiraan tenggat waktu sebelum risiko eskalasi membesar.</span>
-              </div>
-            </div>
-
-            <!-- Baris 4: Deskripsi Masalah & Langkah yang Telah Dicoba -->
-            <div class="field" style="margin-top:16px">
-              <div class="counter-box">
-                <label for="blockerDescription">Deskripsi Masalah &amp; Upaya Penanganan <span class="required">*</span></label>
-                <span class="char-counter" id="descCounter">0 / 15 karakter minimal</span>
-              </div>
-              <textarea id="blockerDescription" name="description" required rows="4" placeholder="Jelaskan secara spesifik: Apa kendala yang dialami? Apa yang sudah dicoba secara mandiri? Dukungan atau otorisasi apa yang Anda butuhkan agar pekerjaan dapat kembali berjalan?"></textarea>
+            <!-- Deskripsi Kendala & Upaya Mandiri -->
+            <div class="field" style="margin-bottom:18px">
+              <label for="blockerDescription">Deskripsi Kendala &amp; Upaya Mandiri <span class="required">*</span></label>
+              <textarea id="blockerDescription" name="description" required rows="4" placeholder="Jelaskan fakta kendala yang dialami, pesan error atau indikasinya, serta langkah mandiri apa yang sudah Anda coba..."></textarea>
               <span class="field-error" id="blockerDescriptionError" hidden></span>
             </div>
 
-            <!-- Baris 5: Bantuan Konkret yang Diharapkan (Expected Resolution Note) -->
-            <div class="field" style="margin-top:16px">
-              <label for="expectedHelp">Tindakan / Bantuan yang Diharapkan <span class="tiny">(opsional)</span></label>
-              <input id="expectedHelp" name="expectedHelp" type="text" maxlength="200" placeholder="Misal: Approval akses staging oleh Head of Infra, atau klarifikasi alur dari PM">
-              <span class="hint">Sebutkan bantuan konkret agar penanggung jawab dapat langsung mengambil tindakan tepat.</span>
+            <!-- Lampiran Bukti / Screenshot (Opsional) -->
+            <div class="field" style="margin-bottom:18px">
+              <label>Lampiran Bukti / Tangkapan Layar <span class="tiny">(opsional)</span></label>
+              <div class="attachment-dropzone" id="attachmentDropzone" tabindex="0" role="button" aria-label="Unggah tangkapan layar atau berkas bukti">
+                <input type="file" id="blockerAttachment" accept="image/*,.txt,.log,.pdf" style="display:none">
+                <div class="attachment-dropzone-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <div>
+                  <div style="font-size:13.5px;font-weight:700;color:var(--color-text-primary)">Klik untuk pilih berkas atau tempel tangkapan layar (Ctrl+V)</div>
+                  <div class="hint">Mendukung format gambar (PNG, JPG), log error (.txt, .log), atau PDF maks. 5MB</div>
+                </div>
+              </div>
+              <div class="attachment-file-preview" id="attachmentFilePreview">
+                <div class="attachment-file-info">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <span id="attachmentFileName">screenshot-error-403.png</span>
+                  <span class="tiny" id="attachmentFileSize">(240 KB)</span>
+                </div>
+                <button type="button" class="attachment-remove-btn" id="attachmentRemoveBtn" title="Hapus lampiran">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Bantuan Konkret yang Diharapkan -->
+            <div class="field">
+              <label for="expectedHelp">Tindakan / Bantuan Spesifik yang Diharapkan <span class="tiny">(opsional)</span></label>
+              <input id="expectedHelp" name="expectedHelp" type="text" maxlength="200" placeholder="Misal: Approval akses staging oleh Head of Infra, atau update kredensial token dari PM">
+              <span class="hint">Sebutkan aksi konkret yang Anda minta agar penanggung jawab dapat langsung mengeksekusinya.</span>
             </div>
 
           </div>
@@ -657,12 +648,12 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
           <div class="ticket-meta-grid">
             <div class="ticket-meta-item">
-              <span class="ticket-meta-label">Tipe Taksonomi</span>
-              <span class="ticket-meta-value" id="ticketTypeSummary">Technical</span>
+              <span class="ticket-meta-label">Terkait Tugas</span>
+              <span class="ticket-meta-value" id="ticketTaskSummary">[Komitmen Pagi #1]</span>
             </div>
             <div class="ticket-meta-item">
-              <span class="ticket-meta-label">Kategori Dampak</span>
-              <span class="ticket-meta-value" id="ticketImpactSummary">Milestone</span>
+              <span class="ticket-meta-label">Urgensi &amp; SLA</span>
+              <span class="ticket-meta-value" id="ticketSlaSummary">Critical (&le; 2 Jam)</span>
             </div>
             <div class="ticket-meta-item">
               <span class="ticket-meta-label">Penanggung Jawab Awal</span>
@@ -821,11 +812,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   // 3. Elemen Kunci DOM
   const form = $('blockerForm');
   const titleInput = $('blockerTitle');
-  const typeSelect = $('blockerType');
-  const impactCategorySelect = $('impactCategory');
   const descTextarea = $('blockerDescription');
   const titleCounter = $('titleCounter');
-  const descCounter = $('descCounter');
+  const linkedCommitmentSelect = $('linkedCommitment');
+  const expectedHelpInput = $('expectedHelp');
+  const attachmentInput = $('blockerAttachment');
+  const attachmentDropzone = $('attachmentDropzone');
+  const attachmentPreview = $('attachmentFilePreview');
+  const attachmentFileName = $('attachmentFileName');
+  const attachmentFileSize = $('attachmentFileSize');
+  const attachmentRemoveBtn = $('attachmentRemoveBtn');
 
   // 4. Live Counter & Validation State
   titleInput.addEventListener('input', () => {
@@ -835,18 +831,63 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   });
 
   descTextarea.addEventListener('input', () => {
-    const len = descTextarea.value.trim().length;
-    descCounter.textContent = `${len} / 15 karakter minimal`;
-    if (len >= 15) {
-      descCounter.className = 'char-counter valid';
-    } else {
-      descCounter.className = 'char-counter invalid';
-    }
     clearError('blockerDescription', 'blockerDescriptionError');
   });
 
-  typeSelect.addEventListener('change', () => clearError('blockerType', 'blockerTypeError'));
-  impactCategorySelect.addEventListener('change', () => clearError('impactCategory', 'impactCategoryError'));
+  // 4b. File Attachment Interaction (Click, Drag & Drop, Paste Screenshot)
+  attachmentDropzone.addEventListener('click', () => attachmentInput.click());
+  attachmentDropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      attachmentInput.click();
+    }
+  });
+
+  function handleFileSelect(file) {
+    if (!file) return;
+    attachmentFileName.textContent = file.name;
+    const sizeKb = Math.round(file.size / 1024);
+    attachmentFileSize.textContent = sizeKb > 1024 ? `(${(sizeKb / 1024).toFixed(1)} MB)` : `(${sizeKb} KB)`;
+    attachmentPreview.classList.add('show');
+    showToast('success', `Berkas ${file.name} berhasil dilampirkan.`);
+  }
+
+  attachmentInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelect(e.target.files[0]);
+    }
+  });
+
+  attachmentDropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    attachmentDropzone.classList.add('dragover');
+  });
+  attachmentDropzone.addEventListener('dragleave', () => {
+    attachmentDropzone.classList.remove('dragover');
+  });
+  attachmentDropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    attachmentDropzone.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  });
+
+  window.addEventListener('paste', (e) => {
+    if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+      const file = e.clipboardData.files[0];
+      if (file.type.startsWith('image/')) {
+        handleFileSelect(file);
+      }
+    }
+  });
+
+  attachmentRemoveBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    attachmentInput.value = '';
+    attachmentPreview.classList.remove('show');
+    showToast('warning', 'Lampiran bukti dihapus.');
+  });
 
   // 5. Interaktivitas Segmented Severity Cards
   const severityCards = document.querySelectorAll('.severity-card');
@@ -1042,35 +1083,17 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       firstInvalid = firstInvalid || titleInput;
     }
 
-    // Validasi Tipe
-    if (!typeSelect.value) {
-      setError('blockerType', 'blockerTypeError', 'Pilih salah satu dari 10 tipe taksonomi resmi blocker.');
-      isValid = false;
-      firstInvalid = firstInvalid || typeSelect;
-    }
-
-    // Validasi Severity
+    // Validasi Severity (Harus dipilih secara sadar oleh pelapor)
     const severityChecked = document.querySelector('input[name="blockerSeverity"]:checked');
     if (!severityChecked) {
-      setError(null, 'blockerSeverityError', 'Tentukan tingkat keparahan (Severity).');
+      setError(null, 'blockerSeverityError', 'Silakan tentukan salah satu tingkat keparahan (Severity).');
       isValid = false;
     }
 
-    // Validasi Impact Category
-    if (!impactCategorySelect.value) {
-      setError('impactCategory', 'impactCategoryError', 'Pilih kategori dampak utama dari kendala ini.');
-      isValid = false;
-      firstInvalid = firstInvalid || impactCategorySelect;
-    }
-
-    // Validasi Deskripsi (Min 15 Karakter)
+    // Validasi Deskripsi Fakta Kendala
     const descVal = descTextarea.value.trim();
     if (!descVal) {
-      setError('blockerDescription', 'blockerDescriptionError', 'Deskripsi masalah wajib diisi.');
-      isValid = false;
-      firstInvalid = firstInvalid || descTextarea;
-    } else if (descVal.length < 15) {
-      setError('blockerDescription', 'blockerDescriptionError', 'Deskripsi masalah minimal 15 karakter agar penanggung jawab dapat memahami akar masalah.');
+      setError('blockerDescription', 'blockerDescriptionError', 'Deskripsi fakta kendala dan upaya mandiri wajib diisi.');
       isValid = false;
       firstInvalid = firstInvalid || descTextarea;
     }
@@ -1093,10 +1116,17 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     const randomTicketNum = Math.floor(1000 + Math.random() * 9000);
     const ticketId = `#BLK-2026-${randomTicketNum}`;
     const severityVal = severityChecked.value;
-    const typeVal = typeSelect.value;
     const titleVal = titleInput.value.trim();
-    const impactVal = impactCategorySelect.value;
+    const taskOption = linkedCommitmentSelect.options[linkedCommitmentSelect.selectedIndex]?.textContent || 'Kendala Umum';
+    const taskShort = taskOption.includes(']') ? taskOption.split(']')[0] + ']' : 'Kendala Umum';
     const ownerName = $('ownerRoutePerson').textContent;
+
+    const slaMap = {
+      Critical: 'Critical (≤ 2 Jam)',
+      High: 'High (≤ 4 Jam)',
+      Medium: 'Medium (Hari Ini)',
+      Low: 'Low (Fleksibel)'
+    };
 
     // Simpan ke localStorage untuk dibaca Halaman 02/03/04
     try {
@@ -1104,11 +1134,11 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       activeBlockers.unshift({
         id: ticketId,
         title: titleVal,
-        type: typeVal,
+        linkedTask: taskOption,
         severity: severityVal,
-        impact: impactVal,
         ownerNeeded: ownerName,
         status: 'Open',
+        hasAttachment: attachmentPreview.classList.contains('show'),
         raisedAt: new Date().toISOString()
       });
       localStorage.setItem('workpulse_active_blockers', JSON.stringify(activeBlockers));
@@ -1121,8 +1151,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     $('ticketTitleSummary').textContent = titleVal;
     $('ticketSeverityBadge').textContent = severityVal;
     $('ticketSeverityBadge').className = `pill ${severityVal.toLowerCase() === 'critical' ? 'red' : (severityVal.toLowerCase() === 'high' ? 'amber' : (severityVal.toLowerCase() === 'medium' ? 'blue' : 'neutral'))}`;
-    $('ticketTypeSummary').textContent = typeVal;
-    $('ticketImpactSummary').textContent = impactVal;
+    $('ticketTaskSummary').textContent = taskShort;
+    $('ticketSlaSummary').textContent = slaMap[severityVal] || severityVal;
     $('ticketOwnerSummary').textContent = ownerName;
     $('ticketTimeSummary').textContent = `Hari ini, ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`;
     $('ticketDescSummary').textContent = descVal;
@@ -1139,14 +1169,14 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   $('resetBlockerBtn').addEventListener('click', () => {
     form.reset();
     titleCounter.textContent = '0 / 140';
-    descCounter.textContent = '0 / 15 karakter minimal';
-    descCounter.className = 'char-counter';
     clearError('blockerTitle', 'blockerTitleError');
-    clearError('blockerType', 'blockerTypeError');
-    clearError('impactCategory', 'impactCategoryError');
     clearError('blockerDescription', 'blockerDescriptionError');
     clearError('projectContext', 'projectContextError');
     clearError(null, 'blockerSeverityError');
+    severityCards.forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('input[name="blockerSeverity"]').forEach(r => r.checked = false);
+    attachmentInput.value = '';
+    attachmentPreview.classList.remove('show');
     orgCard.click();
     showToast('success', 'Formulir berhasil dikosongkan.');
   });
@@ -1158,8 +1188,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     form.style.display = 'block';
     orgCard.click();
     titleCounter.textContent = '0 / 140';
-    descCounter.textContent = '0 / 15 karakter minimal';
-    descCounter.className = 'char-counter';
+    severityCards.forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('input[name="blockerSeverity"]').forEach(r => r.checked = false);
+    attachmentInput.value = '';
+    attachmentPreview.classList.remove('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
