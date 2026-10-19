@@ -301,6 +301,7 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
   6. **Penyelarasan Simbol Blocker (Bebas Ikon Petir):** Mengganti ikon petir (`⚡`) pada pilar nilai kerja sisi kiri menjadi ikon bendera (*flag*) monokrom yang tenang, selaras 100% dengan Halaman 02 dan Halaman 03.
   7. **Standarisasi Label Tombol Submit:** Mengubah `Masuk ke Dashboard` menjadi **`Masuk ke Ruang Kerja`** agar inklusif dan akurat untuk seluruh peran (terutama kontributor yang diarahkan ke Morning Commitment, bukan dashboard).
   8. **Identitas Brand Mobile Header:** Menyematkan logo mini WorkPulse di atas formulir login yang otomatis tampil pada layar ponsel/tablet ($\le 900\text{px}$) saat panel kiri disembunyikan.
+  9. **Penyempurnaan Copywriting & Standarisasi Tombol:** Menghilangkan seluruh istilah teknis/jargon pengembang (seperti *kredensial* $\rightarrow$ *email dan kata sandi*, *dependensi* $\rightarrow$ *ketergantungan alur kerja*), melunakkan nada pilar (menghilangkan kata sensitif *otoriter* $\rightarrow$ *kaku*), serta menyeragamkan seluruh tombol pembatalan sub-layar menjadi baku **`Kembali ke Halaman Login`** dan modal timeout menjadi **`Keluar Akun`**.
 
 ### Halaman 02: My Today — Morning Commitment
 - **Berkas Prototipe:** [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html)
