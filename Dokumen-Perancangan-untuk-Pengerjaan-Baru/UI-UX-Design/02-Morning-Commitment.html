@@ -2305,7 +2305,16 @@
         'HRGA': 'Contoh: Proses onboarding karyawan baru, pengadaan inventaris kantor, review absensi tim bulanan',
         'Management': 'Contoh: Review capaian strategis mingguan, 1-on-1 coaching lead engineer, evaluasi realisasi anggaran'
       };
-      const userHintText = PROMPT_HINTS[activeUser.function] || 'Contoh: Jelaskan deliverable spesifik terukur yang direncanakan selesai hari ini';
+      // Context Hint: Tomorrow Priority dari EOD Kemarin (FR-52, BR-20, US-28)
+      try {
+        const storedTomorrow = localStorage.getItem('workpulse_tomorrow_priority');
+        if (storedTomorrow && storedTomorrow.trim()) {
+          const hintTextEl = document.querySelector('.tomorrow-priority-hint-text');
+          if (hintTextEl) {
+            hintTextEl.textContent = `"${storedTomorrow.trim()}"`;
+          }
+        }
+      } catch (e) {}
 
       // 3. State Management Slot Komitmen
       let slotCount = 0;
