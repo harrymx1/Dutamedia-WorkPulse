@@ -357,12 +357,19 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - **Empty State Mini-Strip Ramping (Opsi 1):** Mengganti kotak vertikal bertumpuk (~190px) dengan *Horizontal Mini-Strip* setinggi $\approx 50\text{px}$ (ikon lingkaran plus 32px di kiri dan teks penjelas 1 baris di kanan), menghemat ruang vertikal hingga 75% saat belum ada data.
 
 ### Halaman 04: My Today — EOD Outcome
-*(Akan diisi saat pengerjaan Halaman 04)*
-- **Rencana Berkas:** `04-EOD-Outcome.html`
-- **Keterkaitan dengan Halaman Sebelumnya:**
-  - Mengevaluasi capaian komitmen pagi (Halaman 02) dan komitmen tambahan siang (Halaman 03).
-  - Menentukan status akhir tugas: *Selesai Penuh*, *Sebagian Selesai (Carry-over)*, atau *Belum Selesai (Carry-over)* yang akan menjadi draf bagi Halaman 02 esok hari.
-  - Input memo *"Tomorrow Priority"* yang akan tampil sebagai referensi di Halaman 02 berikutnya.
+- **Berkas Prototipe:** [`04-EOD-Outcome.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/04-EOD-Outcome.html)
+- **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-04-EOD-Outcome.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-04-EOD-Outcome.md)
+- **Keputusan Utama yang Diambil:**
+  1. **Penyelarasan Desain Sistem & Fluid Grid (100% Selaras):** Mengadopsi palet warna baku *Deep Forest Green*, tipografi *Plus Jakarta Sans*, dan padding fluid simetris `clamp(1.5rem, 4vw, 3.75rem)` yang sejajar lurus dengan Halaman 02 dan Halaman 03.
+  2. **Daily Stepper Bar Langkah 3:** Langkah 1 (*Morning Commitment*) dan Langkah 2 (*Additional Work*) berstatus `completed` (tanda centang SVG hijau), dan Langkah 3 (*EOD Outcome*) berstatus `active` dengan nomor urut 3 dan garis bawah hijau tua.
+  3. **Penyatuan Konteks Hari Ini ke Grid 4-Kolom Terpadu (Panel 1):** Mengintegrasikan Tanggal Kerja (Hari Kerja Aktif), Jendela EOD Outcome (16:30 – 18:00 WIB), Status Evaluasi, dan Status Risiko Harian ke dalam grid 4-kolom terpadu dengan catatan kaki tata kelola di dasar panel.
+  4. **Pemisahan Ketat Outcome vs Continuation (FR-08 & FR-09):** Setiap kartu evaluasi memiliki 2 dropdown mandiri: *Hasil Capaian (Outcome)* (`Completed`, `Partially Completed`, `Not Completed`, `Cancelled`) dan *Kelanjutan Pekerjaan (Continuation)* (`Continue`, `Do Not Continue`). Keduanya tidak boleh disatukan menjadi satu status.
+  5. **Panel Alasan Kondisional Dinamis (FR-09):** Jika memilih `Continue`, field alasan kelanjutan wajib muncul dan wajib diisi (untuk dasar pertimbangan draf pagi esok hari). Jika memilih `Cancelled`, field alasan pembatalan wajib diisi.
+  6. **Penyaluran Otomatis ke Koleksi Draf Pagi Esok Hari (FR-11):** Seluruh item yang ditandai `Continue` otomatis disimpan ke `localStorage: workpulse_carry_over_pool` untuk menjadi kumpulan draf komitmen pada Halaman 02 hari berikutnya.
+  7. **Rekomendasi Status Sistem vs Kemandirian Final Status (FR-10):** Sistem menghitung saran status secara heuristik (*GREEN/AMBER/RED*), namun karyawan memiliki hak mandiri untuk memilih radio card Final Status hariannya.
+  8. **Kewajiban Penjelasan Risiko Harian (FR-10):** Field textarea penjelasan risiko harian otomatis muncul dan wajib diisi jika Final Status yang dipilih adalah `AMBER` atau `RED`.
+  9. **Keterhubungan Tomorrow Priority (FR-52):** Catatan prioritas esok hari disimpan ke `localStorage: workpulse_tomorrow_priority` dan otomatis muncul sebagai *Embedded Context Hint Banner* di Halaman 02 hari berikutnya.
+  10. **Pembersihan Total Elemen Prototipe:** Seluruh kotak coba blocker demo dan toggle penguji lama telah dihapus total. Antarmuka 100% otentik mencerminkan produk enterprise nyata dengan tombol Simpan Draf dan Kirim EOD Outcome yang mengunci form secara permanen.
 
 ### Halaman Berikutnya (Registri Bertahap):
 - `05-Raise-Instant-Blocker.html`
