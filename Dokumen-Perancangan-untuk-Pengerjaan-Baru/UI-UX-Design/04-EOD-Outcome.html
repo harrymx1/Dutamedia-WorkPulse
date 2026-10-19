@@ -2114,7 +2114,7 @@
         if (itemData && itemData.carryOverDays >= 2) {
           hasCarryOver2Days = true;
         }
-        if (itemData && (itemData.blockerInfo || itemData.initialRisk === 'RED')) {
+        if (itemData && ((itemData.blockerInfo && outcome !== 'Completed') || (itemData.initialRisk === 'RED' && outcome !== 'Completed'))) {
           hasActiveBlocker = true;
         }
 
