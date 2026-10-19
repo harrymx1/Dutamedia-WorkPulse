@@ -70,7 +70,7 @@ a:hover{text-decoration:underline}
 .avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#D8EAE2;color:var(--color-brand-primary);font-weight:800;font-size:13px;flex-shrink:0}
 .user-meta{min-width:0;flex:1}
 .user-name{font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-role{font-size:11px;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--color-text-secondary);line-height:1.35}
 .logout-btn{background:transparent;border:0;color:var(--color-text-secondary);padding:6px;border-radius:6px;display:grid;place-items:center;transition:background .15s,color .15s}
 .logout-btn:hover{background:var(--color-surface-subtle);color:#DC2626}
 
@@ -733,7 +733,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     name: 'Budi Pratama',
     avatar: 'BP',
     role: 'EMPLOYEE',
-    roleLabel: 'Contributor',
+    roleLabel: 'Software Engineer',
     department: 'Technology Squad A',
     function: 'Engineering'
   };
@@ -756,7 +756,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
   if (sideAvatar) sideAvatar.textContent = activeUser.avatar || 'BP';
   if (sideUserName) sideUserName.textContent = activeUser.name || 'Budi Pratama';
-  if (sideUserRole) sideUserRole.textContent = `${activeUser.roleLabel || 'Contributor'} · ${activeUser.department || activeUser.function || 'Technology'}`;
+  if (sideUserRole) sideUserRole.textContent = `${activeUser.roleLabel || 'Software Engineer'} · ${activeUser.department || activeUser.function || 'Technology Squad A'}`;
   if (topAvatar) topAvatar.textContent = activeUser.avatar || 'BP';
 
   // Tampilkan menu Management jika role sesuai (SUPERVISOR, HEAD, HRGA, CEO)
