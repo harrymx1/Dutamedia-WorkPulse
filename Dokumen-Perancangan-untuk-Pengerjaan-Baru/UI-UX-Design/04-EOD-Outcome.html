@@ -1285,9 +1285,9 @@
   <div class="app">
 
     <!-- ==============================================================
-         SIDEBAR NAVIGATION (100% Selaras dengan Halaman 02 & 03)
+         SIDEBAR NAVIGATION (RESMI MY TODAY - BEBAS EMOTICON)
          ============================================================== -->
-    <aside class="sidebar" id="app-sidebar" aria-label="Navigasi Utama">
+    <aside class="sidebar" id="main-sidebar">
       <div class="brand">
         <div class="brand-mark">W</div>
         <div>
@@ -2637,7 +2637,7 @@
     function setupMobileNavigation() {
       const btnOpen = $('btn-open-sidebar');
       const btnClose = $('btn-close-sidebar');
-      const sidebar = $('app-sidebar');
+      const sidebar = $('main-sidebar') || $('app-sidebar');
       const backdrop = $('sidebar-backdrop');
 
       if (btnOpen) {
