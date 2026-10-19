@@ -40,28 +40,40 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. PANEL 2: EVALUASI CAPAIAN MORNING COMMITMENT (FR-08, FR-09):             │
 │    - Header: Judul [Capaian Morning Commitment], Counter [2 Komitmen]       │
-│    - Kartu Evaluasi Komitmen (Grid 2-Kolom Kontrol Responsif):              │
-│      * Deskripsi Tugas Pagi & Target Deliverable Terukur                    │
+│    - Kartu Evaluasi Komitmen (Teks Komitmen Tunggal Otentik dari Hal 02):   │
+│      * Teks Rencana Hasil Kerja (Tanpa baris kedua deliverable fiktif)      │
 │      * Badge Initial Risk Pagi (GREEN / AMBER / RED) & Info Blocker Pagi    │
 │      * Dropdown Outcome: Completed / Partially / Not / Cancelled            │
 │      * Dropdown Continuation: Continue vs Do Not Continue                   │
 │      * Panel Kondisional Alasan: Muncul otomatis saat Cancelled / Continue  │
+│      * Tautan Bukti Kerja Opsional (Evidence Link - PR Git / Dokumen)       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. PANEL 3: EVALUASI CAPAIAN ADDITIONAL WORK (FR-08, FR-09):                │
 │    - Header: Judul [Capaian Additional Work], Counter [1 Tugas Tambahan]    │
-│    - Kartu Evaluasi Tugas Tambahan (Kontrol Outcome & Continuation Setara)  │
+│    - Kartu Evaluasi Tugas Tambahan (Teks Target Hasil Kerja dari Hal 03):   │
+│      * Teks Target Hasil Kerja Tunggal (Bebas dari callout ganda)           │
+│      * Metadata Asal: Badge Alasan Resmi (FR-06) & Badge Terkunci           │
+│      * Pemberi Tugas: "Ditugaskan oleh: [Nama]" (khusus Newly Assigned)     │
+│      * Tautan / Blocker Referensi (jika ada tiket blocker dari Hal 03)      │
+│      * Dropdown Outcome, Continuation, dan Tautan Bukti Kerja Setara        │
 │    - Empty State Box: Horizontal Mini-Strip Ramping (~50px) jika 0 item     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. PANEL 4: RINGKASAN HARIAN, FINAL STATUS & PRIORITAS (FR-10, FR-52):      │
-│    - Rekomendasi Status Sistem (Kalkulasi Heuristik Otomatis)               │
+│    - Rekomendasi Status Sistem: Judul bersih tanpa jargon & tanpa simbol,   │
+│      badge informatif [● Menunggu Evaluasi Tugas], heuristik 6 cabang       │
 │    - Radio Cards Final Status: [GREEN (Tuntas)] [AMBER] [RED (Risiko)]      │
-│    - Penjelasan Risiko Harian (Wajib diisi jika status AMBER atau RED)      │
+│      * Circular selection mark dengan checkmark tegas pada kartu aktif      │
+│      * Peringatan dini carry-over ≥ 2 hari pada kartu GREEN                 │
+│    - Penjelasan Risiko Harian: Wajib diisi jika status AMBER atau RED,      │
+│      dilengkapi live counter interaktif [0 / 15 karakter minimal]           │
 │    - Catatan Prioritas Esok Hari (Tomorrow Priority - Opsional)             │
 │      (Otomatis tampil sebagai Context Hint Banner di Halaman 02 besok!)     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. STICKY FOOTER BAR:                                                       │
+│ 6. STICKY FOOTER BAR & NOTIFIKASI TOAST KONTEKSTUAL:                        │
 │    - Ringkasan Kelengkapan Evaluasi (Counter realtime progres pengisian)    │
 │    - Tombol Aksi: [Simpan Draf (Disket)] & [Kirim EOD Outcome (Panah →)]    │
+│    - Contextual Toast Engine: Varian Sukses (centang hijau), Peringatan     │
+│      (segitiga amber), dan Error (lingkaran merah).                         │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -92,8 +104,8 @@ Sistem menyediakan pemandu heuristik (*system suggested status*) deterministik y
 2. **Cabang 2 (Rasio Kegagalan $\ge 50\%$):** Jika persentase tugas `Not Completed` atau `Cancelled` mencapai $\ge 50\%$ dari total tugas yang dievaluasi $\rightarrow$ Sistem menyarankan **`RED`** (*"Sebanyak X% tugas hari ini berstatus Belum Selesai atau Dibatalkan"*).
 3. **Cabang 3 (Carry-Over Berulang $\ge 2$ Hari / High Blocker):** Jika terdapat tugas komitmen berulang ($\ge 2$ hari berturut-turut) atau terdapat kendala berbobot tinggi (*High Blocker*) $\rightarrow$ Sistem menyarankan minimal **`AMBER`** (*"Terdapat tugas komitmen berulang (carry-over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan"*).
 4. **Cabang 4 (Partially Completed / Kegagalan $< 50\%$):** Jika terdapat tugas `Partially Completed` atau terdapat tugas `Not Completed` di bawah $50\%$ $\rightarrow$ Sistem menyarankan **`AMBER`** (*"Pekerjaan selesai sebagian (Partially Completed) atau terdapat penundaan tugas yang berlanjut ke esok hari"*).
-5. **Cabang 5 (Completed Tanpa Blocker):** Jika seluruh komitmen pagi dan pekerjaan tambahan diselesaikan penuh (`Completed`) tanpa ada blocker tersisa $\rightarrow$ Sistem menyarankan **`GREEN`** (*"Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka"*).
-6. **Cabang 6 (Zero Evaluated Tasks):** Jika belum ada tugas yang dievaluasi $\rightarrow$ Sistem menampilkan status netral *Menghitung...* tanpa penetapan status prematur.
+5. **Cabang 5 (Completed Tanpa Blocker):** Jika seluruh komitmen pagi dan pekerjaan tambahan diselesaikan penuh (`Completed`) tanpa ada blocker aktif tersisa $\rightarrow$ Sistem menyarankan **`GREEN`** (*"Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka"*). Tugas yang memiliki catatan kendala pagi namun berhasil tuntas diselesaikan tidak diperlakukan sebagai blocker aktif.
+6. **Cabang 6 (Zero Evaluated Tasks):** Jika belum ada tugas yang dievaluasi $\rightarrow$ Sistem menampilkan status netral **`● Menunggu Evaluasi Tugas`** dengan kalimat panduan tanpa penetapan status prematur.
 
 ### 3.4 Protokol Anti-Silent Mutation & ValidationPromptModal (FR-14 & AC-39, ADR-013)
 Sesuai prinsip etika enterprise WorkPulse, sistem **DILARANG KERAS** mengubah atau memaksa status pilihan pengguna secara sepihak (*Zero Silent Mutation*):
@@ -113,10 +125,11 @@ Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness 
 - **Masa Tenggang (*Grace Period*):** Penyerahan dilakukan antara pukul 18:00 – 18:30 WIB (Pill Kuning/Amber).
 - **Terlambat (*Late Submission*):** Penyerahan melewati batas akhir 18:30 WIB (Pill Merah).
 
-### 3.6 Penjelasan Risiko Harian Tingkat Hari (FR-10 Mandate)
+### 3.6 Penjelasan Risiko Harian Tingkat Hari (FR-10 Mandate & Validasi 15 Karakter)
 - Jika Final Status ditetapkan sebagai **`AMBER`** atau **`RED`**, field `Penjelasan Risiko atau Kendala Tingkat Hari` menjadi **WAJIB DIISI**.
-- Penjelasan ini mencakup evaluasi holistik harian (misal: penundaan rilis dari vendor eksternal, gangguan infrastruktur, atau kendala kapasitas tim).
-- Form akan memblokir pengiriman dan menyorot input jika penjelasan risiko kosong.
+- Penjelasan ini mencakup evaluasi holistik harian (berbeda dari kendala per tugas pada pagi hari).
+- Dilengkapi **penghitung karakter interaktif** (`0 / 15 karakter minimal`) yang otomatis berubah warna hijau saat syarat $\ge 15$ karakter terpenuhi.
+- Form memblokir pengiriman jika penjelasan risiko kosong atau di bawah 15 karakter.
 
 ### 3.7 Keterhubungan Tomorrow Priority ke Halaman 02 (FR-52)
 - Input `Tomorrow Priority` bersifat opsional.
@@ -128,9 +141,20 @@ Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness 
 - Banner hijau locked muncul di bagian atas, seluruh field input dinonaktifkan (`disabled`), dan tombol submit dinonaktifkan.
 - Jika terdapat kekeliruan pencatatan data pasca penutupan, perubahan wajib diajukan melalui rute **Halaman 16b: EOD Correction Request**.
 
+### 3.9 Integritas Konten Tunggal (Zero Duplicate Deliverable)
+- Baik di Halaman 02 maupun Halaman 03, pengguna hanya mengisi satu input teks utama (*Rencana Hasil Kerja* di pagi hari dan *Target Hasil Kerja* di siang hari).
+- Halaman 04 tidak menampilkan baris deliverable sekunder fiktif. Teks tugas disajikan murni, didampingi metadata otentik: badge alasan resmi, tautan referensi/blocker (`reference`), dan nama pemberi tugas (`assignedBy` khusus alasan `Newly Assigned`).
+
+### 3.10 Standarisasi Notifikasi Toast Kontekstual
+- Sistem dilarang menggunakan centang hijau untuk pesan peringatan/error.
+- Varian notifikasi toast mencakup:
+  1. `success`: Ikon centang hijau emerald (`#34D399`) pada latar hijau botol tua (`#113426`).
+  2. `warning`: Ikon segitiga peringatan amber (`#FBBF24`) pada latar cokelat gelap (`#2D1B08`).
+  3. `error`: Ikon lingkaran seru merah rose (`#F87171`) pada latar merah marun (`#3B1212`).
+
 ---
 
-## 4. KATALOG 12 SKENARIO PENGUJIAN SISTEM (TEST CASES)
+## 4. KATALOG 15 SKENARIO PENGUJIAN SISTEM (TEST CASES)
 
 | ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respon Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
@@ -146,6 +170,9 @@ Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness 
 | **TC-10** | Penanganan 0 Additional Work | `localStorage` additional work kosong | Panel 3 menampilkan Horizontal Mini-Strip ramping nan elegan tanpa error. |
 | **TC-11** | Inkonsistensi Status — Pertahankan Pilihan (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `AMBER` + alasan risiko | Sistem memunculkan `ValidationPromptModal`. Pengguna klik [Pertahankan Pilihan Saya], pilihan AMBER dipertahankan tanpa mutasi diam-diam, modal konfirmasi muncul. |
 | **TC-12** | Inkonsistensi Status — Adopsi Rekomendasi (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `RED` | Sistem memunculkan `ValidationPromptModal`. Pengguna klik [Gunakan Saran Sistem], radio otomatis beralih ke `GREEN`, modal konfirmasi muncul dengan status `GREEN`. |
+| **TC-13** | Validasi Penjelasan Risiko < 15 Karakter | Mengisi penjelasan risiko AMBER hanya 5 karakter (misal: "tunda") | Form memblokir submit, counter menunjukkan warna merah, toast peringatan muncul "Penjelasan risiko minimal 15 karakter". |
+| **TC-14** | Toast Peringatan Validasi (Anti-Pattern Fix) | Mengklik tombol submit saat final status belum dipilih | Toast muncul di pojok kanan bawah dengan ikon segitiga amber `▲` dan latar cokelat amber gelap, bebas dari ikon centang hijau. |
+| **TC-15** | Peringatan Dini Carry-over $\ge 2$ Hari pada Kartu GREEN | Terdapat tugas komitmen dengan `carryOverDays >= 2` | Kartu status GREEN menampilkan kotak peringatan sistem amber: "Terdapat tugas carry-over ≥ 2 hari. Sistem merekomendasikan minimal AMBER." |
 
 ---
 
