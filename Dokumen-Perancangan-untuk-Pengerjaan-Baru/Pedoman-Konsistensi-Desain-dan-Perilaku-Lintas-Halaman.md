@@ -384,8 +384,25 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - **Peringatan Validasi (*Warning*):** Menggunakan ikon segitiga peringatan amber (`#FBBF24`) dengan latar cokelat amber gelap (`#2D1B08`) dan border subtil (`#78350F`) untuk form yang belum lengkap atau status yang belum dipilih. Menghilangkan penggunaan centang hijau yang keliru pada pesan error/peringatan.
       - **Kesalahan Kritis (*Error*):** Menggunakan ikon lingkaran seru merah rose (`#F87171`) dengan latar merah gelap (`#3B1212`) untuk kegagalan sistem atau penolakan transaksi.
 
+### Halaman 05: Raise Instant Blocker
+- **Berkas Prototipe:** [`05-Raise-Instant-Blocker.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/05-Raise-Instant-Blocker.html)
+- **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-05-Raise-Instant-Blocker.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-05-Raise-Instant-Blocker.md)
+- **Keputusan Utama yang Diambil:**
+  1. **Aksesibilitas 24/7 di Luar Siklus Harian (PRD FR-15 & BR-04):** Dapat diakses kapan saja tanpa terikat jam kerja check-in harian atau penguncian baseline.
+  2. **Penerapan 10 Enum Taksonomi Baku (PRD FR-16 & AC-55):** Menyediakan 10 tipe kendala resmi (`Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`) dengan penjelasan deskriptif pembantu, membersihkan tipe non-standar.
+  3. **Segmented Radio Cards untuk Tingkat Keparahan (Severity):** Mengganti dropdown biasa dengan 4 kartu visual tersegmentasi (`Critical` merah, `High` amber, `Medium` biru, `Low` abu-abu) dengan lingkaran centang putih yang jelas.
+  4. **Penerapan 7 Kategori Dampak Baku (PRD FR-16 & AC-55):** Membedakan kategori dampak utama (`Task`, `Milestone`, `Project`, `Production`, `Client`, `Financial`, `Compliance`) dari rincian naratif deskripsi masalah.
+  5. **Validasi Kualitas Masukan (Input Quality Gates):** Dilengkapi live counter interaktif pada judul (`0 / 140`) dan deskripsi masalah (`0 / 15 karakter minimal`) yang berubah warna hijau saat mencapai $\ge 15$ karakter untuk mencegah masukan tidak bermakna.
+  6. **Penentuan Owner Needed Deterministik (PRD FR-19 & AC-58..61):**
+     - `Organizational Authority` (bawaan) menugaskan Atasan Langsung (Level 1) secara otomatis.
+     - `Project Authority` (eksplisit) mewajibkan pemilihan proyek terdaftar dan menugaskan Project Lead.
+     - Opsi default penunjukan orang tertentu baku: *"Tidak memilih orang tertentu (Sistem menentukan otomatis)"*.
+  7. **Live Route Preview Box:** Menampilkan visual interaktif penanggung jawab, status rute, dan catatan SLA pengakuan secara realtime sebelum pengiriman.
+  8. **Kartu Tiket Blocker Resmi Pasca-Submit:** Setelah submit berhasil, sistem menampilkan kartu tiket resmi berlatar hijau tua (#BLK-2026-XXXX) dengan status `Open`, ringkasan metadata 4 kolom, dan timer SLA pengakuan.
+  9. **Sinkronisasi Sesi Dinamis & Contextual Toast Engine:** Membaca identitas pengguna dari `localStorage: workpulse_active_user` dan mengadopsi Contextual Toast Engine 3 varian semantik (`success`, `warning`, `error`).
+  10. **Integrasi Pool Blocker Lintas Halaman:** Tiket baru otomatis tersimpan ke `localStorage: workpulse_active_blockers` dan dapat langsung dipilih pada dropdown *Pilih Blocker Aktif* di Halaman 02, 03, dan 04.
+
 ### Halaman Berikutnya (Registri Bertahap):
-- `05-Raise-Instant-Blocker.html`
 - `06-My-History-Weekly-Summary.html`
 - `07-Notification-Center-Browser-Push.html`
 - `08-Pulse-Dashboard.html`
