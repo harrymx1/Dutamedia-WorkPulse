@@ -1197,6 +1197,20 @@
       border-radius: var(--radius-sm);
     }
 
+    .mobile-close-sidebar-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      margin-left: auto;
+    }
+
     @media (max-width: 900px) {
       .app {
         grid-template-columns: 1fr;
@@ -1219,6 +1233,10 @@
 
       .mobile-hamburger-btn {
         display: block;
+      }
+
+      .mobile-close-sidebar-btn {
+        display: inline-flex;
       }
 
       .sidebar-backdrop {
@@ -1276,8 +1294,12 @@
           <div class="brand-name">WorkPulse</div>
           <div class="brand-caption">PT Dutamedia</div>
         </div>
+        <button class="mobile-close-sidebar-btn" type="button" id="btn-close-sidebar" aria-label="Tutup navigasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
 
+      <!-- Workspace Menu (Self-Service) -->
       <div class="nav-group">
         <div class="nav-label">Workspace</div>
         <a class="nav-link active" href="02-Morning-Commitment.html" aria-current="page">
@@ -1298,7 +1320,40 @@
         </a>
       </div>
 
-      <!-- Account Bottom Area -->
+      <!-- Management Menu (Dynamic for Supervisor / Head / HRGA / CEO) -->
+      <div class="nav-group" id="mgmt-nav-group" style="display: none;">
+        <div class="nav-label">Management</div>
+        <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <span>Blocker Queue</span>
+        </a>
+        <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <span>Coaching Notes</span>
+        </a>
+        <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          <span>Compliance Queue</span>
+        </a>
+        <a class="nav-link" href="21-Leave Approval Queue (ReviewerHRGA).html" id="link-leave-approval" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Leave Approvals</span>
+        </a>
+        <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Exemptions</span>
+        </a>
+        <a class="nav-link" href="23-Reports.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+          <span>Reports</span>
+        </a>
+      </div>
+
+      <!-- Account Bottom Area (Klik untuk ke Halaman Profil) -->
       <div class="side-bottom">
         <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
           <div class="avatar" id="side-avatar">BP</div>
@@ -1736,15 +1791,40 @@
     function loadActiveUser() {
       try {
         const stored = localStorage.getItem('workpulse_active_user');
-        if (stored) {
-          const user = JSON.parse(stored);
-          if (user.avatar) {
-            $('side-avatar').textContent = user.avatar;
-            $('top-avatar').textContent = user.avatar;
+        const activeUser = stored ? JSON.parse(stored) : {
+          name: 'Budi Pratama',
+          email: 'budi.pratama@dutamedia.com',
+          role: 'EMPLOYEE',
+          roleLabel: 'Software Engineer',
+          function: 'Engineering',
+          department: 'Technology Squad A',
+          isExempt: false,
+          avatar: 'BP'
+        };
+
+        if (activeUser.name) $('side-user-name').textContent = activeUser.name;
+        if (activeUser.roleLabel) {
+          $('side-user-role').textContent = `${activeUser.roleLabel} · ${activeUser.department || activeUser.function || 'Technology Squad A'}`;
+        }
+        $('side-avatar').textContent = activeUser.avatar || (activeUser.name ? activeUser.name.substring(0, 2).toUpperCase() : 'BP');
+        $('top-avatar').textContent = activeUser.avatar || (activeUser.name ? activeUser.name.substring(0, 2).toUpperCase() : 'BP');
+
+        // Atur visibilitas Menu Management di Sidebar sesuai Role
+        const isMgmtRole = ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HRGA', 'CEO'].includes(activeUser.role);
+        if (isMgmtRole && $('mgmt-nav-group')) {
+          $('mgmt-nav-group').style.display = 'grid';
+          if (activeUser.role === 'SUPERVISOR' || activeUser.role === 'HEAD_OF_DEPARTMENT') {
+            if ($('link-coaching')) $('link-coaching').style.display = 'flex';
           }
-          if (user.name) $('side-user-name').textContent = user.name;
-          if (user.roleLabel) {
-            $('side-user-role').textContent = `${user.roleLabel} · ${user.department || 'Technology'}`;
+          if (activeUser.role === 'HRGA') {
+            if ($('link-compliance')) $('link-compliance').style.display = 'flex';
+            if ($('link-leave-approval')) $('link-leave-approval').style.display = 'flex';
+            if ($('link-exemptions')) $('link-exemptions').style.display = 'flex';
+          }
+          if (activeUser.role === 'CEO') {
+            if ($('link-coaching')) $('link-coaching').style.display = 'flex';
+            if ($('link-compliance')) $('link-compliance').style.display = 'flex';
+            if ($('link-exemptions')) $('link-exemptions').style.display = 'flex';
           }
         }
       } catch (e) {
@@ -2556,18 +2636,24 @@
     // Mobile Hamburger & Drawer
     function setupMobileNavigation() {
       const btnOpen = $('btn-open-sidebar');
+      const btnClose = $('btn-close-sidebar');
       const sidebar = $('app-sidebar');
       const backdrop = $('sidebar-backdrop');
 
-      btnOpen.onclick = () => {
-        sidebar.classList.add('open');
-        backdrop.classList.add('show');
-      };
+      if (btnOpen) {
+        btnOpen.onclick = () => {
+          sidebar.classList.add('open');
+          backdrop.classList.add('show');
+        };
+      }
 
-      backdrop.onclick = () => {
+      const closeSidebar = () => {
         sidebar.classList.remove('open');
         backdrop.classList.remove('show');
       };
+
+      if (btnClose) btnClose.onclick = closeSidebar;
+      if (backdrop) backdrop.onclick = closeSidebar;
     }
 
     // On Load Lifecycle
