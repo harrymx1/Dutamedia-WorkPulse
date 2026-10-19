@@ -444,9 +444,12 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           <div class="panel-head">
             <div>
               <h2 id="blockerDetailsHeading">Detail Kendala &amp; Dampak</h2>
-              <p class="small" style="margin-top:3px">Jelaskan akar kendala, tingkat urgensi penanganan, serta bantuan spesifik yang Anda butuhkan.</p>
+              <p class="small" style="margin-top:3px">Tuliskan fakta kendala yang Anda alami secara ringkas agar penanggung jawab dapat segera memahaminya.</p>
             </div>
-            <span class="pill red"><span class="dot-sm"></span> Wajib Dilengkapi</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="pill neutral">Bagian 1 dari 2</span>
+              <span class="pill amber" id="panel1StatusBadge"><span class="dot-sm"></span> Belum Lengkap</span>
+            </div>
           </div>
           <div class="panel-body">
             
@@ -574,7 +577,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <h2 id="ownerRoutingHeading">Penanggung Jawab Awal (Owner Needed)</h2>
               <p class="small" style="margin-top:3px">Tentukan jalur kewenangan penanganan. Sistem otomatis menghitung penerima dan timer SLA.</p>
             </div>
-            <span class="pill blue"><span class="dot-sm"></span> Rute Terverifikasi</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="pill neutral">Bagian 2 dari 2</span>
+              <span class="pill blue"><span class="dot-sm"></span> Rute Terverifikasi</span>
+            </div>
           </div>
           <div class="panel-body">
             
@@ -890,14 +896,32 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   const attachmentRemoveBtn = $('attachmentRemoveBtn');
 
   // 4. Live Counter & Validation State
+  const panel1StatusBadge = $('panel1StatusBadge');
+  function checkPanel1Completion() {
+    if (!panel1StatusBadge) return;
+    const hasTitle = titleInput.value.trim().length > 0;
+    const hasSeverity = document.querySelector('input[name="blockerSeverity"]:checked') !== null;
+    const hasDesc = descTextarea.value.trim().length > 0;
+
+    if (hasTitle && hasSeverity && hasDesc) {
+      panel1StatusBadge.className = 'pill green';
+      panel1StatusBadge.innerHTML = '<span class="dot-sm"></span> Lengkap';
+    } else {
+      panel1StatusBadge.className = 'pill amber';
+      panel1StatusBadge.innerHTML = '<span class="dot-sm"></span> Belum Lengkap';
+    }
+  }
+
   titleInput.addEventListener('input', () => {
     const len = titleInput.value.length;
     titleCounter.textContent = `${len} / 140`;
     clearError('blockerTitle', 'blockerTitleError');
+    checkPanel1Completion();
   });
 
   descTextarea.addEventListener('input', () => {
     clearError('blockerDescription', 'blockerDescriptionError');
+    checkPanel1Completion();
   });
 
   // 4b. File Attachment Interaction (Click, Drag & Drop, Paste Screenshot)
@@ -964,6 +988,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       const radio = card.querySelector('input[type="radio"]');
       if (radio) radio.checked = true;
       clearError(null, 'blockerSeverityError');
+      checkPanel1Completion();
     });
   });
 
@@ -1245,6 +1270,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     attachmentInput.value = '';
     attachmentPreview.classList.remove('show');
     orgCard.click();
+    checkPanel1Completion();
     showToast('success', 'Formulir berhasil dikosongkan.');
   });
 
@@ -1259,6 +1285,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     document.querySelectorAll('input[name="blockerSeverity"]').forEach(r => r.checked = false);
     attachmentInput.value = '';
     attachmentPreview.classList.remove('show');
+    checkPanel1Completion();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
