@@ -294,6 +294,10 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
   3. **Pengenalan Peran Otomatis (*Realistic Account Matcher*):** Sistem mengenali peran dan divisi akun secara cerdas saat login, lalu menyimpan payload `workpulse_active_user` ke `localStorage`.
   4. **Protokol Keamanan Brute-Force:** Menerapkan penguncian sementara (*lockout*) 60 detik dengan hitung mundur otomatis jika terjadi kegagalan berulang.
   5. **Modal Re-autentikasi di Tempat (UF-03):** Melindungi sesi kerja karyawan tanpa merusak draf yang belum terkirim.
+  6. **Penyelarasan Simbol Blocker (Bebas Ikon Petir):** Mengganti ikon petir (`⚡`) pada pilar nilai kerja sisi kiri menjadi ikon bendera (*flag*) monokrom yang tenang, selaras 100% dengan Halaman 02 dan Halaman 03.
+  7. **Standarisasi Label Tombol Submit:** Mengubah `Masuk ke Dashboard` menjadi **`Masuk ke Ruang Kerja`** agar inklusif dan akurat untuk seluruh peran (terutama kontributor yang diarahkan ke Morning Commitment, bukan dashboard).
+  8. **Identitas Brand Mobile Header:** Menyematkan logo mini WorkPulse di atas formulir login yang otomatis tampil pada layar ponsel/tablet ($\le 900\text{px}$) saat panel kiri disembunyikan.
+  9. **Bilah Uji Peran Cepat (*Quick Role Selector*):** Menyematkan strip pill pengujian peran (Budi/Staff, Siti/Team Lead, Dewi/HRGA, Bambang/CEO) di bawah kartu login untuk mempermudah demonstrasi dan evaluasi alur routing peran.
 
 ### Halaman 02: My Today — Morning Commitment
 - **Berkas Prototipe:** [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html)

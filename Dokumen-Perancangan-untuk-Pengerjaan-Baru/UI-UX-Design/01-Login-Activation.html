@@ -275,6 +275,7 @@
     .card-wrapper {
       width: 100%;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
     }
@@ -532,6 +533,84 @@
       text-align: center;
     }
 
+    /* Mobile Brand Header (Tampil khusus layar <= 900px) */
+    .mobile-brand-header {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      width: min(100%, 440px);
+      margin-bottom: 20px;
+    }
+
+    .mobile-brand-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      line-height: 1.2;
+    }
+
+    .mobile-brand-sub {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Quick Role Selector (Demo Tooling) */
+    .demo-role-bar {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: var(--color-surface-subtle);
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-sm);
+    }
+
+    .demo-role-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .demo-role-title {
+      font-size: 11px;
+      font-weight: 750;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .demo-role-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .demo-pill {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--color-border-subtle);
+      background: #FFFFFF;
+      color: var(--color-text-secondary);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .demo-pill:hover {
+      border-color: var(--color-brand-primary);
+      color: var(--color-brand-primary);
+    }
+
+    .demo-pill.active {
+      background: var(--color-brand-primary);
+      color: #FFFFFF;
+      border-color: var(--color-brand-primary);
+      font-weight: 700;
+    }
+
     .account-preview-card {
       display: flex;
       align-items: center;
@@ -706,6 +785,9 @@
       .card-wrapper {
         padding: 24px 16px 40px;
       }
+      .mobile-brand-header {
+        display: flex;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -752,7 +834,7 @@
           </div>
           <div class="pillar-item">
             <div class="pillar-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
             </div>
             <div class="pillar-text">
               <strong>Pelaporan Blocker Cepat</strong>
@@ -780,6 +862,13 @@
     <!-- RIGHT PANEL: Authentication Views -->
     <main class="interactive-main">
       <div class="card-wrapper">
+        <div class="mobile-brand-header">
+          <div class="brand-mark">W</div>
+          <div>
+            <div class="mobile-brand-title">WorkPulse</div>
+            <div class="mobile-brand-sub">Daily Accountability &amp; Blocker Log</div>
+          </div>
+        </div>
         <div class="form-card">
 
           <!-- ==============================================================
@@ -840,9 +929,21 @@
               </div>
 
               <button class="btn btn-primary" type="submit" id="btn-submit-login">
-                <span>Masuk ke Dashboard</span>
+                <span>Masuk ke Ruang Kerja</span>
               </button>
             </form>
+
+            <div class="demo-role-bar">
+              <div class="demo-role-header">
+                <span class="demo-role-title">Pilih Akun Uji Coba Cepat (Demo):</span>
+              </div>
+              <div class="demo-role-pills">
+                <button type="button" class="demo-pill active" data-email="budi.pratama@dutamedia.com" title="Staff Software Engineer (Diarahkan ke Morning Commitment)">Budi (Staff)</button>
+                <button type="button" class="demo-pill" data-email="siti.aminah@dutamedia.com" title="Supervisor / Team Lead (Diarahkan ke Pulse Dashboard)">Siti (Team Lead)</button>
+                <button type="button" class="demo-pill" data-email="dewi.anggraeni@dutamedia.com" title="HRGA &amp; Compliance Officer (Diarahkan ke Compliance Queue)">Dewi (HRGA)</button>
+                <button type="button" class="demo-pill" data-email="bambang.soedirgo@dutamedia.com" title="Chief Executive Officer (Diarahkan ke Morning dengan Exemption)">Bambang (CEO)</button>
+              </div>
+            </div>
 
             <div class="divider-rule"></div>
             <div class="help-hint">
@@ -1002,7 +1103,7 @@
                 Akun Anda tidak memiliki wewenang untuk mengakses modul ini. Seluruh batasan peran dijaga ketat sesuai kebijakan organisasi.
               </p>
             </div>
-            <button class="btn btn-primary" type="button" data-screen-target="login">Kembali ke Dashboard Utama</button>
+            <button class="btn btn-primary" type="button" data-screen-target="login">Kembali ke Halaman Login</button>
           </section>
 
         </div>
@@ -1070,6 +1171,28 @@
         clearAlerts();
         showScreen(btn.dataset.screenTarget);
       };
+    });
+
+    // Quick Role Selector (Demo Tooling)
+    $$('.demo-pill').forEach(btn => {
+      btn.onclick = () => {
+        $$('.demo-pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        clearAlerts();
+        $('login-email').value = btn.dataset.email;
+        $('login-password').value = 'Dutamedia#2026';
+      };
+    });
+
+    $('login-email').addEventListener('input', () => {
+      const val = $('login-email').value.trim().toLowerCase();
+      $$('.demo-pill').forEach(btn => {
+        if (btn.dataset.email.toLowerCase() === val) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
     });
 
     // Password Visibility Toggle
