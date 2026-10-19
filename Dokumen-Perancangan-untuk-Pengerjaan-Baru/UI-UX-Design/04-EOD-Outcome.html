@@ -1714,10 +1714,10 @@
       {
         id: 'a1',
         slotNumber: 1,
-        title: 'Investigasi bug sesi login timeout pada perangkat Safari mobile.',
-        deliverable: 'Akar masalah terdokumentasi dan patch hotfix terverifikasi di staging',
-        reasonBadge: 'Operational-Incident',
-        assignedBy: 'Siti Aminah',
+        title: 'Investigasi bug sesi login timeout pada perangkat Safari mobile dan penyiapan patch staging.',
+        reasonBadge: 'Newly Assigned',
+        assignedBy: 'Siti Aminah (Tech Lead)',
+        reference: '[#BLK-011] Staging server timeout',
         outcome: '',
         continuation: '',
         reason: '',
@@ -1858,20 +1858,17 @@
         <span class="pill amber" style="font-size: 11px; padding: 2px 7px;">Carry-over Hari ke-${item.carryOverDays}</span>
       ` : '';
 
-      // Target Hasil Kerja: Hanya ditampilkan jika item memiliki deliverable terpisah (misalnya Tugas Tambahan dari Halaman 03)
-      const deliverableHtml = (item.deliverable && kindLabel !== 'Komitmen Pagi') ? `
-        <div class="eod-task-deliverable">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary); flex-shrink: 0; margin-top: 1px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          <div>
-            <strong>Target Hasil Kerja:</strong>
-            <span>${item.deliverable}</span>
-          </div>
+      // Referensi / Blocker dari Halaman 03 (jika ada)
+      const referenceHtml = item.reference ? `
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-brand-primary); margin-top: 6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          <span>Tautan / Blocker: <strong style="font-weight: 600;">${item.reference}</strong></span>
         </div>
       ` : '';
 
       // Pemberi Tugas: Tampil jika berasal dari Tugas Tambahan dengan assignedBy (FR-06)
       const assignedByHtml = item.assignedBy ? `
-        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); margin-top: 8px;">
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); margin-top: 6px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-secondary); flex-shrink: 0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           <span>Ditugaskan oleh: <strong style="color: var(--color-text-primary); font-weight: 700;">${item.assignedBy}</strong></span>
         </div>
@@ -1895,8 +1892,8 @@
         <div class="eod-card-body">
           <div class="eod-task-content">
             <div class="eod-task-desc">${item.title}</div>
-            ${deliverableHtml}
             ${assignedByHtml}
+            ${referenceHtml}
             ${blockerHtml}
           </div>
 
