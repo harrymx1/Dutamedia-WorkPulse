@@ -902,9 +902,43 @@
       font-weight: 800;
     }
 
+    .final-status-selection-mark {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid var(--color-border-subtle);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+      background: #FFFFFF;
+    }
+
+    .final-status-radio-card.active .final-status-selection-mark {
+      color: #FFFFFF;
+    }
+
+    .final-status-radio-card.active.green .final-status-selection-mark {
+      background: var(--color-brand-primary);
+      border-color: var(--color-brand-primary);
+    }
+
+    .final-status-radio-card.active.amber .final-status-selection-mark {
+      background: #D97706;
+      border-color: #D97706;
+    }
+
+    .final-status-radio-card.active.red .final-status-selection-mark {
+      background: #DC2626;
+      border-color: #DC2626;
+    }
+
     .final-status-desc {
       font-size: 11.5px;
       color: var(--color-text-secondary);
+      line-height: 1.45;
     }
 
     /* Sticky Footer Bar */
@@ -1440,17 +1474,20 @@
           </div>
           <div class="panel-body">
 
-            <!-- Saran Status Otomatis Sistem (Heuristic Guidance) -->
+            <!-- Saran Status Otomatis Sistem (Heuristic Guidance - FR-13 / AC-38) -->
             <div class="suggested-status-card" id="suggested-status-card">
               <div>
-                <div class="suggested-meta-title">Rekomendasi Status Sistem</div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary);"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg>
+                  <span class="suggested-meta-title" style="margin-bottom: 0;">Rekomendasi Status Sistem (Heuristic)</span>
+                </div>
                 <div class="suggested-meta-desc" id="suggested-status-desc">
-                  Lengkapi evaluasi capaian seluruh tugas untuk menghitung kalkulasi status akhir secara otomatis.
+                  Lengkapi evaluasi capaian seluruh tugas di atas untuk mengaktifkan kalkulasi status akhir secara otomatis.
                 </div>
               </div>
               <span class="pill neutral" id="suggested-status-pill">
                 <span class="status-indicator-dot"></span>
-                <span id="suggested-status-txt">Menghitung...</span>
+                <span id="suggested-status-txt">Menunggu Evaluasi Tugas</span>
               </span>
             </div>
 
@@ -1464,17 +1501,30 @@
                 <label class="final-status-radio-card green" id="card-status-green">
                   <input type="radio" name="final-status-choice" value="GREEN" required>
                   <div class="final-status-card-header">
-                    <span class="final-status-name" style="color: #145A36;">GREEN</span>
-                    <span class="pill green" style="padding: 2px 7px; font-size: 11px;">Tuntas</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="final-status-name" style="color: #145A36;">GREEN</span>
+                      <span class="pill green" style="padding: 2px 7px; font-size: 11px;">Tuntas</span>
+                    </div>
+                    <div class="final-status-selection-mark">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
                   </div>
                   <div class="final-status-desc">Terkendali penuh, seluruh komitmen utama selesai tanpa blocker aktif.</div>
+                  <div class="green-carryover-warning" id="green-carryover-warning" style="margin-top: 8px; padding: 6px 8px; background: #FFFBF0; border: 1px solid #F6E0A4; border-radius: var(--radius-xs); font-size: 11px; color: #7A4B00; display: none;">
+                    <strong>Peringatan Sistem:</strong> Terdapat tugas carry-over ≥ 2 hari. Sistem merekomendasikan minimal AMBER.
+                  </div>
                 </label>
 
                 <label class="final-status-radio-card amber" id="card-status-amber">
                   <input type="radio" name="final-status-choice" value="AMBER" required>
                   <div class="final-status-card-header">
-                    <span class="final-status-name" style="color: #7A4B00;">AMBER</span>
-                    <span class="pill amber" style="padding: 2px 7px; font-size: 11px;">Perhatian</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="final-status-name" style="color: #7A4B00;">AMBER</span>
+                      <span class="pill amber" style="padding: 2px 7px; font-size: 11px;">Perhatian</span>
+                    </div>
+                    <div class="final-status-selection-mark">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
                   </div>
                   <div class="final-status-desc">Terdapat pekerjaan tertunda atau kendala yang perlu dipantau bersama tim.</div>
                 </label>
@@ -1482,8 +1532,13 @@
                 <label class="final-status-radio-card red" id="card-status-red">
                   <input type="radio" name="final-status-choice" value="RED" required>
                   <div class="final-status-card-header">
-                    <span class="final-status-name" style="color: #991B1B;">RED</span>
-                    <span class="pill red" style="padding: 2px 7px; font-size: 11px;">Risiko Tinggi</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="final-status-name" style="color: #991B1B;">RED</span>
+                      <span class="pill red" style="padding: 2px 7px; font-size: 11px;">Risiko Tinggi</span>
+                    </div>
+                    <div class="final-status-selection-mark">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
                   </div>
                   <div class="final-status-desc">Hambatan kritis atau blocker material membutuhkan bantuan segera / eskalasi.</div>
                 </label>
@@ -1492,13 +1547,16 @@
 
             <!-- Field Penjelasan Risiko Harian (Kondisional jika AMBER/RED - FR-10) -->
             <div class="field-group" id="daily-risk-group" style="display: none; margin-bottom: 20px;">
-              <label class="field-label" for="daily-risk-explanation">
-                <span>Penjelasan Risiko atau Kendala Tingkat Hari</span>
-                <span class="required-mark">*</span>
-              </label>
-              <textarea class="form-textarea" id="daily-risk-explanation" placeholder="Jelaskan faktor, kendala, atau ketergantungan utama yang memengaruhi hasil kerja hari ini secara keseluruhan (berbeda dari blocker per tugas pada pagi hari)..."></textarea>
-              <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 2px;">
-                Wajib diisi saat menetapkan status AMBER atau RED sebagai dasar transparansi kerja tim.
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <label class="field-label" for="daily-risk-explanation" style="margin-bottom: 0;">
+                  <span>Penjelasan Risiko atau Kendala Tingkat Hari</span>
+                  <span class="required-mark">*</span>
+                </label>
+                <span id="daily-risk-counter" style="font-size: 11px; font-weight: 700; color: #DC2626;">0 / 15 karakter minimal</span>
+              </div>
+              <textarea class="form-textarea" id="daily-risk-explanation" rows="3" placeholder="Jelaskan faktor, kendala, atau ketergantungan utama yang memengaruhi hasil kerja hari ini secara keseluruhan (berbeda dari blocker per tugas pada pagi hari)..."></textarea>
+              <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 4px;">
+                Wajib diisi minimal 15 karakter saat menetapkan status AMBER atau RED sebagai dasar transparansi dan bahan koordinasi tim.
               </div>
             </div>
 
@@ -2059,12 +2117,19 @@
       // Branch 6: Belum ada evaluasi
       if (evaluatedCount === 0) {
         currentSuggestedStatus = 'NONE';
-        currentSuggestedReason = 'Lengkapi evaluasi capaian seluruh tugas untuk menghitung kalkulasi status akhir secara otomatis.';
+        currentSuggestedReason = 'Lengkapi evaluasi capaian seluruh tugas di atas untuk mengaktifkan kalkulasi status akhir secara otomatis.';
         pill.className = 'pill neutral';
-        txt.textContent = 'Menghitung...';
+        txt.textContent = 'Menunggu Evaluasi Tugas';
         desc.textContent = currentSuggestedReason;
-        return;
       }
+
+      // Tampilkan peringatan dini carry-over pada kartu GREEN jika ada carry-over >= 2 hari
+      const carryWarningEl = $('green-carryover-warning');
+      if (carryWarningEl) {
+        carryWarningEl.style.display = hasCarryOver2Days ? 'block' : 'none';
+      }
+
+      if (evaluatedCount === 0) return;
 
       const failureRatio = (notCompletedCount + cancelledCount) / evaluatedCount;
 
@@ -2149,13 +2214,33 @@
             $('daily-risk-group').style.display = 'none';
           } else if (val === 'AMBER') {
             $('risk-status-desc').textContent = 'Perhatian (Pantau Berkala)';
-            $('daily-risk-group').style.display = 'flex';
+            $('daily-risk-group').style.display = 'block';
+            $('daily-risk-explanation').focus();
           } else if (val === 'RED') {
             $('risk-status-desc').textContent = 'Risiko Tinggi (Eskalasi Diperlukan)';
-            $('daily-risk-group').style.display = 'flex';
+            $('daily-risk-group').style.display = 'block';
+            $('daily-risk-explanation').focus();
           }
         });
       });
+
+      // Character counter listener for daily risk explanation
+      const riskExp = $('daily-risk-explanation');
+      const riskCounter = $('daily-risk-counter');
+      if (riskExp && riskCounter) {
+        riskExp.addEventListener('input', () => {
+          const len = riskExp.value.trim().length;
+          if (len < 15) {
+            riskCounter.textContent = `${len} / 15 karakter minimal`;
+            riskCounter.style.color = '#DC2626';
+            riskExp.style.borderColor = '#DC2626';
+          } else {
+            riskCounter.textContent = `${len} karakter (Memenuhi syarat)`;
+            riskCounter.style.color = 'var(--color-brand-primary)';
+            riskExp.style.borderColor = 'var(--color-brand-primary)';
+          }
+        });
+      }
     }
 
     // Toast helper
@@ -2270,14 +2355,22 @@
         return false;
       }
 
-      // If AMBER or RED, validate daily risk explanation
+      // If AMBER or RED, validate daily risk explanation with minimum 15 characters
       if (selectedRadio.value === 'AMBER' || selectedRadio.value === 'RED') {
         const riskExp = $('daily-risk-explanation');
-        if (!riskExp.value.trim()) {
+        const trimmed = riskExp.value.trim();
+        if (!trimmed) {
           valid = false;
           riskExp.style.borderColor = '#DC2626';
           if (!firstInvalidEl) firstInvalidEl = riskExp;
           showToast('Penjelasan risiko harian wajib diisi untuk status AMBER / RED.');
+          riskExp.focus();
+          return false;
+        } else if (trimmed.length < 15) {
+          valid = false;
+          riskExp.style.borderColor = '#DC2626';
+          if (!firstInvalidEl) firstInvalidEl = riskExp;
+          showToast(`Penjelasan risiko minimal 15 karakter (saat ini ${trimmed.length} karakter).`);
           riskExp.focus();
           return false;
         } else {
