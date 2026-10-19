@@ -86,31 +86,51 @@ Saat EOD Outcome berhasil diserahkan:
 - Data ini menjadi sumber draf *carry-over* resmi yang ditampilkan di Panel 2 pada Halaman 02 hari kerja berikutnya.
 - Item `Additional Work` yang `Continue` tetap dapat disalurkan sebagai draf komitmen baru, namun **tidak pernah merusak histori komitmen hari ini**.
 
-### 3.3 Rekomendasi Sistem vs Kemandirian Final Status (FR-10)
-Sistem menyediakan pemandu heuristik (*system suggested status*) yang bereaksi langsung terhadap evaluasi:
-- **Saran GREEN:** Seluruh tugas berstatus `Completed` dan tidak ada blocker terbuka.
-- **Saran AMBER:** Terdapat tugas `Partially Completed` atau penundaan wajar tanpa eskalasi kritis.
-- **Saran RED:** Terdapat tugas `Not Completed`, pembatalan mendadak, atau ketergantungan kritis.
-- **Kemandirian Pengguna:** Rekomendasi sistem bersifat pemandu visual objektif. Karyawan tetap memiliki wewenang penuh untuk menetapkan Final Status harian mereka (`GREEN`, `AMBER`, `RED`) berdasarkan penilaian profesional di lapangan.
+### 3.3 Deterministic Heuristic Suggestion Engine (PRD FR-13 & AC-38, ADR-013)
+Sistem menyediakan pemandu heuristik (*system suggested status*) deterministik yang bereaksi secara real-time terhadap evaluasi capaian tugas melalui 6 cabang aturan baku:
+1. **Cabang 1 (Active Critical Blocker):** Jika terdapat kendala kritis (*Critical Blocker*) yang masih aktif pada hari ini $\rightarrow$ Sistem menyarankan **`RED`** (*"Terdapat kendala kritis (Critical Blocker) yang aktif dan memengaruhi penyelesaian komitmen hari ini"*).
+2. **Cabang 2 (Rasio Kegagalan $\ge 50\%$):** Jika persentase tugas `Not Completed` atau `Cancelled` mencapai $\ge 50\%$ dari total tugas yang dievaluasi $\rightarrow$ Sistem menyarankan **`RED`** (*"Sebanyak X% tugas hari ini berstatus Belum Selesai atau Dibatalkan"*).
+3. **Cabang 3 (Carry-Over Berulang $\ge 2$ Hari / High Blocker):** Jika terdapat tugas komitmen berulang ($\ge 2$ hari berturut-turut) atau terdapat kendala berbobot tinggi (*High Blocker*) $\rightarrow$ Sistem menyarankan minimal **`AMBER`** (*"Terdapat tugas komitmen berulang (carry-over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan"*).
+4. **Cabang 4 (Partially Completed / Kegagalan $< 50\%$):** Jika terdapat tugas `Partially Completed` atau terdapat tugas `Not Completed` di bawah $50\%$ $\rightarrow$ Sistem menyarankan **`AMBER`** (*"Pekerjaan selesai sebagian (Partially Completed) atau terdapat penundaan tugas yang berlanjut ke esok hari"*).
+5. **Cabang 5 (Completed Tanpa Blocker):** Jika seluruh komitmen pagi dan pekerjaan tambahan diselesaikan penuh (`Completed`) tanpa ada blocker tersisa $\rightarrow$ Sistem menyarankan **`GREEN`** (*"Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka"*).
+6. **Cabang 6 (Zero Evaluated Tasks):** Jika belum ada tugas yang dievaluasi $\rightarrow$ Sistem menampilkan status netral *Menghitung...* tanpa penetapan status prematur.
 
-### 3.4 Penjelasan Risiko Harian Tingkat Hari (FR-10 Mandate)
+### 3.4 Protokol Anti-Silent Mutation & ValidationPromptModal (FR-14 & AC-39, ADR-013)
+Sesuai prinsip etika enterprise WorkPulse, sistem **DILARANG KERAS** mengubah atau memaksa status pilihan pengguna secara sepihak (*Zero Silent Mutation*):
+- Karyawan memiliki hak prerogatif penuh untuk menetapkan Final Status hariannya berdasarkan pertimbangan profesional di lapangan.
+- Jika pengguna memilih status yang berbeda dari saran heuristik sistem (misalnya pengguna memilih `GREEN` padahal sistem menyarankan `RED` karena rasio kegagalan $\ge 50\%$, atau pengguna memilih `AMBER` padahal sistem menyarankan `GREEN`), sistem **tidak langsung mengunci form**.
+- Sistem memunculkan **`ValidationPromptModal`** (`#modal-status-mismatch`) yang menyajikan:
+  1. Komparasi visual berdampingan antara *Pilihan Anda* vs *Rekomendasi Sistem*.
+  2. Dasar pertimbangan logis heuristik sistem.
+  3. Pernyataan jaminan bahwa sistem menghargai independensi profesional pengguna.
+  4. Dua pilihan aksi yang jelas:
+     - **`Gunakan Saran Sistem (${suggestedStatus})`**: Menyelaraskan pilihan radio dengan rekomendasi sistem dan melanjutkan ke konfirmasi.
+     - **`Pertahankan Pilihan Saya (${userStatus})`**: Mempertahankan keputusan mandiri pengguna dan melanjutkan ke konfirmasi penyerahan tanpa hambatan.
+
+### 3.5 Jendela Waktu Penyerahan & Status Ketepatan Waktu (FR-26 & AC-25)
+Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness Badge*) yang bereaksi secara real-time:
+- **Tepat Waktu (*On-Time*):** Penyerahan dilakukan sebelum atau tepat pukul 18:00 WIB (Pill Hijau).
+- **Masa Tenggang (*Grace Period*):** Penyerahan dilakukan antara pukul 18:00 – 18:30 WIB (Pill Kuning/Amber).
+- **Terlambat (*Late Submission*):** Penyerahan melewati batas akhir 18:30 WIB (Pill Merah).
+
+### 3.6 Penjelasan Risiko Harian Tingkat Hari (FR-10 Mandate)
 - Jika Final Status ditetapkan sebagai **`AMBER`** atau **`RED`**, field `Penjelasan Risiko atau Kendala Tingkat Hari` menjadi **WAJIB DIISI**.
 - Penjelasan ini mencakup evaluasi holistik harian (misal: penundaan rilis dari vendor eksternal, gangguan infrastruktur, atau kendala kapasitas tim).
 - Form akan memblokir pengiriman dan menyorot input jika penjelasan risiko kosong.
 
-### 3.5 Keterhubungan Tomorrow Priority ke Halaman 02 (FR-52)
+### 3.7 Keterhubungan Tomorrow Priority ke Halaman 02 (FR-52)
 - Input `Tomorrow Priority` bersifat opsional.
 - Jika diisi, catatan ini disimpan ke `localStorage: workpulse_tomorrow_priority`.
 - Pada Halaman 02 esok harinya, catatan ini langsung ditampilkan sebagai **Embedded Context Hint Banner** tepat di atas Slot Komitmen 1. Catatan ini murni referensi kontekstual dan tidak menjadi komitmen otomatis.
 
-### 3.6 Penguncian Baseline EOD & Protokol Koreksi
+### 3.8 Penguncian Baseline EOD & Protokol Koreksi
 - Setelah EOD diserahkan, status halaman berubah menjadi **`Diserahkan · Terkunci`**.
 - Banner hijau locked muncul di bagian atas, seluruh field input dinonaktifkan (`disabled`), dan tombol submit dinonaktifkan.
 - Jika terdapat kekeliruan pencatatan data pasca penutupan, perubahan wajib diajukan melalui rute **Halaman 16b: EOD Correction Request**.
 
 ---
 
-## 4. KATALOG 10 SKENARIO PENGUJIAN SISTEM (TEST CASES)
+## 4. KATALOG 12 SKENARIO PENGUJIAN SISTEM (TEST CASES)
 
 | ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respon Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
@@ -121,9 +141,11 @@ Sistem menyediakan pemandu heuristik (*system suggested status*) yang bereaksi l
 | **TC-05** | Final Status AMBER Tanpa Alasan | Memilih radio `AMBER`, textarea penjelasan risiko harian kosong | Form memblokir tombol submit dan memunculkan toast "Penjelasan risiko harian wajib diisi untuk status AMBER/RED". |
 | **TC-06** | Final Status AMBER Lengkap | Memilih radio `AMBER` dan mengisi penjelasan risiko harian secara memadai | Field valid, status badge di Panel 1 otomatis sinkron menjadi `AMBER (Perhatian)`. |
 | **TC-07** | Simpan Draf Lokal | Mengisi sebagian outcome lalu mengklik tombol [Simpan Draf] | Data tersimpan ke `localStorage: workpulse_eod_draft`, toast hijau muncul, data tidak hilang saat reload. |
-| **TC-08** | Input Tomorrow Priority | Mengisi teks prioritas esok hari pada field opsional | Teks tersimpan ke `localStorage: workpulse_tomorrow_priority` dan siap dibaca oleh Halaman 02. |
+| **TC-08** | Input Tomorrow Priority & Evidence Link | Mengisi prioritas esok hari dan tautan URL bukti kerja (PR Git / Doc) | Teks tersimpan ke `localStorage` dan siap dibaca oleh Halaman 02 serta tersimpan di payload evaluasi. |
 | **TC-09** | Penyerahan Sukses & Penguncian | Memvalidasi seluruh field lalu mengonfirmasi submit di modal | Modal sukses muncul, status halaman terkunci (`locked`), seluruh form disabled, banner terkunci aktif. |
 | **TC-10** | Penanganan 0 Additional Work | `localStorage` additional work kosong | Panel 3 menampilkan Horizontal Mini-Strip ramping nan elegan tanpa error. |
+| **TC-11** | Inkonsistensi Status — Pertahankan Pilihan (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `AMBER` + alasan risiko | Sistem memunculkan `ValidationPromptModal`. Pengguna klik [Pertahankan Pilihan Saya], pilihan AMBER dipertahankan tanpa mutasi diam-diam, modal konfirmasi muncul. |
+| **TC-12** | Inkonsistensi Status — Adopsi Rekomendasi (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `RED` | Sistem memunculkan `ValidationPromptModal`. Pengguna klik [Gunakan Saran Sistem], radio otomatis beralih ke `GREEN`, modal konfirmasi muncul dengan status `GREEN`. |
 
 ---
 
@@ -145,24 +167,28 @@ Sistem menyediakan pemandu heuristik (*system suggested status*) yang bereaksi l
       "sourceId": "c1",
       "outcome": "Completed",
       "continuation": "Do Not Continue",
-      "continuationReason": null
+      "continuationReason": null,
+      "evidenceLink": "https://github.com/company/repo/pull/142"
     },
     {
       "sourceType": "MORNING_COMMITMENT",
       "sourceId": "c2",
       "outcome": "Partially Completed",
       "continuation": "Continue",
-      "continuationReason": "Perlu pengujian lanjutan pada endpoint history setelah skema disetujui."
+      "continuationReason": "Perlu pengujian lanjutan pada endpoint history setelah skema disetujui.",
+      "evidenceLink": null
     },
     {
       "sourceType": "ADDITIONAL_WORK",
       "sourceId": "a1",
       "outcome": "Completed",
       "continuation": "Do Not Continue",
-      "continuationReason": null
+      "continuationReason": null,
+      "evidenceLink": "https://company.atlassian.net/browse/HOTFIX-881"
     }
   ]
 }
+```
 ```
 
 #### Respons Sukses Server (HTTP 200 OK):

@@ -1029,6 +1029,53 @@
       gap: 10px;
     }
 
+    /* Status Mismatch Validation Modal (FR-14 & AC-39: Anti-Silent-Mutation) */
+    .mismatch-comparison-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: var(--color-surface-subtle);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin: 14px 0;
+      gap: 12px;
+    }
+
+    .mismatch-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .mismatch-label {
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-secondary);
+    }
+
+    .mismatch-arrow {
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+    }
+
+    .mismatch-rationale-box {
+      background: #FFFDF5;
+      border: 1px solid #E8C77A;
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #7A4B00;
+      line-height: 1.5;
+    }
+
     /* Toast Notification */
     .toast-box {
       position: fixed;
@@ -1294,9 +1341,14 @@
                 <div class="context-subtext" id="workday-type-txt">Hari Kerja Aktif</div>
               </div>
               <div class="context-item">
-                <div class="context-label">Jendela EOD Outcome</div>
+                <div class="context-label">Jendela Penyerahan EOD</div>
                 <div class="context-value">16:30 – 18:00 WIB</div>
-                <div class="context-subtext">Evaluasi Capaian Harian</div>
+                <div class="context-subtext" id="submission-window-wrap">
+                  <span class="pill green" id="submission-window-pill" style="font-size: 11px; padding: 2px 7px;">
+                    <span class="status-indicator-dot"></span>
+                    <span id="submission-window-txt">Tepat Waktu (On-Time)</span>
+                  </span>
+                </div>
               </div>
               <div class="context-item">
                 <div class="context-label">Status Evaluasi</div>
@@ -1476,6 +1528,60 @@
       </footer>
     </main>
 
+  </div>
+
+  <!-- ==============================================================
+       MODAL VALIDASI INKONSISTENSI STATUS (FR-14 & AC-39: ANTI-SILENT-MUTATION)
+       ============================================================== -->
+  <div class="modal-backdrop" id="modal-status-mismatch" role="dialog" aria-modal="true" aria-labelledby="modal-mismatch-title">
+    <div class="modal-card">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="pill amber" style="font-size: 11px; padding: 2px 8px;">Pemberitahuan Rekomendasi</span>
+        <span style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #7A4B00;">Kesesuaian Status Harian</span>
+      </div>
+      <h3 class="modal-title" id="modal-mismatch-title">Perbedaan Pilihan Status Harian</h3>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px;">
+          Pilihan Final Status Anda berbeda dari rekomendasi kalkulasi sistem berdasarkan evaluasi capaian tugas hari ini:
+        </p>
+
+        <div class="mismatch-comparison-box">
+          <div class="mismatch-side">
+            <div class="mismatch-label">Pilihan Anda:</div>
+            <span class="pill green" id="mismatch-user-pill">
+              <span class="status-indicator-dot"></span>
+              <span id="mismatch-user-txt">GREEN</span>
+            </span>
+          </div>
+          <div class="mismatch-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+          <div class="mismatch-side">
+            <div class="mismatch-label">Rekomendasi Sistem:</div>
+            <span class="pill red" id="mismatch-suggested-pill">
+              <span class="status-indicator-dot"></span>
+              <span id="mismatch-suggested-txt">RED</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="mismatch-rationale-box">
+          <strong>Dasar Rekomendasi Sistem:</strong>
+          <div id="mismatch-rationale-desc" style="margin-top: 4px; color: var(--color-text-secondary);">
+            Sebanyak 50% atau lebih komitmen hari ini berstatus Not Completed/Cancelled.
+          </div>
+        </div>
+
+        <div style="font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); margin-top: 14px; background: #F8FAF9; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle);">
+          <strong>Prinsip Anti-Silent Mutation:</strong> Sistem tidak mengubah status Anda secara otomatis. Anda berhak mempertahankan keputusan profesional Anda atau menyelaraskan dengan rekomendasi sistem.
+        </div>
+      </div>
+      <div class="modal-actions" style="flex-wrap: wrap; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn btn-secondary" id="btn-mismatch-cancel">Periksa Kembali</button>
+        <button type="button" class="btn btn-secondary" id="btn-mismatch-keep" style="border-color: #A9C7BC; color: var(--color-brand-primary);">Pertahankan Pilihan Saya</button>
+        <button type="button" class="btn btn-primary" id="btn-mismatch-adopt">Gunakan Saran Sistem</button>
+      </div>
+    </div>
   </div>
 
   <!-- ==============================================================
@@ -1736,6 +1842,10 @@
         <span class="pill neutral" style="font-size: 11.5px;">${item.reasonBadge}</span>
       ` : '');
 
+      const carryOverBadge = (item.carryOverDays && item.carryOverDays >= 2) ? `
+        <span class="pill amber" style="font-size: 11px; padding: 2px 7px;">Carry-over Hari ke-${item.carryOverDays}</span>
+      ` : '';
+
       card.innerHTML = `
         <div class="eod-card-head">
           <div class="eod-card-title">
@@ -1745,6 +1855,7 @@
             </span>
           </div>
           <div class="eod-card-meta">
+            ${carryOverBadge}
             ${headerMetaBadge}
             <span class="pill neutral" style="font-size: 11px;">Terkunci</span>
           </div>
@@ -1797,6 +1908,15 @@
               <span class="required-mark">*</span>
             </div>
             <textarea class="form-textarea reason-textarea" id="reason-${item.id}" placeholder="Jelaskan alasan pembatalan atau pertimbangan mengapa pekerjaan ini perlu dilanjutkan esok hari...">${item.reason || ''}</textarea>
+          </div>
+
+          <!-- Optional Evidence Link Input (FR-08) -->
+          <div class="field-group" style="margin-top: 12px;">
+            <label class="field-label" for="link-${item.id}">
+              <span>Tautan Bukti Kerja / Deliverable</span>
+              <span style="font-size: 11.5px; font-weight: 500; color: var(--color-text-secondary);">(Opsional — PR Git, Dokumen, Tiket)</span>
+            </label>
+            <input type="url" class="form-input evidence-input" id="link-${item.id}" placeholder="https://github.com/... atau https://docs.google.com/..." value="${item.link || ''}">
           </div>
         </div>
       `;
@@ -1866,25 +1986,42 @@
       }
     }
 
-    // Heuristic Suggested Status (FR-10 Helper)
+    // Deterministic Heuristic Suggestion Engine (FR-13 & AC-38, ADR-013)
+    let currentSuggestedStatus = 'NONE';
+    let currentSuggestedReason = '';
+
     function calculateSuggestedStatus() {
       const allCards = $$('.eod-card');
       if (allCards.length === 0) return;
 
-      let hasNotCompleted = false;
-      let hasPartially = false;
-      let allCompleted = true;
       let evaluatedCount = 0;
+      let completedCount = 0;
+      let partiallyCount = 0;
+      let notCompletedCount = 0;
+      let cancelledCount = 0;
+      let hasCarryOver2Days = false;
+      let hasActiveBlocker = false;
 
       allCards.forEach(card => {
+        const id = card.dataset.itemId;
         const outcome = card.querySelector('.outcome-select').value;
+        const continuation = card.querySelector('.continuation-select').value;
+
+        // Check carry-over or blocker metadata
+        const itemData = [...morningList, ...additionalList].find(i => i.id === id);
+        if (itemData && itemData.carryOverDays >= 2) {
+          hasCarryOver2Days = true;
+        }
+        if (itemData && (itemData.blockerInfo || itemData.initialRisk === 'RED')) {
+          hasActiveBlocker = true;
+        }
+
         if (outcome) {
           evaluatedCount++;
-          if (outcome !== 'Completed') allCompleted = false;
-          if (outcome === 'Partially Completed') hasPartially = true;
-          if (outcome === 'Not Completed' || outcome === 'Cancelled') hasNotCompleted = true;
-        } else {
-          allCompleted = false;
+          if (outcome === 'Completed') completedCount++;
+          else if (outcome === 'Partially Completed') partiallyCount++;
+          else if (outcome === 'Not Completed') notCompletedCount++;
+          else if (outcome === 'Cancelled') cancelledCount++;
         }
       });
 
@@ -1892,25 +2029,78 @@
       const txt = $('suggested-status-txt');
       const desc = $('suggested-status-desc');
 
+      // Branch 6: Belum ada evaluasi
       if (evaluatedCount === 0) {
+        currentSuggestedStatus = 'NONE';
+        currentSuggestedReason = 'Lengkapi evaluasi capaian seluruh tugas untuk menghitung kalkulasi status akhir secara otomatis.';
         pill.className = 'pill neutral';
-        txt.textContent = 'Belum Ada Isian';
-        desc.textContent = 'Pilih hasil capaian pada kartu di atas untuk memunculkan rekomendasi status sistem.';
+        txt.textContent = 'Menghitung...';
+        desc.textContent = currentSuggestedReason;
         return;
       }
 
-      if (allCompleted) {
-        pill.className = 'pill green';
-        txt.textContent = 'Saran: GREEN';
-        desc.textContent = 'Seluruh komitmen dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala tersisa.';
-      } else if (hasNotCompleted) {
+      const failureRatio = (notCompletedCount + cancelledCount) / evaluatedCount;
+
+      // FR-13: 6 Deterministic Branches
+      if (hasActiveBlocker) {
+        // Branch 1: Kendala Kritis Aktif
+        currentSuggestedStatus = 'RED';
+        currentSuggestedReason = 'Terdapat kendala kritis (Critical Blocker) yang aktif dan memengaruhi penyelesaian komitmen hari ini.';
         pill.className = 'pill red';
         txt.textContent = 'Saran: RED';
-        desc.textContent = 'Terdapat pekerjaan yang belum terselesaikan (Not Completed/Cancelled) sehingga berpotensi memicu risiko.';
-      } else if (hasPartially) {
+        desc.textContent = currentSuggestedReason;
+      } else if (failureRatio >= 0.5) {
+        // Branch 2: >= 50% Not Completed atau Cancelled
+        currentSuggestedStatus = 'RED';
+        currentSuggestedReason = `Sebanyak ${Math.round(failureRatio * 100)}% tugas hari ini berstatus Belum Selesai (Not Completed) atau Dibatalkan (Cancelled).`;
+        pill.className = 'pill red';
+        txt.textContent = 'Saran: RED';
+        desc.textContent = currentSuggestedReason;
+      } else if (hasCarryOver2Days) {
+        // Branch 3: Carry-over berulang >= 2 hari
+        currentSuggestedStatus = 'AMBER';
+        currentSuggestedReason = 'Terdapat tugas komitmen berulang (carry-over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan.';
         pill.className = 'pill amber';
         txt.textContent = 'Saran: AMBER';
-        desc.textContent = 'Pekerjaan selesai sebagian (Partially Completed) dan dijadwalkan berlanjut ke esok hari.';
+        desc.textContent = currentSuggestedReason;
+      } else if (partiallyCount > 0 || (notCompletedCount + cancelledCount) > 0) {
+        // Branch 4: Partially Completed atau < 50% Not Completed/Cancelled
+        currentSuggestedStatus = 'AMBER';
+        currentSuggestedReason = 'Pekerjaan selesai sebagian (Partially Completed) atau terdapat penundaan tugas yang berlanjut ke esok hari.';
+        pill.className = 'pill amber';
+        txt.textContent = 'Saran: AMBER';
+        desc.textContent = currentSuggestedReason;
+      } else if (completedCount === evaluatedCount) {
+        // Branch 5: Seluruh tugas Completed tanpa kendala
+        currentSuggestedStatus = 'GREEN';
+        currentSuggestedReason = 'Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka.';
+        pill.className = 'pill green';
+        txt.textContent = 'Saran: GREEN';
+        desc.textContent = currentSuggestedReason;
+      }
+    }
+
+    // Live Submission Window Verification (FR-26 & AC-25)
+    function checkSubmissionWindow() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const totalMinutes = hours * 60 + minutes;
+
+      const pill = $('submission-window-pill');
+      const txt = $('submission-window-txt');
+      if (!pill || !txt) return;
+
+      // Batas waktu: 18:00 WIB (1080 menit), Grace period: 18:30 WIB (1110 menit)
+      if (totalMinutes <= 1080) {
+        pill.className = 'pill green';
+        txt.textContent = 'Tepat Waktu (On-Time)';
+      } else if (totalMinutes <= 1110) {
+        pill.className = 'pill amber';
+        txt.textContent = 'Masa Tenggang (Grace Period)';
+      } else {
+        pill.className = 'pill red';
+        txt.textContent = 'Terlambat (Late Submission)';
       }
     }
 
@@ -1967,7 +2157,7 @@
       showToast('Draf evaluasi EOD dan catatan prioritas berhasil disimpan!');
     }
 
-    // Gather payload from UI
+    // Gather payload from UI (FR-08: Termasuk tautan bukti kerja opsional)
     function gatherPayload() {
       const morningData = [];
       $('morning-cards-container').querySelectorAll('.eod-card').forEach(card => {
@@ -1975,7 +2165,8 @@
           id: card.dataset.itemId,
           outcome: card.querySelector('.outcome-select').value,
           continuation: card.querySelector('.continuation-select').value,
-          reason: card.querySelector('.reason-textarea') ? card.querySelector('.reason-textarea').value : ''
+          reason: card.querySelector('.reason-textarea') ? card.querySelector('.reason-textarea').value : '',
+          evidenceLink: card.querySelector('.evidence-input') ? card.querySelector('.evidence-input').value.trim() : ''
         });
       });
 
@@ -1985,7 +2176,8 @@
           id: card.dataset.itemId,
           outcome: card.querySelector('.outcome-select').value,
           continuation: card.querySelector('.continuation-select').value,
-          reason: card.querySelector('.reason-textarea') ? card.querySelector('.reason-textarea').value : ''
+          reason: card.querySelector('.reason-textarea') ? card.querySelector('.reason-textarea').value : '',
+          evidenceLink: card.querySelector('.evidence-input') ? card.querySelector('.evidence-input').value.trim() : ''
         });
       });
 
@@ -2074,29 +2266,63 @@
       return valid;
     }
 
-    // Modal Confirmation Handlers
+    // Modal Confirmation & Mismatch Handlers (FR-14 / AC-39: Anti-Silent-Mutation)
     function setupSubmission() {
       $('btn-submit-eod').onclick = () => {
         if (!validateEodForm()) return;
 
-        // Populate modal recap
         const payload = gatherPayload();
-        $('recap-final-status').textContent = payload.finalStatus;
-        $('recap-final-status').style.color = payload.finalStatus === 'GREEN' ? '#145A36' : (payload.finalStatus === 'AMBER' ? '#7A4B00' : '#991B1B');
+        const selectedStatus = payload.finalStatus;
 
-        let completedCount = 0;
-        let continueCount = 0;
-        [...payload.morningData, ...payload.additionalData].forEach(i => {
-          if (i.outcome === 'Completed') completedCount++;
-          if (i.continuation === 'Continue') continueCount++;
-        });
+        // Anti-Silent-Mutation Check (FR-14 & AC-39 & ADR-013)
+        if (currentSuggestedStatus !== 'NONE' && selectedStatus !== currentSuggestedStatus) {
+          // Buka modal peringatan inkonsistensi status tanpa mengubah pilihan user secara diam-diam
+          $('mismatch-user-txt').textContent = selectedStatus;
+          $('mismatch-user-pill').className = `pill ${selectedStatus.toLowerCase()}`;
+          $('mismatch-suggested-txt').textContent = currentSuggestedStatus;
+          $('mismatch-suggested-pill').className = `pill ${currentSuggestedStatus.toLowerCase()}`;
+          $('mismatch-rationale-desc').textContent = currentSuggestedReason;
+          $('btn-mismatch-adopt').textContent = `Gunakan Saran Sistem (${currentSuggestedStatus})`;
+          $('btn-mismatch-keep').textContent = `Pertahankan Pilihan Saya (${selectedStatus})`;
+          $('modal-status-mismatch').classList.add('show');
+          return;
+        }
 
-        $('recap-completed-count').textContent = `${completedCount} Tugas`;
-        $('recap-continue-count').textContent = `${continueCount} Tugas`;
-
-        $('modal-confirm').classList.add('show');
+        // Jika selaras, langsung buka modal konfirmasi
+        openConfirmationModal(payload);
       };
 
+      // Mismatch modal actions
+      $('btn-mismatch-cancel').onclick = () => {
+        $('modal-status-mismatch').classList.remove('show');
+      };
+
+      $('btn-mismatch-adopt').onclick = () => {
+        $('modal-status-mismatch').classList.remove('show');
+        // Adopsi rekomendasi sistem
+        const radioToAdopt = document.querySelector(`input[name="final-status-choice"][value="${currentSuggestedStatus}"]`);
+        if (radioToAdopt) {
+          radioToAdopt.checked = true;
+          radioToAdopt.dispatchEvent(new Event('change'));
+        }
+        // Jika status adopsi adalah AMBER atau RED, pastikan penjelasan risiko terisi
+        if ((currentSuggestedStatus === 'AMBER' || currentSuggestedStatus === 'RED') && !$('daily-risk-explanation').value.trim()) {
+          showToast(`Mohon lengkapi penjelasan risiko harian untuk status ${currentSuggestedStatus}.`);
+          $('daily-risk-explanation').focus();
+          return;
+        }
+        const updatedPayload = gatherPayload();
+        openConfirmationModal(updatedPayload);
+      };
+
+      $('btn-mismatch-keep').onclick = () => {
+        // Pertahankan pilihan user murni (Zero Silent Mutation)
+        $('modal-status-mismatch').classList.remove('show');
+        const payload = gatherPayload();
+        openConfirmationModal(payload);
+      };
+
+      // Modal Confirmation Actions
       $('btn-cancel-modal').onclick = () => {
         $('modal-confirm').classList.remove('show');
       };
@@ -2109,6 +2335,24 @@
       $('btn-stay-page').onclick = () => {
         $('modal-success').classList.remove('show');
       };
+    }
+
+    // Helper untuk membuka modal konfirmasi pengiriman
+    function openConfirmationModal(payload) {
+      $('recap-final-status').textContent = payload.finalStatus;
+      $('recap-final-status').style.color = payload.finalStatus === 'GREEN' ? '#145A36' : (payload.finalStatus === 'AMBER' ? '#7A4B00' : '#991B1B');
+
+      let completedCount = 0;
+      let continueCount = 0;
+      [...payload.morningData, ...payload.additionalData].forEach(i => {
+        if (i.outcome === 'Completed') completedCount++;
+        if (i.continuation === 'Continue') continueCount++;
+      });
+
+      $('recap-completed-count').textContent = `${completedCount} Tugas`;
+      $('recap-continue-count').textContent = `${continueCount} Tugas`;
+
+      $('modal-confirm').classList.add('show');
     }
 
     // Execute Final Submit
@@ -2183,6 +2427,7 @@
     // On Load Lifecycle
     window.addEventListener('DOMContentLoaded', () => {
       loadActiveUser();
+      checkSubmissionWindow();
       initData();
       renderCards();
       initFinalStatusRadios();
