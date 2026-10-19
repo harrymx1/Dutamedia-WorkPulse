@@ -602,6 +602,11 @@
       border-top-right-radius: var(--radius-md);
     }
 
+    .panel.is-collapsed .panel-head {
+      border-bottom: none;
+      border-radius: var(--radius-md);
+    }
+
     .panel-body {
       padding: 20px 22px;
     }
@@ -1147,24 +1152,25 @@
       display: block;
     }
 
-    /* Copy-Forward Draft Collection Panel (UF-08) - Compact Horizontal Rows */
+    /* Copy-Forward Draft Collection Panel (UF-08) */
     .copy-forward-box {
       border: 1px solid var(--color-border-subtle);
       background: #FFFFFF;
       border-radius: var(--radius-md);
-      padding: 16px 18px 14px;
-      margin-bottom: 22px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
     }
 
     .copy-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 8px 12px;
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      column-gap: 12px;
+      row-gap: 6px;
+      align-items: start;
+      padding: 14px 16px;
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-sm);
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       background: var(--color-surface);
       transition: all 0.15s ease-in-out;
     }
@@ -1174,97 +1180,51 @@
       background: var(--color-surface-subtle);
     }
 
-    .copy-item-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
+    .copy-item-main {
+      display: contents;
     }
 
     .copy-item input.copy-checkbox {
-      margin: 0;
-      width: 16px;
-      height: 16px;
+      grid-column: 1;
+      grid-row: 1;
+      margin-top: 3px;
+      width: 17px;
+      height: 17px;
       cursor: pointer;
       accent-color: var(--color-brand-primary);
-      flex-shrink: 0;
-    }
-
-    .copy-item-content {
-      flex: 1;
-      min-width: 0;
     }
 
     .copy-title {
-      font-size: 13px;
+      grid-column: 2;
+      grid-row: 1;
+      font-size: 13.5px;
       font-weight: 700;
       color: var(--color-text-primary);
-      line-height: 1.35;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .copy-subtext {
-      font-size: 11.5px;
-      color: var(--color-text-secondary);
-      margin-top: 2px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
       line-height: 1.4;
     }
 
-    .copy-subtext-item {
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .copy-subtext-sep {
-      color: #CBD5E1;
-      font-size: 10px;
-    }
-
-    .copy-subtext-note {
-      font-style: italic;
-      color: #334155;
-    }
-
-    .copy-amber-warning-inline {
-      color: #B45309;
-      font-weight: 600;
-      font-size: 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      background: #FEF3C7;
-      padding: 1px 6px;
-      border-radius: 4px;
-    }
-
     .copy-item-side {
+      grid-column: 3;
+      grid-row: 1;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       flex-shrink: 0;
     }
 
     .btn-stop-draft {
-      height: 24px;
-      padding: 0 8px;
+      height: 28px;
+      padding: 0 10px;
       border-radius: var(--radius-sm);
       border: 1px solid #FECACA;
       background: #FFFBFB;
       color: #DC2626;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 11.5px;
+      font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       transition: all 0.15s ease-in-out;
     }
 
@@ -1272,6 +1232,84 @@
       color: #B91C1C;
       border-color: #F87171;
       background: #FEF2F2;
+    }
+
+    /* Mini-Tag / Chip Metadata & Callout Catatan (Memanjang Penuh) */
+    .copy-meta {
+      grid-column: 2 / -1;
+      width: 100%;
+      font-size: 11px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #F1F5F9;
+      border: 1px solid #E2E8F0;
+      border-radius: 4px;
+      padding: 2.5px 7px;
+      font-size: 11px;
+    }
+
+    .meta-label {
+      color: #64748B;
+      font-weight: 500;
+    }
+
+    .meta-val {
+      color: #0F172A;
+      font-weight: 700;
+    }
+
+    .meta-divider {
+      display: none;
+    }
+
+    .copy-note {
+      grid-column: 2 / -1;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 11.5px;
+      margin-top: 8px;
+      padding: 7px 11px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .copy-note .note-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .copy-note .note-val {
+      color: #1E293B;
+      font-style: italic;
+      line-height: 1.45;
+    }
+
+    .copy-amber-warning {
+      grid-column: 2 / -1;
+      width: 100%;
+      font-size: 11.5px;
+      color: #B45309;
+      font-weight: 600;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     /* Footer Action Bar */
@@ -1539,20 +1577,42 @@
       
       /* Kartu Draf Pool Responsif Smartphone (<= 680px) */
       .copy-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 9px 11px;
-      }
-      .copy-item-left {
-        align-items: flex-start;
+        grid-template-columns: 20px 1fr;
+        column-gap: 12px;
+        row-gap: 6px;
+        align-items: start;
+        padding: 12px 14px;
       }
       .copy-item input.copy-checkbox {
+        grid-column: 1;
+        grid-row: 1;
         margin-top: 2px;
       }
+      .copy-title {
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .copy-meta {
+        grid-column: 2 / -1;
+        width: 100%;
+      }
+      .copy-note {
+        grid-column: 2 / -1;
+        width: 100%;
+      }
+      .copy-amber-warning {
+        grid-column: 2 / -1;
+        width: 100%;
+      }
       .copy-item-side {
-        justify-content: flex-end;
-        padding-top: 6px;
+        grid-column: 1 / -1;
+        grid-row: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 6px;
+        padding-top: 8px;
         border-top: 1px dashed var(--color-border-subtle);
       }
       
@@ -1880,112 +1940,118 @@
           </div>
         </div>
 
-        <!-- Copy-Forward Draft Collection Panel (UF-08 / FR-11) -->
-        <div class="copy-forward-box" id="copy-forward-section">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <!-- Copy-Forward Draft Collection Panel (UF-08 / FR-11) - Kolapsibel Mirip Halaman 3 -->
+        <section class="panel is-collapsed" id="copy-forward-section" style="margin-bottom: 24px;">
+          <div class="panel-head" style="cursor: pointer;" id="copy-toggle-head">
             <div>
               <div class="section-kicker">Lanjutan Hari Kerja Sebelumnya</div>
-              <h2 style="font-size: 15px;">Draf Pekerjaan Berlanjut dari Kemarin</h2>
+              <h2>Draf Pekerjaan Berlanjut dari Kemarin</h2>
             </div>
-            <span class="pill brand" id="copy-available-pill">3 Item Tersedia</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="pill brand" id="copy-available-pill">3 Item Tersedia</span>
+              <button type="button" class="btn btn-secondary" id="btn-toggle-copy" aria-expanded="false" style="padding: 5px 12px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-sm); height: 30px;">
+                <span id="btn-toggle-copy-txt">Lihat Draf</span>
+                <svg id="copy-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s ease;">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
-          <p style="font-size: 12.5px; color: var(--color-text-secondary); margin-bottom: 10px;">
-            Pekerjaan dari evaluasi kemarin yang ditandai masih berlanjut dapat langsung dipilih untuk mengisi slot komitmen hari ini:
-          </p>
-          <div id="copy-forward-list">
-            <!-- Item 1 (Kasus 1: Sempat tertunda 1 hari / kemarin tidak masuk komitmen) -->
-            <div class="copy-item" id="draft-item-1">
-              <div class="copy-item-left">
+          <div class="panel-body" id="copy-panel-body" style="display: none;">
+            <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 14px;">
+              Pekerjaan dari evaluasi kemarin yang ditandai masih berlanjut dapat langsung dipilih untuk mengisi slot komitmen hari ini:
+            </p>
+            <div id="copy-forward-list">
+              <!-- Item 1 (Kasus 1: Sempat tertunda 1 hari / kemarin tidak masuk komitmen) -->
+              <div class="copy-item" id="draft-item-1">
                 <input type="checkbox" class="copy-checkbox" data-text="Finalisasi integrasi webhook payment gateway &amp; unit test" data-risk="GREEN" data-carry="1">
-                <div class="copy-item-content">
+                <div class="copy-item-main">
                   <div class="copy-title">Finalisasi integrasi webhook payment gateway &amp; unit test</div>
-                  <div class="copy-subtext">
-                    <span class="copy-subtext-item">Senin, 12 Okt</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-item">Sebagian Selesai</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-item">Total 1 Hari Kerja</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-note">"Menunggu verifikasi webhook sandbox"</span>
+                  <div class="copy-meta">
+                    <span class="meta-item"><span class="meta-label">Terakhir:</span> <span class="meta-val">Senin, 12 Okt</span></span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><span class="meta-label">Status:</span> <span class="meta-val">Sebagian Selesai</span></span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><span class="meta-label">Total Pengerjaan:</span> <span class="meta-val">1 Hari Kerja</span></span>
+                  </div>
+                  <div class="copy-note">
+                    <span class="note-label">Catatan:</span>
+                    <span class="note-val">"Menunggu verifikasi webhook sandbox"</span>
                   </div>
                 </div>
+                <div class="copy-item-side">
+                  <span class="pill amber" style="font-size: 11px;">Tertunda</span>
+                  <button type="button" class="btn-stop-draft" data-target="draft-item-1" data-title="Finalisasi integrasi webhook payment gateway &amp; unit test" title="Hentikan pekerjaan ini secara permanen agar tidak muncul lagi">
+                    <span>Hentikan Pekerjaan</span>
+                  </button>
+                </div>
               </div>
-              <div class="copy-item-side">
-                <span class="pill amber" style="font-size: 11px; padding: 2.5px 8px;">Tertunda</span>
-                <button type="button" class="btn-stop-draft" data-target="draft-item-1" data-title="Finalisasi integrasi webhook payment gateway &amp; unit test" title="Hentikan pekerjaan ini secara permanen agar tidak muncul lagi">
-                  <span>Hentikan Pekerjaan</span>
-                </button>
-              </div>
-            </div>
 
-            <!-- Item 2 (Kasus 2: Dikerjakan aktif berurutan >= 2 hari) -->
-            <div class="copy-item" id="draft-item-2">
-              <div class="copy-item-left">
+              <!-- Item 2 (Kasus 2: Dikerjakan aktif berurutan >= 2 hari) -->
+              <div class="copy-item" id="draft-item-2">
                 <input type="checkbox" class="copy-checkbox" data-text="Penyelesaian investigasi memory leak service otentikasi" data-risk="AMBER" data-carry="2">
-                <div class="copy-item-content">
-                  <div class="copy-title">
-                    <span>Penyelesaian investigasi memory leak service otentikasi</span>
-                    <span class="copy-amber-warning-inline">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                      Minimal AMBER
-                    </span>
+                <div class="copy-item-main">
+                  <div class="copy-title">Penyelesaian investigasi memory leak service otentikasi</div>
+                  <div class="copy-meta">
+                    <span class="meta-item"><span class="meta-label">Terakhir:</span> <span class="meta-val">Selasa, 13 Okt</span></span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><span class="meta-label">Status:</span> <span class="meta-val">Belum Selesai</span></span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><span class="meta-label">Total Pengerjaan:</span> <span class="meta-val">2 Hari Kerja</span></span>
                   </div>
-                  <div class="copy-subtext">
-                    <span class="copy-subtext-item">Selasa, 13 Okt</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-item">Belum Selesai</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-item">Total 2 Hari Kerja</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-note">"Analisis dump log membutuhkan waktu tambahan"</span>
+                  <div class="copy-note">
+                    <span class="note-label">Catatan:</span>
+                    <span class="note-val">"Analisis dump log membutuhkan waktu tambahan"</span>
+                  </div>
+                  <div class="copy-amber-warning">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span>Status awal minimal AMBER (tidak dapat dilanjutkan dengan status GREEN).</span>
                   </div>
                 </div>
+                <div class="copy-item-side">
+                  <span class="pill amber" style="font-size: 11px;">Berlanjut</span>
+                  <button type="button" class="btn-stop-draft" data-target="draft-item-2" data-title="Penyelesaian investigasi memory leak service otentikasi" title="Hentikan pekerjaan ini secara permanen agar tidak muncul lagi">
+                    <span>Hentikan Pekerjaan</span>
+                  </button>
+                </div>
               </div>
-              <div class="copy-item-side">
-                <span class="pill amber" style="font-size: 11px; padding: 2.5px 8px;">Berlanjut</span>
-                <button type="button" class="btn-stop-draft" data-target="draft-item-2" data-title="Penyelesaian investigasi memory leak service otentikasi" title="Hentikan pekerjaan ini secara permanen agar tidak muncul lagi">
-                  <span>Hentikan Pekerjaan</span>
-                </button>
-              </div>
-            </div>
 
-            <!-- Item 3 (Kasus 3: Riwayat dikerjakan 7-9 Okt, sempat tertunda kemarin) -->
-            <div class="copy-item" id="draft-item-3">
-              <div class="copy-item-left">
+              <!-- Item 3 (Kasus 3: Riwayat dikerjakan 7-9 Okt, sempat tertunda kemarin) -->
+              <div class="copy-item" id="draft-item-3">
                 <input type="checkbox" class="copy-checkbox" data-text="Refactor query &amp; migrasi sinkronisasi data transaksi" data-risk="AMBER" data-carry="3">
-                <div class="copy-item-content">
-                  <div class="copy-title">
-                    <span>Refactor query &amp; migrasi sinkronisasi data transaksi</span>
-                    <span class="copy-amber-warning-inline">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                      Minimal AMBER
-                    </span>
+                <div class="copy-item-main">
+                  <div class="copy-title">Refactor query &amp; migrasi sinkronisasi data transaksi</div>
+                  <div class="copy-meta">
+                    <span class="meta-item"><span class="meta-label">Terakhir:</span> <span class="meta-val">Jumat, 9 Okt</span></span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><span class="meta-label">Status:</span> <span class="meta-val">Sebagian Selesai</span></span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><span class="meta-label">Total Pengerjaan:</span> <span class="meta-val">3 Hari Kerja</span></span>
                   </div>
-                  <div class="copy-subtext">
-                    <span class="copy-subtext-item">Jumat, 9 Okt</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-item">Sebagian Selesai</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-item">Total 3 Hari Kerja</span>
-                    <span class="copy-subtext-sep">·</span>
-                    <span class="copy-subtext-note">"Perlu refactor query sebelum sinkronisasi dijalankan"</span>
+                  <div class="copy-note">
+                    <span class="note-label">Catatan:</span>
+                    <span class="note-val">"Perlu refactor query sebelum sinkronisasi dijalankan"</span>
+                  </div>
+                  <div class="copy-amber-warning">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span>Status awal minimal AMBER (tidak dapat dilanjutkan dengan status GREEN).</span>
                   </div>
                 </div>
-              </div>
-              <div class="copy-item-side">
-                <span class="pill amber" style="font-size: 11px; padding: 2.5px 8px;">Tertunda</span>
-                <button type="button" class="btn-stop-draft" data-target="draft-item-3" data-title="Refactor query &amp; migrasi sinkronisasi data transaksi" title="Hentikan pekerjaan ini secara permanen agar tidak muncul lagi">
-                  <span>Hentikan Pekerjaan</span>
-                </button>
+                <div class="copy-item-side">
+                  <span class="pill amber" style="font-size: 11px;">Tertunda</span>
+                  <button type="button" class="btn-stop-draft" data-target="draft-item-3" data-title="Refactor query &amp; migrasi sinkronisasi data transaksi" title="Hentikan pekerjaan ini secara permanen agar tidak muncul lagi">
+                    <span>Hentikan Pekerjaan</span>
+                  </button>
+                </div>
               </div>
             </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+              <button class="btn btn-secondary" type="button" id="btn-apply-copy">
+                <span>Gunakan Item Terpilih ke Slot Hari Ini</span>
+              </button>
+            </div>
           </div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-            <button class="btn btn-secondary" type="button" id="btn-apply-copy" style="padding: 6px 14px; font-size: 12.5px;">
-              <span>Gunakan Item Terpilih ke Slot Hari Ini</span>
-            </button>
-          </div>
-        </div>
+        </section>
 
         <!-- Tomorrow Priority Context Note (FR-52, BR-20, US-28 / Non-Binding Context) -->
         <section class="panel panel-memo" id="tomorrow-priority-panel" style="margin-bottom: 24px; background: #FFFDF7; border: 1px solid #F1DEC0; border-left: 4px solid #D97706; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(122, 75, 0, 0.04);">
@@ -2596,7 +2662,45 @@
         $('zero-reason-custom-group').style.display = isOther ? 'block' : 'none';
       };
 
-      // 6. Penanganan Copy-Forward & Hentikan Pekerjaan
+      // 6. Penanganan Kolapsibel Draf Pekerjaan Berlanjut (Default: Tertutup, Mirip Halaman 3)
+      const copySection = $('copy-forward-section');
+      const copyBody = $('copy-panel-body');
+      const btnToggleCopy = $('btn-toggle-copy');
+      const btnToggleCopyTxt = $('btn-toggle-copy-txt');
+      const copyChevron = $('copy-chevron-icon');
+      const copyHead = $('copy-toggle-head');
+      let isCopyOpen = false;
+
+      function toggleCopyForward() {
+        isCopyOpen = !isCopyOpen;
+        if (isCopyOpen) {
+          copySection.classList.remove('is-collapsed');
+          copyBody.style.display = 'block';
+          btnToggleCopyTxt.textContent = 'Tutup Draf';
+          copyChevron.style.transform = 'rotate(180deg)';
+          btnToggleCopy.setAttribute('aria-expanded', 'true');
+        } else {
+          copySection.classList.add('is-collapsed');
+          copyBody.style.display = 'none';
+          btnToggleCopyTxt.textContent = 'Lihat Draf';
+          copyChevron.style.transform = 'rotate(0deg)';
+          btnToggleCopy.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      if (btnToggleCopy) {
+        btnToggleCopy.onclick = (e) => {
+          e.stopPropagation();
+          toggleCopyForward();
+        };
+      }
+      if (copyHead) {
+        copyHead.onclick = () => {
+          toggleCopyForward();
+        };
+      }
+
+      // Penanganan Hentikan Pekerjaan Draf
       let pendingStopTargetId = null;
 
       // Event listener tombol Hentikan Pekerjaan (Buka Modal)

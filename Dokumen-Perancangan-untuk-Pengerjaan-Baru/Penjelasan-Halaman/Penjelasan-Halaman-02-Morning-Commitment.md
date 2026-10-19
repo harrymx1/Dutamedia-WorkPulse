@@ -41,7 +41,7 @@ Halaman ini tersusun atas 11 blok komponen terintegrasi:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. ZERO COMMITMENT TOGGLE & PANEL ALASAN RESMI (Training, Dinas, Townhall)  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. DRAF PEKERJAAN BERLANJUT (Pool Carry-over dengan Formula Metadata Seragam)│
+│ 6. DRAF PEKERJAAN BERLANJUT (Panel Kolapsibel Default Tertutup, Kartu Asli Callout Abu)│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 7. FOKUS PRIORITAS HARI INI (Catatan Konteks Non-binding dari EOD Kemarin)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -61,7 +61,7 @@ Halaman ini tersusun atas 11 blok komponen terintegrasi:
 
 ## 3. SPESIFIKASI ATURAN BAKU (STANDAR FORMULA SISTEM)
 
-### 3.1 Formula Baku Draf Pekerjaan Berlanjut (Metadata & Badge Status)
+### 3.1 Formula Baku Draf Pekerjaan Berlanjut (Metadata & Desain Kolapsibel)
 Untuk menjaga konsistensi 100% dan menghilangkan ambiguitas serta redundansi, draf carry-over wajib dirender dengan aturan baku berikut:
 
 1. **Badge Status Kanan (Murni Status Kelanjutan):**
@@ -71,11 +71,18 @@ Untuk menjaga konsistensi 100% dan menghilangkan ambiguitas serta redundansi, dr
      - **`Tertunda`** $\rightarrow$ jika pekerjaan kemarin tidak dimasukkan ke komitmen / sempat jeda.
    - *Catatan Penting:* Badge **tidak boleh mencantumkan tanggal atau total hari** (misal bukan *"Tertunda sejak 12 Okt"* atau *"Total 3 Hari"*), karena seluruh rincian tanggal dan akumulasi durasi sudah tertata rapi di baris metadata.
 
-2. **Tata Letak Baris Ramping Terpadu (*Compact Horizontal Rows*):**
-   - **Tinggi Terkendali & Hemat Ruang:** Tinggi per kartu dirampingkan secara drastis dari $\approx 125\text{px}$ menjadi hanya $\approx 46\text{px}$ (menghemat ruang vertikal $\approx 65\%$), sehingga seluruh panel draf tidak lagi memakan layar vertikal berlebih.
-   - **Baris Judul & Warning Inline:** Checkbox di sisi paling kiri, diikuti Judul Pekerjaan tebal, serta badge peringatan aturan sistem (*Minimal AMBER*) yang disematkan secara inline dan ringkas di sebelah judul bila pekerjaan telah berjalan $\ge 2$ hari.
-   - **Subteks Tipis Terpadu:** Seluruh metadata waktu dan catatan evaluasi dipadatkan menjadi subteks 1 baris yang bersih dan elegan di bawah judul (`Tanggal · Status · Total Hari Kerja · "Kutipan Catatan"`), mengeliminasi kotak callout abu-abu tebal yang sebelumnya memakan ruang vertikal tersendiri.
-   - **Sisi Kanan:** Memuat badge status Amber (`Tertunda` / `Berlanjut`) dan tombol aksi merah halus `Hentikan Pekerjaan`. Pada smartphone ($\le 680\text{px}$), sisi kanan ini terlipat rapi ke baris bawah dengan pemisah bertitik.
+2. **Arsitektur Panel Kolapsibel (*Collapsible Accordion by Default*):**
+   - **Tampilan Ringkas Default Tertutup:** Panel draf carry-over dibungkus dalam container `<section class="panel is-collapsed" id="copy-forward-section">`. Saat halaman dimuat, bagian body panel tertutup (`display: none;`), hanya menampilkan strip header ramping setinggi $\approx 50\text{px}$.
+   - **Header Interaktif & Indikator Jelas:** Header menyajikan kicker `Lanjutan Hari Kerja Sebelumnya`, judul utama `Draf Pekerjaan Berlanjut dari Kemarin`, badge jumlah item (`3 Item Tersedia`), serta tombol aksi `#btn-toggle-copy` bertuliskan `Lihat Draf` dengan ikon chevron SVG yang berotasi 180° saat terbuka.
+   - **Penghematan Ruang Layar:** Membebaskan ruang vertikal secara drastis sehingga formulir *Morning Commitment* utama langsung berada dalam pandangan mata karyawan (*above the fold*) tanpa terdorong jauh ke bawah oleh daftar draf carry-over.
+
+3. **Desain Kartu Asli Utuh Saat Dibuka (*Full Context with Callout Note*):**
+   - Ketika panel dibuka oleh pengguna (`Lihat Draf` diklik), seluruh isi kartu ditampilkan dengan desain aslinya yang kaya konteks:
+     - **Checkbox & Judul:** Checkbox seleksi di sisi kiri sejajar dengan judul deliverable pekerjaan.
+     - **Chip Metadata Terstruktur:** Menampilkan baris chip metadata (`📅 Tanggal Mulai`, `🏷️ Status Terakhir`, `⏱️ Total Durasi`).
+     - **Kotak Catatan Callout Abu-abu (`.copy-note`):** Box tersendiri dengan latar abu-abu lembut (`#f8fafc`), border halus, dan label tebal `CATATAN: "..."` yang memuat catatan evaluasi atau alasan pending kemarin secara jelas dan terpisah.
+     - **Peringatan Amber Tegas (`.copy-amber-warning`):** Callout peringatan aturan *Minimal AMBER* jika tugas telah aktif $\ge 2$ hari kerja.
+     - **Aksi Mandiri & Kolektif:** Setiap kartu memiliki tombol merah halus `Hentikan Pekerjaan`, dan di bagian dasar panel terdapat tombol `Gunakan Item Terpilih ke Slot Hari Ini` untuk mentransfer draf ke slot komitmen aktif.
 
 ### 3.2 Aturan Penegakan Risiko Minimal AMBER (*Amber Lock Engine*)
 Sistem secara matematis mengevaluasi atribut `active_days_count` pada setiap pekerjaan:
