@@ -221,6 +221,36 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .ticket-meta-label{font-size:11.5px;color:var(--color-text-secondary);font-weight:600}
 .ticket-meta-value{font-size:13.5px;font-weight:750;color:var(--color-text-primary)}
 
+/* View Tabs Component */
+.view-tabs{display:inline-flex;align-items:center;background:#EDF2F0;padding:4px;border-radius:10px;gap:4px;margin-bottom:24px}
+.view-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;background:transparent;border-radius:8px;font-size:13.5px;font-weight:750;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
+.view-tab:hover{color:var(--color-text-primary);background:rgba(255,255,255,.5)}
+.view-tab.active{background:#fff;color:var(--color-brand-primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--color-brand-tint);color:var(--color-brand-primary);font-size:11.5px;font-weight:800}
+.tab-badge.alert{background:#FEE2E2;color:#991B1B}
+
+/* My Blockers View Styling */
+.my-blockers-view{display:none}
+.my-blockers-view.show{display:block}
+.blockers-filter-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.filter-pills{display:flex;gap:8px;flex-wrap:wrap}
+.filter-pill{padding:7px 15px;border:1px solid var(--color-border-subtle);background:#fff;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
+.filter-pill:hover{border-color:var(--color-border-strong);color:var(--color-text-primary)}
+.filter-pill.active{background:var(--color-brand-primary);color:#fff;border-color:var(--color-brand-primary)}
+.blocker-item-card{background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:22px 24px;margin-bottom:18px;transition:box-shadow .15s ease}
+.blocker-item-card:hover{box-shadow:var(--shadow-modal)}
+.blocker-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.blocker-item-id{font-size:13px;font-weight:800;color:var(--color-brand-primary);letter-spacing:.02em}
+.blocker-item-title{font-size:16.5px;font-weight:800;color:var(--color-text-primary);margin-bottom:5px;line-height:1.35}
+.blocker-item-meta{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--color-text-secondary);flex-wrap:wrap;margin-bottom:14px}
+.resolution-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px 18px;margin-top:14px}
+.resolution-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#166534;margin-bottom:4px}
+.resolution-text{font-size:13.5px;color:#14532D;line-height:1.5}
+.sla-warning-box{background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#92400E;margin-top:14px}
+.blocker-action-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--color-border-subtle);flex-wrap:wrap}
+.empty-blockers{text-align:center;padding:48px 24px;background:#fff;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-card);margin:20px 0}
+.empty-blockers-icon{width:48px;height:48px;border-radius:50%;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;margin:0 auto 14px}
+
 /* Contextual Toast Engine */
 .toast-container{position:fixed;right:24px;bottom:90px;z-index:99;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .toast{max-width:min(420px,calc(100vw - 32px));padding:13px 16px;border-radius:10px;font-size:13.5px;display:none;align-items:center;gap:10px;box-shadow:0 12px 35px rgba(14,33,27,.25);pointer-events:auto;animation:toastIn .2s ease forwards}
@@ -391,8 +421,23 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         </div>
       </div>
 
-      <!-- Form Utama Blocker -->
-      <form id="blockerForm" novalidate>
+      <!-- View Mode Tabs (Beralih antara Buat Baru dan Pantau Blocker Saya) -->
+      <div class="view-tabs" role="tablist" aria-label="Mode Tampilan Halaman Blocker">
+        <button type="button" class="view-tab active" id="tabCreateBlocker" role="tab" aria-selected="true" aria-controls="createBlockerView">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Buat Laporan Blocker</span>
+        </button>
+        <button type="button" class="view-tab" id="tabMyBlockers" role="tab" aria-selected="false" aria-controls="myBlockersView">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="9" y1="11" x2="15" y2="11"></line><line x1="9" y1="15" x2="13" y2="15"></line></svg>
+          <span>Blocker Aktif Saya</span>
+          <span class="tab-badge" id="activeBlockersCountBadge">0</span>
+        </button>
+      </div>
+
+      <!-- VIEW A: FORMULIR PELAPORAN CEPAT -->
+      <div id="createBlockerView" class="create-blocker-view">
+        <!-- Form Utama Blocker -->
+        <form id="blockerForm" novalidate>
         
         <!-- PANEL 1: DETAIL KENDALA & INFORMASI UTAMA -->
         <section class="panel" aria-labelledby="blockerDetailsHeading">
@@ -526,7 +571,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         <section class="panel" aria-labelledby="ownerRoutingHeading">
           <div class="panel-head">
             <div>
-              <div class="section-kicker">Kewenangan &amp; Rute Penugasan Otomatis</div>
               <h2 id="ownerRoutingHeading">Penanggung Jawab Awal (Owner Needed)</h2>
               <p class="small" style="margin-top:3px">Tentukan jalur kewenangan penanganan. Sistem otomatis menghitung penerima dan timer SLA.</p>
             </div>
@@ -596,8 +640,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
               </span>
               <div>
-                <strong>Protokol Penanganan &amp; Eskalasi Otomatis (FR-20 &amp; FR-21):</strong><br>
-                Penanggung jawab awal memiliki waktu untuk mengakui tiket (Acknowledge). Apabila kendala Critical tidak diakui dalam batas waktu yang ditentukan kebijakan, sistem otomatis menaikkan eskalasi ke jenjang berikutnya (Level 2: Head of Department) demi menjamin kelancaran operasional.
+                <strong>Protokol Eskalasi Otomatis:</strong><br>
+                Penanggung jawab awal wajib mengakui (*Acknowledge*) tiket kendala dalam batas toleransi SLA respons. Apabila kendala Critical tidak diakui tepat waktu, sistem secara otomatis meneruskan eskalasi darurat ke jenjang berikutnya (Level 2: Head of Department).
               </div>
             </div>
 
@@ -672,11 +716,34 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
             <span class="small" style="color:var(--color-text-secondary)">
               Timer pengakuan SLA: <strong>Sisa 01:59:59</strong> sebelum notifikasi eskalasi otomatis berjalan.
             </span>
-            <div style="display:flex;gap:10px">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
               <button class="btn btn-secondary" type="button" id="createAnotherBlockerBtn">+ Laporkan Blocker Lain</button>
+              <button class="btn btn-secondary" type="button" id="viewInMyBlockersBtn">Lihat di Blocker Aktif Saya</button>
               <a href="02-Morning-Commitment.html" class="btn btn-primary">Kembali ke Ruang Kerja</a>
             </div>
           </div>
+        </div>
+      </section>
+      </div> <!-- /createBlockerView -->
+
+      <!-- VIEW B: DAFTAR PANTAU & PENUTUPAN TIKET (LIFECYCLE MANAGEMENT - US-30 & FR-18) -->
+      <section id="myBlockersView" class="my-blockers-view" aria-labelledby="myBlockersHeading">
+        <div class="blockers-filter-bar">
+          <div>
+            <h2 id="myBlockersHeading" style="font-size:18px;font-weight:800;color:var(--color-text-primary);margin:0 0 4px">Daftar Blocker yang Saya Laporkan</h2>
+            <p class="small" style="margin:0">Pantau status penanganan, sisa timer SLA respons, serta lakukan konfirmasi penyelesaian tiket (*Confirm Closed*).</p>
+          </div>
+          <div class="filter-pills" role="radiogroup" aria-label="Filter status blocker">
+            <button type="button" class="filter-pill active" data-filter="all">Semua (<span id="countAll">0</span>)</button>
+            <button type="button" class="filter-pill" data-filter="resolved">Perlu Konfirmasi (<span id="countResolved">0</span>)</button>
+            <button type="button" class="filter-pill" data-filter="open_or_progress">Dalam Penanganan (<span id="countProgress">0</span>)</button>
+            <button type="button" class="filter-pill" data-filter="closed">Selesai (<span id="countClosed">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Container Kartu-Kartu Blocker Dinamis -->
+        <div id="blockersListContainer">
+          <!-- Diisi otomatis oleh JavaScript renderBlockerCards() -->
         </div>
       </section>
 
@@ -1127,23 +1194,24 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       Low: 'Low (Fleksibel)'
     };
 
-    // Simpan ke localStorage untuk dibaca Halaman 02/03/04
-    try {
-      const activeBlockers = JSON.parse(localStorage.getItem('workpulse_active_blockers') || '[]');
-      activeBlockers.unshift({
-        id: ticketId,
-        title: titleVal,
-        linkedTask: taskOption,
-        severity: severityVal,
-        ownerNeeded: ownerName,
-        status: 'Open',
-        hasAttachment: attachmentPreview.classList.contains('show'),
-        raisedAt: new Date().toISOString()
-      });
-      localStorage.setItem('workpulse_active_blockers', JSON.stringify(activeBlockers));
-    } catch (err) {
-      console.warn('Gagal menyimpan tiket blocker ke storage:', err);
-    }
+    // Simpan ke localStorage untuk dibaca Halaman 02/03/04 & View B
+    const newBlocker = {
+      id: ticketId,
+      title: titleVal,
+      linkedTask: taskOption,
+      severity: severityVal,
+      ownerNeeded: ownerName,
+      status: 'Open',
+      resolutionNote: null,
+      hasAttachment: attachmentPreview.classList.contains('show'),
+      attachmentName: attachmentPreview.classList.contains('show') ? attachmentFileName.textContent : null,
+      raisedAt: new Date().toISOString(),
+      slaRemaining: severityVal === 'Critical' ? '02:00:00' : (severityVal === 'High' ? '04:00:00' : 'Hari ini')
+    };
+
+    const currentBlockers = getStoredBlockers();
+    currentBlockers.unshift(newBlocker);
+    setStoredBlockers(currentBlockers);
 
     // Tampilkan Kartu Tiket Blocker Resmi
     $('ticketIdBadge').textContent = ticketId;
@@ -1194,8 +1262,328 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // =========================================================================
+  // 10. LIFECYCLE MANAGEMENT & VIEW SWITCHING (US-30, FR-17, FR-18, & BR-22)
+  // =========================================================================
+  const DEFAULT_BLOCKERS = [
+    {
+      id: '#BLK-2026-1048',
+      title: 'Kredensial API Payment Gateway Sandbox Kadaluarsa',
+      linkedTask: '[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)',
+      severity: 'Critical',
+      ownerNeeded: 'Rina Putri — Direct Manager (Level 1)',
+      status: 'Resolved',
+      resolutionNote: 'Kredensial sandbox payment gateway telah diperbarui di staging server dan token baru telah di-regenerate oleh tim backend. Silakan jalankan ulang test suite payment.',
+      hasAttachment: true,
+      attachmentName: 'screenshot-error-403.png',
+      raisedAt: '2026-10-19T09:30:00Z',
+      slaRemaining: '00:45:00'
+    },
+    {
+      id: '#BLK-2026-1052',
+      title: 'Akses VPN Staging Server Squad A Terputus',
+      linkedTask: '[Komitmen Pagi #2] Refactoring Otentikasi JWT & Role Guard',
+      severity: 'High',
+      ownerNeeded: 'Budi Santoso — Head of Engineering (Level 2)',
+      status: 'Open',
+      resolutionNote: null,
+      hasAttachment: false,
+      attachmentName: null,
+      raisedAt: '2026-10-19T11:15:00Z',
+      slaRemaining: '01:42:18'
+    },
+    {
+      id: '#BLK-2026-0988',
+      title: 'Dokumentasi OpenAPI Belum Selaras dengan Skema Database Staging',
+      linkedTask: 'Kendala Umum',
+      severity: 'Medium',
+      ownerNeeded: 'Andi Wicaksono — Principal Architect Core',
+      status: 'Closed',
+      resolutionNote: 'Skema OpenAPI v3 telah disinkronkan ke repositori docs-api pada commit 7a8f1b.',
+      hasAttachment: true,
+      attachmentName: 'openapi-diff.json',
+      raisedAt: '2026-10-18T14:20:00Z',
+      slaRemaining: 'Selesai'
+    }
+  ];
+
+  function getStoredBlockers() {
+    try {
+      const raw = localStorage.getItem('workpulse_active_blockers');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Gagal membaca workpulse_active_blockers:', e);
+    }
+    localStorage.setItem('workpulse_active_blockers', JSON.stringify(DEFAULT_BLOCKERS));
+    return DEFAULT_BLOCKERS;
+  }
+
+  function setStoredBlockers(blockers) {
+    try {
+      localStorage.setItem('workpulse_active_blockers', JSON.stringify(blockers));
+    } catch (e) {
+      console.warn('Gagal menyimpan workpulse_active_blockers:', e);
+    }
+    updateBadgeCounts();
+  }
+
+  // View Switching Tabs
+  const tabCreate = $('tabCreateBlocker');
+  const tabMyBlockers = $('tabMyBlockers');
+  const createView = $('createBlockerView');
+  const myBlockersView = $('myBlockersView');
+  let currentFilter = 'all';
+
+  function switchTab(target) {
+    if (target === 'my-blockers') {
+      tabCreate.classList.remove('active');
+      tabCreate.setAttribute('aria-selected', 'false');
+      tabMyBlockers.classList.add('active');
+      tabMyBlockers.setAttribute('aria-selected', 'true');
+      createView.style.display = 'none';
+      myBlockersView.classList.add('show');
+      renderBlockerCards(currentFilter);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      tabMyBlockers.classList.remove('active');
+      tabMyBlockers.setAttribute('aria-selected', 'false');
+      tabCreate.classList.add('active');
+      tabCreate.setAttribute('aria-selected', 'true');
+      myBlockersView.classList.remove('show');
+      createView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  if (tabCreate) tabCreate.addEventListener('click', () => switchTab('create'));
+  if (tabMyBlockers) tabMyBlockers.addEventListener('click', () => switchTab('my-blockers'));
+  if ($('viewInMyBlockersBtn')) $('viewInMyBlockersBtn').addEventListener('click', () => switchTab('my-blockers'));
+
+  // Update Counters & Badges
+  function updateBadgeCounts() {
+    const blockers = getStoredBlockers();
+    const countAll = blockers.length;
+    const countResolved = blockers.filter(b => b.status === 'Resolved').length;
+    const countProgress = blockers.filter(b => ['Open', 'In Progress'].includes(b.status)).length;
+    const countClosed = blockers.filter(b => b.status === 'Closed').length;
+
+    const activeCount = countResolved + countProgress;
+    const badge = $('activeBlockersCountBadge');
+    if (badge) {
+      badge.textContent = activeCount;
+      if (countResolved > 0) {
+        badge.classList.add('alert');
+      } else {
+        badge.classList.remove('alert');
+      }
+    }
+
+    if ($('countAll')) $('countAll').textContent = countAll;
+    if ($('countResolved')) $('countResolved').textContent = countResolved;
+    if ($('countProgress')) $('countProgress').textContent = countProgress;
+    if ($('countClosed')) $('countClosed').textContent = countClosed;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Render Dynamic Cards di View B
+  function renderBlockerCards(filter = 'all') {
+    currentFilter = filter;
+    const container = $('blockersListContainer');
+    if (!container) return;
+
+    const blockers = getStoredBlockers();
+    let filtered = blockers;
+    if (filter === 'resolved') {
+      filtered = blockers.filter(b => b.status === 'Resolved');
+    } else if (filter === 'open_or_progress') {
+      filtered = blockers.filter(b => ['Open', 'In Progress'].includes(b.status));
+    } else if (filter === 'closed') {
+      filtered = blockers.filter(b => b.status === 'Closed');
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-blockers">
+          <div class="empty-blockers-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <h3 style="font-size:16px;font-weight:800;color:var(--color-text-primary);margin-bottom:6px">Tidak Ada Blocker pada Filter Ini</h3>
+          <p class="small" style="color:var(--color-text-secondary);max-width:420px;margin:0 auto">Semua kendala terkendali atau tidak ada laporan pada kategori filter ini.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const severityPillClass = {
+      Critical: 'red',
+      High: 'amber',
+      Medium: 'blue',
+      Low: 'neutral'
+    };
+
+    container.innerHTML = filtered.map(b => {
+      const isResolved = b.status === 'Resolved';
+      const isClosed = b.status === 'Closed';
+      const isOpen = b.status === 'Open';
+      const isInProgress = b.status === 'In Progress';
+
+      let statusBadgeHtml = '';
+      if (isResolved) {
+        statusBadgeHtml = '<span class="pill green" style="font-weight:800"><span class="dot-sm"></span> Solusi Diberikan · Menunggu Konfirmasi</span>';
+      } else if (isInProgress) {
+        statusBadgeHtml = '<span class="pill blue"><span class="dot-sm"></span> Sedang Ditangani</span>';
+      } else if (isOpen) {
+        statusBadgeHtml = '<span class="pill amber"><span class="dot-sm"></span> Menunggu Pengakuan Atasan</span>';
+      } else {
+        statusBadgeHtml = '<span class="pill neutral"><span class="dot-sm"></span> Selesai Ditutup</span>';
+      }
+
+      const sevColor = severityPillClass[b.severity] || 'neutral';
+      const dateFormatted = b.raisedAt ? new Date(b.raisedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Hari ini';
+
+      return `
+        <div class="blocker-item-card" data-ticket-id="${b.id}" style="${isResolved ? 'border-color:#86EFAC;box-shadow:0 4px 14px rgba(22,101,52,0.08)' : ''}">
+          <div class="blocker-item-head">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="blocker-item-id">${b.id}</span>
+              ${statusBadgeHtml}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="pill ${sevColor}">Tingkat ${b.severity}</span>
+              <span class="small" style="color:var(--color-text-muted)">${dateFormatted}</span>
+            </div>
+          </div>
+
+          <div class="blocker-item-title">${escapeHtml(b.title)}</div>
+          
+          <div class="blocker-item-meta">
+            <span><strong>Terkait:</strong> ${escapeHtml(b.linkedTask || 'Kendala Umum')}</span>
+            <span>&bull;</span>
+            <span><strong>Penanggung Jawab:</strong> ${escapeHtml(b.ownerNeeded || 'Atasan Langsung')}</span>
+            ${b.hasAttachment ? `<span>&bull;</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:2px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>${escapeHtml(b.attachmentName || 'Bukti Terlampir')}</span>` : ''}
+          </div>
+
+          ${isResolved ? `
+            <div class="resolution-box">
+              <div class="resolution-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span>Solusi Diberikan oleh Penanggung Jawab:</span>
+              </div>
+              <div class="resolution-text">${escapeHtml(b.resolutionNote || 'Penanggung jawab telah menangani kendala ini.')}</div>
+              <div class="small" style="margin-top:8px;color:#15803D;font-weight:600">
+                &bull; Kedaulatan Pelapor (US-30 &amp; FR-18): Tiket hanya dapat dinyatakan selesai secara sah oleh Anda selaku pelapor asli setelah memverifikasi langsung solusinya di lapangan.
+              </div>
+            </div>
+          ` : ''}
+
+          ${(isOpen || isInProgress) ? `
+            <div class="sla-warning-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>Timer Respons SLA: <strong>${b.slaRemaining || 'Sisa waktu dalam toleransi'}</strong> sebelum eskalasi otomatis diteruskan ke jenjang berikutnya.</span>
+            </div>
+          ` : ''}
+
+          <div class="blocker-action-bar">
+            <div>
+              ${isResolved ? `
+                <span class="small" style="font-weight:700;color:var(--color-brand-primary)">Apakah kendala Anda benar-benar sudah terselesaikan?</span>
+              ` : (isClosed ? `
+                <span class="small" style="color:var(--color-text-muted)">Tiket telah ditutup resmi oleh Anda (Pelapor Asli).</span>
+              ` : `
+                <span class="small" style="color:var(--color-text-secondary)">Notifikasi penugasan telah diterima oleh penanggung jawab terkait.</span>
+              `)}
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${isResolved ? `
+                <button type="button" class="btn btn-secondary btn-sm btn-reopen" data-id="${b.id}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+                  Buka Kembali (Reopen)
+                </button>
+                <button type="button" class="btn btn-primary btn-sm btn-confirm-close" data-id="${b.id}" style="background:#166534;border-color:#166534">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Konfirmasi Selesai (Confirm Closed)
+                </button>
+              ` : (isClosed ? `
+                <button type="button" class="btn btn-secondary btn-sm btn-reopen" data-id="${b.id}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+                  Buka Kembali Jika Berulang
+                </button>
+              ` : `
+                <a href="02-Morning-Commitment.html" class="btn btn-secondary btn-sm">Periksa Dampak di Workspace</a>
+              `)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach event listeners for actions
+    container.querySelectorAll('.btn-confirm-close').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ticketId = btn.dataset.id;
+        confirmCloseBlocker(ticketId);
+      });
+    });
+
+    container.querySelectorAll('.btn-reopen').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ticketId = btn.dataset.id;
+        reopenBlocker(ticketId);
+      });
+    });
+  }
+
+  function confirmCloseBlocker(ticketId) {
+    const blockers = getStoredBlockers();
+    const target = blockers.find(b => b.id === ticketId);
+    if (!target) return;
+
+    target.status = 'Closed';
+    target.closedAt = new Date().toISOString();
+    target.slaRemaining = 'Selesai';
+    setStoredBlockers(blockers);
+    renderBlockerCards(currentFilter);
+    showToast('success', `Tiket ${ticketId} resmi dikonfirmasi Selesai (Closed). Komitmen tugas kembali hijau.`);
+  }
+
+  function reopenBlocker(ticketId) {
+    const blockers = getStoredBlockers();
+    const target = blockers.find(b => b.id === ticketId);
+    if (!target) return;
+
+    target.status = 'In Progress';
+    target.reopenedAt = new Date().toISOString();
+    target.slaRemaining = '02:00:00 (Perpanjangan Penanganan)';
+    setStoredBlockers(blockers);
+    renderBlockerCards(currentFilter);
+    showToast('warning', `Tiket ${ticketId} dibuka kembali (Reopened). Penanggung jawab telah diberitahu untuk tindakan lanjutan.`);
+  }
+
+  // Filter Pills Event Listener
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const filter = pill.dataset.filter;
+      renderBlockerCards(filter);
+    });
+  });
+
   // Inisialisasi awal
   populateOwnerDropdown();
+  updateBadgeCounts();
 })();
 </script>
 </body>
