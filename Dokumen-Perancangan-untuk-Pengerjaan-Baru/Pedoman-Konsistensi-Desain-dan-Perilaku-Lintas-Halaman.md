@@ -379,6 +379,10 @@ Bagian ini mencatat detail keputusan yang telah disepakati pada setiap halaman. 
       - **Selection Mark Radio Card:** Menambahkan indikator centang lingkaran radio di pojok kanan atas masing-masing kartu status (GREEN, AMBER, RED) yang memberikan kepastian visual tegas saat kartu aktif.
       - **Validasi Kualitas Risiko Harian (Min. 15 Karakter):** Dilengkapi live counter interaktif (`0 / 15 karakter minimal`) yang otomatis berubah warna hijau saat syarat terpenuhi, mencegah masukan kosong atau teks asal.
       - **Peringatan Dini Carry-over $\ge 2$ Hari:** Menampilkan notice kontekstual otomatis pada kartu GREEN jika terdapat tugas carry-over $\ge 2$ hari sebagai edukasi sebelum submit.
+  16. **Standarisasi Notifikasi Toast Kontekstual (*Contextual Toast Engine*):**
+      - **Pemberitahuan Sukses (*Success*):** Menggunakan ikon centang hijau emerald (`#34D399`) dan latar hijau botol tua (`#113426`) untuk aksi berhasil (seperti simpan draf).
+      - **Peringatan Validasi (*Warning*):** Menggunakan ikon segitiga peringatan amber (`#FBBF24`) dengan latar cokelat amber gelap (`#2D1B08`) dan border subtil (`#78350F`) untuk form yang belum lengkap atau status yang belum dipilih. Menghilangkan penggunaan centang hijau yang keliru pada pesan error/peringatan.
+      - **Kesalahan Kritis (*Error*):** Menggunakan ikon lingkaran seru merah rose (`#F87171`) dengan latar merah gelap (`#3B1212`) untuk kegagalan sistem atau penolakan transaksi.
 
 ### Halaman Berikutnya (Registri Bertahap):
 - `05-Raise-Instant-Blocker.html`
