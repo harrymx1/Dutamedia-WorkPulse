@@ -856,7 +856,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         <div class="blockers-filter-bar">
           <div>
             <h2 id="myBlockersHeading" style="font-size:18px;font-weight:800;color:var(--color-text-primary);margin:0 0 4px">Daftar Blocker yang Saya Laporkan</h2>
-            <p class="small" style="margin:0">Pantau status penanganan, sisa batas waktu respons, serta lakukan konfirmasi penyelesaian tiket (<em>Confirm Closed</em>).</p>
+            <p class="small" style="margin:0">Pantau status penanganan, sisa batas waktu respons, serta lakukan konfirmasi penyelesaian tiket kendala.</p>
           </div>
           <div class="filter-pills" role="radiogroup" aria-label="Filter status blocker">
             <button type="button" class="filter-pill active" data-filter="all">Semua (<span id="countAll">0</span>)</button>
@@ -1684,7 +1684,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       categoryLabel: 'Vendor & Layanan Pihak Ketiga',
       linkedTask: '[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)',
       severity: 'Critical',
-      ownerNeeded: 'Rina Putri — Direct Manager (Level 1)',
+      ownerNeeded: 'Rina Putri — Technical Lead / Direct Manager',
       status: 'Resolved',
       expectedHelp: 'Approval perpanjangan akses sandbox API dan regenerasi token staging oleh PM',
       resolutionNote: 'Kredensial sandbox payment gateway telah diperbarui di staging server dan token baru telah di-regenerate oleh tim backend. Silakan jalankan ulang test suite payment.',
@@ -1700,7 +1700,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       categoryLabel: 'Infrastruktur & Lingkungan Kerja',
       linkedTask: '[Komitmen Pagi #2] Refactoring Otentikasi JWT & Role Guard',
       severity: 'High',
-      ownerNeeded: 'Budi Santoso — Head of Engineering (Level 2)',
+      ownerNeeded: 'Budi Santoso — Head of Engineering',
       status: 'Open',
       expectedHelp: 'Reset akun VPN dan verifikasi konfigurasi routing tim infra',
       resolutionNote: null,
@@ -1716,7 +1716,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       categoryLabel: 'Spesifikasi & Kebutuhan Produk',
       linkedTask: 'Kendala Umum',
       severity: 'Medium',
-      ownerNeeded: 'Andi Wicaksono — Principal Architect Core',
+      ownerNeeded: 'Andi Wicaksono — Principal / R&D Engineer',
       status: 'Closed',
       expectedHelp: null,
       resolutionNote: 'Skema OpenAPI v3 telah disinkronkan ke repositori docs-api pada commit 7a8f1b.',
@@ -1732,7 +1732,25 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       const raw = localStorage.getItem('workpulse_active_blockers');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          let changed = false;
+          parsed.forEach(b => {
+            if (b.ownerNeeded && b.ownerNeeded.includes('(Level 1)')) {
+              b.ownerNeeded = 'Rina Putri — Technical Lead / Direct Manager';
+              changed = true;
+            } else if (b.ownerNeeded && b.ownerNeeded.includes('(Level 2)')) {
+              b.ownerNeeded = 'Budi Santoso — Head of Engineering';
+              changed = true;
+            } else if (b.ownerNeeded && b.ownerNeeded.includes('Principal Architect Core')) {
+              b.ownerNeeded = 'Andi Wicaksono — Principal / R&D Engineer';
+              changed = true;
+            }
+          });
+          if (changed) {
+            localStorage.setItem('workpulse_active_blockers', JSON.stringify(parsed));
+          }
+          return parsed;
+        }
       }
     } catch (e) {
       console.warn('Gagal membaca workpulse_active_blockers:', e);
@@ -1865,7 +1883,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       } else if (isInProgress) {
         statusBadgeHtml = '<span class="pill blue"><span class="dot-sm"></span> Sedang Ditangani</span>';
       } else if (isOpen) {
-        statusBadgeHtml = '<span class="pill amber"><span class="dot-sm"></span> Menunggu Pengakuan Atasan</span>';
+        statusBadgeHtml = '<span class="pill amber"><span class="dot-sm"></span> Menunggu Konfirmasi Atasan</span>';
       } else {
         statusBadgeHtml = '<span class="pill neutral"><span class="dot-sm"></span> Selesai Ditutup</span>';
       }
@@ -1911,7 +1929,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               </div>
               <div class="resolution-text">${escapeHtml(b.resolutionNote || 'Penanggung jawab telah menangani kendala ini.')}</div>
               <div class="small" style="margin-top:8px;color:#15803D;font-weight:600">
-                &bull; Kedaulatan Pelapor (US-30 &amp; FR-18): Tiket hanya dapat dinyatakan selesai secara sah oleh Anda selaku pelapor asli setelah memverifikasi langsung solusinya di lapangan.
+                &bull; Konfirmasi Mandiri: Hanya Anda selaku pelapor yang dapat menyatakan kendala ini selesai setelah mencoba langsung solusinya di lapangan.
               </div>
             </div>
           ` : ''}
@@ -1928,7 +1946,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               ${isResolved ? `
                 <span class="small" style="font-weight:700;color:var(--color-brand-primary)">Apakah kendala Anda benar-benar sudah terselesaikan?</span>
               ` : (isClosed ? `
-                <span class="small" style="color:var(--color-text-muted)">Tiket telah ditutup resmi oleh Anda (Pelapor Asli).</span>
+                <span class="small" style="color:var(--color-text-muted)">Kendala telah selesai dan ditutup resmi oleh Anda.</span>
               ` : `
                 <span class="small" style="color:var(--color-text-secondary)">Notifikasi penugasan telah diterima oleh penanggung jawab terkait.</span>
               `)}
@@ -1937,11 +1955,11 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               ${isResolved ? `
                 <button type="button" class="btn btn-secondary btn-sm btn-reopen" data-id="${b.id}">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-                  Buka Kembali (Reopen)
+                  Buka Kembali
                 </button>
                 <button type="button" class="btn btn-primary btn-sm btn-confirm-close" data-id="${b.id}" style="background:#166534;border-color:#166534">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  Konfirmasi Selesai (Confirm Closed)
+                  Konfirmasi Selesai
                 </button>
               ` : (isClosed ? `
                 <button type="button" class="btn btn-secondary btn-sm btn-reopen" data-id="${b.id}">
@@ -1983,7 +2001,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     target.slaRemaining = 'Selesai';
     setStoredBlockers(blockers);
     renderBlockerCards(currentFilter);
-    showToast('success', `Tiket ${ticketId} resmi dikonfirmasi Selesai (Closed). Komitmen tugas kembali hijau.`);
+    showToast('success', `Tiket ${ticketId} resmi dikonfirmasi selesai. Penanganan kendala telah tuntas.`);
   }
 
   function reopenBlocker(ticketId) {
@@ -1996,7 +2014,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     target.slaRemaining = '02:00:00 (Perpanjangan Penanganan)';
     setStoredBlockers(blockers);
     renderBlockerCards(currentFilter);
-    showToast('warning', `Tiket ${ticketId} dibuka kembali (Reopened). Penanggung jawab telah diberitahu untuk tindakan lanjutan.`);
+    showToast('warning', `Tiket ${ticketId} telah dibuka kembali. Penanggung jawab telah diberitahu untuk tindakan lanjutan.`);
   }
 
   // Filter Pills Event Listener
