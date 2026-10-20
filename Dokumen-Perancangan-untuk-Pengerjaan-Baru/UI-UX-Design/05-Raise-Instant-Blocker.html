@@ -453,19 +453,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           </div>
           <div class="panel-body">
             
-            <!-- Tautan Komitmen Hari Ini (Opsional) -->
-            <div class="field" style="margin-bottom:18px">
-              <label for="linkedCommitment">Tautkan ke Komitmen Hari Ini <span class="tiny">(opsional)</span></label>
-              <select id="linkedCommitment" name="linkedCommitment">
-                <option value="">-- Tidak menautkan ke tugas spesifik (Kendala Umum / Proyek) --</option>
-                <option value="task-1" selected>[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)</option>
-                <option value="task-2">[Komitmen Pagi #2] Endpoint Backend /api/v1/history/weekly siap pakai</option>
-                <option value="adhoc-1">[Tugas Tambahan] Investigasi bug sesi login timeout pada Safari Mobile</option>
-              </select>
-              <span class="hint">Menautkan blocker ke tugas harian mempermudah verifikasi keterlambatan dan penilaian status EOD sore hari.</span>
-            </div>
-
-            <!-- Judul Blocker (Lebar Penuh 100%) -->
+            <!-- Judul Blocker (Lebar Penuh 100% - Prioritas Utama Input) -->
             <div class="field" style="margin-bottom:18px">
               <div class="counter-box">
                 <label for="blockerTitle">Judul Blocker <span class="required">*</span></label>
@@ -473,6 +461,18 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               </div>
               <input id="blockerTitle" name="title" type="text" required maxlength="140" placeholder="Misal: Kredensial API Payment Gateway Sandbox Kadaluarsa">
               <span class="field-error" id="blockerTitleError" hidden></span>
+            </div>
+
+            <!-- Tautan Komitmen Hari Ini (Opsional - Di bawah Judul) -->
+            <div class="field" style="margin-bottom:18px">
+              <label for="linkedCommitment">Tautkan ke Komitmen Hari Ini <span class="tiny">(opsional)</span></label>
+              <select id="linkedCommitment" name="linkedCommitment">
+                <option value="" selected>— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —</option>
+                <option value="task-1">[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)</option>
+                <option value="task-2">[Komitmen Pagi #2] Endpoint Backend /api/v1/history/weekly siap pakai</option>
+                <option value="adhoc-1">[Tugas Tambahan] Investigasi bug sesi login timeout pada Safari Mobile</option>
+              </select>
+              <span class="hint">Menautkan blocker ke tugas harian mempermudah verifikasi keterlambatan dan penilaian status EOD sore hari.</span>
             </div>
 
             <!-- Tingkat Keparahan (Severity - 4 Visual Cards Tanpa Auto-Select) -->
@@ -1006,6 +1006,74 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     return authorityDirectory.organizational;
   }
 
+  function populateCommitmentsDropdown() {
+    const select = $('linkedCommitment');
+    if (!select) return;
+
+    const prev = select.value;
+    select.replaceChildren();
+    select.add(new Option('— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —', ''));
+
+    let items = [];
+    try {
+      const storedMorning = localStorage.getItem('workpulse_morning_commitments');
+      if (storedMorning) {
+        const parsed = JSON.parse(storedMorning);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach((c, idx) => {
+            const title = c.deliverable || c.text || c.title || c.commitment;
+            if (title && title.trim()) {
+              items.push({
+                id: `morning-${idx + 1}`,
+                label: `[Komitmen Pagi #${idx + 1}] ${title.trim()}`
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Gagal membaca workpulse_morning_commitments:', e);
+    }
+
+    try {
+      const storedAdd = localStorage.getItem('workpulse_additional_work_items');
+      if (storedAdd) {
+        const parsedAdd = JSON.parse(storedAdd);
+        if (Array.isArray(parsedAdd) && parsedAdd.length > 0) {
+          parsedAdd.forEach((a, idx) => {
+            const title = a.title || a.name || a.description;
+            if (title && title.trim()) {
+              items.push({
+                id: `adhoc-${idx + 1}`,
+                label: `[Tugas Tambahan #${idx + 1}] ${title.trim()}`
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Gagal membaca workpulse_additional_work_items:', e);
+    }
+
+    if (items.length === 0) {
+      items = [
+        { id: 'task-1', label: '[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)' },
+        { id: 'task-2', label: '[Komitmen Pagi #2] Endpoint Backend /api/v1/history/weekly siap pakai' },
+        { id: 'adhoc-1', label: '[Tugas Tambahan] Investigasi bug sesi login timeout pada Safari Mobile' }
+      ];
+    }
+
+    items.forEach(item => {
+      select.add(new Option(item.label, item.id));
+    });
+
+    if (items.some(c => c.id === prev)) {
+      select.value = prev;
+    } else {
+      select.value = '';
+    }
+  }
+
   function populateOwnerDropdown() {
     const select = $('ownerPerson');
     const prev = select.value;
@@ -1208,8 +1276,9 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     const ticketId = `#BLK-2026-${randomTicketNum}`;
     const severityVal = severityChecked.value;
     const titleVal = titleInput.value.trim();
-    const taskOption = linkedCommitmentSelect.options[linkedCommitmentSelect.selectedIndex]?.textContent || 'Kendala Umum';
-    const taskShort = taskOption.includes(']') ? taskOption.split(']')[0] + ']' : 'Kendala Umum';
+    const hasLinkedTask = linkedCommitmentSelect.value !== '';
+    const taskOption = hasLinkedTask ? (linkedCommitmentSelect.options[linkedCommitmentSelect.selectedIndex]?.textContent || 'Kendala Umum') : 'Kendala Umum / Fasilitas';
+    const taskShort = hasLinkedTask && taskOption.includes(']') ? taskOption.split(']')[0] + ']' : 'Kendala Umum';
     const ownerName = $('ownerRoutePerson').textContent;
 
     const slaMap = {
@@ -1270,6 +1339,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     attachmentInput.value = '';
     attachmentPreview.classList.remove('show');
     orgCard.click();
+    populateCommitmentsDropdown();
     checkPanel1Completion();
     showToast('success', 'Formulir berhasil dikosongkan.');
   });
@@ -1280,6 +1350,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     form.reset();
     form.style.display = 'block';
     orgCard.click();
+    populateCommitmentsDropdown();
     titleCounter.textContent = '0 / 140';
     severityCards.forEach(c => c.classList.remove('active'));
     document.querySelectorAll('input[name="blockerSeverity"]').forEach(r => r.checked = false);
@@ -1609,6 +1680,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   });
 
   // Inisialisasi awal
+  populateCommitmentsDropdown();
   populateOwnerDropdown();
   updateBadgeCounts();
 })();
