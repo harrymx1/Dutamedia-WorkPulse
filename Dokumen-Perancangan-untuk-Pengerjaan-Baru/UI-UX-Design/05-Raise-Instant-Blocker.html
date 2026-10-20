@@ -211,7 +211,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .route-preview[data-state="needs-project"] .route-preview-icon{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg)}
 .route-preview[data-state="needs-project"] .route-status{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border-color:var(--color-status-amber-border)}
 
-/* Sticky Action Bar (Responsive & Dynamic) */
+/* Sticky Action Bar (Clean & Focused on Actions) */
 .form-footer{
   position:sticky;
   bottom:0;
@@ -223,21 +223,11 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   box-shadow:0 -6px 20px rgba(0,0,0,.06);
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:20px;
+  justify-content:flex-end;
   backdrop-filter:blur(12px);
   transition:all .2s ease;
 }
-.footer-summary{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0}
-.footer-summary-item{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--color-text-secondary)}
-.footer-summary-label{font-size:12px;font-weight:600;color:var(--color-text-muted)}
-.footer-summary-val{display:inline-flex;align-items:center;gap:6px;font-weight:750;color:var(--color-text-primary)}
-.footer-summary-divider{width:1px;height:16px;background:var(--color-border-subtle)}
-.footer-state-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--color-surface-subtle);color:var(--color-text-secondary);border:1px solid var(--color-border-subtle);transition:all .2s ease}
-.footer-state-badge.ready{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border-color:var(--color-status-green-border)}
-.footer-state-badge.pending{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border-color:var(--color-status-amber-border)}
-.pill-sm{padding:3px 9px;font-size:11.5px}
-.footer-buttons{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.footer-buttons{display:flex;gap:12px;align-items:center}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:1px solid transparent;border-radius:var(--radius-sm);font-weight:750;font-size:14px;text-decoration:none;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
@@ -318,7 +308,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   .severity-grid{grid-template-columns:1fr 1fr}
   .authority-options{grid-template-columns:1fr}
   .ticket-meta-grid{grid-template-columns:1fr 1fr}
-  .footer-summary-divider:nth-of-type(2){display:none}
 }
 @media(max-width:680px){
   .content{padding:20px 16px 80px}
@@ -328,29 +317,18 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   .form-footer{
     margin:24px -16px -80px;
     padding:12px 16px max(14px, env(safe-area-inset-bottom));
-    flex-direction:column;
-    align-items:stretch;
-    gap:12px;
   }
-  .footer-summary{
-    justify-content:space-between;
-    gap:8px;
-    padding-bottom:10px;
-    border-bottom:1px solid var(--color-border-subtle);
-  }
-  .footer-summary-divider{display:none}
-  .footer-summary-item#footerFormState{width:100%;justify-content:flex-start}
   .footer-buttons{
     display:grid;
     grid-template-columns:1fr 2fr;
     width:100%;
-    gap:8px;
+    gap:10px;
   }
   .footer-buttons .btn{
     width:100%;
-    min-height:42px;
-    padding:8px 12px;
-    font-size:13.5px;
+    min-height:44px;
+    padding:10px 14px;
+    font-size:14px;
   }
 }
 </style>
@@ -770,38 +748,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           </div>
         </section>
 
-        <!-- STICKY FOOTER ACTION BAR (RESPONSIF & DINAMIS) -->
+        <!-- STICKY FOOTER ACTION BAR -->
         <div class="form-footer" id="formStickyFooter">
-          <div class="footer-summary" id="footerSummary">
-            <div class="footer-summary-item" id="footerTargetOwner" title="Penanggung jawab yang akan menerima laporan ini">
-              <span class="footer-summary-label">Tujuan:</span>
-              <span class="footer-summary-val" id="footerOwnerVal">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <span id="footerOwnerName">Rina Putri</span>
-              </span>
-            </div>
-            <div class="footer-summary-divider" aria-hidden="true"></div>
-            <div class="footer-summary-item" id="footerTargetUrgensi" title="Batas waktu respons berdasarkan tingkat keparahan yang dipilih">
-              <span class="footer-summary-label">Target Respons:</span>
-              <span class="pill red pill-sm" id="footerSeverityPill">
-                <span class="dot-sm"></span> Critical (≤ 2 Jam)
-              </span>
-            </div>
-            <div class="footer-summary-divider" aria-hidden="true"></div>
-            <div class="footer-summary-item" id="footerFormState">
-              <span class="footer-state-badge pending" id="footerStatusBadge">
-                <span class="dot-sm"></span> Lengkapi Judul &amp; Kategori
-              </span>
-            </div>
-          </div>
           <div class="footer-buttons">
             <button class="btn btn-secondary" type="button" id="resetBlockerBtn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
               <span>Bersihkan</span>
             </button>
             <button class="btn btn-primary" type="submit" id="submitBlockerBtn">
               <span>Kirim Laporan Kendala</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
           </div>
         </div>
@@ -1068,68 +1024,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     } else {
       panel1StatusBadge.className = 'pill amber';
       panel1StatusBadge.innerHTML = '<span class="dot-sm"></span> Belum Lengkap';
-    }
-    updateFooterState();
-  }
-
-  // 4c. Dynamic Sticky Footer State Engine
-  function updateFooterState() {
-    // 1. Update Penerima Laporan
-    const personEl = $('ownerRoutePerson');
-    const footerOwnerName = $('footerOwnerName');
-    if (personEl && footerOwnerName) {
-      const fullText = personEl.textContent || '';
-      const shortName = fullText.split('—')[0].trim() || 'Atasan Langsung';
-      footerOwnerName.textContent = shortName;
-    }
-
-    // 2. Update Target Respons / Severity
-    const severityChecked = document.querySelector('input[name="blockerSeverity"]:checked');
-    const footerSeverityPill = $('footerSeverityPill');
-    if (footerSeverityPill) {
-      if (severityChecked) {
-        const val = severityChecked.value;
-        const targetMap = {
-          Critical: { label: 'Critical (≤ 2 Jam)', cls: 'red' },
-          High: { label: 'High (≤ 4 Jam)', cls: 'amber' },
-          Medium: { label: 'Medium (Hari Ini)', cls: 'blue' },
-          Low: { label: 'Low (Fleksibel)', cls: 'neutral' }
-        };
-        const info = targetMap[val] || { label: val, cls: 'neutral' };
-        footerSeverityPill.className = `pill ${info.cls} pill-sm`;
-        footerSeverityPill.innerHTML = `<span class="dot-sm"></span> ${info.label}`;
-      } else {
-        footerSeverityPill.className = 'pill neutral pill-sm';
-        footerSeverityPill.innerHTML = '<span class="dot-sm"></span> Belum Dipilih';
-      }
-    }
-
-    // 3. Update Kelengkapan Formulir
-    const titleVal = titleInput.value.trim();
-    const catVal = blockerCategorySelect ? blockerCategorySelect.value : '';
-    const descVal = descTextarea.value.trim();
-    const hasSeverity = document.querySelector('input[name="blockerSeverity"]:checked') !== null;
-    const footerStatusBadge = $('footerStatusBadge');
-    if (footerStatusBadge) {
-      if (!titleVal && !catVal && !descVal) {
-        footerStatusBadge.className = 'footer-state-badge pending';
-        footerStatusBadge.innerHTML = '<span class="dot-sm"></span> Menunggu Pengisian Formulir';
-      } else if (!titleVal || titleVal.length < 10) {
-        footerStatusBadge.className = 'footer-state-badge pending';
-        footerStatusBadge.innerHTML = '<span class="dot-sm"></span> Judul Min. 10 Karakter';
-      } else if (!catVal) {
-        footerStatusBadge.className = 'footer-state-badge pending';
-        footerStatusBadge.innerHTML = '<span class="dot-sm"></span> Pilih Kategori Kendala';
-      } else if (!hasSeverity) {
-        footerStatusBadge.className = 'footer-state-badge pending';
-        footerStatusBadge.innerHTML = '<span class="dot-sm"></span> Pilih Tingkat Keparahan';
-      } else if (descVal.length < 20) {
-        footerStatusBadge.className = 'footer-state-badge pending';
-        footerStatusBadge.innerHTML = '<span class="dot-sm"></span> Deskripsi Min. 20 Karakter';
-      } else {
-        footerStatusBadge.className = 'footer-state-badge ready';
-        footerStatusBadge.innerHTML = '<span class="dot-sm"></span> Formulir Siap Dikirim';
-      }
     }
   }
 
@@ -1449,7 +1343,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         panel2StatusBadge.className = 'pill green';
         panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Lengkap';
       }
-      updateFooterState();
       return;
     }
 
@@ -1466,7 +1359,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         panel2StatusBadge.className = 'pill amber';
         panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Belum Lengkap';
       }
-      updateFooterState();
       return;
     }
 
@@ -1491,7 +1383,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       panel2StatusBadge.className = 'pill green';
       panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Lengkap';
     }
-    updateFooterState();
   }
 
   // Event Listeners Authority
@@ -2108,7 +1999,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   populateCommitmentsDropdown();
   populateOwnerDropdown();
   updateBadgeCounts();
-  updateFooterState();
 })();
 </script>
 </body>
