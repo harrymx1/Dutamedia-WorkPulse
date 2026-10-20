@@ -275,17 +275,20 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .filter-pill{padding:7px 15px;border:1px solid var(--color-border-subtle);background:#fff;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
 .filter-pill:hover{border-color:var(--color-border-strong);color:var(--color-text-primary)}
 .filter-pill.active{background:var(--color-brand-primary);color:#fff;border-color:var(--color-brand-primary)}
-.blocker-item-card{background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:22px 24px;margin-bottom:18px;transition:box-shadow .15s ease}
+.blocker-item-card{background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:18px 20px;margin-bottom:14px;transition:box-shadow .15s ease}
 .blocker-item-card:hover{box-shadow:var(--shadow-modal)}
-.blocker-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.blocker-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .blocker-item-id{font-size:13px;font-weight:800;color:var(--color-brand-primary);letter-spacing:.02em}
-.blocker-item-title{font-size:16.5px;font-weight:800;color:var(--color-text-primary);margin-bottom:5px;line-height:1.35}
-.blocker-item-meta{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--color-text-secondary);flex-wrap:wrap;margin-bottom:14px}
-.resolution-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px 18px;margin-top:14px}
-.resolution-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#166534;margin-bottom:4px}
-.resolution-text{font-size:13.5px;color:#14532D;line-height:1.5}
-.sla-warning-box{background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#92400E;margin-top:14px}
-.blocker-action-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--color-border-subtle);flex-wrap:wrap}
+.blocker-item-title{font-size:16px;font-weight:800;color:var(--color-text-primary);margin-bottom:6px;line-height:1.35}
+.blocker-item-meta{display:flex;align-items:center;gap:6px 10px;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap;margin-bottom:10px}
+.blocker-meta-item{display:inline-flex;align-items:center;gap:5px;background:#F8FAFC;border:1px solid #E2E8F0;padding:3px 9px;border-radius:6px}
+.blocker-meta-item strong{color:var(--color-text-primary);font-weight:700}
+.resolution-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-top:10px}
+.resolution-title{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#166534;margin-bottom:4px}
+.resolution-text{font-size:13px;color:#14532D;line-height:1.45;margin-bottom:8px}
+.resolution-hint{display:flex;align-items:center;gap:6px;padding-top:7px;border-top:1px dashed #A7F3D0;font-size:11.5px;color:#047857;line-height:1.35}
+.sla-warning-box{background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:12.5px;color:#92400E;margin-top:10px}
+.blocker-action-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--color-border-subtle);flex-wrap:wrap}
 .empty-blockers{text-align:center;padding:48px 24px;background:#fff;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-card);margin:20px 0}
 .empty-blockers-icon{width:48px;height:48px;border-radius:50%;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;margin:0 auto 14px}
 
@@ -1735,6 +1738,11 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         if (Array.isArray(parsed) && parsed.length > 0) {
           let changed = false;
           parsed.forEach(b => {
+            if (b.id === '#BLK-2026-1048' && (!b.categoryLabel || b.categoryLabel === 'Kendala Umum')) {
+              b.categoryLabel = 'Vendor & Layanan Pihak Ketiga';
+              b.category = 'Vendor';
+              changed = true;
+            }
             if (b.ownerNeeded && b.ownerNeeded.includes('(Level 1)')) {
               b.ownerNeeded = 'Rina Putri — Technical Lead / Direct Manager';
               changed = true;
@@ -1908,28 +1916,39 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           <div class="blocker-item-title">${escapeHtml(b.title)}</div>
           
           <div class="blocker-item-meta">
-            <span><strong>Terkait:</strong> ${escapeHtml(b.linkedTask || 'Kendala Umum')}</span>
-            <span>&bull;</span>
-            <span><strong>Penanggung Jawab:</strong> ${escapeHtml(b.ownerNeeded || 'Atasan Langsung')}</span>
-            ${b.hasAttachment ? `<span>&bull;</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:2px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>${escapeHtml(b.attachmentName || 'Bukti Terlampir')}</span>` : ''}
+            <div class="blocker-meta-item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              <span><strong>Terkait:</strong> ${escapeHtml(b.linkedTask || 'Kendala Umum')}</span>
+            </div>
+            <div class="blocker-meta-item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span><strong>Penanggung Jawab:</strong> ${escapeHtml(b.ownerNeeded || 'Atasan Langsung')}</span>
+            </div>
+            ${b.hasAttachment ? `
+              <div class="blocker-meta-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                <span><strong>Lampiran:</strong> ${escapeHtml(b.attachmentName || 'Bukti Terlampir')}</span>
+              </div>
+            ` : ''}
           </div>
 
           ${b.expectedHelp ? `
-            <div style="margin:4px 0 12px;background:#F0FDF4;border:1px solid #DCFCE7;border-radius:6px;padding:8px 12px;display:flex;align-items:baseline;gap:8px">
-              <span style="font-size:11px;font-weight:750;color:#166534;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em">Bantuan Diminta:</span>
-              <span style="font-size:13px;color:#14532D;line-height:1.45;font-weight:600">${escapeHtml(b.expectedHelp)}</span>
+            <div style="margin:4px 0 8px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;font-weight:750;color:#0B8061;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em">Bantuan Diminta:</span>
+              <span style="font-size:12.5px;color:var(--color-text-primary);line-height:1.4;font-weight:600">${escapeHtml(b.expectedHelp)}</span>
             </div>
           ` : ''}
 
           ${isResolved ? `
             <div class="resolution-box">
               <div class="resolution-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 <span>Solusi Diberikan oleh Penanggung Jawab:</span>
               </div>
               <div class="resolution-text">${escapeHtml(b.resolutionNote || 'Penanggung jawab telah menangani kendala ini.')}</div>
-              <div class="small" style="margin-top:8px;color:#15803D;font-weight:600">
-                &bull; Konfirmasi Mandiri: Hanya Anda selaku pelapor yang dapat menyatakan kendala ini selesai setelah mencoba langsung solusinya di lapangan.
+              <div class="resolution-hint">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span><strong>Konfirmasi Mandiri:</strong> Hanya Anda selaku pelapor yang dapat menyatakan kendala ini selesai setelah mencoba langsung solusinya di lapangan.</span>
               </div>
             </div>
           ` : ''}
@@ -1944,11 +1963,20 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           <div class="blocker-action-bar">
             <div>
               ${isResolved ? `
-                <span class="small" style="font-weight:700;color:var(--color-brand-primary)">Apakah kendala Anda benar-benar sudah terselesaikan?</span>
+                <span class="small" style="font-weight:700;color:var(--color-brand-primary);display:flex;align-items:center;gap:6px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  Apakah kendala Anda benar-benar sudah terselesaikan?
+                </span>
               ` : (isClosed ? `
-                <span class="small" style="color:var(--color-text-muted)">Kendala telah selesai dan ditutup resmi oleh Anda.</span>
+                <span class="small" style="color:var(--color-text-muted);display:flex;align-items:center;gap:6px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  Kendala telah selesai dan ditutup resmi oleh Anda.
+                </span>
               ` : `
-                <span class="small" style="color:var(--color-text-secondary)">Notifikasi penugasan telah diterima oleh penanggung jawab terkait.</span>
+                <span class="small" style="color:var(--color-text-secondary);display:flex;align-items:center;gap:6px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  Notifikasi penugasan telah diterima oleh penanggung jawab terkait.
+                </span>
               `)}
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
