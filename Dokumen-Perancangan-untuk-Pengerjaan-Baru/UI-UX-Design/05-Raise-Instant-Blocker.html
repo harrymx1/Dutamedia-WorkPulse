@@ -469,8 +469,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label for="blockerTitle">Judul Blocker <span class="required">*</span></label>
                 <span class="char-counter" id="titleCounter">0 / 140</span>
               </div>
-              <input id="blockerTitle" name="title" type="text" required minlength="10" maxlength="140" placeholder="Misal: Kredensial API Payment Gateway Sandbox Kadaluarsa">
-              <span class="hint" style="margin-top:4px">Gunakan format ringkas: <strong>[Komponen/Layanan] + [Gejala Masalah]</strong> (min. 10 karakter).</span>
+              <input id="blockerTitle" name="title" type="text" required minlength="10" maxlength="140" placeholder="Contoh: [Payment Gateway] Kredensial Sandbox Kadaluarsa (min. 10 karakter)">
               <span class="field-error" id="blockerTitleError" hidden></span>
             </div>
 
@@ -483,7 +482,6 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <option value="task-2">[Komitmen Pagi #2] Endpoint Backend /api/v1/history/weekly siap pakai</option>
                 <option value="adhoc-1">[Tugas Tambahan] Investigasi bug sesi login timeout pada Safari Mobile</option>
               </select>
-              <span class="hint">Menautkan blocker ke tugas harian mempermudah verifikasi keterlambatan dan penilaian status EOD sore hari.</span>
             </div>
 
             <!-- Tingkat Keparahan (Severity - 4 Visual Cards Tanpa Auto-Select) -->
