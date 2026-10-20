@@ -153,6 +153,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .attachment-remove-btn{background:none;border:none;color:#DC2626;cursor:pointer;padding:4px;display:flex;align-items:center;border-radius:4px}
 .attachment-remove-btn:hover{background:#FEE2E2}
 
+/* Quick Action Chips untuk Tindakan Spesifik */
+.quick-chip{font-size:11.5px;font-weight:700;color:var(--color-brand-primary);background:var(--color-brand-tint);border:1px solid #C6E9DE;border-radius:999px;padding:3px 9px;cursor:pointer;transition:all .15s ease}
+.quick-chip:hover{background:#C6E9DE;color:#0B8061}
+
 /* Segmented Severity Cards (4 Enum PRD) */
 .severity-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:2px}
 .severity-card{position:relative;border:1px solid var(--color-border-subtle);border-radius:10px;padding:14px 12px;background:#fff;cursor:pointer;transition:all .15s ease;display:flex;flex-direction:column;gap:6px}
@@ -599,9 +603,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
             <!-- Bantuan Konkret yang Diharapkan -->
             <div class="field">
-              <label for="expectedHelp">Tindakan / Bantuan Spesifik yang Diharapkan <span class="tiny">(opsional)</span></label>
-              <input id="expectedHelp" name="expectedHelp" type="text" maxlength="200" placeholder="Misal: Approval akses staging oleh Head of Infra, atau update kredensial token dari PM">
-              <span class="hint">Sebutkan aksi konkret yang Anda minta agar penanggung jawab dapat langsung mengeksekusinya.</span>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+                <label for="expectedHelp" style="margin:0">Tindakan / Bantuan Spesifik yang Diharapkan <span class="tiny">(opsional)</span></label>
+                <div class="quick-chips" style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button type="button" class="quick-chip" data-text="Butuh approval tiket/PR dari ">+ Approval</button>
+                  <button type="button" class="quick-chip" data-text="Butuh akses kredensial/token ke ">+ Akses/Token</button>
+                  <button type="button" class="quick-chip" data-text="Butuh eskalasi komunikasi ke vendor ">+ Eskalasi Vendor</button>
+                  <button type="button" class="quick-chip" data-text="Butuh review arsitektur/kode dengan ">+ Review Kode</button>
+                </div>
+              </div>
+              <input id="expectedHelp" name="expectedHelp" type="text" maxlength="200" placeholder="Sebutkan aksi konkret yang Anda butuhkan (Misal: Butuh approval token staging oleh PM, reset kredensial VPN)...">
             </div>
 
           </div>
@@ -754,6 +765,14 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           <p id="ticketDescSummary" style="font-size:14px;color:var(--color-text-secondary);line-height:1.55;background:#FAFCFB;padding:14px 16px;border:1px solid var(--color-border-subtle);border-radius:8px">
             Deskripsi kendala yang dilaporkan.
           </p>
+
+          <div id="ticketHelpWrap" style="display:none;margin-top:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 16px">
+            <div style="font-size:12px;font-weight:750;color:#166534;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              Tindakan / Bantuan yang Diharapkan Pelapor
+            </div>
+            <div id="ticketHelpSummary" style="font-size:13.5px;color:#14532D;line-height:1.5;font-weight:600"></div>
+          </div>
 
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--color-border-subtle);flex-wrap:wrap">
             <span class="small" style="color:var(--color-text-secondary)">
@@ -987,6 +1006,17 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       }
     });
   }
+
+  // Quick Action Chips untuk Tindakan / Bantuan Spesifik
+  document.querySelectorAll('.quick-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const textToAppend = chip.dataset.text;
+      if (!expectedHelpInput) return;
+      expectedHelpInput.value = textToAppend;
+      expectedHelpInput.focus();
+      expectedHelpInput.setSelectionRange(expectedHelpInput.value.length, expectedHelpInput.value.length);
+    });
+  });
 
   // 4b. File Attachment Interaction (Click, Drag & Drop, Paste Screenshot)
   attachmentDropzone.addEventListener('click', () => attachmentInput.click());
@@ -1409,6 +1439,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     };
 
     // Simpan ke localStorage untuk dibaca Halaman 02/03/04 & View B
+    const helpVal = expectedHelpInput ? expectedHelpInput.value.trim() : '';
     const newBlocker = {
       id: ticketId,
       title: titleVal,
@@ -1417,6 +1448,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       ownerNeeded: ownerName,
       status: 'Open',
       resolutionNote: null,
+      expectedHelp: helpVal || null,
       hasAttachment: attachmentPreview.classList.contains('show'),
       attachmentName: attachmentPreview.classList.contains('show') ? attachmentFileName.textContent : null,
       raisedAt: new Date().toISOString(),
@@ -1438,6 +1470,17 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     $('ticketTimeSummary').textContent = `Hari ini, ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`;
     $('ticketDescSummary').textContent = descVal;
 
+    const ticketHelpWrap = $('ticketHelpWrap');
+    const ticketHelpSummary = $('ticketHelpSummary');
+    if (ticketHelpWrap && ticketHelpSummary) {
+      if (helpVal) {
+        ticketHelpSummary.textContent = helpVal;
+        ticketHelpWrap.style.display = 'block';
+      } else {
+        ticketHelpWrap.style.display = 'none';
+      }
+    }
+
     form.style.display = 'none';
     const ticketCard = $('submittedTicketCard');
     ticketCard.classList.add('show');
@@ -1449,6 +1492,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   // Tombol Bersihkan Formulir
   $('resetBlockerBtn').addEventListener('click', () => {
     form.reset();
+    if (expectedHelpInput) expectedHelpInput.value = '';
     titleCounter.textContent = '0 / 140';
     titleCounter.style.color = 'var(--color-text-muted)';
     titleCounter.style.fontWeight = '600';
@@ -1467,6 +1511,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     }
     if (docIcon) docIcon.style.display = 'block';
     attachmentPreview.classList.remove('show');
+    const ticketHelpWrap = $('ticketHelpWrap');
+    if (ticketHelpWrap) ticketHelpWrap.style.display = 'none';
     orgCard.click();
     populateCommitmentsDropdown();
     if (criticalNoticeBox) criticalNoticeBox.style.display = 'none';
@@ -1478,6 +1524,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   $('createAnotherBlockerBtn').addEventListener('click', () => {
     $('submittedTicketCard').classList.remove('show');
     form.reset();
+    if (expectedHelpInput) expectedHelpInput.value = '';
     form.style.display = 'block';
     orgCard.click();
     populateCommitmentsDropdown();
@@ -1488,12 +1535,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     severityCards.forEach(c => c.classList.remove('active'));
     document.querySelectorAll('input[name="blockerSeverity"]').forEach(r => r.checked = false);
     attachmentInput.value = '';
+    const thumb = $('attachmentThumbnail');
+    const docIcon = $('attachmentDocIcon');
     if (thumb) {
       thumb.src = '';
       thumb.style.display = 'none';
     }
     if (docIcon) docIcon.style.display = 'block';
     attachmentPreview.classList.remove('show');
+    const ticketHelpWrap = $('ticketHelpWrap');
+    if (ticketHelpWrap) ticketHelpWrap.style.display = 'none';
     checkPanel1Completion();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -1509,6 +1560,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       severity: 'Critical',
       ownerNeeded: 'Rina Putri — Direct Manager (Level 1)',
       status: 'Resolved',
+      expectedHelp: 'Approval perpanjangan akses sandbox API dan regenerasi token staging oleh PM',
       resolutionNote: 'Kredensial sandbox payment gateway telah diperbarui di staging server dan token baru telah di-regenerate oleh tim backend. Silakan jalankan ulang test suite payment.',
       hasAttachment: true,
       attachmentName: 'screenshot-error-403.png',
@@ -1522,6 +1574,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       severity: 'High',
       ownerNeeded: 'Budi Santoso — Head of Engineering (Level 2)',
       status: 'Open',
+      expectedHelp: 'Reset akun VPN dan verifikasi konfigurasi routing tim infra',
       resolutionNote: null,
       hasAttachment: false,
       attachmentName: null,
@@ -1535,6 +1588,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       severity: 'Medium',
       ownerNeeded: 'Andi Wicaksono — Principal Architect Core',
       status: 'Closed',
+      expectedHelp: null,
       resolutionNote: 'Skema OpenAPI v3 telah disinkronkan ke repositori docs-api pada commit 7a8f1b.',
       hasAttachment: true,
       attachmentName: 'openapi-diff.json',
@@ -1710,6 +1764,13 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
             <span><strong>Penanggung Jawab:</strong> ${escapeHtml(b.ownerNeeded || 'Atasan Langsung')}</span>
             ${b.hasAttachment ? `<span>&bull;</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:2px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>${escapeHtml(b.attachmentName || 'Bukti Terlampir')}</span>` : ''}
           </div>
+
+          ${b.expectedHelp ? `
+            <div style="margin:4px 0 12px;background:#F0FDF4;border:1px solid #DCFCE7;border-radius:6px;padding:8px 12px;display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:11px;font-weight:750;color:#166534;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em">Bantuan Diminta:</span>
+              <span style="font-size:13px;color:#14532D;line-height:1.45;font-weight:600">${escapeHtml(b.expectedHelp)}</span>
+            </div>
+          ` : ''}
 
           ${isResolved ? `
             <div class="resolution-box">
