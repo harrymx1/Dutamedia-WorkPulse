@@ -158,22 +158,29 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .severity-card{position:relative;border:1px solid var(--color-border-subtle);border-radius:10px;padding:14px 12px;background:#fff;cursor:pointer;transition:all .15s ease;display:flex;flex-direction:column;gap:6px}
 .severity-card:hover{border-color:var(--color-border-strong);background:var(--color-surface-subtle)}
 .severity-card input{position:absolute;opacity:0;width:1px;height:1px}
-.severity-card.active{border-width:2px;padding:13px 11px}
-.severity-card.critical.active{background:#FEF2F2;border-color:#DC2626}
-.severity-card.high.active{background:#FFFBEB;border-color:#D97706}
-.severity-card.medium.active{background:#EFF6FF;border-color:#2563EB}
-.severity-card.low.active{background:#F8FAFC;border-color:#64748B}
+.severity-card.active{border-width:1.5px;padding:13.5px 11.5px}
+.severity-card.critical.active{background:#FEF2F2;border-color:#F87171;box-shadow:0 0 0 1px #FCA5A5}
+.severity-card.high.active{background:#FFFBEB;border-color:#FBBF24;box-shadow:0 0 0 1px #FDE68A}
+.severity-card.medium.active{background:#EFF6FF;border-color:#60A5FA;box-shadow:0 0 0 1px #BFDBFE}
+.severity-card.low.active{background:#F8FAFC;border-color:#94A3B8;box-shadow:0 0 0 1px #CBD5E1}
 .severity-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.severity-badge{font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px}
+.severity-label-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.severity-badge{font-size:12.5px;font-weight:800;display:inline-flex;align-items:center}
 .severity-badge.critical{color:#991B1B}
 .severity-badge.high{color:#92400E}
 .severity-badge.medium{color:#1E40AF}
 .severity-badge.low{color:#334155}
+.sla-pill{font-size:10.5px;font-weight:750;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
+.sla-pill.critical{background:#FEE2E2;color:#991B1B}
+.sla-pill.high{background:#FEF3C7;color:#92400E}
+.sla-pill.medium{background:#DBEAFE;color:#1E40AF}
+.sla-pill.low{background:#F1F5F9;color:#475569}
 .severity-desc{font-size:11.5px;color:var(--color-text-secondary);line-height:1.35}
 .circle-mark{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--color-border-strong);display:grid;place-items:center;flex-shrink:0;background:#fff;transition:all .15s ease}
 .severity-card.active .circle-mark{background:currentColor;border-color:currentColor}
 .severity-card.active .circle-mark svg{display:block}
 .circle-mark svg{display:none;color:#fff}
+.critical-notice-box{display:none;align-items:center;gap:10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12.5px;color:#991B1B}
 
 /* Authority Options (Radio Cards) */
 .authority-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;border:none;padding:0;margin:0}
@@ -484,7 +491,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label class="severity-card critical" id="card-critical">
                   <input type="radio" name="blockerSeverity" value="Critical" required>
                   <div class="severity-top">
-                    <span class="severity-badge critical">Critical</span>
+                    <div class="severity-label-wrap">
+                      <span class="severity-badge critical">Critical</span>
+                      <span class="sla-pill critical">≤ 2 Jam</span>
+                    </div>
                     <span class="circle-mark">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </span>
@@ -495,7 +505,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label class="severity-card high" id="card-high">
                   <input type="radio" name="blockerSeverity" value="High">
                   <div class="severity-top">
-                    <span class="severity-badge high">High</span>
+                    <div class="severity-label-wrap">
+                      <span class="severity-badge high">High</span>
+                      <span class="sla-pill high">≤ 4 Jam</span>
+                    </div>
                     <span class="circle-mark">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </span>
@@ -506,7 +519,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label class="severity-card medium" id="card-medium">
                   <input type="radio" name="blockerSeverity" value="Medium">
                   <div class="severity-top">
-                    <span class="severity-badge medium">Medium</span>
+                    <div class="severity-label-wrap">
+                      <span class="severity-badge medium">Medium</span>
+                      <span class="sla-pill medium">Hari Ini</span>
+                    </div>
                     <span class="circle-mark">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </span>
@@ -517,7 +533,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label class="severity-card low" id="card-low">
                   <input type="radio" name="blockerSeverity" value="Low">
                   <div class="severity-top">
-                    <span class="severity-badge low">Low</span>
+                    <div class="severity-label-wrap">
+                      <span class="severity-badge low">Low</span>
+                      <span class="sla-pill low">Fleksibel</span>
+                    </div>
                     <span class="circle-mark">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </span>
@@ -526,6 +545,13 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 </label>
 
               </div>
+
+              <!-- Critical Alert Notice (Halus & Nyaman di Mata) -->
+              <div class="critical-notice-box" id="criticalNoticeBox">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span><strong>Perhatian Skala Critical:</strong> Opsi ini menyalakan timer eskalasi otomatis <strong>2 jam</strong> dan mengirimkan alarm prioritas tinggi ke penanggung jawab.</span>
+              </div>
+
               <span class="field-error" id="blockerSeverityError" hidden></span>
             </div>
 
@@ -995,6 +1021,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
   // 5. Interaktivitas Segmented Severity Cards
   const severityCards = document.querySelectorAll('.severity-card');
+  const criticalNoticeBox = $('criticalNoticeBox');
   severityCards.forEach(card => {
     card.addEventListener('click', () => {
       severityCards.forEach(c => c.classList.remove('active'));
@@ -1003,6 +1030,15 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       if (radio) radio.checked = true;
       clearError(null, 'blockerSeverityError');
       checkPanel1Completion();
+
+      // Tampilkan pemberitahuan skala Critical dengan visual halus
+      if (criticalNoticeBox) {
+        if (radio && radio.value === 'Critical') {
+          criticalNoticeBox.style.display = 'flex';
+        } else {
+          criticalNoticeBox.style.display = 'none';
+        }
+      }
     });
   });
 
@@ -1361,6 +1397,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     attachmentPreview.classList.remove('show');
     orgCard.click();
     populateCommitmentsDropdown();
+    if (criticalNoticeBox) criticalNoticeBox.style.display = 'none';
     checkPanel1Completion();
     showToast('success', 'Formulir berhasil dikosongkan.');
   });
@@ -1372,6 +1409,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     form.style.display = 'block';
     orgCard.click();
     populateCommitmentsDropdown();
+    if (criticalNoticeBox) criticalNoticeBox.style.display = 'none';
     titleCounter.textContent = '0 / 140';
     titleCounter.style.color = 'var(--color-text-muted)';
     titleCounter.style.fontWeight = '600';
