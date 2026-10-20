@@ -654,7 +654,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="pill neutral">Bagian 2 dari 2</span>
-              <span class="pill blue" id="panel2StatusBadge"><span class="dot-sm"></span> Rute Terverifikasi</span>
+              <span class="pill green" id="panel2StatusBadge"><span class="dot-sm"></span> Lengkap</span>
             </div>
           </div>
           <div class="panel-body">
@@ -1299,8 +1299,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       detail.textContent = 'Penanggung jawab ditunjuk secara spesifik oleh pelapor. Notifikasi langsung diteruskan ke yang bersangkutan.';
       status.textContent = 'Ditunjuk Manual · Terverifikasi';
       if (panel2StatusBadge) {
-        panel2StatusBadge.className = 'pill blue';
-        panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Rute Terverifikasi';
+        panel2StatusBadge.className = 'pill green';
+        panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Lengkap';
       }
       return;
     }
@@ -1316,7 +1316,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       status.textContent = 'Menunggu Pilihan Proyek';
       if (panel2StatusBadge) {
         panel2StatusBadge.className = 'pill amber';
-        panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Menunggu Pilihan Proyek';
+        panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Belum Lengkap';
       }
       return;
     }
@@ -1339,8 +1339,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       status.textContent = 'Perlu Konfirmasi Admin';
     }
     if (panel2StatusBadge) {
-      panel2StatusBadge.className = 'pill blue';
-      panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Rute Terverifikasi';
+      panel2StatusBadge.className = 'pill green';
+      panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Lengkap';
     }
   }
 
