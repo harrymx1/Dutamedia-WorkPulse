@@ -560,8 +560,15 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
             <!-- Deskripsi Kendala & Upaya Mandiri -->
             <div class="field" style="margin-bottom:18px">
-              <label for="blockerDescription">Deskripsi Kendala &amp; Upaya Mandiri <span class="required">*</span></label>
-              <textarea id="blockerDescription" name="description" required rows="4" placeholder="Jelaskan fakta kendala yang dialami, pesan error atau indikasinya, serta langkah mandiri apa yang sudah Anda coba..."></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+                <label for="blockerDescription">Deskripsi Kendala &amp; Upaya Mandiri <span class="required">*</span></label>
+                <button type="button" class="btn-text-action" id="insertDescTemplateBtn" style="background:none;border:none;color:var(--color-brand-primary);font-size:12px;font-weight:700;cursor:pointer;padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  Gunakan Format Terstruktur
+                </button>
+              </div>
+              <textarea id="blockerDescription" name="description" required minlength="20" rows="5" placeholder="Jelaskan fakta kendala yang dialami, pesan error atau indikasinya, serta langkah mandiri apa yang sudah Anda coba..."></textarea>
+              <span class="hint" style="margin-top:4px">Uraikan secara jelas <strong>gejala masalah</strong> dan <strong>langkah mandiri</strong> yang telah Anda coba (min. 20 karakter).</span>
               <span class="field-error" id="blockerDescriptionError" hidden></span>
             </div>
 
@@ -931,7 +938,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     if (!panel1StatusBadge) return;
     const hasTitle = titleInput.value.trim().length >= 10;
     const hasSeverity = document.querySelector('input[name="blockerSeverity"]:checked') !== null;
-    const hasDesc = descTextarea.value.trim().length > 0;
+    const hasDesc = descTextarea.value.trim().length >= 20;
 
     if (hasTitle && hasSeverity && hasDesc) {
       panel1StatusBadge.className = 'pill green';
@@ -966,6 +973,20 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     clearError('blockerDescription', 'blockerDescriptionError');
     checkPanel1Completion();
   });
+
+  const insertDescTemplateBtn = $('insertDescTemplateBtn');
+  if (insertDescTemplateBtn) {
+    insertDescTemplateBtn.addEventListener('click', () => {
+      const template = "1. Gejala / Pesan Error: \n2. Upaya mandiri yang sudah dicoba: ";
+      if (!descTextarea.value.trim() || confirm('Ganti isi deskripsi dengan panduan format terstruktur?')) {
+        descTextarea.value = template;
+        descTextarea.focus();
+        descTextarea.setSelectionRange(25, 25);
+        clearError('blockerDescription', 'blockerDescriptionError');
+        checkPanel1Completion();
+      }
+    });
+  }
 
   // 4b. File Attachment Interaction (Click, Drag & Drop, Paste Screenshot)
   attachmentDropzone.addEventListener('click', () => attachmentInput.click());
@@ -1311,6 +1332,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     const descVal = descTextarea.value.trim();
     if (!descVal) {
       setError('blockerDescription', 'blockerDescriptionError', 'Deskripsi fakta kendala dan upaya mandiri wajib diisi.');
+      isValid = false;
+      firstInvalid = firstInvalid || descTextarea;
+    } else if (descVal.length < 20) {
+      setError('blockerDescription', 'blockerDescriptionError', `Deskripsi kendala minimal 20 karakter agar mencakup gejala dan upaya mandiri (saat ini ${descVal.length} karakter).`);
       isValid = false;
       firstInvalid = firstInvalid || descTextarea;
     }
