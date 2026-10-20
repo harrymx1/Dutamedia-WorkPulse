@@ -126,6 +126,7 @@ p{margin:0}
 .tiny{font-size:12px;color:var(--color-text-secondary)}
 
 /* Form Controls */
+[hidden],.field[hidden]{display:none !important}
 .field{display:grid;gap:6px;min-width:0}
 .field label,.field-label{font-size:13.5px;font-weight:750;color:var(--color-text-primary)}
 .required{color:#B91C1C}
@@ -666,16 +667,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <label class="authority-card active" id="auth-org-card">
                 <input type="radio" name="authorityContext" value="organizational" checked>
                 <div class="authority-info">
-                  <strong>Organizational Authority (Bawaan)</strong>
-                  <small>Jalur struktural organisasi. Blocker ditugaskan otomatis ke Atasan Langsung (Direct Manager Level 1).</small>
+                  <strong>Struktural Organisasi (Bawaan)</strong>
+                  <small>Ditangani oleh divisi atau pimpinan yang berwenang dalam struktur perusahaan (seperti Atasan Divisi, Tim Infra, atau Keuangan).</small>
                 </div>
               </label>
 
               <label class="authority-card" id="auth-proj-card">
                 <input type="radio" name="authorityContext" value="project">
                 <div class="authority-info">
-                  <strong>Project Authority (Proyek Spesifik)</strong>
-                  <small>Jalur manajer proyek. Gunakan jika kendala terikat pada proyek tertentu yang memiliki Project Lead terdaftar.</small>
+                  <strong>Kewenangan Proyek</strong>
+                  <small>Ditangani oleh personil yang berwenang di dalam proyek terkait (seperti Project Manager, Tech Lead, atau QA Lead Proyek).</small>
                 </div>
               </label>
             </fieldset>
@@ -949,9 +950,12 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   // =========================================================================
   const authorityDirectory = {
     organizational: [
-      { id: 'usr-rina', name: 'Rina Putri', role: 'Direct Manager (Level 1)', isDefault: true },
-      { id: 'usr-budi', name: 'Budi Santoso', role: 'Head of Engineering (Level 2)', isDefault: false },
-      { id: 'usr-hendra', name: 'Hendra Wijaya', role: 'VP of Technology (Level 3)', isDefault: false }
+      { id: 'usr-rina', name: 'Rina Putri', role: 'Technical Lead / Direct Manager (Engineering)', isDefault: true },
+      { id: 'usr-budi', name: 'Budi Santoso', role: 'Head of Engineering', isDefault: false },
+      { id: 'usr-dimas', name: 'Dimas Prayoga', role: 'Head of Operations & Infrastructure', isDefault: false },
+      { id: 'usr-gilang', name: 'Gilang Ramadhan', role: 'Operations Supervisor (Infra & DevOps)', isDefault: false },
+      { id: 'usr-siti', name: 'Siti Rahma', role: 'Senior Finance (Anggaran & Lisensi)', isDefault: false },
+      { id: 'usr-dewi', name: 'Dewi Lestari', role: 'HRGA Specialist (Fasilitas & Kantor)', isDefault: false }
     ],
     project: {
       'PRJ-PORTAL': [
@@ -1330,8 +1334,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     if (defaultOwner) {
       person.textContent = `${defaultOwner.name} — ${defaultOwner.role}`;
       detail.textContent = ctx === 'organizational'
-        ? 'Penugasan otomatis diberikan kepada Atasan Langsung (Direct Manager Level 1) pelapor.'
-        : `Penugasan otomatis diberikan kepada Project Lead aktif pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}.`;
+        ? 'Penugasan otomatis awal ditujukan ke Atasan Langsung (Technical Lead / Level 1). Pelapor juga dapat memilih penanggung jawab divisi lain (seperti Infra, Finance, atau HRGA) pada pilihan di atas.'
+        : `Penugasan otomatis awal ditujukan ke Project Lead aktif pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Pelapor juga dapat menunjuk Tech Lead atau QA Lead proyek terkait.`;
       status.textContent = ctx === 'organizational' ? 'Ditentukan Otomatis · Level 1' : 'Ditentukan Otomatis · Project Lead';
     } else {
       person.textContent = 'Belum ada pemetaan aktif';
