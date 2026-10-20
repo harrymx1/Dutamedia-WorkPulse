@@ -283,6 +283,25 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 .blocker-item-meta{display:flex;align-items:center;gap:6px 10px;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap;margin-bottom:10px}
 .blocker-meta-item{display:inline-flex;align-items:center;gap:5px;background:#F8FAFC;border:1px solid #E2E8F0;padding:3px 9px;border-radius:6px}
 .blocker-meta-item strong{color:var(--color-text-primary);font-weight:700}
+.blocker-meta-item.attachment-chip{cursor:pointer;transition:all .15s ease;user-select:none}
+.blocker-meta-item.attachment-chip:hover{background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8}
+.blocker-meta-item.attachment-chip:hover svg{color:#2563EB}
+.blocker-meta-item.attachment-chip:hover strong{color:#1D4ED8}
+
+/* Attachment Preview Modal Styling */
+.preview-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(4px);z-index:110;align-items:center;justify-content:center;padding:20px;animation:modalFadeIn .18s ease forwards}
+.preview-modal-backdrop.show{display:flex}
+.preview-modal-card{background:#fff;border-radius:12px;box-shadow:0 24px 50px rgba(0,0,0,.25);max-width:680px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;animation:modalPop .2s ease forwards}
+@keyframes modalFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.preview-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--color-border-subtle);background:#FAFDFB}
+.preview-modal-title-wrap{display:flex;align-items:center;gap:12px}
+.preview-modal-icon{width:38px;height:38px;border-radius:8px;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
+.preview-modal-body{padding:20px;overflow-y:auto;background:#F8FAFC}
+.preview-modal-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--color-border-subtle);background:#fff;gap:10px;flex-wrap:wrap}
+.preview-screen-box{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12.5px;line-height:1.6;border:1px solid #1E293B;box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
+.preview-screen-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #334155;color:#94A3B8;font-size:11.5px}
+.preview-json-diff{background:#1E293B;color:#F1F5F9;border-radius:8px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;line-height:1.6;overflow-x:auto}
 .resolution-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-top:10px}
 .resolution-title{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#166534;margin-bottom:4px}
 .resolution-text{font-size:13px;color:#14532D;line-height:1.45;margin-bottom:8px}
@@ -877,6 +896,39 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
     </div>
   </main>
+</div>
+
+<!-- Modal Pratinjau Lampiran Bukti Kendala -->
+<div class="preview-modal-backdrop" id="attachmentPreviewModal" role="dialog" aria-modal="true" aria-labelledby="previewModalFilename">
+  <div class="preview-modal-card">
+    <div class="preview-modal-header">
+      <div class="preview-modal-title-wrap">
+        <div class="preview-modal-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+        </div>
+        <div>
+          <h3 id="previewModalFilename" style="font-size:15px;font-weight:800;color:var(--color-text-primary);margin:0">screenshot-error-403.png</h3>
+          <p id="previewModalMeta" class="small" style="margin:2px 0 0;color:var(--color-text-secondary)">Lampiran bukti kendala</p>
+        </div>
+      </div>
+      <button type="button" class="btn-ghost" id="closePreviewModalBtn" style="min-height:36px;padding:6px 10px;border-radius:6px;cursor:pointer" aria-label="Tutup Pratinjau">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="preview-modal-body" id="previewModalContent">
+      <!-- Diisi dinamis berdasarkan berkas -->
+    </div>
+    <div class="preview-modal-footer">
+      <span class="small" style="color:var(--color-text-secondary)" id="previewModalNote">Diupload oleh pelapor saat pembuatan tiket</span>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn btn-secondary btn-sm" id="downloadAttachmentBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Unduh Berkas
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" id="closePreviewModalBtn2">Tutup Pratinjau</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Contextual Toast Notification Container -->
@@ -1925,9 +1977,9 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <span><strong>Penanggung Jawab:</strong> ${escapeHtml(b.ownerNeeded || 'Atasan Langsung')}</span>
             </div>
             ${b.hasAttachment ? `
-              <div class="blocker-meta-item">
+              <div class="blocker-meta-item attachment-chip" data-attachment="${escapeHtml(b.attachmentName || 'Bukti Terlampir')}" data-ticket="${b.id}" title="Klik untuk mempratinjau berkas lampiran">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                <span><strong>Lampiran:</strong> ${escapeHtml(b.attachmentName || 'Bukti Terlampir')}</span>
+                <span><strong>Lampiran:</strong> <span style="text-decoration:underline;text-underline-offset:2px">${escapeHtml(b.attachmentName || 'Bukti Terlampir')}</span></span>
               </div>
             ` : ''}
           </div>
@@ -2017,7 +2069,115 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         reopenBlocker(ticketId);
       });
     });
+
+    // Attach event listeners for attachment previews
+    container.querySelectorAll('.attachment-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const filename = chip.dataset.attachment;
+        const ticketId = chip.dataset.ticket;
+        openAttachmentPreview(filename, ticketId);
+      });
+    });
   }
+
+  // =========================================================================
+  // ATTACHMENT PREVIEW MODAL LOGIC
+  // =========================================================================
+  let currentActiveAttachment = '';
+
+  function openAttachmentPreview(filename, ticketId) {
+    const modal = $('attachmentPreviewModal');
+    const filenameEl = $('previewModalFilename');
+    const metaEl = $('previewModalMeta');
+    const contentEl = $('previewModalContent');
+    if (!modal || !contentEl) return;
+
+    currentActiveAttachment = filename;
+    filenameEl.textContent = filename;
+    metaEl.innerHTML = `Lampiran pada tiket <strong>${ticketId}</strong> &bull; Diunggah oleh Pelapor`;
+
+    if (filename.endsWith('.png') || filename.endsWith('.jpg') || filename.includes('screenshot')) {
+      contentEl.innerHTML = `
+        <div class="preview-screen-box">
+          <div class="preview-screen-header">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#EF4444"></span>
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#F59E0B"></span>
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10B981"></span>
+              <span style="margin-left:6px;font-weight:700">Sandbox API Console - Response HTTP/1.1</span>
+            </div>
+            <span>HTTP 403 Forbidden</span>
+          </div>
+          <div style="color:#F87171;margin-bottom:6px;font-weight:700">&gt; POST /api/v2/sandbox/payments/charge HTTP/1.1</div>
+          <div style="color:#94A3B8;margin-bottom:8px">&gt; Authorization: Bearer eyJhbGciOi...[EXPIRED]</div>
+          <div style="background:#020617;padding:12px;border-radius:6px;border:1px solid #1E293B">
+            <span style="color:#F87171">{</span><br>
+            &nbsp;&nbsp;<span style="color:#93C5FD">"status"</span>: <span style="color:#FCA5A5">403</span>,<br>
+            &nbsp;&nbsp;<span style="color:#93C5FD">"error"</span>: <span style="color:#FDE047">"CREDENTIAL_EXPIRED"</span>,<br>
+            &nbsp;&nbsp;<span style="color:#93C5FD">"message"</span>: <span style="color:#86EFAC">"Sandbox Client Key and Staging Token expired on 2026-10-19T08:00:00Z. Please renew credential in Partner Portal."</span>,<br>
+            &nbsp;&nbsp;<span style="color:#93C5FD">"request_id"</span>: <span style="color:#FDE047">"req_sand_94827102"</span><br>
+            <span style="color:#F87171">}</span>
+          </div>
+          <div style="margin-top:10px;font-size:11.5px;color:#64748B">
+            // Bukti tangkapan layar verifikasi galat otentikasi payment gateway pada server staging Squad A.
+          </div>
+        </div>
+      `;
+    } else if (filename.endsWith('.json')) {
+      contentEl.innerHTML = `
+        <div class="preview-json-diff">
+          <div style="color:#94A3B8;margin-bottom:8px;font-size:11.5px;border-bottom:1px solid #334155;padding-bottom:4px">
+            --- docs-api/openapi.json (Production v2.4)<br>
+            +++ staging-db/schema.sql (Staging v2.5-rc1)
+          </div>
+          <div style="color:#F87171">- "user_role": { "type": "string", "enum": ["MEMBER", "LEAD"] }</div>
+          <div style="color:#4ADE80">+ "user_role": { "type": "string", "enum": ["MEMBER", "LEAD", "DIRECTOR", "INTERIM"] }</div>
+          <div style="color:#94A3B8">@@ -142,6 +142,9 @@</div>
+          <div style="color:#4ADE80">+ "delegation_status": { "type": "boolean", "default": false }</div>
+          <div style="color:#4ADE80">+ "sla_escalation_target": { "type": "string" }</div>
+        </div>
+      `;
+    } else {
+      contentEl.innerHTML = `
+        <div style="text-align:center;padding:32px 16px;background:#fff;border:1px dashed #CBD5E1;border-radius:8px">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-brand-primary);margin-bottom:10px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <div style="font-weight:800;font-size:14px;color:var(--color-text-primary)">${escapeHtml(filename)}</div>
+          <div class="small" style="color:var(--color-text-secondary);margin-top:4px">Berkas dokumen telah tersimpan aman di repositori WorkPulse.</div>
+        </div>
+      `;
+    }
+
+    modal.classList.add('show');
+  }
+
+  function closeAttachmentPreview() {
+    const modal = $('attachmentPreviewModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  const closePreviewModalBtn = $('closePreviewModalBtn');
+  if (closePreviewModalBtn) closePreviewModalBtn.addEventListener('click', closeAttachmentPreview);
+
+  const closePreviewModalBtn2 = $('closePreviewModalBtn2');
+  if (closePreviewModalBtn2) closePreviewModalBtn2.addEventListener('click', closeAttachmentPreview);
+
+  const attachmentPreviewModal = $('attachmentPreviewModal');
+  if (attachmentPreviewModal) {
+    attachmentPreviewModal.addEventListener('click', (e) => {
+      if (e.target === attachmentPreviewModal) closeAttachmentPreview();
+    });
+  }
+
+  const downloadAttachmentBtn = $('downloadAttachmentBtn');
+  if (downloadAttachmentBtn) {
+    downloadAttachmentBtn.addEventListener('click', () => {
+      showToast('success', `Mengunduh berkas ${currentActiveAttachment}...`);
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAttachmentPreview();
+  });
 
   function confirmCloseBlocker(ticketId) {
     const blockers = getStoredBlockers();
