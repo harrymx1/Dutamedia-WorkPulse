@@ -1773,7 +1773,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       severity: 'Medium',
       ownerNeeded: 'Andi Wicaksono — Principal / R&D Engineer',
       status: 'Closed',
-      expectedHelp: null,
+      expectedHelp: 'Sinkronisasi skema docs-api dengan perubahan migrasi database staging Squad Core',
       resolutionNote: 'Skema OpenAPI v3 telah disinkronkan ke repositori docs-api pada commit 7a8f1b.',
       hasAttachment: true,
       attachmentName: 'openapi-diff.json',
@@ -1790,11 +1790,38 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         if (Array.isArray(parsed) && parsed.length > 0) {
           let changed = false;
           parsed.forEach(b => {
-            if (b.id === '#BLK-2026-1048' && (!b.categoryLabel || b.categoryLabel === 'Kendala Umum')) {
-              b.categoryLabel = 'Vendor & Layanan Pihak Ketiga';
-              b.category = 'Vendor';
-              changed = true;
+            if (b.id === '#BLK-2026-1048') {
+              if (!b.categoryLabel || b.categoryLabel === 'Kendala Umum') {
+                b.categoryLabel = 'Vendor & Layanan Pihak Ketiga';
+                b.category = 'Vendor';
+                changed = true;
+              }
+              if (!b.expectedHelp) {
+                b.expectedHelp = 'Approval perpanjangan akses sandbox API dan regenerasi token staging oleh PM';
+                changed = true;
+              }
+            } else if (b.id === '#BLK-2026-1052') {
+              if (!b.categoryLabel || b.categoryLabel === 'Kendala Umum') {
+                b.categoryLabel = 'Infrastruktur & Lingkungan Kerja';
+                b.category = 'Infra';
+                changed = true;
+              }
+              if (!b.expectedHelp) {
+                b.expectedHelp = 'Reset akun VPN dan verifikasi konfigurasi routing tim infra';
+                changed = true;
+              }
+            } else if (b.id === '#BLK-2026-0988') {
+              if (!b.categoryLabel || b.categoryLabel === 'Kendala Umum') {
+                b.categoryLabel = 'Spesifikasi & Kebutuhan Produk';
+                b.category = 'Requirement';
+                changed = true;
+              }
+              if (!b.expectedHelp) {
+                b.expectedHelp = 'Sinkronisasi skema docs-api dengan perubahan migrasi database staging Squad Core';
+                changed = true;
+              }
             }
+
             if (b.ownerNeeded && b.ownerNeeded.includes('(Level 1)')) {
               b.ownerNeeded = 'Rina Putri — Technical Lead / Direct Manager';
               changed = true;
@@ -1943,7 +1970,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       } else if (isInProgress) {
         statusBadgeHtml = '<span class="pill blue"><span class="dot-sm"></span> Sedang Ditangani</span>';
       } else if (isOpen) {
-        statusBadgeHtml = '<span class="pill amber"><span class="dot-sm"></span> Menunggu Konfirmasi Atasan</span>';
+        statusBadgeHtml = '<span class="pill amber"><span class="dot-sm"></span> Menunggu Respons Atasan</span>';
       } else {
         statusBadgeHtml = '<span class="pill neutral"><span class="dot-sm"></span> Selesai Ditutup</span>';
       }
@@ -1991,17 +2018,19 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
             </div>
           ` : ''}
 
-          ${isResolved ? `
-            <div class="resolution-box">
-              <div class="resolution-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>Solusi Diberikan oleh Penanggung Jawab:</span>
+          ${b.resolutionNote ? `
+            <div class="resolution-box" style="${isClosed ? 'background:#F8FAFC;border-color:#E2E8F0' : ''}">
+              <div class="resolution-title" style="${isClosed ? 'color:var(--color-text-primary)' : ''}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${isClosed ? '#475569' : '#166534'}" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span>${isClosed ? 'Solusi yang Telah Diterapkan:' : 'Solusi Diberikan oleh Penanggung Jawab:'}</span>
               </div>
-              <div class="resolution-text">${escapeHtml(b.resolutionNote || 'Penanggung jawab telah menangani kendala ini.')}</div>
-              <div class="resolution-hint">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                <span><strong>Konfirmasi Mandiri:</strong> Tiket hanya dapat diselesaikan oleh pelapor setelah hasil solusi diverifikasi.</span>
-              </div>
+              <div class="resolution-text" style="${isClosed ? 'color:var(--color-text-secondary)' : ''}">${escapeHtml(b.resolutionNote)}</div>
+              ${isResolved ? `
+                <div class="resolution-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  <span><strong>Konfirmasi Mandiri:</strong> Tiket hanya dapat diselesaikan oleh pelapor setelah hasil solusi diverifikasi.</span>
+                </div>
+              ` : ''}
             </div>
           ` : ''}
 
@@ -2047,7 +2076,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                   Buka Kembali Jika Berulang
                 </button>
               ` : `
-                <a href="02-Morning-Commitment.html" class="btn btn-secondary btn-sm">Periksa Dampak di Workspace</a>
+                <a href="02-Morning-Commitment.html" class="btn btn-secondary btn-sm">Buka Ruang Kerja</a>
               `)}
             </div>
           </div>
