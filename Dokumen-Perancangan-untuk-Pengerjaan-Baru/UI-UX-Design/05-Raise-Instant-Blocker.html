@@ -477,15 +477,38 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <span class="field-error" id="blockerTitleError" hidden></span>
             </div>
 
-            <!-- Tautan Komitmen Hari Ini (Opsional - Di bawah Judul) -->
-            <div class="field" style="margin-bottom:18px">
-              <label for="linkedCommitment">Tautkan ke Komitmen Hari Ini <span class="tiny">(opsional)</span></label>
-              <select id="linkedCommitment" name="linkedCommitment">
-                <option value="" selected>— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —</option>
-                <option value="task-1">[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)</option>
-                <option value="task-2">[Komitmen Pagi #2] Endpoint Backend /api/v1/history/weekly siap pakai</option>
-                <option value="adhoc-1">[Tugas Tambahan] Investigasi bug sesi login timeout pada Safari Mobile</option>
-              </select>
+            <!-- Baris 2 Kolom: Komitmen Terkait & Kategori Kendala Resmi (PRD FR-16) -->
+            <div class="field-grid" style="margin-bottom:18px">
+              <!-- Tautan Komitmen Hari Ini (Opsional) -->
+              <div class="field">
+                <label for="linkedCommitment">Tautkan ke Komitmen Hari Ini <span class="tiny">(opsional)</span></label>
+                <select id="linkedCommitment" name="linkedCommitment">
+                  <option value="" selected>— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —</option>
+                  <option value="task-1">[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)</option>
+                  <option value="task-2">[Komitmen Pagi #2] Endpoint Backend /api/v1/history/weekly siap pakai</option>
+                  <option value="adhoc-1">[Tugas Tambahan] Investigasi bug sesi login timeout pada Safari Mobile</option>
+                </select>
+              </div>
+
+              <!-- Kategori Kendala (Wajib - 11 Kategori Resmi) -->
+              <div class="field">
+                <label for="blockerCategory">Kategori Kendala <span class="required">*</span></label>
+                <select id="blockerCategory" name="blockerCategory" required>
+                  <option value="" disabled selected>-- Pilih Kategori Kendala --</option>
+                  <option value="Technical">Kendala Teknis &amp; Kode (Bug, error logika, query DB)</option>
+                  <option value="Requirement">Spesifikasi &amp; Kebutuhan Produk (Alur belum jelas, berubah)</option>
+                  <option value="Dependency">Ketergantungan Rekan/Tim Internal (Menunggu hasil rekan tim)</option>
+                  <option value="Client">Klien Eksternal (Menunggu feedback, data, UAT dari klien)</option>
+                  <option value="Vendor">Vendor &amp; Layanan Pihak Ketiga (API luar/SaaS down, lisensi)</option>
+                  <option value="Resource">Kapasitas Tenaga Kerja (Rekan sakit/cuti, beban meluap)</option>
+                  <option value="Approval">Persetujuan &amp; Keputusan (Menunggu approval lead/manajemen)</option>
+                  <option value="Infra">Infrastruktur &amp; Lingkungan Kerja (Server down, CI/CD, jaringan)</option>
+                  <option value="Finance">Keuangan &amp; Anggaran (Pembayaran server/domain, plugin tertahan)</option>
+                  <option value="Legal">Hukum, Kontrak &amp; Regulasi (Kontrak/NDA tertahan, privasi data)</option>
+                  <option value="Other">Lain-lain (Kendala khusus di luar kategori di atas)</option>
+                </select>
+                <span class="field-error" id="blockerCategoryError" hidden></span>
+              </div>
             </div>
 
             <!-- Tingkat Keparahan (Severity - 4 Visual Cards Tanpa Auto-Select) -->
@@ -607,8 +630,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label for="expectedHelp" style="margin:0">Tindakan / Bantuan Spesifik yang Diharapkan <span class="tiny">(opsional)</span></label>
                 <div class="quick-chips" style="display:flex;gap:6px;flex-wrap:wrap">
                   <button type="button" class="quick-chip" data-text="Butuh approval tiket/PR dari ">+ Approval</button>
+                  <button type="button" class="quick-chip" data-text="Butuh konfirmasi requirement / detail alur dari ">+ Konfirmasi Requirement</button>
+                  <button type="button" class="quick-chip" data-text="Butuh konfirmasi keputusan resmi terkait pilihan arah dari ">+ Konfirmasi Keputusan</button>
                   <button type="button" class="quick-chip" data-text="Butuh akses kredensial/token ke ">+ Akses/Token</button>
-                  <button type="button" class="quick-chip" data-text="Butuh eskalasi komunikasi ke vendor ">+ Eskalasi Vendor</button>
+                  <button type="button" class="quick-chip" data-text="Butuh restart / pengecekan server staging oleh tim Infra ">+ Bantuan Infra</button>
                   <button type="button" class="quick-chip" data-text="Butuh review arsitektur/kode dengan ">+ Review Kode</button>
                 </div>
               </div>
@@ -743,7 +768,11 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
             </div>
           </div>
 
-          <div class="ticket-meta-grid">
+          <div class="ticket-meta-grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))">
+            <div class="ticket-meta-item">
+              <span class="ticket-meta-label">Kategori Kendala</span>
+              <span class="ticket-meta-value" id="ticketCategorySummary">Kendala Teknis &amp; Kode</span>
+            </div>
             <div class="ticket-meta-item">
               <span class="ticket-meta-label">Terkait Tugas</span>
               <span class="ticket-meta-value" id="ticketTaskSummary">[Komitmen Pagi #1]</span>
@@ -943,6 +972,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   const descTextarea = $('blockerDescription');
   const titleCounter = $('titleCounter');
   const linkedCommitmentSelect = $('linkedCommitment');
+  const blockerCategorySelect = $('blockerCategory');
   const expectedHelpInput = $('expectedHelp');
   const attachmentInput = $('blockerAttachment');
   const attachmentDropzone = $('attachmentDropzone');
@@ -956,16 +986,24 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   function checkPanel1Completion() {
     if (!panel1StatusBadge) return;
     const hasTitle = titleInput.value.trim().length >= 10;
+    const hasCategory = blockerCategorySelect && blockerCategorySelect.value !== '';
     const hasSeverity = document.querySelector('input[name="blockerSeverity"]:checked') !== null;
     const hasDesc = descTextarea.value.trim().length >= 20;
 
-    if (hasTitle && hasSeverity && hasDesc) {
+    if (hasTitle && hasCategory && hasSeverity && hasDesc) {
       panel1StatusBadge.className = 'pill green';
       panel1StatusBadge.innerHTML = '<span class="dot-sm"></span> Lengkap';
     } else {
       panel1StatusBadge.className = 'pill amber';
       panel1StatusBadge.innerHTML = '<span class="dot-sm"></span> Belum Lengkap';
     }
+  }
+
+  if (blockerCategorySelect) {
+    blockerCategorySelect.addEventListener('change', () => {
+      clearError('blockerCategory', 'blockerCategoryError');
+      checkPanel1Completion();
+    });
   }
 
   titleInput.addEventListener('input', () => {
@@ -1388,6 +1426,14 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       firstInvalid = firstInvalid || titleInput;
     }
 
+    // Validasi Kategori Kendala (11 Kategori Resmi PRD FR-16)
+    const catVal = blockerCategorySelect ? blockerCategorySelect.value : '';
+    if (!catVal) {
+      setError('blockerCategory', 'blockerCategoryError', 'Silakan pilih salah satu kategori kendala resmi.');
+      isValid = false;
+      firstInvalid = firstInvalid || blockerCategorySelect;
+    }
+
     // Validasi Severity (Harus dipilih secara sadar oleh pelapor)
     const severityChecked = document.querySelector('input[name="blockerSeverity"]:checked');
     if (!severityChecked) {
@@ -1429,6 +1475,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     const hasLinkedTask = linkedCommitmentSelect.value !== '';
     const taskOption = hasLinkedTask ? (linkedCommitmentSelect.options[linkedCommitmentSelect.selectedIndex]?.textContent || 'Kendala Umum') : 'Kendala Umum / Fasilitas';
     const taskShort = hasLinkedTask && taskOption.includes(']') ? taskOption.split(']')[0] + ']' : 'Kendala Umum';
+    const catText = blockerCategorySelect.options[blockerCategorySelect.selectedIndex]?.textContent || catVal;
+    const catShort = catText.split('(')[0].trim();
     const ownerName = $('ownerRoutePerson').textContent;
 
     const slaMap = {
@@ -1443,6 +1491,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     const newBlocker = {
       id: ticketId,
       title: titleVal,
+      category: catVal,
+      categoryLabel: catShort,
       linkedTask: taskOption,
       severity: severityVal,
       ownerNeeded: ownerName,
@@ -1462,6 +1512,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     // Tampilkan Kartu Tiket Blocker Resmi
     $('ticketIdBadge').textContent = ticketId;
     $('ticketTitleSummary').textContent = titleVal;
+    $('ticketCategorySummary').textContent = catShort;
     $('ticketSeverityBadge').textContent = severityVal;
     $('ticketSeverityBadge').className = `pill ${severityVal.toLowerCase() === 'critical' ? 'red' : (severityVal.toLowerCase() === 'high' ? 'amber' : (severityVal.toLowerCase() === 'medium' ? 'blue' : 'neutral'))}`;
     $('ticketTaskSummary').textContent = taskShort;
@@ -1492,11 +1543,13 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   // Tombol Bersihkan Formulir
   $('resetBlockerBtn').addEventListener('click', () => {
     form.reset();
+    if (blockerCategorySelect) blockerCategorySelect.value = '';
     if (expectedHelpInput) expectedHelpInput.value = '';
     titleCounter.textContent = '0 / 140';
     titleCounter.style.color = 'var(--color-text-muted)';
     titleCounter.style.fontWeight = '600';
     clearError('blockerTitle', 'blockerTitleError');
+    clearError('blockerCategory', 'blockerCategoryError');
     clearError('blockerDescription', 'blockerDescriptionError');
     clearError('projectContext', 'projectContextError');
     clearError(null, 'blockerSeverityError');
@@ -1524,6 +1577,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   $('createAnotherBlockerBtn').addEventListener('click', () => {
     $('submittedTicketCard').classList.remove('show');
     form.reset();
+    if (blockerCategorySelect) blockerCategorySelect.value = '';
     if (expectedHelpInput) expectedHelpInput.value = '';
     form.style.display = 'block';
     orgCard.click();
@@ -1556,6 +1610,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     {
       id: '#BLK-2026-1048',
       title: 'Kredensial API Payment Gateway Sandbox Kadaluarsa',
+      category: 'Vendor',
+      categoryLabel: 'Vendor & Layanan Pihak Ketiga',
       linkedTask: '[Komitmen Pagi #1] Implementasi Unit Test Payment Gateway (PR #142)',
       severity: 'Critical',
       ownerNeeded: 'Rina Putri — Direct Manager (Level 1)',
@@ -1570,6 +1626,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     {
       id: '#BLK-2026-1052',
       title: 'Akses VPN Staging Server Squad A Terputus',
+      category: 'Infra',
+      categoryLabel: 'Infrastruktur & Lingkungan Kerja',
       linkedTask: '[Komitmen Pagi #2] Refactoring Otentikasi JWT & Role Guard',
       severity: 'High',
       ownerNeeded: 'Budi Santoso — Head of Engineering (Level 2)',
@@ -1584,6 +1642,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     {
       id: '#BLK-2026-0988',
       title: 'Dokumentasi OpenAPI Belum Selaras dengan Skema Database Staging',
+      category: 'Requirement',
+      categoryLabel: 'Spesifikasi & Kebutuhan Produk',
       linkedTask: 'Kendala Umum',
       severity: 'Medium',
       ownerNeeded: 'Andi Wicaksono — Principal Architect Core',
@@ -1749,6 +1809,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <span class="blocker-item-id">${b.id}</span>
               ${statusBadgeHtml}
+              <span class="pill neutral" style="font-weight:700">${escapeHtml(b.categoryLabel || b.category || 'Kendala Umum')}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <span class="pill ${sevColor}">Tingkat ${b.severity}</span>
