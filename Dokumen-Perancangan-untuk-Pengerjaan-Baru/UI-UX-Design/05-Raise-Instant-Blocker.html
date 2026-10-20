@@ -459,7 +459,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <label for="blockerTitle">Judul Blocker <span class="required">*</span></label>
                 <span class="char-counter" id="titleCounter">0 / 140</span>
               </div>
-              <input id="blockerTitle" name="title" type="text" required maxlength="140" placeholder="Misal: Kredensial API Payment Gateway Sandbox Kadaluarsa">
+              <input id="blockerTitle" name="title" type="text" required minlength="10" maxlength="140" placeholder="Misal: Kredensial API Payment Gateway Sandbox Kadaluarsa">
+              <span class="hint" style="margin-top:4px">Gunakan format ringkas: <strong>[Komponen/Layanan] + [Gejala Masalah]</strong> (min. 10 karakter).</span>
               <span class="field-error" id="blockerTitleError" hidden></span>
             </div>
 
@@ -899,7 +900,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   const panel1StatusBadge = $('panel1StatusBadge');
   function checkPanel1Completion() {
     if (!panel1StatusBadge) return;
-    const hasTitle = titleInput.value.trim().length > 0;
+    const hasTitle = titleInput.value.trim().length >= 10;
     const hasSeverity = document.querySelector('input[name="blockerSeverity"]:checked') !== null;
     const hasDesc = descTextarea.value.trim().length > 0;
 
@@ -915,6 +916,19 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   titleInput.addEventListener('input', () => {
     const len = titleInput.value.length;
     titleCounter.textContent = `${len} / 140`;
+
+    // Dynamic color coding for counter
+    if (len >= 140) {
+      titleCounter.style.color = '#DC2626';
+      titleCounter.style.fontWeight = '800';
+    } else if (len >= 120) {
+      titleCounter.style.color = '#D97706';
+      titleCounter.style.fontWeight = '750';
+    } else {
+      titleCounter.style.color = 'var(--color-text-muted)';
+      titleCounter.style.fontWeight = '600';
+    }
+
     clearError('blockerTitle', 'blockerTitleError');
     checkPanel1Completion();
   });
@@ -1236,8 +1250,13 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     let firstInvalid = null;
 
     // Validasi Judul
-    if (!titleInput.value.trim()) {
+    const trimmedTitle = titleInput.value.trim();
+    if (!trimmedTitle) {
       setError('blockerTitle', 'blockerTitleError', 'Judul blocker wajib diisi secara ringkas dan spesifik.');
+      isValid = false;
+      firstInvalid = firstInvalid || titleInput;
+    } else if (trimmedTitle.length < 10) {
+      setError('blockerTitle', 'blockerTitleError', `Judul blocker minimal 10 karakter agar informatif bagi penanggung jawab (saat ini ${trimmedTitle.length} karakter).`);
       isValid = false;
       firstInvalid = firstInvalid || titleInput;
     }
@@ -1330,6 +1349,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   $('resetBlockerBtn').addEventListener('click', () => {
     form.reset();
     titleCounter.textContent = '0 / 140';
+    titleCounter.style.color = 'var(--color-text-muted)';
+    titleCounter.style.fontWeight = '600';
     clearError('blockerTitle', 'blockerTitleError');
     clearError('blockerDescription', 'blockerDescriptionError');
     clearError('projectContext', 'projectContextError');
@@ -1352,6 +1373,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     orgCard.click();
     populateCommitmentsDropdown();
     titleCounter.textContent = '0 / 140';
+    titleCounter.style.color = 'var(--color-text-muted)';
+    titleCounter.style.fontWeight = '600';
     severityCards.forEach(c => c.classList.remove('active'));
     document.querySelectorAll('input[name="blockerSeverity"]').forEach(r => r.checked = false);
     attachmentInput.value = '';
