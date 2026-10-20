@@ -651,7 +651,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           <div class="panel-head">
             <div>
               <h2 id="ownerRoutingHeading">Penanggung Jawab Awal</h2>
-              <p class="small" style="margin-top:3px">Tentukan jalur kewenangan penanganan. Sistem otomatis menghitung penerima dan timer SLA.</p>
+              <p class="small" style="margin-top:3px">Tentukan jalur kewenangan penanganan. Sistem otomatis menentukan penerima dan batas waktu respons.</p>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="pill neutral">Bagian 2 dari 2</span>
@@ -712,7 +712,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <div>
                 <div class="route-preview-title" id="ownerRouteTitle">PENUGASAN OTOMATIS SISTEM</div>
                 <div class="route-preview-person" id="ownerRoutePerson">Rina Putri — Technical Lead / Direct Manager (Engineering)</div>
-                <div class="route-preview-detail" id="ownerRouteDetail">Tiket kendala akan langsung diteruskan ke Atasan Langsung Anda untuk direspons. Timer batas waktu respons (SLA) akan aktif segera setelah formulir dikirimkan.</div>
+                <div class="route-preview-detail" id="ownerRouteDetail">Tiket kendala akan langsung diteruskan ke Atasan Langsung Anda untuk direspons. Batas waktu respons akan langsung berjalan segera setelah formulir dikirimkan.</div>
                 <span class="route-status" id="ownerRouteStatus">Ditentukan Otomatis · Atasan Langsung</span>
               </div>
             </div>
@@ -723,7 +723,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               </span>
               <div>
                 <strong>Protokol Eskalasi Otomatis:</strong><br>
-                Penanggung jawab wajib mengonfirmasi penerimaan (<em>Acknowledge</em>) tiket kendala dalam batas waktu SLA. Apabila kendala berskala Kritis (<em>Critical</em>) tidak direspons tepat waktu, sistem secara otomatis meneruskan eskalasi ke jenjang pimpinan berikutnya sesuai aturan eskalasi perusahaan.
+                Penanggung jawab wajib mengonfirmasi penerimaan (<em>Acknowledge</em>) tiket kendala dalam batas waktu respons yang ditentukan. Apabila kendala berskala Kritis (<em>Critical</em>) tidak direspons tepat waktu, sistem secara otomatis meneruskan eskalasi ke jenjang pimpinan berikutnya sesuai aturan eskalasi perusahaan.
               </div>
             </div>
 
@@ -781,7 +781,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               <span class="ticket-meta-value" id="ticketTaskSummary">[Komitmen Pagi #1]</span>
             </div>
             <div class="ticket-meta-item">
-              <span class="ticket-meta-label">Urgensi &amp; SLA</span>
+              <span class="ticket-meta-label">Tingkat Urgensi &amp; Target Respons</span>
               <span class="ticket-meta-value" id="ticketSlaSummary">Critical (&le; 2 Jam)</span>
             </div>
             <div class="ticket-meta-item">
@@ -808,7 +808,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--color-border-subtle);flex-wrap:wrap">
             <span class="small" style="color:var(--color-text-secondary)">
-              Timer pengakuan SLA: <strong>Sisa 01:59:59</strong> sebelum notifikasi eskalasi otomatis berjalan.
+              Batas waktu konfirmasi respons: <strong>Sisa 01:59:59</strong> sebelum notifikasi eskalasi otomatis berjalan.
             </span>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
               <button class="btn btn-secondary" type="button" id="createAnotherBlockerBtn">+ Laporkan Blocker Lain</button>
@@ -825,7 +825,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
         <div class="blockers-filter-bar">
           <div>
             <h2 id="myBlockersHeading" style="font-size:18px;font-weight:800;color:var(--color-text-primary);margin:0 0 4px">Daftar Blocker yang Saya Laporkan</h2>
-            <p class="small" style="margin:0">Pantau status penanganan, sisa timer SLA respons, serta lakukan konfirmasi penyelesaian tiket (*Confirm Closed*).</p>
+            <p class="small" style="margin:0">Pantau status penanganan, sisa batas waktu respons, serta lakukan konfirmasi penyelesaian tiket (<em>Confirm Closed</em>).</p>
           </div>
           <div class="filter-pills" role="radiogroup" aria-label="Filter status blocker">
             <button type="button" class="filter-pill active" data-filter="all">Semua (<span id="countAll">0</span>)</button>
@@ -1354,8 +1354,8 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     if (defaultOwner) {
       person.textContent = `${defaultOwner.name} — ${defaultOwner.role}`;
       detail.textContent = ctx === 'organizational'
-        ? 'Tiket kendala akan langsung diteruskan ke Atasan Langsung Anda untuk direspons. Timer batas waktu respons (SLA) akan aktif segera setelah formulir dikirimkan.'
-        : `Tiket kendala akan langsung diteruskan ke Pimpinan Proyek aktif (${defaultOwner.name}) pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Timer batas waktu respons (SLA) akan aktif segera setelah formulir dikirimkan.`;
+        ? 'Tiket kendala akan langsung diteruskan ke Atasan Langsung Anda untuk direspons. Batas waktu respons akan langsung berjalan segera setelah formulir dikirimkan.'
+        : `Tiket kendala akan langsung diteruskan ke Pimpinan Proyek aktif (${defaultOwner.name}) pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Batas waktu respons akan langsung berjalan segera setelah formulir dikirimkan.`;
       status.textContent = ctx === 'organizational' ? 'Ditentukan Otomatis · Atasan Langsung' : 'Ditentukan Otomatis · Pimpinan Proyek';
     } else {
       person.textContent = 'Belum ada pemetaan aktif';
@@ -1888,7 +1888,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           ${(isOpen || isInProgress) ? `
             <div class="sla-warning-box">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>Timer Respons SLA: <strong>${b.slaRemaining || 'Sisa waktu dalam toleransi'}</strong> sebelum eskalasi otomatis diteruskan ke jenjang berikutnya.</span>
+              <span>Sisa Batas Waktu Respons: <strong>${b.slaRemaining || 'Sisa waktu dalam batas toleransi'}</strong> sebelum eskalasi otomatis diteruskan ke jenjang berikutnya.</span>
             </div>
           ` : ''}
 
