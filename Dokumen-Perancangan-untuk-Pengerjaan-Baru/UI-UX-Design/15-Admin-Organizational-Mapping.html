@@ -1,60 +1,2035 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>WorkPulse — Admin: Organizational Mapping</title>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WorkPulse — Pemetaan Organisasi &amp; Proyek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--canvas:#F7FAF9;--surface:#fff;--subtle:#EFF5F2;--muted:#F1F5F4;--border:#DCE7E2;--border-strong:#A9C7BC;--ink:#0E211B;--secondary:#5C6E68;--brand:#00674D;--brand-tint:#E6F4EE;--focus:#0B8061;--blue-bg:#E0F2FE;--blue-fg:#075985;--amber-bg:#FFF3D9;--amber-fg:#7A4B00;--green-bg:#E6F4EC;--green-fg:#145A36;--red-bg:#FDE9E7;--red-fg:#9B2923;--neutral-bg:#EFF2F1;--neutral-fg:#46534E;--shadow:0 8px 24px rgba(14,33,27,.05)}
-*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}.sidebar{background:#fff;border-right:1px solid var(--border);padding:24px 16px 18px;display:flex;flex-direction:column;min-height:100vh}.brand{display:flex;align-items:center;gap:10px;padding:0 8px}.brand-mark{height:38px;width:38px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:850;font-size:21px}.brand-name{font-size:18px;font-weight:850;letter-spacing:-.5px}.brand-caption{font-size:11px;color:var(--secondary);margin-top:-3px}.nav-group{margin-top:30px}.nav-group.management{margin-top:28px}.nav-label{padding:0 12px;margin-bottom:10px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--secondary);font-weight:750}.nav{display:grid;gap:5px}.nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:8px;color:var(--secondary);font-weight:650;text-decoration:none;font-size:13px}.nav a.active{background:var(--brand-tint);color:var(--brand);font-weight:800}.nav-icon{width:20px;text-align:center;font-size:16px}.sidebar-bottom{margin-top:auto;padding:18px 8px 0;border-top:1px solid var(--border)}.identity{display:flex;gap:10px;align-items:center}.avatar{width:36px;height:36px;border-radius:50%;background:#D9EEE5;color:var(--brand);display:grid;place-items:center;font-weight:800}.identity-name{font-weight:800;font-size:13px}.identity-role{font-size:11px;color:var(--secondary)}.main{min-width:0}.topbar{height:70px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;gap:12px}.crumb{font-size:12px;color:var(--secondary)}.topbar-title{font-weight:750}.demo-tag{font-size:11px;font-weight:800;color:#7A4B00;background:var(--amber-bg);border:1px solid #F3D79D;padding:5px 9px;border-radius:999px}.mobile-menu{display:none}.content{max-width:1440px;margin:0 auto;padding:28px 32px 44px}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.eyebrow{color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:11px}.page-head h1{font-size:27px;line-height:1.2;letter-spacing:-.7px;margin:5px 0 8px}.page-head p{margin:0;color:var(--secondary);max-width:780px}.btn{border:1px solid var(--border-strong);background:#fff;color:var(--ink);border-radius:8px;padding:9px 13px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn:hover{background:var(--subtle)}.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}.btn-primary:hover{background:#00553F}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-small{padding:6px 9px;font-size:12px}.panel{background:#fff;border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow);margin-bottom:18px;min-width:0}.panel-head{padding:17px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:14px}.panel-head h2{font-size:15px;margin:0;letter-spacing:-.2px}.panel-body{padding:18px 20px}.small{font-size:12px;color:var(--secondary)}.tiny{font-size:11px;color:var(--secondary)}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.metric{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;min-width:0}.metric-label{font-size:12px;color:var(--secondary);font-weight:700}.metric-value{font-size:25px;font-weight:850;letter-spacing:-.7px;margin:5px 0 2px}.metric-note{font-size:11px;color:var(--secondary)}.tabs{display:flex;gap:6px;padding:6px;background:var(--subtle);border-radius:10px;margin-bottom:18px;width:max-content;max-width:100%;flex-wrap:wrap}.tab{border:0;background:transparent;border-radius:7px;padding:9px 13px;font-weight:750;color:var(--secondary)}.tab[aria-selected="true"]{background:#fff;color:var(--brand);box-shadow:0 1px 4px #0e211b12}.filter-grid{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(160px,.8fr) minmax(160px,.8fr) auto;gap:12px;align-items:end}.field{display:grid;gap:6px;min-width:0}.field label{font-size:12px;font-weight:750;color:#344840}.field input,.field select,.field textarea{width:100%;min-width:0;border:1px solid #C9D9D2;border-radius:8px;background:#fff;color:var(--ink);padding:10px 11px}.field textarea{min-height:84px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--focus)}.field .hint{font-size:11px;color:var(--secondary)}.table-wrap{overflow:auto;width:100%}table{width:100%;border-collapse:collapse;min-width:880px}th{text-align:left;background:#F7FAF9;color:#5C6E68;font-size:10px;text-transform:uppercase;letter-spacing:.07em;padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:13px 14px;border-bottom:1px solid #EAF0ED;vertical-align:top}tbody tr:last-child td{border-bottom:0}.person{font-weight:800}.subline{font-size:11px;color:var(--secondary);margin-top:3px}.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800;white-space:nowrap}.pill.green{background:var(--green-bg);color:var(--green-fg)}.pill.blue{background:var(--blue-bg);color:var(--blue-fg)}.pill.amber{background:var(--amber-bg);color:var(--amber-fg)}.pill.neutral{background:var(--neutral-bg);color:var(--neutral-fg)}.pill.red{background:var(--red-bg);color:var(--red-fg)}.table-actions{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:30px 18px;text-align:center;color:var(--secondary)}.empty strong{display:block;color:var(--ink);margin-bottom:5px}.section-note{padding:12px 14px;border-radius:9px;background:#F7FAF9;border:1px solid var(--border);color:var(--secondary);font-size:12px;margin-bottom:14px}.warning-note{padding:12px 14px;border-radius:9px;background:var(--amber-bg);border:1px solid #F0D7A1;color:#684400;font-size:12px;margin:12px 0}.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.85fr);gap:18px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.span-2{grid-column:1/-1}.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}.history-list{display:grid;gap:0}.history-item{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}.history-item:last-child{border-bottom:0}.history-date{font-size:12px;font-weight:800}.history-title{font-weight:800}.history-meta{font-size:12px;color:var(--secondary);margin-top:4px}.backdrop{position:fixed;inset:0;background:#0E211B70;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.backdrop.open{display:flex}.modal{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 80px #0003}.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px;border-bottom:1px solid var(--border)}.modal-head h2{margin:0;font-size:18px}.modal-body{padding:20px}.close-x{border:1px solid var(--border);background:#fff;border-radius:8px;width:34px;height:34px;font-size:20px}.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.preview-card{padding:13px;border:1px solid var(--border);border-radius:9px;background:#fff}.preview-card .label{font-size:11px;color:var(--secondary);font-weight:700}.preview-card .value{font-size:14px;font-weight:800;margin-top:4px}.toast{position:fixed;bottom:20px;right:20px;max-width:min(420px,calc(100vw - 40px));background:#12382B;color:#fff;padding:13px 16px;border-radius:9px;box-shadow:var(--shadow);z-index:40}.hidden{display:none!important}.footnote{font-size:11px;color:var(--secondary);padding:12px 18px;border-top:1px solid var(--border)}
-@media(max-width:1120px){.app{grid-template-columns:220px minmax(0,1fr)}.content{padding:24px 22px 36px}.topbar{padding:0 22px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-grid{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}}
-@media(max-width:760px){.app{display:block}.sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:30;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.mobile-menu{display:inline-flex}.topbar{height:62px;padding:0 15px}.content{padding:20px 14px 32px}.page-head{display:block}.page-head>.btn{margin-top:15px}.page-head h1{font-size:24px}.panel-head{padding:15px;align-items:flex-start}.panel-body{padding:15px}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:22px}.filter-grid{grid-template-columns:1fr}.tabs{width:100%}.tab{flex:1;padding:9px 7px}.form-grid,.preview-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.history-item{grid-template-columns:1fr;gap:5px}.demo-tag{font-size:10px}.topbar-title{font-size:12px}}
-</style></head><body>
-<div class="app"><aside class="sidebar" id="sidebar"><div class="brand"><div class="brand-mark">W</div><div><div class="brand-name">WorkPulse</div><div class="brand-caption">Daily Accountability System</div></div></div>
-<div class="nav-group"><div class="nav-label">Workspace</div><nav class="nav"><a href="#" data-inert><span class="nav-icon">◷</span>Morning Commitment</a><a href="#" data-inert><span class="nav-icon">＋</span>Additional Work</a><a href="#" data-inert><span class="nav-icon">▣</span>EOD Outcome</a><a href="#" data-inert><span class="nav-icon">⚑</span>Raise Instant Blocker</a><a href="#" data-inert><span class="nav-icon">◷</span>My History</a><a href="#" data-inert><span class="nav-icon">♧</span>Notifications</a></nav></div>
-<div class="nav-group management"><div class="nav-label">Management</div><nav class="nav"><a href="#" data-inert><span class="nav-icon">▦</span>Pulse Dashboard</a><a href="#" data-inert><span class="nav-icon">⚑</span>Blocker & Escalation Queue</a><a href="#" data-inert><span class="nav-icon">◷</span>Escalation Aging</a><a class="active" href="#main" aria-current="page"><span class="nav-icon">⌘</span>Organizational Mapping</a></nav></div>
-<div class="sidebar-bottom"><div class="identity"><div class="avatar">AR</div><div><div class="identity-name">Admin Rina</div><div class="identity-role">System Admin · Demo scope</div></div></div></div></aside>
-<main class="main" id="main"><header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="btn mobile-menu" id="mobileMenu" type="button" aria-label="Buka navigasi">☰</button><div><div class="crumb">Management / Administration</div><div class="topbar-title">Organizational Mapping</div></div></div><span class="demo-tag">DEMO · DATA LOKAL</span></header>
-<div class="content"><div class="page-head"><div><div class="eyebrow">Administration · Effective-dated assignments</div><h1>Organizational Mapping</h1><p>Kelola assignment organisasi dan Project Authority secara terpisah. Setiap perubahan memakai Effective Date, mempertahankan histori, dan menampilkan preview dampak sebelum konfirmasi.</p></div><button class="btn btn-primary" id="newOrgBtn" type="button">＋ Ubah assignment organisasi</button></div>
-<div class="section-note"><strong>Batas demo:</strong> ini prototype interaktif dengan data fiktif yang hanya tersimpan selama halaman terbuka. Tidak terhubung ke backend, autentikasi, audit log, atau database. Otorisasi produksi harus diperiksa server-side berdasarkan role, scope, dan effective date.</div>
-<div class="metrics"><div class="metric"><div class="metric-label">Person dalam contoh</div><div class="metric-value" id="metricPeople">6</div><div class="metric-note">Directory demo</div></div><div class="metric"><div class="metric-label">Assignment organisasi aktif</div><div class="metric-value" id="metricOrg">6</div><div class="metric-note">Satu assignment aktif per person</div></div><div class="metric"><div class="metric-label">Project Authority aktif</div><div class="metric-value" id="metricProject">4</div><div class="metric-note">Mapping terpisah per person/scope</div></div><div class="metric"><div class="metric-label">Perubahan demo sesi ini</div><div class="metric-value" id="metricChanges">0</div><div class="metric-note">Tidak persisten setelah halaman ditutup</div></div></div>
-<div class="tabs" role="tablist" aria-label="Jenis mapping"><button class="tab" id="orgTab" role="tab" aria-selected="true" aria-controls="orgPanel" type="button">Organizational Assignment</button><button class="tab" id="projectTab" role="tab" aria-selected="false" aria-controls="projectPanel" type="button">Project Authority Mapping</button></div>
-<section id="orgPanel" role="tabpanel" aria-labelledby="orgTab"><div class="panel"><div class="panel-head"><div><h2>Struktur organisasi saat ini</h2><div class="small" style="margin-top:4px">Role, function, dan direct manager ditampilkan sebagai assignment efektif.</div></div><button class="btn btn-primary btn-small" id="newOrgBtn2" type="button">＋ Assignment</button></div><div class="panel-body"><div class="filter-grid"><div class="field"><label for="orgSearch">Cari person</label><input id="orgSearch" type="search" placeholder="Nama atau ID person" autocomplete="off"></div><div class="field"><label for="functionFilter">Function</label><select id="functionFilter"><option value="all">Semua function</option><option>Engineering</option><option>Product</option><option>Operations</option><option>Finance</option><option>People & Culture</option><option>Executive</option></select></div><div class="field"><label for="roleFilter">Role</label><select id="roleFilter"><option value="all">Semua role</option><option>Employee</option><option>Supervisor / TL</option><option>Head</option><option>PM</option><option>HRGA</option><option>CEO / Management</option><option>System Admin</option></select></div><button class="btn" id="resetOrgFilters" type="button">Reset filter</button></div></div><div class="table-wrap"><table><thead><tr><th>Person</th><th>Role & function</th><th>Direct manager</th><th>Effective date</th><th>Assignment</th><th>Aksi</th></tr></thead><tbody id="orgBody"></tbody></table><div class="empty hidden" id="orgEmpty"><strong>Tidak ada person yang cocok.</strong>Ubah kata kunci atau filter.</div></div><div class="footnote">Histori assignment tidak dihapus atau ditimpa. Setiap perubahan menghasilkan assignment baru bertanggal efektif; detail end-date normalization mengikuti kontrak data di SAD.</div></div>
-<div class="panel"><div class="panel-head"><div><h2>Riwayat assignment organisasi</h2><div class="small" style="margin-top:4px">Pilih “View History” pada person untuk melihat versi terdahulu.</div></div></div><div class="panel-body"><div id="orgHistoryIntro" class="empty"><strong>Belum ada person dipilih.</strong>Pilih View History dari tabel di atas.</div><div id="orgHistory" class="hidden"></div></div></div></section>
-<section id="projectPanel" class="hidden" role="tabpanel" aria-labelledby="projectTab"><div class="panel"><div class="panel-head"><div><h2>Project Authority Mapping</h2><div class="small" style="margin-top:4px">Mapping independen per person dan scope/reference; satu person dapat memiliki beberapa mapping aktif.</div></div><button class="btn btn-primary btn-small" id="newProjectBtn" type="button">＋ Tambah mapping</button></div><div class="panel-body"><div class="filter-grid"><div class="field"><label for="projectSearch">Cari person atau scope/reference</label><input id="projectSearch" type="search" placeholder="Nama, ID, atau reference" autocomplete="off"></div><div class="field"><label for="projectStateFilter">Status mapping</label><select id="projectStateFilter"><option value="all">Semua</option><option value="active">Aktif saat ini</option><option value="historical">Historis / berakhir</option></select></div><div class="field"><label for="projectPersonFilter">Person</label><select id="projectPersonFilter"><option value="all">Semua person</option></select></div><button class="btn" id="resetProjectFilters" type="button">Reset filter</button></div></div><div class="table-wrap"><table style="min-width:820px"><thead><tr><th>Person</th><th>Scope / Reference</th><th>Effective date</th><th>End date</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="projectBody"></tbody></table><div class="empty hidden" id="projectEmpty"><strong>Tidak ada mapping yang cocok.</strong>Ubah filter atau tambahkan mapping baru.</div></div><div class="footnote">Project Authority tidak digabung menjadi satu field di Organizational Assignment. Setiap mapping memiliki periode efektif sendiri dan dapat berjalan bersamaan untuk scope berbeda.</div></div></section>
-<div class="panel"><div class="panel-head"><div><h2>Prinsip pengelolaan assignment</h2><div class="small" style="margin-top:4px">Aturan yang harus tetap terlihat saat administrasi organisasi dilakukan.</div></div></div><div class="panel-body"><div class="preview-grid"><div class="preview-card"><div class="label">Effective-dated history</div><div class="value">Histori tidak ditimpa</div><div class="small" style="margin-top:5px">Perubahan ditambahkan sebagai versi assignment baru, bukan menghapus jejak sebelumnya.</div></div><div class="preview-card"><div class="label">Impact preview</div><div class="value">Sebelum konfirmasi</div><div class="small" style="margin-top:5px">Perubahan manager atau authority harus memperlihatkan siapa yang terdampak dan mulai kapan.</div></div><div class="preview-card"><div class="label">Project Authority</div><div class="value">Mapping independen</div><div class="small" style="margin-top:5px">Lebih dari satu mapping aktif per person diperbolehkan untuk scope/reference berbeda.</div></div><div class="preview-card"><div class="label">Tanggal lampau</div><div class="value">Tidak diasumsikan</div><div class="small" style="margin-top:5px">Prototype tidak menjanjikan efek retroaktif; kebijakan dan otorisasi harus ditentukan sebelum produksi.</div></div></div></div></div>
-</div></main></div>
-<div class="backdrop" id="formBackdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="formTitle"><div class="modal-head"><div><h2 id="formTitle">Ubah assignment</h2><div class="small" id="formSub" style="margin-top:4px">Perubahan demo</div></div><button class="close-x" id="closeForm" type="button" aria-label="Tutup form">×</button></div><div class="modal-body"><form id="assignmentForm"><input type="hidden" id="mappingType" value="org"><input type="hidden" id="editId" value=""><div class="form-grid"><div class="field span-2"><label for="personSelect">Person *</label><select id="personSelect" required></select></div><div id="orgFields" class="span-2"><div class="form-grid"><div class="field"><label for="roleSelect">Role *</label><select id="roleSelect" required><option>Employee</option><option>Supervisor / TL</option><option>Head</option><option>PM</option><option>HRGA</option><option>CEO / Management</option><option>System Admin</option></select></div><div class="field"><label for="functionSelect">Function *</label><select id="functionSelect" required><option>Engineering</option><option>Product</option><option>Operations</option><option>Finance</option><option>People & Culture</option><option>Executive</option></select></div><div class="field span-2"><label for="managerSelect">Direct manager</label><select id="managerSelect"><option value="">— Tidak ada / posisi puncak —</option></select><div class="hint">Kosong hanya bila sesuai struktur, misalnya posisi puncak.</div></div></div></div><div id="projectFields" class="span-2 hidden"><div class="form-grid"><div class="field span-2"><label for="scopeInput">Scope / Reference *</label><input id="scopeInput" placeholder="Mis. Project Atlas / REF-ENG-24" autocomplete="off"></div></div></div><div class="field span-2"><label for="effectiveDate">Effective Date *</label><input id="effectiveDate" type="date" required><div class="hint">Wajib diisi untuk setiap perubahan. Aturan tanggal lampau tidak ditetapkan oleh prototype ini.</div></div><div class="field span-2"><label for="changeReason">Alasan perubahan *</label><textarea id="changeReason" required maxlength="500" placeholder="Jelaskan alasan perubahan assignment"></textarea><div class="hint">Alasan hanya untuk demonstrasi lokal; produksi perlu validasi dan audit server-side.</div></div></div><div id="retroWarning" class="warning-note hidden" role="status">Tanggal yang dipilih berada di masa lampau. UI tidak menyimpulkan apakah perubahan retroaktif diizinkan atau bagaimana dampaknya. Periksa kebijakan dan otorisasi sebelum tindakan produksi.</div><div class="actions"><button class="btn" id="cancelForm" type="button">Batal</button><button class="btn btn-primary" type="submit">Pratinjau dampak</button></div></form></div></section></div>
-<div class="backdrop" id="previewBackdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="modal-head"><div><h2 id="previewTitle">Preview dampak perubahan</h2><div class="small" style="margin-top:4px">Tinjau perubahan sebelum konfirmasi.</div></div><button class="close-x" id="closePreview" type="button" aria-label="Tutup preview">×</button></div><div class="modal-body"><div id="previewContent"></div><div class="warning-note">Konfirmasi hanya mensimulasikan perubahan di browser ini. Tidak ada data yang disimpan ke server atau audit log. Riwayat demo sebelumnya tetap ditampilkan selama sesi ini.</div><div class="actions"><button class="btn" id="backToEdit" type="button">Kembali ke form</button><button class="btn btn-primary" id="confirmChange" type="button">Konfirmasi perubahan demo</button></div></div></section></div>
-<div class="backdrop" id="historyBackdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle"><div class="modal-head"><div><h2 id="historyTitle">View History</h2><div class="small" id="historySub" style="margin-top:4px"></div></div><button class="close-x" id="closeHistory" type="button" aria-label="Tutup histori">×</button></div><div class="modal-body" id="historyBody"></div></section></div><div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+:root{
+  --color-canvas:#F7FAF9;
+  --color-surface:#FFFFFF;
+  --color-surface-subtle:#EFF5F2;
+  --color-surface-muted:#F1F5F4;
+  --color-border-subtle:#DCE7E2;
+  --color-border-strong:#A9C7BC;
+  --color-text-primary:#0E211B;
+  --color-text-secondary:#5C6E68;
+  --color-text-disabled:#8C9B95;
+  --color-brand-primary:#00674D;
+  --color-brand-secondary:#12915F;
+  --color-brand-tint:#E6F4EE;
+  --color-brand-focus:#0B8061;
+  --color-status-green-bg:#E6F4EC;
+  --color-status-green-fg:#145A36;
+  --color-status-green-border:#A7D5B8;
+  --color-status-amber-bg:#FFF3D9;
+  --color-status-amber-fg:#7A4B00;
+  --color-status-amber-border:#E8C77A;
+  --color-status-red-bg:#FFF8F8;
+  --color-status-red-fg:#991B1B;
+  --color-status-red-border:#FECDCA;
+  --color-status-blue-bg:#EFF6FF;
+  --color-status-blue-fg:#1E40AF;
+  --color-status-blue-border:#BFDBFE;
+  --color-status-neutral-bg:#EFF2F1;
+  --color-status-neutral-fg:#46534E;
+  --color-status-neutral-border:#C9D2CE;
+  --shadow-subtle:0 4px 16px rgba(14,33,27,.04);
+  --shadow-card:0 8px 24px rgba(14,33,27,.05);
+  --shadow-modal:0 24px 64px rgba(14,33,27,.18);
+  --radius-sm:8px;
+  --radius-card:12px;
+  --radius-modal:16px;
+  --font-sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--color-canvas);
+  color:var(--color-text-primary);
+  font-family:var(--font-sans);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea,select{font-family:inherit}
+button,a{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+a{color:var(--color-brand-primary);text-decoration:none;font-weight:600}
+a:hover{text-decoration:underline}
+:focus-visible{outline:3px solid var(--color-brand-focus);outline-offset:2px}
+
+/* APP LAYOUT */
+.app{min-height:100vh;display:grid;grid-template-columns:260px minmax(0,1fr)}
+
+/* SIDEBAR NAVIGATION */
+.sidebar{
+  background:var(--color-surface);
+  border-right:1px solid var(--color-border-subtle);
+  padding:24px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:0 8px}
+.brand-mark{
+  height:38px;width:38px;border-radius:10px;
+  background:var(--color-brand-primary);
+  display:grid;place-items:center;
+  color:#FFFFFF;font-weight:800;font-size:20px;flex-shrink:0;
+}
+.brand-name{font-size:18px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
+.brand-caption{font-size:11px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
+.nav-group{display:grid;gap:4px}
+.nav-label{
+  padding:0 12px;margin-bottom:6px;
+  font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--color-text-secondary);font-weight:700;
+}
+.nav{display:grid;gap:3px}
+.nav a{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:var(--radius-sm);
+  color:var(--color-text-secondary);font-weight:600;font-size:13.5px;
+  transition:all .15s ease;
+}
+.nav a:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
+.nav a.active{
+  background:var(--color-brand-tint);
+  color:var(--color-brand-primary);
+  font-weight:700;
+}
+.nav-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;padding:16px 8px 0;border-top:1px solid var(--color-border-subtle)}
+.identity{display:flex;align-items:center;gap:12px}
+.avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--color-brand-tint);color:var(--color-brand-primary);
+  display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;
+  border:1.5px solid var(--color-border-strong);
+}
+.identity-info{min-width:0;line-height:1.35}
+.identity-name{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.identity-role{font-size:11.5px;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* MAIN CONTENT AREA */
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:70px;
+  background:var(--color-surface);
+  border-bottom:1px solid var(--color-border-subtle);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 36px;
+  position:sticky;top:0;z-index:10;
+}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.mobile-menu-btn{
+  display:none;
+  background:transparent;border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-sm);width:36px;height:36px;
+  align-items:center;justify-content:center;color:var(--color-text-primary);
+}
+.breadcrumbs{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--color-text-secondary)}
+.breadcrumbs .crumb-current{color:var(--color-text-primary);font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.system-clock{font-size:12px;color:var(--color-text-secondary);font-weight:600;display:flex;align-items:center;gap:6px}
+
+/* CONTENT CONTAINER */
+.content{
+  max-width:1440px;
+  width:100%;
+  margin:0 auto;
+  padding:32px 36px 64px;
+}
+
+/* BAGIAN 1: HEADER HALAMAN */
+.page-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:24px;
+  margin-bottom:28px;
+}
+.page-header-info h1{
+  font-size:26px;
+  font-weight:800;
+  letter-spacing:-0.03em;
+  color:var(--color-text-primary);
+  line-height:1.2;
+}
+.page-header-info p{
+  margin-top:6px;
+  color:var(--color-text-secondary);
+  font-size:14px;
+  line-height:1.55;
+  max-width:820px;
+}
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:var(--radius-sm);
+  font-size:13.5px;
+  font-weight:700;
+  border:1px solid var(--color-border-subtle);
+  background:var(--color-surface);
+  color:var(--color-text-primary);
+  transition:all .15s ease;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--color-surface-subtle);border-color:var(--color-border-strong);text-decoration:none}
+.btn-primary{
+  background:var(--color-brand-primary);
+  border-color:var(--color-brand-primary);
+  color:#FFFFFF;
+}
+.btn-primary:hover{background:#00553F;border-color:#00553F;color:#FFFFFF}
+.btn-secondary{
+  background:var(--color-surface);
+  border-color:var(--color-border-strong);
+  color:var(--color-text-primary);
+}
+.btn-secondary:hover{background:var(--color-surface-subtle)}
+.btn-small{padding:7px 12px;font-size:12px;border-radius:6px}
+
+/* KARTU METRIK RINGKASAN */
+.metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  margin-bottom:28px;
+}
+.metric-card{
+  background:var(--color-surface);
+  border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-card);
+  padding:18px 20px;
+  box-shadow:var(--shadow-subtle);
+  position:relative;
+  overflow:hidden;
+}
+.metric-card::before{
+  content:"";
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:transparent;
+}
+.metric-card.accent-green::before{background:var(--color-brand-primary)}
+.metric-card.accent-blue::before{background:#2563EB}
+.metric-card.accent-purple::before{background:#7C3AED}
+.metric-card.accent-amber::before{background:#D97706}
+
+.metric-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.metric-label{
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--color-text-secondary);
+}
+.metric-icon{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--color-surface-subtle);
+  display:grid;place-items:center;
+  color:var(--color-brand-primary);
+}
+.metric-value{
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:-0.03em;
+  color:var(--color-text-primary);
+  line-height:1.15;
+}
+.metric-subtext{
+  font-size:12px;
+  color:var(--color-text-secondary);
+  margin-top:6px;
+}
+
+/* BAGIAN 2: BILAH TAB NAVIGASI PENGELOLAAN */
+.nav-tabs-wrapper{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border-bottom:1px solid var(--color-border-subtle);
+  margin-bottom:24px;
+}
+.tabs-list{
+  display:flex;
+  gap:4px;
+}
+.tab-btn{
+  background:transparent;
+  border:none;
+  padding:12px 18px;
+  font-size:14px;
+  font-weight:700;
+  color:var(--color-text-secondary);
+  border-bottom:2px solid transparent;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  transition:all .15s ease;
+  position:relative;
+  top:1px;
+}
+.tab-btn:hover{color:var(--color-text-primary)}
+.tab-btn.active{
+  color:var(--color-brand-primary);
+  border-bottom-color:var(--color-brand-primary);
+}
+.tab-badge{
+  font-size:11px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:var(--color-surface-subtle);
+  color:var(--color-text-secondary);
+  font-weight:700;
+}
+.tab-btn.active .tab-badge{
+  background:var(--color-brand-tint);
+  color:var(--color-brand-primary);
+}
+
+/* PANELS & CARDS */
+.panel{
+  background:var(--color-surface);
+  border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-card);
+  margin-bottom:24px;
+  overflow:hidden;
+}
+.panel-header{
+  padding:20px 24px;
+  border-bottom:1px solid var(--color-border-subtle);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.panel-title h2{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+  color:var(--color-text-primary);
+}
+.panel-title p{
+  font-size:12.5px;
+  color:var(--color-text-secondary);
+  margin-top:3px;
+}
+.panel-body{padding:24px}
+
+/* FILTER BAR */
+.filter-bar{
+  display:grid;
+  grid-template-columns:minmax(240px, 1.5fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap:12px;
+  align-items:end;
+  margin-bottom:20px;
+}
+.filter-group{display:grid;gap:6px}
+.filter-group label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--color-text-primary);
+}
+.filter-input, .filter-select{
+  width:100%;
+  border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-sm);
+  background:var(--color-surface);
+  color:var(--color-text-primary);
+  padding:9px 12px;
+  font-size:13.5px;
+  transition:border-color .15s ease;
+}
+.filter-input:focus, .filter-select:focus{
+  border-color:var(--color-brand-focus);
+}
+
+/* TABLE STYLING */
+.table-wrap{
+  overflow-x:auto;
+  width:100%;
+  border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-sm);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:880px;
+}
+thead th{
+  background:var(--color-surface-subtle);
+  color:var(--color-text-secondary);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  padding:12px 16px;
+  border-bottom:1px solid var(--color-border-subtle);
+  text-align:left;
+  white-space:nowrap;
+}
+tbody td{
+  padding:14px 16px;
+  border-bottom:1px solid var(--color-border-subtle);
+  vertical-align:middle;
+  font-size:13.5px;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(247,250,249,0.7)}
+
+/* TABLE USER CELL */
+.user-cell{display:flex;align-items:center;gap:12px}
+.user-cell-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--color-brand-tint);color:var(--color-brand-primary);
+  display:grid;place-items:center;font-weight:800;font-size:12px;flex-shrink:0;
+}
+.user-cell-info{line-height:1.35}
+.user-cell-name{font-weight:700;color:var(--color-text-primary)}
+.user-cell-id{font-size:11.5px;color:var(--color-text-secondary)}
+
+/* STATUS PILLS */
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border-radius:999px;
+  padding:3px 9px;
+  font-size:11.5px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.pill.green{
+  background:var(--color-status-green-bg);
+  color:var(--color-status-green-fg);
+  border:1px solid var(--color-status-green-border);
+}
+.pill.blue{
+  background:var(--color-status-blue-bg);
+  color:var(--color-status-blue-fg);
+  border:1px solid var(--color-status-blue-border);
+}
+.pill.amber{
+  background:var(--color-status-amber-bg);
+  color:var(--color-status-amber-fg);
+  border:1px solid var(--color-status-amber-border);
+}
+.pill.neutral{
+  background:var(--color-status-neutral-bg);
+  color:var(--color-status-neutral-fg);
+  border:1px solid var(--color-status-neutral-border);
+}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* TABLE ACTIONS */
+.table-actions{display:flex;align-items:center;gap:6px}
+
+/* NOTICE BOX */
+.notice{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px 16px;
+  border-radius:var(--radius-sm);
+  font-size:13px;
+  line-height:1.5;
+  margin-top:16px;
+}
+.notice.info{
+  background:var(--color-status-blue-bg);
+  border:1px solid var(--color-status-blue-border);
+  color:var(--color-status-blue-fg);
+}
+.notice.warning{
+  background:var(--color-status-amber-bg);
+  border:1px solid var(--color-status-amber-border);
+  color:var(--color-status-amber-fg);
+}
+.notice-icon{flex-shrink:0;margin-top:2px}
+
+/* MODAL BACKDROP & DIALOG */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(14,33,27,0.55);
+  backdrop-filter:blur(3px);
+  display:none;
+  align-items:center;justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+.modal-backdrop.open{display:flex}
+.modal-dialog{
+  background:var(--color-surface);
+  border-radius:var(--radius-modal);
+  box-shadow:var(--shadow-modal);
+  width:min(720px, 100%);
+  max-height:88vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.modal-header{
+  padding:18px 24px;
+  border-bottom:1px solid var(--color-border-subtle);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-shrink:0;
+}
+.modal-header h3{
+  font-size:17px;font-weight:800;color:var(--color-text-primary);letter-spacing:-0.02em;
+}
+.modal-close-btn{
+  background:transparent;border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-sm);width:32px;height:32px;
+  display:grid;place-items:center;color:var(--color-text-secondary);
+}
+.modal-close-btn:hover{background:var(--color-surface-subtle);color:var(--color-text-primary)}
+.modal-body{
+  padding:20px 24px;
+  overflow-y:auto;
+  flex:1;
+}
+.modal-footer{
+  padding:14px 24px;
+  border-top:1px solid var(--color-border-subtle);
+  background:var(--color-surface-subtle);
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  flex-shrink:0;
+}
+
+/* FORM STYLES */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:grid;gap:6px}
+.form-group.col-span-2{grid-column:span 2}
+.form-group label{font-size:12.5px;font-weight:700;color:var(--color-text-primary)}
+.form-group label .required{color:#991B1B}
+.form-input, .form-select, .form-textarea{
+  width:100%;
+  border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-sm);
+  background:var(--color-surface);
+  color:var(--color-text-primary);
+  padding:10px 12px;
+  font-size:13.5px;
+}
+.form-textarea{min-height:84px;resize:vertical}
+.form-hint{font-size:11.5px;color:var(--color-text-secondary)}
+
+/* IMPACT PREVIEW CARDS */
+.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.preview-card{
+  padding:14px;border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-sm);background:var(--color-surface-subtle);
+}
+.preview-card-label{font-size:11px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase}
+.preview-card-value{font-size:14px;font-weight:800;color:var(--color-text-primary);margin-top:4px}
+.preview-card.col-span-2{grid-column:span 2}
+
+/* TOAST NOTIFICATION */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:#0E211B;color:#FFFFFF;
+  padding:12px 18px;border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-modal);
+  font-size:13px;font-weight:600;
+  display:none;align-items:center;gap:10px;z-index:200;
+}
+.toast.show{display:flex}
+
+.hidden{display:none!important}
+
+@media(max-width:1024px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .mobile-menu-btn{display:inline-flex}
+  .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .filter-bar{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .content{padding:20px 16px 48px}
+  .page-header{flex-direction:column;align-items:stretch}
+  .metrics-grid{grid-template-columns:1fr}
+  .filter-bar{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .form-group.col-span-2{grid-column:auto}
+  .preview-grid{grid-template-columns:1fr}
+  .preview-card.col-span-2{grid-column:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR NAVIGATION (Diselaraskan dengan sistem) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">WorkPulse</div>
+        <div class="brand-caption">Daily Accountability System</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Workspace Karyawan</div>
+      <nav class="nav">
+        <a href="02-Morning-Commitment.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>Morning Commitment</a>
+        <a href="03-Additional-Work.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>Additional Work</a>
+        <a href="04-EOD-Outcome.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><polyline points="9 11 12 14 22 4"></polyline></svg></span>EOD Outcome</a>
+        <a href="05-Raise-Instant-Blocker.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>Raise Instant Blocker</a>
+        <a href="06-My-History-Weekly-Summary.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>My History</a>
+      </nav>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Manajemen &amp; Tata Kelola</div>
+      <nav class="nav">
+        <a href="08-Pulse-Dashboard.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>Pulse Dashboard</a>
+        <a href="09-Blocker-Escalation-Queue.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></span>Blocker Queue</a>
+        <a href="14-Escalation-Aging.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline></svg></span>Escalation Aging</a>
+        <a href="15-Admin-Organizational-Mapping.html" class="active"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>Pemetaan Organisasi</a>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="identity">
+        <div class="avatar">HW</div>
+        <div class="identity-info">
+          <div class="identity-name">Hendra Wijaya</div>
+          <div class="identity-role">Chief Executive Officer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <main class="main" id="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Buka navigasi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="breadcrumbs">
+          <span>Manajemen &amp; Tata Kelola</span>
+          <span>/</span>
+          <span>Administrasi</span>
+          <span>/</span>
+          <span class="crumb-current">Pemetaan Organisasi &amp; Proyek</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="system-clock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span id="currentTimeDisplay">20 Okt 2026</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT BODY -->
+    <div class="content">
+
+      <!-- BAGIAN 1: HEADER HALAMAN -->
+      <section class="page-header">
+        <div class="page-header-info">
+          <h1>Pemetaan Organisasi &amp; Proyek</h1>
+          <p>
+            Kelola penugasan struktur organisasi, jalur pelaporan atasan langsung (*Direct Manager*), dan kewenangan proyek secara independen dengan kontrol tanggal efektif (*Effective Date*). Histori penugasan tidak ditimpa demi akuntabilitas data masa lalu.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="btnRegisterProject" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+            <span>Daftarkan Proyek</span>
+          </button>
+          <button class="btn btn-primary" id="btnReassignOrg" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+            <span>Ubah Penugasan Organisasi</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- BAGIAN 1: KARTU METRIK RINGKASAN ORGANISASI & PROYEK -->
+      <section class="metrics-grid" aria-label="Ringkasan Organisasi">
+        <div class="metric-card accent-green">
+          <div class="metric-header">
+            <span class="metric-label">Total Personil</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="metricTotalPeople">10</div>
+          <div class="metric-subtext">Karyawan aktif seluruh divisi</div>
+        </div>
+
+        <div class="metric-card accent-blue">
+          <div class="metric-header">
+            <span class="metric-label">Penugasan Organisasi</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="metricActiveOrg">10</div>
+          <div class="metric-subtext">1 penugasan aktif per personil</div>
+        </div>
+
+        <div class="metric-card accent-purple">
+          <div class="metric-header">
+            <span class="metric-label">Proyek Terdaftar</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="metricTotalProjects">3</div>
+          <div class="metric-subtext">Inisiatif perusahaan aktif</div>
+        </div>
+
+        <div class="metric-card accent-amber">
+          <div class="metric-header">
+            <span class="metric-label">Wewenang Proyek</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="metricActiveAuthority">5</div>
+          <div class="metric-subtext">Mapping independen aktif</div>
+        </div>
+      </section>
+
+      <!-- BAGIAN 2: BILAH TAB NAVIGASI PENGELOLAAN -->
+      <section class="nav-tabs-wrapper" aria-label="Navigasi Pengelolaan">
+        <div class="tabs-list" role="tablist">
+          <button class="tab-btn active" id="tabBtnOrg" role="tab" aria-selected="true" aria-controls="panelOrg" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            <span>Struktur Organisasi</span>
+            <span class="tab-badge" id="badgeOrgCount">10</span>
+          </button>
+          <button class="tab-btn" id="tabBtnProjects" role="tab" aria-selected="false" aria-controls="panelProjects" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>Direktori Proyek</span>
+            <span class="tab-badge" id="badgeProjectCount">3</span>
+          </button>
+          <button class="tab-btn" id="tabBtnAuthority" role="tab" aria-selected="false" aria-controls="panelAuthority" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span>Kewenangan Proyek</span>
+            <span class="tab-badge" id="badgeAuthCount">5</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 1: STRUKTUR ORGANISASI (ORGANIZATIONAL ASSIGNMENT)             -->
+      <!-- ================================================================= -->
+      <section id="panelOrg" role="tabpanel" aria-labelledby="tabBtnOrg">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Struktur Organisasi &amp; Jalur Pelaporan Aktif</h2>
+              <p>Daftar penugasan peran (*Role*), fungsi divisi (*Function*), dan atasan langsung (*Direct Manager*) yang berlaku efektif hari ini.</p>
+            </div>
+            <button class="btn btn-primary btn-small" id="btnQuickAddOrg" type="button">
+              <span>＋ Ubah Penugasan</span>
+            </button>
+          </div>
+          <div class="panel-body">
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+              <div class="filter-group">
+                <label for="searchOrgPerson">Cari Personil</label>
+                <input class="filter-input" id="searchOrgPerson" type="search" placeholder="Cari nama atau ID karyawan..." autocomplete="off">
+              </div>
+              <div class="filter-group">
+                <label for="filterOrgFunction">Divisi / Fungsi</label>
+                <select class="filter-select" id="filterOrgFunction">
+                  <option value="all">Semua Divisi</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Quality">Quality / QA</option>
+                  <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+                  <option value="R&D">R&amp;D</option>
+                  <option value="Delivery">Delivery / Project Mgmt</option>
+                  <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+                  <option value="Finance">Finance</option>
+                  <option value="HRGA">HRGA</option>
+                  <option value="Executive">Executive / Management</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filterOrgRole">Peran / Jabatan</label>
+                <select class="filter-select" id="filterOrgRole">
+                  <option value="all">Semua Jabatan</option>
+                  <option value="Employee">Employee (Staff / Developer)</option>
+                  <option value="Supervisor / TL">Supervisor / Technical Lead</option>
+                  <option value="Head">Head of Department</option>
+                  <option value="PM">Project Manager (PM)</option>
+                  <option value="HRGA">HRGA</option>
+                  <option value="CEO / Management">CEO / Management</option>
+                </select>
+              </div>
+              <button class="btn btn-secondary" id="btnResetOrgFilter" type="button" style="height:38px">
+                <span>Reset Filter</span>
+              </button>
+            </div>
+
+            <!-- Table Structure -->
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Personil</th>
+                    <th>Divisi &amp; Jabatan</th>
+                    <th>Atasan Langsung (Direct Manager)</th>
+                    <th>Tanggal Efektif</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tableOrgBody">
+                  <!-- Rendered dynamically by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Footnote Prinsip -->
+            <div class="notice info">
+              <span class="notice-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              </span>
+              <div>
+                <strong>Invarian Akuntabilitas Historis:</strong> Setiap kali penugasan baru disimpan, sistem menutup penugasan lama secara otomatis bertanggal satu hari sebelum tanggal efektif baru tanpa menghapus baris riwayat. Laporan kendala dan persetujuan di masa lalu tetap merujuk pada atasan yang menjabat saat kejadian terjadi.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 2: DIREKTORI PROYEK (PROJECTS DIRECTORY)                      -->
+      <!-- ================================================================= -->
+      <section id="panelProjects" class="hidden" role="tabpanel" aria-labelledby="tabBtnProjects">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Direktori Master Proyek &amp; Inisiatif</h2>
+              <p>Daftar seluruh proyek dan inisiatif resmi perusahaan yang menjadi wadah rujukan penugasan wewenang dan pelaporan kendala (*Blocker*).</p>
+            </div>
+            <button class="btn btn-primary btn-small" id="btnAddProjectInTab" type="button">
+              <span>＋ Daftarkan Proyek Baru</span>
+            </button>
+          </div>
+          <div class="panel-body">
+            <!-- Filter Bar Proyek -->
+            <div class="filter-bar" style="grid-template-columns:minmax(240px, 2fr) minmax(180px, 1fr) auto;">
+              <div class="filter-group">
+                <label for="searchProject">Cari Proyek</label>
+                <input class="filter-input" id="searchProject" type="search" placeholder="Cari nama proyek, kode, atau inisiatif..." autocomplete="off">
+              </div>
+              <div class="filter-group">
+                <label for="filterProjectStatus">Status Proyek</label>
+                <select class="filter-select" id="filterProjectStatus">
+                  <option value="all">Semua Status</option>
+                  <option value="Aktif">Aktif Berjalan</option>
+                  <option value="Selesai">Selesai / Ditutup</option>
+                </select>
+              </div>
+              <button class="btn btn-secondary" id="btnResetProjectFilter" type="button" style="height:38px">
+                <span>Reset Filter</span>
+              </button>
+            </div>
+
+            <!-- Table Projects -->
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kode Proyek</th>
+                    <th>Nama Inisiatif / Proyek</th>
+                    <th>Divisi Penanggung Jawab</th>
+                    <th>Total Pemegang Wewenang</th>
+                    <th>Status Proyek</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tableProjectsBody">
+                  <!-- Rendered dynamically by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 3: KEWENANGAN PROYEK (PROJECT AUTHORITY MAPPING)              -->
+      <!-- ================================================================= -->
+      <section id="panelAuthority" class="hidden" role="tabpanel" aria-labelledby="tabBtnAuthority">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Pemetaan Kewenangan Proyek (*Project Authority Mapping*)</h2>
+              <p>Personil yang berwenang mengambil keputusan, menerima eskalasi, dan menyelesaikan kendala pada proyek tertentu secara independen dari struktur organisasi.</p>
+            </div>
+            <button class="btn btn-primary btn-small" id="btnAddAuthorityBtn" type="button">
+              <span>＋ Tambah Penugasan Wewenang</span>
+            </button>
+          </div>
+          <div class="panel-body">
+            <!-- Filter Bar Authority -->
+            <div class="filter-bar">
+              <div class="filter-group">
+                <label for="searchAuthText">Cari Personil / Proyek</label>
+                <input class="filter-input" id="searchAuthText" type="search" placeholder="Nama personil atau nama proyek..." autocomplete="off">
+              </div>
+              <div class="filter-group">
+                <label for="filterAuthProject">Pilih Proyek</label>
+                <select class="filter-select" id="filterAuthProject">
+                  <option value="all">Semua Proyek</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="filterAuthStatus">Status Wewenang</label>
+                <select class="filter-select" id="filterAuthStatus">
+                  <option value="all">Semua Status</option>
+                  <option value="active">Aktif Saat Ini</option>
+                  <option value="historical">Historis / Berakhir</option>
+                </select>
+              </div>
+              <button class="btn btn-secondary" id="btnResetAuthFilter" type="button" style="height:38px">
+                <span>Reset Filter</span>
+              </button>
+            </div>
+
+            <!-- Table Authority -->
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Personil Berwenang</th>
+                    <th>Proyek / Scope Reference</th>
+                    <th>Peran Wewenang</th>
+                    <th>Tanggal Mulai Efektif</th>
+                    <th>Tanggal Berakhir (End Date)</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tableAuthorityBody">
+                  <!-- Rendered dynamically by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Footnote Multi-Concurrent Authority -->
+            <div class="notice info">
+              <span class="notice-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              </span>
+              <div>
+                <strong>Aturan Multi-Konkuren:</strong> Seorang personil dapat ditugaskan menjadi pemegang wewenang di beberapa proyek sekaligus tanpa mengubah atasan langsungnya di struktur organisasi. Mengakhiri kewenangan dilakukan dengan mengisi *End Date* (bukan *hard-delete*).
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 1: FORM UBAH PENUGASAN ORGANISASI (REASSIGN ORG)                  -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="modalOrgBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalOrgTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modalOrgTitle">Ubah Penugasan Organisasi</h3>
+      <button class="modal-close-btn" id="closeOrgModalBtn" type="button" aria-label="Tutup modal">✕</button>
+    </div>
+    <form id="formOrgAssignment">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group col-span-2">
+            <label for="selectOrgPerson">Pilih Personil / Karyawan <span class="required">*</span></label>
+            <select class="form-select" id="selectOrgPerson" required>
+              <option value="">-- Pilih Karyawan --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="selectOrgRole">Jabatan / Role Baru <span class="required">*</span></label>
+            <select class="form-select" id="selectOrgRole" required>
+              <option value="Employee">Employee (Staff / Developer)</option>
+              <option value="Supervisor / TL">Supervisor / Technical Lead</option>
+              <option value="Head">Head of Department</option>
+              <option value="PM">Project Manager (PM)</option>
+              <option value="HRGA">HRGA Specialist</option>
+              <option value="CEO / Management">CEO / Management</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="selectOrgFunction">Divisi / Fungsi Baru <span class="required">*</span></label>
+            <select class="form-select" id="selectOrgFunction" required>
+              <option value="Engineering">Engineering</option>
+              <option value="Quality">Quality / QA</option>
+              <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+              <option value="R&D">R&amp;D</option>
+              <option value="Delivery">Delivery / Project Mgmt</option>
+              <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+              <option value="Finance">Finance</option>
+              <option value="HRGA">HRGA</option>
+              <option value="Executive">Executive / Management</option>
+            </select>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="selectOrgManager">Atasan Langsung (Direct Manager)</label>
+            <select class="form-select" id="selectOrgManager">
+              <option value="">— Tidak ada / Posisi Puncak (CEO) —</option>
+            </select>
+            <span class="form-hint">Karyawan tidak dapat menjadi atasan langsung bagi dirinya sendiri.</span>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="inputOrgEffectiveDate">Tanggal Mulai Berlaku (Effective Date) <span class="required">*</span></label>
+            <input class="form-input" id="inputOrgEffectiveDate" type="date" required>
+            <span class="form-hint">Penugasan aktif lama otomatis ditutup pada H-1 sebelum tanggal efektif baru.</span>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="textareaOrgReason">Alasan Perubahan Penugasan <span class="required">*</span></label>
+            <textarea class="form-textarea" id="textareaOrgReason" required placeholder="Jelaskan alasan promosi, rotasi divisi, atau penyesuaian hierarki pelaporan..."></textarea>
+          </div>
+        </div>
+
+        <div class="notice warning hidden" id="retroWarningOrg">
+          <span class="notice-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </span>
+          <div>
+            <strong>Perhatian Tanggal Lampau:</strong> Tanggal efektif yang dipilih berada di masa lalu. Sesuai tata kelola sistem, perubahan ini tidak merevisi secara retroaktif tiket blocker atau evaluasi kerja yang sudah diputuskan sebelumnya.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelOrgModal" type="button">Batal</button>
+        <button class="btn btn-primary" type="submit">Pratinjau Dampak</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 2: PRATINJAU DAMPAK SEBELUM KONFIRMASI (IMPACT PREVIEW)           -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="modalPreviewBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalPreviewTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modalPreviewTitle">Pratinjau Dampak Perubahan</h3>
+      <button class="modal-close-btn" id="closePreviewModalBtn" type="button" aria-label="Tutup pratinjau">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--color-text-secondary);margin-bottom:14px">
+        Tinjau perbandingan kondisi sebelum dan sesudah perubahan penugasan organisasi berikut sebelum mengonfirmasi penyimpanan.
+      </p>
+
+      <div class="preview-grid" id="previewContentArea">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="notice info" style="margin-top:16px">
+        <span class="notice-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </span>
+        <div>
+          <strong>Notifikasi &amp; Audit Trail:</strong> Sistem akan mencatat riwayat perubahan ini ke *Audit Log* permanen dan secara otomatis mengirimkan notifikasi resmi kepada karyawan bersangkutan per tanggal efektif.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btnBackToEditOrg" type="button">Kembali ke Form</button>
+      <button class="btn btn-primary" id="btnConfirmOrgChange" type="button">Konfirmasi &amp; Simpan Penugasan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 3: PENDAFTARAN MASTER PROYEK BARU                                 -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="modalProjectBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalProjectTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modalProjectTitle">Daftarkan Inisiatif / Proyek Baru</h3>
+      <button class="modal-close-btn" id="closeProjectModalBtn" type="button" aria-label="Tutup modal">✕</button>
+    </div>
+    <form id="formNewProject">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="inputProjectCode">Kode Proyek (Scope Reference) <span class="required">*</span></label>
+            <input class="form-input" id="inputProjectCode" type="text" placeholder="Misal: PRJ-ERP, REF-OPS-20" required uppercase>
+            <span class="form-hint">Digunakan sebagai rujukan unik di seluruh sistem.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="selectProjectDiv">Divisi Penanggung Jawab <span class="required">*</span></label>
+            <select class="form-select" id="selectProjectDiv" required>
+              <option value="Delivery">Delivery / Project Mgmt</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+              <option value="Finance">Finance</option>
+              <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+              <option value="HRGA">HRGA</option>
+            </select>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="inputProjectName">Nama Proyek / Inisiatif <span class="required">*</span></label>
+            <input class="form-input" id="inputProjectName" type="text" placeholder="Nama inisiatif resmi perusahaan..." required>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="textareaProjectDesc">Deskripsi Singkat / Ruang Lingkup</label>
+            <textarea class="form-textarea" id="textareaProjectDesc" placeholder="Jelaskan tujuan dan ruang lingkup proyek ini..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelProjectModal" type="button">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Master Proyek</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 4: PENUGASAN KEWENANGAN PROYEK (PROJECT AUTHORITY)                -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="modalAuthorityBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalAuthTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modalAuthTitle">Tambah Kewenangan Proyek (*Project Authority*)</h3>
+      <button class="modal-close-btn" id="closeAuthModalBtn" type="button" aria-label="Tutup modal">✕</button>
+    </div>
+    <form id="formAuthorityAssignment">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group col-span-2">
+            <label for="selectAuthProjectTarget">Pilih Proyek Terdaftar <span class="required">*</span></label>
+            <select class="form-select" id="selectAuthProjectTarget" required>
+              <option value="">-- Pilih Proyek Terdaftar --</option>
+            </select>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="selectAuthPersonTarget">Personil yang Diberi Kewenangan <span class="required">*</span></label>
+            <select class="form-select" id="selectAuthPersonTarget" required>
+              <option value="">-- Pilih Karyawan --</option>
+            </select>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="selectAuthRole">Peran Kewenangan di Proyek <span class="required">*</span></label>
+            <select class="form-select" id="selectAuthRole" required>
+              <option value="Pimpinan Proyek (Project Lead / PM)">Pimpinan Proyek (Project Lead / PM) — Otoritas Utama</option>
+              <option value="Penanggung Jawab Keahlian / Lead Spesialis">Penanggung Jawab Keahlian / Lead Spesialis</option>
+              <option value="Penanggung Jawab Mitra / Klien (PIC Eksternal)">Penanggung Jawab Mitra / Klien (PIC Eksternal)</option>
+              <option value="Pengarah / Penjamin Proyek (Project Sponsor)">Pengarah / Penjamin Proyek (Project Sponsor)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="inputAuthEffectiveDate">Tanggal Mulai Efektif <span class="required">*</span></label>
+            <input class="form-input" id="inputAuthEffectiveDate" type="date" required>
+          </div>
+
+          <div class="form-group">
+            <label for="inputAuthEndDate">Tanggal Berakhir (End Date)</label>
+            <input class="form-input" id="inputAuthEndDate" type="date">
+            <span class="form-hint">Kosongkan jika wewenang berlangsung tanpa batas waktu tetap.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelAuthModal" type="button">Batal</button>
+        <button class="btn btn-primary" type="submit">Tetapkan Kewenangan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 5: RIWAYAT PENUGASAN (VIEW HISTORY MODAL)                         -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="modalHistoryBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalHistoryTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h3 id="modalHistoryTitle">Riwayat Penugasan Organisasi</h3>
+        <span id="modalHistorySub" style="font-size:12px;color:var(--color-text-secondary);margin-top:2px;display:block"></span>
+      </div>
+      <button class="modal-close-btn" id="closeHistoryModalBtn" type="button" aria-label="Tutup riwayat">✕</button>
+    </div>
+    <div class="modal-body" id="modalHistoryBody">
+      <!-- Linimasa riwayat rendered dynamically -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btnCloseHistoryBtn" type="button">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="systemToast" role="status" aria-live="polite">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="toastMessage">Perubahan berhasil disimpan.</span>
+</div>
+
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id);let activeTrigger=null,pending=null,changes=0,historyPerson=null;
-const people=[{id:'USR-001',name:'Ayu Nirmala'},{id:'USR-002',name:'Raka Aditya'},{id:'USR-003',name:'Dimas Putra'},{id:'USR-004',name:'Sinta Maharani'},{id:'USR-005',name:'Nadia Safitri'},{id:'USR-006',name:'Fajar Nugroho'}];
-const orgAssignments=[
-{id:'ORG-001-V1',personId:'USR-001',role:'Head',func:'Engineering',managerId:'USR-006',effectiveDate:'2025-01-01',endDate:null,reason:'Assignment awal demo',createdBy:'Admin Rina'},
-{id:'ORG-002-V1',personId:'USR-002',role:'Employee',func:'Engineering',managerId:'USR-001',effectiveDate:'2025-02-01',endDate:null,reason:'Assignment awal demo',createdBy:'Admin Rina'},
-{id:'ORG-003-V1',personId:'USR-003',role:'Supervisor / TL',func:'Operations',managerId:'USR-001',effectiveDate:'2025-02-01',endDate:null,reason:'Assignment awal demo',createdBy:'Admin Rina'},
-{id:'ORG-004-V1',personId:'USR-004',role:'PM',func:'Product',managerId:'USR-001',effectiveDate:'2025-03-01',endDate:null,reason:'Assignment awal demo',createdBy:'Admin Rina'},
-{id:'ORG-005-V1',personId:'USR-005',role:'HRGA',func:'People & Culture',managerId:'USR-006',effectiveDate:'2025-01-01',endDate:null,reason:'Assignment awal demo',createdBy:'Admin Rina'},
-{id:'ORG-006-V1',personId:'USR-006',role:'CEO / Management',func:'Executive',managerId:'',effectiveDate:'2024-01-01',endDate:null,reason:'Assignment awal demo',createdBy:'Admin Rina'}];
-const projectAssignments=[
-{id:'PAM-001',personId:'USR-004',scope:'Project Atlas',effectiveDate:'2025-04-01',endDate:null,reason:'Mapping demo',createdBy:'Admin Rina'},
-{id:'PAM-002',personId:'USR-004',scope:'Project Orion',effectiveDate:'2025-06-01',endDate:null,reason:'Mapping demo',createdBy:'Admin Rina'},
-{id:'PAM-003',personId:'USR-003',scope:'REF-OPS-17',effectiveDate:'2025-05-15',endDate:null,reason:'Mapping demo',createdBy:'Admin Rina'},
-{id:'PAM-004',personId:'USR-002',scope:'Project Atlas',effectiveDate:'2025-08-01',endDate:null,reason:'Mapping demo',createdBy:'Admin Rina'}];
-const orgHistory=[],projectHistory=[];const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function person(id){return people.find(p=>p.id===id)?.name||'—'}function dateLabel(v){if(!v)return'—';const [y,m,d]=v.split('-');return `${d} ${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][Number(m)-1]} ${y}`}function activeOn(a,date=today()){return a.effectiveDate<=date&&(!a.endDate||a.endDate>=date)}function currentOrg(id){return orgAssignments.filter(a=>a.personId===id&&activeOn(a)).sort((a,b)=>b.effectiveDate.localeCompare(a.effectiveDate))[0]||null}function currentProject(a){return activeOn(a)&&!a.endDate}function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),3200)}function focusClose(id){$(id).querySelector('button.close-x')?.focus()}
-function populateSelects(){const pOpts=people.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.id}</option>`).join('');$('personSelect').innerHTML=pOpts;$('managerSelect').innerHTML='<option value="">— Tidak ada / posisi puncak —</option>'+people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');$('projectPersonFilter').innerHTML='<option value="all">Semua person</option>'+people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
-function renderMetrics(){$('metricPeople').textContent=people.length;$('metricOrg').textContent=people.filter(p=>currentOrg(p.id)).length;$('metricProject').textContent=projectAssignments.filter(currentProject).length;$('metricChanges').textContent=changes}
-function renderOrg(){const q=$('orgSearch').value.trim().toLowerCase(),f=$('functionFilter').value,r=$('roleFilter').value;const rows=people.map(p=>({p,a:currentOrg(p.id)})).filter(({p,a})=>a&&(`${p.name} ${p.id}`.toLowerCase().includes(q))&&(f==='all'||a.func===f)&&(r==='all'||a.role===r));$('orgBody').innerHTML=rows.map(({p,a})=>`<tr><td><div class="person">${esc(p.name)}</div><div class="subline">${esc(p.id)}</div></td><td><div class="person">${esc(a.role)}</div><div class="subline">${esc(a.func)}</div></td><td>${esc(person(a.managerId))}<div class="subline">${a.managerId?esc(a.managerId):'Posisi puncak / tidak memiliki manager'}</div></td><td>${esc(dateLabel(a.effectiveDate))}<div class="subline">${a.endDate?'Berakhir '+esc(dateLabel(a.endDate)):'Tidak ada end date'}</div></td><td><span class="pill green">Aktif saat ini</span><div class="subline">${esc(a.id)}</div></td><td><div class="table-actions"><button class="btn btn-small" type="button" data-history-org="${p.id}">View History</button><button class="btn btn-small" type="button" data-reassign-org="${p.id}">Ubah / Reassign</button></div></td></tr>`).join('');$('orgEmpty').classList.toggle('hidden',rows.length>0);renderMetrics()}
-function renderProjects(){const q=$('projectSearch').value.trim().toLowerCase(),state=$('projectStateFilter').value,pf=$('projectPersonFilter').value;const rows=projectAssignments.filter(a=>`${person(a.personId)} ${a.personId} ${a.scope}`.toLowerCase().includes(q)&&(pf==='all'||a.personId===pf)&&(state==='all'||(state==='active'?currentProject(a):!currentProject(a)))).slice().sort((a,b)=>b.effectiveDate.localeCompare(a.effectiveDate));$('projectBody').innerHTML=rows.map(a=>`<tr><td><div class="person">${esc(person(a.personId))}</div><div class="subline">${esc(a.personId)}</div></td><td><div class="person">${esc(a.scope)}</div><div class="subline">Project Authority mapping</div></td><td>${esc(dateLabel(a.effectiveDate))}</td><td>${esc(dateLabel(a.endDate))}</td><td><span class="pill ${currentProject(a)?'green':'neutral'}">${currentProject(a)?'Aktif saat ini':'Historis / berakhir'}</span></td><td><div class="table-actions"><button class="btn btn-small" type="button" data-history-project="${a.id}">View History</button><button class="btn btn-small" type="button" data-end-project="${a.id}" ${a.endDate?'disabled':''}>Akhiri mapping</button></div></td></tr>`).join('');$('projectEmpty').classList.toggle('hidden',rows.length>0);renderMetrics()}
-function renderAll(){renderOrg();renderProjects()}
-function switchTab(type){const org=type==='org';$('orgPanel').classList.toggle('hidden',!org);$('projectPanel').classList.toggle('hidden',org);$('orgTab').setAttribute('aria-selected',String(org));$('projectTab').setAttribute('aria-selected',String(!org));if(!org)$('newProjectBtn').focus()}
-function openForm(type='org',personId='',trigger=null,editId=''){activeTrigger=trigger||document.activeElement;pending=null;$('assignmentForm').reset();$('mappingType').value=type;$('editId').value=editId;const isOrg=type==='org',isEnd=type==='endProject';$('formTitle').textContent=isOrg?'Ubah assignment organisasi':isEnd?'Akhiri Project Authority mapping':'Tambah Project Authority mapping';$('formSub').textContent='Semua perubahan meminta Effective Date dan alasan.';$('orgFields').classList.toggle('hidden',!isOrg);$('projectFields').classList.toggle('hidden',isOrg);$('roleSelect').required=isOrg;$('functionSelect').required=isOrg;$('scopeInput').required=!isOrg;$('effectiveDate').value=today();$('personSelect').disabled=Boolean(editId);if(personId)$('personSelect').value=personId;if(isOrg&&personId){const a=currentOrg(personId);if(a){$('roleSelect').value=a.role;$('functionSelect').value=a.func;$('managerSelect').value=a.managerId||''}}if(isEnd){const a=projectAssignments.find(x=>x.id===editId);if(a){$('scopeInput').value=a.scope;$('scopeInput').readOnly=true;$('personSelect').value=a.personId;$('effectiveDate').min=a.effectiveDate;$('changeReason').value='Akhiri mapping sesuai kebutuhan organisasi';}}else{$('scopeInput').readOnly=false;$('effectiveDate').removeAttribute('min')} $('retroWarning').classList.add('hidden');$('formBackdrop').classList.add('open');$('personSelect').focus()}
-function closeForm(){ $('formBackdrop').classList.remove('open');if(activeTrigger&&activeTrigger.focus)activeTrigger.focus()}
-function formData(){const type=$('mappingType').value,pid=$('personSelect').value,date=$('effectiveDate').value,reason=$('changeReason').value.trim();if(!pid||!date||!reason){toast('Lengkapi semua field wajib.');return null}if(type==='org'){const manager=$('managerSelect').value;if(manager===pid){toast('Person tidak dapat menjadi direct manager dirinya sendiri.');return null}const current=currentOrg(pid);if(current&&date===current.effectiveDate){toast('Effective Date tidak boleh sama dengan awal assignment aktif; pilih tanggal yang menghasilkan periode valid.');return null}return{type,personId:pid,effectiveDate:date,reason,role:$('roleSelect').value,func:$('functionSelect').value,managerId:manager}}const scope=$('scopeInput').value.trim();if(!scope){toast('Scope / Reference wajib diisi.');return null}if(type==='endProject'){const existing=projectAssignments.find(a=>a.id===$('editId').value);if(!existing||date<existing.effectiveDate){toast('Tanggal penghentian tidak boleh mendahului Effective Date mapping.');return null}return{type,personId:pid,effectiveDate:date,reason,scope,editId:existing.id}}return{type,personId:pid,effectiveDate:date,reason,scope}}
-function showRetroWarning(){const d=$('effectiveDate').value;$('retroWarning').classList.toggle('hidden',!d||d>=today())}$('effectiveDate').addEventListener('change',showRetroWarning);
-function makePreview(d){const isOrg=d.type==='org',isEnd=d.type==='endProject',curr=isOrg?currentOrg(d.personId):null,scopeRows=isOrg?orgAssignments.filter(a=>a.personId===d.personId&&activeOn(a)).length:projectAssignments.filter(a=>a.personId===d.personId&&currentProject(a)).length;let details=isOrg?`<div class="preview-card"><div class="label">Role & function baru</div><div class="value">${esc(d.role)} · ${esc(d.func)}</div></div><div class="preview-card"><div class="label">Direct manager baru</div><div class="value">${esc(person(d.managerId))}</div></div>`:`<div class="preview-card"><div class="label">Scope / Reference</div><div class="value">${esc(d.scope)}</div></div><div class="preview-card"><div class="label">Mapping lain aktif untuk person ini</div><div class="value">${scopeRows}</div></div>`;$('previewContent').innerHTML=`<div class="section-note">${isOrg?'Organizational Assignment':isEnd?'Akhiri Project Authority Mapping':'Project Authority Mapping'} · ${esc(person(d.personId))} (${esc(d.personId)})</div><div class="preview-grid"><div class="preview-card"><div class="label">Assignment saat ini</div><div class="value">${isOrg?esc(curr?curr.role+' · '+curr.func:'Tidak ditemukan'): 'Mapping Project Authority yang ada tetap terpisah'}</div><div class="small" style="margin-top:5px">${isOrg&&curr?'Effective sejak '+esc(dateLabel(curr.effectiveDate)):'Tidak ada assignment yang akan digabung otomatis.'}</div></div><div class="preview-card"><div class="label">Mulai berlaku</div><div class="value">${esc(dateLabel(d.effectiveDate))}</div></div>${details}<div class="preview-card span-2"><div class="label">Alasan perubahan</div><div class="value">${esc(d.reason)}</div></div><div class="preview-card span-2"><div class="label">Preview dampak</div><div class="value">${isOrg?'Person yang diubah: '+esc(person(d.personId))+'. Perubahan role/function/manager akan memengaruhi resolusi struktur organisasi mulai tanggal efektif; record historis event sebelumnya tetap memakai snapshot saat event.':isEnd?'Mapping '+esc(d.scope)+' akan berhenti berlaku mulai '+esc(dateLabel(d.effectiveDate))+'. Riwayat mapping tetap dipertahankan.':'Person yang diubah: '+esc(person(d.personId))+'. Mapping baru berlaku untuk scope/reference ini mulai tanggal efektif dan tidak menggantikan mapping lain pada scope berbeda.'}</div></div></div>`}
-$('assignmentForm').addEventListener('submit',e=>{e.preventDefault();const d=formData();if(!d)return;pending=d;makePreview(d);$('formBackdrop').classList.remove('open');$('previewBackdrop').classList.add('open');focusClose('previewBackdrop')});$('confirmChange').addEventListener('click',()=>{if(!pending)return;const d=pending;const newId=(d.type==='org'?'ORG-DEMO-':'PAM-DEMO-')+(changes+1).toString().padStart(3,'0');if(d.type==='org'){const old=currentOrg(d.personId);if(old){if(d.effectiveDate>old.effectiveDate){old.endDate=new Date(new Date(d.effectiveDate+'T00:00:00Z').getTime()-86400000).toISOString().slice(0,10)}else{const nextStart=old.effectiveDate;const newEnd=new Date(new Date(nextStart+'T00:00:00Z').getTime()-86400000).toISOString().slice(0,10);orgAssignments.push({id:newId,personId:d.personId,role:d.role,func:d.func,managerId:d.managerId,effectiveDate:d.effectiveDate,endDate:newEnd,reason:d.reason,createdBy:'Admin Rina'});historyPerson=d.personId;changes++;pending=null;$('previewBackdrop').classList.remove('open');renderAll();showOrgHistory(d.personId);toast('Assignment historis disimulasikan; tidak mengubah assignment yang berlaku saat ini.');return}}orgAssignments.push({id:newId,personId:d.personId,role:d.role,func:d.func,managerId:d.managerId,effectiveDate:d.effectiveDate,endDate:null,reason:d.reason,createdBy:'Admin Rina'});historyPerson=d.personId}else if(d.type==='endProject'){const existing=projectAssignments.find(a=>a.id===d.editId);if(!existing){toast('Mapping tidak ditemukan.');return}existing.endDate=new Date(new Date(d.effectiveDate+'T00:00:00Z').getTime()-86400000).toISOString().slice(0,10);existing.reason=existing.reason+'; dihentikan: '+d.reason;historyPerson=d.personId}else{projectAssignments.push({id:newId,personId:d.personId,scope:d.scope,effectiveDate:d.effectiveDate,endDate:null,reason:d.reason,createdBy:'Admin Rina'});historyPerson=d.personId}changes++;pending=null;$('previewBackdrop').classList.remove('open');renderAll();if(d.type==='org'){showOrgHistory(d.personId);toast('Perubahan organisasi disimulasikan. Tidak tersimpan ke backend.')}else{switchTab('project');$('projectSearch').value='';$('projectPersonFilter').value=d.personId;renderProjects();showHistoryModal('project',d.type==='endProject'?d.editId:newId);toast(d.type==='endProject'?'Akhir mapping disimulasikan; histori dipertahankan.':'Mapping Project Authority demo ditambahkan. Tidak tersimpan ke backend.')}});
-$('backToEdit').addEventListener('click',()=>{if(!pending)return;const d=pending;$('previewBackdrop').classList.remove('open');openForm(d.type,d.personId,$('confirmChange'));$('effectiveDate').value=d.effectiveDate;if(d.type==='org'){$('roleSelect').value=d.role;$('functionSelect').value=d.func;$('managerSelect').value=d.managerId}else $('scopeInput').value=d.scope;$('changeReason').value=d.reason;showRetroWarning()});function showOrgHistory(pid){const list=orgAssignments.filter(a=>a.personId===pid).slice().sort((a,b)=>b.effectiveDate.localeCompare(a.effectiveDate));$('orgHistoryIntro').classList.add('hidden');$('orgHistory').classList.remove('hidden');$('orgHistory').innerHTML=`<div style="font-weight:800;margin-bottom:10px">${esc(person(pid))} · assignment history (demo)</div><div class="history-list">${list.map(a=>`<div class="history-item"><div class="history-date">${esc(dateLabel(a.effectiveDate))}<div class="tiny">${a.endDate?'s.d. '+esc(dateLabel(a.endDate)):'tanpa end date'}</div></div><div><div class="history-title">${esc(a.role)} · ${esc(a.func)}</div><div class="history-meta">Direct manager: ${esc(person(a.managerId))} · ${esc(a.reason)}</div><div class="tiny">${esc(a.id)} · dibuat oleh ${esc(a.createdBy)}</div></div></div>`).join('')}</div>`}
-function showHistoryModal(type,id){const arr=type==='org'?orgAssignments:projectAssignments;const item=arr.find(a=>a.id===id);if(!item)return;$('historyTitle').textContent=type==='org'?'Organizational Assignment History':'Project Authority Mapping History';$('historySub').textContent=`${person(item.personId)} · ${item.personId}`;$('historyBody').innerHTML=`<div class="section-note">Histori demo berdasarkan data lokal. Perubahan tidak disimpan di server.</div><div class="history-list">${arr.filter(a=>a.personId===item.personId).slice().sort((a,b)=>b.effectiveDate.localeCompare(a.effectiveDate)).map(a=>`<div class="history-item"><div class="history-date">${esc(dateLabel(a.effectiveDate))}<div class="tiny">${a.endDate?'s.d. '+esc(dateLabel(a.endDate)):'tanpa end date'}</div></div><div><div class="history-title">${type==='org'?esc(a.role+' · '+a.func):esc(a.scope)}</div><div class="history-meta">${type==='org'?'Direct manager: '+esc(person(a.managerId)): 'Project Authority scope/reference' } · ${esc(a.reason)}</div><div class="tiny">${esc(a.id)} · dibuat oleh ${esc(a.createdBy)}</div></div></div>`).join('')}</div>`;$('historyBackdrop').classList.add('open');focusClose('historyBackdrop')}
-$('orgBody').addEventListener('click',e=>{const h=e.target.closest('[data-history-org]'),r=e.target.closest('[data-reassign-org]');if(h){showOrgHistory(h.dataset.historyOrg);$('orgHistory').scrollIntoView({behavior:'smooth',block:'nearest'})}if(r)openForm('org',r.dataset.reassignOrg,r)});$('projectBody').addEventListener('click',e=>{const h=e.target.closest('[data-history-project]'),end=e.target.closest('[data-end-project]');if(h)showHistoryModal('project',h.dataset.historyProject);if(end){const a=projectAssignments.find(x=>x.id===end.dataset.endProject);if(!a||a.endDate)return;openForm('endProject',a.personId,end,a.id);$('scopeInput').value=a.scope;$('changeReason').value='Akhiri mapping sesuai kebutuhan organisasi';}});
-$('orgTab').addEventListener('click',()=>switchTab('org'));$('projectTab').addEventListener('click',()=>switchTab('project'));$('newOrgBtn').addEventListener('click',()=>openForm('org'));$('newOrgBtn2').addEventListener('click',()=>openForm('org'));$('newProjectBtn').addEventListener('click',()=>openForm('project'));$('closeForm').addEventListener('click',closeForm);$('cancelForm').addEventListener('click',closeForm);$('closePreview').addEventListener('click',()=>{$('previewBackdrop').classList.remove('open');pending=null});$('closeHistory').addEventListener('click',()=>$('historyBackdrop').classList.remove('open'));['orgSearch','functionFilter','roleFilter'].forEach(id=>$(id).addEventListener(id==='orgSearch'?'input':'change',renderOrg));$('resetOrgFilters').addEventListener('click',()=>{$('orgSearch').value='';$('functionFilter').value='all';$('roleFilter').value='all';renderOrg()});['projectSearch','projectStateFilter','projectPersonFilter'].forEach(id=>$(id).addEventListener(id==='projectSearch'?'input':'change',renderProjects));$('resetProjectFilters').addEventListener('click',()=>{$('projectSearch').value='';$('projectStateFilter').value='all';$('projectPersonFilter').value='all';renderProjects()});$('mobileMenu').addEventListener('click',()=>$('sidebar').classList.toggle('open'));document.querySelectorAll('[data-inert]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));document.addEventListener('keydown',e=>{if(e.key==='Escape'){['formBackdrop','previewBackdrop','historyBackdrop'].forEach(id=>$(id).classList.remove('open'));if(activeTrigger&&activeTrigger.focus)activeTrigger.focus()}});populateSelects();renderAll();
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  // Helper tanggal
+  const getTodayDateStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return '—';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return `${parts[2]} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+  };
+
+  const showToast = (msg) => {
+    const toast = $('systemToast');
+    const toastMsg = $('toastMessage');
+    if (!toast || !toastMsg) return;
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  };
+
+  // =========================================================================
+  // DATA MASTER RESMI PT DUTA MEDIA (Baseline Sesuai PDD & PRD)
+  // =========================================================================
+  const people = [
+    { id: 'USR-001', name: 'Rina Putri', initial: 'RP' },
+    { id: 'USR-002', name: 'Budi Santoso', initial: 'BS' },
+    { id: 'USR-003', name: 'Dimas Prayoga', initial: 'DP' },
+    { id: 'USR-004', name: 'Dian Permata', initial: 'DP' },
+    { id: 'USR-005', name: 'Andi Wicaksono', initial: 'AW' },
+    { id: 'USR-006', name: 'Siti Rahma', initial: 'SR' },
+    { id: 'USR-007', name: 'Dewi Lestari', initial: 'DL' },
+    { id: 'USR-008', name: 'Farhan Pratama', initial: 'FP' },
+    { id: 'USR-009', name: 'Bima Santoso', initial: 'BS' },
+    { id: 'USR-010', name: 'Hendra Wijaya', initial: 'HW' }
+  ];
+
+  let orgAssignments = [
+    { id: 'ORG-001', personId: 'USR-001', role: 'Supervisor / TL', func: 'Engineering', managerId: 'USR-002', effectiveDate: '2025-01-01', endDate: null, reason: 'Penugasan Technical Lead Tim Core' },
+    { id: 'ORG-002', personId: 'USR-002', role: 'Head', func: 'Engineering', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan Head of Engineering' },
+    { id: 'ORG-003', personId: 'USR-003', role: 'Head', func: 'Operations & Infrastructure', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan Head of Ops & Infra' },
+    { id: 'ORG-004', personId: 'USR-004', role: 'Supervisor / TL', func: 'Quality', managerId: 'USR-010', effectiveDate: '2024-08-01', endDate: null, reason: 'Penugasan QA / QC Lead Independen' },
+    { id: 'ORG-005', personId: 'USR-005', role: 'Supervisor / TL', func: 'R&D', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan Principal Engineer' },
+    { id: 'ORG-006', personId: 'USR-006', role: 'Supervisor / TL', func: 'Finance', managerId: 'USR-010', effectiveDate: '2024-01-01', endDate: null, reason: 'Penugasan Senior Finance' },
+    { id: 'ORG-007', personId: 'USR-007', role: 'HRGA', func: 'HRGA', managerId: 'USR-010', effectiveDate: '2024-01-01', endDate: null, reason: 'Penugasan HRGA Specialist' },
+    { id: 'ORG-008', personId: 'USR-008', role: 'Head', func: 'Sales Enablement & Presales', managerId: 'USR-010', effectiveDate: '2024-09-01', endDate: null, reason: 'Penugasan Head of Sales & Presales' },
+    { id: 'ORG-009', personId: 'USR-009', role: 'PM', func: 'Delivery', managerId: 'USR-010', effectiveDate: '2024-05-01', endDate: null, reason: 'Penugasan Project Manager Utama' },
+    { id: 'ORG-010', personId: 'USR-010', role: 'CEO / Management', func: 'Executive', managerId: null, effectiveDate: '2023-01-01', endDate: null, reason: 'Pimpinan Puncak Perusahaan' }
+  ];
+
+  let projects = [
+    { code: 'PRJ-PORTAL', name: 'Website Customer Portal & Client Billing', division: 'Delivery', desc: 'Portal interaksi pelanggan terintegrasi billing & payment gateway', status: 'Aktif' },
+    { code: 'PRJ-CORE', name: 'Enterprise Core Engine & Identity Sync', division: 'Engineering', desc: 'Sistem sentral sinkronisasi akun & otorisasi enterprise', status: 'Aktif' },
+    { code: 'PRJ-MOBILE', name: 'WorkPulse Mobile Apps (iOS & Android)', division: 'Delivery', desc: 'Aplikasi pendukung mobilitas pelaporan presensi dan komitmen', status: 'Aktif' }
+  ];
+
+  let projectAuthorities = [
+    { id: 'PA-001', personId: 'USR-009', projectCode: 'PRJ-PORTAL', authRole: 'Pimpinan Proyek (Project Lead / PM)', effectiveDate: '2025-01-01', endDate: null },
+    { id: 'PA-002', personId: 'USR-004', projectCode: 'PRJ-PORTAL', authRole: 'Penanggung Jawab Keahlian / Lead Spesialis', effectiveDate: '2025-01-01', endDate: null },
+    { id: 'PA-003', personId: 'USR-005', projectCode: 'PRJ-CORE', authRole: 'Penanggung Jawab Keahlian / Lead Spesialis', effectiveDate: '2024-06-01', endDate: null },
+    { id: 'PA-004', personId: 'USR-001', projectCode: 'PRJ-CORE', authRole: 'Pimpinan Proyek (Project Lead / PM)', effectiveDate: '2025-02-01', endDate: null },
+    { id: 'PA-005', personId: 'USR-003', projectCode: 'PRJ-MOBILE', authRole: 'Pimpinan Proyek (Project Lead / PM)', effectiveDate: '2025-03-01', endDate: null }
+  ];
+
+  let pendingOrgChange = null;
+
+  // Helpers
+  const getPerson = id => people.find(p => p.id === id);
+  const getPersonName = id => getPerson(id)?.name || '—';
+  const getProject = code => projects.find(pr => pr.code === code);
+  const getCurrentOrg = personId => orgAssignments.find(a => a.personId === personId && a.endDate === null) || null;
+
+  // =========================================================================
+  // RENDER FUNGSI METRIK
+  // =========================================================================
+  const renderMetrics = () => {
+    $('metricTotalPeople').textContent = people.length;
+    $('metricActiveOrg').textContent = orgAssignments.filter(a => a.endDate === null).length;
+    $('metricTotalProjects').textContent = projects.filter(p => p.status === 'Aktif').length;
+    $('metricActiveAuthority').textContent = projectAuthorities.filter(a => a.endDate === null).length;
+
+    $('badgeOrgCount').textContent = orgAssignments.filter(a => a.endDate === null).length;
+    $('badgeProjectCount').textContent = projects.length;
+    $('badgeAuthCount').textContent = projectAuthorities.filter(a => a.endDate === null).length;
+  };
+
+  // =========================================================================
+  // TAB NAVIGATION LOGIC (BAGIAN 2)
+  // =========================================================================
+  const switchTab = (tabName) => {
+    const tabs = [
+      { name: 'org', btn: $('tabBtnOrg'), panel: $('panelOrg') },
+      { name: 'projects', btn: $('tabBtnProjects'), panel: $('panelProjects') },
+      { name: 'authority', btn: $('tabBtnAuthority'), panel: $('panelAuthority') }
+    ];
+
+    tabs.forEach(t => {
+      const isActive = t.name === tabName;
+      t.btn.classList.toggle('active', isActive);
+      t.btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      t.panel.classList.toggle('hidden', !isActive);
+    });
+  };
+
+  $('tabBtnOrg').addEventListener('click', () => switchTab('org'));
+  $('tabBtnProjects').addEventListener('click', () => switchTab('projects'));
+  $('tabBtnAuthority').addEventListener('click', () => switchTab('authority'));
+
+  // =========================================================================
+  // RENDER TAB 1: STRUKTUR ORGANISASI
+  // =========================================================================
+  const renderOrgTable = () => {
+    const search = $('searchOrgPerson').value.trim().toLowerCase();
+    const funcFilter = $('filterOrgFunction').value;
+    const roleFilter = $('filterOrgRole').value;
+
+    const tbody = $('tableOrgBody');
+    tbody.replaceChildren();
+
+    const activeAssignments = orgAssignments.filter(a => a.endDate === null);
+    const filtered = activeAssignments.filter(a => {
+      const person = getPerson(a.personId);
+      const personName = (person?.name || '').toLowerCase();
+      const personId = a.personId.toLowerCase();
+
+      const matchSearch = personName.includes(search) || personId.includes(search);
+      const matchFunc = funcFilter === 'all' || a.func === funcFilter;
+      const matchRole = roleFilter === 'all' || a.role === roleFilter;
+
+      return matchSearch && matchFunc && matchRole;
+    });
+
+    if (filtered.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-secondary)">Tidak ada personil yang sesuai dengan kriteria filter pencarian.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(a => {
+      const person = getPerson(a.personId);
+      const manager = a.managerId ? getPerson(a.managerId) : null;
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>
+          <div class="user-cell">
+            <div class="user-cell-avatar">${person?.initial || 'KP'}</div>
+            <div class="user-cell-info">
+              <div class="user-cell-name">${person?.name || a.personId}</div>
+              <div class="user-cell-id">${a.personId}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:700;color:var(--color-text-primary)">${a.func}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${a.role}</div>
+        </td>
+        <td>
+          ${manager ? `
+            <div style="font-weight:700;color:var(--color-text-primary)">${manager.name}</div>
+            <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${manager.id}</div>
+          ` : `
+            <span class="pill amber"><span class="pill-dot"></span> Posisi Puncak (CEO)</span>
+          `}
+        </td>
+        <td>
+          <div style="font-weight:700">${formatDateDisplay(a.effectiveDate)}</div>
+          <div style="font-size:11.5px;color:var(--color-text-secondary);margin-top:2px">Aktif saat ini</div>
+        </td>
+        <td>
+          <span class="pill green"><span class="pill-dot"></span> Aktif</span>
+        </td>
+        <td>
+          <div class="table-actions">
+            <button class="btn btn-secondary btn-small btn-view-history" data-person-id="${a.personId}" type="button">
+              Riwayat
+            </button>
+            <button class="btn btn-primary btn-small btn-edit-org" data-person-id="${a.personId}" type="button">
+              Ubah
+            </button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Pasang Event Listeners
+    tbody.querySelectorAll('.btn-view-history').forEach(btn => {
+      btn.addEventListener('click', () => openHistoryModal(btn.dataset.personId));
+    });
+    tbody.querySelectorAll('.btn-edit-org').forEach(btn => {
+      btn.addEventListener('click', () => openOrgModal(btn.dataset.personId));
+    });
+  };
+
+  $('searchOrgPerson').addEventListener('input', renderOrgTable);
+  $('filterOrgFunction').addEventListener('change', renderOrgTable);
+  $('filterOrgRole').addEventListener('change', renderOrgTable);
+  $('btnResetOrgFilter').addEventListener('click', () => {
+    $('searchOrgPerson').value = '';
+    $('filterOrgFunction').value = 'all';
+    $('filterOrgRole').value = 'all';
+    renderOrgTable();
+  });
+
+  // =========================================================================
+  // RENDER TAB 2: MASTER PROYEK
+  // =========================================================================
+  const renderProjectsTable = () => {
+    const search = $('searchProject').value.trim().toLowerCase();
+    const statusFilter = $('filterProjectStatus').value;
+
+    const tbody = $('tableProjectsBody');
+    tbody.replaceChildren();
+
+    const filtered = projects.filter(p => {
+      const matchSearch = p.code.toLowerCase().includes(search) || p.name.toLowerCase().includes(search);
+      const matchStatus = statusFilter === 'all' || p.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+
+    if (filtered.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-secondary)">Tidak ada proyek yang cocok dengan filter.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(p => {
+      const authCount = projectAuthorities.filter(pa => pa.projectCode === p.code && pa.endDate === null).length;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong style="color:var(--color-brand-primary)">${p.code}</strong></td>
+        <td>
+          <div style="font-weight:700;color:var(--color-text-primary)">${p.name}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${p.desc}</div>
+        </td>
+        <td><span class="pill blue">${p.division}</span></td>
+        <td>
+          <span style="font-weight:800;color:var(--color-brand-primary)">${authCount} Personil</span>
+        </td>
+        <td>
+          <span class="pill ${p.status === 'Aktif' ? 'green' : 'neutral'}">
+            <span class="pill-dot"></span> ${p.status}
+          </span>
+        </td>
+        <td>
+          <button class="btn btn-secondary btn-small btn-view-project-auth" data-code="${p.code}" type="button">
+            Kelola Wewenang
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.btn-view-project-auth').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.dataset.code;
+        switchTab('authority');
+        $('filterAuthProject').value = code;
+        renderAuthorityTable();
+      });
+    });
+  };
+
+  $('searchProject').addEventListener('input', renderProjectsTable);
+  $('filterProjectStatus').addEventListener('change', renderProjectsTable);
+  $('btnResetProjectFilter').addEventListener('click', () => {
+    $('searchProject').value = '';
+    $('filterProjectStatus').value = 'all';
+    renderProjectsTable();
+  });
+
+  // =========================================================================
+  // RENDER TAB 3: KEWENANGAN PROYEK
+  // =========================================================================
+  const populateAuthProjectFilter = () => {
+    const sel = $('filterAuthProject');
+    sel.replaceChildren();
+    sel.add(new Option('Semua Proyek', 'all'));
+    projects.forEach(p => {
+      sel.add(new Option(`${p.name} (${p.code})`, p.code));
+    });
+  };
+
+  const renderAuthorityTable = () => {
+    const search = $('searchAuthText').value.trim().toLowerCase();
+    const projFilter = $('filterAuthProject').value;
+    const statusFilter = $('filterAuthStatus').value;
+
+    const tbody = $('tableAuthorityBody');
+    tbody.replaceChildren();
+
+    const filtered = projectAuthorities.filter(pa => {
+      const person = getPerson(pa.personId);
+      const proj = getProject(pa.projectCode);
+      const personName = (person?.name || '').toLowerCase();
+      const projName = (proj?.name || '').toLowerCase();
+
+      const matchSearch = personName.includes(search) || projName.includes(search) || pa.projectCode.toLowerCase().includes(search);
+      const matchProj = projFilter === 'all' || pa.projectCode === projFilter;
+      const isAct = pa.endDate === null;
+      const matchStatus = statusFilter === 'all' || (statusFilter === 'active' ? isAct : !isAct);
+
+      return matchSearch && matchProj && matchStatus;
+    });
+
+    if (filtered.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="7" style="text-align:center;padding:32px;color:var(--color-text-secondary)">Tidak ada data kewenangan proyek yang cocok.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(pa => {
+      const person = getPerson(pa.personId);
+      const proj = getProject(pa.projectCode);
+      const isAct = pa.endDate === null;
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>
+          <div class="user-cell">
+            <div class="user-cell-avatar">${person?.initial || 'KP'}</div>
+            <div class="user-cell-info">
+              <div class="user-cell-name">${person?.name || pa.personId}</div>
+              <div class="user-cell-id">${pa.personId}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:700;color:var(--color-text-primary)">${proj?.name || pa.projectCode}</div>
+          <div style="font-size:11.5px;color:var(--color-brand-primary);font-weight:700">${pa.projectCode}</div>
+        </td>
+        <td>
+          <span class="pill blue">${pa.authRole}</span>
+        </td>
+        <td>${formatDateDisplay(pa.effectiveDate)}</td>
+        <td>${pa.endDate ? formatDateDisplay(pa.endDate) : '—'}</td>
+        <td>
+          <span class="pill ${isAct ? 'green' : 'neutral'}">
+            <span class="pill-dot"></span> ${isAct ? 'Aktif' : 'Berakhir'}
+          </span>
+        </td>
+        <td>
+          <div class="table-actions">
+            ${isAct ? `
+              <button class="btn btn-secondary btn-small btn-end-auth" data-id="${pa.id}" type="button">
+                Akhiri Wewenang
+              </button>
+            ` : `
+              <span style="font-size:12px;color:var(--color-text-disabled)">Telah diakhiri</span>
+            `}
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.btn-end-auth').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const item = projectAuthorities.find(x => x.id === id);
+        if (!item) return;
+        const person = getPerson(item.personId);
+        const proj = getProject(item.projectCode);
+
+        if (confirm(`Akhiri kewenangan proyek untuk ${person?.name} pada ${proj?.name}?`)) {
+          item.endDate = getTodayDateStr();
+          renderAuthorityTable();
+          renderProjectsTable();
+          renderMetrics();
+          showToast(`Kewenangan proyek untuk ${person?.name} telah diakhiri per hari ini.`);
+        }
+      });
+    });
+  };
+
+  $('searchAuthText').addEventListener('input', renderAuthorityTable);
+  $('filterAuthProject').addEventListener('change', renderAuthorityTable);
+  $('filterAuthStatus').addEventListener('change', renderAuthorityTable);
+  $('btnResetAuthFilter').addEventListener('click', () => {
+    $('searchAuthText').value = '';
+    $('filterAuthProject').value = 'all';
+    $('filterAuthStatus').value = 'all';
+    renderAuthorityTable();
+  });
+
+  // =========================================================================
+  // MODAL FORM 1: UBAH PENUGASAN ORGANISASI
+  // =========================================================================
+  const populateOrgSelects = (selectedPersonId = '') => {
+    const personSel = $('selectOrgPerson');
+    personSel.replaceChildren();
+    personSel.add(new Option('-- Pilih Karyawan --', ''));
+    people.forEach(p => {
+      personSel.add(new Option(`${p.name} (${p.id})`, p.id));
+    });
+    if (selectedPersonId) personSel.value = selectedPersonId;
+
+    updateManagerOptions(selectedPersonId);
+  };
+
+  const updateManagerOptions = (excludePersonId = '') => {
+    const mgrSel = $('selectOrgManager');
+    const prev = mgrSel.value;
+    mgrSel.replaceChildren();
+    mgrSel.add(new Option('— Tidak ada / Posisi Puncak (CEO) —', ''));
+
+    people.forEach(p => {
+      if (p.id !== excludePersonId) {
+        mgrSel.add(new Option(`${p.name} (${p.id})`, p.id));
+      }
+    });
+
+    if (excludePersonId && prev !== excludePersonId) {
+      mgrSel.value = prev;
+    }
+  };
+
+  $('selectOrgPerson').addEventListener('change', (e) => {
+    const pid = e.target.value;
+    updateManagerOptions(pid);
+    const curr = getCurrentOrg(pid);
+    if (curr) {
+      $('selectOrgRole').value = curr.role;
+      $('selectOrgFunction').value = curr.func;
+      $('selectOrgManager').value = curr.managerId || '';
+    }
+  });
+
+  const openOrgModal = (personId = '') => {
+    $('formOrgAssignment').reset();
+    populateOrgSelects(personId);
+    $('inputOrgEffectiveDate').value = getTodayDateStr();
+    $('retroWarningOrg').classList.add('hidden');
+
+    if (personId) {
+      const curr = getCurrentOrg(personId);
+      if (curr) {
+        $('selectOrgRole').value = curr.role;
+        $('selectOrgFunction').value = curr.func;
+        $('selectOrgManager').value = curr.managerId || '';
+      }
+    }
+
+    $('modalOrgBackdrop').classList.add('open');
+  };
+
+  const closeOrgModal = () => {
+    $('modalOrgBackdrop').classList.remove('open');
+  };
+
+  $('btnReassignOrg').addEventListener('click', () => openOrgModal());
+  $('btnQuickAddOrg').addEventListener('click', () => openOrgModal());
+  $('closeOrgModalBtn').addEventListener('click', closeOrgModal);
+  $('btnCancelOrgModal').addEventListener('click', closeOrgModal);
+
+  $('inputOrgEffectiveDate').addEventListener('change', (e) => {
+    const val = e.target.value;
+    const isPast = val && val < getTodayDateStr();
+    $('retroWarningOrg').classList.toggle('hidden', !isPast);
+  });
+
+  // SUBMIT ORG FORM -> BUKA PRATINJAU DAMPAK (BAGIAN 5)
+  $('formOrgAssignment').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const pid = $('selectOrgPerson').value;
+    const role = $('selectOrgRole').value;
+    const func = $('selectOrgFunction').value;
+    const managerId = $('selectOrgManager').value || null;
+    const effectiveDate = $('inputOrgEffectiveDate').value;
+    const reason = $('textareaOrgReason').value.trim();
+
+    if (!pid || !role || !func || !effectiveDate || !reason) {
+      alert('Harap lengkapi semua bidang isian wajib.');
+      return;
+    }
+
+    if (pid === managerId) {
+      alert('Karyawan tidak dapat menjadi atasan langsung bagi dirinya sendiri.');
+      return;
+    }
+
+    const curr = getCurrentOrg(pid);
+    pendingOrgChange = {
+      personId: pid,
+      role,
+      func,
+      managerId,
+      effectiveDate,
+      reason,
+      currentAssignment: curr
+    };
+
+    closeOrgModal();
+    openPreviewModal(pendingOrgChange);
+  });
+
+  // =========================================================================
+  // MODAL 2: PRATINJAU DAMPAK SEBELUM KONFIRMASI (IMPACT PREVIEW)
+  // =========================================================================
+  const openPreviewModal = (data) => {
+    const person = getPerson(data.personId);
+    const curr = data.currentAssignment;
+    const oldManager = curr && curr.managerId ? getPerson(curr.managerId) : null;
+    const newManager = data.managerId ? getPerson(data.managerId) : null;
+
+    // Cari bawahan yang terdampak jika person ini adalah manager
+    const subordinates = orgAssignments.filter(a => a.managerId === data.personId && a.endDate === null);
+
+    const container = $('previewContentArea');
+    container.innerHTML = `
+      <div class="preview-card col-span-2">
+        <div class="preview-card-label">Karyawan yang Diperbarui</div>
+        <div class="preview-card-value">${person?.name} (${person?.id})</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Tanggal Mulai Efektif: <strong>${formatDateDisplay(data.effectiveDate)}</strong></div>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-card-label">Kondisi Penugasan Saat Ini</div>
+        <div class="preview-card-value" style="color:var(--color-text-secondary)">
+          ${curr ? `${curr.role} · ${curr.func}` : 'Belum ada penugasan'}
+        </div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px">
+          Atasan: <strong>${oldManager ? oldManager.name : 'Posisi Puncak / CEO'}</strong>
+        </div>
+      </div>
+
+      <div class="preview-card" style="border-color:var(--color-brand-primary);background:var(--color-brand-tint)">
+        <div class="preview-card-label" style="color:var(--color-brand-primary)">Penugasan Baru yang Ditetapkan</div>
+        <div class="preview-card-value" style="color:var(--color-brand-primary)">
+          ${data.role} · ${data.func}
+        </div>
+        <div style="font-size:12px;color:var(--color-brand-primary);margin-top:4px">
+          Atasan Baru: <strong>${newManager ? newManager.name : 'Posisi Puncak / CEO'}</strong>
+        </div>
+      </div>
+
+      <div class="preview-card col-span-2">
+        <div class="preview-card-label">Alasan Perubahan</div>
+        <div style="font-size:13px;color:var(--color-text-primary);margin-top:4px">${data.reason}</div>
+      </div>
+
+      <div class="preview-card col-span-2">
+        <div class="preview-card-label">Dampak Hierarki &amp; Anggota Tim Bawahan</div>
+        <div style="font-size:13px;margin-top:4px">
+          ${subordinates.length > 0 ? `
+            <span style="color:#991B1B;font-weight:700">Terdapat ${subordinates.length} karyawan bawahan langsung:</span>
+            <ul style="margin:6px 0 0 18px;font-size:12.5px;color:var(--color-text-secondary)">
+              ${subordinates.map(s => `<li>${getPersonName(s.personId)} (${s.personId}) — ${s.role}</li>`).join('')}
+            </ul>
+            <div style="margin-top:6px;font-size:11.5px;color:var(--color-text-secondary)">Jalur pelaporan bawahan tetap mengarah ke personil ini, kecuali jika dilakukan penyesuaian terpisah.</div>
+          ` : `
+            <span style="color:var(--color-text-secondary)">Personil ini saat ini tidak memiliki bawahan langsung yang melapor kepadanya.</span>
+          `}
+        </div>
+      </div>
+    `;
+
+    $('modalPreviewBackdrop').classList.add('open');
+  };
+
+  const closePreviewModal = () => {
+    $('modalPreviewBackdrop').classList.remove('open');
+  };
+
+  $('closePreviewModalBtn').addEventListener('click', closePreviewModal);
+  $('btnBackToEditOrg').addEventListener('click', () => {
+    closePreviewModal();
+    if (pendingOrgChange) {
+      openOrgModal(pendingOrgChange.personId);
+    }
+  });
+
+  // KONFIRMASI SIMPAN PENUGASAN (BAGIAN 5)
+  $('btnConfirmOrgChange').addEventListener('click', () => {
+    if (!pendingOrgChange) return;
+    const d = pendingOrgChange;
+
+    // 1. Tutup penugasan aktif lama
+    const curr = getCurrentOrg(d.personId);
+    if (curr) {
+      const closingDate = new Date(d.effectiveDate);
+      closingDate.setDate(closingDate.getDate() - 1);
+      const closeDateStr = closingDate.toISOString().slice(0, 10);
+      curr.endDate = closeDateStr < curr.effectiveDate ? curr.effectiveDate : closeDateStr;
+    }
+
+    // 2. Tambah penugasan baru
+    const newId = `ORG-${String(orgAssignments.length + 1).padStart(3, '0')}`;
+    orgAssignments.push({
+      id: newId,
+      personId: d.personId,
+      role: d.role,
+      func: d.func,
+      managerId: d.managerId,
+      effectiveDate: d.effectiveDate,
+      endDate: null,
+      reason: d.reason
+    });
+
+    pendingOrgChange = null;
+    closePreviewModal();
+    renderOrgTable();
+    renderMetrics();
+    showToast(`Penugasan organisasi untuk ${getPersonName(d.personId)} berhasil diperbarui.`);
+  });
+
+  // =========================================================================
+  // MODAL 3: PENDAFTARAN PROYEK BARU
+  // =========================================================================
+  const openProjectModal = () => {
+    $('formNewProject').reset();
+    $('modalProjectBackdrop').classList.add('open');
+  };
+  const closeProjectModal = () => {
+    $('modalProjectBackdrop').classList.remove('open');
+  };
+
+  $('btnRegisterProject').addEventListener('click', openProjectModal);
+  $('btnAddProjectInTab').addEventListener('click', openProjectModal);
+  $('closeProjectModalBtn').addEventListener('click', closeProjectModal);
+  $('btnCancelProjectModal').addEventListener('click', closeProjectModal);
+
+  $('formNewProject').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = $('inputProjectCode').value.trim().toUpperCase();
+    const name = $('inputProjectName').value.trim();
+    const div = $('selectProjectDiv').value;
+    const desc = $('textareaProjectDesc').value.trim() || 'Inisiatif proyek perusahaan';
+
+    if (!code || !name) {
+      alert('Kode dan nama proyek wajib diisi.');
+      return;
+    }
+
+    if (projects.some(p => p.code === code)) {
+      alert(`Kode proyek '${code}' sudah digunakan. Gunakan kode yang unik.`);
+      return;
+    }
+
+    projects.push({
+      code,
+      name,
+      division: div,
+      desc,
+      status: 'Aktif'
+    });
+
+    closeProjectModal();
+    populateAuthProjectFilter();
+    renderProjectsTable();
+    renderMetrics();
+    showToast(`Proyek baru '${name}' (${code}) berhasil didaftarkan.`);
+  });
+
+  // =========================================================================
+  // MODAL 4: PENUGASAN KEWENANGAN PROYEK
+  // =========================================================================
+  const openAuthorityModal = () => {
+    $('formAuthorityAssignment').reset();
+    const projSel = $('selectAuthProjectTarget');
+    projSel.replaceChildren();
+    projSel.add(new Option('-- Pilih Proyek Terdaftar --', ''));
+    projects.filter(p => p.status === 'Aktif').forEach(p => {
+      projSel.add(new Option(`${p.name} (${p.code})`, p.code));
+    });
+
+    const personSel = $('selectAuthPersonTarget');
+    personSel.replaceChildren();
+    personSel.add(new Option('-- Pilih Karyawan --', ''));
+    people.forEach(p => {
+      personSel.add(new Option(`${p.name} (${p.id})`, p.id));
+    });
+
+    $('inputAuthEffectiveDate').value = getTodayDateStr();
+    $('modalAuthorityBackdrop').classList.add('open');
+  };
+
+  const closeAuthorityModal = () => {
+    $('modalAuthorityBackdrop').classList.remove('open');
+  };
+
+  $('btnAddAuthorityBtn').addEventListener('click', openAuthorityModal);
+  $('closeAuthModalBtn').addEventListener('click', closeAuthorityModal);
+  $('btnCancelAuthModal').addEventListener('click', closeAuthorityModal);
+
+  $('formAuthorityAssignment').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const pCode = $('selectAuthProjectTarget').value;
+    const pid = $('selectAuthPersonTarget').value;
+    const role = $('selectAuthRole').value;
+    const eff = $('inputAuthEffectiveDate').value;
+    const end = $('inputAuthEndDate').value || null;
+
+    if (!pCode || !pid || !eff) {
+      alert('Harap lengkapi isian proyek, personil, dan tanggal efektif.');
+      return;
+    }
+
+    if (end && end < eff) {
+      alert('Tanggal berakhir tidak boleh mendahului tanggal efektif.');
+      return;
+    }
+
+    const newId = `PA-${String(projectAuthorities.length + 1).padStart(3, '0')}`;
+    projectAuthorities.push({
+      id: newId,
+      personId: pid,
+      projectCode: pCode,
+      authRole: role,
+      effectiveDate: eff,
+      endDate: end
+    });
+
+    closeAuthorityModal();
+    renderAuthorityTable();
+    renderProjectsTable();
+    renderMetrics();
+    showToast(`Kewenangan proyek untuk ${getPersonName(pid)} pada ${pCode} berhasil ditetapkan.`);
+  });
+
+  // =========================================================================
+  // MODAL 5: RIWAYAT PENUGASAN (VIEW HISTORY)
+  // =========================================================================
+  const openHistoryModal = (personId) => {
+    const person = getPerson(personId);
+    $('modalHistoryTitle').textContent = `Riwayat Penugasan: ${person?.name || personId}`;
+    $('modalHistorySub').textContent = `ID Karyawan: ${personId} · Audit Trail Linimasa Organisasi`;
+
+    const history = orgAssignments
+      .filter(a => a.personId === personId)
+      .slice()
+      .sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
+
+    const body = $('modalHistoryBody');
+    body.innerHTML = `
+      <div style="display:grid;gap:14px">
+        ${history.map((h, idx) => {
+          const isCurrent = h.endDate === null;
+          const mgr = h.managerId ? getPerson(h.managerId) : null;
+          return `
+            <div style="padding:14px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:${isCurrent ? 'var(--color-brand-tint)' : 'var(--color-surface)'}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span class="pill ${isCurrent ? 'green' : 'neutral'}">
+                  <span class="pill-dot"></span> ${isCurrent ? 'Aktif Saat Ini' : 'Historis'}
+                </span>
+                <span style="font-size:12px;font-weight:700;color:var(--color-text-secondary)">
+                  ${formatDateDisplay(h.effectiveDate)} ${h.endDate ? `s.d. ${formatDateDisplay(h.endDate)}` : '(Sekarang)'}
+                </span>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:var(--color-text-primary)">
+                ${h.role} · ${h.func}
+              </div>
+              <div style="font-size:12.5px;color:var(--color-text-secondary);margin-top:4px">
+                Atasan Langsung: <strong>${mgr ? mgr.name : 'Posisi Puncak (CEO)'}</strong>
+              </div>
+              <div style="font-size:12px;color:var(--color-text-primary);margin-top:6px;background:rgba(255,255,255,0.6);padding:6px 10px;border-radius:4px">
+                Alasan: <em>"${h.reason}"</em>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    $('modalHistoryBackdrop').classList.add('open');
+  };
+
+  const closeHistoryModal = () => {
+    $('modalHistoryBackdrop').classList.remove('open');
+  };
+
+  $('closeHistoryModalBtn').addEventListener('click', closeHistoryModal);
+  $('btnCloseHistoryBtn').addEventListener('click', closeHistoryModal);
+
+  // Close modals on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      ['modalOrgBackdrop', 'modalPreviewBackdrop', 'modalProjectBackdrop', 'modalAuthorityBackdrop', 'modalHistoryBackdrop'].forEach(id => {
+        $(id)?.classList.remove('open');
+      });
+    }
+  });
+
+  // Mobile Menu Toggle
+  const mobileBtn = $('mobileMenuBtn');
+  const sidebar = $('sidebar');
+  if (mobileBtn && sidebar) {
+    mobileBtn.addEventListener('click', () => {
+      sidebar.style.display = sidebar.style.display === 'flex' ? 'none' : 'flex';
+      sidebar.style.position = 'fixed';
+      sidebar.style.zIndex = '50';
+    });
+  }
+
+  // =========================================================================
+  // INISIALISASI AWAL
+  // =========================================================================
+  populateAuthProjectFilter();
+  renderMetrics();
+  renderOrgTable();
+  renderProjectsTable();
+  renderAuthorityTable();
+
 })();
-</script></body></html>
+</script>
+</body>
+</html>
