@@ -645,16 +645,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
           </div>
         </section>
 
-        <!-- PANEL 2: PENANGGUNG JAWAB & RUTE PENUGASAN (OWNER NEEDED) -->
+        <!-- PANEL 2: PENANGGUNG JAWAB & RUTE PENUGASAN -->
         <section class="panel" aria-labelledby="ownerRoutingHeading">
           <div class="panel-head">
             <div>
-              <h2 id="ownerRoutingHeading">Penanggung Jawab Awal (Owner Needed)</h2>
+              <h2 id="ownerRoutingHeading">Penanggung Jawab Awal</h2>
               <p class="small" style="margin-top:3px">Tentukan jalur kewenangan penanganan. Sistem otomatis menghitung penerima dan timer SLA.</p>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="pill neutral">Bagian 2 dari 2</span>
-              <span class="pill blue"><span class="dot-sm"></span> Rute Terverifikasi</span>
+              <span class="pill blue" id="panel2StatusBadge"><span class="dot-sm"></span> Rute Terverifikasi</span>
             </div>
           </div>
           <div class="panel-body">
@@ -1287,6 +1287,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     const person = $('ownerRoutePerson');
     const detail = $('ownerRouteDetail');
     const status = $('ownerRouteStatus');
+    const panel2StatusBadge = $('panel2StatusBadge');
 
     // State 1: Pemilihan manual tertentu
     if (chosenPerson) {
@@ -1297,6 +1298,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       person.textContent = `${chosenPerson.name} — ${chosenPerson.role}`;
       detail.textContent = 'Penanggung jawab ditunjuk secara spesifik oleh pelapor. Notifikasi langsung diteruskan ke yang bersangkutan.';
       status.textContent = 'Ditunjuk Manual · Terverifikasi';
+      if (panel2StatusBadge) {
+        panel2StatusBadge.className = 'pill blue';
+        panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Rute Terverifikasi';
+      }
       return;
     }
 
@@ -1309,6 +1314,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       person.textContent = 'Pilih proyek terlebih dahulu di atas';
       detail.textContent = 'Jalur Project Authority mewajibkan pemilihan proyek terdaftar untuk menentukan Project Authority yang berwenang.';
       status.textContent = 'Menunggu Pilihan Proyek';
+      if (panel2StatusBadge) {
+        panel2StatusBadge.className = 'pill amber';
+        panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Menunggu Pilihan Proyek';
+      }
       return;
     }
 
@@ -1328,6 +1337,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
       person.textContent = 'Belum ada pemetaan aktif';
       detail.textContent = 'Hubungi administrator untuk pemetaan otoritas proyek ini.';
       status.textContent = 'Perlu Konfirmasi Admin';
+    }
+    if (panel2StatusBadge) {
+      panel2StatusBadge.className = 'pill blue';
+      panel2StatusBadge.innerHTML = '<span class="dot-sm"></span> Rute Terverifikasi';
     }
   }
 
