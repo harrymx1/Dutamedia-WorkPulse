@@ -676,7 +676,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <input type="radio" name="authorityContext" value="project">
                 <div class="authority-info">
                   <strong>Kewenangan Proyek</strong>
-                  <small>Ditangani oleh personil yang berwenang di dalam proyek terkait (seperti Project Manager, Tech Lead, atau QA Lead Proyek).</small>
+                  <small>Ditangani oleh personil yang berwenang di dalam proyek terkait (seperti Pimpinan Proyek, Penanggung Jawab Bidang, atau Pengarah Proyek).</small>
                 </div>
               </label>
             </fieldset>
@@ -963,15 +963,16 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     ],
     project: {
       'PRJ-PORTAL': [
-        { id: 'pm-bima', name: 'Bima Santoso', role: 'Project Lead Portal', group: 'Tim Proyek Terkait', isDefault: true },
-        { id: 'qa-dian-p', name: 'Dian Permata', role: 'QA Lead Portal', group: 'Tim Proyek Terkait', isDefault: false }
+        { id: 'usr-bima', name: 'Bima Santoso', role: 'Pimpinan Proyek (Project Lead / PM)', group: 'Pimpinan Proyek', isDefault: true },
+        { id: 'usr-dian', name: 'Dian Permata', role: 'Penanggung Jawab Keahlian (Lead QA / QC)', group: 'Penanggung Jawab Bidang / Spesialis', isDefault: false }
       ],
       'PRJ-CORE': [
-        { id: 'pm-andi-p', name: 'Andi Wicaksono', role: 'Principal Architect Core', group: 'Tim Proyek Terkait', isDefault: true },
-        { id: 'lead-maya', name: 'Maya Safitri', role: 'Tech Lead Core', group: 'Tim Proyek Terkait', isDefault: false }
+        { id: 'usr-rina', name: 'Rina Putri', role: 'Pimpinan Proyek (Project Lead / PM)', group: 'Pimpinan Proyek', isDefault: true },
+        { id: 'usr-andi', name: 'Andi Wicaksono', role: 'Penanggung Jawab Keahlian (Principal Architect)', group: 'Penanggung Jawab Bidang / Spesialis', isDefault: false }
       ],
       'PRJ-MOBILE': [
-        { id: 'pm-reza', name: 'Reza Firmansyah', role: 'Mobile Team Lead', group: 'Tim Proyek Terkait', isDefault: true }
+        { id: 'usr-dimas', name: 'Dimas Prayoga', role: 'Pimpinan Proyek (Project Lead / PM)', group: 'Pimpinan Proyek', isDefault: true },
+        { id: 'usr-budi', name: 'Budi Santoso', role: 'Pengarah / Penjamin Proyek (Project Sponsor)', group: 'Pengarah Proyek', isDefault: false }
       ]
     }
   };
@@ -1353,9 +1354,9 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     if (defaultOwner) {
       person.textContent = `${defaultOwner.name} — ${defaultOwner.role}`;
       detail.textContent = ctx === 'organizational'
-        ? 'Penugasan otomatis awal ditujukan ke Atasan Langsung (Technical Lead / Level 1). Pelapor juga dapat memilih penanggung jawab divisi lain (seperti Infra, Finance, atau HRGA) pada pilihan di atas.'
-        : `Penugasan otomatis awal ditujukan ke Project Lead aktif pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Pelapor juga dapat menunjuk Tech Lead atau QA Lead proyek terkait.`;
-      status.textContent = ctx === 'organizational' ? 'Ditentukan Otomatis · Level 1' : 'Ditentukan Otomatis · Project Lead';
+        ? 'Penugasan otomatis awal ditujukan ke Atasan Langsung. Pelapor juga dapat menunjuk penanggung jawab divisi terkait (seperti Ops, QA, Finance, atau HRGA) pada pilihan di atas.'
+        : `Penugasan otomatis awal ditujukan ke Pimpinan Proyek aktif pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Pelapor juga dapat menunjuk penanggung jawab bidang tertentu pada pilihan di atas.`;
+      status.textContent = ctx === 'organizational' ? 'Ditentukan Otomatis · Atasan Langsung' : 'Ditentukan Otomatis · Pimpinan Proyek';
     } else {
       person.textContent = 'Belum ada pemetaan aktif';
       detail.textContent = 'Hubungi administrator untuk pemetaan otoritas proyek ini.';
