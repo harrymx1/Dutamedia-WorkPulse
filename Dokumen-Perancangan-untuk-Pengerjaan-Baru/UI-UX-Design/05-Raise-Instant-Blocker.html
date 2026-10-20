@@ -710,10 +710,10 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
               </div>
               <div>
-                <div class="route-preview-title" id="ownerRouteTitle">RUTE PENUGASAN SISTEM (DETERMINISTIK)</div>
-                <div class="route-preview-person" id="ownerRoutePerson">Rina Putri — Direct Manager (Level 1)</div>
-                <div class="route-preview-detail" id="ownerRouteDetail">Tiket akan langsung diteruskan ke Rina Putri. Timer SLA pengakuan dimulai segera setelah formulir diserahkan.</div>
-                <span class="route-status" id="ownerRouteStatus">Ditentukan Otomatis · Level 1</span>
+                <div class="route-preview-title" id="ownerRouteTitle">PENUGASAN OTOMATIS SISTEM</div>
+                <div class="route-preview-person" id="ownerRoutePerson">Rina Putri — Technical Lead / Direct Manager (Engineering)</div>
+                <div class="route-preview-detail" id="ownerRouteDetail">Tiket kendala akan langsung diteruskan ke Atasan Langsung Anda untuk direspons. Timer batas waktu respons (SLA) akan aktif segera setelah formulir dikirimkan.</div>
+                <span class="route-status" id="ownerRouteStatus">Ditentukan Otomatis · Atasan Langsung</span>
               </div>
             </div>
 
@@ -723,7 +723,7 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
               </span>
               <div>
                 <strong>Protokol Eskalasi Otomatis:</strong><br>
-                Penanggung jawab awal wajib mengakui (*Acknowledge*) tiket kendala dalam batas toleransi SLA respons. Apabila kendala Critical tidak diakui tepat waktu, sistem secara otomatis meneruskan eskalasi darurat ke jenjang berikutnya (Level 2: Head of Department).
+                Penanggung jawab wajib mengonfirmasi penerimaan (<em>Acknowledge</em>) tiket kendala dalam batas waktu SLA. Apabila kendala berskala Kritis (<em>Critical</em>) tidak direspons tepat waktu, sistem secara otomatis meneruskan eskalasi ke jenjang pimpinan berikutnya sesuai aturan eskalasi perusahaan.
               </div>
             </div>
 
@@ -1350,12 +1350,12 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
     preview.className = 'route-preview';
     preview.dataset.state = 'auto';
     icon.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>';
-    title.textContent = 'RUTE PENUGASAN SISTEM (DETERMINISTIK)';
+    title.textContent = 'PENUGASAN OTOMATIS SISTEM';
     if (defaultOwner) {
       person.textContent = `${defaultOwner.name} — ${defaultOwner.role}`;
       detail.textContent = ctx === 'organizational'
-        ? 'Penugasan otomatis awal ditujukan ke Atasan Langsung. Pelapor juga dapat menunjuk penanggung jawab divisi terkait (seperti Ops, QA, Finance, atau HRGA) pada pilihan di atas.'
-        : `Penugasan otomatis awal ditujukan ke Pimpinan Proyek aktif pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Pelapor juga dapat menunjuk penanggung jawab bidang tertentu pada pilihan di atas.`;
+        ? 'Tiket kendala akan langsung diteruskan ke Atasan Langsung Anda untuk direspons. Timer batas waktu respons (SLA) akan aktif segera setelah formulir dikirimkan.'
+        : `Tiket kendala akan langsung diteruskan ke Pimpinan Proyek aktif (${defaultOwner.name}) pada ${$('projectContext').selectedOptions[0]?.textContent || 'proyek terkait'}. Timer batas waktu respons (SLA) akan aktif segera setelah formulir dikirimkan.`;
       status.textContent = ctx === 'organizational' ? 'Ditentukan Otomatis · Atasan Langsung' : 'Ditentukan Otomatis · Pimpinan Proyek';
     } else {
       person.textContent = 'Belum ada pemetaan aktif';
