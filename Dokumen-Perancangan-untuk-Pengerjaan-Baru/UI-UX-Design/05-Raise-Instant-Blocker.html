@@ -950,24 +950,28 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
   // =========================================================================
   const authorityDirectory = {
     organizational: [
-      { id: 'usr-rina', name: 'Rina Putri', role: 'Technical Lead / Direct Manager (Engineering)', isDefault: true },
-      { id: 'usr-budi', name: 'Budi Santoso', role: 'Head of Engineering', isDefault: false },
-      { id: 'usr-dimas', name: 'Dimas Prayoga', role: 'Head of Operations & Infrastructure', isDefault: false },
-      { id: 'usr-gilang', name: 'Gilang Ramadhan', role: 'Operations Supervisor (Infra & DevOps)', isDefault: false },
-      { id: 'usr-siti', name: 'Siti Rahma', role: 'Senior Finance (Anggaran & Lisensi)', isDefault: false },
-      { id: 'usr-dewi', name: 'Dewi Lestari', role: 'HRGA Specialist (Fasilitas & Kantor)', isDefault: false }
+      { id: 'usr-rina', name: 'Rina Putri', role: 'Technical Lead / Direct Manager (Engineering)', group: 'Atasan Langsung', isDefault: true },
+      { id: 'usr-budi', name: 'Budi Santoso', role: 'Head of Engineering', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-dimas', name: 'Dimas Prayoga', role: 'Head of Operations & Infrastructure', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-dian', name: 'Dian Permata', role: 'QA / QC Lead', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-andi', name: 'Andi Wicaksono', role: 'Principal / R&D Engineer', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-siti', name: 'Siti Rahma', role: 'Senior Finance (Anggaran & Lisensi)', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-dewi', name: 'Dewi Lestari', role: 'HRGA Specialist (Fasilitas & Kantor)', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-farhan', name: 'Farhan Pratama', role: 'Head of Sales & Presales', group: 'Penanggung Jawab Divisi Terkait', isDefault: false },
+      { id: 'usr-aris', name: 'Aris Munandar', role: 'Plt. Head of Delivery (s.d. 30 Nov 2026)', group: 'Pejabat Sementara (Temporary Reviewer / Plt)', isDefault: false },
+      { id: 'usr-hendra', name: 'Hendra Wijaya', role: 'Chief Executive Officer (CEO)', group: 'Pimpinan Puncak', isDefault: false }
     ],
     project: {
       'PRJ-PORTAL': [
-        { id: 'pm-bima', name: 'Bima Santoso', role: 'Project Lead Portal', isDefault: true },
-        { id: 'qa-dian', name: 'Dian Permata', role: 'QA Lead Portal', isDefault: false }
+        { id: 'pm-bima', name: 'Bima Santoso', role: 'Project Lead Portal', group: 'Tim Proyek Terkait', isDefault: true },
+        { id: 'qa-dian-p', name: 'Dian Permata', role: 'QA Lead Portal', group: 'Tim Proyek Terkait', isDefault: false }
       ],
       'PRJ-CORE': [
-        { id: 'pm-andi', name: 'Andi Wicaksono', role: 'Principal Architect Core', isDefault: true },
-        { id: 'lead-maya', name: 'Maya Safitri', role: 'Tech Lead Core', isDefault: false }
+        { id: 'pm-andi-p', name: 'Andi Wicaksono', role: 'Principal Architect Core', group: 'Tim Proyek Terkait', isDefault: true },
+        { id: 'lead-maya', name: 'Maya Safitri', role: 'Tech Lead Core', group: 'Tim Proyek Terkait', isDefault: false }
       ],
       'PRJ-MOBILE': [
-        { id: 'pm-reza', name: 'Reza Firmansyah', role: 'Mobile Team Lead', isDefault: true }
+        { id: 'pm-reza', name: 'Reza Firmansyah', role: 'Mobile Team Lead', group: 'Tim Proyek Terkait', isDefault: true }
       ]
     }
   };
@@ -1266,8 +1270,23 @@ input[aria-invalid=true],textarea[aria-invalid=true],select[aria-invalid=true]{b
 
     select.replaceChildren();
     select.add(new Option('Tidak memilih orang tertentu (Sistem menentukan otomatis)', ''));
+
+    // Kelompokkan personil menggunakan <optgroup>
+    const groups = {};
     candidates.forEach(person => {
-      select.add(new Option(`${person.name} — ${person.role}`, person.id));
+      const grp = person.group || 'Daftar Personil';
+      if (!groups[grp]) groups[grp] = [];
+      groups[grp].push(person);
+    });
+
+    Object.keys(groups).forEach(grpName => {
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = `── ${grpName} ──`;
+      groups[grpName].forEach(person => {
+        const opt = new Option(`${person.name} — ${person.role}`, person.id);
+        optGroup.appendChild(opt);
+      });
+      select.appendChild(optGroup);
     });
 
     if (candidates.some(c => c.id === prev)) {
