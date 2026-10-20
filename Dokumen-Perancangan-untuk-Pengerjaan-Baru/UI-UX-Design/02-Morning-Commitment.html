@@ -2305,6 +2305,8 @@
         'HRGA': 'Contoh: Proses onboarding karyawan baru, pengadaan inventaris kantor, review absensi tim bulanan',
         'Management': 'Contoh: Review capaian strategis mingguan, 1-on-1 coaching lead engineer, evaluasi realisasi anggaran'
       };
+      const userHintText = PROMPT_HINTS[activeUser.function] || PROMPT_HINTS['Engineering'];
+
       // Context Hint: Tomorrow Priority dari EOD Kemarin (FR-52, BR-20, US-28)
       try {
         const storedTomorrow = localStorage.getItem('workpulse_tomorrow_priority');
