@@ -72,6 +72,7 @@
       min-height: 100vh;
       display: grid;
       grid-template-columns: 254px minmax(0, 1fr);
+      align-items: start;
     }
 
     /* ==============================================================
@@ -80,15 +81,49 @@
     .sidebar {
       background: var(--color-surface);
       border-right: 1px solid var(--color-border-subtle);
-      padding: 24px 16px 18px;
+      padding: 20px 16px 16px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
-      min-height: 100vh;
-      box-sizing: border-box;
+      gap: 16px;
+      height: 100vh;
+      max-height: 100vh;
       position: sticky;
       top: 0;
-      z-index: 20;
+      overflow-y: auto;
+      box-sizing: border-box;
+      z-index: 50;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--color-border-subtle);
+      border-radius: 4px;
+    }
+
+    @media (max-height: 750px) {
+      .sidebar {
+        padding: 14px 12px 10px;
+        gap: 10px;
+      }
+      .brand {
+        margin-bottom: 0;
+      }
+      .nav-group {
+        gap: 2px;
+      }
+      .nav-label {
+        margin-bottom: 2px;
+        font-size: 10.5px;
+      }
+      .nav-link {
+        padding: 6.5px 10px;
+        font-size: 13px;
+      }
+      .side-bottom {
+        padding-top: 8px;
+      }
     }
 
     .brand {
