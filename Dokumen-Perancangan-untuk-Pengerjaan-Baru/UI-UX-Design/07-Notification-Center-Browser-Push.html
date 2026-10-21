@@ -1018,7 +1018,7 @@
               <div class="panel-head">
                 <div>
                   <div class="eyebrow">Preferensi Perangkat</div>
-                  <h2 id="pushTitle" style="margin-top:3px">Kanal Browser Push (MVP Real Delivery)</h2>
+                  <h2 id="pushTitle" style="margin-top:3px">Kanal Browser Push Perangkat</h2>
                   <p class="subtitle" style="font-size:12.5px;margin-top:4px">Kanal push instan untuk pengingat batas waktu dan eskalasi kendala kritis.</p>
                 </div>
                 <span class="pill neutral" id="pushBadge">Memeriksa…</span>
@@ -1069,12 +1069,12 @@
               </div>
             </section>
 
-            <!-- Card 2: Status Kanal Notifikasi (PRD Section 8 Matrix) -->
+            <!-- Card 2: Status Kanal Notifikasi (Matriks Saluran Distribusi) -->
             <section class="panel" aria-labelledby="channelsTitle">
               <div class="panel-head">
                 <div>
                   <div class="eyebrow">Matriks Distribusi</div>
-                  <h2 id="channelsTitle" style="margin-top:3px">Status Kanal Pengiriman (PRD §8)</h2>
+                  <h2 id="channelsTitle" style="margin-top:3px">Status Saluran Notifikasi</h2>
                   <p class="subtitle" style="font-size:12.5px;margin-top:4px">Kanal pengiriman eksternal memiliki status terpisah dari arsip in-app.</p>
                 </div>
               </div>
@@ -1600,9 +1600,9 @@
           titleText = 'Izin Notifikasi Aktif pada Browser Ini';
           descText = 'Peramban telah mengizinkan penerimaan pengingat dan eskalasi instan.';
           noticeClass = 'success';
-          noticeHtml = `Izin peramban telah aktif. Sesuai PRD FR-38, status izin aktif bukan bukti bahwa pesan tertentu telah sampai; pengiriman push riil dicatat secara independen per pemicu.`;
-          btnText = 'Izin Sudah Aktif';
-          btnDisabled = true;
+          noticeHtml = `Izin peramban telah aktif. Status izin aktif pada peramban bukan bukti mutlak bahwa seluruh pesan telah sampai; pengiriman push riil dicatat secara independen per pemicu dan kanal.`;
+          btnText = 'Kirim Notifikasi Uji';
+          btnDisabled = false;
           metricText = 'Izin Aktif';
           metricNote = 'Aktif pada peramban ini';
           channelText = 'Izin aktif · Delivery riil per pemicu';
@@ -1790,7 +1790,16 @@
         }
 
         if (Notification.permission === 'granted') {
-          showToast('Izin Browser Push sudah aktif pada perangkat ini.', 'success');
+          try {
+            new Notification('WorkPulse — Uji Notifikasi Berhasil', {
+              body: 'Perangkat dan peramban Anda telah terhubung sempurna dengan sistem notifikasi WorkPulse.',
+              tag: 'workpulse-test'
+            });
+            showToast('Notifikasi uji peramban berhasil dikirim ke perangkat Anda.', 'success');
+          } catch (e) {
+            console.warn('Gagal memicu browser notification:', e);
+            showToast('Izin aktif. Peramban siap menerima push notification.', 'success');
+          }
           return;
         }
 

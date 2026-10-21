@@ -140,8 +140,8 @@ Setiap notifikasi memiliki asosiasi rute tujuan yang jelas:
 | **TC-07** | Toggle Status Baca per Item | Klik tombol centang pada kartu unread | Kartu berubah menjadi read, counter unread berkurang 1. Klik ulang mengembalikan status ke unread. |
 | **TC-08** | Buka Modal Detail Notifikasi | Klik tombol [Lihat Detail →] | Modal pop-up muncul di tengah dengan backdrop blur, menyajikan rincian lengkap kendala/tugas dan tombol "Buka Konteks Terkait". |
 | **TC-09** | Deep Link Konteks Dokumen | Klik [Buka Konteks Terkait] di modal | Modal tertutup, pengguna diarahkan ke rute tujuan dokumen dengan toast panduan. |
-| **TC-10** | Aksi Kontrol Browser Push | Klik tombol [Aktifkan Browser Push] | Sistem memicu `Notification.requestPermission()`. Jika disetujui, UI berubah seketika ke state *Izin Aktif* (badge hijau) dan toast sukses muncul. |
-| **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Kanal PRD §8. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
+| **TC-10** | Aksi Kontrol Browser Push | Klik tombol [Aktifkan Browser Push] / [Kirim Notifikasi Uji] | Jika belum aktif, sistem memicu `Notification.requestPermission()`. Jika izin sudah aktif, sistem memicu pengiriman notifikasi uji riil ke peramban dan menampilkan toast konfirmasi sukses. |
+| **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Saluran Notifikasi. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
 | **TC-12** | Pintasan Klik Metrik Browser Push | Klik kartu metrik ke-3 'Browser Push' | Sistem otomatis mengalihkan tampilan aktif ke Tab 'Pengaturan Kanal & Perangkat'. |
 
 ---
