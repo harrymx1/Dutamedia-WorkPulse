@@ -337,7 +337,7 @@ p{margin:0}
         <button class="mobile-hamburger-btn" type="button" id="btn-open-sidebar" aria-label="Buka navigasi menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <div class="breadcrumb">
+        <div class="breadcrumb" id="pageBreadcrumb">
           <a href="02-Morning-Commitment.html" style="color:inherit;text-decoration:none">Workspace</a> <span style="color:#A9C7BC">/</span> <strong>My History</strong>
         </div>
       </div>
@@ -545,6 +545,12 @@ p{margin:0}
           </div>
         </div>
 
+        <!-- No Submission Audit Notice Banner -->
+        <div id="noSubmissionNotice" style="display:none;margin-bottom:18px;padding:14px 18px;border:1px solid #C5DCEB;border-radius:var(--radius-sm);background:#EEF5FA;color:#234D68;font-size:13px;line-height:1.5">
+          <div style="font-weight:750;margin-bottom:2px">Catatan Audit Sistem</div>
+          <div>Hari ini tercatat sebagai <strong>Tidak Ada Submission (No Submission)</strong> karena laporan komitmen pagi dan evaluasi sore tidak diserahkan dalam batas waktu kerja yang berlaku.</div>
+        </div>
+
         <section class="panel detail-section">
           <div class="panel-head">
             <div>
@@ -596,6 +602,14 @@ p{margin:0}
           </div>
           <div class="panel-body" id="notesDetail"></div>
         </section>
+
+        <!-- Bottom Back Action Button -->
+        <div style="display:flex;justify-content:flex-start;margin-top:24px;padding-top:16px;border-top:1px solid var(--color-border-subtle)">
+          <button class="btn btn-secondary" type="button" id="bottomBackBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Kembali ke Histori</span>
+          </button>
+        </div>
       </section>
     </div>
   </main>
@@ -742,6 +756,21 @@ p{margin:0}
     if (s === 'AMBER') return badge('Final Status · AMBER', 'amber');
     if (s === 'RED') return badge('Final Status · RED', 'red');
     return badge('Final Status belum tersedia', 'neutral');
+  }
+
+  function outcomeBadge(o) {
+    if (!o) return '';
+    let cls = 'neutral';
+    if (o === 'Completed') cls = 'green';
+    else if (o === 'Partially Completed') cls = 'amber';
+    else if (o === 'Not Completed') cls = 'red';
+    return badge('Outcome · ' + o, cls);
+  }
+
+  function continuationBadge(c) {
+    if (!c) return '';
+    let cls = c === 'Continue' ? 'timing' : 'neutral';
+    return badge('Continuation · ' + c, cls);
   }
 
   function getNoteTypeConfig(type) {
@@ -903,6 +932,26 @@ p{margin:0}
     $('detailSubtitle').textContent = 'Catatan lengkap yang tersimpan untuk hari ' + r.weekday.toLowerCase() + '.';
     $('detailBadges').innerHTML = timingBadge(r.timing) + statusBadge(r.final) + (r.initial ? badge('Initial Status · ' + r.initial, r.initial.toLowerCase()) : '');
 
+    // Synchronize Topbar Breadcrumb
+    const bc = $('pageBreadcrumb');
+    if (bc) {
+      bc.innerHTML = `
+        <a href="02-Morning-Commitment.html" style="color:inherit;text-decoration:none">Workspace</a>
+        <span style="color:#A9C7BC">/</span>
+        <button type="button" id="breadcrumbBack" style="background:none;border:none;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer">My History</button>
+        <span style="color:#A9C7BC">/</span>
+        <strong>${escapeHtml(r.date)}</strong>
+      `;
+      const bBack = $('breadcrumbBack');
+      if (bBack) bBack.addEventListener('click', back);
+    }
+
+    // Toggle No Submission Notice
+    const noSubNotice = $('noSubmissionNotice');
+    if (noSubNotice) {
+      noSubNotice.style.display = r.timing === 'No Submission' ? 'block' : 'none';
+    }
+
     $('morningState').textContent = r.timing === 'No Submission' ? 'Tidak Ada Submission' : 'Tercatat';
     $('eodState').textContent = r.final ? 'Tersedia' : 'Belum Tersedia';
 
@@ -925,8 +974,8 @@ p{margin:0}
             ${badge('Additional Work', 'neutral')}
           </div>
           <div class="day-badges" style="margin-top:6px">
-            ${badge('Outcome · ' + x.outcome, 'neutral')}
-            ${badge('Continuation · ' + x.continuation, 'neutral')}
+            ${outcomeBadge(x.outcome)}
+            ${continuationBadge(x.continuation)}
           </div>
         </div>
       `).join('')}
@@ -950,8 +999,8 @@ p{margin:0}
           <div class="detail-work">
             <div class="detail-work-title">${escapeHtml(x.title)}</div>
             <div class="day-badges" style="margin-top:8px">
-              ${badge('Outcome: ' + x.outcome, 'neutral')}
-              ${badge('Continuation: ' + x.continuation, 'neutral')}
+              ${outcomeBadge(x.outcome)}
+              ${continuationBadge(x.continuation)}
             </div>
           </div>
         `).join('')}
@@ -987,6 +1036,16 @@ p{margin:0}
     $('detailView').classList.remove('show');
     $('historyOverview').classList.remove('hidden');
     currentKey = null;
+
+    // Restore Topbar Breadcrumb
+    const bc = $('pageBreadcrumb');
+    if (bc) {
+      bc.innerHTML = `
+        <a href="02-Morning-Commitment.html" style="color:inherit;text-decoration:none">Workspace</a>
+        <span style="color:#A9C7BC">/</span>
+        <strong>My History</strong>
+      `;
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1043,6 +1102,8 @@ p{margin:0}
 
   $('recordFilter').addEventListener('change', renderList);
   $('backBtn').addEventListener('click', back);
+  const bottomBack = $('bottomBackBtn');
+  if (bottomBack) bottomBack.addEventListener('click', back);
 
   $('exportBtn').addEventListener('click', () => {
     exportRows(periodData[currentPeriod].keys, 'workpulse-history-' + currentPeriod + '.csv');
