@@ -8,50 +8,50 @@
 
 ---
 
-## 1. TUJUAN & FILOSOFI DESAIN
+## 1. IKHTISAR, TUJUAN & FILOSOFI DESAIN
 
 ### 1.1 Fungsi Utama Halaman
-1. **Mencatat Tugas Tak Terduga di Sela Jam Kerja (*Mid-day Ad-hoc*):** Menampung penugasan mendadak, insiden operasional, atau perubahan prioritas yang terjadi setelah Morning Commitment dikunci (09:30–17:00 WIB).
-2. **Menjaga Kemurnian Baseline Pagi (PRD FR-07 & BR-01):** Pekerjaan tambahan **bukan slot komitmen ke-4** dan **tidak pernah mengubah atau merusak baseline komitmen pagi** yang sudah terkunci.
-3. **Penyetaraan Evaluasi Sore (PRD FR-08):** Seluruh item yang tercatat otomatis disalurkan ke evaluasi akhir (**Halaman 04: EOD Outcome**) dengan bobot capaian yang setara dengan komitmen utama.
+1. **Pencatatan Tugas Tak Terduga di Sela Jam Kerja (*Mid-Day Ad-Hoc*):** Menampung penugasan mendadak, insiden operasional, atau perubahan prioritas yang terjadi setelah Morning Commitment dikunci (jendela kerja 09:30–17:00 WIB).
+2. **Perlindungan Kemurnian Baseline Pagi (PRD FR-07 & BR-01):** Pekerjaan tambahan **bukan slot komitmen ke-4** dan **tidak pernah mengubah atau merusak baseline komitmen pagi** yang telah dikunci.
+3. **Penyetaraan Evaluasi Sore (PRD FR-08):** Seluruh item yang dicatat otomatis disalurkan ke evaluasi akhir (**Halaman 04: EOD Outcome**) dengan bobot pertanggungjawaban yang setara dengan komitmen utama.
 
 ### 1.2 Batasan Desain Baku
-- **Bersifat Fleksibel & Opsional:** Karyawan tidak diwajibkan mengisi jika tidak ada tugas baru di sela jam kerja.
-- **Nol Emoticon / Emoji:** Murni menggunakan tipografi profesional dan ikon inline SVG monokrom.
+- **Bersifat Fleksibel & Opsional:** Karyawan tidak diwajibkan mengisi jika tidak ada tugas baru yang muncul di siang hari.
+- **Nol Emoticon & Ikon Monokrom:** Murni menggunakan tipografi korporat dan inline SVG monokrom (`stroke-width="1.8-2.2"`).
 - **Warna Merah Lembut (*Soft Rose*):** Background `#FFF8F8`, border `#FECDCA`, teks `#DC2626` / `#991B1B` pada tombol hapus dan pesan error.
-- **Penghematan Ruang Vertikal (*Above-the-Fold Priority*):** Komponen sekunder dirancang kompak agar fokus karyawan langsung tertuju ke log dan formulir pencatatan.
+- **Fluid Layout Seimbang:** Padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis kaku.
 
 ---
 
-## 2. ANATOMI & KOMPONEN ANTARMUKA
+## 2. ANATOMI ANTARMUKA & TATA LETAK KOMPONEN
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. TOPBAR & DAILY WORKFLOW STEP BAR:                                        │
-│    [1. Morning Commitment ✓] -> [2. Additional Work ●] -> [3. EOD Outcome]  │
+│    [1. Morning Commitment ✓] ──> [2. Additional Work ●] ──> [3. EOD Outcome]│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. PANEL 1: KONTEKS JADWAL & STATUS RISIKO (Grid 4-Kolom Terpadu):          │
+│ 2. PANEL 1: KONTEKS JADWAL & RISIKO (Grid 4-Kolom Terpadu):                 │
 │    - Kolom 1: Tanggal Kerja [Hari Kerja Aktif]                              │
 │    - Kolom 2: Jendela Pencatatan [09:30 – 17:00 WIB · Fleksibel]            │
 │    - Kolom 3: Status Komitmen Pagi [Tersimpan · Tepat Waktu]                │
 │    - Kolom 4: Status Risiko Hari Ini [GREEN / AMBER / RED]                  │
-│    - Catatan Kaki Terpadu (Notice Aturan Sistem FR-07 Ramping di Dasar)     │
+│    - Catatan Kaki Tata Kelola (Integrated Notice FR-07 Ramping di Dasar)    │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. PANEL 2: KOMITMEN PAGI TERKUNCI (Collapsible Baseline Reference):        │
-│    - Header: Judul [Komitmen Pagi Terkunci], Badge [1 Komitmen],            │
+│ 3. PANEL 2: KOMITMEN PAGI TERKUNCI (Collapsible by Default ~50px):          │
+│    - Header: Judul [Komitmen Pagi Terkunci], Badge Count [1 Komitmen],      │
 │      Tombol Toggle [Lihat Komitmen / Tutup Komitmen] (Rotasi Chevron 180°)  │
-│    - Default: Collapsed by Default (Hemat Ruang Layar Drastis, Nol Emoji)   │
+│    - Konten (Saat Dibuka): Kartu Baca-Saja Rencana Target Pagi & Status     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. PANEL 3: DAFTAR & FORMULIR PENCATATAN (Inti Halaman):                    │
 │    - Kicker: [PEKERJAAN DI LUAR KOMITMEN PAGI]                              │
-│    - Header Panel: Counter Dinamis & Tombol Sinkron [+ Tambah / Tutup Form] │
+│    - Header: Counter Item & Tombol Sinkron [+ Tambah / Tutup Form]          │
 │    - Formulir Input (Tugas Baru / Mode Sunting):                            │
-│      * Target Hasil Kerja (Textarea + Role-Based Prompt Hint + Warning Box) │
-│      * Alasan Pekerjaan Muncul (5 Enum Resmi PRD FR-06)                     │
-│      * Panel Kondisional 'Assigned By' (Aksen Garis Hijau saat Newly Assign)│
+│      * Target Hasil Kerja (Textarea + Role Prompt Hint + Warning Box)       │
+│      * Alasan Resmi Munculnya Pekerjaan (5 Enum Baku PRD FR-06)             │
+│      * Panel Kondisional 'Assigned By' (Border Hijau saat Newly Assigned)   │
 │      * Tautan Referensi / Tiket Tugas (Opsional) + Quick Blocker Picker     │
-│      * Aksi Form: Tombol [Batal / Tutup] & Tombol [Simpan Pekerjaan]        │
-│    - Log Pekerjaan Tambahan: Kartu Tugas [ 1 ], Timestamp, Tombol Edit & Hapus│
+│      * Tombol Aksi: [Batal / Tutup] & [Simpan Pekerjaan]                    │
+│    - Log Tugas Tambahan Tersimpan: Kartu Tugas [ 1 ], Timestamp, Edit/Hapus │
 │    - Empty State Box: Horizontal Mini-Strip Ramping (~50px) saat 0 item     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. PANEL 4: KARTU TRANSISI MENUJU EOD OUTCOME (Next-Step Bridge):           │
@@ -62,113 +62,113 @@
 
 ---
 
-## 3. SPESIFIKASI ATURAN BAKU SISTEM
+## 3. SPESIFIKASI ATURAN BISNIS & PERILAKU SISTEM (*ENGINE RULES*)
 
 ### 3.1 Penyatuan Status Risiko ke Grid 4-Kolom & Notice Terpadu
-- **Tata Letak Seimbang:** Mengeliminasi kotak preview kedua yang bertumpuk. Status Risiko Hari Ini diintegrasikan langsung sebagai **kolom ke-4** pada grid jadwal (`repeat(4, 1fr)` desktop, `repeat(2, 1fr)` tablet, `1fr` mobile).
-- **Catatan Kaki Tata Kelola (FR-07):** Diletakkan di dasar Panel 1 sebagai strip tipis pemisah:
+- Mengintegrasikan Status Risiko Hari Ini langsung sebagai **kolom ke-4** pada Panel 1 (`repeat(4, 1fr)`).
+- Menempatkan maklumat aturan sistem (*Governance Notice FR-07*) sebagai catatan kaki terpadu di dasar Panel 1:
   > *"Mencatat pekerjaan tambahan tidak mengubah komitmen pagi yang telah dikunci. Seluruh item akan dievaluasi saat EOD Outcome sore nanti."*
-- **Dampak:** Menghemat $\approx 150\text{px}$ ruang vertikal dan menjaga keselarasan visual 100% dengan Halaman 02.
+- Menghemat $\approx 150\text{px}$ ruang vertikal kanvas kerja dan selaras 100% dengan Halaman 02.
 
 ### 3.2 Panel Komitmen Pagi Terkunci (*Collapsible by Default*)
 - **Default Tertutup:** Hanya menampilkan strip header ramping setinggi $\approx 50\text{px}$ dengan tombol toggle `Lihat Komitmen` $\leftrightarrow$ `Tutup Komitmen`.
-- **Read-Only Context:** Karyawan dapat merujuk kembali target paginya kapan saja tanpa memakan ruang layar kerja harian.
+- **Konteks Baca-Saja:** Membantu karyawan meninjau target paginya kapan saja tanpa memakan ruang layar kerja.
 - **Empty State Netral:** Jika sesi pagi tidak diisi (*No Submission*), menampilkan pesan informatif netral tanpa nada menghakimi.
 
-### 3.3 Formulir Input & 5 Enum Resmi (PRD FR-06)
-- **Target Hasil Kerja `*` (Wajib):** Textarea dengan teks bantuan berbasis peran (*Role-Based Prompt Hint*) dan *Quality Warning Badge* non-blocking jika teks $< 10$ karakter/generik.
-- **5 Enum Alasan Resmi:**
+### 3.3 Formulir Input & 5 Enum Resmi Alasan (PRD FR-06)
+- **Target Hasil Kerja `*` (Wajib):** Textarea dengan teks bantuan adaptif (*Role-Based Prompt Hint*) dan *Quality Warning* non-blocking jika teks $< 10$ karakter/generik.
+- **5 Enum Baku Alasan Tugas:**
   1. `Newly Assigned` $\rightarrow$ Tugas Baru Ditugaskan *(Wajib mengisi Assigned By)*.
   2. `Missed in Planning` $\rightarrow$ Terlewat saat Perencanaan Pagi.
   3. `Priority Change` $\rightarrow$ Perubahan Prioritas Proyek.
   4. `Operational-Incident` $\rightarrow$ Insiden Operasional Mendesak.
   5. `Other` $\rightarrow$ Alasan Operasional Lainnya.
-- **Panel Kondisional 'Assigned By':** Otomatis muncul dengan border kiri hijau brand `3px solid #0B8061` dan latar `#F8FAFC` hanya saat alasan `Newly Assigned` dipilih.
+- **Panel Kondisional 'Assigned By':** Otomatis tampil dengan aksen border kiri hijau (`#0B8061`) dan latar `#F8FAFC` hanya saat alasan `Newly Assigned` dipilih.
 
 ### 3.4 Mode Sunting (*In-Place Edit*) & Empty State Ramping
-- **Fitur Edit Fleksibel:** Mengklik `Edit` pada kartu log mengubah formulir ke **Mode Sunting** (badge amber, judul berubah dengan ikon pensil, tombol `Perbarui` & `Batal Sunting`), disertai *smooth scroll* otomatis.
-- **Empty State Mini-Strip (~50px):** Jika belum ada item dan formulir ditutup, sistem menampilkan strip horizontal ramping satu baris dengan ikon plus, bukan kotak placeholder besar yang memboroskan layar.
-
-### 3.5 Keseragaman Tipografi Header Panel (Konsistensi 100%)
-Seluruh header panel utama menggunakan spesifikasi tipografi yang identik dengan Halaman 02:
-- **Judul Utama (`h2`):** `font-size: 17px`, `font-weight: 800` (Extra Bold), warna `#0E211B`.
-- **Kicker (`.section-kicker`):** `font-size: 11.5px`, `font-weight: 800`, huruf kapital, `letter-spacing: 0.05em`.
+- **Fitur Sunting Fleksibel:** Tombol `Edit` pada kartu log mengubah formulir ke **Mode Sunting** (badge amber, ikon pensil, tombol `Perbarui` & `Batal Sunting`), disertai *smooth scroll* otomatis.
+- **Horizontal Mini-Strip Empty State (~50px):** Jika belum ada item dan formulir tertutup, sistem menampilkan strip horizontal ramping satu baris dengan ikon plus, bukan kotak placeholder besar yang memboroskan layar.
 
 ---
 
-## 4. KATALOG RINGKAS 16 SKENARIO SISTEM
+## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)
 
-| ID | Kategori | Kondisi Pemicu | Perilaku Antarmuka & Efek Sistem |
+| ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respons Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
-| **TC-01** | Navigasi | Masuk pasca-Morning Commitment | Tab 1 centang hijau (`completed`), Tab 2 aktif (`active`), data profil terhubung. |
-| **TC-02** | Konteks | Kalender Hari Kerja Adaptif | Menampilkan `Hari Kerja Aktif` (adaptif: libur/cuti/dispensasi). |
-| **TC-03** | Konteks | Subteks Status Pagi 1 Baris | Menampilkan `Diserahkan pukul 08:45 WIB` rapi dalam 1 baris tanpa wrapping. |
-| **TC-04** | Konteks | Status Risiko Grid 4-Kolom | Status risiko terpadu di kolom 4 Panel 1 (GREEN / AMBER / RED). |
-| **TC-05** | Referensi | Komitmen Pagi Collapsible | Default tertutup. Klik toggle membuka kartu komitmen (rotasi chevron 180°). |
-| **TC-06** | Referensi | Sesi Pagi Terlewat | Panel komitmen menampilkan pesan netral suportif (bukan error). |
-| **TC-07** | Form UX | Default State Form Dinamis | Tertutup jika sudah ada item tersimpan; terbuka jika log masih kosong. |
-| **TC-08** | Form UX | Sinkronisasi Tombol Header | Tombol berubah dinamis: `+ Tambah Pekerjaan Tambahan` $\leftrightarrow$ `Tutup Formulir`. |
-| **TC-09** | Validasi | Target Hasil Kerja Kosong | Alert merah lembut: *"Target hasil kerja pekerjaan tambahan wajib diisi"*. |
-| **TC-10** | Validasi | Alasan Belum Dipilih | Alert merah lembut: *"Silakan pilih alasan resmi pekerjaan ini muncul"*. |
-| **TC-11** | Kondisional | Alasan 'Newly Assigned' Dipilih | Panel *Assigned By* muncul dengan border kiri hijau 3px; input wajib diisi. |
-| **TC-12** | Validasi | Newly Assigned Tanpa Nama | Alert merah lembut: *"Pemberi tugas wajib diisi"* dan kursor difokuskan. |
-| **TC-13** | Edukasi | Teks Singkat / Generik | Quality warning kuning muncul di bawah textarea (*non-blocking*). |
-| **TC-14** | Referensi | Quick-Picker Blocker Tim | Dropdown blocker aktif terbuka; klik tiket auto-fill referensi & deskripsi. |
-| **TC-15** | Log & Edit | In-Place Edit Mode | Klik `Edit` mengubah form ke *Mode Sunting* (badge amber, tombol `Perbarui`). |
-| **TC-16** | Empty State | Log Kosong / Semua Terhapus | Menampilkan *Horizontal Mini-Strip Empty State* (~50px) hemat ruang. |
+| **TC-01** | Navigasi Siklus Harian | Masuk pasca-Morning Commitment | Tab 1 centang hijau (`completed`), Tab 2 aktif (`active`), data profil tersambung. |
+| **TC-02** | Status Risiko Grid 4-Kolom | Sesi pagi tersimpan | Status risiko terpadu di kolom 4 Panel 1 (GREEN / AMBER / RED). |
+| **TC-03** | Komitmen Pagi Collapsible | Default tertutup | Klik toggle membuka rincian kartu komitmen pagi (rotasi chevron 180°). |
+| **TC-04** | Validasi Target Kosong | Submit form tugas tambahan kosong | Tampil alert merah lembut: *"Target hasil kerja pekerjaan tambahan wajib diisi"*. |
+| **TC-05** | Validasi Alasan Belum Dipilih | Alasan tugas belum ditentukan | Tampil alert merah lembut: *"Silakan pilih alasan resmi pekerjaan ini muncul"*. |
+| **TC-06** | Alasan 'Newly Assigned' | Radio Newly Assigned dipilih | Panel *Assigned By* muncul dengan border hijau; input wajib diisi. |
+| **TC-07** | Validasi Assigned By Kosong | Newly Assigned tanpa nama delegator | Tampil alert merah: *"Pemberi tugas wajib diisi"* dan kursor difokuskan. |
+| **TC-08** | Deteksi Teks Generik | Input $< 10$ karakter atau kata umum | Tampil banner kuning edukatif di bawah textarea (*non-blocking*). |
+| **TC-09** | Quick-Picker Blocker Tim | Dropdown blocker aktif dibuka | Klik tiket auto-fill referensi & deskripsi ke formulir. |
+| **TC-10** | Mode Sunting (*In-Place Edit*) | Klik tombol `Edit` pada kartu tugas | Form beralih ke Mode Sunting (badge amber, tombol `Perbarui Pekerjaan`). |
+| **TC-11** | Hapus Item Tugas | Klik tombol `Hapus` pada kartu tugas | Item dihapus dari daftar; jika kosong, tampil Horizontal Mini-Strip (~50px). |
 
 ---
 
-## 5. KONTRAK DATA & PANDUAN INTEGRASI BACKEND
+## 5. HUBUNGAN LINTAS HALAMAN (*CROSS-PAGE CONTRACTS*)
 
-### 5.1 Skema Data Objek Lokal (`localStorage: workpulse_additional_work_items`)
-```json
-[
-  {
-    "id": 1792340655548,
-    "description": "Pengujian performa query report transaksi bulanan",
-    "reason": "Operational-Incident",
-    "assignedBy": "",
-    "reference": "[#BLK-014] Keterlambatan respons spesifikasi API dari klien X",
-    "time": "14:25"
-  }
-]
+| Halaman Terkait | Sifat Keterhubungan (*Contractual Relationship*) |
+| :--- | :--- |
+| **Halaman 01 (Login)** | Menggunakan sesi pengguna aktif dari `localStorage: workpulse_active_user`. |
+| **Halaman 02 (Morning Commitment)** | Menampilkan komitmen pagi sebagai referensi baca-saja tanpa mengubah baselinenya. |
+| **Halaman 04 (EOD Outcome)** | Seluruh item pekerjaan tambahan yang tersimpan otomatis dimuat di Panel 3 Halaman 04 untuk dievaluasi setara dengan komitmen utama. |
+| **Halaman 05 (Raise Blocker)** | Tugas tambahan dapat mengaitkan tiket blocker aktif yang dilaporkan di Halaman 05. |
+| **Halaman 06 (My History)** | Pekerjaan tambahan yang diselesaikan terekam pada riwayat harian dan laporan mingguan. |
+
+---
+
+## 6. KONTRAK DATA & SPESIFIKASI INTEGRASI API (FRONTEND-BACKEND)
+
+### 6.1 Skema Data Objek Lokal (`localStorage: workpulse_additional_work_items`)
+```typescript
+interface AdditionalWorkItemLocal {
+  id: number; // Timestamp Unix ms
+  description: string;
+  reason: 'Newly Assigned' | 'Missed in Planning' | 'Priority Change' | 'Operational-Incident' | 'Other';
+  assignedBy: string;
+  reference: string;
+  time: string; // Format HH:mm
+}
 ```
 
-### 5.2 Endpoint REST API Backend
+### 6.2 Endpoint REST API Backend
 
 #### 1. POST `/api/v1/today/additional-work`
-- **Fungsi:** Menyimpan catatan pekerjaan tambahan ke audit log harian.
-- **Request Payload:**
-  ```json
-  {
-    "target_hasil_kerja": "Investigasi spike CPU 90% pada service otentikasi",
-    "alasan": "Newly Assigned",
-    "assigned_by": "Pak Joko (Engineering Manager)",
-    "referensi_url": "https://jira.dutamedia.com/browse/DEV-889"
+- **Fungsi:** Menyimpan catatan pekerjaan tambahan ke log harian.
+- **Request Payload (JSON):**
+```json
+{
+  "deliverableTarget": "Investigasi spike CPU 90% pada service otentikasi",
+  "reasonCategory": "Newly Assigned",
+  "assignedBy": "Joko Sasongko (Engineering Manager)",
+  "referenceUrl": "https://jira.dutamedia.com/browse/DEV-889"
+}
+```
+- **Response Success (HTTP 201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "itemId": "adw_991823",
+    "recordedAt": "2026-10-18T14:25:00+07:00",
+    "recordedBy": "budi.pratama@dutamedia.com"
   }
-  ```
-- **Response 201 Created:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      "item_id": "adw_991823",
-      "recorded_at": "2026-10-18T14:25:00+07:00",
-      "recorded_by": "budi.pratama@dutamedia.com"
-    }
-  }
-  ```
+}
+```
 
-#### 2. PUT `/api/v1/today/additional-work/{item_id}`
-- **Fungsi:** Memperbarui detail pekerjaan tambahan sebelum EOD disubmit (*in-place edit*).
+#### 2. PUT `/api/v1/today/additional-work/{itemId}`
+- **Fungsi:** Memperbarui detail pekerjaan tambahan sebelum EOD diserahkan (*in-place edit*).
 - **Aturan Otorisasi:** Diizinkan hanya jika status harian belum `EOD_SUBMITTED`.
 
-#### 3. DELETE `/api/v1/today/additional-work/{item_id}`
+#### 3. DELETE `/api/v1/today/additional-work/{itemId}`
 - **Fungsi:** Menghapus item pekerjaan tambahan dari log harian sebelum evaluasi sore dikunci.
 
 ---
 
-## 6. STATUS KESIAPAN PROTOTIPE
+## 7. STATUS KESIAPAN & PANDUAN IMPLEMENTASI
 
-Dokumen ini adalah **acuan resmi tunggal (*single source of truth*)** untuk implementasi modul Additional Work. Seluruh komponen pada prototipe [`03-Additional-Work.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/03-Additional-Work.html) telah teruji secara visual dan fungsional di browser modern, bebas error, dan selaras 100% dengan Halaman 02 serta panduan konsistensi sistem.
+Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Additional Work. Seluruh komponen pada prototipe [`03-Additional-Work.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/03-Additional-Work.html) telah teruji secara visual dan fungsional di browser modern, bebas error, dan selaras 100% dengan Halaman 02 serta Halaman 04.

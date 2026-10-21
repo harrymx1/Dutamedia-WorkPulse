@@ -8,23 +8,23 @@
 
 ---
 
-## 1. TUJUAN & FILOSOFI DESAIN
+## 1. IKHTISAR, TUJUAN & FILOSOFI DESAIN
 
 ### 1.1 Fungsi Utama Halaman
-1. **Evaluasi Capaian Hasil Terpadu (PRD FR-08):** Memberikan ruang evaluasi menyeluruh terhadap seluruh tugas yang direncanakan pada pagi hari (*Morning Commitment*) dan pekerjaan tak terduga yang muncul di siang hari (*Additional Work*) secara setara dan adil.
+1. **Evaluasi Capaian Hasil Terpadu (PRD FR-08):** Memberikan ruang evaluasi menyeluruh terhadap seluruh tugas yang direncanakan pada pagi hari (*Morning Commitment*) dan pekerjaan baru di siang hari (*Additional Work*) secara setara dan adil.
 2. **Pemisahan Tegas Hasil Capaian vs Kelanjutan Kerja (PRD FR-09):** Memisahkan status *Outcome* (`Completed`, `Partially Completed`, `Not Completed`, `Cancelled`) dari status *Continuation* (`Continue`, `Do Not Continue`). Keduanya tidak boleh digabung menjadi satu nilai status.
 3. **Penyaluran Draf Otomatis ke Esok Hari (PRD FR-11):** Setiap tugas yang ditandai `Continue` otomatis masuk ke koleksi draf *copy-forward* pada Halaman 02 hari kerja berikutnya, lengkap dengan alasan kelanjutan (*continuation reason*).
 4. **Penetapan Final Status & Akuntabilitas Harian (PRD FR-10 & FR-52):** Karyawan menetapkan status penutupan hari (`GREEN`, `AMBER`, `RED`) secara mandiri, didampingi rekomendasi sistem (*heuristic suggestion*), penjelasan risiko jika ada kendala, serta catatan prioritas opsional (*Tomorrow Priority*) untuk esok hari.
 
 ### 1.2 Batasan Desain Baku
-- **100% Otentik Hasil Jadi Produksi:** Bersih mutlak dari elemen/gimmick prototipe (tanpa kotak toggle demo, tanpa pill switcher peran palsu). Pengujian dilakukan secara organik menggunakan data nyata di balik layar.
-- **Nol Emoticon / Emoji:** Murni menggunakan tipografi profesional dan ikon inline SVG monokrom.
+- **100% Otentik Hasil Produksi:** Bersih mutlak dari elemen/gimmick prototipe (tanpa toggle demo, tanpa pill switcher peran palsu).
+- **Nol Emoticon & Ikon Monokrom:** Murni menggunakan tipografi korporat dan inline SVG monokrom (`stroke-width="1.8-2.2"`).
 - **Warna Merah Lembut (*Soft Rose*):** Background `#FFF8F8`, border `#FECDCA`, teks `#DC2626` / `#991B1B` pada tombol bahaya, peringatan, dan badge error.
-- **Fluid Layout Seimbang:** Padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa lebar statis kaku, sejajar lurus dengan Halaman 02 dan Halaman 03.
+- **Fluid Layout Seimbang:** Padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis kaku, sejajar lurus dengan Halaman 02 dan Halaman 03.
 
 ---
 
-## 2. ANATOMI & KOMPONEN ANTARMUKA
+## 2. ANATOMI ANTARMUKA & TATA LETAK KOMPONEN
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -32,7 +32,7 @@
 │    [1. Morning Commitment ✓] ── [2. Additional Work ✓] ── [3. EOD Outcome ●]│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. PANEL 1: JADWAL & STATUS PENGISIAN HARI INI (Grid 4-Kolom Terpadu):      │
-│    - Kolom 1: Tanggal Kerja [Senin, 19 Oktober 2026 · Hari Kerja Aktif]     │
+│    - Kolom 1: Tanggal Kerja [Hari Kerja Aktif]                              │
 │    - Kolom 2: Jendela EOD Outcome [16:30 – 18:00 WIB · Evaluasi Capaian]    │
 │    - Kolom 3: Status Evaluasi [Sesi Dibuka / Draf / Diserahkan · Terkunci]   │
 │    - Kolom 4: Status Risiko Harian [GREEN / AMBER / RED · Terkendali]       │
@@ -79,7 +79,7 @@
 
 ---
 
-## 3. ATURAN BISNIS & PERILAKU SISTEM
+## 3. SPESIFIKASI ATURAN BISNIS & PERILAKU SISTEM (*ENGINE RULES*)
 
 ### 3.1 Pemisahan Tegas Outcome vs Continuation (FR-08 & FR-09)
 Sistem memisahkan secara ketat penilaian hasil kerja dengan keputusan kelanjutan operasional:
@@ -96,92 +96,81 @@ Sistem memisahkan secara ketat penilaian hasil kerja dengan keputusan kelanjutan
 Saat EOD Outcome berhasil diserahkan:
 - Seluruh tugas (baik dari Morning Commitment maupun Additional Work) yang memiliki `continuation = Continue` otomatis disimpan ke `localStorage: workpulse_carry_over_pool`.
 - Data ini menjadi sumber draf *carry-over* resmi yang ditampilkan di Panel 2 pada Halaman 02 hari kerja berikutnya.
-- Item `Additional Work` yang `Continue` tetap dapat disalurkan sebagai draf komitmen baru, namun **tidak pernah merusak histori komitmen hari ini**.
+- Item `Additional Work` yang `Continue` disalurkan sebagai draf komitmen baru tanpa merusak histori komitmen hari ini.
 
 ### 3.3 Deterministic Heuristic Suggestion Engine (PRD FR-13 & AC-38, ADR-013)
-Sistem menyediakan pemandu heuristik (*system suggested status*) deterministik yang bereaksi secara real-time terhadap evaluasi capaian tugas melalui 6 cabang aturan baku:
+Sistem menyediakan rekomendasi status sistem (*heuristic suggestion*) deterministik yang bereaksi secara real-time terhadap evaluasi tugas melalui 6 cabang aturan baku:
 1. **Cabang 1 (Active Critical Blocker):** Jika terdapat kendala kritis (*Critical Blocker*) yang masih aktif pada hari ini $\rightarrow$ Sistem menyarankan **`RED`** (*"Terdapat kendala kritis (Critical Blocker) yang aktif dan memengaruhi penyelesaian komitmen hari ini"*).
-2. **Cabang 2 (Rasio Kegagalan $\ge 50\%$):** Jika persentase tugas `Not Completed` atau `Cancelled` mencapai $\ge 50\%$ dari total tugas yang dievaluasi $\rightarrow$ Sistem menyarankan **`RED`** (*"Sebanyak X% tugas hari ini berstatus Belum Selesai atau Dibatalkan"*).
-3. **Cabang 3 (Carry-Over Berulang $\ge 2$ Hari / High Blocker):** Jika terdapat tugas komitmen berulang ($\ge 2$ hari berturut-turut) atau terdapat kendala berbobot tinggi (*High Blocker*) $\rightarrow$ Sistem menyarankan minimal **`AMBER`** (*"Terdapat tugas komitmen berulang (carry-over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan"*).
+2. **Cabang 2 (Rasio Kegagalan $\ge 50\%$):** Jika persentase tugas `Not Completed` atau `Cancelled` mencapai $\ge 50\%$ dari total tugas $\rightarrow$ Sistem menyarankan **`RED`** (*"Sebanyak X% tugas hari ini berstatus Belum Selesai atau Dibatalkan"*).
+3. **Cabang 3 (Carry-Over Berulang $\ge 2$ Hari / High Blocker):** Jika terdapat tugas komitmen berulang ($\ge 2$ hari beruntun) atau terdapat kendala berbobot tinggi (*High Blocker*) $\rightarrow$ Sistem menyarankan minimal **`AMBER`** (*"Terdapat tugas komitmen berulang (carry-over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan"*).
 4. **Cabang 4 (Partially Completed / Kegagalan $< 50\%$):** Jika terdapat tugas `Partially Completed` atau terdapat tugas `Not Completed` di bawah $50\%$ $\rightarrow$ Sistem menyarankan **`AMBER`** (*"Pekerjaan selesai sebagian (Partially Completed) atau terdapat penundaan tugas yang berlanjut ke esok hari"*).
-5. **Cabang 5 (Completed Tanpa Blocker):** Jika seluruh komitmen pagi dan pekerjaan tambahan diselesaikan penuh (`Completed`) tanpa ada blocker aktif tersisa $\rightarrow$ Sistem menyarankan **`GREEN`** (*"Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka"*). Tugas yang memiliki catatan kendala pagi namun berhasil tuntas diselesaikan tidak diperlakukan sebagai blocker aktif.
-6. **Cabang 6 (Zero Evaluated Tasks):** Jika belum ada tugas yang dievaluasi $\rightarrow$ Sistem menampilkan status netral **`● Menunggu Evaluasi Tugas`** dengan kalimat panduan tanpa penetapan status prematur.
+5. **Cabang 5 (Completed Tanpa Blocker):** Jika seluruh komitmen pagi dan pekerjaan tambahan diselesaikan penuh (`Completed`) tanpa ada blocker aktif tersisa $\rightarrow$ Sistem menyarankan **`GREEN`** (*"Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka"*).
+6. **Cabang 6 (Zero Evaluated Tasks):** Jika belum ada tugas yang dievaluasi $\rightarrow$ Sistem menampilkan status netral **`● Menunggu Evaluasi Tugas`** dengan kalimat panduan edukatif.
 
 ### 3.4 Protokol Anti-Silent Mutation & ValidationPromptModal (FR-14 & AC-39, ADR-013)
-Sesuai prinsip etika enterprise WorkPulse, sistem **DILARANG KERAS** mengubah atau memaksa status pilihan pengguna secara sepihak (*Zero Silent Mutation*):
+Sistem **DILARANG KERAS** mengubah atau memaksa status pilihan pengguna secara sepihak (*Zero Silent Mutation*):
 - Karyawan memiliki hak prerogatif penuh untuk menetapkan Final Status hariannya berdasarkan pertimbangan profesional di lapangan.
-- Jika pengguna memilih status yang berbeda dari saran heuristik sistem (misalnya pengguna memilih `GREEN` padahal sistem menyarankan `RED` karena rasio kegagalan $\ge 50\%$, atau pengguna memilih `AMBER` padahal sistem menyarankan `GREEN`), sistem **tidak langsung mengunci form**.
-- Sistem memunculkan **`ValidationPromptModal`** (`#modal-status-mismatch`) yang menyajikan:
+- Jika pengguna memilih status yang berbeda dari saran heuristik sistem, sistem menampilkan **`ValidationPromptModal`** (`#modal-status-mismatch`) yang menyajikan:
   1. Komparasi visual berdampingan antara *Pilihan Anda* vs *Rekomendasi Sistem*.
   2. Dasar pertimbangan logis heuristik sistem.
-  3. Pernyataan jaminan bahwa sistem menghargai independensi profesional pengguna.
-  4. Dua pilihan aksi yang jelas:
+  3. Dua pilihan aksi yang adil:
      - **`Gunakan Saran Sistem (${suggestedStatus})`**: Menyelaraskan pilihan radio dengan rekomendasi sistem dan melanjutkan ke konfirmasi.
      - **`Pertahankan Pilihan Saya (${userStatus})`**: Mempertahankan keputusan mandiri pengguna dan melanjutkan ke konfirmasi penyerahan tanpa hambatan.
 
-### 3.5 Jendela Waktu Penyerahan & Status Ketepatan Waktu (FR-26 & AC-25)
-Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness Badge*) yang bereaksi secara real-time:
-- **Tepat Waktu (*On-Time*):** Penyerahan dilakukan sebelum atau tepat pukul 18:00 WIB (Pill Hijau).
-- **Masa Tenggang (*Grace Period*):** Penyerahan dilakukan antara pukul 18:00 – 18:30 WIB (Pill Kuning/Amber).
-- **Terlambat (*Late Submission*):** Penyerahan melewati batas akhir 18:30 WIB (Pill Merah).
+### 3.5 Jendela Waktu Penyerahan (FR-26 & AC-25)
+- **Tepat Waktu (*On-Time*):** Penyerahan $\le$ 18:00 WIB (Pill Hijau).
+- **Masa Tenggang (*Grace Period*):** Penyerahan 18:00 – 18:30 WIB (Pill Amber).
+- **Terlambat (*Late Submission*):** Penyerahan > 18:30 WIB (Pill Merah).
 
-### 3.6 Penjelasan Risiko Harian Tingkat Hari (FR-10 Mandate & Validasi 15 Karakter)
-- Jika Final Status ditetapkan sebagai **`AMBER`** atau **`RED`**, field `Penjelasan Risiko atau Kendala Tingkat Hari` menjadi **WAJIB DIISI**.
-- Penjelasan ini mencakup evaluasi holistik harian (berbeda dari kendala per tugas pada pagi hari).
-- Dilengkapi **penghitung karakter interaktif** (`0 / 15 karakter minimal`) yang otomatis berubah warna hijau saat syarat $\ge 15$ karakter terpenuhi.
-- Form memblokir pengiriman jika penjelasan risiko kosong atau di bawah 15 karakter.
+### 3.6 Penjelasan Risiko Harian Tingkat Hari (Validasi 15 Karakter)
+- Jika Final Status ditetapkan sebagai **`AMBER`** atau **`RED`**, field `Penjelasan Risiko atau Kendala Tingkat Hari` **WAJIB DIISI**.
+- Dilengkapi **live counter interaktif** (`0 / 15 karakter minimal`) yang otomatis berubah warna hijau saat syarat $\ge 15$ karakter terpenuhi. Pengiriman diblokir jika teks $< 15$ karakter.
 
 ### 3.7 Keterhubungan Tomorrow Priority ke Halaman 02 (FR-52)
 - Input `Tomorrow Priority` bersifat opsional.
-- Jika diisi, catatan ini disimpan ke `localStorage: workpulse_tomorrow_priority`.
-- Pada Halaman 02 esok harinya, catatan ini langsung ditampilkan sebagai **Embedded Context Hint Banner** tepat di atas Slot Komitmen 1. Catatan ini murni referensi kontekstual dan tidak menjadi komitmen otomatis.
-
-### 3.8 Penguncian Baseline EOD & Protokol Koreksi
-- Setelah EOD diserahkan, status halaman berubah menjadi **`Diserahkan · Terkunci`**.
-- Banner hijau locked muncul di bagian atas, seluruh field input dinonaktifkan (`disabled`), dan tombol submit dinonaktifkan.
-- Jika terdapat kekeliruan pencatatan data pasca penutupan, perubahan wajib diajukan melalui rute **Halaman 16b: EOD Correction Request**.
-
-### 3.9 Integritas Konten Tunggal (Zero Duplicate Deliverable)
-- Baik di Halaman 02 maupun Halaman 03, pengguna hanya mengisi satu input teks utama (*Rencana Hasil Kerja* di pagi hari dan *Target Hasil Kerja* di siang hari).
-- Halaman 04 tidak menampilkan baris deliverable sekunder fiktif. Teks tugas disajikan murni, didampingi metadata otentik: badge alasan resmi, tautan referensi/blocker (`reference`), dan nama pemberi tugas (`assignedBy` khusus alasan `Newly Assigned`).
-
-### 3.10 Standarisasi Notifikasi Toast Kontekstual
-- Sistem dilarang menggunakan centang hijau untuk pesan peringatan/error.
-- Varian notifikasi toast mencakup:
-  1. `success`: Ikon centang hijau emerald (`#34D399`) pada latar hijau botol tua (`#113426`).
-  2. `warning`: Ikon segitiga peringatan amber (`#FBBF24`) pada latar cokelat gelap (`#2D1B08`).
-  3. `error`: Ikon lingkaran seru merah rose (`#F87171`) pada latar merah marun (`#3B1212`).
+- Jika diisi, catatan ini disimpan ke `localStorage: workpulse_tomorrow_priority` dan otomatis tampil sebagai **Embedded Context Hint Banner** di atas Slot Komitmen 1 pada Halaman 02 esok harinya.
 
 ---
 
-## 4. KATALOG 15 SKENARIO PENGUJIAN SISTEM (TEST CASES)
+## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)
 
-| ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respon Sistem & Efek Visual |
+| ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respons Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
-| **TC-01** | Semua Tugas Completed | Outcome seluruh kartu disetel `Completed` + Continuation `Do Not Continue` | Rekomendasi sistem berubah ke `GREEN`. Form valid untuk submit dengan status `GREEN`. |
+| **TC-01** | Semua Tugas Completed | Seluruh kartu disetel `Completed` + Continuation `Do Not Continue` | Rekomendasi sistem berubah ke `GREEN`. Form valid untuk submit status `GREEN`. |
 | **TC-02** | Tugas Berlanjut (Continue) | Memilih Continuation `Continue` pada kartu komitmen 1 | Panel alasan kelanjutan muncul otomatis dengan tanda bintang merah wajib (*). |
 | **TC-03** | Tugas Dibatalkan (Cancelled) | Memilih Outcome `Cancelled` pada salah satu kartu | Panel alasan pembatalan tugas muncul otomatis dengan tanda bintang merah wajib (*). |
-| **TC-04** | Validasi Field Alasan Kosong | Memilih `Continue` namun textarea alasan dibiarkan kosong saat submit | Sistem menampilkan toast peringatan, memberi border merah pada textarea, dan scroll ke elemen terkait. |
-| **TC-05** | Final Status AMBER Tanpa Alasan | Memilih radio `AMBER`, textarea penjelasan risiko harian kosong | Form memblokir tombol submit dan memunculkan toast "Penjelasan risiko harian wajib diisi untuk status AMBER/RED". |
-| **TC-06** | Final Status AMBER Lengkap | Memilih radio `AMBER` dan mengisi penjelasan risiko harian secara memadai | Field valid, status badge di Panel 1 otomatis sinkron menjadi `AMBER (Perhatian)`. |
-| **TC-07** | Simpan Draf Lokal | Mengisi sebagian outcome lalu mengklik tombol [Simpan Draf] | Data tersimpan ke `localStorage: workpulse_eod_draft`, toast hijau muncul, data tidak hilang saat reload. |
-| **TC-08** | Input Tomorrow Priority & Evidence Link | Mengisi prioritas esok hari dan tautan URL bukti kerja (PR Git / Doc) | Teks tersimpan ke `localStorage` dan siap dibaca oleh Halaman 02 serta tersimpan di payload evaluasi. |
-| **TC-09** | Penyerahan Sukses & Penguncian | Memvalidasi seluruh field lalu mengonfirmasi submit di modal | Modal sukses muncul, status halaman terkunci (`locked`), seluruh form disabled, banner terkunci aktif. |
+| **TC-04** | Validasi Alasan Kosong | Memilih `Continue` namun textarea alasan dibiarkan kosong | Toast peringatan muncul, border merah pada textarea, dan fokus melompat ke elemen. |
+| **TC-05** | Final Status AMBER Tanpa Alasan | Memilih radio `AMBER`, textarea penjelasan risiko kosong | Submit diblokir; toast "Penjelasan risiko harian wajib diisi untuk status AMBER/RED" muncul. |
+| **TC-06** | Final Status AMBER Lengkap | Memilih radio `AMBER` dan mengisi penjelasan risiko $\ge 15$ karakter | Status badge di Panel 1 sinkron menjadi `AMBER (Perhatian)`. |
+| **TC-07** | Simpan Draf Lokal | Mengisi sebagian outcome lalu klik tombol [Simpan Draf] | Data tersimpan ke `localStorage: workpulse_eod_draft`, toast hijau muncul. |
+| **TC-08** | Input Tomorrow Priority & Link Bukti | Mengisi prioritas esok hari dan URL bukti kerja (PR Git / Doc) | Data tersimpan ke payload evaluasi dan disalurkan ke Halaman 02 besok. |
+| **TC-09** | Penyerahan Sukses & Penguncian | Validasi lolos $\rightarrow$ konfirmasi di modal | Modal sukses tampil, status halaman terkunci (`locked`), form disabled. |
 | **TC-10** | Penanganan 0 Additional Work | `localStorage` additional work kosong | Panel 3 menampilkan Horizontal Mini-Strip ramping nan elegan tanpa error. |
-| **TC-11** | Inkonsistensi Status — Pertahankan Pilihan (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `AMBER` + alasan risiko | Sistem memunculkan `ValidationPromptModal`. Pengguna klik [Pertahankan Pilihan Saya], pilihan AMBER dipertahankan tanpa mutasi diam-diam, modal konfirmasi muncul. |
-| **TC-12** | Inkonsistensi Status — Adopsi Rekomendasi (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `RED` | Sistem memunculkan `ValidationPromptModal`. Pengguna klik [Gunakan Saran Sistem], radio otomatis beralih ke `GREEN`, modal konfirmasi muncul dengan status `GREEN`. |
-| **TC-13** | Validasi Penjelasan Risiko < 15 Karakter | Mengisi penjelasan risiko AMBER hanya 5 karakter (misal: "tunda") | Form memblokir submit, counter menunjukkan warna merah, toast peringatan muncul "Penjelasan risiko minimal 15 karakter". |
-| **TC-14** | Toast Peringatan Validasi (Anti-Pattern Fix) | Mengklik tombol submit saat final status belum dipilih | Toast muncul di pojok kanan bawah dengan ikon segitiga amber `▲` dan latar cokelat amber gelap, bebas dari ikon centang hijau. |
-| **TC-15** | Peringatan Dini Carry-over $\ge 2$ Hari pada Kartu GREEN | Terdapat tugas komitmen dengan `carryOverDays >= 2` | Kartu status GREEN menampilkan kotak peringatan sistem amber: "Terdapat tugas carry-over ≥ 2 hari. Sistem merekomendasikan minimal AMBER." |
+| **TC-11** | Inkonsistensi Status — Pertahankan (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `AMBER` + alasan | `ValidationPromptModal` tampil; klik [Pertahankan Pilihan Saya], pilihan AMBER terekam tanpa mutasi paksa. |
+| **TC-12** | Inkonsistensi Status — Adopsi Saran (FR-14) | Sistem menyarankan `GREEN`, pengguna memilih `RED` | `ValidationPromptModal` tampil; klik [Gunakan Saran Sistem], radio otomatis beralih ke `GREEN`. |
+| **TC-13** | Validasi Penjelasan Risiko < 15 Karakter | Mengisi alasan AMBER hanya 5 karakter (misal: "tunda") | Submit diblokir, counter berwarna merah, toast "Penjelasan risiko minimal 15 karakter". |
+| **TC-14** | Peringatan Dini Carry-Over $\ge 2$ Hari | Terdapat tugas komitmen dengan `carryOverDays >= 2` | Kartu status GREEN menampilkan notice amber: "Terdapat tugas carry-over ≥ 2 hari. Sistem merekomendasikan minimal AMBER." |
 
 ---
 
-## 5. KONTRAK DATA & PANDUAN INTEGRASI BACKEND
+## 5. HUBUNGAN LINTAS HALAMAN (*CROSS-PAGE CONTRACTS*)
 
-### 5.1 Endpoint Penyerahan EOD Outcome
-`POST /api/v1/daily-accountability/today/eod`
+| Halaman Terkait | Sifat Keterhubungan (*Contractual Relationship*) |
+| :--- | :--- |
+| **Halaman 01 (Login)** | Menggunakan sesi pengguna aktif dari `localStorage: workpulse_active_user`. |
+| **Halaman 02 (Morning Commitment)** | Mengambil rencana kerja pagi untuk dievaluasi capaiannya pada Panel 2. Menyalurkan tugas yang `Continue` sebagai draf carry-over esok hari (FR-11). Menyalurkan `tomorrowPriority` sebagai context hint esok hari (FR-52). |
+| **Halaman 03 (Additional Work)** | Mengambil seluruh log pekerjaan tambahan untuk dievaluasi setara pada Panel 3. |
+| **Halaman 05 (Raise Blocker)** | Membaca tiket kendala aktif untuk dasar pertimbangan kalkulasi Heuristic Suggestion Engine (Critical Blocker $\rightarrow$ RED). |
+| **Halaman 06 (My History)** | Hasil penyerahan EOD menjadi sumber data resmi untuk evaluasi harian, outcome, dan continuation. |
+| **Halaman 16b (EOD Correction)** | Menjadi rute permohonan koreksi resmi jika terdapat kekeliruan data pasca formulir dikunci. |
 
-#### Payload Request (JSON):
+---
+
+## 6. KONTRAK DATA & SPESIFIKASI INTEGRASI API (FRONTEND-BACKEND)
+
+### 6.1 Endpoint Penyerahan EOD Outcome
+- **Rute:** `POST /api/v1/daily-accountability/today/eod`
+- **Request Payload (JSON):**
 ```json
 {
   "workDate": "2026-10-19",
@@ -216,9 +205,7 @@ Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness 
   ]
 }
 ```
-```
-
-#### Respons Sukses Server (HTTP 200 OK):
+- **Response Success (HTTP 200 OK):**
 ```json
 {
   "status": "success",
@@ -232,3 +219,9 @@ Panel 1 menyajikan indikator ketepatan waktu penyerahan (*Submission Timeliness 
   }
 }
 ```
+
+---
+
+## 7. STATUS KESIAPAN & PANDUAN IMPLEMENTASI
+
+Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul EOD Outcome. Seluruh komponen pada prototipe [`04-EOD-Outcome.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/04-EOD-Outcome.html) telah teruji secara visual dan fungsional di browser modern, bebas error, dan siap diimplementasikan ke dalam arsitektur kode frontend dan backend.

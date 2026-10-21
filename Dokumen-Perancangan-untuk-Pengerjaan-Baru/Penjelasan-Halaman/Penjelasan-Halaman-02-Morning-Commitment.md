@@ -8,153 +8,143 @@
 
 ---
 
-## 1. TUJUAN & FILOSOFI DESAIN
+## 1. IKHTISAR, TUJUAN & FILOSOFI DESAIN
 
 ### 1.1 Fungsi Utama Halaman
-1. **Menetapkan Prioritas Terukur:** Mengunci 1 hingga 3 deliverable paling bernilai sebelum jam kerja dimulai.
-2. **Transparansi Risiko Sejak Pagi:** Mengidentifikasi potensi kendala (AMBER) atau ancaman kritis (RED) secara terbuka agar tim dapat segera memberikan dukungan.
-3. **Mencegah Stagnasi Tugas (*Anti-Slippage*):** Pekerjaan carry-over berulang secara otomatis dikunci minimal AMBER agar tidak disamarkan sebagai status hijau.
+1. **Penetapan Prioritas Terukur (PRD FR-01):** Mengunci 1 hingga 3 target capaian kerja (*deliverables*) utama sebelum aktivitas operasional dimulai.
+2. **Keterbukaan Risiko Dini (PRD FR-02 & FR-04):** Mendorong pengungkapan potensi hambatan (AMBER) atau risiko kritis (RED) sejak pagi hari agar tim dan atasan dapat segera memberikan dukungan.
+3. **Pencegahan Stagnasi Tugas (*Anti-Slippage Engine* — PRD FR-03):** Tugas carry-over yang telah aktif $\ge 2$ hari kerja secara otomatis dikunci minimal berstatus AMBER dan dilarang disamarkan sebagai status GREEN.
 
 ### 1.2 Batasan Desain Baku
-- **Nol Emoticon / Emoji:** Murni menggunakan tipografi profesional dan ikon inline SVG monokrom.
-- **Warna Merah Lembut (*Soft Rose*):** Background `#FFF8F8`, border `#FECDCA`, teks `#DC2626` / `#991B1B` (ramah mata, bebas alarmisme).
-- **Bahasa Kerja Lugas:** Tanpa jargon teknis developer (*Zero Developer Jargon*).
+- **Nol Emoticon & Ikon Monokrom:** Seluruh visual menggunakan tipografi korporat dan inline SVG monokrom (`stroke-width="1.8-2.2"`).
+- **Warna Merah Lembut (*Soft Rose*):** Background `#FFF8F8`, border `#FECDCA`, teks `#DC2626` / `#991B1B` pada tombol hapus, badge penalti, dan pesan error.
+- **Bahasa Kerja Lugas (*Zero Developer Jargon*):** Tanpa istilah mentah pemrograman; menggunakan istilah perkantoran manusiawi.
+- **Fluid Layout Seimbang:** Padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis kaku.
 
 ---
 
-## 2. ANATOMI & KOMPONEN ANTARMUKA
+## 2. ANATOMI ANTARMUKA & TATA LETAK KOMPONEN
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. TOPBAR & DAILY WORKFLOW STEP BAR (1. Morning -> 2. Additional -> 3. EOD) │
+│ 1. TOPBAR & DAILY WORKFLOW STEP BAR:                                        │
+│    [1. Morning Commitment ●] ──> [2. Additional Work] ──> [3. EOD Outcome]  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. EXEMPTION BANNER (Kondisional: Akun Pengecualian Terbuka / C-Level)      │
+│ 2. EXEMPTION BANNER (Kondisional: Akun C-Level / Direksi dengan isExempt)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. PANEL KONTEKS HARI INI (Grid 4-Kolom Terpadu: Tanggal Kerja, Batas Waktu,│
-│    Status Pengisian, dan Live Agregasi Status Risiko Hari Ini)              │
+│ 3. PANEL 1: KONTEKS JADWAL & RISIKO (Grid 4-Kolom Terpadu):                 │
+│    - Kolom 1: Tanggal Kerja [Hari Kerja Aktif]                              │
+│    - Kolom 2: Batas Pengisian [08:00 – 09:00 WIB]                           │
+│    - Kolom 3: Status Pengisian [● Menunggu Pengisian / Tersimpan]           │
+│    - Kolom 4: Status Risiko Hari Ini [Live Aggregation: Netral/GREEN/AMBER] │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. TIMING ALERT BANNER (Dinamis: Masa Toleransi Amber / Terlambat Merah)    │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 5. ZERO COMMITMENT TOGGLE & PANEL ALASAN RESMI (Training, Dinas, Townhall)  │
+│ 5. ZERO COMMITMENT TOGGLE & ALASAN RESMI (Training, Dinas Luar, Townhall)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. DRAF PEKERJAAN BERLANJUT (Panel Kolapsibel Default Tertutup, Kartu Asli) │
+│ 6. PANEL 2: DRAF PEKERJAAN BERLANJUT (Akordeon Default Tertutup ~50px):     │
+│    - Header: Badge Count [3 Item Tersedia], Toggle [Lihat Draf / Tutup Draf]│
+│    - Konten (Saat Dibuka): Kartu Tugas 3-Baris (Checkbox, Metadata Chips,   │
+│      Callout Box Abu-abu [CATATAN: ...], Warning Amber, Aksi Hentikan/Ambil)│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 7. FORMULIR SLOT KOMITMEN (1-3 Slot) DENGAN EMBEDDED CONTEXT HINT PRIORITAS │
-│    KEMARIN SORE (Deliverable, Prompt Hint, Risiko, Link Blocker)            │
+│ 7. PANEL 3: DAFTAR SLOT KOMITMEN (1 s.d. 3 Slot):                           │
+│    - Context Hint Banner Prioritas Kemarin Sore (Tepat di Atas Slot 1)      │
+│    - Slot Komitmen: Target Hasil Kerja (Textarea + Role Prompt + Warning),  │
+│      Pilihan Risiko (GREEN / AMBER / RED), Panel Penjelasan Risiko          │
+│      (Kondisional Amber/Red), Tautan Referensi + Dropdown Blocker Aktif     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 8. INPUT ALASAN KETERLAMBATAN (Kondisional: Wajib jika Kirim > 09:30 WIB)   │
+│ 8. PANEL ALASAN KETERLAMBATAN (Kondisional: Wajib Muncul jika Jam > 09:30)  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 9. ACTION FOOTER BAR (Simpan Draf Lokal & Tombol Kirim Komitmen)            │
+│ 9. ACTION FOOTER BAR: [Simpan Draf (Disket)] & [Kirim Komitmen (Panah →)]   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 10. MODAL KONFIRMASI (Konfirmasi Pengiriman & Modal Hentikan Pekerjaan Draf)│
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 11. DRAWER NAVIGASI MOBILE (Hamburger Topbar, Sidebar Off-Canvas, Backdrop) │
+│ 10. MODAL KONFIRMASI (Konfirmasi Pengiriman & Modal Hentikan Draf Tugas)   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. SPESIFIKASI ATURAN BAKU SISTEM
+## 3. SPESIFIKASI ATURAN BISNIS & PERILAKU SISTEM (*ENGINE RULES*)
 
 ### 3.1 Penyatuan Status Risiko ke Grid 4-Kolom Terpadu
-- **Tata Letak:** Mengeliminasi kotak preview kedua yang sebelumnya bertumpuk di bawah Panel 1. Status Risiko Hari Ini diintegrasikan langsung sebagai **kolom ke-4** pada grid jadwal (`repeat(4, 1fr)` desktop, `repeat(2, 1fr)` tablet, `1fr` mobile).
-- **Komponen:** Menampilkan badge pill dinamis (GREEN/AMBER/RED/Netral) lengkap dengan dot status dan subteks penjelasan (`Terkendali Mandiri`, `Perhatian (Pantau Berkala)`, `Risiko Tinggi (Eskalasi Diperlukan)`).
-- **Dampak:** Menghemat $\approx 100\text{px}$ ruang vertikal dan selaras 100% dengan Halaman 03.
+- Mengintegrasikan indikator *Status Risiko Hari Ini* langsung sebagai **kolom ke-4** pada Panel 1 (`repeat(4, 1fr)` desktop, `repeat(2, 1fr)` tablet, `1fr` mobile).
+- Menampilkan badge pill status secara dinamis dengan dot indikator dan subteks penjelas (`Terkendali Mandiri`, `Perhatian (Pantau Berkala)`, `Risiko Tinggi (Eskalasi Diperlukan)`), menghemat $\approx 100\text{px}$ ruang vertikal dan selaras 100% dengan Halaman 03 & 04.
 
 ### 3.2 Panel Draf Carry-Over Kolapsibel (Default Tertutup)
-- **Tampilan Default Tertutup (`is-collapsed`):** Panel berbentuk akordeon yang tertutup saat halaman dimuat. Hanya menampilkan strip header ramping setinggi $\approx 50\text{px}$ dengan badge `3 Item Tersedia` dan tombol interaktif `Lihat Draf` / `Tutup Draf` (rotasi chevron 180°).
-- **Desain Kartu Asli Utuh Saat Dibuka:**
-  - Checkbox pemilihan sejajar judul tugas di sisi kiri.
-  - Chip metadata terpisah (`Terakhir: ...`, `Status: ...`, `Total Pengerjaan: ...`).
-  - **Kotak Catatan Callout Abu-abu (`.copy-note`):** Box tersendiri latar `#F8FAFC` dengan label tebal `CATATAN: "..."` berisi konteks evaluasi kemarin.
-  - **Warning Amber Tegas:** Muncul jika tugas telah aktif $\ge 2$ hari kerja.
-  - Tombol aksi `Hentikan Pekerjaan` per kartu dan tombol bulk `Gunakan Item Terpilih ke Slot Hari Ini`.
+- **Tampilan Default Tertutup (`is-collapsed`):** Berbentuk akordeon ramping setinggi $\approx 50\text{px}$ dengan tombol toggle `Lihat Draf` $\leftrightarrow$ `Tutup Draf` (rotasi chevron 180°).
+- **Desain Kartu 3-Baris Lengkap Saat Dibuka:**
+  - Baris 1: Checkbox seleksi sejajar judul tugas di sisi kiri, badge Amber (`Tertunda`/`Berlanjut`), dan tombol `Hentikan Pekerjaan`.
+  - Baris 2: Mini-tag metadata terpisah (`Terakhir: ...`, `Status: ...`, `Total Pengerjaan: ...`).
+  - Baris 3: Kotak catatan callout abu-abu lembut (`.copy-note`, latar `#F8FAFC`) berisi evaluasi kemarin.
+  - Peringatan Amber jika tugas telah aktif $\ge 2$ hari kerja.
+  - Tombol aksi: `Gunakan Item Terpilih ke Slot Hari Ini`.
 
-### 3.3 Penyematan Fokus Prioritas Kemarin Sore (*Embedded Context Hint*)
-- **Integrasi Langsung:** Menghilangkan panel independen memo kemarin. Disematkan sebagai strip banner ramping satu baris (`.tomorrow-priority-hint`) tepat di dalam panel formulir komitmen, persis di atas Slot Komitmen 1.
-- **Anatomi Banner:** Aksen garis kiri amber `3.5px solid #D97706`, ikon SVG bookmark, label bold `Prioritas Kemarin Sore:`, kutipan teks miring, dan badge mini `Hanya Referensi`.
-- **Dampak:** Memangkas $\approx 110\text{px}$ ruang vertikal dan menyajikan pengingat tepat saat karyawan mulai mengetik target kerja.
+### 3.3 Context Hint Prioritas Kemarin Sore (*Embedded Context Hint*)
+- Disematkan sebagai strip banner satu baris ramping (`.tomorrow-priority-hint`) tepat di atas Slot Komitmen 1.
+- Memuat ikon bookmark, label tegas `Prioritas Kemarin Sore:`, kutipan teks miring dari memo EOD kemarin, dan badge `Hanya Referensi`.
 
-### 3.4 Keseragaman Tipografi Header Panel (Konsistensi 100%)
-Seluruh header panel utama memiliki spesifikasi tipografi yang identik:
-- **Judul Utama (`h2`):** `font-size: 17px`, `font-weight: 800` (Extra Bold), warna `#0E211B`. Berlaku setara pada *"Jadwal & Batas Pengisian Hari Ini"*, *"Draf Pekerjaan Berlanjut dari Kemarin"*, dan *"Daftar Komitmen Hari Ini (1/3)"*.
-- **Kicker (`.section-kicker`):** `font-size: 11.5px`, `font-weight: 800`, huruf kapital, `letter-spacing: 0.05em`.
+### 3.4 Penegakan Risiko Minimal AMBER (*Amber Lock Engine*)
+- Jika tugas carry-over telah aktif $\ge 2$ hari kerja berturut-turut:
+  - Opsi radio GREEN otomatis **dinonaktifkan (*disabled*)**.
+  - Pilihan terkunci minimal pada status **AMBER** (atau RED).
+  - Field penjelasan faktor risiko menjadi wajib diisi.
 
-### 3.5 Penegakan Risiko Minimal AMBER (*Amber Lock Engine*)
-- **Hari Kerja $< 2$ (Hari Pertama):** Karyawan bebas memilih GREEN, AMBER, atau RED.
-- **Hari Kerja $\ge 2$:** Radio GREEN otomatis **dinonaktifkan (*disabled*)**, pilihan terkunci minimal AMBER, peringatan sistem aktif, dan panel penjelasan risiko wajib diisi.
+### 3.5 Jendela Waktu Penyerahan (PRD FR-05)
+- **08:00 – 09:00 WIB:** Tepat Waktu (*On-Time*).
+- **09:01 – 09:30 WIB:** Masa Toleransi (*Grace Period* — banner amber aktif).
+- **> 09:30 WIB:** Terlambat (*Late* — banner merah aktif, textarea alasan keterlambatan wajib diisi).
 
 ---
 
-## 4. KATALOG RINGKAS 33 SKENARIO SISTEM
+## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)
 
-| No | Skenario | Kondisi Pemicu | Perilaku Antarmuka & Efek Sistem |
+| ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respons Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
-| **K1** | **Dimensi Waktu & Kehadiran** | | |
-| 1.1 | Tepat Waktu | Submit $\le$ 09:00 WIB | Status `Tersimpan · Tepat Waktu` (Pill Hijau), tanpa banner peringatan. |
-| 1.2 | Masa Toleransi (*Grace Period*) | 09:01 – 09:30 WIB | Muncul banner toleransi amber; submit tanpa syarat alasan keterlambatan. |
-| 1.3 | Terlambat | Submit > 09:30 WIB | Banner merah aktif; wajib mengisi textarea `Alasan Keterlambatan`. |
-| 1.4 | Terlewat Hari (*No Submission*) | Tidak mengisi hingga berganti hari | Form terkunci permanen; tercatat pelanggaran disiplin *Missed Baseline*. |
-| **K2** | **Hak Akses & Peran** | | |
-| 2.1 | Karyawan Reguler | Akun standar (Budi Pratama) | Seluruh aturan batas waktu, kuota slot (1–3), dan penalti berlaku penuh. |
-| 2.2 | Pengecualian Terbuka (*Exempt*) | Akun C-Level / Direksi | Muncul banner hijau; batas waktu bebas; pengisian bersifat opsional. |
-| 2.3 | Sedang Cuti Resmi | Tanggal cuti disetujui HRGA | Akses formulir diblokir santun: *"Hari ini tercatat Cuti / Izin Resmi"*. |
-| **K3** | **Draf Pekerjaan Berlanjut** | | |
-| 3.1 | Draf Tertunda 1 Hari | Kemarin jeda, durasi 1 hari | Badge Amber `Tertunda`; bebas memilih GREEN jika dimasukkan ke slot. |
-| 3.2 | Draf Berlanjut Aktif $\ge 2$ Hari | Beruntun aktif belum tuntas | Badge Amber `Berlanjut`; terkunci minimal AMBER di slot komitmen. |
-| 3.3 | Draf Multi-Hari Sempat Jeda | Akumulasi durasi $\ge 2$ hari | Badge Amber `Tertunda`; tetap terkunci minimal AMBER saat dipilih. |
-| 3.4 | Hentikan Pekerjaan (*Stop Draft*) | Klik `Hentikan Pekerjaan` | Buka modal; wajib isi alasan; tugas dihapus permanen dari pool. |
-| 3.5 | Draf Kosong / Seluruhnya Stop | Tidak ada sisa tugas carry-over | Menampilkan teks netral: *"Tidak ada draf pekerjaan berlanjut saat ini"*. |
-| **K4** | **Pengisian Slot Komitmen** | | |
-| 4.1 | Kuota Slot (1 s.d. 3) | Klik `+ Tambah Slot Komitmen` | Maksimal 3 slot. Slot 1 wajib; tombol tambah nonaktif saat slot = 3. |
-| 4.2 | Petunjuk Format Sesuai Peran | Berdasarkan fungsi divisi akun | Teks bisikan miring otomatis adaptif (Engineering, Finance, HRGA, dll). |
-| 4.3 | Deteksi Teks Singkat/Generik | Input $< 10$ char / kata generik | Muncul warning box kuning edukatif; tidak memblokir tombol submit. |
-| 4.4 | Konteks Kemarin (*Tomorrow Priority*) | Ada memo EOD kemarin sore | Tampil di banner `.tomorrow-priority-hint` di atas Slot 1 (hanya referensi). |
-| **K5** | **Penilaian Risiko & Agregasi** | | |
-| 5.1 | Bebas Risiko (GREEN) | Radio GREEN dipilih | Panel penjelasan risiko tersembunyi (*collapsed*). |
-| 5.2 | Potensi Kendala (AMBER) | Radio AMBER dipilih/terkunci | Panel risiko amber terbuka; wajib menjelaskan faktor kendala. |
-| 5.3 | Risiko Kritis (RED) | Radio RED dipilih | Panel risiko merah terbuka; wajib menjelaskan kendala kritis & eskalasi. |
-| 5.4 | Aturan Anti-Stagnasi | Tugas aktif $\ge 2$ hari | Radio GREEN nonaktif; otomatis mengunci AMBER/RED. |
-| 5.5 | Agregasi Risiko Harian | Real-time di kolom 4 Panel 1 | Mengikuti risiko tertinggi (RED > AMBER > GREEN > Netral). |
-| **K6** | **Integrasi Tiket Blocker** | | |
-| 6.1 | Tautkan Blocker Aktif | Klik `Pilih Blocker Aktif ▾` | Dropdown tiket aktif tim (`#BLK-014`); auto-fill deskripsi deliverable. |
-| 6.2 | Relaksasi Teks Risiko | Tiket blocker terpilih | Tanda bintang wajib field risiko hilang (konteks terwakili tiket). |
-| **K7** | **Opsi Tanpa Komitmen** | | |
-| 7.1 | Zero Commitment (UF-10) | Centang *"Tidak ada komitmen"* | Slot komitmen meredup; wajib pilih alasan resmi (Dinas/Training/Townhall). |
-| **K8** | **Pengiriman, Kunci & Koreksi** | | |
-| 8.1 | Simpan Draf Lokal | Klik `Simpan Draf` | Data tersimpan di `localStorage`; tidak hilang jika browser tertutup. |
-| 8.2 | Validasi Pra-Kirim | Klik `Kirim Komitmen` | Memeriksa kelengkapan target, alasan risiko, dan alasan telat (jika > 09:30). |
-| 8.3 | Modal Konfirmasi | Validasi form lolos | Modal konfirmasi muncul menampilkan ringkasan status awal risiko. |
-| 8.4 | Penguncian Pasca-Kirim | Konfirmasi disetujui | Form jadi *read-only*; panel *Next Actions* muncul di bawah layar. |
-| 8.5 | Permohonan Koreksi Baseline | Salah input pasca-kirim | Akses form koreksi resmi di `/today/morning/correction-request` (UF-22). |
-| **K9** | **Kasus Khusus & Edge Cases** | | |
-| 9.1 | Submit Detik Batas Waktu | Buka 08:59, submit 09:02 | Status ditentukan oleh **server timestamp**, bukan jam di browser klien. |
-| 9.2 | Kuota Penuh saat Ambil Draf | Slot sudah 2, pilih 2 draf | Sistem hanya memasukkan 1 draf (kuota 3 terpenuhi); sisanya tetap di pool. |
-| 9.3 | Kegagalan Jaringan | Koneksi internet terputus | Form **tidak direset**; data aman; muncul notifikasi toast error jaringan. |
-| 9.4 | Blocker Selesai Siang Hari | Tiket resolve di siang hari | Komitmen pagi tetap menjadi **snapshot historis valid** jam 09:00 WIB. |
+| **TC-01** | Pengiriman Tepat Waktu | Submit $\le$ 09:00 WIB | Status `Tersimpan · Tepat Waktu` (Pill Hijau), tanpa banner peringatan. |
+| **TC-02** | Masa Toleransi (*Grace*) | Submit 09:01 – 09:30 WIB | Banner toleransi amber aktif; submit dapat dilakukan tanpa penalti alasan. |
+| **TC-03** | Pengiriman Terlambat | Submit > 09:30 WIB | Banner merah aktif; textarea alasan keterlambatan wajib diisi. |
+| **TC-04** | Akun Pengecualian (Exempt) | Akun C-Level / Direksi | Banner hijau exemption aktif; batas waktu bersifat opsional. |
+| **TC-05** | Ambil Draf Carry-Over | Pilih 1 draf dari akordeon | Draf terpindah ke Slot 1; jika tugas $\ge 2$ hari, status terkunci AMBER. |
+| **TC-06** | Hentikan Draf Carry-Over | Klik tombol `Hentikan Pekerjaan` | Modal alasan muncul; setelah diisi, tugas terhapus permanen dari pool. |
+| **TC-07** | Opsi Zero Commitment | Centang *"Tidak ada komitmen"* | Slot formulir meredup; wajib memilih alasan resmi (Dinas/Training/Townhall). |
+| **TC-08** | Deteksi Teks Generik | Input $< 10$ karakter atau kata umum | Banner peringatan kualitas kuning edukatif muncul (*non-blocking*). |
+| **TC-09** | Tautkan Tiket Blocker | Pilih tiket `#BLK-014` dari dropdown | Tanda bintang merah wajib pada penjelasan risiko berubah menjadi opsional. |
+| **TC-10** | Simpan Draf Lokal | Klik tombol [Simpan Draf] | Data tersimpan ke `localStorage`; notifikasi toast sukses hijau muncul. |
+| **TC-11** | Penguncian Pasca-Kirim | Konfirmasi pengiriman disetujui | Formulir menjadi *read-only* permanen; panel aksi transisi berikutnya tampil. |
 
 ---
 
-## 5. KONTRAK DATA & PANDUAN INTEGRASI BACKEND
+## 5. HUBUNGAN LINTAS HALAMAN (*CROSS-PAGE CONTRACTS*)
 
-### 5.1 Endpoint Pengiriman Komitmen Pagi
-`POST /api/v1/today/morning-commitment`
+| Halaman Terkait | Sifat Keterhubungan (*Contractual Relationship*) |
+| :--- | :--- |
+| **Halaman 01 (Login)** | Menerima identitas pengguna aktif dan status hak akses (`isExempt`). |
+| **Halaman 03 (Additional Work)** | Menyediakan baseline komitmen yang ditampilkan secara *read-only* di Panel 2 Halaman 03. |
+| **Halaman 04 (EOD Outcome)** | Komitmen pagi menjadi input evaluasi capaian tugas pada Panel 2 Halaman 04. |
+| **Halaman 05 (Raise Blocker)** | Tombol darurat merah di kanan atas mengarahkan ke formulir pelaporan blocker; tiket aktif menjadi sumber dropdown picker. |
+| **Halaman 06 (My History)** | Komitmen yang dikirimkan tercatat permanen pada arsip riwayat harian dan ringkasan mingguan. |
+| **Halaman 16a (Morning Correction)** | Menjadi rute permohonan koreksi resmi jika terdapat kekeliruan data pasca formulir dikunci. |
 
-#### Payload Request (JSON):
+---
+
+## 6. KONTRAK DATA & SPESIFIKASI INTEGRASI API (FRONTEND-BACKEND)
+
+### 6.1 Endpoint Pengiriman Komitmen Pagi
+- **Rute:** `POST /api/v1/today/morning-commitment`
+- **Request Payload (JSON):**
 ```json
 {
   "workDate": "2026-10-14",
   "isZeroCommitment": false,
   "zeroCommitmentReason": null,
   "zeroCommitmentDetail": null,
-  "lateReason": "Kendala jaringan ISP kantor cabang padam pk 08:30-09:40",
-  "clientSubmittedAt": "2026-10-14T09:45:12+07:00",
+  "lateReason": null,
+  "clientSubmittedAt": "2026-10-14T08:52:10+07:00",
   "commitments": [
     {
       "slotNumber": 1,
-      "deliverable": "Implementasi integrasi endpoint user profile dan validasi sesi",
+      "deliverable": "Penyelesaian modul otentikasi token JWT dan session recovery",
       "initialRisk": "GREEN",
-      "referenceLink": "https://jira.dutamedia.com/browse/DP-104",
+      "referenceLink": "https://jira.dutamedia.com/browse/DP-101",
       "linkedBlockerCode": null,
       "riskReason": null,
       "supportNeeded": null,
@@ -162,19 +152,18 @@ Seluruh header panel utama memiliki spesifikasi tipografi yang identik:
     },
     {
       "slotNumber": 2,
-      "deliverable": "Penyelesaian investigasi memory leak service otentikasi",
+      "deliverable": "Investigasi query report performa transaksi",
       "initialRisk": "AMBER",
-      "referenceLink": "[#BLK-011] Staging server staging-db02 tidak dapat diakses",
+      "referenceLink": "[#BLK-011] Staging server lambat merespons",
       "linkedBlockerCode": "BLK-011",
-      "riskReason": "Memerlukan akses shell staging yang saat ini masih terkendala",
-      "supportNeeded": "Koordinasi dengan DevOps untuk restart pod",
-      "carryOverDraftId": "draft-item-2"
+      "riskReason": "Akses staging terbatas akibat maintenance jaringan internal",
+      "supportNeeded": "Bantuan tim DevOps untuk koordinasi akses",
+      "carryOverDraftId": "draft-2"
     }
   ]
 }
 ```
-
-#### Respons Sukses Server (HTTP 201 Created):
+- **Response Success (HTTP 201 Created):**
 ```json
 {
   "success": true,
@@ -191,6 +180,6 @@ Seluruh header panel utama memiliki spesifikasi tipografi yang identik:
 
 ---
 
-## 6. STATUS KESIAPAN PROTOTIPE
+## 7. STATUS KESIAPAN & PANDUAN IMPLEMENTASI
 
-Dokumen ini adalah **acuan resmi tunggal (*single source of truth*)** untuk implementasi modul Morning Commitment. Seluruh spesifikasi pada berkas [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html) telah teruji secara visual dan fungsional di lingkungan peramban modern, bebas error, serta siap diintegrasikan dengan modul backend.
+Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Morning Commitment. Seluruh spesifikasi pada berkas [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html) telah teruji secara visual dan fungsional di lingkungan browser modern, bebas error, dan siap diimplementasikan secara terpadu ke frontend dan backend.
