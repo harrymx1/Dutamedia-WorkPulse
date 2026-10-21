@@ -1131,14 +1131,14 @@
                   <span class="pill neutral" id="pushChannelBadge">Memeriksa…</span>
                 </div>
 
-                <!-- Governance Warning Notice -->
+                <!-- Governance & Privacy Notice -->
                 <div class="notice neutral" style="margin-top:14px">
                   <svg class="notice-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
-                  <div>Menandai <em>Sudah Dibaca</em> di web ini hanya berarti Anda telah melihatnya di sini, bukan jaminan bahwa pesan tersebut sudah terkirim atau terbaca di email/perangkat lain.</div>
+                  <div>Setiap saluran berjalan independen demi menjaga privasi dan keamanan Anda. Namun, jika Anda membuka tautan notifikasi langsung dari email kantor, sistem akan otomatis menandai pesan terkait sebagai <em>Sudah Dibaca</em> di web ini.</div>
                 </div>
               </div>
             </section>
@@ -1934,6 +1934,22 @@
       // Inisialisasi Halaman
       syncActiveUser();
       setPushUI();
+
+      // Smart Email Auto-Read Link Handler (?read=ID atau ?notif=ID)
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoReadId = urlParams.get('read') || urlParams.get('notif');
+        if (autoReadId) {
+          const target = notifications.find(n => n.id === autoReadId);
+          if (target && target.unread) {
+            target.unread = false;
+            showToast(`Notifikasi "${target.title}" otomatis ditandai sudah dibaca dari tautan email.`, 'success');
+          }
+        }
+      } catch (err) {
+        console.warn('Gagal memproses parameter auto-read:', err);
+      }
+
       render();
     })();
   </script>

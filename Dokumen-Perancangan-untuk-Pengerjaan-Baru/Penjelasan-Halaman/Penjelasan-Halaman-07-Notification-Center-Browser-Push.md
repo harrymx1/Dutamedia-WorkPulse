@@ -105,12 +105,13 @@ Sistem secara otomatis mengevaluasi ketersediaan dan status izin Web Notificatio
    - Indikator: Badge merah `Diblokir`.
    - Perilaku: Tombol berubah menjadi `Lihat Panduan Browser`, notice peringatan amber memandu langkah pengguna membuka izin pada pengaturan URL browser.
 
-### 3.2 Saluran Pengiriman Resmi (Transparansi Tata Kelola)
+### 3.2 Saluran Pengiriman Resmi & Integrasi Tautan Pintar Email (*Smart Email Link*)
 Menyajikan status 3 saluran pengiriman:
 - **Pusat Notifikasi Web:** `Selalu Aktif (Utama)` (in-app, seluruh arsip resmi tersimpan rapi).
 - **Email Kantor:** `Aktif Otomatis` (pengingat batas waktu dan kabar penting pimpinan).
 - **Notifikasi Layar Komputer:** Mengikuti status izin perangkat aktif (pengiriman langsung di layar laptop).
 - **Prinsip Read $\ne$ Delivery:** Menandai "Sudah Dibaca" di web murni penandaan di layar pengguna, bukan konfirmasi mutlak bahwa email atau pesan push telah sampai/dibaca di perangkat fisik pihak ketiga.
+- **Tautan Otomatis Baca (*Smart Auto-Read Link*):** Untuk mencegah beban "kerja dua kali" (*double work*), setiap tautan pada badan email kantor membawa parameter rujukan (contoh `?read={notifId}`). Ketika pengguna membuka tautan dari email, sistem otomatis menandai notifikasi tersebut sebagai "Sudah Dibaca" di web tanpa perlu mengeklik tombol centang manual.
 
 ### 3.3 Deep-Link Context Resolver & Modal Rincian
 Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#detailModal`). Modal ini:
@@ -154,6 +155,7 @@ Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#d
 | **TC-10** | Aksi Kontrol Browser Push | Klik tombol [Aktifkan Browser Push] / [Kirim Notifikasi Uji] | Jika belum aktif, sistem memicu `Notification.requestPermission()`. Jika izin sudah aktif, sistem memicu pengiriman notifikasi uji riil ke peramban dan menampilkan toast konfirmasi sukses. |
 | **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Saluran Notifikasi. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
 | **TC-12** | Pintasan Klik Metrik Browser Push | Klik kartu metrik ke-3 'Browser Push' | Sistem otomatis mengalihkan tampilan aktif ke Tab 'Pengaturan Kanal & Perangkat'. |
+| **TC-13** | Auto-Read via Tautan Email | Buka halaman dengan query `?read=notif-001` | Notifikasi dengan ID terkait otomatis ditandai sudah dibaca saat halaman dimuat, counter unread berkurang 1, dan toast hijau konfirmasi sukses muncul. |
 
 ---
 
@@ -184,6 +186,7 @@ export interface NotificationItemDto {
   description: string;
   contextRoute: string; // Tautan tujuan deep-link
   contextLabel: string; // Misal: "Raise Instant Blocker · #BLK-2026-0042"
+  actionLabel: string;  // Misal: "Buka Tiket Kendala"
   createdAt: string;    // ISO 8601 DateTime
   isRead: boolean;
   priorityTone: 'red' | 'amber' | 'blue' | 'green' | 'neutral';
@@ -206,9 +209,10 @@ export interface NotificationCenterFeedResponseDto {
 2. `PUT /api/v1/notifications/{id}/read` — Mengubah status penandaan dibaca/belum per notifikasi.
 3. `POST /api/v1/notifications/mark-all-read` — Menandai seluruh notifikasi pengguna sebagai sudah dibaca.
 4. `POST /api/v1/notifications/push/subscribe` — Mendaftarkan endpoint `PushSubscription` peramban ke database backend untuk pengiriman notifikasi Web Push nyata.
+5. **Log Audit Pengiriman (*Delivery Audit Trail*):** Backend mencatat tabel log pengiriman email (`notification_delivery_logs`: `notificationId`, `recipientEmail`, `channel`, `sentAt`, `deliveryStatus`: `DELIVERED` / `BOUNCED` / `FAILED`) sebagai bukti resmi pengiriman notifikasi untuk mencegah dalih komunikasi.
 
 ---
 
 ## 7. STATUS KESIAPAN & PANDUAN IMPLEMENTASI
 
-Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Web Notification Center & Browser Push. Seluruh komponen pada prototipe [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html) telah teruji secara visual dan fungsional di peramban (0 console error, 100% lulus uji 10 Test Cases, responsif di desktop/tablet/mobile), bebas error, serta siap diintegrasikan secara terpadu ke kode frontend dan backend.
+Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Web Notification Center & Browser Push. Seluruh komponen pada prototipe [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html) telah teruji secara visual dan fungsional di peramban (0 console error, 100% lulus uji 13 Test Cases, responsif di desktop/tablet/mobile), bebas error, serta siap diintegrasikan secara terpadu ke kode frontend dan backend.
