@@ -1921,7 +1921,7 @@
   if (breadcrumbRoot) {
     breadcrumbRoot.addEventListener('click', (e) => {
       e.preventDefault();
-      switchScope('team');
+      if ($('tabTeam')) { $('tabTeam').click(); } else { renderScope('team'); }
       showToast('Memuat ulang tampilan Pulse Dashboard (Team Pulse)...');
     });
   }
