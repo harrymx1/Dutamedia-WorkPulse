@@ -10,51 +10,52 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --canvas: #F7FAF9;
-      --surface: #FFFFFF;
-      --subtle: #EFF5F2;
-      --muted: #F1F5F4;
-      --border: #DCE7E2;
-      --border-strong: #A9C7BC;
-      --ink: #0E211B;
-      --secondary: #5C6E68;
-      --brand: #00674D;
-      --brand-tint: #E6F4EE;
-      --brand-hover: #00543F;
-      --focus: #0B8061;
-      
-      --blue-bg: #E0F2FE;
-      --blue-fg: #075985;
-      --blue-border: #BAE6FD;
-      
-      --amber-bg: #FFFDF0;
-      --amber-tint: #FEF3C7;
-      --amber-fg: #92400E;
-      --amber-border: #FDE68A;
-      
-      --green-bg: #E6F4EC;
-      --green-fg: #145A36;
-      --green-border: #A7D5B8;
-      
-      --red-bg: #FFF8F8;
-      --red-tint: #FEE2E2;
-      --red-fg: #991B1B;
-      --red-border: #FECDCA;
-      
-      --neutral-bg: #F8FAF9;
-      --neutral-fg: #46534E;
-      --neutral-border: #DCE7E2;
-      
-      --shadow: 0 4px 16px rgba(14, 33, 27, 0.04);
-      --shadow-md: 0 8px 24px rgba(14, 33, 27, 0.07);
-      --shadow-lg: 0 16px 40px rgba(14, 33, 27, 0.12);
+      /* Palette Tokens Standar Baku WorkPulse (Identik Halaman 01-07) */
+      --color-brand-primary: #00674D;
+      --color-brand-tint: #E6F4EE;
+      --color-brand-focus: #0B8061;
+      --color-canvas: #F7FAF9;
+      --color-surface: #FFFFFF;
+      --color-surface-subtle: #EFF5F2;
+      --color-border-subtle: #DCE7E2;
+      --color-border-strong: #A9C7BC;
+      --color-text-primary: #0E211B;
+      --color-text-secondary: #5C6E68;
+
+      --color-status-green-bg: #E6F4EC;
+      --color-status-green-fg: #145A36;
+      --color-status-green-border: #A7D5B8;
+
+      --color-status-amber-bg: #FFF3D9;
+      --color-status-amber-fg: #7A4B00;
+      --color-status-amber-border: #E8C77A;
+
+      --color-status-red-bg: #FFF8F8;
+      --color-status-red-fg: #991B1B;
+      --color-status-red-border: #FECDCA;
+
+      --color-status-blue-bg: #E0F2FE;
+      --color-status-blue-fg: #075985;
+      --color-status-blue-border: #BAE6FD;
+
+      --color-status-neutral-bg: #F8FAF9;
+      --color-status-neutral-fg: #46534E;
+      --color-status-neutral-border: #DCE7E2;
+
+      --radius-sm: 8px;
+      --radius-md: 10px;
+      --radius-card: 12px;
+      --radius-full: 999px;
+
+      --shadow-card: 0 4px 16px rgba(14, 33, 27, 0.04);
+      --shadow-modal: 0 16px 40px rgba(14, 33, 27, 0.12);
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: var(--canvas);
-      color: var(--ink);
+      background: var(--color-canvas);
+      color: var(--color-text-primary);
       font: 14.5px/1.55 "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
@@ -62,25 +63,27 @@
 
     button { font: inherit; cursor: pointer; }
     button:focus-visible, a:focus-visible, select:focus-visible {
-      outline: 3px solid var(--focus);
+      outline: 3px solid var(--color-brand-focus);
       outline-offset: 2px;
     }
 
-    /* Layout Shell */
+    /* Layout Shell 2-Kolom (Identik Halaman 02-07) */
     .app {
       min-height: 100vh;
       display: grid;
       grid-template-columns: 254px minmax(0, 1fr);
     }
 
-    /* Sidebar Standard WorkPulse */
+    /* ==============================================================
+       SIDEBAR STANDAR WORKPULSE (IDENTIK PERSIS HALAMAN 1-7)
+       ============================================================== */
     .sidebar {
-      background: #FFFFFF;
-      border-right: 1px solid var(--border);
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border-subtle);
       padding: 24px 16px 18px;
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 24px;
       min-height: 100vh;
       box-sizing: border-box;
       position: sticky;
@@ -93,13 +96,12 @@
       align-items: center;
       gap: 10px;
       padding: 0 8px;
-      margin-bottom: 26px;
     }
     .brand-mark {
       height: 38px;
       width: 38px;
       border-radius: 10px;
-      background: var(--brand);
+      background: var(--color-brand-primary);
       display: grid;
       place-items: center;
       color: #fff;
@@ -107,57 +109,82 @@
       font-size: 20px;
       box-shadow: 0 4px 12px rgba(0, 103, 77, 0.2);
     }
-    .brand-name { font-size: 17.5px; font-weight: 800; letter-spacing: -0.4px; color: var(--ink); }
-    .brand-caption { font-size: 11px; color: var(--secondary); margin-top: -2px; }
+    .brand-name {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: var(--color-text-primary);
+    }
+    .brand-caption {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      margin-top: -2px;
+    }
 
-    .nav-groups { display: grid; gap: 24px; }
-    .nav-section { display: grid; gap: 4px; }
+    .nav-group { display: grid; gap: 4px; }
     .nav-label {
       padding: 0 12px;
-      margin-bottom: 6px;
-      font-size: 10.5px;
+      font-size: 11px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--secondary);
-      font-weight: 800;
+      color: var(--color-text-secondary);
+      font-weight: 750;
+      margin-bottom: 4px;
     }
-    .nav { display: grid; gap: 3px; }
-    .nav a {
+    .nav-link {
       display: flex;
       gap: 12px;
       align-items: center;
       padding: 10px 12px;
-      border-radius: 8px;
-      color: var(--secondary);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
       font-weight: 600;
+      font-size: 14px;
       text-decoration: none;
-      font-size: 13.5px;
-      transition: all 0.15s ease;
+      transition: background 0.15s, color 0.15s;
     }
-    .nav a:hover {
-      background: var(--subtle);
-      color: var(--brand);
+    .nav-link:hover {
+      background: var(--color-surface-subtle);
+      color: var(--color-text-primary);
+      text-decoration: none;
     }
-    .nav a.active {
-      background: var(--brand-tint);
-      color: var(--brand);
+    .nav-link.active {
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
       font-weight: 750;
     }
     .nav-icon {
       width: 18px;
       height: 18px;
-      display: grid;
-      place-items: center;
       flex-shrink: 0;
+      stroke: currentColor;
     }
 
     .side-bottom {
       margin-top: auto;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--color-border-subtle);
       padding: 16px 8px 0;
       display: flex;
       gap: 10px;
       align-items: center;
+    }
+    .user-profile-link {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+      flex: 1;
+      text-decoration: none;
+      color: inherit;
+      padding: 6px;
+      margin: -6px;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s;
+    }
+    .user-profile-link:hover {
+      background: var(--color-surface-subtle);
+      text-decoration: none;
     }
     .avatar {
       width: 36px;
@@ -166,66 +193,138 @@
       place-items: center;
       border-radius: 50%;
       background: #D8EAE2;
-      color: #1B5B46;
+      color: var(--color-brand-primary);
       font-weight: 800;
-      font-size: 12.5px;
+      font-size: 13px;
       flex-shrink: 0;
-      border: 1.5px solid #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
     .user-meta { min-width: 0; flex: 1; }
-    .user-name { font-size: 13px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-role { font-size: 11.5px; color: var(--secondary); }
-    .user-scope { font-size: 10.5px; line-height: 1.4; color: var(--secondary); margin-top: 2px; }
+    .user-name {
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--color-text-primary);
+    }
+    .user-role {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logout-btn {
+      background: transparent;
+      border: 0;
+      color: var(--color-text-secondary);
+      padding: 6px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: var(--color-surface-subtle);
+      color: #DC2626;
+    }
 
-    /* Topbar */
+    /* Mobile Backdrop & Drawer Controls */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 99;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.show { display: block; }
+    .mobile-close-sidebar-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    /* ==============================================================
+       TOPBAR STANDAR WORKPULSE (IDENTIK PERSIS HALAMAN 1-7)
+       ============================================================== */
+    main { min-width: 0; display: flex; flex-direction: column; }
     .topbar {
       height: 64px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid var(--color-border-subtle);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 clamp(18px, 3vw, 40px);
-      gap: 14px;
+      padding: 0 clamp(16px, 3vw, 36px);
       position: sticky;
       top: 0;
       z-index: 15;
     }
-    .breadcrumb { font-size: 13px; color: var(--secondary); display: flex; align-items: center; gap: 8px; }
-    .breadcrumb strong { color: var(--ink); font-weight: 700; }
-    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .breadcrumb {
+      font-size: 13.5px;
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .breadcrumb strong { color: var(--color-text-primary); font-weight: 750; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
     .icon-button {
       height: 38px;
       width: 38px;
       display: grid;
       place-items: center;
-      border: 1px solid var(--border);
-      background: #FFFFFF;
-      border-radius: 8px;
-      color: var(--secondary);
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
       position: relative;
-      transition: all 0.15s ease;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
     }
-    .icon-button:hover { background: var(--subtle); color: var(--brand); border-color: var(--border-strong); }
-    .dot {
+    .icon-button:hover {
+      background: var(--color-surface-subtle);
+      color: var(--color-text-primary);
+    }
+    .badge-dot {
       position: absolute;
-      right: 7px;
       top: 7px;
+      right: 7px;
       width: 7px;
       height: 7px;
       background: #E11D48;
-      border: 1.5px solid #FFFFFF;
+      border: 1.5px solid #fff;
       border-radius: 50%;
     }
-    .mobile-menu { display: none; }
+    .mobile-hamburger-btn {
+      display: none;
+      background: transparent;
+      border: 0;
+      padding: 8px;
+      margin: -8px 8px -8px -8px;
+      color: var(--color-text-primary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
 
     /* Content Area */
     .content {
       max-width: 1180px;
       margin: 0 auto;
-      padding: 28px clamp(16px, 3vw, 36px) 56px;
+      width: 100%;
+      padding: 28px clamp(16px, 3vw, 36px) 64px;
     }
 
     /* Page Heading */
@@ -239,7 +338,7 @@
     }
     .eyebrow {
       font-size: 11px;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -253,11 +352,11 @@
       letter-spacing: -0.6px;
       margin: 4px 0 6px;
       font-weight: 800;
-      color: var(--ink);
+      color: var(--color-text-primary);
     }
     .subtitle {
-      color: var(--secondary);
-      max-width: 700px;
+      color: var(--color-text-secondary);
+      max-width: 720px;
       font-size: 13.5px;
       margin: 0;
       line-height: 1.5;
@@ -276,12 +375,12 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-card);
       padding: 10px 14px;
       margin-bottom: 18px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-card);
       flex-wrap: wrap;
     }
     .scope-tabs {
@@ -294,32 +393,35 @@
       align-items: center;
       gap: 7px;
       padding: 8px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       border: 1px solid transparent;
       background: transparent;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 750;
       transition: all 0.15s ease;
     }
-    .scope-tab:hover { background: var(--subtle); color: var(--ink); }
+    .scope-tab:hover {
+      background: var(--color-surface-subtle);
+      color: var(--color-text-primary);
+    }
     .scope-tab.active {
-      background: var(--brand-tint);
-      color: var(--brand);
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
       border-color: #B7DCCB;
     }
     .scope-badge {
       font-size: 10px;
       padding: 2px 6px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       background: #FFFFFF;
-      border: 1px solid var(--border-strong);
+      border: 1px solid var(--color-border-strong);
       font-weight: 700;
     }
     .scope-tab.active .scope-badge {
-      background: var(--brand);
+      background: var(--color-brand-primary);
       color: #fff;
-      border-color: var(--brand);
+      border-color: var(--color-brand-primary);
     }
     .filter-tools {
       display: flex;
@@ -330,30 +432,30 @@
     .filter-select {
       height: 38px;
       padding: 0 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-sm);
       background: #FFFFFF;
-      color: var(--ink);
+      color: var(--color-text-primary);
       font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
     }
-    .filter-select:hover { border-color: var(--border-strong); }
+    .filter-select:hover { border-color: var(--color-border-strong); }
 
     /* Scope Banner */
     .scope-banner {
       padding: 12px 16px;
-      background: var(--subtle);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: var(--color-surface-subtle);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
       font-size: 12.5px;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       margin-bottom: 22px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .scope-banner strong { color: var(--ink); }
+    .scope-banner strong { color: var(--color-text-primary); }
 
     /* 4 Emergency Metric Cards (Exception-First) */
     .metrics-four {
@@ -363,11 +465,11 @@
       margin-bottom: 24px;
     }
     .metric-card {
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-card);
       padding: 16px 18px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-card);
       display: flex;
       flex-direction: column;
       position: relative;
@@ -375,15 +477,15 @@
     }
     .metric-card:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 8px 24px rgba(14, 33, 27, 0.07);
     }
     .metric-card.alert {
-      background: var(--red-bg);
-      border-color: var(--red-border);
+      background: var(--color-status-red-bg);
+      border-color: var(--color-status-red-border);
     }
     .metric-card.caution {
-      background: var(--amber-bg);
-      border-color: var(--amber-border);
+      background: var(--color-status-amber-bg);
+      border-color: var(--color-status-amber-border);
     }
     .metric-header {
       display: flex;
@@ -394,12 +496,12 @@
     }
     .metric-label {
       font-size: 12px;
-      color: var(--secondary);
-      font-weight: 700;
+      color: var(--color-text-secondary);
+      font-weight: 750;
     }
     .metric-card.alert .metric-label { color: #7F1D1D; }
     .metric-card.caution .metric-label { color: #78350F; }
-    
+
     .metric-val {
       font-size: 28px;
       font-weight: 850;
@@ -407,14 +509,14 @@
       line-height: 1.1;
       margin: 4px 0 2px;
       font-variant-numeric: tabular-nums;
-      color: var(--ink);
+      color: var(--color-text-primary);
     }
-    .metric-card.alert .metric-val { color: var(--red-fg); }
-    .metric-card.caution .metric-val { color: var(--amber-fg); }
-    
+    .metric-card.alert .metric-val { color: var(--color-status-red-fg); }
+    .metric-card.caution .metric-val { color: var(--color-status-amber-fg); }
+
     .metric-note {
       font-size: 11.5px;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       display: flex;
       align-items: center;
       gap: 5px;
@@ -426,7 +528,7 @@
       gap: 4px;
       font-size: 10px;
       padding: 2px 6px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       background: #FEE2E2;
       color: #991B1B;
       font-weight: 800;
@@ -444,10 +546,10 @@
 
     /* Panel Component */
     .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
       overflow: hidden;
     }
     .panel-head {
@@ -456,26 +558,26 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 14px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--color-border-subtle);
       background: #FFFFFF;
     }
     .panel-title {
       font-size: 15.5px;
       font-weight: 800;
       margin: 0;
-      color: var(--ink);
+      color: var(--color-text-primary);
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .panel-sub { font-size: 12px; color: var(--secondary); margin-top: 2px; }
+    .panel-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
     .panel-body { padding: 18px 20px; }
     .panel-note {
       padding: 11px 20px;
       background: #FAFCFB;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--color-border-subtle);
       font-size: 12px;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       line-height: 1.45;
     }
 
@@ -485,18 +587,18 @@
       align-items: center;
       gap: 6px;
       padding: 4px 9px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border-subtle);
       background: #fff;
       font-size: 11.5px;
-      font-weight: 700;
+      font-weight: 750;
       white-space: nowrap;
     }
-    .pill.green { background: var(--green-bg); color: var(--green-fg); border-color: var(--green-border); }
-    .pill.amber { background: var(--amber-bg); color: var(--amber-fg); border-color: var(--amber-border); }
-    .pill.red { background: var(--red-bg); color: var(--red-fg); border-color: var(--red-border); }
-    .pill.blue { background: var(--blue-bg); color: var(--blue-fg); border-color: var(--blue-border); }
-    .pill.neutral { background: var(--neutral-bg); color: var(--neutral-fg); border-color: var(--neutral-border); }
+    .pill.green { background: var(--color-status-green-bg); color: var(--color-status-green-fg); border-color: var(--color-status-green-border); }
+    .pill.amber { background: var(--color-status-amber-bg); color: var(--color-status-amber-fg); border-color: var(--color-status-amber-border); }
+    .pill.red { background: var(--color-status-red-bg); color: var(--color-status-red-fg); border-color: var(--color-status-red-border); }
+    .pill.blue { background: var(--color-status-blue-bg); color: var(--color-status-blue-fg); border-color: var(--color-status-blue-border); }
+    .pill.neutral { background: var(--color-status-neutral-bg); color: var(--color-status-neutral-fg); border-color: var(--color-status-neutral-border); }
 
     /* Action Links & Buttons */
     .btn {
@@ -507,20 +609,20 @@
       min-height: 38px;
       padding: 8px 14px;
       border: 1px solid transparent;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-weight: 700;
       font-size: 12.5px;
       text-decoration: none;
       transition: all 0.15s ease;
     }
-    .btn-primary { background: var(--brand); color: #fff; }
-    .btn-primary:hover { background: var(--brand-hover); }
-    .btn-secondary { background: #FFFFFF; color: var(--ink); border-color: var(--border-strong); }
-    .btn-secondary:hover { background: var(--subtle); border-color: var(--brand); }
+    .btn-primary { background: var(--color-brand-primary); color: #fff; }
+    .btn-primary:hover { background: #00543F; }
+    .btn-secondary { background: #FFFFFF; color: var(--color-text-primary); border-color: var(--color-border-strong); }
+    .btn-secondary:hover { background: var(--color-surface-subtle); border-color: var(--color-brand-primary); }
     .btn-sm { min-height: 30px; padding: 4px 10px; font-size: 11.5px; border-radius: 6px; }
     .link-action {
       font-size: 12.5px;
-      color: var(--brand);
+      color: var(--color-brand-primary);
       font-weight: 750;
       text-decoration: none;
       display: inline-flex;
@@ -560,10 +662,10 @@
       gap: 8px;
       flex-wrap: wrap;
     }
-    .exception-name { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+    .exception-name { font-size: 13.5px; font-weight: 800; color: var(--color-text-primary); }
     .exception-desc {
       font-size: 12px;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       margin-top: 2px;
       line-height: 1.4;
       white-space: nowrap;
@@ -577,7 +679,7 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       font-weight: 800;
       margin-bottom: 6px;
     }
@@ -593,7 +695,7 @@
     }
     .data-table th {
       font-size: 10.5px;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       font-weight: 750;
@@ -624,9 +726,9 @@
       min-width: 0;
     }
     .owner-name { font-size: 13px; font-weight: 800; }
-    .owner-role { font-size: 11.5px; color: var(--secondary); }
+    .owner-role { font-size: 11.5px; color: var(--color-text-secondary); }
     .owner-stat { text-align: right; }
-    .owner-count { font-size: 13.5px; font-weight: 850; color: var(--ink); }
+    .owner-count { font-size: 13.5px; font-weight: 850; color: var(--color-text-primary); }
 
     /* 5-Day Continuation Histogram */
     .trend-container { padding: 8px 0; }
@@ -646,7 +748,7 @@
       height: 100%;
       justify-content: flex-end;
     }
-    .trend-val { font-size: 12px; font-weight: 800; color: var(--ink); }
+    .trend-val { font-size: 12px; font-weight: 800; color: var(--color-text-primary); }
     .bar-wrap {
       width: 100%;
       max-width: 38px;
@@ -659,21 +761,21 @@
     }
     .bar-fill {
       width: 100%;
-      background: #00674D;
+      background: var(--color-brand-primary);
       border-radius: 5px 5px 0 0;
       transition: height 0.3s ease;
       min-height: 4px;
     }
     .bar-fill.warning { background: #D97706; }
-    .trend-day { font-size: 11px; color: var(--secondary); font-weight: 700; }
+    .trend-day { font-size: 11px; color: var(--color-text-secondary); font-weight: 700; }
 
-    /* Cross-Project Support & Weekly Reliability */
+    /* Cross-Project Support */
     .support-list { display: grid; gap: 10px; }
     .support-card {
       padding: 11px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       background: #F8FAF9;
-      border: 1px solid var(--border);
+      border: 1px solid var(--color-border-subtle);
       font-size: 12px;
     }
     .support-head {
@@ -683,7 +785,7 @@
       gap: 8px;
       margin-bottom: 4px;
     }
-    .support-head strong { color: var(--ink); font-size: 12.5px; }
+    .support-head strong { color: var(--color-text-primary); font-size: 12.5px; }
 
     /* Review Queue Mini Box */
     .review-queue-box { display: grid; gap: 8px; }
@@ -692,9 +794,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 10px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       background: #FFFFFF;
-      border: 1px solid var(--border);
+      border: 1px solid var(--color-border-subtle);
       font-size: 12.5px;
     }
 
@@ -716,15 +818,15 @@
       max-height: 90vh;
       background: #FFFFFF;
       border-radius: 14px;
-      box-shadow: var(--shadow-lg);
+      box-shadow: var(--shadow-modal);
       overflow-y: auto;
-      border: 1px solid var(--border);
+      border: 1px solid var(--color-border-subtle);
       display: flex;
       flex-direction: column;
     }
     .modal-header {
       padding: 18px 22px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--color-border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -737,7 +839,7 @@
     .modal-body { padding: 20px 22px; font-size: 13px; }
     .modal-footer {
       padding: 14px 22px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--color-border-subtle);
       display: flex;
       justify-content: flex-end;
       gap: 8px;
@@ -745,8 +847,8 @@
     }
     .detail-card {
       background: #F8FAF9;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-sm);
       padding: 12px 14px;
       margin-bottom: 12px;
     }
@@ -754,7 +856,7 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--secondary);
+      color: var(--color-text-secondary);
       font-weight: 800;
       margin-bottom: 5px;
     }
@@ -770,7 +872,7 @@
       padding: 12px 18px;
       background: #103C2E;
       color: #fff;
-      border-radius: 10px;
+      border-radius: var(--radius-md);
       box-shadow: 0 12px 30px rgba(0,0,0,0.2);
       font-size: 13.5px;
       font-weight: 600;
@@ -779,25 +881,36 @@
     .toast.show { display: block; animation: slideUp 0.2s ease; }
     @keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    /* Responsive Breakpoints */
+    /* Responsive Breakpoints (Identik Halaman 02-07) */
     @media (max-width: 1024px) {
       .app { grid-template-columns: 220px minmax(0, 1fr); }
       .metrics-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .dashboard-grid { grid-template-columns: 1fr; }
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 900px) {
       .app { display: block; }
       .sidebar {
-        display: none;
         position: fixed;
-        inset: 0 auto 0 0;
-        width: 270px;
-        box-shadow: var(--shadow-lg);
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 260px;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 0 24px rgba(0,0,0,0.15);
       }
-      .sidebar.open { display: flex; }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .mobile-close-sidebar-btn {
+        display: inline-flex;
+      }
+      .mobile-hamburger-btn {
+        display: inline-flex;
+      }
       .topbar { padding: 0 16px; height: 58px; }
-      .mobile-menu { display: grid; }
       .content { padding: 18px 14px 44px; }
       .page-heading { margin-bottom: 16px; }
       h1 { font-size: 23px; }
@@ -815,116 +928,119 @@
 <body>
 
 <div class="app">
-  <!-- SIDEBAR STANDAR WORKPULSE -->
-  <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+  <!-- Backdrop Drawer Mobile (Identik Halaman 02-07) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- ==============================================================
+       SIDEBAR NAVIGATION (RESMI MY TODAY - BEBAS EMOTICON - 100% IDENTIK)
+       ============================================================== -->
+  <aside class="sidebar" id="main-sidebar">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">W</div>
+      <div class="brand-mark">W</div>
       <div>
         <div class="brand-name">WorkPulse</div>
-        <div class="brand-caption">Daily Accountability</div>
+        <div class="brand-caption">PT Dutamedia</div>
       </div>
-    </div>
-
-    <div class="nav-groups">
-      <div class="nav-section">
-        <div class="nav-label">Workspace</div>
-        <nav class="nav" aria-label="Workspace">
-          <a href="02-Morning-Commitment.html" data-nav="today">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            </span>
-            <span>My Today</span>
-          </a>
-          <a href="06-My-History-Weekly-Summary.html" data-nav="history">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            </span>
-            <span>My History</span>
-          </a>
-          <a href="20-My Leave Request (Employee).html" data-nav="leave">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            </span>
-            <span>My Leave Request</span>
-          </a>
-          <a href="07-Notification-Center-Browser-Push.html" data-nav="notifications">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-            </span>
-            <span>Notifications</span>
-          </a>
-          <a href="24-Profile-Settings.html" data-nav="profile">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            </span>
-            <span>Profile</span>
-          </a>
-        </nav>
-      </div>
-
-      <div class="nav-section">
-        <div class="nav-label">Management</div>
-        <nav class="nav" aria-label="Management">
-          <a class="active" href="08-Pulse-Dashboard.html" data-nav="pulse-dashboard" aria-current="page">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            </span>
-            <span>Pulse Dashboard</span>
-          </a>
-          <a href="09-Blocker-Escalation-Queue.html" data-nav="blockers">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-            </span>
-            <span>Blocker Queue</span>
-          </a>
-          <a href="10-Manager-Note-Coaching-Record.html" data-nav="coaching">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            </span>
-            <span>Coaching Notes</span>
-          </a>
-          <a href="22-Correction-and-Leave-Review.html" data-nav="reviews">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-            </span>
-            <span>Review Queue</span>
-          </a>
-        </nav>
-      </div>
-    </div>
-
-    <div class="side-bottom">
-      <div class="avatar" id="sideAvatar">AD</div>
-      <div class="user-meta">
-        <div class="user-name" id="sideUserName">Andi Pratama</div>
-        <div class="user-role" id="sideUserRole">Supervisor / TL</div>
-        <div class="user-scope" id="sideUserScope">Tim Engineering</div>
-      </div>
-      <button class="icon-button" style="width:32px;height:32px;border:0" type="button" aria-label="Ganti akun simulasi" id="switchAccountBtn" title="Ganti akun">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+      <button class="mobile-close-sidebar-btn" type="button" id="btn-close-sidebar" aria-label="Tutup navigasi">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
+    </div>
+
+    <!-- Workspace Menu (Self-Service) -->
+    <div class="nav-group">
+      <div class="nav-label">Workspace</div>
+      <a class="nav-link" href="02-Morning-Commitment.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>My Today</span>
+      </a>
+      <a class="nav-link" href="05-Raise-Instant-Blocker.html#my-blockers">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        <span>My Blockers</span>
+        <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">2</span>
+      </a>
+      <a class="nav-link" href="06-My-History-Weekly-Summary.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>My History</span>
+      </a>
+      <a class="nav-link" href="20-My Leave Request (Employee).html">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        <span>My Leave</span>
+      </a>
+      <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>Notifications</span>
+        <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">3</span>
+      </a>
+    </div>
+
+    <!-- Management Menu (Dynamic for Supervisor / Head / CEO) -->
+    <div class="nav-group" id="mgmt-nav-group">
+      <div class="nav-label">Management</div>
+      <a class="nav-link active" href="08-Pulse-Dashboard.html" id="link-pulse" aria-current="page">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Pulse Dashboard</span>
+      </a>
+      <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>Blocker Queue</span>
+      </a>
+      <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Coaching Notes</span>
+      </a>
+      <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="link-reviews">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <span>Review Queue</span>
+      </a>
+      <a class="nav-link" href="23-Reports.html" id="link-reports">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+        <span>Reports</span>
+      </a>
+    </div>
+
+    <!-- Account Bottom Area (Klik untuk ke Halaman Profil - Identik Halaman 1-7) -->
+    <div class="side-bottom">
+      <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
+        <div class="avatar" id="side-avatar">SA</div>
+        <div class="user-meta">
+          <div class="user-name" id="side-user-name">Siti Aminah</div>
+          <div class="user-role" id="side-user-role">Supervisor / Team Lead · Technology Squad A</div>
+        </div>
+      </a>
+      <a href="01-Login-Activation.html" class="logout-btn" title="Keluar / Ganti Akun" aria-label="Keluar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
     </div>
   </aside>
 
-  <!-- MAIN VIEWPORT -->
-  <main id="main">
+  <!-- ==============================================================
+       MAIN WORKSPACE AREA
+       ============================================================== -->
+  <main>
+    <!-- Topbar Header (Identik Halaman 1-7) -->
     <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="icon-button mobile-menu" id="mobileMenu" type="button" aria-label="Buka menu navigasi" aria-expanded="false">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="mobile-hamburger-btn" type="button" id="btn-open-sidebar" aria-label="Buka navigasi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
         <div class="breadcrumb">
           <span>Pulse Dashboard</span>
-          <span aria-hidden="true">/</span>
+          <span style="color:var(--color-text-secondary);margin:0 4px">/</span>
           <strong id="breadcrumbTitle">Team Pulse</strong>
         </div>
       </div>
+
       <div class="top-actions">
-        <button class="icon-button" id="topBell" type="button" aria-label="Buka notifikasi">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <span class="dot" aria-hidden="true"></span>
+        <!-- Shortcut Simulasi Ganti Akun (Header Ringkas) -->
+        <button class="btn btn-secondary btn-sm" id="btnSwitchAccount" type="button" style="height:32px;padding:2px 8px;font-size:11.5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+          Ganti Akun
         </button>
-        <div class="avatar" id="topAvatar">AD</div>
+        <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi" aria-label="Buka Notifikasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span class="badge-dot"></span>
+        </a>
+        <a href="24-Profile-Settings.html" class="avatar" id="topAvatar" style="text-decoration:none" title="Profil Saya">SA</a>
       </div>
     </header>
 
@@ -982,7 +1098,7 @@
       <!-- Scope Context Banner -->
       <div class="scope-banner" id="scopeBanner">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-        <span><strong>Lingkup Wewenang:</strong> Menampilkan data tim di bawah supervisi langsung Andi Pratama. Data bawahan terlindungi oleh prinsip <em>least-privilege access</em>.</span>
+        <span><strong>Lingkup Wewenang:</strong> Menampilkan data tim di bawah supervisi langsung Siti Aminah. Data bawahan terlindungi oleh prinsip <em>least-privilege access</em>.</span>
       </div>
 
       <!-- 4 EMERGENCY METRIC CARDS (EXCEPTION-FIRST) -->
@@ -1202,7 +1318,7 @@
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap">
                   <span class="pill amber">Sorotan: 2 Tugas Carry-Over &ge; 2 Hari Beruntun</span>
-                  <span style="font-size:11.5px;color:var(--secondary)">Sinyal evaluasi beban kerja</span>
+                  <span style="font-size:11.5px;color:var(--color-text-secondary)">Sinyal evaluasi beban kerja</span>
                 </div>
               </div>
             </div>
@@ -1224,15 +1340,15 @@
             </div>
             <div class="panel-body">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div style="background:#F8FAF9;border:1px solid var(--border);border-radius:8px;padding:12px">
-                  <div style="font-size:11px;color:var(--secondary);font-weight:700">Rasio Komitmen Tuntas</div>
-                  <div style="font-size:22px;font-weight:850;color:var(--brand);margin:4px 0" id="rateCommitment">89%</div>
-                  <div style="font-size:11px;color:var(--secondary)">Target tim: &ge; 85%</div>
+                <div style="background:#F8FAF9;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:12px">
+                  <div style="font-size:11px;color:var(--color-text-secondary);font-weight:700">Rasio Komitmen Tuntas</div>
+                  <div style="font-size:22px;font-weight:850;color:var(--color-brand-primary);margin:4px 0" id="rateCommitment">89%</div>
+                  <div style="font-size:11px;color:var(--color-text-secondary)">Target tim: &ge; 85%</div>
                 </div>
-                <div style="background:#F8FAF9;border:1px solid var(--border);border-radius:8px;padding:12px">
-                  <div style="font-size:11px;color:var(--secondary);font-weight:700">Respon Blocker Tepat Waktu</div>
+                <div style="background:#F8FAF9;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:12px">
+                  <div style="font-size:11px;color:var(--color-text-secondary);font-weight:700">Respon Blocker Tepat Waktu</div>
                   <div style="font-size:22px;font-weight:850;color:#0369A1;margin:4px 0" id="rateBlockerSla">94%</div>
-                  <div style="font-size:11px;color:var(--secondary)">Batas SLA &lt; 4 jam kerja</div>
+                  <div style="font-size:11px;color:var(--color-text-secondary)">Batas SLA &lt; 4 jam kerja</div>
                 </div>
               </div>
             </div>
@@ -1260,7 +1376,7 @@
                     <span class="pill blue">Koreksi</span>
                     <div>
                       <div style="font-weight:750">Morning Correction Request (Material)</div>
-                      <div style="font-size:11.5px;color:var(--secondary)">Dalam masa sanggah (Objection Window)</div>
+                      <div style="font-size:11.5px;color:var(--color-text-secondary)">Dalam masa sanggah (Objection Window)</div>
                     </div>
                   </div>
                   <span class="pill red">2 Baru</span>
@@ -1270,7 +1386,7 @@
                     <span class="pill amber">Cuti</span>
                     <div>
                       <div style="font-weight:750">Pengajuan Cuti Karyawan (Leave Request)</div>
-                      <div style="font-size:11.5px;color:var(--secondary)">Menunggu persetujuan Lead / HRGA</div>
+                      <div style="font-size:11.5px;color:var(--color-text-secondary)">Menunggu persetujuan Lead / HRGA</div>
                     </div>
                   </div>
                   <span class="pill amber">1 Menunggu</span>
@@ -1310,7 +1426,7 @@
         <div class="avatar" id="modalAvatar">RA</div>
         <div>
           <h2 id="modalMemberName">Raka Aditya</h2>
-          <div style="font-size:12px;color:var(--secondary)" id="modalMemberRole">Senior Backend Engineer · Tim Produk Digital</div>
+          <div style="font-size:12px;color:var(--color-text-secondary)" id="modalMemberRole">Senior Backend Engineer · Tim Produk Digital</div>
         </div>
       </div>
       <button class="icon-button" id="closeMemberModalBtn" type="button" aria-label="Tutup detail modal">
@@ -1336,7 +1452,7 @@
         <p style="margin:0 0 6px" id="modalEodNotes">
           Terdapat keterlambatan deliver akibat kegagalan deployment pada staging server. Dibutuhkan investigasi tim DevOps.
         </p>
-        <div style="font-size:11.5px;color:var(--secondary)">
+        <div style="font-size:11.5px;color:var(--color-text-secondary)">
           <strong>Continuation:</strong> <span class="pill amber">Continue</span> (Dilanjutkan besok pagi)
         </div>
       </div>
@@ -1369,36 +1485,36 @@
       </button>
     </div>
     <div class="modal-body">
-      <p style="margin:0 0 14px;color:var(--secondary);font-size:13px">
+      <p style="margin:0 0 14px;color:var(--color-text-secondary);font-size:13px">
         Pilih profil untuk menguji perubahan otomatis hak akses dan cakupan data pada Pulse Dashboard:
       </p>
       <div style="display:grid;gap:8px">
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="andi">
-          <div class="avatar" style="margin-right:10px">AD</div>
+        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="siti">
+          <div class="avatar" style="margin-right:10px">SA</div>
           <div>
-            <div style="font-weight:800">Andi Pratama</div>
-            <div style="font-size:11.5px;color:var(--secondary)">Supervisor / TL (Akses default: Team Pulse)</div>
+            <div style="font-weight:800">Siti Aminah</div>
+            <div style="font-size:11.5px;color:var(--color-text-secondary)">Supervisor / Team Lead (Akses default: Team Pulse)</div>
           </div>
         </button>
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="budi">
+        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="hendra">
+          <div class="avatar" style="margin-right:10px">HG</div>
+          <div>
+            <div style="font-weight:800">Hendra Gunawan</div>
+            <div style="font-size:11.5px;color:var(--color-text-secondary)">Head of Technology (Akses: Function Pulse)</div>
+          </div>
+        </button>
+        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="bambang_ceo">
           <div class="avatar" style="margin-right:10px">BS</div>
           <div>
-            <div style="font-weight:800">Budi Santoso</div>
-            <div style="font-size:11.5px;color:var(--secondary)">Head of Department (Akses: Function Pulse)</div>
+            <div style="font-weight:800">Ir. Bambang Soedirgo</div>
+            <div style="font-size:11.5px;color:var(--color-text-secondary)">Chief Executive Officer (Akses: Management Pulse)</div>
           </div>
         </button>
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="dewi">
-          <div class="avatar" style="margin-right:10px">DS</div>
-          <div>
-            <div style="font-weight:800">Dewi Sartika</div>
-            <div style="font-size:11.5px;color:var(--secondary)">CEO / Management (Akses: Management Pulse)</div>
-          </div>
-        </button>
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="bambang">
+        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="budi_emp">
           <div class="avatar" style="margin-right:10px">BP</div>
           <div>
-            <div style="font-weight:800">Bambang Pamungkas</div>
-            <div style="font-size:11.5px;color:var(--secondary)">Employee Biasa (Simulasi Proteksi Ditolak)</div>
+            <div style="font-weight:800">Budi Pratama</div>
+            <div style="font-size:11.5px;color:var(--color-text-secondary)">Software Engineer (Simulasi Proteksi Akses Ditolak)</div>
           </div>
         </button>
       </div>
@@ -1428,7 +1544,7 @@
       title: 'Team Pulse',
       subtitle: 'Ringkasan kondisi tim dan hal yang membutuhkan perhatian segera, dalam lingkup tim yang menjadi tanggung jawab Anda.',
       pill: 'Tim Produk Digital',
-      banner: '<strong>Lingkup Wewenang:</strong> Menampilkan data tim di bawah supervisi langsung Andi Pratama. Data bawahan terlindungi oleh prinsip least-privilege access.',
+      banner: '<strong>Lingkup Wewenang:</strong> Menampilkan data tim di bawah supervisi langsung Siti Aminah. Data bawahan terlindungi oleh prinsip least-privilege access.',
       metrics: { red: 3, blocker: 2, noSub: 4, amber: 5 },
       status: { green: 18, amber: 5, red: 3, na: 2 },
       timing: { onTime: 21, late: 3, noSub: 4 },
@@ -1456,7 +1572,7 @@
       title: 'Function Pulse',
       subtitle: 'Ringkasan anomali, tren beban kerja, dan kesehatan operasional pada seluruh divisi yang menjadi tanggung jawab Head of Department.',
       pill: 'Divisi Engineering (Semua Tim)',
-      banner: '<strong>Lingkup Divisi:</strong> Mengagregasi seluruh sub-tim (Frontend, Backend, DevOps, QA) di bawah wewenang Budi Santoso.',
+      banner: '<strong>Lingkup Divisi:</strong> Mengagregasi seluruh sub-tim (Frontend, Backend, DevOps, QA) di bawah wewenang Hendra Gunawan.',
       metrics: { red: 7, blocker: 4, noSub: 9, amber: 11 },
       status: { green: 42, amber: 11, red: 7, na: 4 },
       timing: { onTime: 49, late: 6, noSub: 9 },
@@ -1496,8 +1612,8 @@
         { id: 'ex11', dot: 'red', name: 'Divisi Engineering', role: 'Core Platform', tag: 'RED · Escalation L3', desc: 'Ticket blocker Level 3 menua > 36 jam membutuhkan keputusan.', project: 'Core Payment Engine' }
       ],
       owners: [
-        { avatar: 'BS', name: 'Budi Santoso', role: 'Head of Engineering', count: 7, urgent: true },
-        { avatar: 'AD', name: 'Andi Pratama', role: 'Technical Lead', count: 5, urgent: true },
+        { avatar: 'HG', name: 'Hendra Gunawan', role: 'Head of Technology', count: 7, urgent: true },
+        { avatar: 'SA', name: 'Siti Aminah', role: 'Supervisor / TL', count: 5, urgent: true },
         { avatar: 'MD', name: 'Maya Dwi', role: 'Head of Delivery', count: 4, urgent: false }
       ],
       trend: [82, 94, 78, 102, 88],
@@ -1509,7 +1625,7 @@
     }
   };
 
-  // Top Taxonomy Blockers for Management
+  // Top Taxonomy Blockers for Management (10 Official Enum)
   const taxonomyData = [
     { cat: 'Technical & Architecture', pct: 32, count: '14 tiket' },
     { cat: 'Client & External Stakeholder', pct: 24, count: '11 tiket' },
@@ -1528,6 +1644,13 @@
       const stored = localStorage.getItem('workpulse_active_user');
       if (stored) {
         const u = JSON.parse(stored);
+        if (u.name) $('side-user-name').textContent = u.name;
+        if (u.roleLabel) $('side-user-role').textContent = u.roleLabel + (u.department ? ' · ' + u.department : '');
+        if (u.avatar) {
+          $('side-avatar').textContent = u.avatar;
+          $('topAvatar').textContent = u.avatar;
+        }
+
         if (u.role === 'HEAD_OF_DEPARTMENT') currentScope = 'function';
         else if (u.role === 'MANAGEMENT' || u.role === 'CEO') currentScope = 'management';
         else currentScope = 'team';
@@ -1575,7 +1698,7 @@
         <div class="exception-info">
           <div class="exception-name-row">
             <span class="exception-name">${item.name}</span>
-            <span style="font-size:11.5px;color:var(--secondary)">· ${item.role}</span>
+            <span style="font-size:11.5px;color:var(--color-text-secondary)">· ${item.role}</span>
             <span class="pill ${item.dot === 'red' ? 'red' : (item.dot === 'amber' ? 'amber' : 'neutral')}">${item.tag}</span>
           </div>
           <div class="exception-desc">${item.desc}</div>
@@ -1598,7 +1721,7 @@
         </div>
         <div class="owner-stat">
           <div class="owner-count">${o.count} Blocker</div>
-          ${o.urgent ? '<span class="sla-chip">Perlu Respon</span>' : '<span style="font-size:10.5px;color:var(--secondary)">Normal SLA</span>'}
+          ${o.urgent ? '<span class="sla-chip">Perlu Respon</span>' : '<span style="font-size:10.5px;color:var(--color-text-secondary)">Normal SLA</span>'}
         </div>
       </div>
     `).join('');
@@ -1626,7 +1749,7 @@
           <strong>${s.supporter}</strong>
           <span class="pill blue">${s.project}</span>
         </div>
-        <div style="color:var(--secondary);margin-bottom:4px">${s.action}</div>
+        <div style="color:var(--color-text-secondary);margin-bottom:4px">${s.action}</div>
         <div style="font-size:10.5px;color:#8B9D96">${s.time}</div>
       </div>
     `).join('');
@@ -1650,10 +1773,10 @@
         <div>
           <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:750;margin-bottom:4px">
             <span>${t.cat}</span>
-            <span style="color:var(--secondary)">${t.pct}% (${t.count})</span>
+            <span style="color:var(--color-text-secondary)">${t.pct}% (${t.count})</span>
           </div>
           <div style="height:7px;background:#EEF5F2;border-radius:999px;overflow:hidden">
-            <div style="width:${t.pct}%;height:100%;background:#00674D;border-radius:999px"></div>
+            <div style="width:${t.pct}%;height:100%;background:var(--color-brand-primary);border-radius:999px"></div>
           </div>
         </div>
       `).join('');
@@ -1744,21 +1867,35 @@
     showToast(`Periode diubah: ${$('periodFilter').selectedOptions[0].text}`);
   });
 
-  // Mobile Menu
-  $('mobileMenu').addEventListener('click', () => {
-    const s = $('sidebar');
-    s.classList.toggle('open');
-    const open = s.classList.contains('open');
-    $('mobileMenu').setAttribute('aria-expanded', String(open));
-  });
+  // Mobile Drawer Handlers (Identik Halaman 02-07)
+  const sidebar = $('main-sidebar');
+  const backdrop = $('sidebar-backdrop');
+  const btnOpen = $('btn-open-sidebar');
+  const btnClose = $('btn-close-sidebar');
 
-  // Notifications Bell
-  $('topBell').addEventListener('click', () => {
-    window.location.href = '07-Notification-Center-Browser-Push.html';
-  });
+  if (btnOpen) {
+    btnOpen.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      backdrop.classList.add('show');
+    });
+  }
 
-  // Account Switcher Modal
-  $('switchAccountBtn').addEventListener('click', () => {
+  if (btnClose) {
+    btnClose.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+    });
+  }
+
+  // Account Switcher Modal (Trigger from Topbar button)
+  $('btnSwitchAccount').addEventListener('click', () => {
     $('accountModal').classList.add('show');
   });
   $('closeAccountModalBtn').addEventListener('click', () => {
@@ -1772,37 +1909,34 @@
     btn.addEventListener('click', () => {
       const login = btn.dataset.login;
       $('accountModal').classList.remove('show');
-      if (login === 'bambang') {
+      if (login === 'budi_emp') {
         showToast('Akses ditolak: Karyawan biasa tidak memiliki izin ke Pulse Dashboard.');
         setTimeout(() => {
           window.location.href = '02-Morning-Commitment.html';
         }, 1200);
         return;
       }
-      if (login === 'andi') {
-        $('sideAvatar').textContent = 'AD';
-        $('topAvatar').textContent = 'AD';
-        $('sideUserName').textContent = 'Andi Pratama';
-        $('sideUserRole').textContent = 'Supervisor / TL';
-        $('sideUserScope').textContent = 'Tim Engineering';
+      if (login === 'siti') {
+        $('side-avatar').textContent = 'SA';
+        $('topAvatar').textContent = 'SA';
+        $('side-user-name').textContent = 'Siti Aminah';
+        $('side-user-role').textContent = 'Supervisor / Team Lead · Technology Squad A';
         renderScope('team');
-        showToast('Masuk sebagai Andi Pratama (Supervisor).');
-      } else if (login === 'budi') {
-        $('sideAvatar').textContent = 'BS';
-        $('topAvatar').textContent = 'BS';
-        $('sideUserName').textContent = 'Budi Santoso';
-        $('sideUserRole').textContent = 'Head of Department';
-        $('sideUserScope').textContent = 'Divisi Engineering';
+        showToast('Masuk sebagai Siti Aminah (Supervisor / TL).');
+      } else if (login === 'hendra') {
+        $('side-avatar').textContent = 'HG';
+        $('topAvatar').textContent = 'HG';
+        $('side-user-name').textContent = 'Hendra Gunawan';
+        $('side-user-role').textContent = 'Head of Technology · Delivery & Tech Division';
         renderScope('function');
-        showToast('Masuk sebagai Budi Santoso (Head).');
-      } else if (login === 'dewi') {
-        $('sideAvatar').textContent = 'DS';
-        $('topAvatar').textContent = 'DS';
-        $('sideUserName').textContent = 'Dewi Sartika';
-        $('sideUserRole').textContent = 'CEO / Management';
-        $('sideUserScope').textContent = 'Company-Wide';
+        showToast('Masuk sebagai Hendra Gunawan (Head of Department).');
+      } else if (login === 'bambang_ceo') {
+        $('side-avatar').textContent = 'BS';
+        $('topAvatar').textContent = 'BS';
+        $('side-user-name').textContent = 'Ir. Bambang Soedirgo';
+        $('side-user-role').textContent = 'Chief Executive Officer · Executive Board';
         renderScope('management');
-        showToast('Masuk sebagai Dewi Sartika (CEO).');
+        showToast('Masuk sebagai Ir. Bambang Soedirgo (CEO).');
       }
     });
   });
@@ -1812,6 +1946,10 @@
     if (e.key === 'Escape') {
       closeMemberModal();
       $('accountModal').classList.remove('show');
+      if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+      }
     }
   });
 
