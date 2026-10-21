@@ -692,22 +692,36 @@
       border: 0;
     }
 
-    /* Responsive (breakpoint identik Halaman 06) */
+    /* Responsive (breakpoint identik Halaman 06 dengan Ultra-Compact Summary Strip) */
     @media (max-width: 900px) {
       .app{grid-template-columns:1fr}
       .sidebar{display:none;position:fixed;left:0;top:0;bottom:0;width:280px;z-index:100;box-shadow:0 0 40px rgba(0,0,0,.2)}
       .sidebar.open{display:flex}
       .mobile-hamburger-btn{display:block}
       .mobile-close-sidebar-btn{display:inline-flex}
-      .summary-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .summary-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+      .metric-card{padding:10px 12px;border-radius:10px}
+      .metric-value{font-size:20px}
+      #pushMetricValue{font-size:14.5px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .metric-note{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .top-grid{grid-template-columns:1fr}
     }
 
     @media (max-width: 680px) {
-      .content{padding:20px 16px 100px}
-      .page-heading{flex-direction:column;gap:12px}
-      .heading-side{width:100%;justify-content:flex-start;flex-wrap:wrap}
-      .summary-strip{grid-template-columns:1fr}
+      .content{padding:16px 14px 100px}
+      .page-heading{flex-direction:column;gap:10px;margin-bottom:14px}
+      .heading-side{width:100%;justify-content:flex-start;flex-wrap:wrap;gap:8px}
+      
+      /* Ultra-Compact 1-Row Mini Bar for Mobile (Hemat ~80% Ruang Vertikal) */
+      .summary-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+      .metric-card{padding:8px 10px;border-radius:10px}
+      .metric-head{margin-bottom:2px}
+      .metric-label{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
+      .metric-icon-wrap{display:none}
+      .metric-value{font-size:18px;line-height:1.2}
+      #pushMetricValue{font-size:12.5px !important;margin-top:2px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .metric-note{display:none}
+
       .filter-row{flex-direction:column;align-items:stretch;gap:10px}
       .filter-tools{width:100%}
       .search-input{width:100%}

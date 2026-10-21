@@ -38,12 +38,15 @@
 │    - Subteks: Pusat pemantauan pemberitahuan komitmen kerja, eskalasi kendala...│
 │    - Sisi Kanan: Badge [ ● 3 belum dibaca ] & Tombol [ Tandai Semua Dibaca ]│
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. METRIC SUMMARY STRIP (Grid 3-Kolom Ramping):                             │
+│ 2. METRIC SUMMARY STRIP (Ultra-Compact 1-Row Mini Bar):                     │
 │    ┌────────────────────────┐ ┌────────────────────────┐ ┌────────────────┐ │
 │    │ Total Notifikasi       │ │ Belum Dibaca           │ │ Browser Push ↗ │ │
 │    │ 8                      │ │ 3                      │ │ Izin Aktif / ..│ │
 │    │ Riwayat in-system      │ │ Perlu peninjauan       │ │ Klik ke Tab 2  │ │
 │    └────────────────────────┘ └────────────────────────┘ └────────────────┘ │
+│    *Desain Responsif Smartphone/Tablet: Tetap 1 baris sejajar (3 kolom),     │
+│     tinggi ~48px (hemat ~80% ruang vertikal layar HP dibanding stacking).    │
+│     Subteks & ikon disembunyikan otomatis di HP agar feed langsung terlihat. │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. NAVIGASI TAB TAMPILAN UTAMA (MAIN VIEW TABS):                            │
 │    [ ● Daftar Notifikasi (3) ] (Aktif)   [ ⚙ Pengaturan Kanal & Perangkat ]  │
@@ -156,6 +159,7 @@ Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#d
 | **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Saluran Notifikasi. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
 | **TC-12** | Pintasan Klik Metrik Browser Push | Klik kartu metrik ke-3 'Browser Push' | Sistem otomatis mengalihkan tampilan aktif ke Tab 'Pengaturan Kanal & Perangkat'. |
 | **TC-13** | Auto-Read via Tautan Email | Buka halaman dengan query `?read=notif-001` | Notifikasi dengan ID terkait otomatis ditandai sudah dibaca saat halaman dimuat, counter unread berkurang 1, dan toast hijau konfirmasi sukses muncul. |
+| **TC-14** | Strip Metrik Kompak Mobile & Tablet | Buka halaman pada layar smartphone ($\le 680\text{px}$) atau tablet ($\le 900\text{px}$) | 3 kartu metrik tetap sejajar 1 baris ultra-kompak ($\approx 48\text{px}$), subteks dan ikon disembunyikan otomatis di ponsel cerdas (hemat $\approx 80\%$ ruang vertikal dibanding stacking 3 baris). Feed daftar notifikasi langsung terlihat di atas layar, dan interaktivitas klik-filter kartu tetap aktif. |
 
 ---
 
@@ -215,4 +219,4 @@ export interface NotificationCenterFeedResponseDto {
 
 ## 7. STATUS KESIAPAN & PANDUAN IMPLEMENTASI
 
-Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Web Notification Center & Browser Push. Seluruh komponen pada prototipe [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html) telah teruji secara visual dan fungsional di peramban (0 console error, 100% lulus uji 13 Test Cases, responsif di desktop/tablet/mobile), bebas error, serta siap diintegrasikan secara terpadu ke kode frontend dan backend.
+Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Web Notification Center & Browser Push. Seluruh komponen pada prototipe [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html) telah teruji secara visual dan fungsional di peramban (0 console error, 100% lulus uji 14 Test Cases, responsif di desktop/tablet/mobile), bebas error, serta siap diintegrasikan secara terpadu ke kode frontend dan backend.
