@@ -40,44 +40,47 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. METRIC SUMMARY STRIP (Grid 3-Kolom Ramping):                             │
 │    ┌────────────────────────┐ ┌────────────────────────┐ ┌────────────────┐ │
-│    │ Total Notifikasi       │ │ Belum Dibaca           │ │ Browser Push   │ │
+│    │ Total Notifikasi       │ │ Belum Dibaca           │ │ Browser Push ↗ │ │
 │    │ 8                      │ │ 3                      │ │ Izin Aktif / ..│ │
-│    │ Riwayat in-system      │ │ Perlu peninjauan       │ │ Status peramban│ │
+│    │ Riwayat in-system      │ │ Perlu peninjauan       │ │ Klik ke Tab 2  │ │
 │    └────────────────────────┘ └────────────────────────┘ └────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. TOP GRID (Grid 2-Kolom Seimbang):                                        │
-│    ┌───────────────────────────────────┐ ┌────────────────────────────────┐ │
-│    │ KARTU A: PREFERENSI PERANGKAT     │ │ KARTU B: STATUS KANAL DISTRIBUS│ │
-│    │ (Browser Push Permission Engine)  │ │ (PRD Section 8 Matrix)         │ │
-│    │ - Badge Status: [ Izin Aktif / ..]│ │ - Row 1: Web Notification Ctr  │ │
-│    │ - Ikon Lonceng SVG Monokrom       │ │   [ Tersedia · Arsip Resmi ]   │ │
-│    │ - Judul & Deskripsi Hak Akses     │ │ - Row 2: Email Korporat        │ │
-│    │ - Notice Box Edukatif (4-State)   │ │   [ Aktif per Kebijakan ]      │ │
-│    │ - Aksi: [ Aktifkan Push ]         │ │ - Row 3: Browser Push          │ │
-│    │   & [ Periksa Status ]            │ │   [ Status Izin Perangkat ]    │ │
-│    │ - Subteks: Berlaku per gawai      │ │ - Notice: Read ≠ Delivery      │ │
-│    └───────────────────────────────────┘ └────────────────────────────────┘ │
+│ 3. NAVIGASI TAB TAMPILAN UTAMA (MAIN VIEW TABS):                            │
+│    [ ● Daftar Notifikasi (3) ] (Aktif)   [ ⚙ Pengaturan Kanal & Perangkat ]  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 4. PANEL UTAMA: SEMUA RIWAYAT NOTIFIKASI (INTERACTIVE FEED):                │
-│    - Header: Judul "Daftar Notifikasi", Tombol [ Tandai Semua Dibaca ]      │
-│    - Toolbar Filter & Live Search:                                          │
-│      • Tab Status: [ Semua (8) ]  [ Belum Dibaca (3) ]  [ Sudah Dibaca (5) ]│
-│      • Input Live Search: Pencarian real-time (judul, deskripsi, tiket)     │
-│      • Dropdown Kategori: Semua / Blocker / Dukungan / Koreksi / Pengingat  │
-│    - Daftar Kartu Notifikasi (Notification Cards):                          │
-│      • Ikon SVG Kategori Tematik (Merah/Amber/Biru/Hijau/Netral)            │
-│      • Dot Indikator Unread (Hijau Botol)                                   │
-│      • Judul & Narasi Ringkas                                               │
-│      • Mini-Tag Semantik & Timestamp Humanis                                │
-│      • Aksi Baris: [ Lihat Detail → ] & [ Tombol Toggle Baca/Belum ]        │
-│    - Empty State Box: Muncul saat filter pencarian tidak menemukan hasil    │
-│    - Footer Panel: Counter hasil pencarian & maklumat otorisasi akun        │
+│ KONTEN TAB 1 (DEFAULT / UTAMA): DAFTAR NOTIFIKASI                           │
+│ - Header: Judul "Daftar Notifikasi", Tombol [ Tandai Semua Dibaca ]         │
+│ - Toolbar Filter & Live Search:                                             │
+│   • Tab Status: [ Semua (8) ]  [ Belum Dibaca (3) ]  [ Sudah Dibaca (5) ]   │
+│   • Input Live Search: Pencarian real-time (judul, deskripsi, tiket)        │
+│   • Dropdown Kategori: Semua / Blocker / Dukungan / Koreksi / Pengingat     │
+│ - Feed Daftar Kartu Notifikasi (Langsung tampak tanpa scroll!):             │
+│   • Ikon SVG Kategori Tematik (Merah/Amber/Biru/Hijau/Netral)               │
+│   • Dot Indikator Unread (Hijau Botol)                                      │
+│   • Judul & Narasi Ringkas                                                  │
+│   • Mini-Tag Semantik & Timestamp Humanis                                   │
+│   • Aksi Baris: [ Lihat Detail → ] & [ Tombol Toggle Baca/Belum ]           │
+│ - Empty State Box: Muncul saat filter pencarian tidak menemukan hasil       │
+│ - Footer Panel: Counter hasil pencarian & maklumat otorisasi akun           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 5. MODAL DETAIL NOTIFIKASI & DEEP-LINK RESOLVER:                            │
+│ KONTEN TAB 2: PENGATURAN KANAL & PERANGKAT                                  │
+│ ┌───────────────────────────────────┐ ┌───────────────────────────────────┐ │
+│ │ KARTU A: PREFERENSI PERANGKAT     │ │ KARTU B: STATUS KANAL DISTRIBUSI  │ │
+│ │ (Browser Push Permission Engine)  │ │ (PRD Section 8 Matrix)            │ │
+│ │ - Badge Status: [ Izin Aktif / ..]│ │ - Row 1: Web Notification Center  │ │
+│ │ - Ikon Lonceng SVG Monokrom       │ │   [ Tersedia · Arsip Resmi ]      │ │
+│ │ - Judul & Deskripsi Hak Akses     │ │ - Row 2: Email Korporat           │ │
+│ │ - Notice Box Edukatif (4-State)   │ │   [ Aktif per Kebijakan ]         │ │
+│ │ - Aksi: [ Aktifkan Push ]         │ │ - Row 3: Browser Push             │ │
+│ │   & [ Periksa Status ]            │ │   [ Status Izin Perangkat ]       │ │
+│ │ - Subteks: Berlaku per gawai      │ │ - Maklumat: Read ≠ Delivery Proof │ │
+│ └───────────────────────────────────┘ └───────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 4. MODAL DETAIL NOTIFIKASI & DEEP-LINK RESOLVER:                            │
 │    - Pop-up Dialog terisolasi dengan backdrop blur                          │
 │    - Rincian lengkap dokumen dan tombol aksi [ Buka Konteks Terkait > ]     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. CONTEXTUAL TOAST ENGINE: Feedback notifikasi sudut kanan bawah           │
+│ 5. CONTEXTUAL TOAST ENGINE: Feedback notifikasi sudut kanan bawah           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -138,6 +141,8 @@ Setiap notifikasi memiliki asosiasi rute tujuan yang jelas:
 | **TC-08** | Buka Modal Detail Notifikasi | Klik tombol [Lihat Detail →] | Modal pop-up muncul di tengah dengan backdrop blur, menyajikan rincian lengkap kendala/tugas dan tombol "Buka Konteks Terkait". |
 | **TC-09** | Deep Link Konteks Dokumen | Klik [Buka Konteks Terkait] di modal | Modal tertutup, pengguna diarahkan ke rute tujuan dokumen dengan toast panduan. |
 | **TC-10** | Aksi Kontrol Browser Push | Klik tombol [Aktifkan Browser Push] | Sistem memicu `Notification.requestPermission()`. Jika disetujui, UI berubah seketika ke state *Izin Aktif* (badge hijau) dan toast sukses muncul. |
+| **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Kanal PRD §8. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
+| **TC-12** | Pintasan Klik Metrik Browser Push | Klik kartu metrik ke-3 'Browser Push' | Sistem otomatis mengalihkan tampilan aktif ke Tab 'Pengaturan Kanal & Perangkat'. |
 
 ---
 

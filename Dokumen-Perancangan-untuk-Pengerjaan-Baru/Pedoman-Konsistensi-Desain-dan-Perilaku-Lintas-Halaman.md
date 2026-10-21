@@ -380,6 +380,7 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   7. **Penandaan Massal & Mandiri:** Tombol *Tandai semua dibaca* di header dan baris feed yang memperbarui dot unread secara instan, didampingi tombol toggle status baca per baris.
   8. **Modal Detail & Context Deep-Link Resolver:** Dialog pop-up rincian notifikasi dengan tombol *Buka Konteks Terkait* yang mengarahkan pengguna secara akurat ke halaman sumber dokumen (Halaman 02, 03, 04, 05, 06, 16a/b, 20, 24).
   9. **Sinkronisasi Sesi Dinamis & Contextual Toast Engine:** Membaca profil aktif Budi Pratama dari `localStorage: workpulse_active_user` dan menyajikan feedback notifikasi 3 varian semantik (`success`, `warning`, `error`).
+  10. **Arsitektur Tab Tampilan Utama (*Primary Tab Architecture*):** Memposisikan *Daftar Notifikasi* (Tab 1) langsung di bawah 3 kartu ringkasan metrik sebagai tampilan utama harian tanpa scrolling, sedangkan *Preferensi Perangkat* dan *Matriks Distribusi Kanal PRD §8* diisolasi rapi ke Tab 2 (*Pengaturan Kanal & Perangkat*). Kartu metrik ke-3 bersifat interaktif dan mengalihkan pengguna langsung ke Tab 2.
 
 ---
 
