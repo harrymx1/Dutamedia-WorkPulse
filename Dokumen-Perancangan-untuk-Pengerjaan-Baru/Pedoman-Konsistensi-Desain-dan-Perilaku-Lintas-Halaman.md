@@ -170,7 +170,7 @@ Pada kartu rincian evaluasi harian (Halaman 04 dan Halaman 06), status hasil dan
   - `Continuation · Continue`: `.pill.timing` (Biru WorkPulse)
   - `Continuation · Do Not Continue`: `.pill.neutral` (Abu netral)
 
-### 5.5 Standar 3 Jenis Catatan Pimpinan (Manager Notes — PRD FR-39, US-13, AC-43)
+### 5.5 Standar 3 Jenis Catatan Evaluasi Kerja (Manager Notes — PRD FR-39, US-13, AC-43)
 Catatan pembinaan dan manajerial dari atasan yang dipublikasikan ke karyawan wajib terikat pada 3 tipe baku berlabel dwibahasa dan ikon pembeda resmi:
 1. **`Apresiasi (Recognition)`**: Badge `.pill.green` (hijau), mark background hijau botol, ikon lencana/bintang (`polygon 12-point`). Berfungsi mencatat pengakuan formal atas pencapaian luar biasa.
 2. **`Bimbingan (Coaching)`**: Badge `.pill.amber` (amber), mark background amber, ikon kompas/target (`compass circle & polygon`). Berfungsi mencatat arahan konstruktif dan pengembangan cara kerja.
@@ -358,8 +358,8 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
 - **Keputusan Terkunci:**
   1. Hak akses audit personal penuh (*self-service*) dan kepatuhan mutlak pada mandat Anti-Gamifikasi (FR-66, AC-44, AC-75).
   2. Toolbar filter terpadu: preset periode dan filter kehadiran/submission.
-  3. Weekly Summary Grid 7-Metrik seimbang: 6 kartu dalam 2 baris 3 kolom + Kartu 7 (*Catatan Pimpinan*) membentang selebar baris penuh (*full-width `grid-column: 1 / -1`*).
-  4. Standar 3 tipe Catatan Pimpinan terpublikasi: *Apresiasi (Recognition)* (hijau/bintang), *Bimbingan (Coaching)* (amber/kompas), dan *Tindakan Korektif (Corrective)* (merah/seru).
+  3. Weekly Summary Grid 7-Metrik seimbang: 6 kartu dalam 2 baris 3 kolom + Kartu 7 (*Catatan Evaluasi Kerja*) membentang selebar baris penuh (*full-width `grid-column: 1 / -1`*).
+  4. Standar 3 tipe Catatan Evaluasi Kerja (Manager Notes): *Apresiasi (Recognition)* (hijau/bintang), *Bimbingan (Coaching)* (amber/kompas), dan *Tindakan Korektif (Corrective)* (merah/seru).
   5. Mandat Dual Badges berdampingan pada daftar riwayat harian: *Submission Timing Badge* (`On-Time`, `Late`, `No Submission`) berdampingan dengan *Final Status Badge* (`GREEN`, `AMBER`, `RED`, `Final Status belum tersedia`).
   6. Arsitektur Dual-View State: Overview Mingguan $\leftrightarrow$ Day Detail View tanpa reload halaman.
   7. Semantic Badges Outcome (`Completed` hijau, `Partially` amber, `Not Completed` merah) dan Continuation (`Continue` biru, `Do Not Continue` netral).
@@ -383,7 +383,7 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   10. **Arsitektur Tab Tampilan Utama (*Primary Tab Architecture*):** Memposisikan *Daftar Notifikasi* (Tab 1) langsung di bawah 3 kartu ringkasan metrik sebagai tampilan utama harian tanpa scrolling, sedangkan *Preferensi Perangkat* dan *Matriks Distribusi Kanal PRD §8* diisolasi rapi ke Tab 2 (*Pengaturan Kanal & Perangkat*). Ketiga kartu metrik bersifat interaktif (*click-to-filter* dan *click-to-tab*).
   11. **Standar Badge Notifikasi Lintas Sidebar (Halaman 02–07, 20, 24):** Menu sidebar resmi *Notifications* menyematkan pill amber aktif (`3`) yang sejajar dan konsisten dengan badge pada *My Blockers* (`2`), dan tersinkronisasi dinamis pada Halaman 07 saat notifikasi dibaca atau dipulihkan.
   12. **Desain Responsif Ultra-Compact 1-Row Mini Bar & Tab Navigasi Bebas Wrap:** 3 kartu ringkasan metrik dikunci tetap sejajar dalam 1 baris (3 kolom, $\approx 48\text{ px}$) pada layar smartphone dan tablet (menghemat 80% tinggi layar HP dibanding stacking vertikal). Tombol tab navigasi utama (*Daftar Notifikasi* & *Pengaturan Kanal & Perangkat*) otomatis menyesuaikan ukuran font ($9.5\text{ px} - 11\text{ px}$) dan padding secara proporsional sehingga muat presisi dalam 1 baris tanpa memakan 2 baris bahkan di layar smartphone kecil seperti iPhone SE ($375\text{ px}$).
-  13. **Sistem Anti-Celah Matriks 22 Pemicu Komprehensif (PRD §8 Updated):** Menutup seluruh siklus hidup Blocker 2-arah (*Acknowledged*, *Resolved*, *Rejected*), kolaborasi tim (*Support Accepted*, *Support Declined*), penugasan tugas darurat siang hari (*Additional Work*), catatan pimpinan harian (*Manager Daily Note on EOD*), dan keamanan akun (*New Device Login*).
+  13. **Sistem Anti-Celah Matriks 22 Pemicu Komprehensif (PRD §8 Updated):** Menutup seluruh siklus hidup Blocker 2-arah (*Acknowledged*, *Resolved*, *Rejected*), kolaborasi tim (*Support Accepted*, *Support Declined*), penugasan tugas darurat siang hari (*Additional Work*), catatan evaluasi kerja harian (*Manager Daily Note on EOD*), dan keamanan akun (*New Device Login*).
   14. **Tautan Otomatis Baca Email (*Smart Auto-Read Link: `?read=ID`*):** Tautan dari notifikasi email kantor secara otomatis menandai notifikasi terkait menjadi 'Sudah Dibaca' di Web Notification Center untuk mencegah kerja dua kali (*zero double work*).
 
 ---

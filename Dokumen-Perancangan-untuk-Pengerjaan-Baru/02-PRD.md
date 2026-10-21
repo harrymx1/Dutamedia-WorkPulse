@@ -358,9 +358,9 @@ Nilai default sistem yang telah dikunci oleh ADR atau kontrak keamanan (misalnya
 | Permintaan dukungan diterima (Support Accepted) | Employee pemohon bantuan | Web Notification Center + Browser Push | Konfirmasi rekan kerja siap membantu komitmen |
 | Permintaan dukungan ditolak (Support Declined) | Employee pemohon bantuan + Squad Lead | Email + Browser Push + Web Notification Center | Peringatan darurat overcapacity rekan agar segera dialihkan |
 | Penugasan tugas tambahan baru (Additional Work Assigned) | Employee pelaksana yang ditugaskan | Email + Browser Push + Web Notification Center | Tugas darurat siang hari yang diinstruksikan atasan/PM |
-| Catatan evaluasi/arahan pimpinan terbit (Manager Daily Note) | Employee pemilik catatan kerja | Email + Web Notification Center | Umpan balik harian pimpinan atas hasil kerja EOD |
+| Catatan evaluasi kerja harian (Manager Notes) terbit | Employee pemilik catatan kerja | Email + Web Notification Center | Umpan balik evaluasi/apresiasi kerja atas hasil EOD |
 | Repeated no-submission flag | Supervisor/Head; HRGA jika threshold policy terpenuhi | Review required — Email | Tinjauan disiplin kepatuhan pelaporan kerja |
-| Weekly summary & Catatan Pimpinan mingguan tersedia | Employee + Manager sesuai konfigurasi | Summary notification — Email | Rangkuman akuntabilitas dan tren performa mingguan |
+| Weekly summary & Catatan Evaluasi Kerja (Manager Notes) tersedia | Employee + Manager sesuai konfigurasi | Summary notification — Email | Rangkuman akuntabilitas dan catatan evaluasi kerja mingguan |
 | Policy/organizational assignment berubah pada user terkait | User yang terdampak; Authorized Policy Owner terkait | Web Notification Center | Pembaruan struktur tim, squad, atau hak akses |
 | Morning atau EOD Correction Request Material diajukan | Authorized Reviewer terkait | Web Notification Center + Email | Pengajuan koreksi memasuki Jendela Keberatan (*Objection Window*) |
 | Morning atau EOD Correction Request menuju akhir Objection Window | Authorized Reviewer terkait (reminder terakhir sebelum auto-applied) | Web Notification Center | Pengingat telaah sebelum koreksi disetujui otomatis |

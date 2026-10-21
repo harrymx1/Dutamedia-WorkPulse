@@ -61,7 +61,7 @@
 │    └──────────────────────┘ └──────────────────────┘ └────────────────────┘ │
 │    [Baris 3: Kartu Lebar Penuh (Full-Width grid-column: 1 / -1)]            │
 │    ┌──────────────────────────────────────────────────────────────────────┐ │
-│    │ 7. Catatan Pimpinan (Manager Notes Terpublikasi)                     │ │
+│    │ 7. Catatan Evaluasi Kerja (Manager Notes)                            │ │
 │    │    [Ikon Lencana] [Pill: Apresiasi (Recognition)] · Budi Santoso     │ │
 │    │    "Terima kasih sudah mengantisipasi kebutuhan checkout..."         │ │
 │    │    Jumat, 9 Oktober 2026 · Terverifikasi Sistem                      │ │
@@ -91,7 +91,7 @@
 │ 7. PANEL 2: EOD OUTCOME & CONTINUATION (Semantic Badges Outcome/Continue)   │
 │ 8. PANEL 3: KENDALA & DUKUNGAN (Blocker & Eskalasi Terkait)                 │
 │ 9. PANEL 4: PERMOHONAN KOREKSI (Kondisional: Koreksi Berstatus Applied)     │
-│ 10. PANEL 5: CATATAN PIMPINAN (Kondisional: Recognition/Coaching/Corrective)│
+│ 10. PANEL 5: CATATAN EVALUASI KERJA (Kondisional: Apresiasi/Bimbingan/Korektif)│
 │ 11. FOOTER DETAIL HARI: Tombol Kembali Bawah: [ ← Kembali ke Histori ]      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -121,7 +121,7 @@ Pada kartu tugas di tampilan detail sore hari, status capaian wajib menerapkan d
 - **`Continuation · Continue`** $\rightarrow$ `.pill.timing` (Biru WorkPulse)
 - **`Continuation · Do Not Continue`** $\rightarrow$ `.pill.neutral` (Abu netral)
 
-### 3.3 Standar 3 Jenis Catatan Pimpinan (Manager Notes — PRD FR-39, US-13, AC-43)
+### 3.3 Standar 3 Jenis Catatan Evaluasi Kerja (Manager Notes — PRD FR-39, US-13, AC-43)
 Sistem mendukung 3 jenis catatan manajerial resmi dengan identitas visual terstandarisasi:
 1. **`Apresiasi (Recognition)`**:
    - Badge: `.pill.green` berlabel `Apresiasi (Recognition)`.
@@ -154,12 +154,12 @@ Sistem mendukung 3 jenis catatan manajerial resmi dengan identitas visual tersta
 | ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respons Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
 | **TC-01** | Filter: Minggu Sebelumnya | Pilih opsi "Minggu Sebelumnya · 5–9 Okt" | Kartu ringkasan terisi metrik lengkap, Card 7 menampilkan Apresiasi dari Budi Santoso, daftar hari menampilkan 5 hari kerja (5–9 Okt). |
-| **TC-02** | Filter: Minggu Ini (Empty) | Pilih opsi "Minggu Ini · 12–16 Okt" | Angka metrik menampilkan strip netral ("—"), Card 7 menampilkan pesan netral belum ada catatan pimpinan, daftar hari empty state. |
+| **TC-02** | Filter: Minggu Ini (Empty) | Pilih opsi "Minggu Ini · 12–16 Okt" | Angka metrik menampilkan strip netral ("—"), Card 7 menampilkan pesan netral belum ada catatan evaluasi kerja dari atasan, daftar hari empty state. |
 | **TC-03** | Filter Kehadiran: Ada Submission | Pilih "Ada Submission" pada filter kehadiran | Daftar harian menyaring instan dan hanya menampilkan Senin–Kamis (4 hari). Hari Jumat (No Submission) disembunyikan. Counter badge = "4 hari". |
 | **TC-04** | Filter Kehadiran: No Submission | Pilih "Tanpa Submission" pada filter kehadiran | Daftar harian hanya menampilkan 1 hari (Jumat, 9 Okt). Counter badge = "1 hari". |
 | **TC-05** | Buka Detail Hari: Senin | Klik [Lihat Detail →] pada baris Senin, 5 Okt | Layar beralih ke Detail Hari Senin. Breadcrumb memuat tanggal. Badges memuat `On-Time` & `GREEN`. Panel Morning & EOD tampil dengan Semantic Badges. |
-| **TC-06** | Detail Hari: Koreksi Applied | Klik [Lihat Detail →] pada baris Selasa, 6 Okt | Menampilkan badge `AMBER`. Panel Permohonan Koreksi tampil otomatis dengan tiket `EOD-2026-1006-01` (`Applied`). Panel Catatan Pimpinan menampilkan `Bimbingan`. |
-| **TC-07** | Detail Hari: No Submission | Klik [Lihat Detail →] pada baris Jumat, 9 Okt | Banner Audit Sistem biru/abu-abu muncul di atas detail hari. Panel Morning & EOD menampilkan status Tidak Ada Submission. Card Catatan Pimpinan tetap tampil. |
+| **TC-06** | Detail Hari: Koreksi Applied | Klik [Lihat Detail →] pada baris Selasa, 6 Okt | Menampilkan badge `AMBER`. Panel Permohonan Koreksi tampil otomatis dengan tiket `EOD-2026-1006-01` (`Applied`). Panel Catatan Evaluasi Kerja menampilkan `Bimbingan`. |
+| **TC-07** | Detail Hari: No Submission | Klik [Lihat Detail →] pada baris Jumat, 9 Okt | Banner Audit Sistem biru/abu-abu muncul di atas detail hari. Panel Morning & EOD menampilkan status Tidak Ada Submission. Card Catatan Evaluasi Kerja tetap tampil. |
 | **TC-08** | Tombol Kembali Ganda | Klik [← Kembali ke Histori] di atas atau di bawah | Layar detail disembunyikan, overview mingguan dipulihkan, breadcrumb kembali, posisi layar scroll halus ke paling atas. |
 | **TC-09** | Navigasi Breadcrumb | Klik teks `My History` pada breadcrumb | Mengeksekusi fungsi pemulihan yang sama dengan tombol kembali, mengembalikan pengguna ke overview mingguan. |
 | **TC-10** | Ekspor Berkas CSV | Klik [Export Histori] atau [Export Hari Ini] | Peramban mengunduh berkas `.csv` UTF-8 BOM sesuai periode/tanggal. Toast notifikasi hijau muncul mengonfirmasi baris yang diekspor. |
@@ -176,7 +176,7 @@ Sistem mendukung 3 jenis catatan manajerial resmi dengan identitas visual tersta
 | **Halaman 04 (EOD Outcome)** | Menjadi sumber data untuk *Final Status*, jam penyerahan sore, evaluasi capaian (*Outcome*), kelanjutan kerja (*Continuation*), dan justifikasi risiko harian. |
 | **Halaman 05 (Raise Blocker)** | Menjadi sumber data riwayat kendala (*blockers*) yang dilaporkan atau ditindaklanjuti pada hari bersangkutan. |
 | **Halaman 07 (Notifications)** | Aksi publikasi catatan manajer (*Manager Note*) atau persetujuan koreksi menghasilkan notifikasi yang terhubung ke arsip Halaman 06. |
-| **Halaman 10 (Manager Notes)** | Catatan pimpinan berstatus `visible: true` yang dibuat oleh manajer pada Halaman 10 otomatis mengalir ke Card 7 ringkasan mingguan dan Panel 5 detail harian. |
+| **Halaman 10 (Manager Notes)** | Catatan evaluasi kerja (Manager Notes) berstatus `visible: true` yang dibuat oleh manajer pada Halaman 10 otomatis mengalir ke Card 7 ringkasan mingguan dan Panel 5 detail harian. |
 | **Halaman 16a & 16b (Correction Requests)** | Permohonan koreksi pagi atau sore yang berstatus `Applied` ditampilkan secara berdampingan di Panel 4 untuk menjaga integritas jejak audit tanpa menimpa data asli. |
 
 ---

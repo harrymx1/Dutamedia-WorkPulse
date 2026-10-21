@@ -202,7 +202,7 @@ Sistem WorkPulse menerapkan matriks 22 pemicu resmi untuk memastikan tidak ada c
 | **Halaman 03 (Additional Work)** | Menerima pengalihan pengguna dari notifikasi penugasan ad-hoc siang hari (*Newly Assigned*). |
 | **Halaman 04 (EOD Outcome)** | Menerima pengalihan pengguna dari notifikasi pengingat evaluasi sore hari (16:30–18:00 WIB). |
 | **Halaman 05 (Raise Blocker)** | Menerima pengalihan pengguna dari notifikasi kendala kritis (*Critical Blocker*) dan pembaruan tiket penanganan. |
-| **Halaman 06 (My History)** | Menerima pengalihan pengguna dari notifikasi penerbitan Weekly Summary dan publikasi Catatan Pimpinan (*Manager Notes*). |
+| **Halaman 06 (My History)** | Menerima pengalihan pengguna dari notifikasi penerbitan Weekly Summary dan publikasi Catatan Evaluasi Kerja (*Manager Notes*). |
 | **Halaman 16a & 16b (Correction Requests)** | Menerima pengalihan pengguna dari notifikasi permohonan koreksi material yang diajukan atau disetujui (*Applied*). |
 | **Halaman 20 (My Leave Request)** | Menerima pengalihan pengguna dari notifikasi persetujuan atau penolakan izin cuti resmi. |
 | **Halaman 24 (Profile Settings)** | Menerima pengalihan pengguna dari notifikasi pembaruan struktur organisasi akun. |
