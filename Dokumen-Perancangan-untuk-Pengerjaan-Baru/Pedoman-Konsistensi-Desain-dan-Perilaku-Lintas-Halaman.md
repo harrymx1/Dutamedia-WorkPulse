@@ -393,6 +393,23 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   13. **Sistem Anti-Celah Matriks 22 Pemicu Komprehensif (PRD §8 Updated):** Menutup seluruh siklus hidup Blocker 2-arah (*Acknowledged*, *Resolved*, *Rejected*), kolaborasi tim (*Support Accepted*, *Support Declined*), penugasan tugas darurat siang hari (*Additional Work*), catatan evaluasi kerja harian (*Manager Daily Note on EOD*), dan keamanan akun (*New Device Login*).
   14. **Tautan Otomatis Baca Email (*Smart Auto-Read Link: `?read=ID`*):** Tautan dari notifikasi email kantor secara otomatis menandai notifikasi terkait menjadi 'Sudah Dibaca' di Web Notification Center untuk mencegah kerja dua kali (*zero double work*).
 
+### Halaman 08: Pulse Dashboard (Team Pulse / Function Pulse / Management Pulse)
+- **Berkas Prototipe:** [`08-Pulse-Dashboard.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/08-Pulse-Dashboard.html)
+- **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-08-Pulse-Dashboard.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-08-Pulse-Dashboard.md)
+- **Keputusan Terkunci:**
+  1. **Filosofi Exception-First & Anti-Gamifikasi (PRD FR-66, FR-68, FR-69, BR-08):** DILARANG MUTLAK menyajikan leaderboard, pemeringkatan produktivitas individu, atau skor KPI otomatis. Bagian paling atas layar wajib memprioritaskan kartu anomali krisis (*RED*, *Blocker Belum Diakui*, *No Submission*, *AMBER*).
+  2. **Penyajian Dua Dimensi Independen (Anti-Bias):** Memisahkan secara tegas dan mutlak antara **Dimensi Status Risiko** (`GREEN`, `AMBER`, `RED`, `NOT_APPLICABLE — NO_COMMITMENT`) dengan **Dimensi Ketepatan Waktu** (`On-Time`, `Late`, `No Submission`). *No Submission* adalah fakta waktu pengiriman, bukan status risiko dan bukan vonis disipliner.
+  3. **Tiga Tingkat Cakupan Peran (*Multi-Scope Architecture*):** Satu menu navigasi *Pulse Dashboard* membuka scope yang sesuai dengan wewenang sah akun:
+     - **Team Pulse (`/team`):** Khusus Supervisor / TL, membatasi data hanya pada anggota tim langsung.
+     - **Function Pulse (`/function`):** Khusus Head of Department, mengagregasi seluruh sub-tim di bawah divisinya.
+     - **Management Pulse (`/management`):** Khusus CEO / Direksi, menyajikan tren helikopter lintas fungsi perusahaan (*company-wide*).
+  4. **Proteksi Akses Karyawan Biasa:** Menu disembunyikan bagi karyawan biasa; akses URL langsung diblokir dan dialihkan ke `/today` (Halaman 02).
+  5. **Dialog Rincian Anggota Tim (UF-30 Step 4 Drilldown):** Mengklik baris anomali pada daftar *Perlu Perhatian Segera* memunculkan modal dialog yang menampilkan rincian komitmen pagi, hasil evaluasi sore, dan tiket blocker terkait tanpa meninggalkan halaman.
+  6. **Pencatatan Dukungan Lintas Tim (*Cross-Project Support* - FR-64 & FR-68):** Menyajikan widget khusus untuk mencatat dan mengapresiasi kontribusi anggota tim yang membantu proyek/tim lain.
+  7. **Tren Pekerjaan Tertunda (*Carry-Over Trend Histogram*):** Visualisasi batang 5 hari kerja (Senin–Jumat) yang menyorot tugas yang mengalami `Continuation = Continue` $\ge 2$ hari beruntun sebagai indikasi evaluasi beban kerja (*capacity planning*).
+  8. **Widget Khusus Management Pulse (FR-69):** Menampilkan visualisasi persentase *Top Recurring Blockers (10 Taksonomi Resmi)* dan pemantauan penuaan tiket eskalasi (*Unresolved Escalation Aging*).
+  9. **Simulasi Akun Terintegrasi:** Terhubung dengan `localStorage: workpulse_active_user` dan menyediakan modal alih peran simulasi (Andi, Budi, Dewi, Bambang).
+
 ---
 
 ## 10. CHECKLIST WAJIB SEBELUM MEMULAI HALAMAN BARU
