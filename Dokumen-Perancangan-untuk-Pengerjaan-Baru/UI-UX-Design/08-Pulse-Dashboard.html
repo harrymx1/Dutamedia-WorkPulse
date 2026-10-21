@@ -367,12 +367,10 @@
     .eyebrow {
       font-size: 11px;
       color: var(--color-text-secondary);
-      font-weight: 800;
+      font-weight: 750;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-bottom: 4px;
     }
     h1 {
       font-size: 26px;
@@ -1070,19 +1068,12 @@
       <!-- Page Heading -->
       <div class="page-heading">
         <div>
-          <div class="eyebrow">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            PEMANTAUAN OPERASIONAL & RISIKO (EXCEPTION-FIRST)
-          </div>
+          <div class="eyebrow">Dashboard Operasional</div>
           <h1 id="pageTitle">Team Pulse</h1>
           <p class="subtitle" id="pageSubtitle">Ringkasan kondisi tim dan hal yang membutuhkan perhatian segera, dalam lingkup tim yang menjadi tanggung jawab Anda.</p>
         </div>
         <div class="heading-side">
           <span class="pill neutral" id="scopePill">Tim Produk Digital</span>
-          <button class="btn btn-secondary" id="refreshBtn" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-            Perbarui data
-          </button>
         </div>
       </div>
 
@@ -1871,9 +1862,11 @@
   $('tabFunction').addEventListener('click', () => { renderScope('function'); showToast('Beralih ke tampilan Function Pulse.'); });
   $('tabManagement').addEventListener('click', () => { renderScope('management'); showToast('Beralih ke tampilan Management Pulse.'); });
 
-  $('refreshBtn').addEventListener('click', () => {
-    showToast('Data pemantauan berhasil diperbarui.');
-  });
+  if ($('refreshBtn')) {
+    $('refreshBtn').addEventListener('click', () => {
+      showToast('Data pemantauan berhasil diperbarui.');
+    });
+  }
 
   $('closeMemberModalBtn').addEventListener('click', closeMemberModal);
   $('modalCloseAction').addEventListener('click', closeMemberModal);
