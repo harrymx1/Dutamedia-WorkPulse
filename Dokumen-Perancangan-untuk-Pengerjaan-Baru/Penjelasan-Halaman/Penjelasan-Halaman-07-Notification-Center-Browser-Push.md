@@ -35,7 +35,7 @@
 │ 1. PAGE HEADING:                                                            │
 │    - Eyebrow: PUSAT KOMUNIKASI & PEMBARUAN                                  │
 │    - Judul H1: Web Notification Center                                      │
-│    - Subteks: Pantau pembaruan komitmen kerja, tindak lanjut blocker...     │
+│    - Subteks: Pusat pemantauan pemberitahuan komitmen kerja, eskalasi kendala...│
 │    - Sisi Kanan: Badge [ ● 3 belum dibaca ] & Tombol [ Tandai Semua Dibaca ]│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. METRIC SUMMARY STRIP (Grid 3-Kolom Ramping):                             │
