@@ -35,16 +35,33 @@
 │ =========================================================================== │
 │ TAMPILAN 1: RINGKASAN MINGGUAN & DAFTAR HARI (HISTORY OVERVIEW)             │
 │ =========================================================================== │
-│ 1. BAGIAN 1: HEADER & TOOLBAR FILTER                                        │
+│ 1. BAGIAN 1: HEADER & TOOLBAR FILTER GLOBAL PERIODE                         │
 │    - Eyebrow: CATATAN PRIBADI                                               │
 │    - Judul: My History & Weekly Summary                                     │
 │    - Tombol Aksi Kanan: [ ⬇ Export Histori ] (Unduh CSV Periode Aktif)      │
-│    - Toolbar Filter:                                                        │
+│    - Toolbar Filter Global:                                                 │
 │      • Filter Periode: [ Minggu Sebelumnya · 5–9 Okt ▼ ] (Preset Dropdown)  │
-│      • Filter Kehadiran: [ Semua Hari Kerja ▼ ] (Semua / Submitted / No Sub)│
 │      • Keterangan Tanggal: Senin, 5 Oktober – Jumat, 9 Oktober 2026         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. BAGIAN 2: KARTU RINGKASAN ANGKA MINGGUAN (WEEKLY SUMMARY GRID)           │
+│ 2. BAGIAN 2: NAVIGASI TAB UTAMA (KONSISTEN DENGAN HALAMAN 07)               │
+│    ┌───────────────────────────────────┬──────────────────────────────────┐ │
+│    │ [📅 Riwayat Harian  (5)] (ACTIVE) │ [📊 Ringkasan Mingguan (1 Catatan│ │
+│    └───────────────────────────────────┴──────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. TAB PANEL 1: DAFTAR RIWAYAT HARI PER HARI (DAILY HISTORY LIST)           │
+│    - Panel Header:                                                          │
+│      • Sisi Kiri : Kicker "Rincian per Hari", Counter [ 5 hari ], Judul,    │
+│                    dan Keterangan resmi baca-saja (*read-only*).            │
+│      • Sisi Kanan: Sub-Filter Kehadiran [ Semua Hari Kerja ▼ ]              │
+│                    (Opsi: Semua Hari Kerja / Ada Submission / Tanpa Sub)    │
+│    - Baris Harian (Senin s/d Jumat):                                        │
+│      • Sisi Kiri : Tanggal Lengkap & Sublabel "Riwayat Harian Resmi"        │
+│      • Sisi Tengah: Rangkuman Tugas & Mandat Dual Badges Berdampingan:      │
+│                     [ On-Time / Late / No Sub ] [ Final Status · GREEN/.. ] │
+│                     Metadata: Jam Morning · Jam EOD · Jumlah Komitmen/Tugas │
+│      • Sisi Kanan: [ Tombol: Lihat Detail → ]                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 4. TAB PANEL 2: KARTU RINGKASAN ANGKA MINGGUAN (WEEKLY SUMMARY GRID)        │
 │    [Baris 1: 3 Kolom Metrik Utama]                                          │
 │    ┌──────────────────────┐ ┌──────────────────────┐ ┌────────────────────┐ │
 │    │ 1. Komitmen Pagi     │ │ 2. Distribusi Hasil  │ │ 3. Evaluasi Harian │ │
@@ -68,16 +85,6 @@
 │    │    (Atau: Empty state netral jika belum ada catatan pada periode tsb)│ │
 │    └──────────────────────────────────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. BAGIAN 3: DAFTAR RIWAYAT HARI PER HARI (DAILY HISTORY LIST)              │
-│    - Panel Header: Kicker "Rincian per Hari", Judul "Daftar Riwayat Harian" │
-│    - Counter Badge: [ 5 hari kerja ]                                        │
-│    - Baris Harian (Senin s/d Jumat):                                        │
-│      • Sisi Kiri : Tanggal Lengkap & Sublabel "Riwayat Harian Resmi"        │
-│      • Sisi Tengah: Rangkuman Tugas & Mandat Dual Badges Berdampingan:      │
-│                     [ On-Time / Late / No Sub ] [ Final Status · GREEN/.. ] │
-│                     Metadata: Jam Morning · Jam EOD · Jumlah Komitmen/Tugas │
-│      • Sisi Kanan: [ Tombol: Lihat Detail → ]                               │
-├─────────────────────────────────────────────────────────────────────────────┤
 │ =========================================================================== │
 │ TAMPILAN 2: RINCIAN HARI KERJA (DAY DETAIL VIEW / DRILL-DOWN)               │
 │ =========================================================================== │
@@ -99,6 +106,17 @@
 ---
 
 ## 3. SPESIFIKASI ATURAN BISNIS & PERILAKU SISTEM (*ENGINE RULES*)
+
+### 3.0 Arsitektur Tab Navigasi Utama (Riwayat Harian vs Ringkasan Mingguan)
+Guna meningkatkan kenyamanan membaca (*ergonomics*) dan mencegah kejenuhan menggulir (*scrolling fatigue*) di layar kecil/mobile, antarmuka gambaran histori dipecah menjadi 2 tab navigasi baku yang konsisten dengan standar Halaman 07:
+1. **Tab 1: Riwayat Harian (`#panelDailyHistory` — Default Active):**
+   - Menampilkan daftar catatan kerja per hari (Senin s/d Jumat) secara langsung di layar pertama (*above the fold*).
+   - Dilengkapi badge hitungan hari (`#tabDaysBadge`) dan sub-filter kehadiran (`#recordFilter`: *Semua Hari Kerja*, *Ada Submission*, *Tanpa Submission*) di sisi kanan header panel harian.
+2. **Tab 2: Ringkasan Mingguan (`#panelWeeklySummary`):**
+   - Menampilkan 6 kartu ringkasan metrik kinerja mingguan dan kartu penuh *Catatan Evaluasi Kerja (Manager Notes)*.
+   - **Fitur Pengingat Otomatis (*Smart Reminder Badge*):** Jika pada periode yang aktif terdapat Catatan Evaluasi Kerja resmi dari atasan, tombol Tab 2 otomatis memunculkan badge amber pengingat: `[1 Catatan]`. Jika tidak ada catatan, badge disembunyikan secara otomatis.
+3. **Preservasi Status Tab:**
+   - Ketika pengguna masuk ke rincian hari melalui tombol *Lihat Detail →* dan kemudian menekan tombol *Kembali ke Histori*, sistem secara otomatis memulihkan tampilan ke Tab 1 (Riwayat Harian).
 
 ### 3.1 Aturan Mandat Dual Badges Berdampingan (PRD FR-67 & UI/UX Spec §4.6)
 Setiap baris hari pada Daftar Riwayat Harian **wajib menyajikan sepasang badge (*Dual Badges*) berdampingan**:
@@ -163,6 +181,8 @@ Sistem mendukung 3 jenis catatan manajerial resmi dengan identitas visual tersta
 | **TC-08** | Tombol Kembali Ganda | Klik [← Kembali ke Histori] di atas atau di bawah | Layar detail disembunyikan, overview mingguan dipulihkan, breadcrumb kembali, posisi layar scroll halus ke paling atas. |
 | **TC-09** | Navigasi Breadcrumb | Klik teks `My History` pada breadcrumb | Mengeksekusi fungsi pemulihan yang sama dengan tombol kembali, mengembalikan pengguna ke overview mingguan. |
 | **TC-10** | Ekspor Berkas CSV | Klik [Export Histori] atau [Export Hari Ini] | Peramban mengunduh berkas `.csv` UTF-8 BOM sesuai periode/tanggal. Toast notifikasi hijau muncul mengonfirmasi baris yang diekspor. |
+| **TC-11** | Navigasi Tab Utama | Klik tab [Ringkasan Mingguan] lalu klik [Riwayat Harian] | Tampilan beralih mulus antara 6 kartu metrik + kartu evaluasi pimpinan dan daftar hari kerja tanpa reload halaman. Tab aktif ditandai background putih & bayangan elevasi. |
+| **TC-12** | Sinkronisasi Smart Badge Catatan | Ganti periode ke "Minggu Sebelumnya" $\leftrightarrow$ "Minggu Ini" | Pada Minggu Sebelumnya, badge amber `1 Catatan` muncul di tab Ringkasan Mingguan. Pada Minggu Ini (belum ada catatan), badge amber disembunyikan otomatis. |
 
 ---
 

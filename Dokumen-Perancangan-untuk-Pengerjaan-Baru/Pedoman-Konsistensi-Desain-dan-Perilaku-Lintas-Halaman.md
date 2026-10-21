@@ -357,11 +357,13 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
 - **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-06-My-History-Weekly-Summary.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-06-My-History-Weekly-Summary.md)
 - **Keputusan Terkunci:**
   1. Hak akses audit personal penuh (*self-service*) dan kepatuhan mutlak pada mandat Anti-Gamifikasi (FR-66, AC-44, AC-75).
-  2. Toolbar filter terpadu: preset periode dan filter kehadiran/submission.
-  3. Weekly Summary Grid 7-Metrik seimbang: 6 kartu dalam 2 baris 3 kolom + Kartu 7 (*Catatan Evaluasi Kerja*) membentang selebar baris penuh (*full-width `grid-column: 1 / -1`*).
-  4. Standar 3 tipe Catatan Evaluasi Kerja (Manager Notes): *Apresiasi (Recognition)* (hijau/bintang), *Bimbingan (Coaching)* (amber/kompas), dan *Tindakan Korektif (Corrective)* (merah/seru).
-  5. Mandat Dual Badges berdampingan pada daftar riwayat harian: *Submission Timing Badge* (`On-Time`, `Late`, `No Submission`) berdampingan dengan *Final Status Badge* (`GREEN`, `AMBER`, `RED`, `Final Status belum tersedia`).
-  6. Arsitektur Dual-View State: Overview Mingguan $\leftrightarrow$ Day Detail View tanpa reload halaman.
+  2. **Toolbar Global Periode & Arsitektur 2-Tab (Konsisten dengan Halaman 07):** Toolbar atas memuat preset periode global dan keterangan tanggal rentang waktu. Di bawahnya, antarmuka dibagi menjadi 2 Tab bersih dengan sistem penanda aktif:
+     - **Tab 1: Riwayat Harian (Default):** Dilengkapi badge counter jumlah hari (`5`), sub-filter kehadiran (*Semua Hari Kerja*, *Ada Submission*, *Tanpa Submission*), dan daftar riwayat baris harian Senin–Jumat tanpa tertimbun tumpukan kartu.
+     - **Tab 2: Ringkasan Mingguan:** Dilengkapi badge amber pengingat otomatis (*`1 Catatan`*) saat atasan memberikan catatan evaluasi, menyajikan 6 kartu metrik ringkasan kerja dan kartu penuh *Catatan Evaluasi Kerja (Manager Notes)*.
+  3. **Weekly Summary Grid 7-Metrik Seimbang:** 6 kartu dalam 2 baris 3 kolom (Komitmen Pagi, Distribusi Hasil, Evaluasi Harian Final Status, Kepatuhan Waktu, Pola Pekerjaan Berlanjut, Dukungan & Eskalasi) + Kartu 7 (*Catatan Evaluasi Kerja*) membentang selebar baris penuh (*full-width `grid-column: 1 / -1`*).
+  4. **Standar 3 Tipe Catatan Evaluasi Kerja (Manager Notes):** *Apresiasi (Recognition)* (hijau/bintang), *Bimbingan (Coaching)* (amber/kompas), dan *Tindakan Korektif (Corrective)* (merah/seru).
+  5. **Mandat Dual Badges Berdampingan pada Daftar Riwayat Harian:** *Submission Timing Badge* (`On-Time`, `Late`, `No Submission`) berdampingan dengan *Final Status Badge* (`GREEN`, `AMBER`, `RED`, `Final Status belum tersedia`).
+  6. **Arsitektur Dual-View State & Tab Preservation:** Overview Mingguan (Tab 1/Tab 2) $\leftrightarrow$ Day Detail View tanpa reload halaman. Navigasi kembali dari detail hari selalu mengembalikan pengguna ke Tab 1 Riwayat Harian secara mulus.
   7. Semantic Badges Outcome (`Completed` hijau, `Partially` amber, `Not Completed` merah) dan Continuation (`Continue` biru, `Do Not Continue` netral).
   8. Banner audit khusus hari tanpa submission (*No Submission Audit Notice*).
   9. Breadcrumb topbar dinamis interaktif dan tombol kembali ganda di atas & bawah halaman detail.

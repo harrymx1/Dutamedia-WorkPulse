@@ -135,18 +135,30 @@ p{margin:0}
 
 /* Panels & Cards */
 .panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:var(--shadow-card);margin-bottom:20px}
-.panel-head{padding:18px 22px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--color-border-subtle)}
+.panel-head{padding:18px 22px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--color-border-subtle)}
+.panel-head-titles{min-width:0;flex:1}
 .panel-body{padding:20px 22px}
 .section-kicker{font-size:11.5px;color:var(--color-text-secondary);font-weight:750;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .small{font-size:13px;color:var(--color-text-secondary)}
+
+/* Main View Tabs (Konsisten dengan Halaman 07) */
+.view-tabs{display:inline-flex;align-items:center;background:var(--color-surface-subtle);border:1px solid var(--color-border-subtle);padding:4px;border-radius:10px;gap:4px;margin-bottom:20px}
+.view-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;background:transparent;border-radius:var(--radius-sm);font-size:13.5px;font-weight:750;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
+.view-tab:hover{color:var(--color-text-primary);background:rgba(255,255,255,.6)}
+.view-tab.active{background:#fff;color:var(--color-brand-primary);box-shadow:0 1px 4px rgba(14,33,27,.08)}
+.view-tab svg{width:15px;height:15px;flex-shrink:0}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--color-brand-tint);color:var(--color-brand-primary);font-size:11.5px;font-weight:800}
+.tab-badge.amber{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border:1px solid var(--color-status-amber-border)}
+.view-panel{display:none}
+.view-panel.active{display:block}
 
 /* Toolbar & Filters */
 .history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;background:#fff;border:1px solid var(--color-border-subtle);padding:14px 18px;border-radius:var(--radius-card);box-shadow:var(--shadow-subtle);box-sizing:border-box;max-width:100%}
 .history-toolbar-left,.history-toolbar-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0;max-width:100%}
 .toolbar-filter-group{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%}
 .toolbar-label{font-size:12.5px;font-weight:700;color:var(--color-text-secondary);white-space:nowrap;flex-shrink:0}
-.history-toolbar select{border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--color-text-primary);background:#fff;min-width:160px;max-width:100%;box-sizing:border-box;text-overflow:ellipsis}
-.history-toolbar select:focus{border-color:var(--color-brand-focus);outline:none}
+.history-toolbar select,.toolbar-select{border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--color-text-primary);background:#fff;min-width:160px;max-width:100%;box-sizing:border-box;text-overflow:ellipsis}
+.history-toolbar select:focus,.toolbar-select:focus{border-color:var(--color-brand-focus);outline:none}
 
 /* Summary Grid */
 .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}
@@ -226,11 +238,18 @@ p{margin:0}
   .summary-card.wide{grid-column:auto}
   .history-day{grid-template-columns:1fr;gap:10px;padding:16px}
   .day-action{grid-column:auto}
+  /* Responsif Tab Navigasi Utama di Mobile (1 Baris Ringkas & Rapi) */
+  .view-tabs{display:flex;width:100%;padding:3px;gap:4px;border-radius:9px;margin-bottom:16px;box-sizing:border-box}
+  .view-tab{flex:1;justify-content:center;text-align:center;padding:8px 6px;font-size:11.5px;gap:5px;white-space:nowrap}
+  .view-tab svg{width:13px;height:13px}
+  .tab-badge{min-width:18px;height:18px;font-size:10px;padding:0 4px}
+
   .history-toolbar{padding:14px;gap:12px}
   .history-toolbar-left,.history-toolbar-right{width:100%;gap:10px}
   .toolbar-filter-group{width:100%;display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:8px}
-  .history-toolbar select{width:100%;min-width:0;flex:none}
+  .history-toolbar select,.toolbar-select{width:100%;min-width:0;flex:none}
   .history-toolbar-right{padding-top:4px;border-top:1px dashed var(--color-border-subtle)}
+  .panel-head{flex-direction:column;align-items:stretch;gap:12px}
   .detail-fields{grid-template-columns:1fr}
 }
 </style>
@@ -373,23 +392,15 @@ p{margin:0}
           </div>
         </div>
 
-        <!-- Filter Toolbar -->
+        <!-- Global Period Toolbar -->
         <div class="history-toolbar">
           <div class="history-toolbar-left">
             <div class="toolbar-filter-group">
               <label for="periodFilter" class="toolbar-label">Periode:</label>
-              <select id="periodFilter">
+              <select id="periodFilter" class="toolbar-select">
                 <option value="last-week" selected>Minggu Sebelumnya · 5–9 Okt</option>
                 <option value="this-week">Minggu Ini · 12–16 Okt</option>
                 <option value="this-month">Bulan Ini · Oktober</option>
-              </select>
-            </div>
-            <div class="toolbar-filter-group">
-              <label for="recordFilter" class="toolbar-label">Tampilkan:</label>
-              <select id="recordFilter">
-                <option value="all">Semua Hari Kerja</option>
-                <option value="submitted">Ada Submission</option>
-                <option value="no-submission">Tanpa Submission</option>
               </select>
             </div>
           </div>
@@ -398,136 +409,166 @@ p{margin:0}
           </div>
         </div>
 
-        <!-- Summary Grid -->
-        <div class="summary-grid" id="summaryGrid">
-          <article class="summary-card">
-            <div class="summary-label">Komitmen Pagi (Commitments)</div>
-            <div class="summary-number" id="commitmentTotal">7</div>
-            <div class="summary-foot">Morning Commitment; Additional Work dicatat terpisah</div>
-          </article>
+        <!-- Main View Navigation Tabs -->
+        <nav class="view-tabs" role="tablist" aria-label="Tampilan Histori dan Ringkasan">
+          <button class="view-tab active" id="tabDailyBtn" role="tab" aria-selected="true" aria-controls="panelDailyHistory" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>Riwayat Harian</span>
+            <span class="tab-badge" id="tabDaysBadge">5</span>
+          </button>
+          <button class="view-tab" id="tabWeeklyBtn" role="tab" aria-selected="false" aria-controls="panelWeeklySummary" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <span>Ringkasan Mingguan</span>
+            <span class="tab-badge amber" id="tabNotesIndicator" style="display:inline-flex" title="Terdapat Catatan Evaluasi Kerja dari Pimpinan">1 Catatan</span>
+          </button>
+        </nav>
 
-          <article class="summary-card">
-            <div class="summary-label">Distribusi Hasil (Outcomes)</div>
-            <div class="metric-rows">
-              <div class="metric-row">
-                <span class="metric-label">Completed</span>
-                <div class="meter"><span style="width:78%"></span></div>
-                <strong id="completedCount">7</strong>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Partially Completed</span>
-                <div class="meter"><span class="m-amber" style="width:22%"></span></div>
-                <strong id="partialCount">2</strong>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Not Completed</span>
-                <div class="meter"><span class="m-red" style="width:0%"></span></div>
-                <strong id="notCompletedCount">0</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="summary-card">
-            <div class="summary-label">Evaluasi Harian (Final Status)</div>
-            <div class="metric-rows">
-              <div class="metric-row">
-                <span class="metric-label"><span class="dot-sm" style="color:#2F855A"></span> GREEN</span>
-                <div class="meter"><span class="m-green" style="width:50%"></span></div>
-                <strong id="greenDays">2 hari</strong>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label"><span class="dot-sm" style="color:#B7791F"></span> AMBER</span>
-                <div class="meter"><span class="m-amber" style="width:25%"></span></div>
-                <strong id="amberDays">1 hari</strong>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label"><span class="dot-sm" style="color:#B8322A"></span> RED</span>
-                <div class="meter"><span class="m-red" style="width:25%"></span></div>
-                <strong id="redDays">1 hari</strong>
-              </div>
-            </div>
-            <div class="summary-foot">No Submission ditampilkan terpisah dari Final Status.</div>
-          </article>
-
-          <article class="summary-card">
-            <div class="summary-label">Kepatuhan Waktu (Timing)</div>
-            <div class="metric-rows">
-              <div class="metric-row">
-                <span class="metric-label">On-Time</span>
-                <div class="meter"><span class="m-blue" style="width:60%"></span></div>
-                <strong id="onTimeDays">3 hari</strong>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Late</span>
-                <div class="meter"><span class="m-amber" style="width:20%"></span></div>
-                <strong id="lateDays">1 hari</strong>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">No Submission</span>
-                <div class="meter"><span style="width:20%;background:#64748B"></span></div>
-                <strong id="noSubmissionDays">1 hari</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="summary-card">
-            <div class="summary-label">Pola Pekerjaan Berlanjut</div>
-            <div class="summary-number" id="continuationCount">2 hari</div>
-            <div class="summary-foot">Pola pekerjaan yang berlanjut pada hari kerja berturut-turut</div>
-            <div class="outcome-list">
-              <span class="outcome-chip">Continue <strong id="continueCount">3</strong></span>
-              <span class="outcome-chip">Do Not Continue <strong id="stopCount">6</strong></span>
-            </div>
-          </article>
-
-          <article class="summary-card">
-            <div class="summary-label">Dukungan &amp; Eskalasi</div>
-            <div style="display:grid;gap:8px;margin-top:10px">
-              <div style="display:flex;justify-content:space-between;font-size:13px">
-                <span style="color:var(--color-text-secondary)">Dukungan Diberikan:</span>
-                <strong id="supportCount" style="color:var(--color-brand-primary)">1 aktivitas</strong>
-              </div>
-              <div style="display:flex;justify-content:space-between;font-size:13px">
-                <span style="color:var(--color-text-secondary)">Eskalasi Terbuka:</span>
-                <strong id="escalationCount" style="color:var(--color-status-amber-fg)">1 terbuka</strong>
-              </div>
-            </div>
-            <div class="summary-foot">Menampilkan tindak lanjut yang terkait dengan periode ini.</div>
-          </article>
-
-          <article class="summary-card wide">
-            <div class="summary-label">Catatan Evaluasi Kerja (Manager Notes)</div>
-            <div id="managerNoteWrapper">
-              <div class="note-card">
-                <div class="note-mark recognition" title="Apresiasi (Recognition)">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <!-- Tab Panel 1: Riwayat Harian (Default Active) -->
+        <div class="view-panel active" id="panelDailyHistory" role="tabpanel" aria-labelledby="tabDailyBtn">
+          <!-- History Day List Panel -->
+          <section class="panel history-panel" aria-labelledby="dailyHistoryTitle">
+            <div class="panel-head">
+              <div class="panel-head-titles">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="section-kicker">Rincian per Hari</div>
+                  <span class="pill neutral" id="daysCount" style="padding:2px 8px;font-size:11px">5 hari</span>
                 </div>
-                <div class="note-body">
-                  <div class="note-title">
-                    <span class="pill green">Apresiasi (Recognition)</span>
-                    <span>Budi Santoso — Head of Engineering</span>
-                  </div>
-                  <div class="note-copy">“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”</div>
-                  <div class="note-meta">Jumat, 9 Oktober 2026 · Terverifikasi Sistem</div>
-                </div>
+                <h2 id="dailyHistoryTitle">Daftar Riwayat Harian</h2>
+                <p class="small" style="margin-top:3px">Pilih satu hari untuk melihat catatan lengkap. Data historis bersifat arsip resmi baca-saja (*read-only*).</p>
+              </div>
+              <div class="toolbar-filter-group">
+                <label for="recordFilter" class="toolbar-label">Tampilkan:</label>
+                <select id="recordFilter" class="toolbar-select">
+                  <option value="all">Semua Hari Kerja</option>
+                  <option value="submitted">Ada Submission</option>
+                  <option value="no-submission">Tanpa Submission</option>
+                </select>
               </div>
             </div>
-          </article>
+            <div class="history-list" id="dayList"></div>
+            <div class="empty-filter" id="emptyFilter">Tidak ada hari yang sesuai dengan filter ini.</div>
+          </section>
         </div>
 
-        <!-- History Day List Panel -->
-        <section class="panel history-panel" aria-labelledby="dailyHistoryTitle">
-          <div class="panel-head">
-            <div>
-              <div class="section-kicker">Rincian per Hari</div>
-              <h2 id="dailyHistoryTitle">Daftar Riwayat Harian</h2>
-              <p class="small" style="margin-top:3px">Pilih satu hari untuk melihat catatan lengkap. Data historis bersifat arsip resmi baca-saja (*read-only*).</p>
-            </div>
-            <span class="pill neutral" id="daysCount">5 hari</span>
+        <!-- Tab Panel 2: Ringkasan Mingguan -->
+        <div class="view-panel" id="panelWeeklySummary" role="tabpanel" aria-labelledby="tabWeeklyBtn">
+          <!-- Summary Grid -->
+          <div class="summary-grid" id="summaryGrid">
+            <article class="summary-card">
+              <div class="summary-label">Komitmen Pagi (Commitments)</div>
+              <div class="summary-number" id="commitmentTotal">7</div>
+              <div class="summary-foot">Morning Commitment; Additional Work dicatat terpisah</div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-label">Distribusi Hasil (Outcomes)</div>
+              <div class="metric-rows">
+                <div class="metric-row">
+                  <span class="metric-label">Completed</span>
+                  <div class="meter"><span style="width:78%"></span></div>
+                  <strong id="completedCount">7</strong>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Partially Completed</span>
+                  <div class="meter"><span class="m-amber" style="width:22%"></span></div>
+                  <strong id="partialCount">2</strong>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Not Completed</span>
+                  <div class="meter"><span class="m-red" style="width:0%"></span></div>
+                  <strong id="notCompletedCount">0</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-label">Evaluasi Harian (Final Status)</div>
+              <div class="metric-rows">
+                <div class="metric-row">
+                  <span class="metric-label"><span class="dot-sm" style="color:#2F855A"></span> GREEN</span>
+                  <div class="meter"><span class="m-green" style="width:50%"></span></div>
+                  <strong id="greenDays">2 hari</strong>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label"><span class="dot-sm" style="color:#B7791F"></span> AMBER</span>
+                  <div class="meter"><span class="m-amber" style="width:25%"></span></div>
+                  <strong id="amberDays">1 hari</strong>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label"><span class="dot-sm" style="color:#B8322A"></span> RED</span>
+                  <div class="meter"><span class="m-red" style="width:25%"></span></div>
+                  <strong id="redDays">1 hari</strong>
+                </div>
+              </div>
+              <div class="summary-foot">No Submission ditampilkan terpisah dari Final Status.</div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-label">Kepatuhan Waktu (Timing)</div>
+              <div class="metric-rows">
+                <div class="metric-row">
+                  <span class="metric-label">On-Time</span>
+                  <div class="meter"><span class="m-blue" style="width:60%"></span></div>
+                  <strong id="onTimeDays">3 hari</strong>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Late</span>
+                  <div class="meter"><span class="m-amber" style="width:20%"></span></div>
+                  <strong id="lateDays">1 hari</strong>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">No Submission</span>
+                  <div class="meter"><span style="width:20%;background:#64748B"></span></div>
+                  <strong id="noSubmissionDays">1 hari</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-label">Pola Pekerjaan Berlanjut</div>
+              <div class="summary-number" id="continuationCount">2 hari</div>
+              <div class="summary-foot">Pola pekerjaan yang berlanjut pada hari kerja berturut-turut</div>
+              <div class="outcome-list">
+                <span class="outcome-chip">Continue <strong id="continueCount">3</strong></span>
+                <span class="outcome-chip">Do Not Continue <strong id="stopCount">6</strong></span>
+              </div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-label">Dukungan &amp; Eskalasi</div>
+              <div style="display:grid;gap:8px;margin-top:10px">
+                <div style="display:flex;justify-content:space-between;font-size:13px">
+                  <span style="color:var(--color-text-secondary)">Dukungan Diberikan:</span>
+                  <strong id="supportCount" style="color:var(--color-brand-primary)">1 aktivitas</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:13px">
+                  <span style="color:var(--color-text-secondary)">Eskalasi Terbuka:</span>
+                  <strong id="escalationCount" style="color:var(--color-status-amber-fg)">1 terbuka</strong>
+                </div>
+              </div>
+              <div class="summary-foot">Menampilkan tindak lanjut yang terkait dengan periode ini.</div>
+            </article>
+
+            <article class="summary-card wide">
+              <div class="summary-label">Catatan Evaluasi Kerja (Manager Notes)</div>
+              <div id="managerNoteWrapper">
+                <div class="note-card">
+                  <div class="note-mark recognition" title="Apresiasi (Recognition)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </div>
+                  <div class="note-body">
+                    <div class="note-title">
+                      <span class="pill green">Apresiasi (Recognition)</span>
+                      <span>Budi Santoso — Head of Engineering</span>
+                    </div>
+                    <div class="note-copy">“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”</div>
+                    <div class="note-meta">Jumat, 9 Oktober 2026 · Terverifikasi Sistem</div>
+                  </div>
+                </div>
+              </div>
+            </article>
           </div>
-          <div class="history-list" id="dayList"></div>
-          <div class="empty-filter" id="emptyFilter">Tidak ada hari yang sesuai dengan filter ini.</div>
-        </section>
+        </div>
       </section>
 
       <!-- Section 2: Day Detail View (Drill-Down) -->
@@ -856,14 +897,22 @@ p{margin:0}
     }
 
     const noteEl = $('managerNoteWrapper');
+    const tabNotesBadge = $('tabNotesIndicator');
     if (noteEl) {
       if (d.managerNote) {
         noteEl.innerHTML = renderNoteCardHtml(d.managerNote);
+        if (tabNotesBadge) {
+          tabNotesBadge.style.display = 'inline-flex';
+          tabNotesBadge.textContent = '1 Catatan';
+        }
       } else {
         noteEl.innerHTML = `
           <div style="padding:16px 14px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);text-align:center;font-size:12.5px;color:var(--color-text-secondary);background:var(--color-surface-subtle)">
             Belum ada catatan evaluasi atau apresiasi kerja resmi yang diberikan oleh atasan untuk periode ini.
           </div>`;
+        if (tabNotesBadge) {
+          tabNotesBadge.style.display = 'none';
+        }
       }
     }
 
@@ -885,6 +934,7 @@ p{margin:0}
     list.innerHTML = '';
     $('emptyFilter').classList.toggle('show', keys.length === 0);
     $('daysCount').textContent = keys.length + ' hari';
+    if ($('tabDaysBadge')) $('tabDaysBadge').textContent = d.keys.length;
 
     if (currentPeriod === 'this-week' && keys.length === 0) {
       $('emptyFilter').textContent = 'Belum ada catatan akuntabilitas untuk minggu ini.';
@@ -1101,6 +1151,32 @@ p{margin:0}
   }
 
   // Event Listeners
+  const tabDailyBtn = $('tabDailyBtn');
+  const tabWeeklyBtn = $('tabWeeklyBtn');
+  const panelDaily = $('panelDailyHistory');
+  const panelWeekly = $('panelWeeklySummary');
+
+  function switchTab(tabName) {
+    if (tabName === 'daily') {
+      tabDailyBtn.classList.add('active');
+      tabDailyBtn.setAttribute('aria-selected', 'true');
+      tabWeeklyBtn.classList.remove('active');
+      tabWeeklyBtn.setAttribute('aria-selected', 'false');
+      panelDaily.classList.add('active');
+      panelWeekly.classList.remove('active');
+    } else {
+      tabWeeklyBtn.classList.add('active');
+      tabWeeklyBtn.setAttribute('aria-selected', 'true');
+      tabDailyBtn.classList.remove('active');
+      tabDailyBtn.setAttribute('aria-selected', 'false');
+      panelWeekly.classList.add('active');
+      panelDaily.classList.remove('active');
+    }
+  }
+
+  if (tabDailyBtn) tabDailyBtn.addEventListener('click', () => switchTab('daily'));
+  if (tabWeeklyBtn) tabWeeklyBtn.addEventListener('click', () => switchTab('weekly'));
+
   $('periodFilter').addEventListener('change', e => {
     currentPeriod = e.target.value;
     renderSummary();
