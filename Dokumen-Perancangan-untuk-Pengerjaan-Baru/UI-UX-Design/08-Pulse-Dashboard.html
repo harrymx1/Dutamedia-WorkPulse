@@ -357,7 +357,57 @@
 
     /* Page Heading */
     .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
       margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .heading-side {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+    .scope-context-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      padding: 7px 14px;
+      box-shadow: 0 2px 8px rgba(14, 33, 27, 0.05);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .scope-context-card:hover {
+      border-color: var(--color-border-strong);
+      box-shadow: 0 4px 12px rgba(14, 33, 27, 0.08);
+    }
+    .scope-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--color-brand-tint);
+      color: var(--color-brand-primary);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .scope-card-label {
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 750;
+      color: var(--color-text-secondary);
+      line-height: 1.2;
+    }
+    .scope-card-val {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      line-height: 1.3;
     }
     .eyebrow {
       font-size: 11px;
@@ -1062,9 +1112,27 @@
     <div class="content">
       <!-- Page Heading -->
       <div class="page-heading">
-        <div class="eyebrow">Dashboard Operasional</div>
-        <h1 id="pageTitle">Team Pulse</h1>
-        <p class="subtitle" id="pageSubtitle">Ringkasan kondisi tim dan hal yang membutuhkan perhatian segera, dalam lingkup tim yang menjadi tanggung jawab Anda.</p>
+        <div>
+          <div class="eyebrow">Dashboard Operasional</div>
+          <h1 id="pageTitle">Team Pulse</h1>
+          <p class="subtitle" id="pageSubtitle">Ringkasan kondisi tim dan hal yang membutuhkan perhatian segera, dalam lingkup tim yang menjadi tanggung jawab Anda.</p>
+        </div>
+        <div class="heading-side">
+          <div class="scope-context-card" title="Lingkup unit kerja aktif">
+            <div class="scope-icon-wrap" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="scope-card-label">Lingkup Unit</div>
+              <div class="scope-card-val" id="scopePill">Tim Produk Digital</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Scope Switcher & Filter Bar (Multi-Role Support) -->
