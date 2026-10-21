@@ -371,36 +371,15 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
 - **Berkas Prototipe:** [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html)
 - **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-07-Notification-Center-Browser-Push.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-07-Notification-Center-Browser-Push.md)
 - **Keputusan Terkunci:**
-  1. **Mandat Pengiriman Nyata MVP (PRD FR-38):** Mendukung Browser Push fungsional nyata untuk trigger PRD Section 8, bukan rekaman dummy/stub.
-  2. **Pemisahan Status Dibaca vs Pengiriman Kanal:** Status *Sudah Dibaca* di in-app center tidak boleh disamakan dengan bukti pengiriman (*delivery confirmation*) pada Email maupun Browser Push.
-  3. **Engine Kontrol Izin Browser Push (4-State):** `Unsupported` (disabled amber), `Default/Prompt` (tombol aktif sadar pengguna), `Granted` (izin aktif hijau), dan `Denied/Blocked` (edukasi pembukaan izin di pengaturan peramban).
-  4. **Prinsip Non-Blocking on Denial:** Penolakan izin browser push tidak menghalangi alur kerja operasional inti apa pun.
-  5. **Panel Matriks Kanal Pengiriman (PRD §8):** Menyajikan transparansi status distribusi multi-kanal (In-App Center, Email, Browser Push).
-  6. **Feed Notifikasi Interaktif:** Tab status filter (`Semua`, `Belum Dibaca`, `Sudah Dibaca`), dropdown jenis notifikasi, dan live search teks instan.
-  7. **Tindakan Massal & Satuan:** Tombol *Tandai Semua Dibaca* di header/feed serta toggle status baca per baris.
-  8. **Modal Detail & Deep Link Resolver:** Tombol *Buka Konteks Terkait* mengarahkan pengguna secara presisi ke dokumen/modul sumber (Halaman 02, 03, 04, 05, 06, 16a/b, 20, 24).
-  9. **Zero Unicode Emoji & Murni SVG Monokrom:** Mengeliminasi seluruh karakter unicode mentah dan menggantinya dengan inline SVG monokrom profesional `stroke-width="1.8-2.2"`.
-  10. **Sinkronisasi Sesi & Shell Sidebar Baku:** Terhubung dengan `localStorage: workpulse_active_user`, drawer off-canvas, dan fluid padding simetris `clamp(1.5rem, 4vw, 3.75rem)`.
-
-### Halaman Berikutnya (Registri Bertahap):
-- `08-Pulse-Dashboard.html`
-- `09-Blocker-Escalation-Queue.html`
-- `10-Manager-Note-Coaching-Record.html`
-- `11-Compliance-Queue-HRGA.html`
-- `12-Exemption-Management.html`
-- `13-Project-Risk-View.html`
-- `14-Escalation-Aging.html`
-- `15-Admin-Organizational-Mapping.html`
-- `16a-Morning-Correction-Request.html`
-- `16b-EOD-Correction-Request.html`
-- `17-Admin-Temporary-Reviewer.html`
-- `18-Policy-Settings.html`
-- `19-Admin-Notification-Channel-Setup.html`
-- `20-My Leave Request (Employee).html`
-- `21-Leave Approval Queue (ReviewerHRGA).html`
-- `22-Correction-and-Leave-Review.html`
-- `23-Reports.html`
-- `24-Profile-Settings.html`
+  1. **Mandat Pengiriman Nyata MVP (PRD FR-38 & PDD §2.2):** Sistem mendukung pengiriman Web Notification Browser Push riil pada MVP untuk pemicu batas waktu (Morning/EOD cutoff) dan kendala kritis (Critical Blocker).
+  2. **Pemisahan Status Read vs Delivery (UI/UX Spec §4.7):** Status "Sudah Dibaca" di Notification Center murni penandaan in-app, bukan bukti bahwa notifikasi Email atau Browser Push telah sampai pada perangkat penerima.
+  3. **Engine Kontrol Izin Browser Push 4-State:** Mengevaluasi ketersediaan dan izin `window.Notification` peramban: `Unsupported` (badge amber disabled), `Default / Prompt` (badge netral, tombol aktivasi eksplisit), `Granted` (badge hijau izin aktif), dan `Denied` (badge merah dengan panduan membuka kunci situs).
+  4. **Prinsip Non-Intrusif & Non-Blocking:** Permintaan izin browser push hanya dipicu oleh klik sadar pengguna (*click-to-prompt*). Penolakan izin peramban dilarang menghambat operasional alur kerja lainnya.
+  5. **Panel Matriks Saluran Distribusi (PRD §8):** Menyajikan status 3 saluran (*Web Notification Center*, *Email Korporat*, *Browser Push*) dengan maklumat tata kelola resmi.
+  6. **Feed Interaktif Multi-Filter & Live Search:** Mendukung filter tab status (`Semua`, `Belum Dibaca`, `Sudah Dibaca`), dropdown filter kategori, dan pencarian teks instan pada judul/deskripsi/ID tiket.
+  7. **Penandaan Massal & Mandiri:** Tombol *Tandai semua dibaca* di header dan baris feed yang memperbarui dot unread secara instan, didampingi tombol toggle status baca per baris.
+  8. **Modal Detail & Context Deep-Link Resolver:** Dialog pop-up rincian notifikasi dengan tombol *Buka Konteks Terkait* yang mengarahkan pengguna secara akurat ke halaman sumber dokumen (Halaman 02, 03, 04, 05, 06, 16a/b, 20, 24).
+  9. **Sinkronisasi Sesi Dinamis & Contextual Toast Engine:** Membaca profil aktif Budi Pratama dari `localStorage: workpulse_active_user` dan menyajikan feedback notifikasi 3 varian semantik (`success`, `warning`, `error`).
 
 ---
 

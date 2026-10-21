@@ -3,123 +3,124 @@
 
 - **Berkas Prototipe:** [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html)
 - **Rute Sistem:** `/notifications`
-- **Posisi Alur:** Pusat Komunikasi, Pemantauan Pembaruan & Distribusi Notifikasi (*Notification & Communication Hub*)
-- **Dokumen Terkait:** [Pedoman-Konsistensi-Desain-dan-Perilaku-Lintas-Halaman.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Pedoman-Konsistensi-Desain-dan-Perilaku-Lintas-Halaman.md), [02-PRD.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/02-PRD.md), [03-UI-UX-Spec-Flow.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/03-UI-UX-Spec-Flow.md), [04-Design-System.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/04-Design-System.md)
+- **Posisi Alur:** Pusat Komunikasi, Pemantauan Notifikasi In-App & Kontrol Izin Browser Push (*Communication Hub & Browser Push Control*)
+- **Dokumen Terkait:** [Pedoman-Konsistensi-Desain-dan-Perilaku-Lintas-Halaman.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Pedoman-Konsistensi-Desain-dan-Perilaku-Lintas-Halaman.md), [01-PDD.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/01-PDD.md), [02-PRD.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/02-PRD.md), [03-UI-UX-Spec-Flow.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/03-UI-UX-Spec-Flow.md), [04-Design-System.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/04-Design-System.md)
 
 ---
 
 ## 1. IKHTISAR, TUJUAN & FILOSOFI DESAIN
 
 ### 1.1 Fungsi Utama Halaman
-1. **Pusat Notifikasi Terpadu In-System (PRD FR-38):** Menjadi wadah arsip terpusat bagi seluruh pembaruan operasional, eskalasi risiko, permohonan bantuan, persetujuan cuti, keputusan koreksi, dan pengingat jadwal kerja harian.
-2. **Mandat Pengiriman Nyata MVP (*Real MVP Delivery*):** Mendukung pengiriman notifikasi nyata melalui **Browser Push** untuk pemicu-pemicu yang telah ditetapkan dalam PRD Section 8, bukan sekadar *mock/stub*.
-3. **Pemisahan Tegas Status Dibaca vs Bukti Pengiriman (*Read $\ne$ Delivery*):** Menegaskan bahwa penandaan "Sudah Dibaca" di aplikasi murni status antarmuka dan tidak boleh disamakan dengan bukti pengiriman (*delivery confirmation*) pada kanal Email maupun Browser Push.
-4. **Pemberian Izin Sadar Pengguna (*Explicit Opt-In*):** Permintaan izin browser push hanya dipicu oleh aksi eksplisit pengguna tanpa memblokir alur operasional utama saat izin ditolak atau tidak didukung.
+1. **Pusat Pemantauan In-App Terpusat (PRD FR-38):** Menjadi tempat pencatatan terpusat seluruh peristiwa akuntabilitas kerja, tanggapan blocker, persetujuan koreksi data, pembaruan izin cuti, dan catatan apresiasi pimpinan dalam satu wadah arsip *in-system*.
+2. **Kanal Pengiriman Browser Push Nyata MVP (PRD FR-38 & PDD §2.2):** Menyediakan mekanisme aktivasi dan pemantauan izin Web Notifications API peramban (*Explicit Opt-In*) untuk mendukung pengiriman push notification riil pada pemicu batas waktu (Morning/EOD cutoff) dan eskalasi kedaruratan (tiket Critical Blocker).
+3. **Pemisahan Status Penandaan vs Status Pengiriman Saluran (UI/UX Spec §4.7):** Menegakkan pemisahan tegas bahwa status *"Sudah Dibaca" (Read)* di Notification Center murni interaksi penandaan aplikasi, bukan bukti bahwa notifikasi Email atau Browser Push telah terkirim/diterima di gawai penerima.
+4. **Pemberdayaan Tindak Lanjut Kontekstual (*Deep-Link Context Resolver*):** Memfasilitasi pengguna untuk melompat langsung ke halaman sumber dokumen (Halaman 02, 03, 04, 05, 06, 16a/b, 20, 24) melalui dialog rincian notifikasi.
 
 ### 1.2 Batasan Desain Baku
-- **Nol Emoticon & Ikon Monokrom:** Seluruh visual menggunakan tipografi korporat dan inline SVG monokrom (`stroke-width="1.8-2.2"`).
-- **Sidebar Workspace Resmi:** Mengintegrasikan menu *My Today*, *My Blockers* (ikon bendera + badge `2`), *My History*, *My Leave*, dan *Notifications* (aktif) dengan pembacaan profil dinamis *Budi Pratama* (`workpulse_active_user`).
-- **Fluid Layout Seimbang:** Padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis kaku, sejajar lurus dengan Halaman 02 s.d. 06.
-- **100% Otentik Hasil Produksi:** Bersih mutlak dari elemen demo uji coba (*pure production-authentic*).
+- **Nol Emoticon / Emoji:** Murni menggunakan tipografi korporat dan inline SVG monokrom bergaya *line-stroke* (`stroke-width="1.8-2.2"`).
+- **Warna Merah Lembut (*Soft Rose*):** Background `#FFF8F8`, border `#FECDCA`, teks `#DC2626` / `#991B1B` pada kartu Critical Blocker dan status izin peramban yang diblokir (*Denied*).
+- **Prinsip Non-Intrusif & Non-Blocking:** Permintaan izin Browser Push hanya dipicu oleh tindakan sadar pengguna (*click-to-prompt*). Penolakan izin browser tidak boleh menghalangi alur kerja operasional lainnya.
+- **Fluid Layout Seimbang:** Padding simetris `clamp(1.5rem, 4vw, 3.75rem)` tanpa satuan statis kaku, sejajar lurus dengan seluruh halaman Workspace lainnya.
 
 ---
 
 ## 2. ANATOMI ANTARMUKA & TATA LETAK KOMPONEN
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│ TOPBAR:                                                                          │
-│ [☰ Hamburger Mobile]  Breadcrumb: Workspace / Notifications                      │
-│ [Lonceng Notifikasi + Dot Indikator Dinamis]   [Avatar Profil (BP)]              │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ 1. PAGE HEADING:                                                                 │
-│    - Kicker: PUSAT KOMUNIKASI & PEMBARUAN                                        │
-│    - Judul H1: Web Notification Center                                           │
-│    - Subteks: Pantau pembaruan komitmen kerja, tindak lanjut blocker, status...  │
-│    - Sisi Kanan: Badge Belum Dibaca [ ● 3 belum dibaca ] + [ Tandai Semua Dibaca]│
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ 2. METRIC SUMMARY STRIP (Grid 3-Kolom):                                          │
-│    ┌────────────────────────┐ ┌────────────────────────┐ ┌─────────────────────┐ │
-│    │ Total Notifikasi       │ │ Belum Dibaca           │ │ Browser Push        │ │
-│    │ 8                      │ │ 3                      │ │ Izin Aktif / Belum  │ │
-│    │ Tercatat dalam riwayat │ │ Perlu peninjauan/aksi  │ │ Status pada browser │ │
-│    └────────────────────────┘ └────────────────────────┘ └─────────────────────┘ │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ 3. TOP GRID (Grid 2-Kolom):                                                      │
-│    ┌───────────────────────────────────┐ ┌─────────────────────────────────────┐ │
-│    │ KARTU 1: PREFERENSI PERANGKAT     │ │ KARTU 2: STATUS KANAL DISTRIBUSI    │ │
-│    │ (Browser Push Permission Control) │ │ (Notification Channel Matrix PRD §8)│ │
-│    │ - Badge State: [ Izin Aktif / ..] │ │ - Baris 1: Web Notification Center  │ │
-│    │ - Ikon Lingkaran Lonceng SVG      │ │            [ Tersedia · Arsip Resmi]│ │
-│    │ - Judul & Penjelasan Hak Akses    │ │ - Baris 2: Email Korporat           │ │
-│    │ - Notice Box Edukatif 4-Varian    │ │            [ Aktif per Kebijakan ]  │ │
-│    │ - Tombol: [Aktifkan Browser Push] │ │ - Baris 3: Browser Push             │ │
-│    │   & [Periksa Status]              │ │            [ Status Izin Perangkat ]│ │
-│    │ - Subtitle: Izin berlaku per gawai│ │ - Maklumat: Read status ≠ Delivery  │ │
-│    └───────────────────────────────────┘ └─────────────────────────────────────┘ │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ 4. PANEL UTAMA: SEMUA NOTIFIKASI (FEED & ARSIP IN-APP):                          │
-│    - Header Panel: Judul "Semua Riwayat Notifikasi", Tombol Cepat Tandai Dibaca  │
-│    - Toolbar Filter & Pencarian:                                                 │
-│      • Tab Status: [ Semua (8) ]   [ Belum Dibaca (3) ]   [ Sudah Dibaca (5) ]   │
-│      • Input Live Search: Pencarian real-time (judul, deskripsi, ID tiket)       │
-│      • Dropdown Jenis: Semua / Blocker / Dukungan / Koreksi / Pengingat / Sistem │
-│    - Feed Notifikasi (Notification Items):                                       │
-│      • Ikon SVG Kategori Tematik (Merah/Risiko, Amber/Dukungan, Biru/Koreksi)    │
-│      • Dot Indikator Belum Dibaca (Hijau Botol)                                  │
-│      • Judul & Narasi Ringkas                                                    │
-│      • Mini-Tag Semantik & Timestamp ISO Humanis                                 │
-│      • Aksi Kartu: [ Lihat Detail → ] & [ Toggle Status Dibaca (SVG) ]           │
-│    - Empty State Box: Ikon pencarian SVG, teks ramah, dan petunjuk filter       │
-│    - Footer Panel: Counter hasil pencarian & maklumat otorisasi akun             │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ 5. MODAL DETAIL NOTIFIKASI & DEEP LINK RESOLVER:                                 │
-│    - Dialog terisolasi dengan backdrop blur                                      │
-│    - Rincian lengkap: Judul, Deskripsi, Metadata Dokumen, Waktu Lapor            │
-│    - Tombol Aksi: [ Tutup ] & [ Buka Konteks Terkait > ]                         │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ 6. CONTEXTUAL TOAST ENGINE: Notifikasi feedback sudut kanan bawah                │
-└──────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TOPBAR:                                                                     │
+│ [☰ Hamburger Mobile] Breadcrumb: Workspace / Notifications                   │
+│ [Lonceng Notifikasi + Dot Indikator Unread]  [Avatar Pengguna (BP)]         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. PAGE HEADING:                                                            │
+│    - Eyebrow: PUSAT KOMUNIKASI & PEMBARUAN                                  │
+│    - Judul H1: Web Notification Center                                      │
+│    - Subteks: Pantau pembaruan komitmen kerja, tindak lanjut blocker...     │
+│    - Sisi Kanan: Badge [ ● 3 belum dibaca ] & Tombol [ Tandai Semua Dibaca ]│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. METRIC SUMMARY STRIP (Grid 3-Kolom Ramping):                             │
+│    ┌────────────────────────┐ ┌────────────────────────┐ ┌────────────────┐ │
+│    │ Total Notifikasi       │ │ Belum Dibaca           │ │ Browser Push   │ │
+│    │ 8                      │ │ 3                      │ │ Izin Aktif / ..│ │
+│    │ Riwayat in-system      │ │ Perlu peninjauan       │ │ Status peramban│ │
+│    └────────────────────────┘ └────────────────────────┘ └────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. TOP GRID (Grid 2-Kolom Seimbang):                                        │
+│    ┌───────────────────────────────────┐ ┌────────────────────────────────┐ │
+│    │ KARTU A: PREFERENSI PERANGKAT     │ │ KARTU B: STATUS KANAL DISTRIBUS│ │
+│    │ (Browser Push Permission Engine)  │ │ (PRD Section 8 Matrix)         │ │
+│    │ - Badge Status: [ Izin Aktif / ..]│ │ - Row 1: Web Notification Ctr  │ │
+│    │ - Ikon Lonceng SVG Monokrom       │ │   [ Tersedia · Arsip Resmi ]   │ │
+│    │ - Judul & Deskripsi Hak Akses     │ │ - Row 2: Email Korporat        │ │
+│    │ - Notice Box Edukatif (4-State)   │ │   [ Aktif per Kebijakan ]      │ │
+│    │ - Aksi: [ Aktifkan Push ]         │ │ - Row 3: Browser Push          │ │
+│    │   & [ Periksa Status ]            │ │   [ Status Izin Perangkat ]    │ │
+│    │ - Subteks: Berlaku per gawai      │ │ - Notice: Read ≠ Delivery      │ │
+│    └───────────────────────────────────┘ └────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 4. PANEL UTAMA: SEMUA RIWAYAT NOTIFIKASI (INTERACTIVE FEED):                │
+│    - Header: Judul "Daftar Notifikasi", Tombol [ Tandai Semua Dibaca ]      │
+│    - Toolbar Filter & Live Search:                                          │
+│      • Tab Status: [ Semua (8) ]  [ Belum Dibaca (3) ]  [ Sudah Dibaca (5) ]│
+│      • Input Live Search: Pencarian real-time (judul, deskripsi, tiket)     │
+│      • Dropdown Kategori: Semua / Blocker / Dukungan / Koreksi / Pengingat  │
+│    - Daftar Kartu Notifikasi (Notification Cards):                          │
+│      • Ikon SVG Kategori Tematik (Merah/Amber/Biru/Hijau/Netral)            │
+│      • Dot Indikator Unread (Hijau Botol)                                   │
+│      • Judul & Narasi Ringkas                                               │
+│      • Mini-Tag Semantik & Timestamp Humanis                                │
+│      • Aksi Baris: [ Lihat Detail → ] & [ Tombol Toggle Baca/Belum ]        │
+│    - Empty State Box: Muncul saat filter pencarian tidak menemukan hasil    │
+│    - Footer Panel: Counter hasil pencarian & maklumat otorisasi akun        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 5. MODAL DETAIL NOTIFIKASI & DEEP-LINK RESOLVER:                            │
+│    - Pop-up Dialog terisolasi dengan backdrop blur                          │
+│    - Rincian lengkap dokumen dan tombol aksi [ Buka Konteks Terkait > ]     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 6. CONTEXTUAL TOAST ENGINE: Feedback notifikasi sudut kanan bawah           │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 3. SPESIFIKASI ATURAN BISNIS & PERILAKU SISTEM (*ENGINE RULES*)
 
-### 3.1 Pembedaan Status Dibaca vs Status Pengiriman (*Read $\ne$ Delivery*)
-- Sesuai amanat **PRD FR-38** dan **UI/UX Spec §4.7**, penandaan status *Sudah Dibaca* di aplikasi murni mengubah status internal notifikasi (`isRead = true`).
-- Status ini **DILARANG** diklaim atau disamakan sebagai bukti pengiriman (*delivery confirmation*) pada kanal Email maupun Browser Push.
-- Maklumat tata kelola resmi selalu disematkan pada dasar panel kanal untuk menjaga integritas informasi.
+### 3.1 Kontrol Izin Browser Push 4-State (PRD FR-38 & UI/UX Spec §4.7)
+Sistem secara otomatis mengevaluasi ketersediaan dan status izin Web Notifications API (`window.Notification`):
+1. **State 1: Unsupported (Peramban Tidak Mendukung):**
+   - Indikator: Badge amber `Tidak Didukung`.
+   - Perilaku: Tombol aktivasi dinonaktifkan (`disabled`), notice informatif menegaskan bahwa seluruh notifikasi tetap dapat diakses melalui Notification Center dan Email.
+2. **State 2: Default / Prompt (Belum Diaktifkan):**
+   - Indikator: Badge netral `Belum Aktif`.
+   - Perilaku: Tombol **`Aktifkan Browser Push`** aktif. Izin hanya diminta saat pengguna mengklik tombol tersebut.
+3. **State 3: Granted (Izin Diberikan & Aktif):**
+   - Indikator: Badge hijau `Izin Aktif`.
+   - Perilaku: Tombol berubah menjadi `Izin Sudah Aktif` (disabled), notice hijau sukses menegaskan izin telah aktif pada peramban ini.
+4. **State 4: Denied / Blocked (Izin Diblokir di Browser):**
+   - Indikator: Badge merah `Diblokir`.
+   - Perilaku: Tombol berubah menjadi `Lihat Panduan Browser`, notice peringatan amber memandu langkah pengguna membuka izin pada pengaturan URL browser.
 
-### 3.2 Engine Kontrol Izin Browser Push (4 State Baku)
-Sistem mengevaluasi status Web Notifications API secara *real-time*:
-1. **`Unsupported`**: Platform/browser tidak mendukung API `Notification`. Tombol push dinonaktifkan (`disabled`), badge *Tidak Didukung* (amber), dan pengguna diedukasi untuk menggunakan Web Notification Center serta Email.
-2. **`Default / Prompt`**: Browser mendukung namun izin belum pernah diminta. Badge *Belum Diaktifkan* (netral), tombol *Aktifkan Browser Push* siap diklik, dan notice menjelaskan bahwa izin hanya diminta atas tindakan sadar pengguna.
-3. **`Granted`**: Pengguna telah memberikan izin pada peramban ini. Badge *Izin Aktif* (hijau), tombol *Izin Sudah Aktif* (`disabled`), notice hijau sukses tampil.
-4. **`Denied / Blocked`**: Pengguna memblokir izin notifikasi pada level browser. Badge *Izin Diblokir* (merah), notice edukatif menjelaskan bahwa aplikasi tidak dapat mengubah izin browser secara sepihak dan memandu pengguna membuka ikon gembok URL browser.
+### 3.2 Matriks Kanal Distribusi Resmi (PRD Section 8)
+Menyajikan status 3 saluran pengiriman:
+- **Web Notification Center:** `Tersedia · Arsip Resmi` (in-app, seluruh peristiwa tercatat).
+- **Email Korporat:** `Aktif per Kebijakan` (pengingat batas waktu dan eskalasi).
+- **Browser Push:** Mengikuti status izin perangkat aktif (pengiriman instan pemicu kritis).
+- **Prinsip Read $\ne$ Delivery:** Status "Sudah Dibaca" di Notification Center bukan konfirmasi bahwa pesan telah sampai pada kanal eksternal.
 
-### 3.3 Penolakan Izin Bersifat Non-Blocking
-- Jika pengguna menolak izin push atau memblokirnya, sistem **DILARANG KERAS** memblokir alur operasional apa pun. Karyawan tetap dapat check-in, melapor blocker, melihat histori, dan menggunakan Notification Center secara bebas.
+### 3.3 Deep-Link Context Resolver
+Setiap notifikasi memiliki asosiasi rute tujuan yang jelas:
+- Blocker $\rightarrow$ `05-Raise-Instant-Blocker.html#my-blockers`.
+- Morning Commitment $\rightarrow$ `02-Morning-Commitment.html`.
+- Additional Work $\rightarrow$ `03-Additional-Work.html`.
+- EOD Outcome $\rightarrow$ `04-EOD-Outcome.html`.
+- History & Weekly Summary $\rightarrow$ `06-My-History-Weekly-Summary.html`.
+- Correction Requests $\rightarrow$ `16a-Morning-Correction-Request.html` / `16b-EOD-Correction-Request.html`.
+- Leave Requests $\rightarrow$ `20-My Leave Request (Employee).html`.
+- Profil & Organisasi $\rightarrow$ `24-Profile-Settings.html`.
 
-### 3.4 Matriks Distribusi Multi-Kanal (PRD Section 8)
-Sistem mencatat notifikasi secara otomatis berdasarkan taksonomi pemicu:
-- **Blocker Kritis / Instant Blocker:** Email + Browser Push + Web Notification Center.
-- **AMBER + Kebutuhan Bantuan:** Email + Browser Push + Web Notification Center.
-- **EOD / Morning Reminder Cutoff:** Email + Browser Push + Web Notification Center.
-- **Koreksi Applied / Rejected:** Web Notification Center.
-- **Perubahan Kebijakan / Organisasi:** Web Notification Center.
-- **Permohonan Cuti:** Email + Browser Push (Pengajuan) / Email + Web Notification Center (Keputusan).
-
-### 3.5 Deep Link Resolver Antar-Halaman
-Setiap notifikasi memiliki target rute kontekstual (`targetRoute`) yang menyelesaikan navigasi secara tepat:
-- Notifikasi Blocker $\rightarrow$ `05-Raise-Instant-Blocker.html#my-blockers`.
-- Notifikasi Morning Commitment $\rightarrow$ `02-Morning-Commitment.html`.
-- Notifikasi Additional Work $\rightarrow$ `03-Additional-Work.html`.
-- Notifikasi EOD Outcome $\rightarrow$ `04-EOD-Outcome.html`.
-- Notifikasi Weekly Summary / Histori $\rightarrow$ `06-My-History-Weekly-Summary.html`.
-- Notifikasi Koreksi $\rightarrow$ `16a-Morning-Correction-Request.html` / `16b-EOD-Correction-Request.html`.
-- Notifikasi Cuti $\rightarrow$ `20-My Leave Request (Employee).html`.
-- Notifikasi Profil/Organisasi $\rightarrow$ `24-Profile-Settings.html`.
+### 3.4 Mekanisme Penandaan Massal & Satuan
+- Mengklik **`Tandai semua dibaca`** langsung mengubah seluruh item unread menjadi read, memadamkan dot badge pada topbar dan sidebar, serta memicu toast sukses hijau.
+- Tombol toggle pada kartu memungkinkan penandaan baca/belum secara mandiri per baris dengan sinkronisasi counter metrik secara real-time.
 
 ---
 
@@ -127,16 +128,16 @@ Setiap notifikasi memiliki target rute kontekstual (`targetRoute`) yang menyeles
 
 | ID | Skenario Pengujian | Kondisi Masukan (*Input State*) | Respons Sistem & Efek Visual |
 | :---: | :--- | :--- | :--- |
-| **TC-01** | Pemuatan Awal Halaman | Halaman dibuka | Counter unread = 3, dot lonceng topbar menyala, 8 kartu ter-render dengan rapi, status izin browser diperiksa. |
-| **TC-02** | Filter Tab: Belum Dibaca | Klik tab `Belum dibaca (3)` | Tepat 3 kartu unread tampil (latar hijau lembut halus dengan dot unread). Kartu read disembunyikan. |
-| **TC-03** | Filter Tab: Sudah Dibaca | Klik tab `Sudah dibaca (5)` | Tepat 5 kartu berstatus dibaca tampil. Dot unread tidak ada pada kartu. |
-| **TC-04** | Filter Dropdown: Blocker | Pilih opsi "Blocker & risiko" | Menampilkan 2 kartu blocker (BLK-0042 dan BLK-0031). Kategori lain disembunyikan. Counter hasil menampilkan "Menampilkan 2 notifikasi". |
-| **TC-05** | Live Search Kata Kunci | Ketik "Blocker" di kotak pencarian | Menampilkan kartu yang memuat kata Blocker secara real-time. |
-| **TC-06** | Tandai Semua Dibaca | Klik tombol [Tandai semua dibaca] | Seluruh kartu beralih ke status read, counter unread = 0, dot lonceng topbar padam, tombol tandai semua disabled, toast sukses hijau muncul. |
-| **TC-07** | Toggle Baca/Belum Per Kartu | Klik tombol aksi centang/putar per kartu | Status kartu beralih instan antara read $\leftrightarrow$ unread, counter header & sidebar tersinkronisasi otomatis. |
-| **TC-08** | Buka Modal Detail Notifikasi | Klik [Lihat Detail →] pada kartu | Modal pop-up muncul di tengah dengan backdrop blur, menampilkan rincian kendala/tugas dan tombol "Buka Konteks Terkait". |
-| **TC-09** | Deep Link Konteks Blocker | Klik [Buka Konteks Terkait] di modal blocker | Modal tertutup, pengguna diarahkan ke rute `05-Raise-Instant-Blocker.html#my-blockers` dengan toast panduan. |
-| **TC-10** | Interaksi Browser Push Engine | Klik tombol [Aktifkan Browser Push] | Sistem memicu `Notification.requestPermission()`. Jika disetujui, UI berubah seketika ke state *Izin Aktif* (badge hijau) dan toast sukses muncul. |
+| **TC-01** | Pemuatan Awal Halaman | Halaman dibuka | Counter unread = 3, dot lonceng topbar aktif, 8 kartu feed ter-render, status izin peramban dievaluasi. |
+| **TC-02** | Filter Tab 'Belum Dibaca' | Klik tab `Belum dibaca (3)` | Hanya 3 kartu unread yang tampil (background hijau lembut halus dengan dot unread). Kartu read disembunyikan. |
+| **TC-03** | Filter Tab 'Sudah Dibaca' | Klik tab `Sudah dibaca (5)` | Hanya 5 kartu berstatus dibaca yang tampil. Dot unread tidak ada pada kartu. |
+| **TC-04** | Filter Dropdown Kategori | Pilih opsi "Blocker & Risiko" | Menampilkan 2 kartu blocker (BLK-0042 dan BLK-0031). Kategori lain disembunyikan. Counter hasil = "Menampilkan 2 notifikasi". |
+| **TC-05** | Live Search Kata Kunci | Ketik "invoice" di kotak pencarian | Menampilkan 1 kartu kendala terkait invoice export. Kartu lain disaring instan secara real-time. |
+| **TC-06** | Tandai Semua Dibaca | Klik tombol [Tandai semua dibaca] | Seluruh kartu beralih ke state read, counter unread = 0, dot lonceng padam, tombol tandai semua disabled, toast sukses hijau muncul. |
+| **TC-07** | Toggle Status Baca per Item | Klik tombol centang pada kartu unread | Kartu berubah menjadi read, counter unread berkurang 1. Klik ulang mengembalikan status ke unread. |
+| **TC-08** | Buka Modal Detail Notifikasi | Klik tombol [Lihat Detail →] | Modal pop-up muncul di tengah dengan backdrop blur, menyajikan rincian lengkap kendala/tugas dan tombol "Buka Konteks Terkait". |
+| **TC-09** | Deep Link Konteks Dokumen | Klik [Buka Konteks Terkait] di modal | Modal tertutup, pengguna diarahkan ke rute tujuan dokumen dengan toast panduan. |
+| **TC-10** | Aksi Kontrol Browser Push | Klik tombol [Aktifkan Browser Push] | Sistem memicu `Notification.requestPermission()`. Jika disetujui, UI berubah seketika ke state *Izin Aktif* (badge hijau) dan toast sukses muncul. |
 
 ---
 
@@ -144,22 +145,21 @@ Setiap notifikasi memiliki target rute kontekstual (`targetRoute`) yang menyeles
 
 | Halaman Terkait | Sifat Keterhubungan (*Contractual Relationship*) |
 | :--- | :--- |
-| **Halaman 01 (Login)** | Membaca sesi aktif pengguna dari `localStorage: workpulse_active_user` untuk mengidentifikasi kepemilikan notifikasi. |
-| **Halaman 02 (Morning Commitment)** | Menerima navigasi pengingat check-in pagi atau notifikasi tugas carry-over. |
-| **Halaman 03 (Additional Work)** | Menjadi tujuan navigasi notifikasi tugas tambahan mendadak. |
-| **Halaman 04 (EOD Outcome)** | Menerima navigasi pengingat check-out evaluasi sore (16:30–18:00 WIB). |
-| **Halaman 05 (Raise Blocker)** | Menerima deep-link dari notifikasi tiket kendala kritis atau pembaruan status blocker (`#my-blockers`). |
-| **Halaman 06 (My History)** | Menerima deep-link saat Weekly Summary atau Catatan Pimpinan telah terbit. |
-| **Halaman 10 (Manager Notes)** | Catatan pimpinan yang dipublikasikan atasan memicu entri notifikasi apresiasi/bimbingan di Notification Center ini. |
-| **Halaman 16a & 16b (Correction Requests)** | Menerima deep-link pemantauan status permohonan koreksi baseline yang diajukan atau disetujui. |
-| **Halaman 19 (Admin Notification Channel)** | Konfigurasi matriks saluran di Halaman 19 menjadi acuan jalur distribusi notifikasi ke Halaman 07 ini. |
-| **Halaman 20 (Leave Request)** | Menerima deep-link notifikasi persetujuan atau penolakan cuti karyawan. |
+| **Halaman 01 (Login)** | Membaca sesi aktif dari `localStorage: workpulse_active_user` untuk menampilkan profil Budi Pratama di sidebar dan header. |
+| **Halaman 02 (Morning Commitment)** | Menerima pengalihan pengguna dari notifikasi pengingat batas waktu pengisian pagi (08:00–09:00 WIB). |
+| **Halaman 03 (Additional Work)** | Menerima pengalihan pengguna dari notifikasi penugasan ad-hoc siang hari (*Newly Assigned*). |
+| **Halaman 04 (EOD Outcome)** | Menerima pengalihan pengguna dari notifikasi pengingat evaluasi sore hari (16:30–18:00 WIB). |
+| **Halaman 05 (Raise Blocker)** | Menerima pengalihan pengguna dari notifikasi kendala kritis (*Critical Blocker*) dan pembaruan tiket penanganan. |
+| **Halaman 06 (My History)** | Menerima pengalihan pengguna dari notifikasi penerbitan Weekly Summary dan publikasi Catatan Pimpinan (*Manager Notes*). |
+| **Halaman 16a & 16b (Correction Requests)** | Menerima pengalihan pengguna dari notifikasi permohonan koreksi material yang diajukan atau disetujui (*Applied*). |
+| **Halaman 20 (My Leave Request)** | Menerima pengalihan pengguna dari notifikasi persetujuan atau penolakan izin cuti resmi. |
+| **Halaman 24 (Profile Settings)** | Menerima pengalihan pengguna dari notifikasi pembaruan struktur organisasi akun. |
 
 ---
 
 ## 6. KONTRAK DATA & SPESIFIKASI INTEGRASI API (FRONTEND-BACKEND)
 
-### 6.1 DTO TypeScript Notifikasi
+### 6.1 DTO TypeScript Notifikasi Tunggal & Respons Feed
 ```typescript
 export interface NotificationItemDto {
   id: string;
@@ -167,61 +167,32 @@ export interface NotificationItemDto {
   title: string;
   description: string;
   contextRoute: string; // Tautan tujuan deep-link
-  contextLabel: string;
+  contextLabel: string; // Misal: "Raise Instant Blocker · #BLK-2026-0042"
   createdAt: string;    // ISO 8601 DateTime
   isRead: boolean;
   priorityTone: 'red' | 'amber' | 'blue' | 'green' | 'neutral';
-  tagLabel: string;
+  tagLabel: string;     // Misal: "Critical Blocker", "Dukungan Tim"
 }
 
-export interface NotificationCenterResponseDto {
-  unreadCount: number;
+export interface NotificationCenterFeedResponseDto {
   totalCount: number;
+  unreadCount: number;
   notifications: NotificationItemDto[];
+  browserPushStatus: {
+    isServerKeyConfigured: boolean;
+    vapidPublicKey: string;
+  };
 }
 ```
 
-### 6.2 Endpoint REST API Backend
-
-#### 1. GET `/api/v1/notifications`
-- **Fungsi:** Mengambil daftar seluruh riwayat notifikasi pengguna aktif beserta status baca.
-- **Query Params:** `filter=all|unread|read`, `type=all|blocker|support|review|reminder|system`, `search`
-- **Response Success (HTTP 200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "unreadCount": 3,
-    "totalCount": 8,
-    "notifications": [
-      {
-        "id": "notif-001",
-        "type": "blocker",
-        "title": "Kendala Kritis BLK-2026-0042 Membutuhkan Tindak Lanjut",
-        "description": "Kendala teknis Akses staging database timeout masih berstatus Open.",
-        "contextRoute": "05-Raise-Instant-Blocker.html#my-blockers",
-        "contextLabel": "Raise Instant Blocker · #BLK-2026-0042",
-        "createdAt": "2026-10-14T09:12:00+07:00",
-        "isRead": false,
-        "priorityTone": "red",
-        "tagLabel": "Critical Blocker"
-      }
-    ]
-  }
-}
-```
-
-#### 2. PUT `/api/v1/notifications/{id}/read`
-- **Fungsi:** Memperbarui status baca notifikasi tunggal (`isRead: true/false`).
-
-#### 3. POST `/api/v1/notifications/mark-all-read`
-- **Fungsi:** Menandai seluruh notifikasi pengguna aktif sebagai telah dibaca secara massal.
-
-#### 4. POST `/api/v1/notifications/push/subscribe`
-- **Fungsi:** Mendaftarkan payload `PushSubscription` peramban klien ke backend untuk pengiriman Web Push nyata.
+### 6.2 Endpoint REST API Backend Terkait
+1. `GET /api/v1/notifications` — Mengambil daftar notifikasi terurut waktu untuk pengguna aktif.
+2. `PUT /api/v1/notifications/{id}/read` — Mengubah status penandaan dibaca/belum per notifikasi.
+3. `POST /api/v1/notifications/mark-all-read` — Menandai seluruh notifikasi pengguna sebagai sudah dibaca.
+4. `POST /api/v1/notifications/push/subscribe` — Mendaftarkan endpoint `PushSubscription` peramban ke database backend untuk pengiriman notifikasi Web Push nyata.
 
 ---
 
 ## 7. STATUS KESIAPAN & PANDUAN IMPLEMENTASI
 
-Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Web Notification Center & Browser Push. Seluruh komponen pada prototipe [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html) telah teruji secara visual dan fungsional di peramban (0 console error), bebas emoji, responsif di seluruh breakpoint layar, dan siap diimplementasikan secara terpadu ke frontend dan backend.
+Dokumen ini adalah **acuan resmi tunggal (*Single Source of Truth*)** untuk implementasi modul Web Notification Center & Browser Push. Seluruh komponen pada prototipe [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html) telah teruji secara visual dan fungsional di peramban (0 console error, 100% lulus uji 10 Test Cases, responsif di desktop/tablet/mobile), bebas error, serta siap diintegrasikan secara terpadu ke kode frontend dan backend.
