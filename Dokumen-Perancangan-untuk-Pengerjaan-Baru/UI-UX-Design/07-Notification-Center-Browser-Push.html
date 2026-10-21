@@ -631,6 +631,27 @@
     .toast-container.success { background: #113426; color: #FFFFFF; border: 1px solid #1E5640; }
     .toast-container.warning { background: #2D1B08; color: #FFFFFF; border: 1px solid #78350F; }
     .toast-container.error { background: #3B1212; color: #FFFFFF; border: 1px solid #7F1D1D; }
+    .toast-action-btn {
+      margin-left: 10px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 750;
+      padding: 3px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .toast-action-btn:hover {
+      background: rgba(255, 255, 255, 0.32);
+      border-color: rgba(255, 255, 255, 0.55);
+    }
+    .toast-action-btn:focus-visible {
+      outline: 2px solid #FFFFFF;
+      outline-offset: 1px;
+    }
 
     .sr-only {
       position: absolute;
@@ -887,12 +908,6 @@
                 <h2 id="feedTitle" style="margin-top:3px">Semua Riwayat Notifikasi</h2>
                 <p class="subtitle" style="font-size:12.5px;margin-top:4px">Diurutkan kronologis dari pemberitahuan yang paling baru diterima.</p>
               </div>
-              <button class="btn btn-ghost" id="btnMarkAllFeed" type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Tandai semua dibaca</span>
-              </button>
             </div>
 
             <!-- Filter & Search Toolbar -->
@@ -1154,6 +1169,7 @@
   <div class="toast-container" id="toastBox" role="status" aria-live="polite">
     <div id="toastIconWrap"></div>
     <span id="toastMessage">Pemberitahuan sistem</span>
+    <button class="toast-action-btn" id="toastActionBtn" type="button" style="display:none"></button>
   </div>
 
   <!-- ==============================================================
@@ -1289,11 +1305,12 @@
         }[c]));
       }
 
-      // Contextual Toast Engine (3 Varian: success, warning, error)
-      function showToast(message, variant = 'success') {
+      // Contextual Toast Engine (3 Varian: success, warning, error + Optional Action Button)
+      function showToast(message, variant = 'success', action = null) {
         const toast = $('toastBox');
         const iconWrap = $('toastIconWrap');
         const msgText = $('toastMessage');
+        const actionBtn = $('toastActionBtn');
 
         toast.className = `toast-container ${variant} show`;
         msgText.textContent = message;
@@ -1306,10 +1323,26 @@
           iconWrap.innerHTML = SVG_ICONS.error;
         }
 
+        if (action && action.label && typeof action.callback === 'function') {
+          actionBtn.textContent = action.label;
+          actionBtn.style.display = 'inline-block';
+          actionBtn.onclick = () => {
+            clearTimeout(toastTimer);
+            toast.classList.remove('show');
+            actionBtn.style.display = 'none';
+            action.callback();
+          };
+        } else {
+          actionBtn.style.display = 'none';
+          actionBtn.onclick = null;
+        }
+
         clearTimeout(toastTimer);
+        const duration = action ? 5000 : 3600;
         toastTimer = setTimeout(() => {
           toast.classList.remove('show');
-        }, 3600);
+          actionBtn.style.display = 'none';
+        }, duration);
       }
 
       // Sinkronisasi Sesi Akun Dinamis dari localStorage
@@ -1349,7 +1382,6 @@
         $('tabUnreadBadge').style.display = unreadCount > 0 ? 'inline-flex' : 'none';
 
         $('btnMarkAllTop').disabled = unreadCount === 0;
-        $('btnMarkAllFeed').disabled = unreadCount === 0;
       }
 
       // Render Daftar Feed Notifikasi
@@ -1454,14 +1486,33 @@
         activeNotification = null;
       }
 
-      // Tandai Semua Dibaca
-      function markAllRead() {
-        const unreadCount = notifications.filter(n => n.unread).length;
-        if (unreadCount === 0) return;
+      // Riwayat Snapshot untuk Fitur Urungkan (Undo)
+      let undoUnreadNotificationIds = [];
 
+      // Tandai Semua Dibaca dengan Safety Undo Action
+      function markAllRead() {
+        const unreadItems = notifications.filter(n => n.unread);
+        if (unreadItems.length === 0) return;
+
+        undoUnreadNotificationIds = unreadItems.map(n => n.id);
         notifications.forEach(n => n.unread = false);
         render();
-        showToast('Seluruh notifikasi berhasil ditandai sudah dibaca.', 'success');
+
+        showToast('Seluruh notifikasi berhasil ditandai sudah dibaca.', 'success', {
+          label: 'Urungkan',
+          callback: () => {
+            if (undoUnreadNotificationIds.length > 0) {
+              notifications.forEach(n => {
+                if (undoUnreadNotificationIds.includes(n.id)) {
+                  n.unread = true;
+                }
+              });
+              undoUnreadNotificationIds = [];
+              render();
+              showToast('Tindakan dibatalkan. Status belum dibaca berhasil dipulihkan.', 'success');
+            }
+          }
+        });
       }
 
       // Browser Push Engine (4 State Control)
@@ -1611,7 +1662,6 @@
 
       // Tandai Semua Dibaca
       $('btnMarkAllTop').addEventListener('click', markAllRead);
-      $('btnMarkAllFeed').addEventListener('click', markAllRead);
 
       // Aksi Kontrol Izin Browser Push
       $('btnEnablePush').addEventListener('click', async () => {
