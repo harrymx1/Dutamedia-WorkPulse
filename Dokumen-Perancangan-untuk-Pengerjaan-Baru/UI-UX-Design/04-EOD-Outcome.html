@@ -59,6 +59,11 @@
       padding: 0;
     }
 
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+
     body {
       background: var(--color-canvas);
       color: var(--color-text-primary);
@@ -278,6 +283,8 @@
        ========================================================================== */
     main {
       min-width: 0;
+      max-width: 100%;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
     }
@@ -348,6 +355,8 @@
       border-bottom: 1px solid var(--color-border-subtle);
       background: #FFFFFF;
       padding: 0 clamp(1.5rem, 4vw, 3.75rem);
+      min-width: 0;
+      max-width: 100%;
     }
 
     .daily-step {
@@ -677,6 +686,8 @@
       color: var(--color-text-primary);
       line-height: 1.5;
       margin-bottom: 6px;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     .eod-task-deliverable {
@@ -692,6 +703,8 @@
       align-items: flex-start;
       gap: 8px;
       line-height: 1.45;
+      word-break: break-all;
+      overflow-wrap: anywhere;
     }
 
     .eod-task-deliverable strong {
@@ -1273,6 +1286,148 @@
       .footer-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Layar Tablet Kecil & Smartphone (<= 680px) */
+    @media (max-width: 680px) {
+      .app {
+        max-width: 100vw;
+        overflow-x: hidden;
+      }
+
+      main {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .content {
+        padding: 16px 12px 64px;
+      }
+
+      .topbar {
+        height: 58px;
+        padding: 0 12px;
+      }
+
+      .daily-workflow-bar {
+        padding: 0 8px;
+        font-size: 11px;
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .daily-workflow-bar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .daily-step {
+        padding: 8px 6px;
+        gap: 6px;
+        min-height: 44px;
+        white-space: nowrap;
+        font-size: 11.5px;
+        flex-shrink: 0;
+      }
+
+      .step-num {
+        width: 20px;
+        height: 20px;
+        font-size: 10.5px;
+      }
+
+      .page-heading {
+        margin-bottom: 16px;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+      }
+
+      .panel {
+        margin-bottom: 16px;
+      }
+
+      .panel-head {
+        padding: 14px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .panel-body {
+        padding: 14px 14px;
+      }
+
+      .eod-card-head {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .eod-card-body {
+        padding: 14px 14px;
+      }
+
+      .eod-controls-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .suggested-status-card {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .sticky-footer-bar {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+
+      .footer-summary-txt {
+        font-size: 12px;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .footer-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .footer-actions .btn {
+        height: 40px;
+        padding: 0 10px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .footer-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-actions #btn-submit-eod {
+        order: 1;
+      }
+
+      .footer-actions #btn-save-draft {
+        order: 2;
       }
     }
   </style>
