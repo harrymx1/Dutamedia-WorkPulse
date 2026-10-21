@@ -130,6 +130,19 @@ Sistem **DILARANG KERAS** mengubah atau memaksa status pilihan pengguna secara s
 - Input `Tomorrow Priority` bersifat opsional.
 - Jika diisi, catatan ini disimpan ke `localStorage: workpulse_tomorrow_priority` dan otomatis tampil sebagai **Embedded Context Hint Banner** di atas Slot Komitmen 1 pada Halaman 02 esok harinya.
 
+### 3.8 Spesifikasi Tata Letak Responsif Mobile & Konsistensi Alur Kerja 3-Langkah
+Guna memastikan konsistensi pengalaman visual (*cross-page visual coherence*) di seluruh alur kerja harian (Halaman 02, 03, dan 04) serta menjamin kebersihan tampilan bebas luapan horizontal (*zero horizontal scroll*):
+1. **Standar Seragam Step Bar 3-Langkah (`.daily-workflow-bar`):**
+   - Pada layar smartphone ($\le 680\text{px}$), navigasi alur kerja harian menerapkan aturan yang **100% identik dengan Halaman 02 dan Halaman 03**: `font-size: 11px; padding: 0 12px;` dan `.daily-step { padding: 8px 4px; gap: 5px; min-height: 46px; }`.
+   - **Pemecahan Teks 2 Baris Alami (*Natural 2-Line Wrapping*):** Tidak menggunakan `white-space: nowrap`, sehingga label teks terpecah secara rapi dan seragam menjadi 2 baris (*Morning / Commitment*, *Additional / Work*, *EOD / Outcome*) tanpa terdesak atau menyebabkan baris horizontal melebar.
+2. **Pencegahan Luapan Layar (*Root & Main Overflow Lock*):**
+   - Mengunci `overflow-x: hidden; max-width: 100%;` pada level `html, body`, `.app`, dan `<main>` untuk mengeliminasi risiko pergeseran horizontal layar (*horizontal drift*) saat pengguna menggulir atau berinteraksi.
+3. **Sticky Action Footer Bar Responsif:**
+   - Menggunakan padding ramping `12px 14px; gap: 10px;` dengan tombol *Simpan Draf* dan *Kirim EOD Outcome* berukuran `height: 40px; font-size: 12px; padding: 0 10px;`.
+   - Pada layar ultra-kompak ($\le 380\text{px}$ seperti iPhone SE), susunan tombol otomatis bertransisi menjadi tumpukan vertikal (*stacked*) dengan tombol primer *Kirim EOD Outcome* di posisi atas (`order: 1`) untuk kenyamanan jempol (*thumb zone*).
+4. **Keamanan URL Deliverable Bukti Kerja:**
+   - Kontainer tautan deliverable (`.eod-task-deliverable`) dilengkapi `word-break: break-all; overflow-wrap: anywhere;` guna mencegah URL panjang (seperti tautan PR GitHub atau Google Docs) mendorong lebar kartu melebihi batas layar.
+
 ---
 
 ## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)

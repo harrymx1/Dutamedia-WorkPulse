@@ -336,6 +336,7 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   7. Keterhubungan Tomorrow Priority ke Halaman 02 esok harinya (FR-52).
   8. Zero duplicate deliverable pada kartu komitmen pagi dan tugas tambahan.
   9. Standarisasi Contextual Toast Engine (sukses hijau, warning amber segitiga, error merah).
+  10. **Standar Seragam Step Bar 3-Langkah Mobile:** Mengadopsi aturan responsif yang 100% identik dengan Halaman 02 & 03 (`font-size: 11px; padding: 0 12px;` dan `.daily-step { padding: 8px 4px; gap: 5px; min-height: 46px; }`) dengan pemecahan teks 2 baris alami (*Morning / Commitment*, *Additional / Work*, *EOD / Outcome*) tanpa `white-space: nowrap`, didukung penguncian `overflow-x: hidden; max-width: 100%;` di level root & kontainer utama guna menjamin tampilan bebas luapan horizontal (*zero horizontal scroll*).
 
 ### Halaman 05: Raise Instant Blocker & My Blockers
 - **Berkas Prototipe:** [`05-Raise-Instant-Blocker.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/05-Raise-Instant-Blocker.html)
