@@ -140,6 +140,34 @@ Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#d
 - Mengklik **`Tandai semua dibaca`** langsung mengubah seluruh item unread menjadi read, memadamkan dot badge pada topbar dan sidebar, serta memicu toast sukses hijau.
 - Tombol toggle pada kartu memungkinkan penandaan baca/belum secara mandiri per baris dengan sinkronisasi counter metrik secara real-time.
 
+### 3.5 Matriks Lengkap 22 Pemicu Notifikasi & Sistem Anti-Celah Komunikasi
+Sistem WorkPulse menerapkan matriks 22 pemicu resmi untuk memastikan tidak ada celah alur kerja (*zero blind spots*) pada seluruh siklus hidup operasional:
+
+| No | Pemicu Kejadian (*Event Trigger*) | Kategori (`type`) | Warna / *Tone* | Penerima Sasaran | Saluran Pengiriman (*Channels*) | Rute *Deep-Link* & Aksi Utama |
+| :-: | :--- | :---: | :---: | :--- | :--- | :--- |
+| **1** | Morning / EOD mendekati *cutoff* belum diisi | `reminder` | `blue` | Employee terkait | Email + Browser Push + Web Center | `02` / `04` (Buka Form Komitmen/EOD) |
+| **2** | Komitmen **AMBER** dengan kebutuhan bantuan | `support` | `amber` | Assigned Support Owner + Employee | Email + Browser Push + Web Center | `02-Morning-Commitment.html` (Buka Komitmen) |
+| **3** | Evaluasi sore **RED** (Terkendala berat) | `blocker` | `red` | Supervisor/Head + PM/Owner | Email + Browser Push + Web Center | `09-Blocker-Escalation-Queue.html` |
+| **4** | Kendala kritis (*Instant Blocker*) diajukan | `blocker` | `red` | Rantai eskalasi terkonfigurasi | Email + Browser Push + Web Center | `05-Raise-Instant-Blocker.html#my-blockers` |
+| **5** | Tiket kendala belum diakui melewati SLA | `blocker` | `red` | Level eskalasi berikutnya | Email + Browser Push + Web Center | `09-Blocker-Escalation-Queue.html` |
+| **6** | Tiket Blocker diakui (*Acknowledged*) | `blocker` | `blue` | Employee pelapor kendala | Browser Push + Web Center | `05-Raise-Instant-Blocker.html#my-blockers` |
+| **7** | Tiket Blocker tuntas diperbaiki (*Resolved*) | `blocker` | `green` | Employee pelapor kendala + Lead | Email + Browser Push + Web Center | `05-Raise-Instant-Blocker.html#my-blockers` |
+| **8** | Tiket Blocker ditolak / invalid (*Rejected*) | `blocker` | `amber` | Employee pelapor kendala | Email + Web Center | `05-Raise-Instant-Blocker.html#my-blockers` |
+| **9** | Permintaan dukungan diterima (*Support Accepted*) | `support` | `green` | Employee pemohon bantuan | Browser Push + Web Center | `02-Morning-Commitment.html` |
+| **10** | Permintaan dukungan ditolak (*Support Declined*) | `support` | `red` | Employee pemohon + Squad Lead | Email + Browser Push + Web Center | `02-Morning-Commitment.html` (Alihkan Dukungan) |
+| **11** | Penugasan pekerjaan tambahan (*Additional Work*) | `reminder` | `amber` | Employee pelaksana yang ditugaskan | Email + Browser Push + Web Center | `03-Additional-Work.html` (Buka Tugas) |
+| **12** | Catatan / arahan harian pimpinan (*Manager Note*) | `review` | `blue` | Employee pemilik hasil kerja | Email + Web Center | `06-My-History-Weekly-Summary.html` |
+| **13** | Karyawan berulang kali tidak mengisi (*No-Submission*) | `review` | `red` | Supervisor/Head + HRGA | Email + Web Center | `22-Correction-and-Leave-Review.html` |
+| **14** | Ringkasan mingguan (*Weekly Summary*) terbit | `reminder` | `blue` | Employee + Manager | Email + Web Center | `06-My-History-Weekly-Summary.html` |
+| **15** | Perubahan kebijakan / pemetaan organisasi tim | `system` | `neutral` | User terdampak + Policy Owner | Web Center saja | `24-Profile-Settings.html` |
+| **16** | Koreksi material diajukan (*Objection Window*) | `review` | `blue` | Authorized Reviewer terkait | Email + Web Center | `16a` / `16b` (Buka Pengajuan Koreksi) |
+| **17** | Koreksi mendekati akhir batas keberatan | `review` | `amber` | Authorized Reviewer (Pengingat) | Web Center saja | `16a` / `16b` (Telaah Koreksi) |
+| **18** | Koreksi disetujui (*Applied*) atau ditolak (*Rejected*) | `review` | `green`/`red` | Employee pengaju | Web Center saja | `06-My-History-Weekly-Summary.html` |
+| **19** | Undangan aktivasi akun baru / aktivasi ulang | `system` | `blue` | Karyawan pemilik akun | Email (Tautan Sekali Pakai) | `01-Login-Activation.html` |
+| **20** | Pengajuan cuti (*Leave Request*) diajukan | `review` | `amber` | Authorized Approver terkait | Email + Browser Push + Web Center | `22-Correction-and-Leave-Review.html` |
+| **21** | Putusan cuti disetujui atau ditolak | `review` | `green`/`red` | Employee pengaju | Email + Web Center | `20-My Leave Request (Employee).html` |
+| **22** | Deteksi sesi masuk (*login*) peramban / perangkat baru | `system` | `amber` | Karyawan pemilik akun | Email + Web Center | `24-Profile-Settings.html` (Keamanan Akun) |
+
 ---
 
 ## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)

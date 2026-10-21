@@ -26,15 +26,23 @@ const triggers=[
 {trigger:'RED',recipient:'Supervisor/Head dan PM/owner terkait sesuai authority context',channels:['Email','Browser Push']},
 {trigger:'Critical / instant blocker',recipient:'Rantai eskalasi yang dikonfigurasi',channels:['Email','Browser Push']},
 {trigger:'Blocker belum diakui melewati threshold',recipient:'Level eskalasi berikutnya',channels:['Email','Browser Push']},
+{trigger:'Tiket Blocker diakui (Acknowledged)',recipient:'Employee pelapor kendala',channels:['Browser Push','Web Notification Center']},
+{trigger:'Tiket Blocker berhasil dituntaskan (Resolved)',recipient:'Employee pelapor kendala dan Supervisor',channels:['Email','Browser Push','Web Notification Center']},
+{trigger:'Tiket Blocker ditolak / dibatalkan (Rejected)',recipient:'Employee pelapor kendala',channels:['Email','Web Notification Center']},
+{trigger:'Permintaan dukungan diterima (Support Accepted)',recipient:'Employee pemohon bantuan',channels:['Browser Push','Web Notification Center']},
+{trigger:'Permintaan dukungan ditolak / dialihkan (Support Declined)',recipient:'Employee pemohon bantuan dan Squad Lead',channels:['Email','Browser Push','Web Notification Center']},
+{trigger:'Penugasan pekerjaan tambahan ad-hoc (Additional Work)',recipient:'Employee pelaksana yang ditugaskan',channels:['Email','Browser Push','Web Notification Center']},
+{trigger:'Catatan evaluasi harian pimpinan diterbitkan (Manager Daily Note)',recipient:'Employee pemilik catatan kerja',channels:['Email','Web Notification Center']},
 {trigger:'Repeated no-submission flag',recipient:'Supervisor/Head; HRGA jika threshold terpenuhi',channels:['Email']},
-{trigger:'Weekly summary tersedia',recipient:'Employee dan Manager sesuai konfigurasi',channels:['Email']},
+{trigger:'Weekly summary & catatan pimpinan mingguan tersedia',recipient:'Employee dan Manager sesuai konfigurasi',channels:['Email']},
 {trigger:'Perubahan policy / organizational assignment',recipient:'User terdampak dan Authorized Policy Owner terkait',channels:['Web Notification Center']},
 {trigger:'Morning/EOD Correction Request Material diajukan',recipient:'Authorized Reviewer terkait',channels:['Email','Web Notification Center']},
 {trigger:'Correction Request mendekati akhir Objection Window',recipient:'Authorized Reviewer terkait',channels:['Web Notification Center']},
 {trigger:'Correction Request Applied / Rejected',recipient:'Employee pengaju',channels:['Web Notification Center']},
 {trigger:'User invitation diterbitkan / diterbitkan ulang',recipient:'Karyawan pemilik akun',channels:['Email']},
 {trigger:'Leave Request diajukan',recipient:'Authorized Approver terkait',channels:['Email','Browser Push']},
-{trigger:'Leave Request disetujui / ditolak',recipient:'Employee pengaju',channels:['Email','Web Notification Center']}
+{trigger:'Leave Request disetujui / ditolak',recipient:'Employee pengaju',channels:['Email','Web Notification Center']},
+{trigger:'Deteksi sesi login dari perangkat / peramban baru',recipient:'Karyawan pemilik akun',channels:['Email','Web Notification Center']}
 ];let filter='all',results=[];
 function renderMatrix(){const rows=triggers.filter(t=>filter==='all'||t.channels.includes(filter));$('matrixBody').innerHTML=rows.map(t=>`<tr><td>${escapeHTML(t.trigger)}</td><td>${escapeHTML(t.recipient)}</td>${['Email','Browser Push','Web Notification Center'].map(c=>`<td>${(c==='Web Notification Center'||t.channels.includes(c))?`<span class="channel-pill ${c==='Email'?'email':c==='Browser Push'?'push':''}"><span class="dot"></span>${c==='Web Notification Center'?'Tercatat':'Ditentukan'}</span>`:'<span class="channel-pill off">—</span>'}</td>`).join('')}</tr>`).join('')}
 function addResult(channel,title,detail,status='amber'){results.unshift({channel,title,detail,status,at:new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})});renderResults()}

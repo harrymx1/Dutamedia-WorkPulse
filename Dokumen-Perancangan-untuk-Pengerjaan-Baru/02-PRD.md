@@ -345,24 +345,32 @@ Nilai default sistem yang telah dikunci oleh ADR atau kontrak keamanan (misalnya
 
 ## 8. Notification Requirements
 
-| Trigger | Recipient | Channel |
-|---|---|---|
-| Morning/EOD mendekati cutoff belum submit | Employee | Reminder — Email + Browser Push |
-| AMBER + support needed | Assigned support owner + employee | Support request — Email + Browser Push + Web Notification Center |
-| RED | Supervisor/Head + relevant PM/owner (authority context) | Immediate escalation — Email + Browser Push |
-| Critical/instant blocker | Configured escalation chain | Immediate — Email + Browser Push |
-| Blocker unacknowledged melebihi threshold | Next escalation level | Escalation — Email + Browser Push |
-| Repeated no-submission flag | Supervisor/Head; HRGA jika threshold policy terpenuhi | Review required — Email |
-| Weekly summary tersedia | Employee + Manager sesuai konfigurasi | Summary notification — Email |
-| Policy/organizational assignment berubah pada user terkait | User yang terdampak; Authorized Policy Owner terkait | Web Notification Center |
-| Morning atau EOD Correction Request Material diajukan | Authorized Reviewer terkait | Web Notification Center + Email |
-| Morning atau EOD Correction Request menuju akhir Objection Window | Authorized Reviewer terkait (reminder terakhir sebelum auto-applied) | Web Notification Center |
-| Morning atau EOD Correction Request Applied/Rejected | Employee pengaju | Web Notification Center |
-| User invitation diterbitkan atau diterbitkan ulang | Karyawan pemilik akun | Email dengan tautan aktivasi sekali pakai |
-| Leave Request diajukan  | Authorized Approver terkait | Email + Browser Push |
-| Leave Request disetujui/ditolak | Employee pengaju | Email + Web Notification Center |
+| Trigger | Recipient | Channel | Keterangan / Urgensi |
+|---|---|---|---|
+| Morning/EOD mendekati cutoff belum submit | Employee | Reminder — Email + Browser Push | Pengingat disiplin waktu kerja harian |
+| AMBER + support needed | Assigned support owner + employee | Support request — Email + Browser Push + Web Notification Center | Permintaan bantuan pendampingan komitmen |
+| RED | Supervisor/Head + relevant PM/owner (authority context) | Immediate escalation — Email + Browser Push | Eskalasi segera hasil evaluasi terhambat berat |
+| Critical/instant blocker diajukan | Configured escalation chain | Immediate — Email + Browser Push | Eskalasi instan kendala blocker darurat |
+| Blocker unacknowledged melebihi threshold | Next escalation level | Escalation — Email + Browser Push | Eskalasi berjenjang akibat keterlambatan respons SLA |
+| Tiket Blocker diakui (Acknowledged) | Employee pelapor kendala | Web Notification Center + Browser Push | Konfirmasi bahwa kendala sedang ditangani oleh PIC teknis |
+| Tiket Blocker tuntas diperbaiki (Resolved) | Employee pelapor kendala + Supervisor | Email + Browser Push + Web Notification Center | Pemberitahuan bahwa hambatan tuntas & kerja dapat dilanjutkan |
+| Tiket Blocker ditolak/dibatalkan (Rejected/Invalid) | Employee pelapor kendala | Email + Web Notification Center | Penjelasan alasan penutupan tiket kendala |
+| Permintaan dukungan diterima (Support Accepted) | Employee pemohon bantuan | Web Notification Center + Browser Push | Konfirmasi rekan kerja siap membantu komitmen |
+| Permintaan dukungan ditolak (Support Declined) | Employee pemohon bantuan + Squad Lead | Email + Browser Push + Web Notification Center | Peringatan darurat overcapacity rekan agar segera dialihkan |
+| Penugasan tugas tambahan baru (Additional Work Assigned) | Employee pelaksana yang ditugaskan | Email + Browser Push + Web Notification Center | Tugas darurat siang hari yang diinstruksikan atasan/PM |
+| Catatan evaluasi/arahan pimpinan terbit (Manager Daily Note) | Employee pemilik catatan kerja | Email + Web Notification Center | Umpan balik harian pimpinan atas hasil kerja EOD |
+| Repeated no-submission flag | Supervisor/Head; HRGA jika threshold policy terpenuhi | Review required — Email | Tinjauan disiplin kepatuhan pelaporan kerja |
+| Weekly summary & Catatan Pimpinan mingguan tersedia | Employee + Manager sesuai konfigurasi | Summary notification — Email | Rangkuman akuntabilitas dan tren performa mingguan |
+| Policy/organizational assignment berubah pada user terkait | User yang terdampak; Authorized Policy Owner terkait | Web Notification Center | Pembaruan struktur tim, squad, atau hak akses |
+| Morning atau EOD Correction Request Material diajukan | Authorized Reviewer terkait | Web Notification Center + Email | Pengajuan koreksi memasuki Jendela Keberatan (*Objection Window*) |
+| Morning atau EOD Correction Request menuju akhir Objection Window | Authorized Reviewer terkait (reminder terakhir sebelum auto-applied) | Web Notification Center | Pengingat telaah sebelum koreksi disetujui otomatis |
+| Morning atau EOD Correction Request Applied/Rejected | Employee pengaju | Web Notification Center | Status putusan persetujuan/penolakan koreksi |
+| User invitation diterbitkan atau diterbitkan ulang | Karyawan pemilik akun | Email dengan tautan aktivasi sekali pakai | Aktivasi akun baru karyawan |
+| Leave Request diajukan | Authorized Approver terkait | Email + Browser Push | Pengajuan izin cuti membutuhkan telaah persetujuan |
+| Leave Request disetujui/ditolak | Employee pengaju | Email + Web Notification Center | Putusan resmi permohonan cuti karyawan |
+| Deteksi sesi login dari perangkat/peramban baru | Karyawan pemilik akun | Email + Web Notification Center | Peringatan keamanan akun korporat |
 
-Seluruh notifikasi juga tercatat riwayatnya di **Web Notification Center** in-system, terlepas dari channel pengirimannya.
+Seluruh notifikasi di atas tanpa terkecuali (100%) wajib tercatat riwayatnya di **Web Notification Center** in-system, terlepas dari saluran pengirimannya, serta mendukung rujukan langsung (*deep-link*) ke dokumen sumber terkait.
 
 ---
 
