@@ -114,7 +114,12 @@ Guna meningkatkan kenyamanan membaca (*ergonomics*) dan mencegah kejenuhan mengg
    - Dilengkapi badge hitungan hari (`#tabDaysBadge`) dan sub-filter kehadiran (`#recordFilter`: *Semua Hari Kerja*, *Ada Submission*, *Tanpa Submission*) di sisi kanan header panel harian.
 2. **Tab 2: Ringkasan Mingguan (`#panelWeeklySummary`):**
    - Menampilkan kartu utama *Catatan Evaluasi Kerja (Manager Notes)* di baris teratas (*Top Hero Card*), disusul 6 kartu ringkasan metrik kinerja mingguan di bawahnya sebagai data pendukung.
-   - **Fitur Pengingat Otomatis (*Smart Reminder Badge*):** Jika pada periode yang aktif terdapat Catatan Evaluasi Kerja resmi dari atasan, tombol Tab 2 otomatis memunculkan badge amber pengingat: `[1 Catatan]`. Jika tidak ada catatan, badge disembunyikan secara otomatis.
+   - **Mekanisme Tampilan Catatan Fleksibel (*Hero Note + Accordion Toggle*):**
+     - **1 Catatan Terbaru (*Hero Note*):** Selalu ditampilkan di posisi teratas sebagai fokus evaluasi utama periode aktif.
+     - **Chip Tanggal Kalender Menonjol (`.note-date-chip`):** Tanggal penerbitan catatan tidak disatukan di footer kutipan, melainkan ditempatkan di pojok kanan atas header kartu sebagai chip berlatar putih dengan border tegas, ikon kalender SVG, dan tipografi berbobot 750 berwarna brand primer.
+     - **Tombol Lipat/Buka (*Accordion Toggle*):** Jika periode memiliki lebih dari 1 catatan, disediakan tombol dashed interaktif `Lihat [X] Catatan Sebelumnya pada Periode Ini` yang dapat melipat/membuka catatan-catatan lama tanpa membebani tata letak kartu metrik di bawahnya.
+     - **Empty State Ramping (`.note-empty-box`):** Jika pada periode berjalan belum ada catatan baru dari atasan, kartu menampilkan satu baris pesan netral yang ramping dan tidak memakan ruang vertikal.
+   - **Fitur Pengingat Otomatis (*Smart Reminder Badge*):** Jika pada periode yang aktif terdapat Catatan Evaluasi Kerja resmi dari atasan, tombol Tab 2 otomatis memunculkan badge amber pengingat: `[X Catatan]`. Jika tidak ada catatan baru, badge disembunyikan secara otomatis.
 3. **Preservasi Status Tab:**
    - Ketika pengguna masuk ke rincian hari melalui tombol *Lihat Detail →* dan kemudian menekan tombol *Kembali ke Histori*, sistem secara otomatis memulihkan tampilan ke Tab 1 (Riwayat Harian).
 
@@ -153,6 +158,9 @@ Sistem mendukung 3 jenis catatan manajerial resmi dengan identitas visual tersta
    - Badge: `.pill.red` berlabel `Tindakan Korektif (Corrective)`.
    - Ikon Mark: Perisai / tanda seru penegasan (`alert-circle`).
    - Warna Latar Mark: Merah lembut (`#FEE2E2`) dengan border `#E8B1AC`.
+
+4. **Struktur Header & Chip Tanggal Mandiri:**
+   - Baris atas kartu catatan disusun dengan flexbox responsif (`.note-head-row`): sisi kiri memuat badge tipe evaluasi dan nama atasan pemberi catatan (`.note-author`), sedangkan sisi kanan memuat chip tanggal kalender independen (`.note-date-chip`) untuk memastikan kepastian kronologis evaluasi terlihat seketika (*instant temporal context*). Pada viewport mobile ($\le 680\text{px}$), flexbox otomatis berganti ke arah vertikal (`flex-direction: column`) agar teks nama dan chip tanggal tidak berdesakan.
 
 ### 3.4 Standar Ekspor Berkas CSV Resmi (AC-06 & DEF-05)
 1. **Format Berkas:** Comma-Separated Values (`.csv`) berstandar RFC-4180.

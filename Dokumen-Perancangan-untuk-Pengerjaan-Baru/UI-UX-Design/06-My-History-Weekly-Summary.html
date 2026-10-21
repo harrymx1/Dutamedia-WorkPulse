@@ -192,15 +192,28 @@ p{margin:0}
 .empty-filter{display:none;padding:40px 20px;text-align:center;color:var(--color-text-secondary);font-size:13.5px;background:#fff}
 .empty-filter.show{display:block}
 
-/* Note Card */
-.note-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-surface-subtle);margin-top:8px}
-.note-mark{width:34px;height:34px;border-radius:8px;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
+/* Note Card & Top Note System */
+.note-card{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-surface-subtle);margin-top:8px;transition:border-color .15s}
+.note-card:hover{border-color:var(--color-border-strong)}
+.note-card.subtle{background:#fff;border:1px solid var(--color-border-subtle)}
+.note-mark{width:36px;height:36px;border-radius:8px;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
 .note-mark.recognition{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border:1px solid #A7D5B8}
 .note-mark.coaching{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border:1px solid #E8C77A}
 .note-mark.corrective{background:var(--color-status-red-bg);color:var(--color-status-red-fg);border:1px solid #E8B1AC}
+.note-body{flex:1;min-width:0}
+.note-head-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
 .note-title{font-size:13px;font-weight:800;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.note-copy{font-size:13px;line-height:1.55;margin-top:4px;color:var(--color-text-secondary)}
-.note-meta{font-size:11.5px;color:var(--color-text-secondary);margin-top:6px}
+.note-author{font-size:13px;font-weight:700;color:var(--color-text-primary)}
+.note-date-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#fff;border:1px solid var(--color-border-subtle);font-size:12px;font-weight:750;color:var(--color-brand-primary);box-shadow:0 1px 3px rgba(14,33,27,.05);white-space:nowrap}
+.note-copy{font-size:13px;line-height:1.55;color:var(--color-text-secondary)}
+.note-meta{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--color-text-secondary);margin-top:6px}
+.btn-toggle-notes{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 14px;margin-top:10px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);background:#fff;font-size:12px;font-weight:750;color:var(--color-brand-primary);cursor:pointer;transition:all .15s ease}
+.btn-toggle-notes:hover{background:var(--color-surface-subtle);border-color:var(--color-border-strong)}
+.btn-toggle-notes .toggle-arrow{transition:transform .2s ease}
+.btn-toggle-notes.expanded .toggle-arrow{transform:rotate(180deg)}
+.older-notes-container{display:none;grid-gap:8px;margin-top:10px}
+.older-notes-container.open{display:grid}
+.note-empty-box{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-surface-subtle);font-size:13px;color:var(--color-text-secondary);line-height:1.45;margin-top:8px}
 
 /* Detail View */
 .detail-view{display:none}.detail-view.show{display:block}.history-overview.hidden{display:none}
@@ -251,6 +264,8 @@ p{margin:0}
   .history-toolbar-right{padding-top:4px;border-top:1px dashed var(--color-border-subtle)}
   .panel-head{flex-direction:column;align-items:stretch;gap:12px}
   .detail-fields{grid-template-columns:1fr}
+  .note-head-row{flex-direction:column;align-items:flex-start;gap:8px}
+  .note-date-chip{align-self:flex-start}
 }
 </style>
 </head>
@@ -463,12 +478,21 @@ p{margin:0}
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   </div>
                   <div class="note-body">
-                    <div class="note-title">
-                      <span class="pill green">Apresiasi (Recognition)</span>
-                      <span>Budi Santoso — Head of Engineering</span>
+                    <div class="note-head-row">
+                      <div class="note-title">
+                        <span class="pill green">Apresiasi (Recognition)</span>
+                        <span class="note-author">Budi Santoso — Head of Engineering</span>
+                      </div>
+                      <div class="note-date-chip">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span>Jumat, 9 Okt 2026</span>
+                      </div>
                     </div>
                     <div class="note-copy">“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”</div>
-                    <div class="note-meta">Jumat, 9 Oktober 2026 · Terverifikasi Sistem</div>
+                    <div class="note-meta">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-status-green-fg);flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                      <span>Terverifikasi Sistem</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -751,12 +775,22 @@ p{margin:0}
       onTime: 3, late: 1, noSubmission: 1,
       continuation: 2, continueCount: 3, stopCount: 6,
       support: 1, escalations: 1,
-      managerNote: {
-        type: 'Recognition',
-        author: 'Budi Santoso — Head of Engineering',
-        copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”',
-        meta: 'Jumat, 9 Oktober 2026 · Terverifikasi Sistem'
-      }
+      managerNotes: [
+        {
+          type: 'Recognition',
+          author: 'Budi Santoso — Head of Engineering',
+          date: 'Jumat, 9 Okt 2026',
+          verified: 'Terverifikasi Sistem',
+          copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”'
+        },
+        {
+          type: 'Coaching',
+          author: 'Dewi Lestari — Lead Product Engineer',
+          date: 'Rabu, 7 Okt 2026',
+          verified: 'Terverifikasi Sistem',
+          copy: '“Pastikan log error pada endpoint pembayaran dicek berkala bersama tim backend sebelum merilis patch baru.”'
+        }
+      ]
     },
     'this-week': {
       caption: 'Senin, 12 Oktober – Jumat, 16 Oktober 2026',
@@ -766,7 +800,7 @@ p{margin:0}
       onTime: null, late: null, noSubmission: null,
       continuation: null, continueCount: null, stopCount: null,
       support: null, escalations: null,
-      managerNote: null
+      managerNotes: []
     },
     'this-month': {
       caption: '1–31 Oktober 2026',
@@ -776,12 +810,22 @@ p{margin:0}
       onTime: 3, late: 1, noSubmission: 1,
       continuation: 2, continueCount: 3, stopCount: 6,
       support: 1, escalations: 1,
-      managerNote: {
-        type: 'Coaching',
-        author: 'Dewi Lestari — Lead Product Engineer',
-        copy: '“Untuk verifikasi format ekspor berikutnya, koordinasikan contoh berkas bersama tim QA sejak sesi komitmen pagi agar tidak terhambat saat evaluasi sore.”',
-        meta: 'Selasa, 6 Oktober 2026 · Terverifikasi Sistem'
-      }
+      managerNotes: [
+        {
+          type: 'Recognition',
+          author: 'Budi Santoso — Head of Engineering',
+          date: 'Jumat, 9 Okt 2026',
+          verified: 'Terverifikasi Sistem',
+          copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”'
+        },
+        {
+          type: 'Coaching',
+          author: 'Dewi Lestari — Lead Product Engineer',
+          date: 'Selasa, 6 Okt 2026',
+          verified: 'Terverifikasi Sistem',
+          copy: '“Untuk verifikasi format ekspor berikutnya, koordinasikan contoh berkas bersama tim QA sejak sesi komitmen pagi agar tidak terhambat saat evaluasi sore.”'
+        }
+      ]
     }
   };
 
@@ -847,21 +891,40 @@ p{margin:0}
     };
   }
 
-  function renderNoteCardHtml(n) {
+  function renderNoteCardHtml(n, isOlder = false) {
     if (!n) return '';
     const cfg = getNoteTypeConfig(n.type);
+    const dateStr = n.date || (n.meta ? n.meta.split('·')[0].trim() : '9 Okt 2026');
+    const verifiedStr = n.verified || (n.meta && n.meta.includes('·') ? n.meta.split('·')[1].trim() : 'Terverifikasi Sistem');
     return `
-      <div class="note-card">
+      <div class="note-card ${isOlder ? 'subtle' : ''}">
         <div class="note-mark ${cfg.markClass}" title="${cfg.label}">
           ${cfg.icon}
         </div>
         <div class="note-body">
-          <div class="note-title">
-            <span class="pill ${cfg.pillClass}">${cfg.label}</span>
-            <span>${escapeHtml(n.author || '')}</span>
+          <div class="note-head-row">
+            <div class="note-title">
+              <span class="pill ${cfg.pillClass}">${cfg.label}</span>
+              <span class="note-author">${escapeHtml(n.author || '')}</span>
+            </div>
+            <div class="note-date-chip">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>${escapeHtml(dateStr)}</span>
+            </div>
           </div>
           <div class="note-copy">${escapeHtml(n.copy || n.detail || '')}</div>
-          ${n.meta ? `<div class="note-meta">${escapeHtml(n.meta)}</div>` : ''}
+          <div class="note-meta">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-status-green-fg);flex-shrink:0">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>${escapeHtml(verifiedStr)}</span>
+          </div>
         </div>
       </div>
     `;
@@ -901,19 +964,66 @@ p{margin:0}
     const noteEl = $('managerNoteWrapper');
     const tabNotesBadge = $('tabNotesIndicator');
     if (noteEl) {
-      if (d.managerNote) {
-        noteEl.innerHTML = renderNoteCardHtml(d.managerNote);
-        if (tabNotesBadge) {
-          tabNotesBadge.style.display = 'inline-flex';
-          tabNotesBadge.textContent = '1 Catatan';
-        }
-      } else {
+      const notes = Array.isArray(d.managerNotes)
+        ? d.managerNotes
+        : (d.managerNote ? [d.managerNote] : []);
+
+      if (notes.length === 0) {
         noteEl.innerHTML = `
-          <div style="padding:16px 14px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);text-align:center;font-size:12.5px;color:var(--color-text-secondary);background:var(--color-surface-subtle)">
-            Belum ada catatan evaluasi atau apresiasi kerja resmi yang diberikan oleh atasan untuk periode ini.
+          <div class="note-empty-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--color-text-secondary)">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Belum ada catatan evaluasi atau apresiasi resmi pada periode ini. Catatan dari atasan akan otomatis muncul di sini setelah diterbitkan.</span>
           </div>`;
         if (tabNotesBadge) {
           tabNotesBadge.style.display = 'none';
+        }
+      } else {
+        const heroNoteHtml = renderNoteCardHtml(notes[0], false);
+        if (notes.length === 1) {
+          noteEl.innerHTML = heroNoteHtml;
+          if (tabNotesBadge) {
+            tabNotesBadge.style.display = 'inline-flex';
+            tabNotesBadge.textContent = '1 Catatan';
+          }
+        } else {
+          const olderNotesCount = notes.length - 1;
+          const olderNotesHtml = notes.slice(1).map(n => renderNoteCardHtml(n, true)).join('');
+          noteEl.innerHTML = `
+            ${heroNoteHtml}
+            <button type="button" class="btn-toggle-notes" id="toggleOlderNotesBtn" aria-expanded="false">
+              <span>Lihat ${olderNotesCount} Catatan Sebelumnya pada Periode Ini</span>
+              <svg class="toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="older-notes-container" id="olderNotesContainer">
+              ${olderNotesHtml}
+            </div>
+          `;
+          if (tabNotesBadge) {
+            tabNotesBadge.style.display = 'inline-flex';
+            tabNotesBadge.textContent = `${notes.length} Catatan`;
+          }
+
+          const toggleBtn = $('toggleOlderNotesBtn');
+          const olderContainer = $('olderNotesContainer');
+          if (toggleBtn && olderContainer) {
+            toggleBtn.addEventListener('click', () => {
+              const isOpen = olderContainer.classList.toggle('open');
+              toggleBtn.classList.toggle('expanded', isOpen);
+              toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+              const span = toggleBtn.querySelector('span');
+              if (span) {
+                span.textContent = isOpen
+                  ? 'Tutup Catatan Sebelumnya'
+                  : `Lihat ${olderNotesCount} Catatan Sebelumnya pada Periode Ini`;
+              }
+            });
+          }
         }
       }
     }

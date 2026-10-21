@@ -359,15 +359,19 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   1. Hak akses audit personal penuh (*self-service*) dan kepatuhan mutlak pada mandat Anti-Gamifikasi (FR-66, AC-44, AC-75).
   2. **Toolbar Global Periode & Arsitektur 2-Tab (Konsisten dengan Halaman 07):** Toolbar atas memuat preset periode global dan keterangan tanggal rentang waktu. Di bawahnya, antarmuka dibagi menjadi 2 Tab bersih dengan sistem penanda aktif:
      - **Tab 1: Riwayat Harian (Default):** Dilengkapi badge counter jumlah hari (`5`), sub-filter kehadiran (*Semua Hari Kerja*, *Ada Submission*, *Tanpa Submission*), dan daftar riwayat baris harian Senin–Jumat tanpa tertimbun tumpukan kartu.
-     - **Tab 2: Ringkasan Mingguan:** Dilengkapi badge amber pengingat otomatis (*`1 Catatan`*) saat atasan memberikan catatan evaluasi, menyajikan kartu utama *Catatan Evaluasi Kerja (Manager Notes)* di baris paling atas (*Top Hero Card*), disusul 6 kartu metrik ringkasan kerja di bawahnya.
+     - **Tab 2: Ringkasan Mingguan:** Dilengkapi badge amber pengingat otomatis (*`[X Catatan]`*) saat atasan memberikan catatan evaluasi, menyajikan kartu utama *Catatan Evaluasi Kerja (Manager Notes)* di baris paling atas (*Top Hero Card*), disusul 6 kartu metrik ringkasan kerja di bawahnya.
   3. **Weekly Summary Grid 7-Metrik Seimbang (Top Hero + 6 Metrik):** Kartu Sorotan Utama (*Catatan Evaluasi Kerja*) membentang penuh di baris teratas (*full-width `grid-column: 1 / -1`*), disusul 6 kartu metrik pendukung dalam 2 baris 3 kolom (Komitmen Pagi, Distribusi Hasil, Evaluasi Harian Final Status, Kepatuhan Waktu, Pola Pekerjaan Berlanjut, Dukungan & Eskalasi).
-  4. **Standar 3 Tipe Catatan Evaluasi Kerja (Manager Notes):** *Apresiasi (Recognition)* (hijau/bintang), *Bimbingan (Coaching)* (amber/kompas), dan *Tindakan Korektif (Corrective)* (merah/seru).
-  5. **Mandat Dual Badges Berdampingan pada Daftar Riwayat Harian:** *Submission Timing Badge* (`On-Time`, `Late`, `No Submission`) berdampingan dengan *Final Status Badge* (`GREEN`, `AMBER`, `RED`, `Final Status belum tersedia`).
-  6. **Arsitektur Dual-View State & Tab Preservation:** Overview Mingguan (Tab 1/Tab 2) $\leftrightarrow$ Day Detail View tanpa reload halaman. Navigasi kembali dari detail hari selalu mengembalikan pengguna ke Tab 1 Riwayat Harian secara mulus.
-  7. Semantic Badges Outcome (`Completed` hijau, `Partially` amber, `Not Completed` merah) dan Continuation (`Continue` biru, `Do Not Continue` netral).
-  8. Banner audit khusus hari tanpa submission (*No Submission Audit Notice*).
-  9. Breadcrumb topbar dinamis interaktif dan tombol kembali ganda di atas & bawah halaman detail.
-  10. Ekspor CSV resmi berstandar RFC-4180 dengan UTF-8 Byte Order Mark (`\ufeff`).
+  4. **Mekanisme Hero Note + Accordion Toggle & Chip Tanggal Mandiri:**
+     - Menampilkan **1 catatan terbaru sebagai Hero Card**. Jika terdapat lebih dari satu catatan pada periode terkait, disediakan tombol dashed interaktif *Lihat [X] Catatan Sebelumnya pada Periode Ini* (`.btn-toggle-notes`) yang dapat melipat/membuka catatan-catatan lama secara mulus tanpa mendorong 6 kartu metrik ke bawah.
+     - **Chip Tanggal Kalender Menonjol (`.note-date-chip`):** Tanggal penerbitan catatan tidak disatukan di footer kutipan abu-abu, melainkan ditampilkan mandiri di pojok kanan atas kartu sebagai chip berlatar putih dengan border tegas, ikon kalender SVG, dan tipografi tebal (750) berwarna brand primer.
+     - **Empty State Ramping (`.note-empty-box`):** Jika pada periode aktif belum ada catatan resmi, kartu menampilkan satu baris pesan netral yang ringkas dan otomatis menyembunyikan badge pengingat pada tombol Tab 2.
+  5. **Standar 3 Tipe Catatan Evaluasi Kerja (Manager Notes):** *Apresiasi (Recognition)* (hijau/bintang), *Bimbingan (Coaching)* (amber/kompas), dan *Tindakan Korektif (Corrective)* (merah/seru).
+  6. **Mandat Dual Badges Berdampingan pada Daftar Riwayat Harian:** *Submission Timing Badge* (`On-Time`, `Late`, `No Submission`) berdampingan dengan *Final Status Badge* (`GREEN`, `AMBER`, `RED`, `Final Status belum tersedia`).
+  7. **Arsitektur Dual-View State & Tab Preservation:** Overview Mingguan (Tab 1/Tab 2) $\leftrightarrow$ Day Detail View tanpa reload halaman. Navigasi kembali dari detail hari selalu mengembalikan pengguna ke Tab 1 Riwayat Harian secara mulus.
+  8. Semantic Badges Outcome (`Completed` hijau, `Partially` amber, `Not Completed` merah) dan Continuation (`Continue` biru, `Do Not Continue` netral).
+  9. Banner audit khusus hari tanpa submission (*No Submission Audit Notice*).
+  10. Breadcrumb topbar dinamis interaktif dan tombol kembali ganda di atas & bawah halaman detail.
+  11. Ekspor CSV resmi berstandar RFC-4180 dengan UTF-8 Byte Order Mark (`\ufeff`).
 
 ### Halaman 07: Web Notification Center & Browser Push
 - **Berkas Prototipe:** [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html)
