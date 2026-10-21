@@ -704,6 +704,8 @@
       .metric-value{font-size:20px}
       #pushMetricValue{font-size:14.5px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .metric-note{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .view-tabs{margin-bottom:18px}
+      .view-tab{padding:8px 14px;font-size:12.5px}
       .top-grid{grid-template-columns:1fr}
     }
 
@@ -722,12 +724,25 @@
       #pushMetricValue{font-size:12.5px !important;margin-top:2px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .metric-note{display:none}
 
+      /* Responsif Tab Navigasi Utama (1 Baris Ringkas & Tidak Wrap 2 Baris) */
+      .view-tabs{display:flex;width:100%;padding:3px;gap:4px;border-radius:9px;margin-bottom:16px}
+      .view-tab{flex:1;justify-content:center;text-align:center;padding:7px 5px;font-size:11px;gap:5px;white-space:nowrap}
+      .view-tab svg{width:13px;height:13px;flex-shrink:0}
+      .tab-badge{min-width:18px;height:18px;font-size:10px;padding:0 4px}
+
       .filter-row{flex-direction:column;align-items:stretch;gap:10px}
       .filter-tools{width:100%}
       .search-input{width:100%}
       .select-input{flex:1}
       .notification-item{grid-template-columns:36px minmax(0,1fr);gap:10px}
       .item-actions{grid-column:2;justify-content:flex-start}
+    }
+
+    /* Penyesuaian Ekstra Layar Sangat Kecil (<= 390px, mis. iPhone SE) */
+    @media (max-width: 390px) {
+      .view-tab{padding:6px 3px;font-size:9.5px;gap:3px;letter-spacing:-0.01em}
+      .view-tab svg{width:12px;height:12px}
+      .tab-badge{min-width:16px;height:16px;font-size:9.5px;padding:0 3px}
     }
   </style>
 </head>

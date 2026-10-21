@@ -50,6 +50,8 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. NAVIGASI TAB TAMPILAN UTAMA (MAIN VIEW TABS):                            │
 │    [ ● Daftar Notifikasi (3) ] (Aktif)   [ ⚙ Pengaturan Kanal & Perangkat ]  │
+│    *Desain Responsif Mobile: Font & padding diperkecil proporsional (9.5-11px│
+│     white-space: nowrap), muat presisi 1 baris di iPhone SE (375px) & Android│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ KONTEN TAB 1 (DEFAULT / UTAMA): DAFTAR NOTIFIKASI                           │
 │ - Header: Judul "Daftar Notifikasi", Tombol [ Tandai Semua Dibaca ]         │
@@ -187,7 +189,7 @@ Sistem WorkPulse menerapkan matriks 22 pemicu resmi untuk memastikan tidak ada c
 | **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Saluran Notifikasi. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
 | **TC-12** | Pintasan Klik Metrik Browser Push | Klik kartu metrik ke-3 'Browser Push' | Sistem otomatis mengalihkan tampilan aktif ke Tab 'Pengaturan Kanal & Perangkat'. |
 | **TC-13** | Auto-Read via Tautan Email | Buka halaman dengan query `?read=notif-001` | Notifikasi dengan ID terkait otomatis ditandai sudah dibaca saat halaman dimuat, counter unread berkurang 1, dan toast hijau konfirmasi sukses muncul. |
-| **TC-14** | Strip Metrik Kompak Mobile & Tablet | Buka halaman pada layar smartphone ($\le 680\text{px}$) atau tablet ($\le 900\text{px}$) | 3 kartu metrik tetap sejajar 1 baris ultra-kompak ($\approx 48\text{px}$), subteks dan ikon disembunyikan otomatis di ponsel cerdas (hemat $\approx 80\%$ ruang vertikal dibanding stacking 3 baris). Feed daftar notifikasi langsung terlihat di atas layar, dan interaktivitas klik-filter kartu tetap aktif. |
+| **TC-14** | Strip Metrik & Tab Bar Responsif di Layar Kecil | Buka halaman pada layar smartphone ($\le 680\text{px}$) atau layar sangat kecil seperti iPhone SE ($375\text{px}$) | 3 kartu metrik tetap sejajar 1 baris ultra-kompak ($\approx 48\text{px}$). Tab navigasi (*Daftar Notifikasi* & *Pengaturan Kanal & Perangkat*) otomatis menyesuaikan ukuran font ($9.5\text{px} - 11\text{px}$) dan padding secara proporsional sehingga tetap rapi dalam 1 baris (tidak memakan 2 baris), tidak ada teks terpotong/overflow, serta interaktivitas beralih panel tetap 100% responsif. |
 
 ---
 
