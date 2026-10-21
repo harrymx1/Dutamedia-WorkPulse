@@ -836,7 +836,7 @@
 
         <!-- 2. Metric Summary Strip (3 Kolom) -->
         <div class="summary-strip" aria-label="Ringkasan Notifikasi">
-          <div class="metric-card">
+          <div class="metric-card interactive" id="metricCardTotal" title="Klik untuk menampilkan semua notifikasi" role="button" tabindex="0">
             <div class="metric-head">
               <span class="metric-label">Total Notifikasi</span>
               <div class="metric-icon-wrap">
@@ -847,10 +847,10 @@
               </div>
             </div>
             <div class="metric-value" id="totalMetric">8</div>
-            <div class="metric-note">Tercatat dalam riwayat in-system</div>
+            <div class="metric-note">Tercatat dalam riwayat in-system · Klik untuk lihat</div>
           </div>
 
-          <div class="metric-card">
+          <div class="metric-card interactive" id="metricCardUnread" title="Klik untuk menyaring notifikasi belum dibaca" role="button" tabindex="0">
             <div class="metric-head">
               <span class="metric-label">Belum Dibaca</span>
               <div class="metric-icon-wrap" style="background:#FFF3D9;color:#B45309">
@@ -862,10 +862,10 @@
               </div>
             </div>
             <div class="metric-value" id="unreadMetric" style="color:#B45309">3</div>
-            <div class="metric-note">Perlu peninjauan atau tindakan</div>
+            <div class="metric-note">Perlu peninjauan · Klik untuk saring</div>
           </div>
 
-          <div class="metric-card interactive" id="metricCardPush" title="Klik untuk membuka Pengaturan Kanal & Perangkat">
+          <div class="metric-card interactive" id="metricCardPush" title="Klik untuk membuka Pengaturan Kanal & Perangkat" role="button" tabindex="0">
             <div class="metric-head">
               <span class="metric-label">Browser Push</span>
               <div class="metric-icon-wrap" id="pushMetricIconWrap">
@@ -1640,19 +1640,45 @@
         });
       });
 
+      // Helper untuk Mengubah Filter Status Feed (Semua / Belum Dibaca / Sudah Dibaca)
+      function setFeedFilter(filterValue) {
+        switchMainView('riwayat');
+        activeFilter = filterValue;
+        document.querySelectorAll('[data-filter]').forEach(b => {
+          const on = (b.dataset.filter === filterValue);
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-selected', String(on));
+        });
+        render();
+      }
+
+      document.querySelectorAll('[data-filter]').forEach(tab => {
+        tab.addEventListener('click', () => {
+          setFeedFilter(tab.dataset.filter);
+        });
+      });
+
+      // Interaktivitas 3 Kartu Ringkasan Metrik
+      $('metricCardTotal').addEventListener('click', () => {
+        setFeedFilter('all');
+      });
+
+      $('metricCardUnread').addEventListener('click', () => {
+        setFeedFilter('unread');
+      });
+
       $('metricCardPush').addEventListener('click', () => {
         switchMainView('pengaturan');
       });
 
-      document.querySelectorAll('[data-filter]').forEach(tab => {
-        tab.addEventListener('click', () => {
-          activeFilter = tab.dataset.filter;
-          document.querySelectorAll('[data-filter]').forEach(b => {
-            const on = (b === tab);
-            b.classList.toggle('active', on);
-            b.setAttribute('aria-selected', String(on));
-          });
-          render();
+      // Aksesibilitas Keyboard untuk Kartu Interaktif
+      [$('metricCardTotal'), $('metricCardUnread'), $('metricCardPush')].forEach(card => {
+        if (!card) return;
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
         });
       });
 
