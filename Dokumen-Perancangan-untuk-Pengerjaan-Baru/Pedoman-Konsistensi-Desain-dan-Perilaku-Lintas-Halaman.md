@@ -367,6 +367,41 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   9. Breadcrumb topbar dinamis interaktif dan tombol kembali ganda di atas & bawah halaman detail.
   10. Ekspor CSV resmi berstandar RFC-4180 dengan UTF-8 Byte Order Mark (`\ufeff`).
 
+### Halaman 07: Web Notification Center & Browser Push
+- **Berkas Prototipe:** [`07-Notification-Center-Browser-Push.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/07-Notification-Center-Browser-Push.html)
+- **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-07-Notification-Center-Browser-Push.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-07-Notification-Center-Browser-Push.md)
+- **Keputusan Terkunci:**
+  1. **Mandat Pengiriman Nyata MVP (PRD FR-38):** Mendukung Browser Push fungsional nyata untuk trigger PRD Section 8, bukan rekaman dummy/stub.
+  2. **Pemisahan Status Dibaca vs Pengiriman Kanal:** Status *Sudah Dibaca* di in-app center tidak boleh disamakan dengan bukti pengiriman (*delivery confirmation*) pada Email maupun Browser Push.
+  3. **Engine Kontrol Izin Browser Push (4-State):** `Unsupported` (disabled amber), `Default/Prompt` (tombol aktif sadar pengguna), `Granted` (izin aktif hijau), dan `Denied/Blocked` (edukasi pembukaan izin di pengaturan peramban).
+  4. **Prinsip Non-Blocking on Denial:** Penolakan izin browser push tidak menghalangi alur kerja operasional inti apa pun.
+  5. **Panel Matriks Kanal Pengiriman (PRD §8):** Menyajikan transparansi status distribusi multi-kanal (In-App Center, Email, Browser Push).
+  6. **Feed Notifikasi Interaktif:** Tab status filter (`Semua`, `Belum Dibaca`, `Sudah Dibaca`), dropdown jenis notifikasi, dan live search teks instan.
+  7. **Tindakan Massal & Satuan:** Tombol *Tandai Semua Dibaca* di header/feed serta toggle status baca per baris.
+  8. **Modal Detail & Deep Link Resolver:** Tombol *Buka Konteks Terkait* mengarahkan pengguna secara presisi ke dokumen/modul sumber (Halaman 02, 03, 04, 05, 06, 16a/b, 20, 24).
+  9. **Zero Unicode Emoji & Murni SVG Monokrom:** Mengeliminasi seluruh karakter unicode mentah dan menggantinya dengan inline SVG monokrom profesional `stroke-width="1.8-2.2"`.
+  10. **Sinkronisasi Sesi & Shell Sidebar Baku:** Terhubung dengan `localStorage: workpulse_active_user`, drawer off-canvas, dan fluid padding simetris `clamp(1.5rem, 4vw, 3.75rem)`.
+
+### Halaman Berikutnya (Registri Bertahap):
+- `08-Pulse-Dashboard.html`
+- `09-Blocker-Escalation-Queue.html`
+- `10-Manager-Note-Coaching-Record.html`
+- `11-Compliance-Queue-HRGA.html`
+- `12-Exemption-Management.html`
+- `13-Project-Risk-View.html`
+- `14-Escalation-Aging.html`
+- `15-Admin-Organizational-Mapping.html`
+- `16a-Morning-Correction-Request.html`
+- `16b-EOD-Correction-Request.html`
+- `17-Admin-Temporary-Reviewer.html`
+- `18-Policy-Settings.html`
+- `19-Admin-Notification-Channel-Setup.html`
+- `20-My Leave Request (Employee).html`
+- `21-Leave Approval Queue (ReviewerHRGA).html`
+- `22-Correction-and-Leave-Review.html`
+- `23-Reports.html`
+- `24-Profile-Settings.html`
+
 ---
 
 ## 10. CHECKLIST WAJIB SEBELUM MEMULAI HALAMAN BARU
