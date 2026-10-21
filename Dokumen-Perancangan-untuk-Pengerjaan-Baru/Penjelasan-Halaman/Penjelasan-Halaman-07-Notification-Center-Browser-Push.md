@@ -78,7 +78,9 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. MODAL DETAIL NOTIFIKASI & DEEP-LINK RESOLVER:                            │
 │    - Pop-up Dialog terisolasi dengan backdrop blur                          │
-│    - Rincian lengkap dokumen dan tombol aksi [ Buka Konteks Terkait > ]     │
+│    - Tag semantik berwarna (Tone Pill) & status baca instan                 │
+│    - Metadata rujukan lengkap (Konteks Tiket & Stempel Waktu Lokal)         │
+│    - Tombol aksi [ Tutup ] & [ Buka Konteks Terkait > ]                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. CONTEXTUAL TOAST ENGINE: Feedback notifikasi sudut kanan bawah           │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -98,7 +100,7 @@ Sistem secara otomatis mengevaluasi ketersediaan dan status izin Web Notificatio
    - Perilaku: Tombol **`Aktifkan Browser Push`** aktif. Izin hanya diminta saat pengguna mengklik tombol tersebut.
 3. **State 3: Granted (Izin Diberikan & Aktif):**
    - Indikator: Badge hijau `Izin Aktif`.
-   - Perilaku: Tombol berubah menjadi `Izin Sudah Aktif` (disabled), notice hijau sukses menegaskan izin telah aktif pada peramban ini.
+   - Perilaku: Tombol berubah menjadi **`Kirim Notifikasi Uji`** (aktif untuk memicu pengujian push notification riil ke OS/desktop), notice hijau sukses menegaskan izin telah aktif pada peramban ini.
 4. **State 4: Denied / Blocked (Izin Diblokir di Browser):**
    - Indikator: Badge merah `Diblokir`.
    - Perilaku: Tombol berubah menjadi `Lihat Panduan Browser`, notice peringatan amber memandu langkah pengguna membuka izin pada pengaturan URL browser.
@@ -110,16 +112,19 @@ Menyajikan status 3 saluran pengiriman:
 - **Browser Push:** Mengikuti status izin perangkat aktif (pengiriman instan pemicu kritis).
 - **Prinsip Read $\ne$ Delivery:** Status "Sudah Dibaca" di Notification Center bukan konfirmasi bahwa pesan telah sampai pada kanal eksternal.
 
-### 3.3 Deep-Link Context Resolver
-Setiap notifikasi memiliki asosiasi rute tujuan yang jelas:
-- Blocker $\rightarrow$ `05-Raise-Instant-Blocker.html#my-blockers`.
-- Morning Commitment $\rightarrow$ `02-Morning-Commitment.html`.
-- Additional Work $\rightarrow$ `03-Additional-Work.html`.
-- EOD Outcome $\rightarrow$ `04-EOD-Outcome.html`.
-- History & Weekly Summary $\rightarrow$ `06-My-History-Weekly-Summary.html`.
-- Correction Requests $\rightarrow$ `16a-Morning-Correction-Request.html` / `16b-EOD-Correction-Request.html`.
-- Leave Requests $\rightarrow$ `20-My Leave Request (Employee).html`.
-- Profil & Organisasi $\rightarrow$ `24-Profile-Settings.html`.
+### 3.3 Deep-Link Context Resolver & Modal Rincian
+Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#detailModal`). Modal ini:
+1. Menyajikan tag pill berwarna sesuai urgensi (*Critical Blocker*, *Dukungan Tim*, dsb.).
+2. Menampilkan status baca instan (*Baru saja ditandai dibaca* / *Sudah dibaca*).
+3. Mengasosiasikan rute tujuan dokumen secara presisi:
+   - Blocker $\rightarrow$ `05-Raise-Instant-Blocker.html#my-blockers`.
+   - Morning Commitment $\rightarrow$ `02-Morning-Commitment.html`.
+   - Additional Work $\rightarrow$ `03-Additional-Work.html`.
+   - EOD Outcome $\rightarrow$ `04-EOD-Outcome.html`.
+   - History & Weekly Summary $\rightarrow$ `06-My-History-Weekly-Summary.html`.
+   - Correction Requests $\rightarrow$ `16a-Morning-Correction-Request.html` / `16b-EOD-Correction-Request.html`.
+   - Leave Requests $\rightarrow$ `20-My Leave Request (Employee).html`.
+   - Profil & Organisasi $\rightarrow$ `24-Profile-Settings.html`.
 
 ### 3.4 Mekanisme Penandaan Massal & Satuan
 - Mengklik **`Tandai semua dibaca`** langsung mengubah seluruh item unread menjadi read, memadamkan dot badge pada topbar dan sidebar, serta memicu toast sukses hijau.

@@ -1155,10 +1155,13 @@
     <div class="modal-box">
       <div class="modal-head">
         <div>
-          <div class="eyebrow" id="modalCategoryEyebrow">Detail Notifikasi</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <span class="pill" id="modalTagPill">Kategori</span>
+            <span class="pill neutral" id="modalStatusBadge" style="font-size:11.5px">Status Baca</span>
+          </div>
           <h2 class="modal-title" id="modalTitle">Judul Notifikasi</h2>
         </div>
-        <button class="icon-button" id="btnCloseModalTop" type="button" aria-label="Tutup dialog" style="width:32px;height:32px">
+        <button class="icon-button" id="btnCloseModalTop" type="button" aria-label="Tutup dialog" style="width:32px;height:32px;flex-shrink:0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1171,11 +1174,23 @@
       <div class="modal-detail-card">
         <div class="modal-detail-row">
           <span class="modal-detail-label">Konteks Dokumen / Tiket Terkait</span>
-          <span class="modal-detail-value" id="modalContext">Raise Instant Blocker · BLK-2026-0042</span>
+          <div style="display:inline-flex;align-items:center;gap:6px;margin-top:2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--secondary);flex-shrink:0">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span class="modal-detail-value" id="modalContext">Raise Instant Blocker · BLK-2026-0042</span>
+          </div>
         </div>
         <div class="modal-detail-row" style="margin-top:8px">
           <span class="modal-detail-label">Waktu Diterima</span>
-          <span class="modal-detail-value" id="modalTime" style="font-weight:600;font-size:12.5px;color:var(--secondary)">Senin, 12 Oktober 2026 · 09:12 WIB</span>
+          <div style="display:inline-flex;align-items:center;gap:6px;margin-top:2px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--secondary);flex-shrink:0">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="modal-detail-value" id="modalTime" style="font-weight:600;font-size:12.5px;color:var(--secondary)">Senin, 12 Oktober 2026 · 09:12 WIB</span>
+          </div>
         </div>
       </div>
 
@@ -1526,12 +1541,34 @@
         if (!item) return;
 
         activeNotification = item;
+        const wasUnread = item.unread;
         if (item.unread) {
           item.unread = false;
           render();
         }
 
-        $('modalCategoryEyebrow').textContent = `Kategori: ${item.tag}`;
+        const tagPill = $('modalTagPill');
+        if (tagPill) {
+          tagPill.className = `pill ${item.tone}`;
+          tagPill.textContent = item.tag;
+        }
+
+        const statusBadge = $('modalStatusBadge');
+        if (statusBadge) {
+          if (wasUnread) {
+            statusBadge.className = 'pill green';
+            statusBadge.innerHTML = `
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Baru saja ditandai dibaca</span>
+            `;
+          } else {
+            statusBadge.className = 'pill neutral';
+            statusBadge.innerHTML = `<span>Sudah dibaca</span>`;
+          }
+        }
+
         $('modalTitle').textContent = item.title;
         $('modalDescription').textContent = item.description;
         $('modalContext').textContent = item.context;
