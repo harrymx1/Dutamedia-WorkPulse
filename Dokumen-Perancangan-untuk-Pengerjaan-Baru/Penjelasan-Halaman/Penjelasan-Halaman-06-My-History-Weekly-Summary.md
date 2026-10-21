@@ -62,28 +62,28 @@
 │      • Sisi Kanan: [ Tombol: Lihat Detail → ]                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. TAB PANEL 2: KARTU RINGKASAN ANGKA MINGGUAN (WEEKLY SUMMARY GRID)        │
-│    [Baris 1: 3 Kolom Metrik Utama]                                          │
-│    ┌──────────────────────┐ ┌──────────────────────┐ ┌────────────────────┐ │
-│    │ 1. Komitmen Pagi     │ │ 2. Distribusi Hasil  │ │ 3. Evaluasi Harian │ │
-│    │    7 Komitmen        │ │    7 Selesai (Hijau) │ │    2 GREEN (Hijau) │ │
-│    │    (Morning Baseline)│ │    2 Sebagian (Amber)│ │    1 AMBER (Amber) │ │
-│    │                      │ │    0 Belum (Merah)   │ │    1 RED (Merah)   │ │
-│    └──────────────────────┘ └──────────────────────┘ └────────────────────┘ │
-│    [Baris 2: 3 Kolom Metrik Kepatuhan & Pola Kerja]                         │
-│    ┌──────────────────────┐ ┌──────────────────────┐ ┌────────────────────┐ │
-│    │ 4. Kepatuhan Waktu   │ │ 5. Pola Pekerjaan    │ │ 6. Dukungan &      │ │
-│    │    3 Tepat Waktu(Biru│ │    Berlanjut         │ │    Eskalasi        │ │
-│    │    1 Terlambat(Amber)│ │    2 Hari Berurutan  │ │    1 Dukungan Diber│ │
-│    │    1 Tanpa Laporan   │ │    Chips: Continue(3)│ │    1 Eskalasi Buka │ │
-│    └──────────────────────┘ └──────────────────────┘ └────────────────────┘ │
-│    [Baris 3: Kartu Lebar Penuh (Full-Width grid-column: 1 / -1)]            │
+│    [Baris 1: Kartu Utama Lebar Penuh (Top Hero Card grid-column: 1 / -1)]   │
 │    ┌──────────────────────────────────────────────────────────────────────┐ │
-│    │ 7. Catatan Evaluasi Kerja (Manager Notes)                            │ │
+│    │ 1. Catatan Evaluasi Kerja (Manager Notes)                            │ │
 │    │    [Ikon Lencana] [Pill: Apresiasi (Recognition)] · Budi Santoso     │ │
 │    │    "Terima kasih sudah mengantisipasi kebutuhan checkout..."         │ │
 │    │    Jumat, 9 Oktober 2026 · Terverifikasi Sistem                      │ │
 │    │    (Atau: Empty state netral jika belum ada catatan pada periode tsb)│ │
 │    └──────────────────────────────────────────────────────────────────────┘ │
+│    [Baris 2: 3 Kolom Metrik Utama]                                          │
+│    ┌──────────────────────┐ ┌──────────────────────┐ ┌────────────────────┐ │
+│    │ 2. Komitmen Pagi     │ │ 3. Distribusi Hasil  │ │ 4. Evaluasi Harian │ │
+│    │    7 Komitmen        │ │    7 Selesai (Hijau) │ │    2 GREEN (Hijau) │ │
+│    │    (Morning Baseline)│ │    2 Sebagian (Amber)│ │    1 AMBER (Amber) │ │
+│    │                      │ │    0 Belum (Merah)   │ │    1 RED (Merah)   │ │
+│    └──────────────────────┘ └──────────────────────┘ └────────────────────┘ │
+│    [Baris 3: 3 Kolom Metrik Kepatuhan & Pola Kerja]                         │
+│    ┌──────────────────────┐ ┌──────────────────────┐ ┌────────────────────┐ │
+│    │ 5. Kepatuhan Waktu   │ │ 6. Pola Pekerjaan    │ │ 7. Dukungan &      │ │
+│    │    3 Tepat Waktu(Biru│ │    Berlanjut         │ │    Eskalasi        │ │
+│    │    1 Terlambat(Amber)│ │    2 Hari Berurutan  │ │    1 Dukungan Diber│ │
+│    │    1 Tanpa Laporan   │ │    Chips: Continue(3)│ │    1 Eskalasi Buka │ │
+│    └──────────────────────┘ └──────────────────────┘ └────────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ =========================================================================== │
 │ TAMPILAN 2: RINCIAN HARI KERJA (DAY DETAIL VIEW / DRILL-DOWN)               │
@@ -113,7 +113,7 @@ Guna meningkatkan kenyamanan membaca (*ergonomics*) dan mencegah kejenuhan mengg
    - Menampilkan daftar catatan kerja per hari (Senin s/d Jumat) secara langsung di layar pertama (*above the fold*).
    - Dilengkapi badge hitungan hari (`#tabDaysBadge`) dan sub-filter kehadiran (`#recordFilter`: *Semua Hari Kerja*, *Ada Submission*, *Tanpa Submission*) di sisi kanan header panel harian.
 2. **Tab 2: Ringkasan Mingguan (`#panelWeeklySummary`):**
-   - Menampilkan 6 kartu ringkasan metrik kinerja mingguan dan kartu penuh *Catatan Evaluasi Kerja (Manager Notes)*.
+   - Menampilkan kartu utama *Catatan Evaluasi Kerja (Manager Notes)* di baris teratas (*Top Hero Card*), disusul 6 kartu ringkasan metrik kinerja mingguan di bawahnya sebagai data pendukung.
    - **Fitur Pengingat Otomatis (*Smart Reminder Badge*):** Jika pada periode yang aktif terdapat Catatan Evaluasi Kerja resmi dari atasan, tombol Tab 2 otomatis memunculkan badge amber pengingat: `[1 Catatan]`. Jika tidak ada catatan, badge disembunyikan secara otomatis.
 3. **Preservasi Status Tab:**
    - Ketika pengguna masuk ke rincian hari melalui tombol *Lihat Detail →* dan kemudian menekan tombol *Kembali ke Histori*, sistem secara otomatis memulihkan tampilan ke Tab 1 (Riwayat Harian).
