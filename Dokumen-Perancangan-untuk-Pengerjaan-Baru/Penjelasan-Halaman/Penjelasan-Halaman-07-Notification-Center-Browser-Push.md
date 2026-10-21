@@ -125,6 +125,7 @@ Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#d
    - Correction Requests $\rightarrow$ `16a-Morning-Correction-Request.html` / `16b-EOD-Correction-Request.html`.
    - Leave Requests $\rightarrow$ `20-My Leave Request (Employee).html`.
    - Profil & Organisasi $\rightarrow$ `24-Profile-Settings.html`.
+4. Menyajikan label tombol aksi dinamis (*Dynamic Action Label*) yang cerdas menyesuaikan jenis dokumen (misal: *"Buka Tiket Kendala"*, *"Buka Komitmen Kerja"*, *"Buka Pengajuan Koreksi"*, *"Buka Catatan di Histori"*) alih-alih label abstrak "Buka Konteks Terkait".
 
 ### 3.4 Mekanisme Penandaan Massal & Satuan
 - Mengklik **`Tandai semua dibaca`** langsung mengubah seluruh item unread menjadi read, memadamkan dot badge pada topbar dan sidebar, serta memicu toast sukses hijau.
@@ -143,8 +144,8 @@ Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#d
 | **TC-05** | Live Search Kata Kunci | Ketik "invoice" di kotak pencarian | Menampilkan 1 kartu kendala terkait invoice export. Kartu lain disaring instan secara real-time. |
 | **TC-06** | Tandai Semua Dibaca | Klik tombol [Tandai semua dibaca] | Seluruh kartu beralih ke state read, counter unread = 0, dot lonceng padam, tombol tandai semua disabled, toast sukses hijau muncul. |
 | **TC-07** | Toggle Status Baca per Item | Klik tombol centang pada kartu unread | Kartu berubah menjadi read, counter unread berkurang 1. Klik ulang mengembalikan status ke unread. |
-| **TC-08** | Buka Modal Detail Notifikasi | Klik tombol [Lihat Detail →] | Modal pop-up muncul di tengah dengan backdrop blur, menyajikan rincian lengkap kendala/tugas dan tombol "Buka Konteks Terkait". |
-| **TC-09** | Deep Link Konteks Dokumen | Klik [Buka Konteks Terkait] di modal | Modal tertutup, pengguna diarahkan ke rute tujuan dokumen dengan toast panduan. |
+| **TC-08** | Buka Modal Detail Notifikasi | Klik kartu notifikasi / [Lihat Detail →] | Modal pop-up muncul di tengah dengan backdrop blur, menyajikan rincian lengkap kendala/tugas, tag semantik urgensi, status baca instan, dan tombol aksi dinamis (misal: "Buka Tiket Kendala"). |
+| **TC-09** | Deep Link Konteks Dokumen | Klik tombol aksi dinamis modal (misal: [Buka Tiket Kendala]) | Modal tertutup, pengguna diarahkan ke rute tujuan dokumen dengan toast panduan spesifik. |
 | **TC-10** | Aksi Kontrol Browser Push | Klik tombol [Aktifkan Browser Push] / [Kirim Notifikasi Uji] | Jika belum aktif, sistem memicu `Notification.requestPermission()`. Jika izin sudah aktif, sistem memicu pengiriman notifikasi uji riil ke peramban dan menampilkan toast konfirmasi sukses. |
 | **TC-11** | Beralih Tab Tampilan Utama | Klik tab 'Pengaturan Kanal & Perangkat' | Panel beralih menampilkan Preferensi Browser Push & Matriks Saluran Notifikasi. Klik kembali 'Daftar Notifikasi' mengembalikan tampilan feed seketika. |
 | **TC-12** | Pintasan Klik Metrik Browser Push | Klik kartu metrik ke-3 'Browser Push' | Sistem otomatis mengalihkan tampilan aktif ke Tab 'Pengaturan Kanal & Perangkat'. |

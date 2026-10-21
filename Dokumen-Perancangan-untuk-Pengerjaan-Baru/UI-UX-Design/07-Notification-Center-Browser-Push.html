@@ -1200,13 +1200,13 @@
           <line x1="12" y1="16" x2="12" y2="12"></line>
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg>
-        <div>Tombol di bawah akan mengarahkan Anda langsung ke halaman kerja atau formulir terkait dokumen ini.</div>
+        <div id="modalNoticeText">Tombol aksi di bawah akan mengarahkan Anda langsung ke dokumen atau formulir kerja terkait.</div>
       </div>
 
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btnCloseModal" type="button">Tutup</button>
         <button class="btn btn-primary" id="btnOpenContext" type="button">
-          <span>Buka Konteks Terkait</span>
+          <span id="btnOpenContextText">Buka Halaman Terkait</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
@@ -1259,6 +1259,7 @@
           description: 'Kendala teknis "Akses staging database timeout" masih berstatus Open dan mendekati batas toleransi SLA pengakuan.',
           context: 'Raise Instant Blocker · #BLK-2026-0042',
           targetRoute: '05-Raise-Instant-Blocker.html#my-blockers',
+          actionLabel: 'Buka Tiket Kendala',
           time: '14 Okt 2026 · 09:12 WIB',
           unread: true,
           tag: 'Critical Blocker',
@@ -1271,6 +1272,7 @@
           description: 'Rina Putri menugaskan Anda sebagai pendukung teknis untuk dependensi migrasi skema database staging.',
           context: 'My Today · Slot Komitmen 2',
           targetRoute: '02-Morning-Commitment.html',
+          actionLabel: 'Buka Komitmen Kerja',
           time: '14 Okt 2026 · 08:45 WIB',
           unread: true,
           tag: 'Dukungan Tim',
@@ -1283,6 +1285,7 @@
           description: 'Permohonan EOD Correction Request #EOD-2026-1006-01 telah diajukan dan sedang dalam jendela telaah (Objection Window).',
           context: 'EOD Correction Request · #EOD-2026-1006-01',
           targetRoute: '16b-EOD-Correction-Request.html',
+          actionLabel: 'Buka Pengajuan Koreksi',
           time: '14 Okt 2026 · 08:15 WIB',
           unread: true,
           tag: 'Jendela Keberatan',
@@ -1295,6 +1298,7 @@
           description: 'Jendela pengisian Morning Commitment telah dibuka (08:00–09:00 WIB). Kunci prioritas terukur Anda hari ini sebelum jam kerja dimulai.',
           context: 'My Today · Morning Commitment',
           targetRoute: '02-Morning-Commitment.html',
+          actionLabel: 'Buka Komitmen Pagi',
           time: '14 Okt 2026 · 07:30 WIB',
           unread: false,
           tag: 'Pengingat Waktu',
@@ -1307,6 +1311,7 @@
           description: 'Permohonan koreksi minor target deliverable pagi hari telah disetujui reviewer dan tercatat pada audit trail.',
           context: 'My History · Selasa, 6 Okt 2026',
           targetRoute: '06-My-History-Weekly-Summary.html',
+          actionLabel: 'Buka Histori Koreksi',
           time: '13 Okt 2026 · 16:40 WIB',
           unread: false,
           tag: 'Applied Formal',
@@ -1319,6 +1324,7 @@
           description: 'Perubahan hierarki pelaporan pada Technology Squad A telah disahkan oleh Administrator Sistem.',
           context: 'Profile Settings · Organizational Structure',
           targetRoute: '24-Profile-Settings.html',
+          actionLabel: 'Buka Pengaturan Profil',
           time: '13 Okt 2026 · 13:20 WIB',
           unread: false,
           tag: 'Organisasi Master',
@@ -1331,6 +1337,7 @@
           description: 'Tim DevOps telah memulihkan instance staging dan memperbarui tiket kendala terkait.',
           context: 'Raise Instant Blocker · #BLK-2026-0031',
           targetRoute: '05-Raise-Instant-Blocker.html#my-blockers',
+          actionLabel: 'Buka Tiket Kendala',
           time: '12 Okt 2026 · 15:10 WIB',
           unread: false,
           tag: 'Tiket Resolved',
@@ -1343,6 +1350,7 @@
           description: 'Rekap akuntabilitas kerja minggu lalu dan Catatan Apresiasi dari pimpinan telah terbit pada halaman histori.',
           context: 'My History · Minggu Sebelumnya',
           targetRoute: '06-My-History-Weekly-Summary.html',
+          actionLabel: 'Buka Catatan di Histori',
           time: '12 Okt 2026 · 08:00 WIB',
           unread: false,
           tag: 'Refleksi Mingguan',
@@ -1573,6 +1581,14 @@
         $('modalDescription').textContent = item.description;
         $('modalContext').textContent = item.context;
         $('modalTime').textContent = item.time;
+
+        const actionLabel = item.actionLabel || 'Buka Halaman Terkait';
+        if ($('btnOpenContextText')) {
+          $('btnOpenContextText').textContent = actionLabel;
+        }
+        if ($('modalNoticeText')) {
+          $('modalNoticeText').innerHTML = `Klik tombol <strong>${escapeHTML(actionLabel)}</strong> di bawah untuk langsung menuju ke dokumen atau formulir kerja yang bersangkutan.`;
+        }
 
         $('detailModal').classList.add('show');
         $('btnOpenContext').focus();
@@ -1876,8 +1892,9 @@
       $('btnOpenContext').addEventListener('click', () => {
         if (!activeNotification) return;
         const target = activeNotification.targetRoute;
+        const label = activeNotification.actionLabel || 'Halaman Terkait';
         closeDetail();
-        showToast(`Mengarahkan ke ${activeNotification.context}…`, 'success');
+        showToast(`Mengarahkan ke ${activeNotification.context} (${label})…`, 'success');
         setTimeout(() => {
           window.location.href = target;
         }, 300);
