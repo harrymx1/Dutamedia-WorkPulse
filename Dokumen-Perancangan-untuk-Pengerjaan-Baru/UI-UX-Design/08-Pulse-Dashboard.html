@@ -71,8 +71,7 @@
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 254px minmax(0, 1fr);
-      align-items: start;
+      grid-template-columns: 260px minmax(0, 1fr);
     }
 
     /* ==============================================================
@@ -81,55 +80,28 @@
     .sidebar {
       background: var(--color-surface);
       border-right: 1px solid var(--color-border-subtle);
-      padding: 20px 16px 16px;
+      padding: 24px 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      height: 100vh;
-      max-height: 100vh;
+      gap: 24px;
       position: sticky;
       top: 0;
+      height: 100vh;
       overflow-y: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
       box-sizing: border-box;
       z-index: 50;
     }
 
     .sidebar::-webkit-scrollbar {
-      width: 4px;
-    }
-    .sidebar::-webkit-scrollbar-thumb {
-      background: var(--color-border-subtle);
-      border-radius: 4px;
-    }
-
-    @media (max-height: 750px) {
-      .sidebar {
-        padding: 14px 12px 10px;
-        gap: 10px;
-      }
-      .brand {
-        margin-bottom: 0;
-      }
-      .nav-group {
-        gap: 2px;
-      }
-      .nav-label {
-        margin-bottom: 2px;
-        font-size: 10.5px;
-      }
-      .nav-link {
-        padding: 6.5px 10px;
-        font-size: 13px;
-      }
-      .side-bottom {
-        padding-top: 8px;
-      }
+      display: none;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       padding: 0 8px;
     }
     .brand-mark {
@@ -142,19 +114,19 @@
       color: #fff;
       font-weight: 800;
       font-size: 20px;
-      box-shadow: 0 4px 12px rgba(0, 103, 77, 0.2);
+      flex-shrink: 0;
     }
     .brand-name {
       font-size: 18px;
       font-weight: 800;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.03em;
       color: var(--color-text-primary);
     }
     .brand-caption {
       font-size: 11px;
       color: var(--color-text-secondary);
-      font-weight: 600;
-      margin-top: -2px;
+      margin-top: 1px;
+      font-weight: 500;
     }
 
     .nav-group { display: grid; gap: 4px; }
@@ -187,7 +159,7 @@
     .nav-link.active {
       background: var(--color-brand-tint);
       color: var(--color-brand-primary);
-      font-weight: 750;
+      font-weight: 700;
     }
     .nav-icon {
       width: 18px;
@@ -246,9 +218,6 @@
       font-size: 11px;
       color: var(--color-text-secondary);
       line-height: 1.35;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .logout-btn {
       background: transparent;
