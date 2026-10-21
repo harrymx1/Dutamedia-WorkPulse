@@ -100,7 +100,7 @@ Sistem secara otomatis mengevaluasi ketersediaan dan status izin Web Notificatio
    - Perilaku: Tombol **`Aktifkan Browser Push`** aktif. Izin hanya diminta saat pengguna mengklik tombol tersebut.
 3. **State 3: Granted (Izin Diberikan & Aktif):**
    - Indikator: Badge hijau `Izin Aktif`.
-   - Perilaku: Tombol berubah menjadi **`Kirim Notifikasi Uji`** (aktif untuk memicu pengujian push notification riil ke OS/desktop), notice hijau sukses menegaskan izin telah aktif pada peramban ini.
+   - Perilaku: Tombol berubah menjadi **`Kirim Notifikasi Uji`** (aktif untuk memicu pengujian push notification riil ke OS/desktop), notice hijau sukses menegaskan izin telah aktif pada peramban ini serta menyertakan petunjuk cara mencabut izin (*Revoke Guidance*). Baris saluran Browser Push pada Matriks Distribusi otomatis tersinkronisasi ke badge hijau `Tersedia · Peramban Ini`.
 4. **State 4: Denied / Blocked (Izin Diblokir di Browser):**
    - Indikator: Badge merah `Diblokir`.
    - Perilaku: Tombol berubah menjadi `Lihat Panduan Browser`, notice peringatan amber memandu langkah pengguna membuka izin pada pengaturan URL browser.

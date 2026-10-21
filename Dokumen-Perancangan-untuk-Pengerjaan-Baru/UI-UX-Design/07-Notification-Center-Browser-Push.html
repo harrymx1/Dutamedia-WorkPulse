@@ -1633,7 +1633,7 @@
         const supported = ('Notification' in window);
         const permission = supported ? Notification.permission : 'unsupported';
 
-        let badgeText, badgeClass, titleText, descText, noticeClass, noticeHtml, btnText, btnDisabled, metricText, metricNote, channelText;
+        let badgeText, badgeClass, titleText, descText, noticeClass, noticeHtml, btnText, btnDisabled, metricText, metricNote, channelBadgeText, channelBadgeClass, channelText, helpText;
 
         if (!supported) {
           badgeText = 'Tidak Didukung';
@@ -1646,31 +1646,43 @@
           btnDisabled = true;
           metricText = 'Tidak Didukung';
           metricNote = 'Platform tidak mendukung API';
+          channelBadgeText = 'Tidak Didukung';
+          channelBadgeClass = 'pill amber';
           channelText = 'Tidak didukung pada peramban ini';
+          helpText = 'Platform atau peramban ini tidak menyediakan Web Notifications API.';
         } else if (permission === 'granted') {
           badgeText = 'Izin Aktif';
           badgeClass = 'pill green';
           titleText = 'Izin Notifikasi Aktif pada Browser Ini';
           descText = 'Peramban telah mengizinkan penerimaan pengingat dan eskalasi instan.';
           noticeClass = 'success';
-          noticeHtml = `Izin peramban telah aktif. Status izin aktif pada peramban bukan bukti mutlak bahwa seluruh pesan telah sampai; pengiriman push riil dicatat secara independen per pemicu dan kanal.`;
+          noticeHtml = `
+            <div>Izin peramban telah aktif. Perangkat siap menerima pengingat batas waktu dan eskalasi kendala instan secara real-time.</div>
+            <div style="margin-top:7px;font-size:12px;opacity:0.92">Ingin menonaktifkan? Klik ikon setelan/gembok di samping alamat web peramban Anda, lalu ubah izin Notifikasi ke <em>Blokir</em>.</div>
+          `;
           btnText = 'Kirim Notifikasi Uji';
           btnDisabled = false;
           metricText = 'Izin Aktif';
           metricNote = 'Aktif pada peramban ini';
-          channelText = 'Izin aktif · Delivery riil per pemicu';
+          channelBadgeText = 'Tersedia · Peramban Ini';
+          channelBadgeClass = 'pill green';
+          channelText = 'Siap menerima pengiriman instan pada gawai ini';
+          helpText = 'Izin notifikasi aktif pada peramban ini. Anda dapat menguji pengiriman melalui tombol di atas kapan saja.';
         } else if (permission === 'denied') {
           badgeText = 'Izin Diblokir';
           badgeClass = 'pill red';
           titleText = 'Izin Notifikasi Diblokir di Browser';
           descText = 'Pemberitahuan push tidak dapat dikirim karena izin situs dinonaktifkan.';
           noticeClass = 'warning';
-          noticeHtml = `WorkPulse tidak dapat mengubah pengaturan browser secara sepihak. Silakan klik ikon gembok/pengaturan di samping alamat URL browser Anda, ubah izin Notifikasi ke <em>Izinkan (Allow)</em>, lalu klik periksa status kembali.`;
+          noticeHtml = `WorkPulse tidak dapat mengubah pengaturan browser secara sepihak. Silakan klik ikon gembok/pengaturan di samping alamat URL browser Anda, ubah izin Notifikasi ke <em>Izinkan (Allow)</em>, lalu klik tombol <strong>Periksa Status</strong>.`;
           btnText = 'Lihat Panduan Browser';
           btnDisabled = false;
           metricText = 'Diblokir';
           metricNote = 'Ubah izin pada pengaturan situs';
-          channelText = 'Izin dinonaktifkan di peramban';
+          channelBadgeText = 'Izin Diblokir';
+          channelBadgeClass = 'pill red';
+          channelText = 'Izin dinonaktifkan di setelan peramban';
+          helpText = 'Izin diblokir pada peramban ini. Buka blokir di pengaturan situs peramban untuk mengaktifkannya.';
         } else {
           // default / prompt
           badgeText = 'Belum Diaktifkan';
@@ -1683,14 +1695,17 @@
           btnDisabled = false;
           metricText = 'Belum Aktif';
           metricNote = 'Klik untuk meminta izin browser';
-          channelText = 'Menunggu izin pengguna';
+          channelBadgeText = 'Belum Diaktifkan';
+          channelBadgeClass = 'pill neutral';
+          channelText = 'Menunggu izin pengguna pada peramban ini';
+          helpText = 'Izin notifikasi hanya berlaku untuk browser dan perangkat yang sedang Anda gunakan saat ini.';
         }
 
         // Terapkan ke DOM
         $('pushBadge').textContent = badgeText;
         $('pushBadge').className = badgeClass;
-        $('pushChannelBadge').textContent = badgeText;
-        $('pushChannelBadge').className = badgeClass;
+        $('pushChannelBadge').textContent = channelBadgeText;
+        $('pushChannelBadge').className = channelBadgeClass;
 
         $('pushStatusTitle').textContent = titleText;
         $('pushStatusText').textContent = descText;
@@ -1709,6 +1724,9 @@
         $('btnEnablePushText').textContent = btnText;
         $('btnEnablePush').disabled = btnDisabled;
         $('pushChannelDesc').textContent = channelText;
+        if ($('pushHelpText')) {
+          $('pushHelpText').textContent = helpText;
+        }
 
         $('pushMetricValue').textContent = metricText;
         $('pushMetricNote').textContent = metricNote;
