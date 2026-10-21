@@ -367,12 +367,29 @@
       gap: 14px;
       padding: 16px 20px;
       border-bottom: 1px solid #EBF1EE;
+      border-left: 3.5px solid transparent;
       align-items: start;
-      transition: background 0.15s ease;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      cursor: pointer;
     }
     .notification-item:last-child { border-bottom: 0; }
-    .notification-item.unread { background: #F8FCFA; }
-    .notification-item:hover { background: #F3F8F5; }
+    .notification-item.unread {
+      background: #F8FCFA;
+      border-left: 3.5px solid var(--color-brand-primary);
+    }
+    .notification-item:hover { background: #F0F6F3; }
+    .notification-item:focus-visible {
+      outline: 2px solid var(--color-brand-focus);
+      outline-offset: -2px;
+    }
+
+    .load-more-row {
+      display: flex;
+      justify-content: center;
+      padding: 16px 20px;
+      border-top: 1px dashed var(--color-border-subtle);
+      background: var(--color-surface);
+    }
 
     .item-icon-box {
       width: 40px;
@@ -954,6 +971,16 @@
             <!-- Notification Items Feed -->
             <div class="notification-list" id="notificationList" aria-live="polite"></div>
 
+            <!-- Load More Row (Progressive Pagination) -->
+            <div class="load-more-row" id="loadMoreRow" style="display:none">
+              <button class="btn btn-secondary" id="btnLoadMore" type="button">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span id="btnLoadMoreText">Muat Riwayat Lebih Lama</span>
+              </button>
+            </div>
+
             <!-- Empty State Box -->
             <div class="empty-state" id="emptyState">
               <div class="empty-icon-circle">
@@ -1389,6 +1416,10 @@
         $('btnMarkAllTop').disabled = unreadCount === 0;
       }
 
+      // Parameter Paginasi Progresif (Load More)
+      const PAGE_SIZE = 5;
+      let visibleCount = PAGE_SIZE;
+
       // Render Daftar Feed Notifikasi
       function render() {
         updateCounts();
@@ -1410,17 +1441,32 @@
 
         if (filtered.length === 0) {
           $('emptyState').classList.add('show');
+          $('loadMoreRow').style.display = 'none';
           $('resultCount').textContent = 'Tidak ada notifikasi yang cocok';
           $('emptyTitle').textContent = query || type !== 'all' ? 'Tidak ada hasil pencarian' : 'Tidak ada notifikasi';
           $('emptyText').textContent = query || type !== 'all' ? 'Coba gunakan kata kunci atau ubah filter kategori lain.' : 'Seluruh notifikasi baru akan tercatat di sini.';
         } else {
           $('emptyState').classList.remove('show');
-          $('resultCount').textContent = `Menampilkan ${filtered.length} dari ${notifications.length} notifikasi`;
 
-          filtered.forEach(item => {
+          const itemsToDisplay = filtered.slice(0, visibleCount);
+          const remaining = filtered.length - itemsToDisplay.length;
+
+          $('resultCount').textContent = `Menampilkan ${itemsToDisplay.length} dari ${filtered.length} notifikasi`;
+
+          if (remaining > 0) {
+            $('loadMoreRow').style.display = 'flex';
+            $('btnLoadMoreText').textContent = `Muat ${remaining} Notifikasi Lainnya`;
+          } else {
+            $('loadMoreRow').style.display = 'none';
+          }
+
+          itemsToDisplay.forEach(item => {
             const el = document.createElement('article');
             el.className = `notification-item ${item.unread ? 'unread' : ''}`;
             el.dataset.id = item.id;
+            el.tabIndex = 0;
+            el.setAttribute('role', 'button');
+            el.setAttribute('aria-label', `${item.title}. ${item.unread ? 'Belum dibaca' : 'Sudah dibaca'}. Klik untuk melihat detail.`);
 
             const iconSvg = SVG_ICONS[item.type] || SVG_ICONS.reminder;
 
@@ -1606,14 +1652,10 @@
         $('pushMetricNote').textContent = metricNote;
       }
 
-      // Event Listener Delegasi untuk Feed Items
+      // Event Listener Delegasi untuk Feed Items (Clickable Row & Toggle Action)
       $('notificationList').addEventListener('click', e => {
-        const openBtn = e.target.closest('[data-open]');
         const toggleBtn = e.target.closest('[data-toggle]');
-
-        if (openBtn) {
-          openDetail(openBtn.dataset.open);
-        } else if (toggleBtn) {
+        if (toggleBtn) {
           const id = toggleBtn.dataset.toggle;
           const item = notifications.find(x => x.id === id);
           if (item) {
@@ -1621,7 +1663,32 @@
             render();
             showToast(item.unread ? 'Notifikasi ditandai belum dibaca.' : 'Notifikasi ditandai sudah dibaca.', 'success');
           }
+          return;
         }
+
+        const itemRow = e.target.closest('.notification-item');
+        if (itemRow && itemRow.dataset.id) {
+          openDetail(itemRow.dataset.id);
+        }
+      });
+
+      // Aksesibilitas Keyboard untuk Baris Notifikasi
+      $('notificationList').addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (!e.target.closest('[data-toggle]')) {
+            const itemRow = e.target.closest('.notification-item');
+            if (itemRow && itemRow.dataset.id) {
+              e.preventDefault();
+              openDetail(itemRow.dataset.id);
+            }
+          }
+        }
+      });
+
+      // Paginasi Progresif (Muat Lebih Banyak)
+      $('btnLoadMore').addEventListener('click', () => {
+        visibleCount += PAGE_SIZE;
+        render();
       });
 
       // Filter Tabs
@@ -1649,6 +1716,7 @@
       function setFeedFilter(filterValue) {
         switchMainView('riwayat');
         activeFilter = filterValue;
+        visibleCount = PAGE_SIZE;
         document.querySelectorAll('[data-filter]').forEach(b => {
           const on = (b.dataset.filter === filterValue);
           b.classList.toggle('active', on);
@@ -1687,9 +1755,15 @@
         });
       });
 
-      // Filter Live Search & Kategori
-      $('searchNotifications').addEventListener('input', render);
-      $('typeFilter').addEventListener('change', render);
+      // Filter Live Search & Kategori (Reset visibleCount ke PAGE_SIZE)
+      $('searchNotifications').addEventListener('input', () => {
+        visibleCount = PAGE_SIZE;
+        render();
+      });
+      $('typeFilter').addEventListener('change', () => {
+        visibleCount = PAGE_SIZE;
+        render();
+      });
 
       // Tandai Semua Dibaca
       $('btnMarkAllTop').addEventListener('click', markAllRead);
