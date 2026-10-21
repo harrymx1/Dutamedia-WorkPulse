@@ -377,10 +377,11 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   4. **Prinsip Non-Intrusif & Non-Blocking:** Permintaan izin browser push hanya dipicu oleh klik sadar pengguna (*click-to-prompt*). Penolakan izin peramban dilarang menghambat operasional alur kerja lainnya.
   5. **Panel Matriks Saluran Distribusi (PRD §8):** Menyajikan status 3 saluran (*Web Notification Center*, *Email Korporat*, *Browser Push*) dengan maklumat tata kelola resmi.
   6. **Feed Interaktif Multi-Filter & Live Search:** Mendukung filter tab status (`Semua`, `Belum Dibaca`, `Sudah Dibaca`), dropdown filter kategori, dan pencarian teks instan pada judul/deskripsi/ID tiket.
-  7. **Penandaan Massal & Mandiri:** Tombol *Tandai semua dibaca* di header dan baris feed yang memperbarui dot unread secara instan, didampingi tombol toggle status baca per baris.
+  7. **Penandaan Massal Tunggal & Safety Undo:** Tombol *Tandai semua dibaca* terpusat pada Page Heading dengan proteksi tombol *Urungkan (Undo)* berdurasi 5 detik pada toast, didampingi tombol toggle status baca per baris.
   8. **Modal Detail & Context Deep-Link Resolver:** Dialog pop-up rincian notifikasi dengan tombol *Buka Konteks Terkait* yang mengarahkan pengguna secara akurat ke halaman sumber dokumen (Halaman 02, 03, 04, 05, 06, 16a/b, 20, 24).
   9. **Sinkronisasi Sesi Dinamis & Contextual Toast Engine:** Membaca profil aktif Budi Pratama dari `localStorage: workpulse_active_user` dan menyajikan feedback notifikasi 3 varian semantik (`success`, `warning`, `error`).
-  10. **Arsitektur Tab Tampilan Utama (*Primary Tab Architecture*):** Memposisikan *Daftar Notifikasi* (Tab 1) langsung di bawah 3 kartu ringkasan metrik sebagai tampilan utama harian tanpa scrolling, sedangkan *Preferensi Perangkat* dan *Matriks Distribusi Kanal PRD §8* diisolasi rapi ke Tab 2 (*Pengaturan Kanal & Perangkat*). Kartu metrik ke-3 bersifat interaktif dan mengalihkan pengguna langsung ke Tab 2.
+  10. **Arsitektur Tab Tampilan Utama (*Primary Tab Architecture*):** Memposisikan *Daftar Notifikasi* (Tab 1) langsung di bawah 3 kartu ringkasan metrik sebagai tampilan utama harian tanpa scrolling, sedangkan *Preferensi Perangkat* dan *Matriks Distribusi Kanal PRD §8* diisolasi rapi ke Tab 2 (*Pengaturan Kanal & Perangkat*). Ketiga kartu metrik bersifat interaktif (*click-to-filter* dan *click-to-tab*).
+  11. **Standar Badge Notifikasi Lintas Sidebar (Halaman 02–07, 20, 24):** Menu sidebar resmi *Notifications* menyematkan pill amber aktif (`3`) yang sejajar dan konsisten dengan badge pada *My Blockers* (`2`), dan tersinkronisasi dinamis pada Halaman 07 saat notifikasi dibaca atau dipulihkan.
 
 ---
 
