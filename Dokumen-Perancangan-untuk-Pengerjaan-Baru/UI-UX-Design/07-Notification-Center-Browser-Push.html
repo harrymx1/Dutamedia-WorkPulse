@@ -1017,9 +1017,9 @@
             <section class="panel" aria-labelledby="pushTitle">
               <div class="panel-head">
                 <div>
-                  <div class="eyebrow">Preferensi Perangkat</div>
-                  <h2 id="pushTitle" style="margin-top:3px">Kanal Browser Push Perangkat</h2>
-                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Kanal push instan untuk pengingat batas waktu dan eskalasi kendala kritis.</p>
+                  <div class="eyebrow">Pengaturan Perangkat</div>
+                  <h2 id="pushTitle" style="margin-top:3px">Notifikasi Layar Komputer</h2>
+                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Dapatkan pemberitahuan langsung di layar saat ada pengingat jam kerja atau kendala darurat.</p>
                 </div>
                 <span class="pill neutral" id="pushBadge">Memeriksa…</span>
               </div>
@@ -1032,8 +1032,8 @@
                     </svg>
                   </div>
                   <div>
-                    <div class="push-status-title" id="pushStatusTitle">Memeriksa Izin Browser…</div>
-                    <div class="push-status-desc" id="pushStatusText">Sistem sedang membaca status izin Web Notifications pada browser ini.</div>
+                    <div class="push-status-title" id="pushStatusTitle">Memeriksa Pengaturan Layar…</div>
+                    <div class="push-status-desc" id="pushStatusText">Sistem sedang memeriksa status izin notifikasi pada peramban ini.</div>
                   </div>
                 </div>
 
@@ -1044,7 +1044,7 @@
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
-                  <div id="pushNoticeText">Memberikan izin browser tidak berarti setiap pesan langsung sampai. Status delivery hanya dikonfirmasi sistem saat ada bukti pengiriman riil.</div>
+                  <div id="pushNoticeText">Kami tidak akan memunculkan izin sebelum Anda menekan tombol. Jika Anda memilih tidak menyalakannya, aplikasi tetap bisa digunakan seperti biasa.</div>
                 </div>
 
                 <div class="push-actions">
@@ -1053,7 +1053,7 @@
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <span id="btnEnablePushText">Aktifkan Browser Push</span>
+                    <span id="btnEnablePushText">Nyalakan Notifikasi Layar</span>
                   </button>
                   <button class="btn btn-secondary" id="btnRefreshPush" type="button">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1065,17 +1065,17 @@
                   </button>
                 </div>
 
-                <p class="subtitle" id="pushHelpText" style="font-size:11.5px;margin-top:12px">Izin notifikasi hanya berlaku untuk browser dan perangkat yang sedang Anda gunakan saat ini.</p>
+                <p class="subtitle" id="pushHelpText" style="font-size:11.5px;margin-top:12px">Pengaturan ini hanya berlaku untuk laptop dan peramban yang sedang Anda gunakan saat ini.</p>
               </div>
             </section>
 
-            <!-- Card 2: Status Kanal Notifikasi (Matriks Saluran Distribusi) -->
+            <!-- Card 2: Saluran Pemberitahuan -->
             <section class="panel" aria-labelledby="channelsTitle">
               <div class="panel-head">
                 <div>
-                  <div class="eyebrow">Matriks Distribusi</div>
-                  <h2 id="channelsTitle" style="margin-top:3px">Status Saluran Notifikasi</h2>
-                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Kanal pengiriman eksternal memiliki status terpisah dari arsip in-app.</p>
+                  <div class="eyebrow">Saluran Pemberitahuan</div>
+                  <h2 id="channelsTitle" style="margin-top:3px">Di Mana Saja Notifikasi Dikirim?</h2>
+                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Selain di web ini, pemberitahuan penting juga dikirimkan melalui saluran berikut.</p>
                 </div>
               </div>
               <div class="panel-body">
@@ -1090,11 +1090,11 @@
                       </svg>
                     </div>
                     <div>
-                      <div class="channel-name">Web Notification Center</div>
-                      <div class="channel-desc">Daftar arsip seluruh pembaruan in-system</div>
+                      <div class="channel-name">Pusat Notifikasi Web</div>
+                      <div class="channel-desc">Semua riwayat pemberitahuan tersimpan rapi di sini</div>
                     </div>
                   </div>
-                  <span class="pill green">Tersedia · Arsip Resmi</span>
+                  <span class="pill green">Selalu Aktif (Utama)</span>
                 </div>
 
                 <!-- Channel 2: Email -->
@@ -1107,11 +1107,11 @@
                       </svg>
                     </div>
                     <div>
-                      <div class="channel-name">Email Korporat</div>
-                      <div class="channel-desc">Pengingat batas waktu &amp; eskalasi pimpinan</div>
+                      <div class="channel-name">Email Kantor</div>
+                      <div class="channel-desc">Pengingat jadwal kerja dan kabar penting dari pimpinan</div>
                     </div>
                   </div>
-                  <span class="pill neutral">Aktif per Kebijakan</span>
+                  <span class="pill neutral">Aktif Otomatis</span>
                 </div>
 
                 <!-- Channel 3: Browser Push -->
@@ -1124,7 +1124,7 @@
                       </svg>
                     </div>
                     <div>
-                      <div class="channel-name">Browser Push</div>
+                      <div class="channel-name">Notifikasi Layar Komputer</div>
                       <div class="channel-desc" id="pushChannelDesc">Status izin perangkat sedang diperiksa</div>
                     </div>
                   </div>
@@ -1138,7 +1138,7 @@
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
-                  <div>Status <em>Sudah Dibaca</em> pada halaman ini murni interaksi penandaan aplikasi, bukan bukti bahwa notifikasi Email atau Browser Push telah terkirim ke gawai penerima.</div>
+                  <div>Menandai <em>Sudah Dibaca</em> di web ini hanya berarti Anda telah melihatnya di sini, bukan jaminan bahwa pesan tersebut sudah terkirim atau terbaca di email/perangkat lain.</div>
                 </div>
               </div>
             </section>
@@ -1638,67 +1638,67 @@
         if (!supported) {
           badgeText = 'Tidak Didukung';
           badgeClass = 'pill amber';
-          titleText = 'Browser Tidak Menyediakan Push';
-          descText = 'Peramban ini tidak mendukung Web Notifications API.';
+          titleText = 'Peramban Tidak Mendukung Notifikasi Layar';
+          descText = 'Peramban atau platform ini tidak menyediakan fitur notifikasi layar.';
           noticeClass = 'warning';
-          noticeHtml = `Peramban atau platform ini tidak menyediakan Web Notifications API. Notifikasi tetap dapat dipantau secara penuh melalui Web Notification Center dan kanal Email resmi.`;
-          btnText = 'Push Tidak Didukung';
+          noticeHtml = `Peramban ini tidak mendukung notifikasi layar. Namun tenang, semua pemberitahuan tetap bisa Anda pantau secara lengkap di web ini dan melalui Email Kantor.`;
+          btnText = 'Tidak Didukung';
           btnDisabled = true;
           metricText = 'Tidak Didukung';
-          metricNote = 'Platform tidak mendukung API';
+          metricNote = 'Peramban tidak menyediakan API';
           channelBadgeText = 'Tidak Didukung';
           channelBadgeClass = 'pill amber';
           channelText = 'Tidak didukung pada peramban ini';
-          helpText = 'Platform atau peramban ini tidak menyediakan Web Notifications API.';
+          helpText = 'Peramban ini tidak mendukung notifikasi layar.';
         } else if (permission === 'granted') {
           badgeText = 'Izin Aktif';
           badgeClass = 'pill green';
-          titleText = 'Izin Notifikasi Aktif pada Browser Ini';
-          descText = 'Peramban telah mengizinkan penerimaan pengingat dan eskalasi instan.';
+          titleText = 'Notifikasi Layar Sudah Aktif';
+          descText = 'Laptop ini sudah siap menerima pengingat jam kerja dan kendala darurat.';
           noticeClass = 'success';
           noticeHtml = `
-            <div>Izin peramban telah aktif. Perangkat siap menerima pengingat batas waktu dan eskalasi kendala instan secara real-time.</div>
-            <div style="margin-top:7px;font-size:12px;opacity:0.92">Ingin menonaktifkan? Klik ikon setelan/gembok di samping alamat web peramban Anda, lalu ubah izin Notifikasi ke <em>Blokir</em>.</div>
+            <div>Notifikasi layar sudah aktif. Anda akan menerima pemberitahuan instan saat ada kabar penting.</div>
+            <div style="margin-top:7px;font-size:12px;opacity:0.92">Ingin mematikan? Klik ikon setelan/gembok di samping alamat web peramban Anda, lalu ubah izin Notifikasi ke <em>Blokir</em>.</div>
           `;
           btnText = 'Kirim Notifikasi Uji';
           btnDisabled = false;
           metricText = 'Izin Aktif';
-          metricNote = 'Aktif pada peramban ini';
-          channelBadgeText = 'Tersedia · Peramban Ini';
+          metricNote = 'Aktif di laptop ini';
+          channelBadgeText = 'Aktif di Laptop Ini';
           channelBadgeClass = 'pill green';
-          channelText = 'Siap menerima pengiriman instan pada gawai ini';
-          helpText = 'Izin notifikasi aktif pada peramban ini. Anda dapat menguji pengiriman melalui tombol di atas kapan saja.';
+          channelText = 'Siap menerima pemberitahuan langsung di layar laptop ini';
+          helpText = 'Notifikasi aktif di laptop ini. Anda bisa mengeklik tombol di atas untuk menguji coba.';
         } else if (permission === 'denied') {
           badgeText = 'Izin Diblokir';
           badgeClass = 'pill red';
-          titleText = 'Izin Notifikasi Diblokir di Browser';
-          descText = 'Pemberitahuan push tidak dapat dikirim karena izin situs dinonaktifkan.';
+          titleText = 'Notifikasi Layar Diblokir';
+          descText = 'Pemberitahuan layar tidak bisa muncul karena izin di peramban sedang dimatikan.';
           noticeClass = 'warning';
-          noticeHtml = `WorkPulse tidak dapat mengubah pengaturan browser secara sepihak. Silakan klik ikon gembok/pengaturan di samping alamat URL browser Anda, ubah izin Notifikasi ke <em>Izinkan (Allow)</em>, lalu klik tombol <strong>Periksa Status</strong>.`;
+          noticeHtml = `WorkPulse tidak bisa menyalakan izin sendiri secara otomatis. Silakan klik ikon gembok/pengaturan di sebelah alamat web browser Anda, ubah izin Notifikasi menjadi <em>Izinkan (Allow)</em>, lalu klik tombol <strong>Periksa Status</strong> di bawah.`;
           btnText = 'Lihat Panduan Browser';
           btnDisabled = false;
           metricText = 'Diblokir';
-          metricNote = 'Ubah izin pada pengaturan situs';
+          metricNote = 'Nyalakan lewat setelan situs';
           channelBadgeText = 'Izin Diblokir';
           channelBadgeClass = 'pill red';
-          channelText = 'Izin dinonaktifkan di setelan peramban';
-          helpText = 'Izin diblokir pada peramban ini. Buka blokir di pengaturan situs peramban untuk mengaktifkannya.';
+          channelText = 'Izin sedang dimatikan di setelan peramban';
+          helpText = 'Izin sedang diblokir di peramban ini. Buka blokir di setelan peramban untuk menyalakannya.';
         } else {
           // default / prompt
           badgeText = 'Belum Diaktifkan';
           badgeClass = 'pill neutral';
-          titleText = 'Browser Push Belum Diaktifkan';
-          descText = 'Pilih tombol di bawah untuk mengaktifkan pengingat check-in dan eskalasi instan.';
+          titleText = 'Notifikasi Layar Belum Aktif';
+          descText = 'Nyalakan agar Anda tidak ketinggalan batas waktu kerja dan kabar penting dari rekan tim.';
           noticeClass = 'info';
-          noticeHtml = `Izin hanya akan diminta setelah Anda menekan tombol di bawah secara sadar. Jika Anda memilih untuk tidak mengaktifkannya, seluruh fitur inti WorkPulse tetap dapat digunakan tanpa hambatan.`;
-          btnText = 'Aktifkan Browser Push';
+          noticeHtml = `Kami tidak akan memunculkan izin sebelum Anda menekan tombol. Jika Anda memilih tidak menyalakannya, aplikasi tetap bisa digunakan seperti biasa.`;
+          btnText = 'Nyalakan Notifikasi Layar';
           btnDisabled = false;
           metricText = 'Belum Aktif';
-          metricNote = 'Klik untuk meminta izin browser';
+          metricNote = 'Klik untuk mengaktifkan';
           channelBadgeText = 'Belum Diaktifkan';
           channelBadgeClass = 'pill neutral';
-          channelText = 'Menunggu izin pengguna pada peramban ini';
-          helpText = 'Izin notifikasi hanya berlaku untuk browser dan perangkat yang sedang Anda gunakan saat ini.';
+          channelText = 'Membutuhkan izin Anda pada peramban ini';
+          helpText = 'Pengaturan ini hanya berlaku untuk laptop dan peramban yang sedang Anda gunakan saat ini.';
         }
 
         // Terapkan ke DOM

@@ -65,15 +65,15 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ KONTEN TAB 2: PENGATURAN KANAL & PERANGKAT                                  │
 │ ┌───────────────────────────────────┐ ┌───────────────────────────────────┐ │
-│ │ KARTU A: PREFERENSI PERANGKAT     │ │ KARTU B: STATUS KANAL DISTRIBUSI  │ │
-│ │ (Browser Push Permission Engine)  │ │ (PRD Section 8 Matrix)            │ │
-│ │ - Badge Status: [ Izin Aktif / ..]│ │ - Row 1: Web Notification Center  │ │
-│ │ - Ikon Lonceng SVG Monokrom       │ │   [ Tersedia · Arsip Resmi ]      │ │
-│ │ - Judul & Deskripsi Hak Akses     │ │ - Row 2: Email Korporat           │ │
-│ │ - Notice Box Edukatif (4-State)   │ │   [ Aktif per Kebijakan ]         │ │
-│ │ - Aksi: [ Aktifkan Push ]         │ │ - Row 3: Browser Push             │ │
-│ │   & [ Periksa Status ]            │ │   [ Status Izin Perangkat ]       │ │
-│ │ - Subteks: Berlaku per gawai      │ │ - Maklumat: Read ≠ Delivery Proof │ │
+│ │ KARTU A: PENGATURAN PERANGKAT     │ │ KARTU B: SALURAN PEMBERITAHUAN    │ │
+│ │ (Notifikasi Layar Komputer)       │ │ (Di Mana Saja Notifikasi Dikirim?)│ │
+│ │ - Badge Status: [ Izin Aktif / ..]│ │ - Row 1: Pusat Notifikasi Web     │ │
+│ │ - Ikon Lonceng SVG Monokrom       │ │   [ Selalu Aktif (Utama) ]        │ │
+│ │ - Judul & Penjelasan Ramah        │ │ - Row 2: Email Kantor             │ │
+│ │ - Notice Box Edukatif (4-State)   │ │   [ Aktif Otomatis ]              │ │
+│ │ - Aksi: [ Nyalakan Notifikasi ]   │ │ - Row 3: Notifikasi Layar Komputer│ │
+│ │   & [ Periksa Status ]            │ │   [ Belum Aktif / Aktif di Laptop]│ │
+│ │ - Subteks: Berlaku per laptop     │ │ - Maklumat: Read ≠ Delivery Proof │ │
 │ └───────────────────────────────────┘ └───────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. MODAL DETAIL NOTIFIKASI & DEEP-LINK RESOLVER:                            │
@@ -90,27 +90,27 @@
 
 ## 3. SPESIFIKASI ATURAN BISNIS & PERILAKU SISTEM (*ENGINE RULES*)
 
-### 3.1 Kontrol Izin Browser Push 4-State (PRD FR-38 & UI/UX Spec §4.7)
+### 3.1 Kontrol Izin Notifikasi Layar 4-State (UI/UX Spec §4.7)
 Sistem secara otomatis mengevaluasi ketersediaan dan status izin Web Notifications API (`window.Notification`):
 1. **State 1: Unsupported (Peramban Tidak Mendukung):**
    - Indikator: Badge amber `Tidak Didukung`.
-   - Perilaku: Tombol aktivasi dinonaktifkan (`disabled`), notice informatif menegaskan bahwa seluruh notifikasi tetap dapat diakses melalui Notification Center dan Email.
+   - Perilaku: Tombol aktivasi dinonaktifkan (`disabled`), notice informatif menegaskan bahwa seluruh notifikasi tetap dapat dipantau secara penuh melalui Pusat Notifikasi Web dan Email Kantor.
 2. **State 2: Default / Prompt (Belum Diaktifkan):**
    - Indikator: Badge netral `Belum Aktif`.
-   - Perilaku: Tombol **`Aktifkan Browser Push`** aktif. Izin hanya diminta saat pengguna mengklik tombol tersebut.
+   - Perilaku: Tombol **`Nyalakan Notifikasi Layar`** aktif. Izin hanya diminta saat pengguna mengklik tombol tersebut.
 3. **State 3: Granted (Izin Diberikan & Aktif):**
    - Indikator: Badge hijau `Izin Aktif`.
-   - Perilaku: Tombol berubah menjadi **`Kirim Notifikasi Uji`** (aktif untuk memicu pengujian push notification riil ke OS/desktop), notice hijau sukses menegaskan izin telah aktif pada peramban ini serta menyertakan petunjuk cara mencabut izin (*Revoke Guidance*). Baris saluran Browser Push pada Matriks Distribusi otomatis tersinkronisasi ke badge hijau `Tersedia · Peramban Ini`.
+   - Perilaku: Tombol berubah menjadi **`Kirim Notifikasi Uji`** (aktif untuk memicu pengujian notifikasi riil ke desktop), notice hijau sukses menegaskan notifikasi layar telah aktif serta menyertakan petunjuk cara mematikan izin (*Revoke Guidance*). Baris saluran Notifikasi Layar Komputer otomatis tersinkronisasi ke badge hijau `Aktif di Laptop Ini`.
 4. **State 4: Denied / Blocked (Izin Diblokir di Browser):**
    - Indikator: Badge merah `Diblokir`.
    - Perilaku: Tombol berubah menjadi `Lihat Panduan Browser`, notice peringatan amber memandu langkah pengguna membuka izin pada pengaturan URL browser.
 
-### 3.2 Matriks Kanal Distribusi Resmi (PRD Section 8)
+### 3.2 Saluran Pengiriman Resmi (Transparansi Tata Kelola)
 Menyajikan status 3 saluran pengiriman:
-- **Web Notification Center:** `Tersedia · Arsip Resmi` (in-app, seluruh peristiwa tercatat).
-- **Email Korporat:** `Aktif per Kebijakan` (pengingat batas waktu dan eskalasi).
-- **Browser Push:** Mengikuti status izin perangkat aktif (pengiriman instan pemicu kritis).
-- **Prinsip Read $\ne$ Delivery:** Status "Sudah Dibaca" di Notification Center bukan konfirmasi bahwa pesan telah sampai pada kanal eksternal.
+- **Pusat Notifikasi Web:** `Selalu Aktif (Utama)` (in-app, seluruh arsip resmi tersimpan rapi).
+- **Email Kantor:** `Aktif Otomatis` (pengingat batas waktu dan kabar penting pimpinan).
+- **Notifikasi Layar Komputer:** Mengikuti status izin perangkat aktif (pengiriman langsung di layar laptop).
+- **Prinsip Read $\ne$ Delivery:** Menandai "Sudah Dibaca" di web murni penandaan di layar pengguna, bukan konfirmasi mutlak bahwa email atau pesan push telah sampai/dibaca di perangkat fisik pihak ketiga.
 
 ### 3.3 Deep-Link Context Resolver & Modal Rincian
 Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#detailModal`). Modal ini:
