@@ -126,6 +126,11 @@ Setiap baris notifikasi yang diklik membuka Modal Pop-up Rincian Notifikasi (`#d
    - Leave Requests $\rightarrow$ `20-My Leave Request (Employee).html`.
    - Profil & Organisasi $\rightarrow$ `24-Profile-Settings.html`.
 4. Menyajikan label tombol aksi dinamis (*Dynamic Action Label*) yang cerdas menyesuaikan jenis dokumen (misal: *"Buka Tiket Kendala"*, *"Buka Komitmen Kerja"*, *"Buka Pengajuan Koreksi"*, *"Buka Catatan di Histori"*) alih-alih label abstrak "Buka Konteks Terkait".
+5. **Kewajiban Kontrak Routing Frontend (*Deep-Link Routing Mandate*):**
+   - **Simulasi Prototipe:** Prototipe HTML saat ini menjalankan simulasi navigasi menggunakan `window.location.href = targetRoute`.
+   - **Spesifikasi Integrasi SPA (React / Next.js / Vue):** Pada implementasi frontend aplikasi nyata, klik tombol ini **wajib** menggunakan client-side routing (`router.push(targetRoute)`).
+   - **Kontrak Halaman Penerima (*Target Page Contract*):** Halaman tujuan yang menerima deep-link wajib mem-parsing target hash/ID (contoh `#BLK-2026-0042`), melakukan *auto-scroll* mulus ke elemen sasaran, serta memberikan animasi sorot visual sementara (*highlight pulse*) agar pengguna langsung menemukan item yang dimaksud.
+   - **Penanganan Galat (*Graceful Fallback*):** Jika dokumen atau tiket tujuan telah dihapus atau pengguna kehilangan hak akses ke entitas tersebut, router wajib menampilkan pesan toast informasi dan mengarahkan kembali ke halaman induk tanpa merusak alur aplikasi.
 
 ### 3.4 Mekanisme Penandaan Massal & Satuan
 - Mengklik **`Tandai semua dibaca`** langsung mengubah seluruh item unread menjadi read, memadamkan dot badge pada topbar dan sidebar, serta memicu toast sukses hijau.
