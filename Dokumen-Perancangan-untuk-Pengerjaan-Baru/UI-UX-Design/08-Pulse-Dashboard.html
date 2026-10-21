@@ -279,10 +279,30 @@
     .breadcrumb {
       font-size: 13px;
       color: var(--color-text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .breadcrumb a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .breadcrumb a:hover {
+      color: var(--color-brand-primary);
+      text-decoration: underline;
     }
     .breadcrumb strong {
       color: var(--color-text-primary);
       font-weight: 750;
+    }
+    .breadcrumb strong.clickable {
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .breadcrumb strong.clickable:hover {
+      color: var(--color-brand-primary);
     }
     .top-actions {
       display: flex;
@@ -1031,9 +1051,11 @@
         <button class="mobile-hamburger-btn" type="button" id="btn-open-sidebar" aria-label="Buka navigasi menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <div class="breadcrumb">
-          Pulse Dashboard <span style="color: #A9C7BC;">/</span> <strong id="breadcrumbTitle">Team Pulse</strong>
-        </div>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="08-Pulse-Dashboard.html" id="breadcrumbRoot" title="Kembali ke awal Pulse Dashboard">Pulse Dashboard</a>
+          <span style="color: #A9C7BC;" aria-hidden="true">/</span>
+          <strong id="breadcrumbTitle" class="clickable" title="Klik untuk fokus ke tab cakupan aktif">Team Pulse</strong>
+        </nav>
       </div>
       <div class="top-actions">
         <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi">
@@ -1891,6 +1913,27 @@
     backdrop.addEventListener('click', () => {
       sidebar.classList.remove('open');
       backdrop.classList.remove('show');
+    });
+  }
+
+  // Breadcrumb Interactive Clicks
+  const breadcrumbRoot = $('breadcrumbRoot');
+  if (breadcrumbRoot) {
+    breadcrumbRoot.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchScope('team');
+      showToast('Memuat ulang tampilan Pulse Dashboard (Team Pulse)...');
+    });
+  }
+  const breadcrumbTitle = $('breadcrumbTitle');
+  if (breadcrumbTitle) {
+    breadcrumbTitle.addEventListener('click', () => {
+      const activeTab = document.querySelector('.scope-tab.active');
+      if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        activeTab.focus();
+        showToast('Fokus pada cakupan aktif: ' + activeTab.querySelector('span').textContent);
+      }
     });
   }
 
