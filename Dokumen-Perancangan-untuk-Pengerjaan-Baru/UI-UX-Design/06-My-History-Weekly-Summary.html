@@ -141,9 +141,11 @@ p{margin:0}
 .small{font-size:13px;color:var(--color-text-secondary)}
 
 /* Toolbar & Filters */
-.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;background:#fff;border:1px solid var(--color-border-subtle);padding:14px 18px;border-radius:var(--radius-card);box-shadow:var(--shadow-subtle)}
-.history-toolbar-left,.history-toolbar-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.history-toolbar select{border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--color-text-primary);background:#fff;min-width:180px}
+.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;background:#fff;border:1px solid var(--color-border-subtle);padding:14px 18px;border-radius:var(--radius-card);box-shadow:var(--shadow-subtle);box-sizing:border-box;max-width:100%}
+.history-toolbar-left,.history-toolbar-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0;max-width:100%}
+.toolbar-filter-group{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%}
+.toolbar-label{font-size:12.5px;font-weight:700;color:var(--color-text-secondary);white-space:nowrap;flex-shrink:0}
+.history-toolbar select{border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--color-text-primary);background:#fff;min-width:160px;max-width:100%;box-sizing:border-box;text-overflow:ellipsis}
 .history-toolbar select:focus{border-color:var(--color-brand-focus);outline:none}
 
 /* Summary Grid */
@@ -224,8 +226,11 @@ p{margin:0}
   .summary-card.wide{grid-column:auto}
   .history-day{grid-template-columns:1fr;gap:10px;padding:16px}
   .day-action{grid-column:auto}
-  .history-toolbar-left,.history-toolbar-right{width:100%}
-  .history-toolbar select{flex:1;min-width:0}
+  .history-toolbar{padding:14px;gap:12px}
+  .history-toolbar-left,.history-toolbar-right{width:100%;gap:10px}
+  .toolbar-filter-group{width:100%;display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:8px}
+  .history-toolbar select{width:100%;min-width:0;flex:none}
+  .history-toolbar-right{padding-top:4px;border-top:1px dashed var(--color-border-subtle)}
   .detail-fields{grid-template-columns:1fr}
 }
 </style>
@@ -371,20 +376,20 @@ p{margin:0}
         <!-- Filter Toolbar -->
         <div class="history-toolbar">
           <div class="history-toolbar-left">
-            <div style="display:flex;align-items:center;gap:8px">
-              <label for="periodFilter" style="font-size:12.5px;font-weight:700;color:var(--color-text-secondary)">Periode:</label>
+            <div class="toolbar-filter-group">
+              <label for="periodFilter" class="toolbar-label">Periode:</label>
               <select id="periodFilter">
                 <option value="last-week" selected>Minggu Sebelumnya · 5–9 Okt</option>
                 <option value="this-week">Minggu Ini · 12–16 Okt</option>
                 <option value="this-month">Bulan Ini · Oktober</option>
               </select>
             </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <label for="recordFilter" style="font-size:12.5px;font-weight:700;color:var(--color-text-secondary)">Tampilkan:</label>
+            <div class="toolbar-filter-group">
+              <label for="recordFilter" class="toolbar-label">Tampilkan:</label>
               <select id="recordFilter">
                 <option value="all">Semua Hari Kerja</option>
                 <option value="submitted">Ada Submission</option>
-                <option value="no-submission">Tanpa Submission (No Submission)</option>
+                <option value="no-submission">Tanpa Submission</option>
               </select>
             </div>
           </div>
