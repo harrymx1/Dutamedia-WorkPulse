@@ -20,7 +20,7 @@
 6. [Standar Penyajian Informasi & Hierarki Data (3-Baris Baku)](#6-standar-penyajian-informasi--hierarki-data-3-baris-baku)
 7. [Aturan Bisnis & Penegakan Sistem Lintas Halaman (*Engine Rules*)](#7-aturan-bisnis--penegakan-sistem-lintas-halaman-engine-rules)
 8. [Standar Pola Interaksi Formulir & Validasi](#8-standar-pola-interaksi-formulir--validasi)
-9. [Registri Keputusan Desain Tiap Halaman (Halaman 01 s.d. 06)](#9-registri-keputusan-desain-tiap-halaman)
+9. [Registri Keputusan Desain Tiap Halaman (Halaman 01 s.d. 07)](#9-registri-keputusan-desain-tiap-halaman)
 10. [Checklist Wajib Sebelum Memulai Halaman Baru](#10-checklist-wajib-sebelum-memulai-halaman-baru)
 
 ---
@@ -382,6 +382,9 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   9. **Sinkronisasi Sesi Dinamis & Contextual Toast Engine:** Membaca profil aktif Budi Pratama dari `localStorage: workpulse_active_user` dan menyajikan feedback notifikasi 3 varian semantik (`success`, `warning`, `error`).
   10. **Arsitektur Tab Tampilan Utama (*Primary Tab Architecture*):** Memposisikan *Daftar Notifikasi* (Tab 1) langsung di bawah 3 kartu ringkasan metrik sebagai tampilan utama harian tanpa scrolling, sedangkan *Preferensi Perangkat* dan *Matriks Distribusi Kanal PRD §8* diisolasi rapi ke Tab 2 (*Pengaturan Kanal & Perangkat*). Ketiga kartu metrik bersifat interaktif (*click-to-filter* dan *click-to-tab*).
   11. **Standar Badge Notifikasi Lintas Sidebar (Halaman 02–07, 20, 24):** Menu sidebar resmi *Notifications* menyematkan pill amber aktif (`3`) yang sejajar dan konsisten dengan badge pada *My Blockers* (`2`), dan tersinkronisasi dinamis pada Halaman 07 saat notifikasi dibaca atau dipulihkan.
+  12. **Desain Responsif Ultra-Compact 1-Row Mini Bar & Tab Navigasi Bebas Wrap:** 3 kartu ringkasan metrik dikunci tetap sejajar dalam 1 baris (3 kolom, $\approx 48\text{ px}$) pada layar smartphone dan tablet (menghemat 80% tinggi layar HP dibanding stacking vertikal). Tombol tab navigasi utama (*Daftar Notifikasi* & *Pengaturan Kanal & Perangkat*) otomatis menyesuaikan ukuran font ($9.5\text{ px} - 11\text{ px}$) dan padding secara proporsional sehingga muat presisi dalam 1 baris tanpa memakan 2 baris bahkan di layar smartphone kecil seperti iPhone SE ($375\text{ px}$).
+  13. **Sistem Anti-Celah Matriks 22 Pemicu Komprehensif (PRD §8 Updated):** Menutup seluruh siklus hidup Blocker 2-arah (*Acknowledged*, *Resolved*, *Rejected*), kolaborasi tim (*Support Accepted*, *Support Declined*), penugasan tugas darurat siang hari (*Additional Work*), catatan pimpinan harian (*Manager Daily Note on EOD*), dan keamanan akun (*New Device Login*).
+  14. **Tautan Otomatis Baca Email (*Smart Auto-Read Link: `?read=ID`*):** Tautan dari notifikasi email kantor secara otomatis menandai notifikasi terkait menjadi 'Sudah Dibaca' di Web Notification Center untuk mencegah kerja dua kali (*zero double work*).
 
 ---
 
