@@ -180,9 +180,12 @@ p{margin:0}
 
 /* Note Card */
 .note-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-surface-subtle);margin-top:8px}
-.note-mark{width:32px;height:32px;border-radius:8px;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0;font-size:14px}
-.note-title{font-size:13px;font-weight:800;color:var(--color-text-primary)}
-.note-copy{font-size:13px;line-height:1.5;margin-top:3px;color:var(--color-text-secondary)}
+.note-mark{width:34px;height:34px;border-radius:8px;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
+.note-mark.recognition{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border:1px solid #A7D5B8}
+.note-mark.coaching{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border:1px solid #E8C77A}
+.note-mark.corrective{background:var(--color-status-red-bg);color:var(--color-status-red-fg);border:1px solid #E8B1AC}
+.note-title{font-size:13px;font-weight:800;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note-copy{font-size:13px;line-height:1.55;margin-top:4px;color:var(--color-text-secondary)}
 .note-meta{font-size:11.5px;color:var(--color-text-secondary);margin-top:6px}
 
 /* Detail View */
@@ -490,11 +493,14 @@ p{margin:0}
             <div class="summary-label">Catatan Pimpinan (Manager Notes Terpublikasi)</div>
             <div id="managerNoteWrapper">
               <div class="note-card">
-                <div class="note-mark">
+                <div class="note-mark recognition" title="Apresiasi (Recognition)">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                 </div>
                 <div class="note-body">
-                  <div class="note-title">Recognition · Budi Santoso — Head of Engineering</div>
+                  <div class="note-title">
+                    <span class="pill green">Apresiasi (Recognition)</span>
+                    <span>Budi Santoso — Head of Engineering</span>
+                  </div>
                   <div class="note-copy">“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”</div>
                   <div class="note-meta">Jumat, 9 Oktober 2026 · Terverifikasi Sistem</div>
                 </div>
@@ -624,7 +630,14 @@ p{margin:0}
       corrections: [
         { title: 'EOD Correction Request · EOD-2026-1006-01', status: 'Applied', detail: 'Keterangan Continuation diperjelas setelah pengajuan koreksi disetujui reviewer.' }
       ],
-      notes: []
+      notes: [
+        {
+          type: 'Coaching',
+          author: 'Dewi Lestari — Lead Product Engineer',
+          detail: 'Untuk verifikasi format ekspor berikutnya, koordinasikan contoh berkas bersama tim QA sejak sesi komitmen pagi agar tidak terhambat saat evaluasi sore.',
+          meta: 'Selasa, 6 Oktober 2026 · Terverifikasi Sistem'
+        }
+      ]
     },
     '2026-10-07': {
       date: 'Rabu, 7 Oktober 2026', weekday: 'Rabu', timing: 'Late', final: 'RED', initial: 'RED', morningTime: '09.18', eodTime: '17.20',
@@ -656,7 +669,12 @@ p{margin:0}
       blockers: 'Tidak ada catatan kendala baru pada hari ini.',
       corrections: [],
       notes: [
-        { title: 'Recognition · Budi Santoso — Head of Engineering', detail: 'Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.' }
+        {
+          type: 'Recognition',
+          author: 'Budi Santoso — Head of Engineering',
+          detail: 'Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.',
+          meta: 'Jumat, 9 Oktober 2026 · Terverifikasi Sistem'
+        }
       ]
     }
   };
@@ -671,7 +689,8 @@ p{margin:0}
       continuation: 2, continueCount: 3, stopCount: 6,
       support: 1, escalations: 1,
       managerNote: {
-        title: 'Recognition · Budi Santoso — Head of Engineering',
+        type: 'Recognition',
+        author: 'Budi Santoso — Head of Engineering',
         copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”',
         meta: 'Jumat, 9 Oktober 2026 · Terverifikasi Sistem'
       }
@@ -695,9 +714,10 @@ p{margin:0}
       continuation: 2, continueCount: 3, stopCount: 6,
       support: 1, escalations: 1,
       managerNote: {
-        title: 'Recognition · Budi Santoso — Head of Engineering',
-        copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”',
-        meta: 'Jumat, 9 Oktober 2026 · Terverifikasi Sistem'
+        type: 'Coaching',
+        author: 'Dewi Lestari — Lead Product Engineer',
+        copy: '“Untuk verifikasi format ekspor berikutnya, koordinasikan contoh berkas bersama tim QA sejak sesi komitmen pagi agar tidak terhambat saat evaluasi sore.”',
+        meta: 'Selasa, 6 Oktober 2026 · Terverifikasi Sistem'
       }
     }
   };
@@ -722,6 +742,51 @@ p{margin:0}
     if (s === 'AMBER') return badge('Final Status · AMBER', 'amber');
     if (s === 'RED') return badge('Final Status · RED', 'red');
     return badge('Final Status belum tersedia', 'neutral');
+  }
+
+  function getNoteTypeConfig(type) {
+    if (type === 'Recognition') {
+      return {
+        label: 'Apresiasi (Recognition)',
+        pillClass: 'green',
+        markClass: 'recognition',
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>'
+      };
+    }
+    if (type === 'Coaching') {
+      return {
+        label: 'Bimbingan (Coaching)',
+        pillClass: 'amber',
+        markClass: 'coaching',
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>'
+      };
+    }
+    return {
+      label: 'Tindakan Korektif (Corrective)',
+      pillClass: 'red',
+      markClass: 'corrective',
+      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+    };
+  }
+
+  function renderNoteCardHtml(n) {
+    if (!n) return '';
+    const cfg = getNoteTypeConfig(n.type);
+    return `
+      <div class="note-card">
+        <div class="note-mark ${cfg.markClass}" title="${cfg.label}">
+          ${cfg.icon}
+        </div>
+        <div class="note-body">
+          <div class="note-title">
+            <span class="pill ${cfg.pillClass}">${cfg.label}</span>
+            <span>${escapeHtml(n.author || '')}</span>
+          </div>
+          <div class="note-copy">${escapeHtml(n.copy || n.detail || '')}</div>
+          ${n.meta ? `<div class="note-meta">${escapeHtml(n.meta)}</div>` : ''}
+        </div>
+      </div>
+    `;
   }
 
   function renderSummary() {
@@ -758,17 +823,7 @@ p{margin:0}
     const noteEl = $('managerNoteWrapper');
     if (noteEl) {
       if (d.managerNote) {
-        noteEl.innerHTML = `
-          <div class="note-card">
-            <div class="note-mark">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            </div>
-            <div class="note-body">
-              <div class="note-title">${d.managerNote.title}</div>
-              <div class="note-copy">${d.managerNote.copy}</div>
-              <div class="note-meta">${d.managerNote.meta}</div>
-            </div>
-          </div>`;
+        noteEl.innerHTML = renderNoteCardHtml(d.managerNote);
       } else {
         noteEl.innerHTML = `
           <div style="padding:16px 14px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);text-align:center;font-size:12.5px;color:var(--color-text-secondary);background:var(--color-surface-subtle)">
@@ -923,17 +978,7 @@ p{margin:0}
 
     const visibleNotes = r.notes || [];
     $('notesSection').style.display = visibleNotes.length ? '' : 'none';
-    $('notesDetail').innerHTML = visibleNotes.map(n => `
-      <div class="note-card">
-        <div class="note-mark">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <div class="note-body">
-          <div class="note-title">${escapeHtml(n.title)}</div>
-          <div class="note-copy">${escapeHtml(n.detail)}</div>
-        </div>
-      </div>
-    `).join('');
+    $('notesDetail').innerHTML = visibleNotes.map(n => renderNoteCardHtml(n)).join('');
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
