@@ -411,10 +411,13 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
      - Eyebrow bersih: `DASHBOARD OPERASIONAL` tanpa ikon jam.
      - Badge lingkup organisasi menggunakan format **Solid Card Badge** berlatar putih `#FFFFFF` (`border: 1px solid var(--color-border-subtle)`), tipografi dua baris (`LINGKUP UNIT` 10px / `Tim Produk Digital` 12px), dan ikon struktur organisasi SVG hijau. Dilarang menggunakan pil mengambang transparan dengan border ganda kaku.
   7. **Standarisasi Kontrol Filter Dropdown:** Kontrol dropdown menggunakan panah SVG monokrom custom (`appearance: none;`) dengan padding kanan 32px untuk menjamin estetika elegan tanpa bergantung pada render bawaan OS.
-  8. **Dialog Rincian Anggota Tim (UF-30 Step 4 Drilldown):** Mengklik baris anomali pada daftar *Perlu Perhatian Segera* memunculkan modal dialog yang menampilkan rincian komitmen pagi, hasil evaluasi sore, dan tiket blocker terkait tanpa meninggalkan halaman.
+  8. **Dialog Rincian Anggota Tim (UF-30 Step 4 Drilldown):** Mengklik baris anomali pada daftar *Perlu Perhatian Segera* memunculkan modal dialog yang menampilkan rincian komitmen pagi, hasil evaluasi sore, *Prioritas Esok Hari (Tomorrow Priority)*, serta tiket blocker terkait. Dilengkapi tombol jalan pintas pimpinan: *Beri Coaching Note ↗* (Hal 10), *Histori Anggota ↗* (Hal 06), dan *Tindak Lanjut Blocker ↗* (Hal 09).
   9. **Pencatatan Dukungan Lintas Tim (*Cross-Project Support* - FR-64 & FR-68):** Menyajikan widget khusus untuk mencatat dan mengapresiasi kontribusi anggota tim yang membantu proyek/tim lain.
   10. **Tren Pekerjaan Tertunda (*Carry-Over Trend Histogram*):** Visualisasi batang 5 hari kerja (Senin–Jumat) yang menyorot tugas yang mengalami `Continuation = Continue` $\ge 2$ hari beruntun sebagai indikasi evaluasi beban kerja (*capacity planning*).
-  11. **Widget Khusus Management Pulse (FR-69):** Menampilkan visualisasi persentase *Top Recurring Blockers (10 Taksonomi Resmi)* dan pemantauan penuaan tiket eskalasi (*Unresolved Escalation Aging*).
+  11. **Widget Khusus Management Pulse (FR-69 & AC-78):** Menampilkan visualisasi persentase *Top Recurring Blockers (10 Taksonomi Resmi)* dan *Unresolved Escalation Aging Snapshot* (tiket blocker eskalasi Level 2 & Level 3 yang menua $\ge 24$ jam dengan tombol antrean eskalasi).
+  12. **Modal Daftar Lengkap Anomali Operasional (`#allExceptionsModal`):** Mengeliminasi tautan buntu `href="#exceptions"` dengan dialog pop-up yang menyajikan seluruh anomali lengkap dengan filter pill (`Semua`, `Hanya RED`, `Hanya AMBER`, `No Submission`) dan pencarian nama anggota.
+  13. **Reaktivitas Filter Proyek Global:** Dropdown `#projectFilter` secara reaktif menyaring daftar exception dan memperbarui kalkulasi angka 4 kartu metrik darurat secara dinamis.
+  14. **Zero Dead Markup & Disiplin Kode:** Menghapus seluruh markup mengambang dan event listener yatim (seperti modal switch akun yang tidak lagi memiliki pemicu di topbar) demi integritas kode produksi.
 
 ---
 

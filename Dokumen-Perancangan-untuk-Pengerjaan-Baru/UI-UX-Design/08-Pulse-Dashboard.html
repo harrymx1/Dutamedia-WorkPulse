@@ -1483,21 +1483,40 @@
             </div>
           </section>
 
-          <!-- 8. KHUSUS MANAGEMENT PULSE: TOP RECURRING BLOCKERS (FR-69) -->
+          <!-- 8. KHUSUS MANAGEMENT PULSE: WIDGET RESMI CEO (FR-69 & AC-78) -->
           <section class="panel" id="managementPanel" style="display:none" aria-labelledby="mgmtTitle">
             <div class="panel-head">
               <div>
                 <h2 class="panel-title" id="mgmtTitle">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  Akar Masalah Dominan (10 Taksonomi Blocker)
+                  Akar Masalah Dominan (10 Taksonomi Blocker - FR-69)
                 </h2>
-                <div class="panel-sub">Statistik sumber hambatan lintas divisi tingkat perusahaan (FR-69).</div>
+                <div class="panel-sub">Statistik sumber hambatan lintas divisi tingkat perusahaan.</div>
               </div>
             </div>
             <div class="panel-body">
               <div style="display:grid;gap:10px" id="taxonomyList">
                 <!-- Rendered dynamically in Management mode -->
               </div>
+            </div>
+            
+            <!-- Widget 5 FR-69: Unresolved Escalation Aging Snapshot -->
+            <div style="padding:14px 20px;border-top:1px solid #E8EFEB;background:#FAFDFC">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:12px;font-weight:800;color:var(--color-text-primary);display:flex;align-items:center;gap:6px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Penuaan Eskalasi Belum Selesai (Escalation Aging)
+                </div>
+                <a href="09-Blocker-Escalation-Queue.html" class="link-action" style="font-size:11.5px">
+                  Antrean Eskalasi ↗
+                </a>
+              </div>
+              <div style="display:grid;gap:8px" id="escalationAgingList">
+                <!-- Rendered dynamically via JS -->
+              </div>
+            </div>
+            <div class="panel-note">
+              Tiket blocker level 3 & 4 yang menua &ge; 24 jam memerlukan keputusan atau intervensi material Direksi.
             </div>
           </section>
         </div>
@@ -1552,60 +1571,74 @@
           Owner Needed: <strong>Dimas Putra (Ops & Infra)</strong> · Severity: <strong>High</strong> · SLA Respon: <strong>Tersisa 45 menit</strong>
         </div>
       </div>
+
+      <!-- Prioritas Esok Hari (PRD §FR-11 & UF-30 Step 4) -->
+      <div class="detail-card" style="background:#F0FDF4;border-color:#BBF7D0">
+        <div class="detail-title" style="color:#166534">Prioritas Esok Hari (Tomorrow Priority)</div>
+        <div id="modalTomorrowPriority" style="font-size:12.5px;color:#14532D;line-height:1.4">
+          Menuntaskan migrasi schema database transaction pool dan verifikasi integrasi webhook merchant.
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" type="button" id="modalCloseAction">Tutup</button>
-      <a href="09-Blocker-Escalation-Queue.html" class="btn btn-primary" id="modalActionBlocker">
-        Tindak Lanjut Blocker
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-      </a>
+    <div class="modal-footer" style="flex-wrap:wrap;justify-content:space-between;gap:8px">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" type="button" id="modalCloseAction">Tutup</button>
+        <a href="06-My-History-Weekly-Summary.html" class="btn btn-secondary" id="modalHistoryBtn" title="Lihat arsip komitmen dan tren mingguan anggota ini">
+          Histori Anggota ↗
+        </a>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="10-Manager-Daily-Note-Coaching.html" class="btn btn-secondary" id="modalCoachingBtn" style="border-color:#FDE68A;background:#FEFDF0;color:#92400E" title="Buat catatan bimbingan atau apresiasi resmi">
+          Beri Coaching Note ↗
+        </a>
+        <a href="09-Blocker-Escalation-Queue.html" class="btn btn-primary" id="modalActionBlocker">
+          Tindak Lanjut Blocker
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL SIMULASI AKUN PENGGUNA -->
-<div class="modal-backdrop" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="modalAccountTitle">
-  <div class="modal" style="width:min(460px,100%)">
+<!-- MODAL SIMULASI AKUN: Dihapus sesuai standar kebersihan kode dan Pedoman Konsistensi (Zero Dead Markup) -->
+</div>
+
+
+<!-- MODAL DAFTAR SELURUH ANOMALI TIM (EXCEPTION-FIRST FULL LIST) -->
+<div class="modal-backdrop" id="allExceptionsModal" role="dialog" aria-modal="true" aria-labelledby="allExceptionsTitle">
+  <div class="modal" style="width:min(680px,100%)">
     <div class="modal-header">
-      <h2 id="modalAccountTitle">Simulasi Peran & Akun Pengguna</h2>
-      <button class="icon-button" id="closeAccountModalBtn" type="button" aria-label="Tutup modal akun">
+      <div>
+        <h2 id="allExceptionsTitle" style="display:flex;align-items:center;gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          Daftar Lengkap Anomali Operasional
+        </h2>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Seluruh isu kritis, keterlambatan SLA blocker, dan kasus tanpa submission dalam lingkup aktif.</div>
+      </div>
+      <button class="icon-button" id="closeAllExceptionsBtn" type="button" aria-label="Tutup modal anomali">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
-    <div class="modal-body">
-      <p style="margin:0 0 14px;color:var(--color-text-secondary);font-size:13px">
-        Pilih profil untuk menguji perubahan otomatis hak akses dan cakupan data pada Pulse Dashboard:
-      </p>
-      <div style="display:grid;gap:8px">
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="siti">
-          <div class="avatar" style="margin-right:10px">SA</div>
-          <div>
-            <div style="font-weight:800">Siti Aminah</div>
-            <div style="font-size:11.5px;color:var(--color-text-secondary)">Supervisor / Team Lead (Akses default: Team Pulse)</div>
-          </div>
-        </button>
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="hendra">
-          <div class="avatar" style="margin-right:10px">HG</div>
-          <div>
-            <div style="font-weight:800">Hendra Gunawan</div>
-            <div style="font-size:11.5px;color:var(--color-text-secondary)">Head of Technology (Akses: Function Pulse)</div>
-          </div>
-        </button>
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="bambang_ceo">
-          <div class="avatar" style="margin-right:10px">BS</div>
-          <div>
-            <div style="font-weight:800">Ir. Bambang Soedirgo</div>
-            <div style="font-size:11.5px;color:var(--color-text-secondary)">Chief Executive Officer (Akses: Management Pulse)</div>
-          </div>
-        </button>
-        <button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;height:auto;padding:10px" data-login="budi_emp">
-          <div class="avatar" style="margin-right:10px">BP</div>
-          <div>
-            <div style="font-weight:800">Budi Pratama</div>
-            <div style="font-size:11.5px;color:var(--color-text-secondary)">Software Engineer (Simulasi Proteksi Akses Ditolak)</div>
-          </div>
-        </button>
+    <div class="modal-body" style="padding:16px 22px">
+      <!-- Modal Filters & Search -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:6px" id="modalFilterChips">
+          <button class="pill blue" style="border:1px solid #B2DDFF;cursor:pointer;font-weight:750" data-filter="all">Semua (<span id="modalCntAll">4</span>)</button>
+          <button class="pill red" style="cursor:pointer;border:1px solid #FECDCA" data-filter="red">Hanya RED (<span id="modalCntRed">2</span>)</button>
+          <button class="pill amber" style="cursor:pointer;border:1px solid #FDE68A" data-filter="amber">Hanya AMBER (<span id="modalCntAmber">1</span>)</button>
+          <button class="pill neutral" style="cursor:pointer;border:1px solid #E2E8F0" data-filter="noSub">No Submission (<span id="modalCntNoSub">1</span>)</button>
+        </div>
+        <input type="text" id="modalSearchInput" placeholder="Cari nama anggota..." style="height:32px;padding:0 10px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);font-size:12px;width:180px">
       </div>
+      <div class="exception-list" id="modalExceptionList" style="max-height:360px;overflow-y:auto;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm)">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <div style="font-size:11.5px;color:var(--color-text-secondary)">
+        Prinsip PRD: Pimpinan mengutamakan penyelesaian blocker dan pembinaan langsung.
+      </div>
+      <button class="btn btn-secondary" type="button" id="closeAllExceptionsFooterBtn">Tutup</button>
     </div>
   </div>
 </div>
@@ -1713,7 +1746,7 @@
     }
   };
 
-  // Top Taxonomy Blockers for Management (10 Official Enum)
+  // Top Taxonomy Blockers for Management (10 Official Enum - FR-16 & FR-69)
   const taxonomyData = [
     { cat: 'Technical & Architecture', pct: 32, count: '14 tiket' },
     { cat: 'Client & External Stakeholder', pct: 24, count: '11 tiket' },
@@ -1723,30 +1756,94 @@
     { cat: 'Resource & Capacity', pct: 6, count: '3 tiket' }
   ];
 
-  // Active Scope State
-  let currentScope = 'team';
+  // Unresolved Escalation Aging Snapshot (FR-69 Widget 5 & UI-UX Spec §4.14)
+  const escalationAgingData = [
+    { id: 'BLK-2026-0891', title: 'Sertifikasi API Merchant Payment ditunda Auditor', level: 'Level 3 · Direksi', div: 'Divisi Delivery', owner: 'Maya Dwi', age: '52 Jam', alert: true },
+    { id: 'BLK-2026-0884', title: 'Disk IO throttling cluster MariaDB staging', level: 'Level 2 · Head', div: 'Divisi Ops & Infra', owner: 'Dimas Putra', age: '31 Jam', alert: false },
+    { id: 'BLK-2026-0879', title: 'Perpanjangan SLA lisensi middleware cloud tertahan', level: 'Level 2 · Head', div: 'Divisi Finance', owner: 'Senior Finance', age: '26 Jam', alert: false }
+  ];
 
-  // Read User Session from LocalStorage
+  // Active Scope State & Filter State
+  let currentScope = 'team';
+  let activeProjectFilter = 'all';
+  let currentUser = {
+    role: 'SUPERVISOR',
+    name: 'Siti Aminah',
+    roleLabel: 'Supervisor / Team Lead',
+    department: 'Technology Squad A',
+    avatar: 'SA',
+    allowedScopes: ['team'] // Default Supervisor: single-role (PRD §AC-62 & §AC-63)
+  };
+
+  // Read User Session & Apply Runtime Scope RBAC Guardrails
   function initUserSession() {
     try {
       const stored = localStorage.getItem('workpulse_active_user');
       if (stored) {
         const u = JSON.parse(stored);
-        if (u.name) $('side-user-name').textContent = u.name;
-        if (u.roleLabel) $('side-user-role').textContent = u.roleLabel + (u.department ? ' · ' + u.department : '');
-        if (u.avatar) {
-          $('side-avatar').textContent = u.avatar;
-          $('topAvatar').textContent = u.avatar;
+        if (u.role === 'EMPLOYEE') {
+          showToast('Akses ditolak: Karyawan biasa tidak memiliki izin ke Pulse Dashboard (PRD §AC-62).');
+          setTimeout(() => { window.location.href = '02-Morning-Commitment.html'; }, 1500);
+          return;
         }
-
-        if (u.role === 'HEAD_OF_DEPARTMENT') currentScope = 'function';
-        else if (u.role === 'MANAGEMENT' || u.role === 'CEO') currentScope = 'management';
-        else currentScope = 'team';
+        currentUser = Object.assign(currentUser, u);
       }
     } catch(e) {}
+
+    // Synchronize UI Profile Labels
+    if ($('side-user-name')) $('side-user-name').textContent = currentUser.name;
+    if ($('side-user-role')) $('side-user-role').textContent = currentUser.roleLabel + (currentUser.department ? ' · ' + currentUser.department : '');
+    if ($('side-avatar')) $('side-avatar').textContent = currentUser.avatar;
+    if ($('topAvatar')) $('topAvatar').textContent = currentUser.avatar;
+
+    // RBAC Scope Assignment based on Role
+    if (currentUser.role === 'HEAD_OF_DEPARTMENT') {
+      currentUser.allowedScopes = ['team', 'function'];
+      currentScope = 'function';
+    } else if (currentUser.role === 'MANAGEMENT' || currentUser.role === 'CEO') {
+      currentUser.allowedScopes = ['team', 'function', 'management'];
+      currentScope = 'management';
+    } else {
+      currentUser.allowedScopes = ['team'];
+      currentScope = 'team';
+    }
+
+    // Check URL parameters for explicit demonstration overrides (e.g. ?demo=all or ?scope=management)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'all') {
+      currentUser.allowedScopes = ['team', 'function', 'management'];
+    }
+    if (urlParams.get('scope') && ['team', 'function', 'management'].includes(urlParams.get('scope'))) {
+      currentScope = urlParams.get('scope');
+    }
+
+    // Apply Scope Tab Visibility & Lock Indicators per PRD §AC-63
+    enforceScopeGuardrails();
+  }
+
+  function enforceScopeGuardrails() {
+    // If single-role and not in demo mode, highlight allowed scopes and disable others
+    ['team', 'function', 'management'].forEach(sc => {
+      const tabBtn = $('tab' + sc.charAt(0).toUpperCase() + sc.slice(1));
+      if (!tabBtn) return;
+      const isAllowed = currentUser.allowedScopes.includes(sc);
+      if (!isAllowed) {
+        tabBtn.style.opacity = '0.5';
+        tabBtn.title = 'Akses Terbatas: Memerlukan wewenang ' + (sc === 'function' ? 'Head of Department' : 'Management / CEO') + ' (PRD §AC-62)';
+      } else {
+        tabBtn.style.opacity = '1';
+        tabBtn.removeAttribute('title');
+      }
+    });
   }
 
   function renderScope(scopeKey) {
+    // Runtime Guardrail check
+    if (!currentUser.allowedScopes.includes(scopeKey)) {
+      showToast('Akses Dibatasi: Akun ' + currentUser.roleLabel + ' tidak memiliki wewenang ke ' + scopeKey.toUpperCase() + ' Pulse (PRD §AC-62).');
+      return;
+    }
+
     currentScope = scopeKey;
     const d = mockData[scopeKey];
 
@@ -1760,11 +1857,8 @@
       <span>${d.banner}</span>
     `;
 
-    // Metrics
-    $('metricRed').textContent = d.metrics.red;
-    $('metricBlocker').textContent = d.metrics.blocker;
-    $('metricNoSub').textContent = d.metrics.noSub;
-    $('metricAmber').textContent = d.metrics.amber;
+    // Filter Exceptions based on Active Project Filter
+    applyProjectFilter();
 
     // Status Tables
     $('statGreen').textContent = d.status.green;
@@ -1778,24 +1872,6 @@
     // Reliability
     $('rateCommitment').textContent = d.rateCommit;
     $('rateBlockerSla').textContent = d.rateBlocker;
-
-    // Exceptions List
-    $('exceptionList').innerHTML = d.exceptions.map(item => `
-      <div class="exception-item" data-id="${item.id}" role="button" tabindex="0" aria-label="Lihat rincian ${item.name}">
-        <div class="exception-dot ${item.dot}"></div>
-        <div class="exception-info">
-          <div class="exception-name-row">
-            <span class="exception-name">${item.name}</span>
-            <span style="font-size:11.5px;color:var(--color-text-secondary)">· ${item.role}</span>
-            <span class="pill ${item.dot === 'red' ? 'red' : (item.dot === 'amber' ? 'amber' : 'neutral')}">${item.tag}</span>
-          </div>
-          <div class="exception-desc">${item.desc}</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" type="button" aria-label="Buka komitmen">
-          Detail ↗
-        </button>
-      </div>
-    `).join('');
 
     // Open Blockers by Owner
     $('ownerList').innerHTML = d.owners.map(o => `
@@ -1857,6 +1933,7 @@
     $('crossSupportPanel').style.display = isMgmt ? 'none' : 'block';
 
     if (isMgmt) {
+      // Render Top Recurring Blockers (10 Taxonomy)
       $('taxonomyList').innerHTML = taxonomyData.map(t => `
         <div>
           <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:750;margin-bottom:4px">
@@ -1868,9 +1945,59 @@
           </div>
         </div>
       `).join('');
+
+      // Render Unresolved Escalation Aging Snapshot (FR-69 Widget 5)
+      $('escalationAgingList').innerHTML = escalationAgingData.map(e => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#FFFFFF;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);font-size:12px">
+          <div>
+            <div style="font-weight:750;color:var(--color-text-primary)">${e.title}</div>
+            <div style="font-size:11px;color:var(--color-text-secondary)">${e.id} · ${e.div} · PIC: <strong>${e.owner}</strong></div>
+          </div>
+          <div style="text-align:right">
+            <span class="pill ${e.alert ? 'red' : 'amber'}">${e.level}</span>
+            <div style="font-size:10.5px;color:${e.alert ? '#991B1B' : '#92400E'};font-weight:800;margin-top:2px">Menua: ${e.age}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Reactive Project Filtering (Fix Gap 4)
+  function applyProjectFilter() {
+    const d = mockData[currentScope];
+    let filteredList = d.exceptions;
+    
+    if (activeProjectFilter !== 'all') {
+      filteredList = d.exceptions.filter(e => e.project.toLowerCase().includes(activeProjectFilter.toLowerCase()));
     }
 
-    // Attach click listeners to exception rows
+    // Update Exception List DOM
+    if (filteredList.length === 0) {
+      $('exceptionList').innerHTML = `
+        <div style="padding:24px 20px;text-align:center;color:var(--color-text-secondary);font-size:12.5px">
+          Tidak ada anomali atau blocker aktif pada proyek ini. Semua komitmen berjalan lancar.
+        </div>
+      `;
+    } else {
+      $('exceptionList').innerHTML = filteredList.map(item => `
+        <div class="exception-item" data-id="${item.id}" role="button" tabindex="0" aria-label="Lihat rincian ${item.name}">
+          <div class="exception-dot ${item.dot}"></div>
+          <div class="exception-info">
+            <div class="exception-name-row">
+              <span class="exception-name">${item.name}</span>
+              <span style="font-size:11.5px;color:var(--color-text-secondary)">· ${item.role}</span>
+              <span class="pill ${item.dot === 'red' ? 'red' : (item.dot === 'amber' ? 'amber' : 'neutral')}">${item.tag}</span>
+            </div>
+            <div class="exception-desc">${item.desc}</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" aria-label="Buka komitmen">
+            Detail ↗
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Re-attach click listeners
     document.querySelectorAll('.exception-item').forEach(el => {
       el.addEventListener('click', () => openMemberModal(el.dataset.id));
       el.addEventListener('keydown', e => {
@@ -1880,9 +2007,25 @@
         }
       });
     });
+
+    // Update Dynamic Emergency Metrics
+    if (activeProjectFilter === 'all') {
+      $('metricRed').textContent = d.metrics.red;
+      $('metricBlocker').textContent = d.metrics.blocker;
+      $('metricNoSub').textContent = d.metrics.noSub;
+      $('metricAmber').textContent = d.metrics.amber;
+    } else {
+      const redCnt = filteredList.filter(e => e.dot === 'red').length;
+      const amberCnt = filteredList.filter(e => e.dot === 'amber').length;
+      const noSubCnt = filteredList.filter(e => e.dot === 'neutral').length;
+      $('metricRed').textContent = redCnt;
+      $('metricBlocker').textContent = redCnt > 0 ? 1 : 0;
+      $('metricNoSub').textContent = noSubCnt;
+      $('metricAmber').textContent = amberCnt;
+    }
   }
 
-  // Member Detail Drill-down Modal
+  // Member Detail Drill-down Modal (UF-30 Step 4)
   function openMemberModal(id) {
     const m = $('memberModal');
     if (id === 'ex1' || id === 'ex7') {
@@ -1906,6 +2049,9 @@
       $('modalEodNotes').textContent = 'Connection timeout berulang saat stress test stage 2. Perlu intervensi tim Ops & Infra untuk scale pool limit.';
       $('modalBlockerTitle').textContent = 'Database connection pool exhausted pada environment staging';
       $('modalBlockerDesc').innerHTML = 'Owner Needed: <strong>Dimas Putra (Ops & Infra)</strong> · Severity: <strong>High</strong> · SLA Respon: <strong>Tersisa 45 menit</strong>';
+      $('modalTomorrowPriority').textContent = 'Pembersihan memory leak worker dan verifikasi load testing transaction pool bersama DevOps.';
+      $('modalCoachingBtn').href = '10-Manager-Daily-Note-Coaching.html?user=raka&type=coaching';
+      $('modalHistoryBtn').href = '06-My-History-Weekly-Summary.html?user=raka';
     } else {
       $('modalMemberName').textContent = 'Nadia Safitri';
       $('modalMemberRole').textContent = 'Frontend Lead · Tim Merchant Web';
@@ -1923,6 +2069,9 @@
       $('modalEodNotes').textContent = 'Tersendat akibat respons payload dari sandbox pihak ketiga belum stabil.';
       $('modalBlockerTitle').textContent = 'Menunggu spesifikasi endpoint update dari vendor payment gateway';
       $('modalBlockerDesc').innerHTML = 'Owner Needed: <strong>Maya Dwi (Partner Delivery)</strong> · Severity: <strong>Medium</strong> · Status: <strong>In Progress</strong>';
+      $('modalTomorrowPriority').textContent = 'Finalisasi mocking layer webhook bila respon vendor pihak ketiga masih belum tersedia.';
+      $('modalCoachingBtn').href = '10-Manager-Daily-Note-Coaching.html?user=nadia&type=coaching';
+      $('modalHistoryBtn').href = '06-My-History-Weekly-Summary.html?user=nadia';
     }
 
     m.classList.add('show');
@@ -1932,29 +2081,118 @@
     $('memberModal').classList.remove('show');
   }
 
-  // Event Listeners
+  // All Exceptions Full Modal (Fix Gap 3)
+  function openAllExceptionsModal() {
+    const m = $('allExceptionsModal');
+    renderModalExceptions('all', '');
+    m.classList.add('show');
+  }
+
+  function closeAllExceptionsModal() {
+    $('allExceptionsModal').classList.remove('show');
+  }
+
+  function renderModalExceptions(filterType, searchQuery) {
+    const list = mockData[currentScope].exceptions;
+    let filtered = list;
+
+    if (filterType === 'red') filtered = filtered.filter(e => e.dot === 'red');
+    else if (filterType === 'amber') filtered = filtered.filter(e => e.dot === 'amber');
+    else if (filterType === 'noSub') filtered = filtered.filter(e => e.dot === 'neutral');
+
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.desc.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+
+    // Update Counter Badges
+    $('modalCntAll').textContent = list.length;
+    $('modalCntRed').textContent = list.filter(e => e.dot === 'red').length;
+    $('modalCntAmber').textContent = list.filter(e => e.dot === 'amber').length;
+    $('modalCntNoSub').textContent = list.filter(e => e.dot === 'neutral').length;
+
+    if (filtered.length === 0) {
+      $('modalExceptionList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--color-text-secondary);font-size:12.5px">Tidak ada data anomali yang sesuai dengan filter.</div>';
+      return;
+    }
+
+    $('modalExceptionList').innerHTML = filtered.map(item => `
+      <div class="exception-item" data-id="${item.id}" role="button" tabindex="0" style="padding:12px 14px">
+        <div class="exception-dot ${item.dot}"></div>
+        <div class="exception-info">
+          <div class="exception-name-row">
+            <span class="exception-name">${item.name}</span>
+            <span style="font-size:11.5px;color:var(--color-text-secondary)">· ${item.role}</span>
+            <span class="pill ${item.dot === 'red' ? 'red' : (item.dot === 'amber' ? 'amber' : 'neutral')}">${item.tag}</span>
+            <span class="pill blue" style="font-size:9.5px">${item.project}</span>
+          </div>
+          <div class="exception-desc">${item.desc}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button">Detail ↗</button>
+      </div>
+    `).join('');
+
+    // Attach click to open Member Modal
+    $('modalExceptionList').querySelectorAll('.exception-item').forEach(el => {
+      el.addEventListener('click', () => {
+        closeAllExceptionsModal();
+        openMemberModal(el.dataset.id);
+      });
+    });
+  }
+
+  // Event Listeners for Scope Tabs
   $('tabTeam').addEventListener('click', () => { renderScope('team'); showToast('Beralih ke tampilan Team Pulse.'); });
   $('tabFunction').addEventListener('click', () => { renderScope('function'); showToast('Beralih ke tampilan Function Pulse.'); });
   $('tabManagement').addEventListener('click', () => { renderScope('management'); showToast('Beralih ke tampilan Management Pulse.'); });
 
-  if ($('refreshBtn')) {
-    $('refreshBtn').addEventListener('click', () => {
-      showToast('Data pemantauan berhasil diperbarui.');
+  // Event Listener for All Exceptions Link (Fix Gap 3)
+  if ($('allExceptionsLink')) {
+    $('allExceptionsLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      openAllExceptionsModal();
     });
   }
+  $('closeAllExceptionsBtn').addEventListener('click', closeAllExceptionsModal);
+  $('closeAllExceptionsFooterBtn').addEventListener('click', closeAllExceptionsModal);
+  $('allExceptionsModal').addEventListener('click', e => {
+    if (e.target === $('allExceptionsModal')) closeAllExceptionsModal();
+  });
 
+  // Modal Filter Chips
+  document.querySelectorAll('#modalFilterChips button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#modalFilterChips button').forEach(b => b.style.outline = 'none');
+      btn.style.outline = '2px solid var(--color-brand-primary)';
+      renderModalExceptions(btn.dataset.filter, $('modalSearchInput').value);
+    });
+  });
+  $('modalSearchInput').addEventListener('input', e => {
+    const activeChip = document.querySelector('#modalFilterChips button[style*="outline"]');
+    const filter = activeChip ? activeChip.dataset.filter : 'all';
+    renderModalExceptions(filter, e.target.value);
+  });
+
+  // Member Modal Events
   $('closeMemberModalBtn').addEventListener('click', closeMemberModal);
   $('modalCloseAction').addEventListener('click', closeMemberModal);
   $('memberModal').addEventListener('click', e => {
     if (e.target === $('memberModal')) closeMemberModal();
   });
 
-  // Filter Tool Change
+  // Reactive Project Filter Listener (Fix Gap 4)
   $('projectFilter').addEventListener('change', () => {
-    showToast(`Filter proyek diubah: ${$('projectFilter').selectedOptions[0].text}`);
+    const val = $('projectFilter').value;
+    if (val.includes('core-payment')) activeProjectFilter = 'Core Payment';
+    else if (val.includes('merchant-portal')) activeProjectFilter = 'Merchant Portal';
+    else if (val.includes('mobile-pwa')) activeProjectFilter = 'WorkPulse Mobile';
+    else activeProjectFilter = 'all';
+
+    applyProjectFilter();
+    showToast(`Data disaring untuk proyek: ${$('projectFilter').selectedOptions[0].text}`);
   });
+
   $('periodFilter').addEventListener('change', () => {
-    showToast(`Periode diubah: ${$('periodFilter').selectedOptions[0].text}`);
+    showToast(`Periode pemantauan diubah: ${$('periodFilter').selectedOptions[0].text}`);
   });
 
   // Mobile Drawer Handlers (Identik Halaman 02-07)
@@ -2005,60 +2243,11 @@
     });
   }
 
-  // Account Switcher Modal (Trigger from Topbar button)
-  if ($('btnSwitchAccount')) {
-    $('btnSwitchAccount').addEventListener('click', () => {
-      $('accountModal').classList.add('show');
-    });
-  }
-  $('closeAccountModalBtn').addEventListener('click', () => {
-    $('accountModal').classList.remove('show');
-  });
-  $('accountModal').addEventListener('click', e => {
-    if (e.target === $('accountModal')) $('accountModal').classList.remove('show');
-  });
-
-  document.querySelectorAll('[data-login]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const login = btn.dataset.login;
-      $('accountModal').classList.remove('show');
-      if (login === 'budi_emp') {
-        showToast('Akses ditolak: Karyawan biasa tidak memiliki izin ke Pulse Dashboard.');
-        setTimeout(() => {
-          window.location.href = '02-Morning-Commitment.html';
-        }, 1200);
-        return;
-      }
-      if (login === 'siti') {
-        $('side-avatar').textContent = 'SA';
-        $('topAvatar').textContent = 'SA';
-        $('side-user-name').textContent = 'Siti Aminah';
-        $('side-user-role').textContent = 'Supervisor / Team Lead · Technology Squad A';
-        renderScope('team');
-        showToast('Masuk sebagai Siti Aminah (Supervisor / TL).');
-      } else if (login === 'hendra') {
-        $('side-avatar').textContent = 'HG';
-        $('topAvatar').textContent = 'HG';
-        $('side-user-name').textContent = 'Hendra Gunawan';
-        $('side-user-role').textContent = 'Head of Technology · Delivery & Tech Division';
-        renderScope('function');
-        showToast('Masuk sebagai Hendra Gunawan (Head of Department).');
-      } else if (login === 'bambang_ceo') {
-        $('side-avatar').textContent = 'BS';
-        $('topAvatar').textContent = 'BS';
-        $('side-user-name').textContent = 'Ir. Bambang Soedirgo';
-        $('side-user-role').textContent = 'Chief Executive Officer · Executive Board';
-        renderScope('management');
-        showToast('Masuk sebagai Ir. Bambang Soedirgo (CEO).');
-      }
-    });
-  });
-
   // ESC Key Listener
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeMemberModal();
-      $('accountModal').classList.remove('show');
+      closeAllExceptionsModal();
       if (sidebar.classList.contains('open')) {
         sidebar.classList.remove('open');
         backdrop.classList.remove('show');
@@ -2066,7 +2255,7 @@
     }
   });
 
-  // Boot
+  // Boot Engine
   initUserSession();
   renderScope(currentScope);
 })();

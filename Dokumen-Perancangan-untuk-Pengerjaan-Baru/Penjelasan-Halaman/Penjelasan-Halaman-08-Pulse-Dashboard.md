@@ -134,7 +134,12 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 
 ### 4.3 Section "Perlu Perhatian Segera" (*Exception-First Action List*)
 * Menyajikan ringkasan nama anggota, jabatan, label anomali, dan ringkasan kendala.
-* Mengklik baris akan memunculkan **Modal Detail Anggota Tim** yang menampilkan komitmen lengkap hari ini, alasan risiko, kebutuhan bantuan, serta catatan tindak lanjut tanpa meninggalkan halaman.
+* **Tautan "Semua Anomali" Terhubung ke Modal Penuh (`#allExceptionsModal`):** Mengklik tautan ini membuka dialog daftar lengkap anomali yang dilengkapi chip filter status (`Semua`, `Hanya RED`, `Hanya AMBER`, `No Submission`) dan kolom pencarian nama anggota.
+* **Modal Detail Anggota Tim (`#memberModal` - UF-30 Step 4 Drilldown):** Mengklik baris anomali memunculkan pop-up yang menyajikan:
+  - Komitmen pagi (*Morning Baseline*) & Hasil sore (*EOD Outcome & Risiko*).
+  - Prioritas Esok Hari (*Tomorrow Priority* - FR-11) untuk konteks rencana kerja lanjutan.
+  - Tiket Blocker terkait lengkap dengan penanggung jawab (*Owner Needed*) dan sisa SLA.
+  - Tombol aksi terpadu: **"Beri Coaching Note ↗"** (Halaman 10), **"Histori Anggota ↗"** (Halaman 06), dan **"Tindak Lanjut Blocker ↗"** (Halaman 09).
 
 ### 4.4 Section "Ringkasan Status Harian" (Pemisahan 2 Dimensi Independen)
 * **Tabel Status Risiko:** Merekap data hanya dari EOD yang telah diserahkan (`GREEN`, `AMBER`, `RED`), ditambah baris khusus `NOT_APPLICABLE — NO_COMMITMENT` bagi anggota yang secara sah tidak memiliki komitmen harian (misal dalam pelatihan atau standby operasional).
@@ -148,7 +153,7 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 
 ### 4.6 Section "Tren Pekerjaan Tertunda" (*Continuation Trend*)
 * Menampilkan visualisasi batang 5 hari kerja terakhir (Senin s/d Jumat) mengenai jumlah pekerjaan yang ditandai `Continuation = Continue`.
-* Membantu pimpinan mendeteksi pola carry-over yang berulang $\rightarrow$\ge 2$\rightarrow$ hari berturut-turut sebagai indikasi beban kerja berlebih (*overcapacity*) atau estimasi yang tidak akurat.
+* Membantu pimpinan mendeteksi pola carry-over yang berulang $\ge 2$ hari berturut-turut sebagai indikasi beban kerja berlebih (*overcapacity*) atau estimasi yang tidak akurat.
 
 ### 4.7 Section "Dukungan Lintas Tim/Proyek" (*Cross-Project Support - FR-64*)
 * Menampilkan rekaman kontribusi anggota tim yang memberikan bantuan pada proyek atau tim lain di luar penugasan utamanya.
@@ -162,9 +167,12 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 * Kotak ringkas yang menghitung pengajuan *Morning/EOD Correction Request* dan *Leave Request* yang sedang menunggu respon atau masuk dalam masa sanggah (*objection window*).
 * Menyediakan jalan pintas (*deep-link*) menuju Halaman 22 (*Correction & Leave Review*). Otomatis disembunyikan pada mode Management Pulse.
 
-### 4.10 Section Khusus Management Pulse (Direksi / CEO - FR-69)
-* **Top Recurring Blockers (10 Taksonomi Resmi):** Visualisasi kategori masalah paling sering muncul (Technical, Requirement, Client, Vendor, Resource, Approval, Infra, Finance, Legal, Other).
-* **Unresolved Escalation Aging Snapshot:** Pemantauan tiket blocker menua yang belum terselesaikan di jenjang Level 2, 3, atau 4.
+### 4.10 Section Khusus Management Pulse (Direksi / CEO - FR-69 & AC-78)
+* **Top Recurring Blockers (10 Taksonomi Resmi):** Visualisasi persentase distribusi kategori hambatan tingkat perusahaan (*Technical, Requirement, Client, Vendor, Resource, Approval, Infra, Finance, Legal, Other*).
+* **Unresolved Escalation Aging Snapshot (Widget 5 FR-69 & UI-UX Spec §4.14):** Widget pemantauan penuaan tiket eskalasi aktif:
+  - Menampilkan ID tiket, judul blocker, jenjang eskalasi (*Level 2 / Level 3*), divisi asal, support owner saat ini, dan durasi penuaan (*> 48 Jam* merah, *> 24 Jam* amber).
+  - Dilengkapi jalan pintas (*deep-link*) menuju *Antrean Eskalasi Manajemen* di Halaman 09.
+* **Filter Proyek Reaktif:** Dropdown filter proyek pada Scope Bar secara reaktif menyaring baris anomali dan mengkalkulasi ulang angka pada kartu metrik darurat secara dinamis.
 
 ---
 
@@ -173,8 +181,8 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 ### Skenario 1: Supervisor Melakukan Mitigasi Pagi & Sore (UF-30)
 1. Supervisor membuka `/team` melalui menu sidebar "Pulse Dashboard".
 2. Meninjau 4 kartu metrik di bagian atas: mendapati 1 kasus *RED* dan 2 *Blocker Belum Diakui*.
-3. Mengklik baris anomali pada panel *Perlu Perhatian Segera* $\rightarrow$\rightarrow$\rightarrow$ Modal detail anggota terbuka $\rightarrow$\rightarrow$\rightarrow$ membaca bahwa anggota terhambat akses database server klien.
-4. Mengklik tautan *"Buka Antrean Blocker"* $\rightarrow$\rightarrow$\rightarrow$ dialihkan ke Halaman 09 untuk segera meng-acknowledge atau me-reassign bantuan ke tim infrastruktur.
+3. Mengklik baris anomali pada panel *Perlu Perhatian Segera* $\rightarrow$ Modal detail anggota terbuka $\rightarrow$ membaca bahwa anggota terhambat akses database server klien.
+4. Mengklik tautan *"Buka Antrean Blocker"* $\rightarrow$ dialihkan ke Halaman 09 untuk segera meng-acknowledge atau me-reassign bantuan ke tim infrastruktur.
 
 ### Skenario 2: Kepala Divisi Memantau Tren Carry-Over (UF-31)
 1. Head of Department membuka `/function` melalui menu sidebar.
@@ -186,7 +194,7 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 1. CEO membuka `/management` melalui menu sidebar.
 2. Memeriksa ringkasan anomali lintas fungsi: Divisi Operasi dan Finance hijau stabil, Divisi Delivery memiliki beberapa blocker terkait vendor luar.
 3. Memeriksa grafik *Top Recurring Blockers*: kategori `Vendor` dan `Client Approval` mendominasi 60% hambatan.
-4. Meninjau *Escalation Aging*: melihat 1 eskalasi Level 3 yang menua $\rightarrow$\ge 48$\rightarrow$ jam yang memerlukan keputusan dewan direksi.
+4. Meninjau *Escalation Aging*: melihat 1 eskalasi Level 3 yang menua $\ge 48$ jam yang memerlukan keputusan dewan direksi.
 
 ---
 
@@ -198,7 +206,7 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 | **Halaman 02 & 03 (Morning & Additional Work)** | Menyuplai data baseline komitmen harian, initial risk, dan beban kerja tambahan anggota tim. |
 | **Halaman 04 (EOD Outcome)** | Menyuplai data Final Status (`GREEN`/`AMBER`/`RED`), hasil outcome, dan alasan risiko sore. |
 | **Halaman 05 & 09 (Blocker & Escalation)** | Menyuplai data tiket blocker aktif, penghitungan SLA respon, dan daftar Support Owner. |
-| **Halaman 06 (My History & Weekly Summary)** | Menyuplai histori tren `Continuation = Continue` berulang $\rightarrow$\ge 2$\rightarrow$ hari dan statistik keandalan mingguan. |
+| **Halaman 06 (My History & Weekly Summary)** | Menyuplai histori tren `Continuation = Continue` berulang $\ge 2$ hari dan statistik keandalan mingguan. |
 | **Halaman 07 (Notification Center)** | Memicu notifikasi in-app kepada pimpinan saat ada status RED atau blocker baru tim. |
 | **Halaman 10 (Manager Notes)** | Pimpinan dari Hal 08 dapat menindaklanjuti temuan anomali dengan membuat catatan apresiasi (*Recognition*) atau bimbingan (*Coaching*). |
 | **Halaman 22 (Correction & Leave Review)** | Menerima pengalihan dari kotak antrean review Hal 08 untuk pemrosesan persetujuan koreksi atau cuti. |
