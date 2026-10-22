@@ -20,7 +20,7 @@
 6. [Standar Penyajian Informasi & Hierarki Data (3-Baris Baku)](#6-standar-penyajian-informasi--hierarki-data-3-baris-baku)
 7. [Aturan Bisnis & Penegakan Sistem Lintas Halaman (*Engine Rules*)](#7-aturan-bisnis--penegakan-sistem-lintas-halaman-engine-rules)
 8. [Standar Pola Interaksi Formulir & Validasi](#8-standar-pola-interaksi-formulir--validasi)
-9. [Registri Keputusan Desain Tiap Halaman (Halaman 01 s.d. 07)](#9-registri-keputusan-desain-tiap-halaman)
+9. [Registri Keputusan Desain Tiap Halaman (Halaman 01 s.d. 08)](#9-registri-keputusan-desain-tiap-halaman)
 10. [Checklist Wajib Sebelum Memulai Halaman Baru](#10-checklist-wajib-sebelum-memulai-halaman-baru)
 
 ---
@@ -399,16 +399,22 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
 - **Keputusan Terkunci:**
   1. **Filosofi Exception-First & Anti-Gamifikasi (PRD FR-66, FR-68, FR-69, BR-08):** DILARANG MUTLAK menyajikan leaderboard, pemeringkatan produktivitas individu, atau skor KPI otomatis. Bagian paling atas layar wajib memprioritaskan kartu anomali krisis (*RED*, *Blocker Belum Diakui*, *No Submission*, *AMBER*).
   2. **Penyajian Dua Dimensi Independen (Anti-Bias):** Memisahkan secara tegas dan mutlak antara **Dimensi Status Risiko** (`GREEN`, `AMBER`, `RED`, `NOT_APPLICABLE — NO_COMMITMENT`) dengan **Dimensi Ketepatan Waktu** (`On-Time`, `Late`, `No Submission`). *No Submission* adalah fakta waktu pengiriman, bukan status risiko dan bukan vonis disipliner.
-  3. **Tiga Tingkat Cakupan Peran (*Multi-Scope Architecture*):** Satu menu navigasi *Pulse Dashboard* membuka scope yang sesuai dengan wewenang sah akun:
+  3. **Tiga Tingkat Cakupan Peran & Tiga Rute Mandiri (*Multi-Scope Architecture*):** Satu menu navigasi *Pulse Dashboard* membuka scope yang sesuai dengan wewenang sah akun:
      - **Team Pulse (`/team`):** Khusus Supervisor / TL, membatasi data hanya pada anggota tim langsung.
      - **Function Pulse (`/function`):** Khusus Head of Department, mengagregasi seluruh sub-tim di bawah divisinya.
      - **Management Pulse (`/management`):** Khusus CEO / Direksi, menyajikan tren helikopter lintas fungsi perusahaan (*company-wide*).
-  4. **Proteksi Akses Karyawan Biasa:** Menu disembunyikan bagi karyawan biasa; akses URL langsung diblokir dan dialihkan ke `/today` (Halaman 02).
-  5. **Dialog Rincian Anggota Tim (UF-30 Step 4 Drilldown):** Mengklik baris anomali pada daftar *Perlu Perhatian Segera* memunculkan modal dialog yang menampilkan rincian komitmen pagi, hasil evaluasi sore, dan tiket blocker terkait tanpa meninggalkan halaman.
-  6. **Pencatatan Dukungan Lintas Tim (*Cross-Project Support* - FR-64 & FR-68):** Menyajikan widget khusus untuk mencatat dan mengapresiasi kontribusi anggota tim yang membantu proyek/tim lain.
-  7. **Tren Pekerjaan Tertunda (*Carry-Over Trend Histogram*):** Visualisasi batang 5 hari kerja (Senin–Jumat) yang menyorot tugas yang mengalami `Continuation = Continue` $\ge 2$ hari beruntun sebagai indikasi evaluasi beban kerja (*capacity planning*).
-  8. **Widget Khusus Management Pulse (FR-69):** Menampilkan visualisasi persentase *Top Recurring Blockers (10 Taksonomi Resmi)* dan pemantauan penuaan tiket eskalasi (*Unresolved Escalation Aging*).
-  9. **Simulasi Akun Terintegrasi:** Terhubung dengan `localStorage: workpulse_active_user` dan menyediakan modal alih peran simulasi (Andi, Budi, Dewi, Bambang).
+  4. **Proteksi Akses Karyawan Biasa & Route Guards:** Menu disembunyikan bagi karyawan biasa; akses URL langsung diblokir oleh Route Guard dan dialihkan ke `/today` (Halaman 02). Backend (`ScopeFilterService`) menerapkan Zero-Trust RBAC.
+  5. **Komponen Scope Bar Dinamis (Guardrail Prototipe vs Produksi - PRD §AC-62, §AC-63):**
+     - **Tujuan Prototipe (Karena X Supaya Y):** Pada berkas desain `08-Pulse-Dashboard.html`, Scope Bar sengaja disajikan sebagai bilah tab interaktif 3-in-1 berlatar lembut agar desainer dan pengembang dapat menguji ketiga tampilan secara instan dalam 1 berkas master tanpa harus berulang kali login-logout dengan akun berbeda.
+     - **Mandat Produksi:** Komponen `.scope-bar` bersifat dinamis. Jika pengguna hanya memegang peran tunggal (`currentUser.allowedScopes.length <= 1`), bar ini **WAJIB DISEMBUNYIKAN TOTAL (HIDDEN)**. Bar switcher hanya dirender jika akun memegang wewenang multi-peran (misal Head merangkap Plt TL).
+  6. **Page Heading & Solid Card Badge Lingkup Unit:**
+     - Eyebrow bersih: `DASHBOARD OPERASIONAL` tanpa ikon jam.
+     - Badge lingkup organisasi menggunakan format **Solid Card Badge** berlatar putih `#FFFFFF` (`border: 1px solid var(--color-border-subtle)`), tipografi dua baris (`LINGKUP UNIT` 10px / `Tim Produk Digital` 12px), dan ikon struktur organisasi SVG hijau. Dilarang menggunakan pil mengambang transparan dengan border ganda kaku.
+  7. **Standarisasi Kontrol Filter Dropdown:** Kontrol dropdown menggunakan panah SVG monokrom custom (`appearance: none;`) dengan padding kanan 32px untuk menjamin estetika elegan tanpa bergantung pada render bawaan OS.
+  8. **Dialog Rincian Anggota Tim (UF-30 Step 4 Drilldown):** Mengklik baris anomali pada daftar *Perlu Perhatian Segera* memunculkan modal dialog yang menampilkan rincian komitmen pagi, hasil evaluasi sore, dan tiket blocker terkait tanpa meninggalkan halaman.
+  9. **Pencatatan Dukungan Lintas Tim (*Cross-Project Support* - FR-64 & FR-68):** Menyajikan widget khusus untuk mencatat dan mengapresiasi kontribusi anggota tim yang membantu proyek/tim lain.
+  10. **Tren Pekerjaan Tertunda (*Carry-Over Trend Histogram*):** Visualisasi batang 5 hari kerja (Senin–Jumat) yang menyorot tugas yang mengalami `Continuation = Continue` $\ge 2$ hari beruntun sebagai indikasi evaluasi beban kerja (*capacity planning*).
+  11. **Widget Khusus Management Pulse (FR-69):** Menampilkan visualisasi persentase *Top Recurring Blockers (10 Taksonomi Resmi)* dan pemantauan penuaan tiket eskalasi (*Unresolved Escalation Aging*).
 
 ---
 

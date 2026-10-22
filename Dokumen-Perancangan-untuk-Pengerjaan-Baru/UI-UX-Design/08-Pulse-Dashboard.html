@@ -462,7 +462,7 @@
     .scope-tab {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       padding: 8px 14px;
       border-radius: var(--radius-sm);
       border: 1px solid transparent;
@@ -482,16 +482,18 @@
       border-color: #B7DCCB;
     }
     .scope-badge {
-      font-size: 10px;
-      padding: 2px 6px;
+      font-size: 10.5px;
+      padding: 2px 8px;
       border-radius: var(--radius-full);
-      background: #FFFFFF;
-      border: 1px solid var(--color-border-strong);
+      background: var(--color-surface-subtle);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border-subtle);
       font-weight: 700;
+      transition: all 0.15s ease;
     }
     .scope-tab.active .scope-badge {
       background: var(--color-brand-primary);
-      color: #fff;
+      color: #FFFFFF;
       border-color: var(--color-brand-primary);
     }
     .filter-tools {
@@ -502,16 +504,25 @@
     }
     .filter-select {
       height: 38px;
-      padding: 0 12px;
+      padding: 0 32px 0 12px;
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-sm);
-      background: #FFFFFF;
+      background-color: #FFFFFF;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C6E68' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
       color: var(--color-text-primary);
       font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .filter-select:hover { border-color: var(--color-border-strong); }
+    .filter-select:hover {
+      border-color: var(--color-border-strong);
+    }
 
     /* Scope Banner */
     .scope-banner {
@@ -1135,7 +1146,13 @@
         </div>
       </div>
 
-      <!-- Scope Switcher & Filter Bar (Multi-Role Support) -->
+      <!-- ==============================================================
+           SCOPE SWITCHER & FILTER BAR (PRD §AC-62, §AC-63)
+           CATATAN ARSITEKTUR: Komponen Scope Bar di bawah ini berfungsi sebagai 
+           Kompilasi Visual 3-in-1 untuk simulasi prototipe. Pada implementasi 
+           produksi nyata, bar ini otomatis disembunyikan bagi pengguna single-role 
+           dan hanya merender rute yang sah sesuai wewenang akun pengguna.
+           ============================================================== -->
       <div class="scope-bar">
         <div class="scope-tabs" role="tablist" aria-label="Pilih cakupan pemantauan">
           <button class="scope-tab active" id="tabTeam" role="tab" aria-selected="true" data-scope="team">

@@ -39,6 +39,32 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 | **Employee Biasa** | *Tidak Ada Akses* | Menu sidebar disembunyikan. Akses URL langsung dialihkan ke `/today` (Halaman 02). | – |
 | **PM / HRGA / System Admin** | *Kewenangan Khusus* | Hanya jika diberikan hak dashboard eksplisit; secara default diarahkan ke ruang kerja masing-masing (Project Risk / Compliance / Org Mapping). | Sesuai delegasi |
 
+### 2.1 Peringatan Keras Arsitektur: Pendekatan Prototipe Multi-Scope vs Implementasi Produksi (Karena X Supaya Y)
+
+> [!WARNING]
+> ### PERINGATAN KERAS ARSITEKTUR: PENDEKATAN PROTOTIPE MULTI-SCOPE vs IMPLEMENTASI PRODUKSI
+>
+> **Mengapa Berkas Mockup `08-Pulse-Dashboard.html` Mengadopsi Pendekatan Tab Switcher 3-in-1 yang Bebas Diklik?**
+> * **KARENA (X):** Halaman 08 mencakup 3 rute arsitektural yang berbeda (`/team`, `/function`, `/management`) dengan struktur data yang adaptif terhadap hierarki organisasi (Supervisor, Head of Department, dan CEO/Direksi). Jika rancangan ini dipecah ke dalam 3 berkas HTML terpisah, akan terjadi redundansi kode dan markup sebesar ~85%, fragmentasi evaluasi desain, serta pemborosan waktu dalam memvalidasi konsistensi tata letak visual.
+> * **SUPAYA (Y):** Tim pengembang, desainer, dan pemangku kepentingan (*stakeholders*) dapat menguji, mengevaluasi responsivitas tata letak, dan mendemonstrasikan perilaku adaptif ketiga tingkat cakupan manajerial secara instan dalam **satu berkas master terpadu**, tanpa harus repot melakukan siklus *logout-login* berulang kali menggunakan tiga akun kredensial yang berbeda (`siti`, `hendra`, `bambang_ceo`).
+>
+> ---
+>
+> ### PANDUAN IMPLEMENTASI KODE PRODUKSI (ANTI-SALAH KAPRAH):
+> 1. **Dilarang Menampilkan Tab Secara Bebas pada Pengguna Tunggal (PRD §AC-62):**
+>    Pada sistem produksi nyata, seorang **Supervisor biasa (Siti Aminah)** TIDAK PERNAH melihat tab *Function Pulse* apalagi *Management Pulse*. Prinsip *Least-Privilege Access* melarang keras bawahan mengintip data agregat strategis di atasnya.
+> 2. **Aturan Rendering Kondisional Frontend (PRD §AC-63):**
+>    Komponen `.scope-bar` di frontend (Angular/React/dsb) **WAJIB bersifat kondisional**:
+>    - Jika `currentUser.allowedScopes.length <= 1` (mayoritas pimpinan single-role): Bar tab switcher **TIDAK DIRENDER SAMA SEKALI (HIDDEN)**. Sistem langsung menampilkan rute aktifnya (`/team` atau `/function`).
+>    - Jika `currentUser.allowedScopes.length > 1` (kasus khusus multi-role, misal Head of Dept merangkap Plt. Team Lead, atau CEO): Sistem **HANYA merender tab-tab yang secara eksplisit diizinkan** dalam array `allowedScopes`.
+> 3. **Pemisahan Rute Mandiri (*Protected Route Guards*):**
+>    Ketiga cakupan bukan sekadar pergantian *tab state* lokal, melainkan 3 rute mandiri yang dilindungi pengawal rute (*Route Guard*):
+>    - /team -> RoleGuard([Role.Supervisor_TL, Role.Head, Role.CEO_Management])
+>    - /function -> RoleGuard([Role.Head, Role.CEO_Management])
+>    - /management -> RoleGuard([Role.CEO_Management])
+> 4. **Otorisasi Server-Side Mutlak (*Zero-Trust Backend*):**
+>    Backend (`ScopeFilterService`) **TIDAK PERNAH** mempercayai parameter scope yang dikirimkan oleh frontend. Endpoint query selalu mengekstrak identitas pengguna dari JWT Payload dan menerapkan filter cakupan `getAccessibleUserIds()` secara ketat. Upaya pemanggilan paksa ke level di atas haknya akan langsung ditolak dengan `403 ForbiddenException`.
+
 ---
 
 ## 3. ANATOMI ANTARMUKA & TATA LETAK WIDGET
@@ -50,10 +76,10 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 │ [Lonceng Notifikasi + Dot Indikator Unread]  [Avatar Pengguna & Role Tag]   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. PAGE HEADING & CONTEXT BAR:                                              │
-│    - Eyebrow: PEMANTAUAN OPERASIONAL & RISIKO                               │
+│    - Eyebrow: DASHBOARD OPERASIONAL (Bersih tanpa ikon)                     │
 │    - Judul H1: Team Pulse (atau Function Pulse / Management Pulse)          │
 │    - Subteks: Ringkasan kondisi tim dan hal yang membutuhkan perhatian...   │
-│    - Sisi Kanan: [Pill Scope: Tim Produk Digital] [↻ Perbarui Data]         │
+│    - Sisi Kanan: [Solid Badge: LINGKUP UNIT / Tim Produk Digital]           │
 │    - Banner Wewenang: Informasi cakupan data yang berhak diakses akun aktif │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. SCOPE SWITCHER & FILTER BAR:                                             │
@@ -122,7 +148,7 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 
 ### 4.6 Section "Tren Pekerjaan Tertunda" (*Continuation Trend*)
 * Menampilkan visualisasi batang 5 hari kerja terakhir (Senin s/d Jumat) mengenai jumlah pekerjaan yang ditandai `Continuation = Continue`.
-* Membantu pimpinan mendeteksi pola carry-over yang berulang $\ge 2$ hari berturut-turut sebagai indikasi beban kerja berlebih (*overcapacity*) atau estimasi yang tidak akurat.
+* Membantu pimpinan mendeteksi pola carry-over yang berulang $\rightarrow$\ge 2$\rightarrow$ hari berturut-turut sebagai indikasi beban kerja berlebih (*overcapacity*) atau estimasi yang tidak akurat.
 
 ### 4.7 Section "Dukungan Lintas Tim/Proyek" (*Cross-Project Support - FR-64*)
 * Menampilkan rekaman kontribusi anggota tim yang memberikan bantuan pada proyek atau tim lain di luar penugasan utamanya.
@@ -147,8 +173,8 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 ### Skenario 1: Supervisor Melakukan Mitigasi Pagi & Sore (UF-30)
 1. Supervisor membuka `/team` melalui menu sidebar "Pulse Dashboard".
 2. Meninjau 4 kartu metrik di bagian atas: mendapati 1 kasus *RED* dan 2 *Blocker Belum Diakui*.
-3. Mengklik baris anomali pada panel *Perlu Perhatian Segera* $\rightarrow$ Modal detail anggota terbuka $\rightarrow$ membaca bahwa anggota terhambat akses database server klien.
-4. Mengklik tautan *"Buka Antrean Blocker"* $\rightarrow$ dialihkan ke Halaman 09 untuk segera meng-acknowledge atau me-reassign bantuan ke tim infrastruktur.
+3. Mengklik baris anomali pada panel *Perlu Perhatian Segera* $\rightarrow$\rightarrow$\rightarrow$ Modal detail anggota terbuka $\rightarrow$\rightarrow$\rightarrow$ membaca bahwa anggota terhambat akses database server klien.
+4. Mengklik tautan *"Buka Antrean Blocker"* $\rightarrow$\rightarrow$\rightarrow$ dialihkan ke Halaman 09 untuk segera meng-acknowledge atau me-reassign bantuan ke tim infrastruktur.
 
 ### Skenario 2: Kepala Divisi Memantau Tren Carry-Over (UF-31)
 1. Head of Department membuka `/function` melalui menu sidebar.
@@ -160,7 +186,7 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 1. CEO membuka `/management` melalui menu sidebar.
 2. Memeriksa ringkasan anomali lintas fungsi: Divisi Operasi dan Finance hijau stabil, Divisi Delivery memiliki beberapa blocker terkait vendor luar.
 3. Memeriksa grafik *Top Recurring Blockers*: kategori `Vendor` dan `Client Approval` mendominasi 60% hambatan.
-4. Meninjau *Escalation Aging*: melihat 1 eskalasi Level 3 yang menua $\ge 48$ jam yang memerlukan keputusan dewan direksi.
+4. Meninjau *Escalation Aging*: melihat 1 eskalasi Level 3 yang menua $\rightarrow$\ge 48$\rightarrow$ jam yang memerlukan keputusan dewan direksi.
 
 ---
 
@@ -172,7 +198,7 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 | **Halaman 02 & 03 (Morning & Additional Work)** | Menyuplai data baseline komitmen harian, initial risk, dan beban kerja tambahan anggota tim. |
 | **Halaman 04 (EOD Outcome)** | Menyuplai data Final Status (`GREEN`/`AMBER`/`RED`), hasil outcome, dan alasan risiko sore. |
 | **Halaman 05 & 09 (Blocker & Escalation)** | Menyuplai data tiket blocker aktif, penghitungan SLA respon, dan daftar Support Owner. |
-| **Halaman 06 (My History & Weekly Summary)** | Menyuplai histori tren `Continuation = Continue` berulang $\ge 2$ hari dan statistik keandalan mingguan. |
+| **Halaman 06 (My History & Weekly Summary)** | Menyuplai histori tren `Continuation = Continue` berulang $\rightarrow$\ge 2$\rightarrow$ hari dan statistik keandalan mingguan. |
 | **Halaman 07 (Notification Center)** | Memicu notifikasi in-app kepada pimpinan saat ada status RED atau blocker baru tim. |
 | **Halaman 10 (Manager Notes)** | Pimpinan dari Hal 08 dapat menindaklanjuti temuan anomali dengan membuat catatan apresiasi (*Recognition*) atau bimbingan (*Coaching*). |
 | **Halaman 22 (Correction & Leave Review)** | Menerima pengalihan dari kotak antrean review Hal 08 untuk pemrosesan persetujuan koreksi atau cuti. |
@@ -181,14 +207,14 @@ Halaman ini diakses melalui satu item menu navigasi di sidebar bernama **"Pulse 
 
 ## 7. PANDUAN DESAIN RESPONSIF & KONSISTENSI LINTAS HALAMAN
 
-1. **Tata Letak Desktop ($\ge 1024\text{px}$):**
+1. **Tata Letak Desktop ($\rightarrow$\ge 1024\text{px}$\rightarrow$):**
    * Grid utama 2-kolom asimetris (`1.2fr : 0.8fr`) dengan celah `18px`.
    * 4 kartu metrik anomali sejajar 4 kolom dalam satu baris horizontal.
-2. **Tata Letak Layar Sedang & Tablet ($720\text{px} - 1023\text{px}$):**
+2. **Tata Letak Layar Sedang & Tablet ($\rightarrow$720\text{px} - 1023\text{px}$\rightarrow$):**
    * Grid utama berubah menjadi 1 kolom bertumpuk rapi (*single column stack*).
    * 4 kartu metrik anomali berubah menjadi 2 kolom x 2 baris.
-3. **Tata Letak Smartphone ($\le 680\text{px}$):**
+3. **Tata Letak Smartphone ($\rightarrow$\le 680\text{px}$\rightarrow$):**
    * Padding luar dibatasi `clamp(14px, 4vw, 20px)` dengan `overflow-x: hidden` terkunci pada kontainer induk.
-   * Dropdown filter dan scope switcher dapat digeser horizontal dengan rapi atau bertumpuk vertikal dengan target sentuh $\ge 42\text{px}$.
+   * Dropdown filter dan scope switcher dapat digeser horizontal dengan rapi atau bertumpuk vertikal dengan target sentuh $\rightarrow$\ge 42\text{px}$\rightarrow$.
    * Modal detail anggota memenuhi 94% lebar layar dengan tombol tutup yang mudah dijangkau ibu jari.
 4. **Standardisasi Ikonografi:** Seluruh ikon navigasi, status, filter, dan aksi wajib menggunakan SVG monokrom standar WorkPulse dengan ketebalan garis 1.8–2.2. Dilarang menggunakan karakter unicode teks mentah.
