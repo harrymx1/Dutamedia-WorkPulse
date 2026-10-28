@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WorkPulse — My Leave Request</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --color-canvas:#F7FAF9;--color-surface:#FFFFFF;--color-surface-subtle:#EFF5F2;--color-surface-muted:#F1F5F4;
+  --color-border-subtle:#DCE7E2;--color-border-strong:#A9C7BC;
+  --color-text-primary:#0E211B;--color-text-secondary:#5C6E68;--color-text-disabled:#66736E;
+  --color-brand-primary:#00674D;--color-brand-secondary:#12915F;--color-brand-tint:#E6F4EE;
+  --color-brand-focus:#0B8061;--color-focus-ring:#0B8061;
+
+  /* Canonical Status & Workflow Tokens v1.5.0 */
+  --color-status-green-fg:#166534;--color-status-green-bg:#DCFCE7;--color-status-green-border:#86EFAC;
+  --color-status-amber-fg:#92400E;--color-status-amber-bg:#FEF3C7;--color-status-amber-border:#FCD34D;
+  --color-status-red-fg:#991B1B;--color-status-red-bg:#FEE2E2;--color-status-red-border:#FCA5A5;
+  --color-status-blue-fg:#075985;--color-status-blue-bg:#E0F2FE;--color-status-blue-border:#7DD3FC;
+  --color-timing-late-fg:#9A3412;--color-timing-late-bg:#FFEDD5;--color-timing-late-border:#FDBA74;
+  --color-status-neutral-fg:#334155;--color-status-neutral-bg:#F1F5F9;--color-status-neutral-border:#CBD5E1;
+  --color-status-na-fg:#334155;--color-status-na-bg:#F1F5F9;--color-status-na-border:#94A3B8;
+
+  --shadow-subtle:none;--shadow-card:none;--shadow-modal:0 16px 36px rgba(14,33,27,.12);
+  --radius-sm:8px;--radius-card:12px;--radius-modal:16px;
+  --font-sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  /* Aliases */
+  --canvas:var(--color-canvas);--surface:var(--color-surface);--subtle:var(--color-surface-subtle);--muted:var(--color-surface-muted);
+  --border:var(--color-border-subtle);--border-strong:var(--color-border-strong);--ink:var(--color-text-primary);--secondary:var(--color-text-secondary);
+  --disabled:var(--color-text-disabled);--brand:var(--color-brand-primary);--brand-2:var(--color-brand-secondary);--brand-tint:var(--color-brand-tint);--focus:var(--color-brand-focus);
+  --green-bg:var(--color-status-green-bg);--green-fg:var(--color-status-green-fg);--green-border:var(--color-status-green-border);
+  --amber-bg:var(--color-status-amber-bg);--amber-fg:var(--color-status-amber-fg);--amber-border:var(--color-status-amber-border);
+  --red-bg:var(--color-status-red-bg);--red-fg:var(--color-status-red-fg);--red-border:var(--color-status-red-border);
+  --blue-bg:var(--color-status-blue-bg);--blue-fg:var(--color-status-blue-fg);--blue-border:var(--color-status-blue-border);
+  --neutral-bg:var(--color-status-neutral-bg);--neutral-fg:var(--color-status-neutral-fg);--neutral-border:var(--color-status-neutral-border);
+  --shadow:var(--shadow-card);--r-sm:var(--radius-sm);--r-card:var(--radius-card);--r-modal:var(--radius-modal);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-sans);font-size:14.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit}
+button,a{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.58}
+a{color:var(--brand);text-decoration:none;font-weight:600}
+a:hover{text-decoration:underline}
+:focus-visible{outline:3px solid var(--color-focus-ring);outline-offset:2px}
+.skip{position:absolute;left:-9999px;top:0;background:#fff;padding:12px;z-index:100}
+.skip:focus{left:12px;top:12px}
+.tabular-nums{font-variant-numeric:tabular-nums}
+.mono-id{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* ==========================================================================
+   APP SHELL & 3-GROUP SIDEBAR NAVIGATION
+   ========================================================================== */
+.app{min-height:100vh;display:grid;grid-template-columns:232px minmax(0,1fr)}
+
+.sidebar{
+  background:var(--color-surface);
+  border-right:1px solid var(--color-border-subtle);
+  padding:20px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+  z-index:50;
+}
+
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px;color:inherit;text-decoration:none}
+.brand:hover{text-decoration:none}
+.brand-mark{height:36px;width:36px;border-radius:10px;background:var(--color-brand-primary);display:grid;place-items:center;color:#FFFFFF;font-weight:800;font-size:18px;flex-shrink:0}
+.brand-name{font-size:17px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
+.brand-caption{font-size:12px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
+
+.nav-group{display:grid;gap:3px}
+.nav-label{padding:0 10px;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--color-text-secondary);font-weight:700;margin-bottom:4px}
+.nav-link{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:var(--radius-sm);color:var(--color-text-secondary);font-weight:600;font-size:13.5px;text-decoration:none;transition:background .15s,color .15s}
+.nav-link:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
+.nav-link.active{background:var(--color-brand-tint);color:var(--color-brand-primary);font-weight:700}
+.nav-icon{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
+
+.side-bottom{margin-top:auto;border-top:1px solid var(--color-border-subtle);padding:14px 6px 0;display:flex;gap:10px;align-items:center}
+.user-profile-link{display:flex;gap:10px;align-items:center;min-width:0;flex:1;text-decoration:none;color:inherit;padding:6px;margin:-6px;border-radius:var(--radius-sm);transition:background .15s}
+.user-profile-link:hover{background:var(--color-surface-subtle);text-decoration:none}
+.avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#D8EAE2;color:var(--color-brand-primary);font-weight:800;font-size:13px;flex-shrink:0}
+.avatar:hover{text-decoration:none}
+.user-meta{min-width:0;flex:1}
+.user-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-text-primary)}
+.user-role{font-size:12px;color:var(--color-text-secondary);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logout-btn{background:transparent;border:0;color:var(--color-text-secondary);padding:6px;border-radius:6px;display:grid;place-items:center;transition:background .15s,color .15s}
+.logout-btn:hover{background:var(--color-surface-subtle);color:#DC2626}
+
+/* Topbar */
+main{min-width:0;display:flex;flex-direction:column}
+.topbar{height:56px;border-bottom:1px solid var(--color-border-subtle);background:rgba(255,255,255,.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,36px);position:sticky;top:0;z-index:20}
+.breadcrumb{font-size:13.5px;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px}
+.breadcrumb strong{color:var(--color-text-primary)}
+.top-actions{display:flex;align-items:center;gap:12px}
+.icon-button{height:36px;width:36px;display:grid;place-items:center;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);position:relative;text-decoration:none}
+.icon-button:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
+.badge-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#D97706;border:1.5px solid #fff;border-radius:50%}
+.mobile-hamburger-btn{display:none;background:transparent;border:0;padding:8px;margin:-8px 8px -8px -8px;color:var(--color-text-primary);border-radius:var(--radius-sm)}
+
+/* Mobile Drawer Backdrop */
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+.sidebar-backdrop.show{display:block}
+.mobile-close-sidebar-btn{display:none;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);cursor:pointer;margin-left:auto}
+
+/* Prototype Simulation Bar */
+.sim-bar{
+  background:var(--color-surface-subtle);
+  border:1px dashed var(--color-border-strong);
+  border-radius:var(--radius-card);
+  padding:12px 16px;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.sim-bar-label{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:800;
+  color:var(--color-brand-primary);
+  letter-spacing:.03em;
+}
+.sim-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sim-btn{
+  background:#fff;
+  border:1px solid var(--color-border-subtle);
+  border-radius:6px;
+  padding:6px 11px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--color-text-primary);
+  transition:all .15s;
+}
+.sim-btn:hover{border-color:var(--color-brand-primary);color:var(--color-brand-primary);background:var(--color-brand-tint)}
+.sim-btn.active{background:var(--color-brand-primary);color:#fff;border-color:var(--color-brand-primary)}
+.sim-select{
+  background:#fff;
+  border:1px solid var(--color-border-strong);
+  border-radius:6px;
+  padding:5px 10px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--color-text-primary);
+}
+
+/* Content */
+.content{max-width:1200px;margin:0 auto;width:100%;padding:28px clamp(1.5rem,4vw,3.5rem) 72px}
+.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
+.eyebrow{font-size:12px;color:var(--secondary);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:26px;line-height:1.25;letter-spacing:-.03em;margin:4px 0 6px;font-weight:800}
+h2{font-size:17px;line-height:1.35;letter-spacing:-.02em;margin:0;font-weight:800}
+h3{font-size:15px;line-height:1.4;margin:0;font-weight:800}
+p{margin:0}
+.subtitle{color:var(--secondary);max-width:720px;font-size:14px}
+.heading-side{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.neutral{background:var(--neutral-bg);color:var(--neutral-fg);border-color:var(--neutral-border)}
+.pill.brand{background:var(--brand-tint);color:var(--brand);border-color:#B7DCCB}
+.pill.green{background:var(--green-bg);color:var(--green-fg);border-color:var(--green-border)}
+.pill.amber{background:var(--amber-bg);color:var(--amber-fg);border-color:var(--amber-border)}
+.pill.red{background:var(--red-bg);color:var(--red-fg);border-color:var(--red-border)}
+.pill.pending,.pill.blue{background:var(--blue-bg);color:var(--blue-fg);border-color:var(--blue-border)}
+.dot-sm{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:none;margin-bottom:18px;overflow:hidden}
+.panel-head{padding:20px 22px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel-body{padding:22px}
+.panel-subtitle{color:var(--secondary);font-size:13px;margin-top:4px}
+.small{font-size:13px;color:var(--secondary)}
+.tiny{font-size:12px;color:var(--secondary)}
+.layout{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(0,1.35fr);gap:18px;align-items:start}
+.form-panel{position:sticky;top:74px}
+.field{display:grid;gap:7px;min-width:0}
+.field + .field{margin-top:16px}
+.field label,.field-label{font-size:13px;font-weight:700}
+.required{color:var(--color-status-red-fg);margin-left:3px}
+.input,.textarea{width:100%;min-width:0;border:1px solid #C9D8D1;border-radius:8px;background:#fff;color:var(--ink);padding:11px 12px;outline:none;transition:border-color .15s,box-shadow .15s;font-variant-numeric:tabular-nums}
+.input{height:44px}
+.textarea{min-height:112px;resize:vertical}
+.input:hover,.textarea:hover{border-color:var(--border-strong)}
+.input:focus,.textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(11,128,97,.12)}
+.input[aria-invalid="true"],.textarea[aria-invalid="true"]{border-color:var(--color-status-red-fg);background:#FFFBFB}
+.field-help{font-size:12px;color:var(--secondary);line-height:1.45}
+.field-error{font-size:12px;color:var(--color-status-red-fg);font-weight:600;display:none}
+.field-error.show{display:block}
+.error-banner{display:none;margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--color-status-red-bg);border:1px solid var(--color-status-red-border);color:var(--color-status-red-fg);font-size:12.5px;font-weight:600;line-height:1.5}
+.error-banner.show{display:block}
+.form-note{display:flex;align-items:flex-start;gap:9px;background:var(--color-status-blue-bg);border:1px solid var(--color-status-blue-border);border-radius:8px;padding:11px 12px;margin-top:20px;color:var(--color-status-blue-fg);font-size:12px;line-height:1.5}
+.form-note svg{width:16px;height:16px;flex:none;margin-top:2px}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid transparent;border-radius:8px;padding:10px 15px;font-weight:700;font-size:13px;text-decoration:none;transition:background .15s,border-color .15s}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:#00563F;text-decoration:none}
+.btn-secondary{background:#fff;color:var(--ink);border-color:var(--border)}
+.btn-secondary:hover{background:#F7FAF8;border-color:var(--border-strong);text-decoration:none}
+.btn svg{width:16px;height:16px}
+.list-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid var(--border)}
+.search-wrap{position:relative;flex:1;min-width:190px;max-width:340px}
+.search-wrap svg{position:absolute;left:12px;top:12px;width:17px;height:17px;color:var(--secondary)}
+.search{width:100%;height:40px;padding:9px 12px 9px 38px;border:1px solid var(--border);border-radius:8px;background:#fff}
+.filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.filter{border:1px solid transparent;background:transparent;color:var(--secondary);padding:8px 10px;border-radius:7px;font-size:12px;font-weight:700}
+.filter:hover{background:#F5F8F6}
+.filter.active{background:var(--brand-tint);border-color:#C7E4D7;color:var(--brand)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:640px}
+thead th{text-align:left;background:#FAFCFB;color:var(--secondary);font-size:12px;letter-spacing:.045em;text-transform:uppercase;font-weight:800;padding:12px 18px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:16px 18px;border-bottom:1px solid #EAF0ED;vertical-align:top;font-size:13px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#FCFDFC}
+.date-main{font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.date-sub{font-size:12px;color:var(--secondary);margin-top:3px;font-variant-numeric:tabular-nums}
+.reason-text{max-width:290px;overflow-wrap:anywhere;font-weight:600;color:var(--ink)}
+.status-cell{min-width:210px}
+.status-line{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.status-sub{font-size:12px;color:var(--secondary);line-height:1.45;font-variant-numeric:tabular-nums}
+.request-id{font-size:12px;color:var(--secondary);margin-top:5px;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.reconcile-note{margin-top:8px;padding:9px 11px;border-radius:6px;background:var(--color-status-neutral-bg);border:1px solid var(--color-status-neutral-border);color:var(--color-status-neutral-fg);font-size:12px;line-height:1.45}
+.rejection-reason{margin-top:7px;color:var(--color-status-red-fg);font-size:12px;max-width:260px;line-height:1.45}
+.table-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid var(--border);font-size:12px;color:var(--secondary);font-variant-numeric:tabular-nums}
+.empty-state{padding:42px 20px;text-align:center;display:none}
+.empty-state.show{display:block}
+.empty-icon{width:44px;height:44px;margin:0 auto 12px;display:grid;place-items:center;background:var(--subtle);border-radius:12px;color:var(--brand)}
+.empty-icon svg{width:22px;height:22px}
+.empty-state h3{margin-bottom:5px}
+.empty-state p{font-size:13px;color:var(--secondary);max-width:340px;margin:0 auto}
+.toast-region{position:fixed;right:20px;bottom:20px;z-index:50;display:grid;gap:10px;width:min(400px,calc(100vw - 40px))}
+.toast{background:#fff;border:1px solid var(--green-border);border-left:4px solid var(--brand-2);box-shadow:0 12px 30px rgba(14,33,27,.14);border-radius:10px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start}
+.toast svg{width:19px;height:19px;color:var(--brand);flex:none;margin-top:1px}
+.toast-title{font-size:13px;font-weight:800}
+.toast-copy{font-size:12px;color:var(--secondary);margin-top:2px;font-variant-numeric:tabular-nums}
+.toast-close{margin-left:auto;background:transparent;border:0;color:var(--secondary);font-size:20px;line-height:1;padding:0 0 0 8px}
+
+@media(max-width:1050px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .form-panel{position:static}
+}
+@media(max-width:960px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .sidebar{display:none;position:fixed;z-index:100;left:0;top:0;bottom:0;width:260px;box-shadow:0 0 40px rgba(0,0,0,.2)}
+  .sidebar.open{display:flex}
+  .mobile-hamburger-btn{display:block}
+  .mobile-close-sidebar-btn{display:inline-flex}
+  .content{padding-top:24px}
+  .page-heading{display:block}
+  .heading-side{justify-content:flex-start;margin-top:12px}
+  h1{font-size:24px}
+  .panel-head,.panel-body{padding:17px}
+  .list-tools{padding:14px 16px}
+  .form-actions{flex-direction:column-reverse}
+  .form-actions .btn{width:100%}
+  .table-footer{align-items:flex-start;flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main-content">Lewati ke konten utama</a>
+
+<!-- Mobile Drawer Backdrop -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app">
+<!-- ==============================================================
+     SIDEBAR NAVIGATION (3 GRUP: WORKSPACE, MANAGEMENT, ADMINISTRATION)
+     ============================================================== -->
+<aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">W</div>
+    <div>
+      <div class="brand-name">WorkPulse</div>
+      <div class="brand-caption">PT Dutamedia</div>
+    </div>
+    <button class="mobile-close-sidebar-btn" type="button" id="btnCloseSidebar" aria-label="Tutup navigasi">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+
+  <!-- Grup 1: Workspace (Tampil untuk semua role) -->
+  <div class="nav-group" id="workspace-nav-group">
+    <div class="nav-label">Workspace</div>
+    <a class="nav-link" href="02-Morning-Commitment.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span>My Today</span>
+    </a>
+    <a class="nav-link" href="06-My-History-Weekly-Summary.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      <span>My History</span>
+    </a>
+    <a class="nav-link active" href="20-My-Leave-Request.html" aria-current="page">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      <span>My Leave Request</span>
+    </a>
+    <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      <span>Notifications</span>
+      <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:12px;font-weight:800;border-radius:999px">3</span>
+    </a>
+    <a class="nav-link" href="24-Profile-Settings.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>Profile</span>
+    </a>
+  </div>
+
+  <!-- Grup 2: Management (Kondisional sesuai role aktif) -->
+  <div class="nav-group" id="mgmt-nav-group" style="display: none;">
+    <div class="nav-label">Management</div>
+    <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      <span>Pulse Dashboard</span>
+    </a>
+    <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+      <span>Blocker &amp; Escalation Queue</span>
+    </a>
+    <a class="nav-link" href="14-Escalation-Aging.html" id="link-escalation-aging">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span>Escalation Aging</span>
+    </a>
+    <a class="nav-link" href="13-Project-Risk-View.html" id="link-project-risk">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22 12 2"></polygon><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      <span>Project Risk View</span>
+    </a>
+    <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      <span>Manager Notes</span>
+    </a>
+    <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="link-correction-review">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      <span>Correction &amp; Leave Review</span>
+    </a>
+    <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+      <span>Compliance Queue</span>
+    </a>
+    <a class="nav-link" href="21-Leave-Approval-Queue.html" id="link-leave-approval">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <span>Leave Approval Queue</span>
+    </a>
+    <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      <span>Holiday &amp; Exemption</span>
+    </a>
+    <a class="nav-link" href="23-Reports.html" id="link-reports">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+      <span>Reports</span>
+    </a>
+  </div>
+
+  <!-- Grup 3: Administration (Kondisional sesuai role aktif) -->
+  <div class="nav-group" id="admin-nav-group" style="display: none;">
+    <div class="nav-label">Administration</div>
+    <a class="nav-link" href="25-Admin-User-Invitation-Management.html" id="link-admin-users">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <span>User &amp; Invitation</span>
+    </a>
+    <a class="nav-link" href="15-Admin-Organizational-Mapping.html" id="link-admin-org">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      <span>Organizational Mapping</span>
+    </a>
+    <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" id="link-admin-temp-rev">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+      <span>Temporary Reviewer</span>
+    </a>
+    <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" id="link-admin-notif">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      <span>Notification Setup</span>
+    </a>
+    <a class="nav-link" href="18-Policy-Settings.html" id="link-admin-policy">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>Policy Settings</span>
+    </a>
+  </div>
+
+  <!-- Account Bottom Area -->
+  <div class="side-bottom">
+    <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
+      <div class="avatar" id="sideAvatar">BP</div>
+      <div class="user-meta">
+        <div class="user-name" id="sideUserName">Budi Pratama</div>
+        <div class="user-role" id="sideUserRole">Software Engineer · Engineering</div>
+      </div>
+    </a>
+    <a href="01-Login-Activation.html" class="logout-btn" title="Keluar / Ganti Akun" aria-label="Keluar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+    </a>
+  </div>
+</aside>
+
+<main id="main-content">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="mobile-hamburger-btn" id="mobileNavToggle" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <div class="breadcrumb">
+        <a href="02-Morning-Commitment.html" style="color:inherit;text-decoration:none">Workspace</a>
+        <span style="color:#A9C7BC" aria-hidden="true">/</span>
+        <strong>My Leave Request</strong>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a class="icon-button" href="07-Notification-Center-Browser-Push.html" aria-label="Notifications" title="Pusat Notifikasi">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="badge-dot" aria-hidden="true"></span>
+      </a>
+      <a class="avatar" href="24-Profile-Settings.html" id="topAvatar" title="Buka Profil Saya">BP</a>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- Bar Mode Simulasi Prototipe -->
+    <div class="sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+      <div class="sim-bar-label">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        <span>[Mode Simulasi Prototipe]</span>
+      </div>
+      <div class="sim-actions">
+        <button type="button" class="sim-btn active" id="simBtnDefault">Default (Ada Riwayat &amp; Rekonsiliasi Pasca-Cut-Off)</button>
+        <button type="button" class="sim-btn" id="simBtnOverlap">Uji Validasi Tanggal Tumpang-Tindih</button>
+        <button type="button" class="sim-btn" id="simBtnEmpty">Empty State (Belum Ada Pengajuan)</button>
+        <label for="simRoleSelect" style="font-size:12px;font-weight:700;color:var(--color-text-secondary);margin-left:4px">Peran Sidebar:</label>
+        <select id="simRoleSelect" class="sim-select" aria-label="Pilih Peran Sidebar">
+          <option value="EMPLOYEE">Employee</option>
+          <option value="SUPERVISOR">Supervisor</option>
+          <option value="HEAD_OF_DEPARTMENT">Head of Dept</option>
+          <option value="PM">Project Manager</option>
+          <option value="HRGA">HRGA</option>
+          <option value="SYSTEM_ADMIN">System Admin</option>
+          <option value="CEO">CEO</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="page-heading">
+      <div>
+        <div class="eyebrow">Workspace</div>
+        <h1>My Leave Request</h1>
+        <p class="subtitle">Ajukan permohonan cuti dan pantau status persetujuan serta rekonsiliasi kehadiran harian Anda di satu tempat.</p>
+      </div>
+      <div class="heading-side"><span class="pill neutral"><span class="dot-sm"></span>Pengajuan Milik Saya</span></div>
+    </div>
+
+    <div class="layout">
+      <section class="panel form-panel" aria-labelledby="form-title">
+        <div class="panel-head">
+          <div><h2 id="form-title">Ajukan Leave Request</h2><p class="panel-subtitle">Tentukan rentang tanggal cuti yang diajukan.</p></div>
+        </div>
+        <div class="panel-body">
+          <form id="leaveForm" novalidate>
+            <div class="field">
+              <label for="startDate">Tanggal mulai<span class="required" aria-hidden="true">*</span></label>
+              <input class="input" id="startDate" name="startDate" type="date" required aria-describedby="startError">
+              <span class="field-error" id="startError">Pilih tanggal mulai cuti.</span>
+            </div>
+            <div class="field">
+              <label for="endDate">Tanggal selesai<span class="required" aria-hidden="true">*</span></label>
+              <input class="input" id="endDate" name="endDate" type="date" required aria-describedby="endError">
+              <span class="field-error" id="endError">Pilih tanggal selesai cuti.</span>
+            </div>
+            <div class="field">
+              <label for="reason">Alasan <span style="font-weight:500;color:var(--secondary)">(opsional)</span></label>
+              <textarea class="textarea" id="reason" name="reason" maxlength="1000" placeholder="Tambahkan alasan pengajuan cuti atau keterangan darurat bila diperlukan."></textarea>
+            </div>
+
+            <!-- Penjelasan Aturan Status Pending (Info Blue) & Rekonsiliasi Pasca-Cut-Off -->
+            <div class="form-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div>
+                <strong>Ketentuan Status Leave (Pending):</strong> Tanggal yang masih berstatus <strong>Leave (Pending)</strong> belum mengecualikan kewajiban check-in harian hingga disetujui (<strong>Approved</strong>). Apabila cuti mendadak disetujui setelah jam Cut-Off pagi (09:30 WIB), catatan <em>No Submission</em> hari tersebut akan direkonsiliasi otomatis menjadi <strong>Approved Leave (Superseded by Approved Leave)</strong>.
+              </div>
+            </div>
+
+            <div class="error-banner" id="rangeError" role="alert">Tanggal selesai tidak boleh lebih awal dari tanggal mulai.</div>
+            <div class="error-banner" id="overlapError" role="alert"></div>
+
+            <div class="form-actions">
+              <button class="btn btn-secondary" type="reset">Bersihkan</button>
+              <button class="btn btn-primary" type="submit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                <span>Ajukan Permohonan</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="history-title">
+        <div class="panel-head">
+          <div><h2 id="history-title">Riwayat Leave Request</h2><p class="panel-subtitle">Pantau status setiap permohonan cuti dan jejak rekonsiliasi pasca-Cut-Off yang Anda ajukan.</p></div>
+          <span class="pill neutral" id="requestCount">4 permohonan</span>
+        </div>
+        <div class="list-tools">
+          <label class="search-wrap" aria-label="Cari permohonan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4 4"/></svg>
+            <input class="search" id="searchRequests" type="search" placeholder="Cari alasan, ID tiket, atau tanggal…" aria-label="Cari alasan atau tanggal">
+          </label>
+          <div class="filters" role="group" aria-label="Filter status">
+            <button class="filter active" type="button" data-filter="All" aria-pressed="true">Semua</button>
+            <button class="filter" type="button" data-filter="Pending" aria-pressed="false">Pending</button>
+            <button class="filter" type="button" data-filter="Approved" aria-pressed="false">Approved</button>
+            <button class="filter" type="button" data-filter="Rejected" aria-pressed="false">Rejected</button>
+          </div>
+        </div>
+        <div class="table-wrap" id="tableWrap">
+          <table>
+            <thead><tr><th scope="col">Tanggal Cuti</th><th scope="col">Alasan &amp; Jejak Pengajuan</th><th scope="col">Status &amp; Rekonsiliasi</th></tr></thead>
+            <tbody id="requestRows">
+              <!-- Baris 1: Leave (Pending) menggunakan Info Blue (#075985 / #E0F2FE / #7DD3FC) -->
+              <tr data-status="Pending" data-start="2026-10-20" data-end="2026-10-21" data-ticket="LVR-2026-1020-05" data-search="urusan keluarga 20 oktober 2026 21 oktober 2026 lvr-2026-1020-05">
+                <td>
+                  <div class="date-main">20–21 Okt 2026</div>
+                  <div class="date-sub">2 hari kerja</div>
+                </td>
+                <td>
+                  <div class="reason-text">Urusan keluarga luar kota</div>
+                  <div class="request-id">#LVR-2026-1020-05 · Diajukan 12 Okt 2026 · 14:10 WIB</div>
+                </td>
+                <td class="status-cell">
+                  <div class="status-line">
+                    <span class="pill pending">Leave (Pending)</span>
+                    <span class="status-sub">Menunggu keputusan approver · Belum mengecualikan kewajiban check-in hingga disetujui (Approved).</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Baris 2: Rekonsiliasi Cuti Pasca-Cut-Off (Approved + Superseded by Approved Leave) -->
+              <tr data-status="Approved" data-start="2026-10-09" data-end="2026-10-09" data-ticket="LVR-2026-1009-04" data-search="cuti sakit mendadak demam tinggi 9 oktober 2026 superseded by approved leave lvr-2026-1009-04">
+                <td>
+                  <div class="date-main">9 Okt 2026</div>
+                  <div class="date-sub">1 hari kerja (Hari Berjalan)</div>
+                </td>
+                <td>
+                  <div class="reason-text">Cuti Sakit Mendadak — Observasi medis &amp; istirahat demam akut</div>
+                  <div class="request-id">#LVR-2026-1009-04 · Diajukan 9 Okt 2026 · 09:50 WIB · Disetujui 10:45 WIB (Pasca-Cut-Off 09:30 WIB)</div>
+                  <div class="reconcile-note">
+                    <strong>Rekonsiliasi Otomatis Pasca-Cut-Off:</strong> Catatan <em>No Submission</em> pagi pukul 09:30 WIB tetap tersimpan <em>append-only</em> di log audit, namun status efektif hari tersebut telah direkonsiliasi otomatis menjadi <strong>Approved Leave</strong> dan dikeluarkan dari penghitungan 3x ketidakpatuhan beruntun.
+                  </div>
+                </td>
+                <td class="status-cell">
+                  <div class="status-line">
+                    <span class="pill green">Leave (Approved)</span>
+                    <span class="pill neutral">Superseded by Approved Leave</span>
+                    <span class="status-sub">Disetujui pasca-Cut-Off (10:45 WIB) · Direkonsiliasi sah</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Baris 3: Approved standar sebelum hari H -->
+              <tr data-status="Approved" data-start="2026-09-25" data-end="2026-09-25" data-ticket="LVR-2026-0925-03" data-search="keperluan pribadi administrasi 25 september 2026 lvr-2026-0925-03">
+                <td>
+                  <div class="date-main">25 Sep 2026</div>
+                  <div class="date-sub">1 hari kerja</div>
+                </td>
+                <td>
+                  <div class="reason-text">Keperluan pribadi &amp; pengurusan dokumen kependudukan</div>
+                  <div class="request-id">#LVR-2026-0925-03 · Diajukan 18 Sep 2026 · Disetujui 19 Sep 2026</div>
+                </td>
+                <td class="status-cell">
+                  <div class="status-line">
+                    <span class="pill green">Leave (Approved)</span>
+                    <span class="status-sub">Disetujui sebelum tanggal cuti · Kewajiban check-in dikecualikan</span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Baris 4: Rejected -->
+              <tr data-status="Rejected" data-start="2026-09-18" data-end="2026-09-18" data-ticket="LVR-2026-0918-02" data-search="keperluan keluarga 18 september 2026 lvr-2026-0918-02">
+                <td>
+                  <div class="date-main">18 Sep 2026</div>
+                  <div class="date-sub">1 hari kerja</div>
+                </td>
+                <td>
+                  <div class="reason-text">Keperluan keluarga</div>
+                  <div class="request-id">#LVR-2026-0918-02 · Diajukan 15 Sep 2026</div>
+                  <div class="rejection-reason">Alasan penolakan: Jadwal rilis kuartal membutuhkan kehadiran seluruh personel inti; silakan jadwalkan ulang minggu berikutnya.</div>
+                </td>
+                <td class="status-cell">
+                  <div class="status-line">
+                    <span class="pill red">Leave (Rejected)</span>
+                    <span class="status-sub">Ditolak · Kewajiban check-in tetap berlaku</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg></div>
+          <h3 id="emptyStateTitle">Tidak ada permohonan yang cocok</h3>
+          <p id="emptyStateCopy">Coba ubah kata kunci pencarian atau pilih filter status lain.</p>
+        </div>
+        <div class="table-footer"><span id="resultCount">Menampilkan 4 permohonan</span><span>Status diperbarui secara otomatis setelah keputusan pejabat penyetuju (HRGA / Approver).</span></div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const form = $('leaveForm');
+  const start = $('startDate');
+  const end = $('endDate');
+  const reason = $('reason');
+  const rows = $('requestRows');
+  const search = $('searchRequests');
+  const empty = $('emptyState');
+  const requestCount = $('requestCount');
+  const resultCount = $('resultCount');
+  const toastRegion = $('toastRegion');
+  const rangeError = $('rangeError');
+  const overlapError = $('overlapError');
+
+  // Simpan HTML default tabel untuk restorasi simulasi
+  const initialRowsHtml = rows.innerHTML;
+  let activeFilter = 'All';
+  let nextId = 6;
+
+  const parseDate = value => value ? new Date(value + 'T00:00:00') : null;
+  const formatDate = value => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(parseDate(value));
+  const formatRange = (from, to) => {
+    const a = parseDate(from), b = parseDate(to);
+    if (from === to) return formatDate(from);
+    const sameYear = a.getFullYear() === b.getFullYear();
+    const sameMonth = sameYear && a.getMonth() === b.getMonth();
+    if (sameMonth) return `${a.getDate()}–${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(b)}`;
+    return `${formatDate(from)} – ${formatDate(to)}`;
+  };
+
+  const showError = (input, error, show) => {
+    input.setAttribute('aria-invalid', show ? 'true' : 'false');
+    error.classList.toggle('show', show);
+  };
+
+  // Cek apakah rentang [from, to] bertabrakan dengan baris cuti Pending atau Approved yang sudah ada
+  const findOverlappingRequest = (from, to) => {
+    const existingRows = [...rows.querySelectorAll('tr')];
+    for (const r of existingRows) {
+      const st = r.dataset.status;
+      if (st !== 'Pending' && st !== 'Approved') continue;
+      const rStart = r.dataset.start;
+      const rEnd = r.dataset.end;
+      if (!rStart || !rEnd) continue;
+      if (from <= rEnd && to >= rStart) {
+        return {
+          status: st,
+          rangeLabel: formatRange(rStart, rEnd),
+          ticket: r.dataset.ticket || 'LVR-EXISTING'
+        };
+      }
+    }
+    return null;
+  };
+
+  const validate = () => {
+    const missingStart = !start.value;
+    const missingEnd = !end.value;
+    const invalidRange = !missingStart && !missingEnd && end.value < start.value;
+
+    showError(start, $('startError'), missingStart);
+    showError(end, $('endError'), missingEnd);
+    rangeError.classList.toggle('show', invalidRange);
+
+    let overlap = null;
+    if (!missingStart && !missingEnd && !invalidRange) {
+      overlap = findOverlappingRequest(start.value, end.value);
+    }
+
+    if (overlap) {
+      overlapError.textContent = `Validasi Tanggal Tumpang-Tindih: Rentang tanggal ${formatRange(start.value, end.value)} beririsan dengan pengajuan cuti berstatus ${overlap.status} yang sudah terdaftar (${overlap.rangeLabel} · #${overlap.ticket}). Silakan pilih tanggal lain yang tidak tumpang-tindih.`;
+      overlapError.classList.add('show');
+      start.setAttribute('aria-invalid', 'true');
+      end.setAttribute('aria-invalid', 'true');
+    } else {
+      overlapError.classList.remove('show');
+      if (invalidRange) end.setAttribute('aria-invalid', 'true');
+      else if (!missingEnd) end.setAttribute('aria-invalid', 'false');
+    }
+
+    return !missingStart && !missingEnd && !invalidRange && !overlap;
+  };
+
+  const createToast = (title, copy) => {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg><div><div class="toast-title"></div><div class="toast-copy"></div></div><button class="toast-close" type="button" aria-label="Tutup notifikasi">&times;</button>`;
+    toast.querySelector('.toast-title').textContent = title;
+    toast.querySelector('.toast-copy').textContent = copy;
+    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+    toastRegion.appendChild(toast);
+    window.setTimeout(() => toast.remove(), 6000);
+  };
+
+  // Warna badge: Pending -> pending (Info Blue), Approved -> green, Rejected -> red
+  const statusClass = status => status === 'Approved' ? 'green' : status === 'Rejected' ? 'red' : 'pending';
+
+  const refresh = () => {
+    const query = search.value.trim().toLocaleLowerCase('id-ID');
+    const all = [...rows.querySelectorAll('tr')];
+    let visible = 0;
+    all.forEach(row => {
+      const text = (row.textContent + ' ' + (row.dataset.search || '')).toLocaleLowerCase('id-ID');
+      const matches = (activeFilter === 'All' || row.dataset.status === activeFilter) && (!query || text.includes(query));
+      row.hidden = !matches;
+      if (matches) visible++;
+    });
+    $('tableWrap').style.display = visible === 0 ? 'none' : 'block';
+    empty.classList.toggle('show', visible === 0);
+
+    if (all.length === 0) {
+      $('emptyStateTitle').textContent = 'Belum ada riwayat pengajuan cuti';
+      $('emptyStateCopy').textContent = 'Gunakan formulir Ajukan Leave Request di sebelah kiri untuk membuat permohonan cuti baru.';
+    } else {
+      $('emptyStateTitle').textContent = 'Tidak ada permohonan yang cocok';
+      $('emptyStateCopy').textContent = 'Coba ubah kata kunci pencarian atau pilih filter status lain.';
+    }
+
+    requestCount.textContent = `${all.length} permohonan`;
+    resultCount.textContent = visible === 0 ? 'Tidak ada hasil (0 permohonan)' : `Menampilkan ${visible} dari ${all.length} permohonan`;
+  };
+
+  document.querySelectorAll('[data-filter]').forEach(button => {
+    button.addEventListener('click', () => {
+      activeFilter = button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(item => {
+        const selected = item === button;
+        item.classList.toggle('active', selected);
+        item.setAttribute('aria-pressed', String(selected));
+      });
+      refresh();
+    });
+  });
+
+  search.addEventListener('input', refresh);
+
+  [start, end].forEach(input => input.addEventListener('change', () => {
+    if (start.value && end.value && end.value >= start.value) rangeError.classList.remove('show');
+    overlapError.classList.remove('show');
+    if (input.value) {
+      const err = $(input.id === 'startDate' ? 'startError' : 'endError');
+      showError(input, err, false);
+    }
+  }));
+
+  form.addEventListener('reset', () => {
+    window.setTimeout(() => {
+      [start, end].forEach(input => input.setAttribute('aria-invalid', 'false'));
+      document.querySelectorAll('.field-error, .error-banner').forEach(error => error.classList.remove('show'));
+    }, 0);
+  });
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!validate()) {
+      const firstInvalid = form.querySelector('[aria-invalid="true"]');
+      if (firstInvalid) firstInvalid.focus();
+      return;
+    }
+    const from = start.value, to = end.value, why = reason.value.trim();
+    const ticketCode = `LVR-2026-10${String(nextId).padStart(2, '0')}`;
+    const tr = document.createElement('tr');
+    tr.dataset.status = 'Pending';
+    tr.dataset.start = from;
+    tr.dataset.end = to;
+    tr.dataset.ticket = ticketCode;
+    tr.dataset.search = `${why} ${from} ${to} ${ticketCode}`.toLocaleLowerCase('id-ID');
+
+    const dateCell = document.createElement('td');
+    const dateMain = document.createElement('div');
+    dateMain.className = 'date-main';
+    dateMain.textContent = formatRange(from, to);
+    dateCell.append(dateMain);
+
+    const reasonCell = document.createElement('td');
+    const reasonMain = document.createElement('div');
+    reasonMain.className = 'reason-text';
+    reasonMain.textContent = why || 'Permohonan cuti terjadwal';
+    const meta = document.createElement('div');
+    meta.className = 'request-id';
+    meta.textContent = `#${ticketCode} · Diajukan ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date())}`;
+    reasonCell.append(reasonMain, meta);
+
+    const statusCell = document.createElement('td');
+    statusCell.className = 'status-cell';
+    const statusLine = document.createElement('div');
+    statusLine.className = 'status-line';
+    const badge = document.createElement('span');
+    badge.className = 'pill ' + statusClass('Pending');
+    badge.textContent = 'Leave (Pending)';
+    const sub = document.createElement('span');
+    sub.className = 'status-sub';
+    sub.textContent = 'Menunggu keputusan approver · Belum mengecualikan kewajiban check-in hingga disetujui (Approved).';
+    statusLine.append(badge, sub);
+    statusCell.append(statusLine);
+
+    tr.append(dateCell, reasonCell, statusCell);
+    rows.prepend(tr);
+    nextId++;
+    form.reset();
+    activeFilter = 'All';
+    document.querySelectorAll('[data-filter]').forEach(item => {
+      const selected = item.dataset.filter === 'All';
+      item.classList.toggle('active', selected);
+      item.setAttribute('aria-pressed', String(selected));
+    });
+    search.value = '';
+    refresh();
+    createToast('Permohonan cuti diajukan', `Leave Request #${ticketCode} untuk ${formatRange(from, to)} berstatus Leave (Pending).`);
+    $('history-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Dynamic 3-Group Sidebar Role Renderer
+  function syncSidebarForRole(roleCode) {
+    const role = (roleCode || 'EMPLOYEE').toUpperCase();
+    const mgmtGroup = $('mgmt-nav-group');
+    const adminGroup = $('admin-nav-group');
+
+    const mgmtRules = {
+      'link-pulse': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO'],
+      'link-blockers': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD'],
+      'link-escalation-aging': ['CEO'],
+      'link-project-risk': ['PM'],
+      'link-coaching': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+      'link-correction-review': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+      'link-compliance': ['HRGA'],
+      'link-leave-approval': ['HRGA'],
+      'link-exemptions': ['HRGA', 'SYSTEM_ADMIN', 'ADMIN'],
+      'link-reports': ['HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA', 'CEO']
+    };
+
+    const adminRules = {
+      'link-admin-users': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'CEO'],
+      'link-admin-org': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+      'link-admin-temp-rev': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+      'link-admin-notif': ['SYSTEM_ADMIN', 'ADMIN'],
+      'link-admin-policy': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO']
+    };
+
+    let anyMgmt = false;
+    for (const [id, allowed] of Object.entries(mgmtRules)) {
+      const el = $(id);
+      if (!el) continue;
+      const show = allowed.includes(role);
+      el.style.display = show ? 'flex' : 'none';
+      if (show) anyMgmt = true;
+    }
+    if (mgmtGroup) mgmtGroup.style.display = anyMgmt ? 'grid' : 'none';
+
+    let anyAdmin = false;
+    for (const [id, allowed] of Object.entries(adminRules)) {
+      const el = $(id);
+      if (!el) continue;
+      const show = allowed.includes(role);
+      el.style.display = show ? 'flex' : 'none';
+      if (show) anyAdmin = true;
+    }
+    if (adminGroup) adminGroup.style.display = anyAdmin ? 'grid' : 'none';
+  }
+
+  function loadSessionRole() {
+    let role = 'EMPLOYEE';
+    try {
+      const raw = localStorage.getItem('workpulse_active_user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        if (user.role) role = user.role.toUpperCase();
+        if (user.name) $('sideUserName').textContent = user.name;
+        if (user.roleLabel) $('sideUserRole').textContent = `${user.roleLabel} · ${user.function || 'Engineering'}`;
+        if (user.avatar) {
+          $('sideAvatar').textContent = user.avatar;
+          $('topAvatar').textContent = user.avatar;
+        }
+      }
+    } catch (e) {}
+    const sel = $('simRoleSelect');
+    if (sel && [...sel.options].some(o => o.value === role)) {
+      sel.value = role;
+    }
+    syncSidebarForRole(role);
+  }
+
+  // Simulation Bar Handlers
+  function setActiveSimBtn(id) {
+    ['simBtnDefault', 'simBtnOverlap', 'simBtnEmpty'].forEach(btnId => {
+      const b = $(btnId);
+      if (b) b.classList.toggle('active', btnId === id);
+    });
+  }
+
+  $('simBtnDefault').addEventListener('click', () => {
+    rows.innerHTML = initialRowsHtml;
+    form.reset();
+    activeFilter = 'All';
+    document.querySelectorAll('[data-filter]').forEach(item => {
+      const selected = item.dataset.filter === 'All';
+      item.classList.toggle('active', selected);
+      item.setAttribute('aria-pressed', String(selected));
+    });
+    search.value = '';
+    refresh();
+    setActiveSimBtn('simBtnDefault');
+  });
+
+  $('simBtnOverlap').addEventListener('click', () => {
+    rows.innerHTML = initialRowsHtml;
+    refresh();
+    start.value = '2026-10-20';
+    end.value = '2026-10-21';
+    reason.value = 'Pengajuan uji tanggal yang beririsan dengan cuti Pending 20–21 Okt 2026';
+    validate();
+    setActiveSimBtn('simBtnOverlap');
+  });
+
+  $('simBtnEmpty').addEventListener('click', () => {
+    rows.innerHTML = '';
+    form.reset();
+    refresh();
+    setActiveSimBtn('simBtnEmpty');
+  });
+
+  $('simRoleSelect').addEventListener('change', e => {
+    syncSidebarForRole(e.target.value);
+    createToast('Peran Simulasi Diperbarui', `Menu Sidebar disesuaikan untuk peran ${e.target.options[e.target.selectedIndex].text}.`);
+  });
+
+  // Mobile Drawer Controls
+  const toggle = $('mobileNavToggle');
+  const sidebar = $('sidebar');
+  const backdrop = $('sidebarBackdrop');
+  const btnClose = $('btnCloseSidebar');
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  toggle.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('open');
+    backdrop.classList.toggle('show', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  backdrop.addEventListener('click', closeSidebar);
+  if (btnClose) btnClose.addEventListener('click', closeSidebar);
+
+  loadSessionRole();
+  refresh();
+})();
+</script>
+</body>
+</html>

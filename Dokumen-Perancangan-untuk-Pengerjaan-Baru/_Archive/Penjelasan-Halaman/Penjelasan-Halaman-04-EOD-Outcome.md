@@ -130,7 +130,13 @@ Sistem **DILARANG KERAS** mengubah atau memaksa status pilihan pengguna secara s
 - Input `Tomorrow Priority` bersifat opsional.
 - Jika diisi, catatan ini disimpan ke `localStorage: workpulse_tomorrow_priority` dan otomatis tampil sebagai **Embedded Context Hint Banner** di atas Slot Komitmen 1 pada Halaman 02 esok harinya.
 
-### 3.8 Spesifikasi Tata Letak Responsif Mobile & Konsistensi Alur Kerja 3-Langkah
+### 3.8 Keterhubungan Final Status EOD ke Halaman 08 (Pulse Dashboard) & Independensi Blocker
+- **Penyaluran ke Pulse Dashboard:** Saat karyawan menyelesaikan laporan EOD dengan Final Status **`RED`** atau **`AMBER`**, rekaman tersebut langsung disalurkan ke Halaman 08 (*Pulse Dashboard*) pada widget *"Perlu Perhatian Segera Hari Ini"* dengan lencana resmi **`RED • EOD`** atau **`AMBER • EOD`**. Pimpinan tim dapat langsung melihat penjelasan risiko harian dan mengambil langkah bimbingan (*Coaching Note* - Halaman 10).
+- **Prinsip Independensi EOD RED vs Blocker:**
+  - **Status RED pada EOD TIDAK mensyaratkan adanya tiket Blocker.** Karyawan berhak menetapkan Final Status EOD = RED murni karena kegagalan pencapaian target, salah kalkulasi kerumitan teknis, atau kendala internal mandiri tanpa perlu membuat tiket Blocker.
+  - Sebaliknya, jika ada tiket *Critical Blocker* aktif, sistem heuristik (FR-13 Cabang 1) secara proaktif merekomendasikan status RED untuk mengingatkan karyawan bahwa pekerjaan terhambat secara kritis.
+
+### 3.9 Spesifikasi Tata Letak Responsif Mobile & Konsistensi Alur Kerja 3-Langkah
 Guna memastikan konsistensi pengalaman visual (*cross-page visual coherence*) di seluruh alur kerja harian (Halaman 02, 03, dan 04) serta menjamin kebersihan tampilan bebas luapan horizontal (*zero horizontal scroll*):
 1. **Standar Seragam Step Bar 3-Langkah (`.daily-workflow-bar`):**
    - Pada layar smartphone ($\le 680\text{px}$), navigasi alur kerja harian menerapkan aturan yang **100% identik dengan Halaman 02 dan Halaman 03**: `font-size: 11px; padding: 0 12px;` dan `.daily-step { padding: 8px 4px; gap: 5px; min-height: 46px; }`.
@@ -175,6 +181,9 @@ Guna memastikan konsistensi pengalaman visual (*cross-page visual coherence*) di
 | **Halaman 03 (Additional Work)** | Mengambil seluruh log pekerjaan tambahan untuk dievaluasi setara pada Panel 3. |
 | **Halaman 05 (Raise Blocker)** | Membaca tiket kendala aktif untuk dasar pertimbangan kalkulasi Heuristic Suggestion Engine (Critical Blocker $\rightarrow$ RED). |
 | **Halaman 06 (My History)** | Hasil penyerahan EOD menjadi sumber data resmi untuk evaluasi harian, outcome, dan continuation. |
+| **Halaman 08 (Pulse Dashboard)** | Laporan EOD berstatus RED atau AMBER otomatis dialirkan ke widget *"Perlu Perhatian Segera Hari Ini"* dan histogram tren keandalan tim. |
+| **Halaman 10 (Manager Notes)** | Catatan risiko harian dan kelanjutan tugas berulang menjadi bahan tinjauan atasan untuk menerbitkan catatan bimbingan (*Coaching Record*). |
+| **Halaman 11 (Compliance HRGA)** | Ketiadaan penyerahan EOD melewati jendela batas waktu toleransi memicu pencatatan event kepatuhan (*No Submission*). |
 | **Halaman 16b (EOD Correction)** | Menjadi rute permohonan koreksi resmi jika terdapat kekeliruan data pasca formulir dikunci. |
 
 ---

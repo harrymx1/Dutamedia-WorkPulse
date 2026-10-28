@@ -5,25 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>WorkPulse — Web Notification Center &amp; Browser Push</title>
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-canvas:#F7FAF9;--color-surface:#FFFFFF;--color-surface-subtle:#EFF5F2;--color-surface-muted:#F1F5F4;
-      --color-border-subtle:#DCE7E2;--color-border-strong:#A9C7BC;--color-text-primary:#0E211B;--color-text-secondary:#5C6E68;
-      --color-text-disabled:#8C9B95;--color-brand-primary:#00674D;--color-brand-secondary:#12915F;--color-brand-tint:#E6F4EE;--color-brand-focus:#0B8061;
-      --color-status-green-bg:#E6F4EC;--color-status-green-fg:#145A36;--color-status-green-border:#A7D5B8;
-      --color-status-amber-bg:#FFF3D9;--color-status-amber-fg:#7A4B00;--color-status-amber-border:#E8C77A;
-      --color-status-red-bg:#FDE9E7;--color-status-red-fg:#9B2923;--color-status-red-border:#E8B1AC;
-      --color-status-blue-bg:#EFF6FF;--color-status-blue-fg:#1E40AF;--color-status-blue-border:#BFDBFE;
-      --color-status-neutral-bg:#EFF2F1;--color-status-neutral-fg:#46534E;--color-status-neutral-border:#C9D2CE;
-      --shadow-subtle:0 4px 16px rgba(14,33,27,.04);--shadow-card:0 8px 24px rgba(14,33,27,.05);--shadow-modal:0 16px 36px rgba(14,33,27,.12);
+      --color-border-subtle:#DCE7E2;--color-border-strong:#A9C7BC;
+      --color-text-primary:#0E211B;--color-text-secondary:#5C6E68;--color-text-disabled:#66736E;
+      --color-brand-primary:#00674D;--color-brand-secondary:#12915F;--color-brand-tint:#E6F4EE;
+      --color-brand-focus:#0B8061;--color-focus-ring:#0B8061;
+
+      /* Canonical Status & Workflow Tokens v1.5.0 */
+      --color-status-green-fg:#166534;--color-status-green-bg:#DCFCE7;--color-status-green-border:#86EFAC;
+      --color-status-amber-fg:#92400E;--color-status-amber-bg:#FEF3C7;--color-status-amber-border:#FCD34D;
+      --color-status-red-fg:#991B1B;--color-status-red-bg:#FEE2E2;--color-status-red-border:#FCA5A5;
+      --color-status-blue-fg:#075985;--color-status-blue-bg:#E0F2FE;--color-status-blue-border:#7DD3FC;
+      --color-timing-late-fg:#9A3412;--color-timing-late-bg:#FFEDD5;--color-timing-late-border:#FDBA74;
+      --color-status-neutral-fg:#334155;--color-status-neutral-bg:#F1F5F9;--color-status-neutral-border:#CBD5E1;
+      --color-status-na-fg:#334155;--color-status-na-bg:#F1F5F9;--color-status-na-border:#94A3B8;
+
+      --shadow-subtle:none;--shadow-card:none;--shadow-modal:0 16px 36px rgba(14,33,27,.12);
       --radius-sm:8px;--radius-card:12px;--radius-modal:16px;
       --font-sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 
-      /* Aliases (identik dengan Halaman 06) */
+      /* Aliases */
       --canvas:var(--color-canvas);--surface:var(--color-surface);--subtle:var(--color-surface-subtle);--muted:var(--color-surface-muted);
       --border:var(--color-border-subtle);--border-strong:var(--color-border-strong);--ink:var(--color-text-primary);--secondary:var(--color-text-secondary);
       --brand:var(--color-brand-primary);--brand-hover:#00543F;--brand-tint:var(--color-brand-tint);--focus:var(--color-brand-focus);
@@ -44,22 +51,23 @@
     button:disabled{cursor:not-allowed;opacity:.55}
     a{color:var(--color-brand-primary);text-decoration:none;font-weight:600}
     a:hover{text-decoration:underline}
-    :focus-visible{outline:3px solid var(--color-brand-focus);outline-offset:2px}
-    .sr-only{position:absolute;left:-9999px;top:0;background:#fff;padding:12px;z-index:100}
-    .sr-only:focus{left:12px;top:12px}
+    :focus-visible{outline:3px solid var(--color-focus-ring);outline-offset:2px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .tabular-nums{font-variant-numeric:tabular-nums}
+    .mono-id{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
     /* ==========================================================================
-       APP SHELL & SIDEBAR NAVIGATION (100% IDENTIK DENGAN HALAMAN 02-06)
+       APP SHELL & 3-GROUP SIDEBAR NAVIGATION
        ========================================================================== */
-    .app{min-height:100vh;display:grid;grid-template-columns:260px minmax(0,1fr)}
+    .app{min-height:100vh;display:grid;grid-template-columns:232px minmax(0,1fr)}
 
     .sidebar{
       background:var(--color-surface);
       border-right:1px solid var(--color-border-subtle);
-      padding:24px 16px;
+      padding:20px 14px;
       display:flex;
       flex-direction:column;
-      gap:24px;
+      gap:20px;
       position:sticky;
       top:0;
       height:100vh;
@@ -67,39 +75,39 @@
       z-index:50;
     }
 
-    .brand{display:flex;align-items:center;gap:12px;padding:0 8px;color:inherit}
+    .brand{display:flex;align-items:center;gap:10px;padding:0 6px;color:inherit}
     .brand:hover{text-decoration:none}
-    .brand-mark{height:38px;width:38px;border-radius:10px;background:var(--color-brand-primary);display:grid;place-items:center;color:#FFFFFF;font-weight:800;font-size:20px;flex-shrink:0}
-    .brand-name{font-size:18px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
-    .brand-caption{font-size:11px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
+    .brand-mark{height:36px;width:36px;border-radius:10px;background:var(--color-brand-primary);display:grid;place-items:center;color:#FFFFFF;font-weight:800;font-size:18px;flex-shrink:0}
+    .brand-name{font-size:17px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
+    .brand-caption{font-size:12px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
 
-    .nav-group{display:grid;gap:4px}
-    .nav-label{padding:0 12px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-secondary);font-weight:750;margin-bottom:4px}
-    .nav-link{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:var(--radius-sm);color:var(--color-text-secondary);font-weight:600;font-size:14px;text-decoration:none;transition:background .15s,color .15s}
+    .nav-group{display:grid;gap:3px}
+    .nav-label{padding:0 10px;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--color-text-secondary);font-weight:700;margin-bottom:4px}
+    .nav-link{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:var(--radius-sm);color:var(--color-text-secondary);font-weight:600;font-size:13.5px;text-decoration:none;transition:background .15s,color .15s}
     .nav-link:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
     .nav-link.active{background:var(--color-brand-tint);color:var(--color-brand-primary);font-weight:700}
     .nav-icon{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
 
-    .side-bottom{margin-top:auto;border-top:1px solid var(--color-border-subtle);padding:16px 8px 0;display:flex;gap:10px;align-items:center}
+    .side-bottom{margin-top:auto;border-top:1px solid var(--color-border-subtle);padding:14px 6px 0;display:flex;gap:10px;align-items:center}
     .user-profile-link{display:flex;gap:10px;align-items:center;min-width:0;flex:1;text-decoration:none;color:inherit;padding:6px;margin:-6px;border-radius:var(--radius-sm);transition:background .15s}
     .user-profile-link:hover{background:var(--color-surface-subtle);text-decoration:none}
     .avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#D8EAE2;color:var(--color-brand-primary);font-weight:800;font-size:13px;flex-shrink:0}
     .avatar:hover{text-decoration:none}
     .user-meta{min-width:0;flex:1}
-    .user-name{font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-text-primary)}
-    .user-role{font-size:11px;color:var(--color-text-secondary);line-height:1.35}
+    .user-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-text-primary)}
+    .user-role{font-size:12px;color:var(--color-text-secondary);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .logout-btn{background:transparent;border:0;color:var(--color-text-secondary);padding:6px;border-radius:6px;display:grid;place-items:center;transition:background .15s,color .15s}
     .logout-btn:hover{background:var(--color-surface-subtle);color:#DC2626;text-decoration:none}
 
     /* Topbar */
     main{min-width:0;display:flex;flex-direction:column}
-    .topbar{height:64px;border-bottom:1px solid var(--color-border-subtle);background:rgba(255,255,255,.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,36px);position:sticky;top:0;z-index:20}
+    .topbar{height:56px;border-bottom:1px solid var(--color-border-subtle);background:rgba(255,255,255,.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,36px);position:sticky;top:0;z-index:20}
     .breadcrumb{font-size:13.5px;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px}
     .breadcrumb strong{color:var(--color-text-primary)}
     .top-actions{display:flex;align-items:center;gap:12px}
-    .icon-button{height:38px;width:38px;display:grid;place-items:center;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);position:relative;text-decoration:none}
+    .icon-button{height:36px;width:36px;display:grid;place-items:center;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);position:relative;text-decoration:none}
     .icon-button:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
-    .badge-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;background:#C77A12;border:1.5px solid #fff;border-radius:50%}
+    .badge-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#D97706;border:1.5px solid #fff;border-radius:50%}
     .mobile-hamburger-btn{display:none;background:transparent;border:0;padding:8px;margin:-8px 8px -8px -8px;color:var(--color-text-primary);border-radius:var(--radius-sm)}
 
     /* Mobile Drawer Backdrop */
@@ -107,66 +115,113 @@
     .sidebar-backdrop.open,.sidebar-backdrop.show{display:block}
     .mobile-close-sidebar-btn{display:none;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);cursor:pointer;margin-left:auto}
 
+    /* Prototype Simulation Bar */
+    .sim-bar{
+      background:var(--color-surface-subtle);
+      border:1px dashed var(--color-border-strong);
+      border-radius:var(--radius-card);
+      padding:12px 16px;
+      margin-bottom:20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .sim-bar-label{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--color-brand-primary);
+      letter-spacing:.03em;
+    }
+    .sim-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .sim-btn{
+      background:#fff;
+      border:1px solid var(--color-border-subtle);
+      border-radius:6px;
+      padding:5px 10px;
+      font-size:12px;
+      font-weight:700;
+      color:var(--color-text-primary);
+      transition:all .15s;
+    }
+    .sim-btn:hover{border-color:var(--color-brand-primary);color:var(--color-brand-primary);background:var(--color-brand-tint)}
+    .sim-btn.active{background:var(--color-brand-primary);color:#fff;border-color:var(--color-brand-primary)}
+    .sim-select{
+      background:#fff;
+      border:1px solid var(--color-border-strong);
+      border-radius:6px;
+      padding:5px 10px;
+      font-size:12px;
+      font-weight:700;
+      color:var(--color-text-primary);
+    }
+
     /* Main Content Container */
-    .content{max-width:1140px;margin:0 auto;width:100%;padding:28px clamp(1.5rem,4vw,3.75rem) 100px}
-    .page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px}
-    .eyebrow{font-size:12px;color:var(--color-text-secondary);font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+    .content{max-width:1200px;margin:0 auto;width:100%;padding:28px clamp(1.5rem,4vw,3.5rem) 100px}
+    .page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
+    .eyebrow{font-size:12px;color:var(--color-text-secondary);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
     h1{font-size:26px;line-height:1.25;letter-spacing:-.03em;margin:4px 0 6px;font-weight:800;color:var(--color-text-primary)}
     h2{font-size:17px;line-height:1.35;letter-spacing:-.02em;margin:0;font-weight:800;color:var(--color-text-primary)}
     h3{font-size:15px;line-height:1.4;margin:0;font-weight:800}
     p{margin:0}
     .subtitle{color:var(--color-text-secondary);max-width:740px;font-size:14px;line-height:1.55}
-    .heading-side{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;flex-shrink:0;justify-content:flex-end}
+    .heading-side{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0;justify-content:flex-end}
 
     /* Buttons */
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius-sm);font-weight:700;font-size:13.5px;text-decoration:none;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius-sm);font-weight:700;font-size:13px;text-decoration:none;transition:background .15s ease,border-color .15s ease}
     .btn:hover{text-decoration:none}
     .btn-primary{background:var(--color-brand-primary);color:#fff}
     .btn-primary:hover:not(:disabled){background:var(--brand-hover)}
     .btn-secondary{background:var(--color-surface);color:var(--color-text-primary);border-color:var(--color-border-subtle)}
     .btn-secondary:hover:not(:disabled){background:var(--color-surface-subtle);border-color:var(--color-border-strong)}
+    .btn-danger-outline{background:#fff;color:var(--color-status-red-fg);border-color:var(--color-status-red-border)}
+    .btn-danger-outline:hover:not(:disabled){background:var(--color-status-red-bg)}
     .btn-ghost{background:transparent;color:var(--color-brand-primary);border-color:transparent}
     .btn-ghost:hover:not(:disabled){background:var(--color-brand-tint)}
 
     /* Badges & Pills */
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--color-border-subtle);background:#fff;font-size:12px;font-weight:750;white-space:nowrap}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;border:1px solid var(--color-border-subtle);background:#fff;font-size:12px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
     .pill.neutral{background:var(--color-status-neutral-bg);color:var(--color-status-neutral-fg);border-color:var(--color-status-neutral-border)}
     .pill.brand{background:var(--color-brand-tint);color:var(--color-brand-primary);border-color:#B7DCCB}
     .pill.green{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border-color:var(--color-status-green-border)}
     .pill.amber{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border-color:var(--color-status-amber-border)}
     .pill.red{background:var(--color-status-red-bg);color:var(--color-status-red-fg);border-color:var(--color-status-red-border)}
     .pill.blue{background:var(--color-status-blue-bg);color:var(--color-status-blue-fg);border-color:var(--color-status-blue-border)}
+    .pill.late{background:var(--color-timing-late-bg);color:var(--color-timing-late-fg);border-color:var(--color-timing-late-border)}
     .dot-indicator{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
 
-    /* Summary Grid (Compact & Sleek Sizing) */
+    /* Summary Grid */
     .summary-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
-    .metric-card{min-width:0;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);padding:13px 16px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+    .metric-card{min-width:0;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);padding:14px 16px;box-shadow:none;display:flex;flex-direction:column}
     .metric-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
-    .metric-label{font-size:11.5px;color:var(--color-text-secondary);font-weight:750;text-transform:uppercase;letter-spacing:.04em}
-    .metric-icon-wrap{width:26px;height:26px;border-radius:var(--radius-sm);background:var(--color-surface-subtle);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
+    .metric-label{font-size:12px;color:var(--color-text-secondary);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .metric-icon-wrap{width:28px;height:28px;border-radius:var(--radius-sm);background:var(--color-surface-subtle);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
     .metric-icon-wrap svg{width:14px;height:14px}
-    .metric-value{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1.15;color:var(--color-text-primary)}
-    .metric-note{font-size:11.5px;color:var(--color-text-secondary);margin-top:auto;padding-top:6px;line-height:1.35}
+    .metric-value{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1.15;color:var(--color-text-primary);font-variant-numeric:tabular-nums}
+    .metric-note{font-size:12px;color:var(--color-text-secondary);margin-top:auto;padding-top:6px;line-height:1.35}
 
-    /* Top Grid 2 Kolom */
-    .top-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,0.8fr);gap:20px;margin-bottom:20px;align-items:start}
-    .top-grid .panel{margin-bottom:0}
+    /* Settings Stack & Grid */
+    .settings-stack{display:grid;gap:20px;margin-bottom:20px}
 
-    /* Main View Tabs (Halaman 07 Navigasi Tab Baku) */
+    /* Main View Tabs */
     .view-tabs{display:inline-flex;align-items:center;background:var(--color-surface-subtle);border:1px solid var(--color-border-subtle);padding:4px;border-radius:10px;gap:4px;margin-bottom:24px}
-    .view-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;background:transparent;border-radius:var(--radius-sm);font-size:13.5px;font-weight:750;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
+    .view-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;background:transparent;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
     .view-tab:hover{color:var(--color-text-primary);background:rgba(255,255,255,.6)}
-    .view-tab.active{background:#fff;color:var(--color-brand-primary);box-shadow:0 1px 4px rgba(14,33,27,.08)}
-    .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--color-brand-tint);color:var(--color-brand-primary);font-size:11.5px;font-weight:800}
+    .view-tab.active{background:#fff;color:var(--color-brand-primary);border:1px solid var(--color-border-subtle)}
+    .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--color-brand-tint);color:var(--color-brand-primary);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
     .tab-badge.amber{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg)}
     .view-panel{display:none}
     .view-panel.active{display:block}
-    .metric-card.interactive{cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
-    .metric-card.interactive:hover{border-color:var(--color-brand-focus);box-shadow:var(--shadow-modal);transform:translateY(-2px)}
+    .metric-card.interactive{cursor:pointer;transition:transform .15s ease,border-color .15s ease}
+    .metric-card.interactive:hover{border-color:var(--color-brand-focus);transform:translateY(-1px)}
 
-    /* Panels & Cards (identik Halaman 06) */
-    .panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:var(--shadow-card);margin-bottom:20px}
-    .panel-head{padding:18px 22px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--color-border-subtle)}
+    /* Panels & Cards */
+    .panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:none;margin-bottom:20px}
+    .panel-head{padding:18px 22px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--color-border-subtle);flex-wrap:wrap}
     .panel-body{padding:20px 22px}
 
     /* Push Notification Control Card */
@@ -189,13 +244,13 @@
     }
 
     .push-status-title {
-      font-size: 14.5px;
+      font-size: 15px;
       font-weight: 800;
       color: var(--ink);
     }
 
     .push-status-desc {
-      font-size: 12.5px;
+      font-size: 13px;
       color: var(--secondary);
       margin-top: 2px;
       line-height: 1.45;
@@ -207,12 +262,12 @@
       display: flex;
       gap: 10px;
       align-items: flex-start;
-      font-size: 12.5px;
-      line-height: 1.5;
+      font-size: 13px;
+      line-height: 1.55;
     }
 
     .notice.info { background: var(--blue-bg); border: 1px solid var(--blue-border); color: var(--blue-fg); }
-    .notice.neutral { background: var(--muted); border: 1px solid var(--border); color: var(--neutral-fg); }
+    .notice.neutral { background: var(--neutral-bg); border: 1px solid var(--neutral-border); color: var(--neutral-fg); }
     .notice.warning { background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber-fg); }
     .notice.success { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-fg); }
     .notice.error { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red-fg); }
@@ -222,7 +277,7 @@
       height: 16px;
       stroke: currentColor;
       flex-shrink: 0;
-      margin-top: 1.5px;
+      margin-top: 2px;
     }
 
     .push-actions {
@@ -232,38 +287,14 @@
       margin-top: 16px;
     }
 
-    /* Channel Rows Matrix */
-    .channel-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 0;
-      border-top: 1px solid var(--border);
-    }
-    .channel-row:first-child { border-top: 0; padding-top: 2px; }
-
-    .channel-main {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .channel-symbol-circle {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      background: var(--muted);
-      border: 1px solid var(--border);
-      color: var(--secondary);
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-    }
-
-    .channel-name { font-size: 13px; font-weight: 800; color: var(--ink); }
-    .channel-desc { font-size: 11.5px; color: var(--secondary); margin-top: 1px; }
+    /* Read-Only Trigger Matrix Table */
+    .matrix-table-wrap{overflow-x:auto;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm)}
+    .matrix-table{width:100%;border-collapse:separate;border-spacing:0;min-width:680px}
+    .matrix-table thead th{text-align:left;background:var(--color-surface-subtle);color:var(--color-text-secondary);font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:800;padding:12px 16px;border-bottom:1px solid var(--color-border-subtle)}
+    .matrix-table tbody td{padding:13px 16px;border-bottom:1px solid var(--color-border-subtle);vertical-align:top;font-size:13px;line-height:1.45}
+    .matrix-table tbody tr:last-child td{border-bottom:0}
+    .matrix-trigger-name{font-weight:800;color:var(--color-text-primary);margin-bottom:2px}
+    .matrix-trigger-sub{font-size:12px;color:var(--color-text-secondary);font-variant-numeric:tabular-nums}
 
     /* Feed & Filter Toolbar */
     .filter-row {
@@ -290,7 +321,7 @@
       padding: 7px 12px;
       border-radius: var(--radius-md);
       font-size: 12.5px;
-      font-weight: 750;
+      font-weight: 700;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -308,7 +339,8 @@
       background: rgba(0, 0, 0, 0.06);
       padding: 1px 6px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
     }
     .tab-btn.active .tab-count-badge {
       background: #FFFFFF;
@@ -356,7 +388,7 @@
       background: #FFFFFF;
       color: var(--ink);
       font-size: 12.5px;
-      font-weight: 650;
+      font-weight: 600;
     }
 
     /* Notification Feed List */
@@ -450,15 +482,17 @@
       align-items: center;
       gap: 5px;
       background: #F1F5F9;
-      border: 1px solid #E2E8F0;
+      border: 1px solid #CBD5E1;
       border-radius: 4px;
       padding: 2px 7px;
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--secondary);
       font-weight: 600;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
     }
 
-    .item-time { font-size: 11.5px; color: var(--secondary); }
+    .item-time { font-size: 12px; color: var(--secondary); font-variant-numeric: tabular-nums; }
 
     .item-actions {
       display: flex;
@@ -492,20 +526,12 @@
       display: grid;
       place-items: center;
       transition: all 0.15s ease;
-      box-shadow: 0 1px 2px rgba(14, 33, 27, 0.04);
       flex-shrink: 0;
     }
     .btn-toggle-read:hover {
       background: var(--color-brand-tint);
       border-color: var(--color-brand-primary);
       color: var(--color-brand-primary);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-sm);
-    }
-    .btn-toggle-read.is-read:hover {
-      background: var(--color-surface-subtle);
-      border-color: var(--color-text-secondary);
-      color: var(--color-text-primary);
     }
 
     /* Empty State */
@@ -554,6 +580,7 @@
       color: var(--secondary);
       background: #FAFDFC;
       border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      font-variant-numeric: tabular-nums;
     }
 
     /* Modal Pop-up Detail */
@@ -571,7 +598,7 @@
     .modal-backdrop.show { display: flex; }
 
     .modal-box {
-      width: min(540px, 100%);
+      width: min(560px, 100%);
       background: #FFFFFF;
       border-radius: var(--radius-xl);
       padding: 24px;
@@ -618,7 +645,7 @@
     .modal-detail-row:last-child { margin-bottom: 0; }
 
     .modal-detail-label {
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--secondary);
@@ -629,6 +656,7 @@
       font-size: 13.5px;
       font-weight: 700;
       color: var(--ink);
+      font-variant-numeric: tabular-nums;
     }
 
     .modal-actions {
@@ -636,6 +664,7 @@
       justify-content: flex-end;
       gap: 10px;
       margin-top: 20px;
+      flex-wrap: wrap;
     }
 
     /* Contextual Toast */
@@ -650,9 +679,9 @@
       padding: 12px 18px;
       border-radius: var(--radius-md);
       font-size: 13.5px;
-      font-weight: 650;
+      font-weight: 600;
       box-shadow: var(--shadow-lg);
-      max-width: min(440px, calc(100vw - 32px));
+      max-width: min(460px, calc(100vw - 32px));
     }
     .toast-container.show { display: flex; }
     .toast-container.success { background: #113426; color: #FFFFFF; border: 1px solid #1E5640; }
@@ -664,85 +693,42 @@
       border: 1px solid rgba(255, 255, 255, 0.38);
       color: #FFFFFF;
       font-size: 12px;
-      font-weight: 750;
+      font-weight: 700;
       padding: 3px 10px;
       border-radius: 6px;
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .toast-action-btn:hover {
-      background: rgba(255, 255, 255, 0.32);
-      border-color: rgba(255, 255, 255, 0.55);
-    }
-    .toast-action-btn:focus-visible {
-      outline: 2px solid #FFFFFF;
-      outline-offset: 1px;
     }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* Responsive (breakpoint identik Halaman 06 dengan Ultra-Compact Summary Strip) */
-    @media (max-width: 900px) {
+    /* Responsive */
+    @media (max-width: 960px) {
       .app{grid-template-columns:1fr}
-      .sidebar{display:none;position:fixed;left:0;top:0;bottom:0;width:280px;z-index:100;box-shadow:0 0 40px rgba(0,0,0,.2)}
+      .sidebar{display:none;position:fixed;left:0;top:0;bottom:0;width:260px;z-index:100;box-shadow:0 0 40px rgba(0,0,0,.2)}
       .sidebar.open{display:flex}
       .mobile-hamburger-btn{display:block}
       .mobile-close-sidebar-btn{display:inline-flex}
       .summary-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
       .metric-card{padding:10px 12px;border-radius:10px}
       .metric-value{font-size:20px}
-      #pushMetricValue{font-size:14.5px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .metric-note{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .metric-note{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .view-tabs{margin-bottom:18px}
       .view-tab{padding:8px 14px;font-size:12.5px}
-      .top-grid{grid-template-columns:1fr}
     }
 
     @media (max-width: 680px) {
       .content{padding:16px 14px 100px}
       .page-heading{flex-direction:column;gap:10px;margin-bottom:14px}
       .heading-side{width:100%;justify-content:flex-start;flex-wrap:wrap;gap:8px}
-      
-      /* Ultra-Compact 1-Row Mini Bar for Mobile (Hemat ~80% Ruang Vertikal) */
-      .summary-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
-      .metric-card{padding:8px 10px;border-radius:10px}
-      .metric-head{margin-bottom:2px}
-      .metric-label{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
-      .metric-icon-wrap{display:none}
-      .metric-value{font-size:18px;line-height:1.2}
-      #pushMetricValue{font-size:12.5px !important;margin-top:2px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .metric-note{display:none}
-
-      /* Responsif Tab Navigasi Utama (1 Baris Ringkas & Tidak Wrap 2 Baris) */
+      .summary-strip{grid-template-columns:1fr;gap:8px;margin-bottom:14px}
       .view-tabs{display:flex;width:100%;padding:3px;gap:4px;border-radius:9px;margin-bottom:16px}
-      .view-tab{flex:1;justify-content:center;text-align:center;padding:7px 5px;font-size:11px;gap:5px;white-space:nowrap}
-      .view-tab svg{width:13px;height:13px;flex-shrink:0}
-      .tab-badge{min-width:18px;height:18px;font-size:10px;padding:0 4px}
-
+      .view-tab{flex:1;justify-content:center;text-align:center;padding:7px 5px;font-size:12px;gap:5px;white-space:nowrap}
+      .tab-badge{min-width:18px;height:18px;font-size:12px;padding:0 4px}
       .filter-row{flex-direction:column;align-items:stretch;gap:10px}
       .filter-tools{width:100%}
       .search-input{width:100%}
       .select-input{flex:1}
       .notification-item{grid-template-columns:36px minmax(0,1fr);gap:10px}
       .item-actions{grid-column:2;justify-content:flex-start}
-    }
-
-    /* Penyesuaian Ekstra Layar Sangat Kecil (<= 390px, mis. iPhone SE) */
-    @media (max-width: 390px) {
-      .view-tab{padding:6px 3px;font-size:9.5px;gap:3px;letter-spacing:-0.01em}
-      .view-tab svg{width:12px;height:12px}
-      .tab-badge{min-width:16px;height:16px;font-size:9.5px;padding:0 3px}
     }
   </style>
 </head>
@@ -755,10 +741,9 @@
 
   <div class="app">
     <!-- ==============================================================
-         SIDEBAR RUANG KERJA KARYAWAN (OFFICIAL WORKSPACE SHELL)
+         SIDEBAR NAVIGATION (3 GRUP: WORKSPACE, MANAGEMENT, ADMINISTRATION)
          ============================================================== -->
     <aside class="sidebar" id="sidebarNav" aria-label="Navigasi Utama">
-      <!-- Brand Logo Header -->
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">W</div>
         <div>
@@ -770,8 +755,8 @@
         </button>
       </div>
 
-      <!-- Workspace Menu Links -->
-      <div class="nav-group">
+      <!-- Grup 1: Workspace (Tampil untuk semua role) -->
+      <div class="nav-group" id="workspace-nav-group">
         <div class="nav-label">Workspace</div>
         <a class="nav-link" href="02-Morning-Commitment.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -779,14 +764,6 @@
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
           <span>My Today</span>
-        </a>
-        <a class="nav-link" href="05-Raise-Instant-Blocker.html#my-blockers">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-            <line x1="4" y1="22" x2="4" y2="15"></line>
-          </svg>
-          <span>My Blockers</span>
-          <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">2</span>
         </a>
         <a class="nav-link" href="06-My-History-Weekly-Summary.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -797,14 +774,14 @@
           </svg>
           <span>My History</span>
         </a>
-        <a class="nav-link" href="20-My Leave Request (Employee).html">
+        <a class="nav-link" href="20-My-Leave-Request.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <line x1="16" y1="13" x2="8" y2="13"></line>
             <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
-          <span>My Leave</span>
+          <span>My Leave Request</span>
         </a>
         <a class="nav-link active" href="07-Notification-Center-Browser-Push.html" aria-current="page">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -812,17 +789,94 @@
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
           <span>Notifications</span>
-          <span class="pill amber" id="sideUnreadBadge" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">3</span>
+          <span class="pill amber" id="sideUnreadBadge" style="margin-left:auto;padding:1px 7px;font-size:12px;font-weight:800;border-radius:999px">3</span>
+        </a>
+        <a class="nav-link" href="24-Profile-Settings.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Profile</span>
         </a>
       </div>
 
-      <!-- Account Bottom Area (Membaca workpulse_active_user) -->
+      <!-- Grup 2: Management (Kondisional sesuai role aktif) -->
+      <div class="nav-group" id="mgmt-nav-group" style="display: none;">
+        <div class="nav-label">Management</div>
+        <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span>Blocker &amp; Escalation Queue</span>
+        </a>
+        <a class="nav-link" href="14-Escalation-Aging.html" id="link-escalation-aging">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Escalation Aging</span>
+        </a>
+        <a class="nav-link" href="13-Project-Risk-View.html" id="link-project-risk">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22 12 2"></polygon><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>Project Risk View</span>
+        </a>
+        <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <span>Manager Notes</span>
+        </a>
+        <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="link-correction-review">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          <span>Correction &amp; Leave Review</span>
+        </a>
+        <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          <span>Compliance Queue</span>
+        </a>
+        <a class="nav-link" href="21-Leave-Approval-Queue.html" id="link-leave-approval">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Leave Approval Queue</span>
+        </a>
+        <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Holiday &amp; Exemption</span>
+        </a>
+        <a class="nav-link" href="23-Reports.html" id="link-reports">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+          <span>Reports</span>
+        </a>
+      </div>
+
+      <!-- Grup 3: Administration (Kondisional sesuai role aktif) -->
+      <div class="nav-group" id="admin-nav-group" style="display: none;">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="25-Admin-User-Invitation-Management.html" id="link-admin-users">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a class="nav-link" href="15-Admin-Organizational-Mapping.html" id="link-admin-org">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Organizational Mapping</span>
+        </a>
+        <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" id="link-admin-temp-rev">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" id="link-admin-notif">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>Notification Setup</span>
+        </a>
+        <a class="nav-link" href="18-Policy-Settings.html" id="link-admin-policy">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Policy Settings</span>
+        </a>
+      </div>
+
+      <!-- Account Bottom Area -->
       <div class="side-bottom">
         <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
           <div class="avatar" id="sideAvatar">BP</div>
           <div class="user-meta">
             <div class="user-name" id="sideUserName">Budi Pratama</div>
-            <div class="user-role" id="sideUserRole">Software Engineer · Technology Squad A</div>
+            <div class="user-role" id="sideUserRole">Software Engineer · Engineering</div>
           </div>
         </a>
         <a href="01-Login-Activation.html" class="logout-btn" title="Keluar Akun" aria-label="Keluar Akun">
@@ -870,12 +924,43 @@
 
       <!-- Content Container -->
       <div class="content">
+        <!-- Bar Mode Simulasi Prototipe (7 State Browser Push & Role Sidebar) -->
+        <div class="sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+          <div class="sim-bar-label">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span>[Mode Simulasi Prototipe]</span>
+          </div>
+          <div class="sim-actions">
+            <label for="simPushStateSelect" style="font-size:12px;font-weight:700;color:var(--color-text-secondary)">State Browser Push (7 State):</label>
+            <select id="simPushStateSelect" class="sim-select" aria-label="Pilih State Simulasi Browser Push">
+              <option value="default">1. default (Izin Belum Diminta)</option>
+              <option value="granted" selected>2. granted (Aktif &amp; Terdaftar + Unregister)</option>
+              <option value="denied">3. denied (Izin Ditolak di Browser)</option>
+              <option value="unsupported">4. unsupported (Browser Tidak Mendukung Push)</option>
+              <option value="no_subscription">5. no_subscription (Izin Ada, Langganan Kedaluwarsa)</option>
+              <option value="delivery_attempted">6. delivery_attempted (Pengiriman Dicoba)</option>
+              <option value="delivery_failed">7. delivery_failed (Pengiriman Gagal ke Endpoint)</option>
+            </select>
+            <button type="button" class="sim-btn" id="simOpenTab2Btn">Buka Tab 2: Kanal &amp; 7 State Push</button>
+            <label for="simRoleSelect" style="font-size:12px;font-weight:700;color:var(--color-text-secondary)">Peran Sidebar:</label>
+            <select id="simRoleSelect" class="sim-select" aria-label="Pilih Peran Sidebar">
+              <option value="EMPLOYEE">Employee</option>
+              <option value="SUPERVISOR">Supervisor</option>
+              <option value="HEAD_OF_DEPARTMENT">Head of Dept</option>
+              <option value="PM">Project Manager</option>
+              <option value="HRGA">HRGA</option>
+              <option value="SYSTEM_ADMIN">System Admin</option>
+              <option value="CEO">CEO</option>
+            </select>
+          </div>
+        </div>
+
         <!-- 1. Page Heading -->
         <div class="page-heading">
           <div>
             <div class="eyebrow">Pusat Komunikasi &amp; Pembaruan</div>
             <h1>Web Notification Center</h1>
-            <p class="subtitle">Pusat pemantauan pemberitahuan komitmen kerja, eskalasi kendala, status pengajuan, serta pengingat aktivitas harian.</p>
+            <p class="subtitle">Pusat pemantauan pemberitahuan komitmen kerja, eskalasi kendala, status pengajuan koreksi/cuti, serta pengingat aktivitas harian.</p>
           </div>
           <div class="heading-side">
             <span class="pill neutral" id="headingUnreadPill">
@@ -910,7 +995,7 @@
           <div class="metric-card interactive" id="metricCardUnread" title="Klik untuk menyaring notifikasi belum dibaca" role="button" tabindex="0">
             <div class="metric-head">
               <span class="metric-label">Belum Dibaca</span>
-              <div class="metric-icon-wrap" style="background:#FFF3D9;color:#B45309">
+              <div class="metric-icon-wrap" style="background:var(--color-status-amber-bg);color:var(--color-status-amber-fg)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -918,13 +1003,13 @@
                 </svg>
               </div>
             </div>
-            <div class="metric-value" id="unreadMetric" style="color:#B45309">3</div>
+            <div class="metric-value" id="unreadMetric" style="color:var(--color-status-amber-fg)">3</div>
             <div class="metric-note">Perlu peninjauan · Klik untuk saring</div>
           </div>
 
           <div class="metric-card interactive" id="metricCardPush" title="Klik untuk membuka Pengaturan Kanal & Perangkat" role="button" tabindex="0">
             <div class="metric-head">
-              <span class="metric-label">Browser Push</span>
+              <span class="metric-label">Browser Push Perangkat Ini</span>
               <div class="metric-icon-wrap" id="pushMetricIconWrap">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -985,7 +1070,6 @@
               </div>
 
               <div class="filter-tools">
-                <!-- Search Box -->
                 <div class="search-box-wrap">
                   <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -994,7 +1078,6 @@
                   <input class="search-input" id="searchNotifications" type="search" placeholder="Cari notifikasi / tiket…" aria-label="Cari notifikasi">
                 </div>
 
-                <!-- Type Select Dropdown -->
                 <label class="sr-only" for="typeFilter">Filter jenis</label>
                 <select class="select-input" id="typeFilter">
                   <option value="all">Semua Kategori</option>
@@ -1010,7 +1093,7 @@
             <!-- Notification Items Feed -->
             <div class="notification-list" id="notificationList" aria-live="polite"></div>
 
-            <!-- Load More Row (Progressive Pagination) -->
+            <!-- Load More Row -->
             <div class="load-more-row" id="loadMoreRow" style="display:none">
               <button class="btn btn-secondary" id="btnLoadMore" type="button">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1042,14 +1125,14 @@
 
         <!-- VIEW TAB 2: PENGATURAN KANAL & PERANGKAT -->
         <div class="view-panel" id="viewPengaturan" style="display:none">
-          <div class="top-grid">
-            <!-- Card 1: Preferensi Perangkat (Browser Push Control) -->
+          <div class="settings-stack">
+            <!-- Card 1: Status & Langganan Perangkat Browser Push (7 State Resmi) -->
             <section class="panel" aria-labelledby="pushTitle">
               <div class="panel-head">
                 <div>
-                  <div class="eyebrow">Pengaturan Perangkat</div>
-                  <h2 id="pushTitle" style="margin-top:3px">Notifikasi Layar Komputer</h2>
-                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Dapatkan pemberitahuan langsung di layar saat ada pengingat jam kerja atau kendala darurat.</p>
+                  <div class="eyebrow">Pengaturan Perangkat Ini</div>
+                  <h2 id="pushTitle" style="margin-top:3px">Status Izin &amp; Langganan Browser Push</h2>
+                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Kelola izin dan status langganan (<em>subscription endpoint</em>) Browser Push khusus pada peramban dan perangkat yang sedang Anda gunakan.</p>
                 </div>
                 <span class="pill neutral" id="pushBadge">Memeriksa…</span>
               </div>
@@ -1061,9 +1144,12 @@
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
                   </div>
-                  <div>
-                    <div class="push-status-title" id="pushStatusTitle">Memeriksa Pengaturan Layar…</div>
-                    <div class="push-status-desc" id="pushStatusText">Sistem sedang memeriksa status izin notifikasi pada peramban ini.</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                      <div class="push-status-title" id="pushStatusTitle">Memeriksa Pengaturan Perangkat…</div>
+                      <span class="pill neutral mono-id" id="pushStateCodePill">state: granted</span>
+                    </div>
+                    <div class="push-status-desc" id="pushStatusText">Sistem sedang memeriksa status izin dan registrasi endpoint Web Push pada peramban ini.</div>
                   </div>
                 </div>
 
@@ -1074,16 +1160,23 @@
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
-                  <div id="pushNoticeText">Kami tidak akan memunculkan izin sebelum Anda menekan tombol. Jika Anda memilih tidak menyalakannya, aplikasi tetap bisa digunakan seperti biasa.</div>
+                  <div id="pushNoticeText">Kami tidak akan memunculkan dialog izin browser sebelum Anda menekan tombol aktivasi secara eksplisit.</div>
                 </div>
 
-                <div class="push-actions">
-                  <button class="btn btn-primary" id="btnEnablePush" type="button">
+                <div class="push-actions" id="pushActionButtons">
+                  <button class="btn btn-primary" id="btnPrimaryPushAction" type="button">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <span id="btnEnablePushText">Nyalakan Notifikasi Layar</span>
+                    <span id="btnPrimaryPushText">Aktifkan Browser Push Perangkat Ini</span>
+                  </button>
+                  <button class="btn btn-danger-outline" id="btnUnregisterPush" type="button" style="display:none">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Nonaktifkan / Cabut Langganan Perangkat Ini (Unregister)</span>
                   </button>
                   <button class="btn btn-secondary" id="btnRefreshPush" type="button">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1091,84 +1184,141 @@
                       <polyline points="1 20 1 14 7 14"></polyline>
                       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                     </svg>
-                    <span>Periksa Status</span>
+                    <span>Periksa Ulang Status Perangkat</span>
                   </button>
                 </div>
 
-                <p class="subtitle" id="pushHelpText" style="font-size:11.5px;margin-top:12px">Pengaturan ini hanya berlaku untuk laptop dan peramban yang sedang Anda gunakan saat ini.</p>
+                <p class="subtitle" id="pushHelpText" style="font-size:12px;margin-top:12px">Status izin dan langganan Browser Push bersifat spesifik pada peramban/perangkat ini dan tidak memengaruhi kanal Web Notification Center maupun Email.</p>
               </div>
             </section>
 
-            <!-- Card 2: Saluran Pemberitahuan -->
+            <!-- Card 2: Tabel Referensi Read-Only Matriks Kanal per Trigger -->
             <section class="panel" aria-labelledby="channelsTitle">
               <div class="panel-head">
                 <div>
-                  <div class="eyebrow">Saluran Pemberitahuan</div>
-                  <h2 id="channelsTitle" style="margin-top:3px">Di Mana Saja Notifikasi Dikirim?</h2>
-                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Selain di web ini, pemberitahuan penting juga dikirimkan melalui saluran berikut.</p>
+                  <div class="eyebrow">Aturan Produk &amp; Distribusi Kanal</div>
+                  <h2 id="channelsTitle" style="margin-top:3px">Tabel Referensi Read-Only Matriks Kanal per Trigger</h2>
+                  <p class="subtitle" style="font-size:12.5px;margin-top:4px">Matriks pemicu pemberitahuan resmi beserta saluran pengiriman aktifnya. Aturan pemicu dikelola secara terpusat oleh sistem untuk menjamin konsistensi akuntabilitas.</p>
                 </div>
+                <span class="pill neutral">Read-Only Product Policy</span>
               </div>
               <div class="panel-body">
-                <!-- Channel 1: In-App Center -->
-                <div class="channel-row">
-                  <div class="channel-main">
-                    <div class="channel-symbol-circle">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
-                      </svg>
-                    </div>
-                    <div>
-                      <div class="channel-name">Pusat Notifikasi Web</div>
-                      <div class="channel-desc">Semua riwayat pemberitahuan tersimpan rapi di sini</div>
-                    </div>
+                <!-- Penjelasan Eksplisit Aturan Tetap 60 Menit Sebelum On-Time Deadline -->
+                <div class="notice info" style="margin-bottom:16px">
+                  <svg class="notice-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <div class="tabular-nums">
+                    <strong>Aturan Tetap Pengingat Morning &amp; EOD (60 Menit Sebelum On-Time Deadline):</strong>
+                    Pengingat Morning Commitment dan EOD Update menggunakan aturan tetap produk yakni dikirim tepat pada jendela <strong>60 menit sebelum On-Time Deadline (<code>[Deadline - 60m, Deadline)</code>)</strong> — yaitu pukul <strong>08:00 WIB</strong> (untuk On-Time Deadline 09:00 WIB) dan pukul <strong>16:00 WIB</strong> (untuk On-Time Deadline 17:00 WIB) — serta berhenti tepat saat On-Time Deadline atau segera setelah karyawan menyelesaikan check-in.
                   </div>
-                  <span class="pill green">Selalu Aktif (Utama)</span>
                 </div>
 
-                <!-- Channel 2: Email -->
-                <div class="channel-row">
-                  <div class="channel-main">
-                    <div class="channel-symbol-circle">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                      </svg>
-                    </div>
-                    <div>
-                      <div class="channel-name">Email Kantor</div>
-                      <div class="channel-desc">Pengingat jadwal kerja dan kabar penting dari pimpinan</div>
-                    </div>
-                  </div>
-                  <span class="pill neutral">Aktif Otomatis</span>
-                </div>
-
-                <!-- Channel 3: Browser Push -->
-                <div class="channel-row">
-                  <div class="channel-main">
-                    <div class="channel-symbol-circle">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <div class="channel-name">Notifikasi Layar Komputer</div>
-                      <div class="channel-desc" id="pushChannelDesc">Status izin perangkat sedang diperiksa</div>
-                    </div>
-                  </div>
-                  <span class="pill neutral" id="pushChannelBadge">Memeriksa…</span>
+                <div class="matrix-table-wrap">
+                  <table class="matrix-table" aria-label="Matriks Kanal per Trigger Notifikasi">
+                    <thead>
+                      <tr>
+                        <th scope="col">Pemicu Notifikasi (Trigger Event)</th>
+                        <th scope="col">Jadwal / Kondisi Pemicu</th>
+                        <th scope="col">Web Notification Center</th>
+                        <th scope="col">Email Resmi</th>
+                        <th scope="col">Browser Push Perangkat</th>
+                      </tr>
+                    </thead>
+                    <tbody class="tabular-nums">
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">1. Pengingat Morning Commitment</div>
+                          <div class="matrix-trigger-sub">Bagi karyawan wajib check-in yang belum submit</div>
+                        </td>
+                        <td><span class="mono-id">[Deadline - 60m, Deadline)</span><br><span class="matrix-trigger-sub">08:00 WIB (berhenti tepat 09:00 WIB)</span></td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">2. Pengingat EOD Outcome &amp; Continuation</div>
+                          <div class="matrix-trigger-sub">Bagi karyawan dengan komitmen pagi aktif yang belum EOD</div>
+                        </td>
+                        <td><span class="mono-id">[Deadline - 60m, Deadline)</span><br><span class="matrix-trigger-sub">16:00 WIB (berhenti tepat 17:00 WIB)</span></td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">3. Instant Blocker &amp; Eskalasi SLA</div>
+                          <div class="matrix-trigger-sub">Kendala baru, eskalasi kritis, atau pembaruan resolusi</div>
+                        </td>
+                        <td>Real-time saat tiket dilaporkan / melampaui SLA</td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Prioritas Tinggi)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">4. Permintaan Dukungan Lintas Tim (Support)</div>
+                          <div class="matrix-trigger-sub">Penunjukan rekan pendukung pada slot komitmen</div>
+                        </td>
+                        <td>Real-time saat komitmen pagi / tambahan disimpan</td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">5. Permohonan Koreksi &amp; Jendela Keberatan</div>
+                          <div class="matrix-trigger-sub">Notifikasi antrean reviewer &amp; status pemohon (Applied / Rejected)</div>
+                        </td>
+                        <td>Saat diajukan, selama Objection Window, &amp; saat selesai</td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">6. Pengajuan Cuti &amp; Rekonsiliasi Pasca-Cut-Off</div>
+                          <div class="matrix-trigger-sub">Keputusan cuti &amp; rekonsiliasi Superseded by Approved Leave</div>
+                        </td>
+                        <td>Saat diajukan ke HRGA/Approver &amp; saat disetujui/ditolak</td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">7. Catatan Evaluasi Kerja (Manager Notes)</div>
+                          <div class="matrix-trigger-sub">Recognition, Coaching, atau Corrective Note dari atasan</div>
+                        </td>
+                        <td>Saat diterbitkan resmi oleh Supervisor / Head / HRGA</td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="matrix-trigger-name">8. Peringatan Kepatuhan (3x No Submission)</div>
+                          <div class="matrix-trigger-sub">Pemicu antrean kepatuhan HRGA &amp; pemberitahuan karyawan</div>
+                        </td>
+                        <td>Saat mencapai ambang 3x No Submission beruntun</td>
+                        <td><span class="pill green">Selalu Aktif</span></td>
+                        <td><span class="pill green">Aktif</span></td>
+                        <td><span class="pill blue">Aktif (Jika Perangkat Terdaftar)</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
 
                 <!-- Governance & Privacy Notice -->
-                <div class="notice neutral" style="margin-top:14px">
+                <div class="notice neutral" style="margin-top:16px">
                   <svg class="notice-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
-                  <div>Setiap saluran berjalan independen demi menjaga privasi dan keamanan Anda. Namun, jika Anda membuka tautan notifikasi langsung dari email kantor, sistem akan otomatis menandai pesan terkait sebagai <em>Sudah Dibaca</em> di web ini.</div>
+                  <div>Setiap saluran berjalan independen. Kegagalan pengiriman pada kanal Email atau Browser Push tidak pernah menghapus atau menghalangi pencatatan riwayat resmi di <strong>Web Notification Center</strong>. Jika Anda membuka tautan langsung dari email kantor, sistem otomatis menandai item terkait sebagai <em>Sudah Dibaca</em>.</div>
                 </div>
               </div>
             </section>
@@ -1187,7 +1337,7 @@
         <div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
             <span class="pill" id="modalTagPill">Kategori</span>
-            <span class="pill neutral" id="modalStatusBadge" style="font-size:11.5px">Status Baca</span>
+            <span class="pill neutral" id="modalStatusBadge">Status Baca</span>
           </div>
           <h2 class="modal-title" id="modalTitle">Judul Notifikasi</h2>
         </div>
@@ -1209,7 +1359,7 @@
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
             </svg>
-            <span class="modal-detail-value" id="modalContext">Raise Instant Blocker · BLK-2026-0042</span>
+            <span class="modal-detail-value mono-id" id="modalContext">Raise Instant Blocker · BLK-2026-0042</span>
           </div>
         </div>
         <div class="modal-detail-row" style="margin-top:8px">
@@ -1219,7 +1369,7 @@
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <span class="modal-detail-value" id="modalTime" style="font-weight:600;font-size:12.5px;color:var(--secondary)">Senin, 12 Oktober 2026 · 09:12 WIB</span>
+            <span class="modal-detail-value tabular-nums" id="modalTime" style="font-weight:600;font-size:12.5px;color:var(--secondary)">Senin, 12 Oktober 2026 · 09:12 WIB</span>
           </div>
         </div>
       </div>
@@ -1235,6 +1385,7 @@
 
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btnCloseModal" type="button">Tutup</button>
+        <button class="btn btn-secondary" id="btnOpenAltContext" type="button" style="display:none"></button>
         <button class="btn btn-primary" id="btnOpenContext" type="button">
           <span id="btnOpenContextText">Buka Halaman Terkait</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1265,8 +1416,8 @@
       let activeFilter = 'all';
       let activeNotification = null;
       let toastTimer = null;
+      let currentPushState = 'granted';
 
-      // Pustaka Ikon SVG Monokrom Baku (Zero Unicode Emoji)
       const SVG_ICONS = {
         blocker: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`,
         support: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
@@ -1280,7 +1431,7 @@
         error: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
       };
 
-      // Koleksi 8 Data Notifikasi Otentik Sesuai PRD Section 8
+      // Koleksi 8 Data Notifikasi Otentik (notif-004 tepat 08:00 WIB / 60 menit sebelum On-Time Deadline 09:00 WIB; notif-003 mengarah ke 22-Correction-and-Leave-Review.html untuk reviewer dan membedakan halaman pemohon 16b-EOD-Correction-Request.html)
       const notifications = [
         {
           id: 'notif-001',
@@ -1311,40 +1462,42 @@
         {
           id: 'notif-003',
           type: 'review',
-          title: 'Permohonan Koreksi EOD Menunggu Tinjauan',
-          description: 'Permohonan EOD Correction Request #EOD-2026-1006-01 telah diajukan dan sedang dalam jendela telaah (Objection Window).',
-          context: 'EOD Correction Request · #EOD-2026-1006-01',
-          targetRoute: '16b-EOD-Correction-Request.html',
-          actionLabel: 'Buka Pengajuan Koreksi',
+          title: 'Antrean Peninjau: Permohonan Koreksi EOD dalam Objection Window',
+          description: 'Permohonan EOD Correction Request #EOD-2026-1006-01 berada dalam jendela keberatan (Objection Window) dan menunggu telaah di Antrean Tinjauan Koreksi & Cuti.',
+          context: 'Correction & Leave Review · #EOD-2026-1006-01',
+          targetRoute: '22-Correction-and-Leave-Review.html',
+          actionLabel: 'Buka Antrean Reviewer (22)',
+          altRoute: '16b-EOD-Correction-Request.html',
+          altActionLabel: 'Lihat Status Pemohon (16b)',
           time: '14 Okt 2026 · 08:15 WIB',
           unread: true,
-          tag: 'Jendela Keberatan',
+          tag: 'Antrean Reviewer',
           tone: 'blue'
         },
         {
           id: 'notif-004',
           type: 'reminder',
-          title: 'Waktunya Menetapkan Morning Commitment',
-          description: 'Jendela pengisian Morning Commitment telah dibuka (08:00–09:00 WIB). Kunci prioritas terukur Anda hari ini sebelum jam kerja dimulai.',
+          title: 'Waktunya Menetapkan Morning Commitment (60 Menit Sebelum Deadline)',
+          description: 'Pengingat otomatis 60 menit sebelum On-Time Deadline (09:00 WIB). Jendela pengisian Morning Commitment sedang berlangsung [08:00, 09:00 WIB).',
           context: 'My Today · Morning Commitment',
           targetRoute: '02-Morning-Commitment.html',
           actionLabel: 'Buka Komitmen Pagi',
-          time: '14 Okt 2026 · 07:30 WIB',
+          time: '14 Okt 2026 · 08:00 WIB',
           unread: false,
-          tag: 'Pengingat Waktu',
+          tag: 'Pengingat 08:00 WIB',
           tone: 'blue'
         },
         {
           id: 'notif-005',
           type: 'review',
-          title: 'Morning Correction Request Berhasil Diterapkan (Applied)',
-          description: 'Permohonan koreksi minor target deliverable pagi hari telah disetujui reviewer dan tercatat pada audit trail.',
-          context: 'My History · Selasa, 6 Okt 2026',
-          targetRoute: '06-My-History-Weekly-Summary.html',
-          actionLabel: 'Buka Histori Koreksi',
+          title: 'Status Pemohon: EOD Correction Request Berhasil Diterapkan (Applied)',
+          description: 'Permohonan koreksi EOD Anda (#EOD-2026-1006-01) telah melewati jendela telaah dan resmi diterapkan pada catatan audit trail.',
+          context: 'EOD Correction Request · #EOD-2026-1006-01',
+          targetRoute: '16b-EOD-Correction-Request.html',
+          actionLabel: 'Buka Detail Koreksi Pemohon',
           time: '13 Okt 2026 · 16:40 WIB',
           unread: false,
-          tag: 'Applied Formal',
+          tag: 'Status Pemohon · Applied',
           tone: 'green'
         },
         {
@@ -1388,14 +1541,12 @@
         }
       ];
 
-      // Sanitasi Teks
       function escapeHTML(str) {
         return String(str).replace(/[&<>"']/g, c => ({
           '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
       }
 
-      // Contextual Toast Engine (3 Varian: success, warning, error + Optional Action Button)
       function showToast(message, variant = 'success', action = null) {
         const toast = $('toastBox');
         const iconWrap = $('toastIconWrap');
@@ -1435,26 +1586,77 @@
         }, duration);
       }
 
-      // Sinkronisasi Sesi Akun Dinamis dari localStorage
+      // Dynamic 3-Group Sidebar Role Renderer
+      function syncSidebarForRole(roleCode) {
+        const role = (roleCode || 'EMPLOYEE').toUpperCase();
+        const mgmtGroup = $('mgmt-nav-group');
+        const adminGroup = $('admin-nav-group');
+
+        const mgmtRules = {
+          'link-pulse': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO'],
+          'link-blockers': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD'],
+          'link-escalation-aging': ['CEO'],
+          'link-project-risk': ['PM'],
+          'link-coaching': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+          'link-correction-review': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+          'link-compliance': ['HRGA'],
+          'link-leave-approval': ['HRGA'],
+          'link-exemptions': ['HRGA', 'SYSTEM_ADMIN', 'ADMIN'],
+          'link-reports': ['HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA', 'CEO']
+        };
+
+        const adminRules = {
+          'link-admin-users': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'CEO'],
+          'link-admin-org': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+          'link-admin-temp-rev': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+          'link-admin-notif': ['SYSTEM_ADMIN', 'ADMIN'],
+          'link-admin-policy': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO']
+        };
+
+        let anyMgmt = false;
+        for (const [id, allowed] of Object.entries(mgmtRules)) {
+          const el = $(id);
+          if (!el) continue;
+          const show = allowed.includes(role);
+          el.style.display = show ? 'flex' : 'none';
+          if (show) anyMgmt = true;
+        }
+        if (mgmtGroup) mgmtGroup.style.display = anyMgmt ? 'grid' : 'none';
+
+        let anyAdmin = false;
+        for (const [id, allowed] of Object.entries(adminRules)) {
+          const el = $(id);
+          if (!el) continue;
+          const show = allowed.includes(role);
+          el.style.display = show ? 'flex' : 'none';
+          if (show) anyAdmin = true;
+        }
+        if (adminGroup) adminGroup.style.display = anyAdmin ? 'grid' : 'none';
+      }
+
       function syncActiveUser() {
+        let role = 'EMPLOYEE';
         try {
           const raw = localStorage.getItem('workpulse_active_user');
           if (raw) {
             const user = JSON.parse(raw);
+            if (user.role) role = user.role.toUpperCase();
             if (user.name) {
               $('sideUserName').textContent = user.name;
-              $('sideUserRole').textContent = `${user.roleLabel || 'Karyawan'} · ${user.department || 'PT Dutamedia'}`;
+              $('sideUserRole').textContent = `${user.roleLabel || 'Karyawan'} · ${user.function || user.department || 'Engineering'}`;
               const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
               $('sideAvatar').textContent = initials;
               $('topAvatar').textContent = initials;
             }
           }
-        } catch (e) {
-          console.warn('Gagal membaca workpulse_active_user:', e);
+        } catch (e) {}
+        const sel = $('simRoleSelect');
+        if (sel && [...sel.options].some(o => o.value === role)) {
+          sel.value = role;
         }
+        syncSidebarForRole(role);
       }
 
-      // Update Angka Metrik & Badge Unread
       function updateCounts() {
         const unreadCount = notifications.filter(n => n.unread).length;
         const totalCount = notifications.length;
@@ -1478,11 +1680,9 @@
         $('btnMarkAllTop').disabled = unreadCount === 0;
       }
 
-      // Parameter Paginasi Progresif (Load More)
       const PAGE_SIZE = 5;
       let visibleCount = PAGE_SIZE;
 
-      // Render Daftar Feed Notifikasi
       function render() {
         updateCounts();
 
@@ -1573,7 +1773,6 @@
         }
       }
 
-      // Buka Modal Pop-up Detail
       function openDetail(id) {
         const item = notifications.find(x => x.id === id);
         if (!item) return;
@@ -1616,8 +1815,21 @@
         if ($('btnOpenContextText')) {
           $('btnOpenContextText').textContent = actionLabel;
         }
+        const altBtn = $('btnOpenAltContext');
+        if (altBtn) {
+          if (item.altRoute) {
+            altBtn.style.display = 'inline-flex';
+            altBtn.textContent = item.altActionLabel || 'Buka Halaman Pemohon';
+            altBtn.onclick = () => {
+              closeDetail();
+              window.location.href = item.altRoute;
+            };
+          } else {
+            altBtn.style.display = 'none';
+          }
+        }
         if ($('modalNoticeText')) {
-          $('modalNoticeText').innerHTML = `Klik tombol <strong>${escapeHTML(actionLabel)}</strong> di bawah untuk langsung menuju ke dokumen atau formulir kerja yang bersangkutan.`;
+          $('modalNoticeText').innerHTML = `Klik tombol <strong>${escapeHTML(actionLabel)}</strong> di bawah untuk langsung menuju ke halaman kerja terkait (${escapeHTML(item.targetRoute)}).`;
         }
 
         $('detailModal').classList.add('show');
@@ -1629,10 +1841,8 @@
         activeNotification = null;
       }
 
-      // Riwayat Snapshot untuk Fitur Urungkan (Undo)
       let undoUnreadNotificationIds = [];
 
-      // Tandai Semua Dibaca dengan Safety Undo Action
       function markAllRead() {
         const unreadItems = notifications.filter(n => n.unread);
         if (unreadItems.length === 0) return;
@@ -1658,111 +1868,204 @@
         });
       }
 
-      // Browser Push Engine (4 State Control)
-      function setPushUI() {
-        const supported = ('Notification' in window);
-        const permission = supported ? Notification.permission : 'unsupported';
-
-        let badgeText, badgeClass, titleText, descText, noticeClass, noticeHtml, btnText, btnDisabled, metricText, metricNote, channelBadgeText, channelBadgeClass, channelText, helpText;
-
-        if (!supported) {
-          badgeText = 'Tidak Didukung';
-          badgeClass = 'pill amber';
-          titleText = 'Peramban Tidak Mendukung Notifikasi Layar';
-          descText = 'Peramban atau platform ini tidak menyediakan fitur notifikasi layar.';
-          noticeClass = 'warning';
-          noticeHtml = `Peramban ini tidak mendukung notifikasi layar. Namun tenang, semua pemberitahuan tetap bisa Anda pantau secara lengkap di web ini dan melalui Email Kantor.`;
-          btnText = 'Tidak Didukung';
-          btnDisabled = true;
-          metricText = 'Tidak Didukung';
-          metricNote = 'Peramban tidak menyediakan API';
-          channelBadgeText = 'Tidak Didukung';
-          channelBadgeClass = 'pill amber';
-          channelText = 'Tidak didukung pada peramban ini';
-          helpText = 'Peramban ini tidak mendukung notifikasi layar.';
-        } else if (permission === 'granted') {
-          badgeText = 'Izin Aktif';
-          badgeClass = 'pill green';
-          titleText = 'Notifikasi Layar Sudah Aktif';
-          descText = 'Laptop ini sudah siap menerima pengingat jam kerja dan kendala darurat.';
-          noticeClass = 'success';
-          noticeHtml = `
-            <div>Notifikasi layar sudah aktif. Anda akan menerima pemberitahuan instan saat ada kabar penting.</div>
-            <div style="margin-top:7px;font-size:12px;opacity:0.92">Ingin mematikan? Klik ikon setelan/gembok di samping alamat web peramban Anda, lalu ubah izin Notifikasi ke <em>Blokir</em>.</div>
-          `;
-          btnText = 'Kirim Notifikasi Uji';
-          btnDisabled = false;
-          metricText = 'Izin Aktif';
-          metricNote = 'Aktif di laptop ini';
-          channelBadgeText = 'Aktif di Laptop Ini';
-          channelBadgeClass = 'pill green';
-          channelText = 'Siap menerima pemberitahuan langsung di layar laptop ini';
-          helpText = 'Notifikasi aktif di laptop ini. Anda bisa mengeklik tombol di atas untuk menguji coba.';
-        } else if (permission === 'denied') {
-          badgeText = 'Izin Diblokir';
-          badgeClass = 'pill red';
-          titleText = 'Notifikasi Layar Diblokir';
-          descText = 'Pemberitahuan layar tidak bisa muncul karena izin di peramban sedang dimatikan.';
-          noticeClass = 'warning';
-          noticeHtml = `WorkPulse tidak bisa menyalakan izin sendiri secara otomatis. Silakan klik ikon gembok/pengaturan di sebelah alamat web browser Anda, ubah izin Notifikasi menjadi <em>Izinkan (Allow)</em>, lalu klik tombol <strong>Periksa Status</strong> di bawah.`;
-          btnText = 'Lihat Panduan Browser';
-          btnDisabled = false;
-          metricText = 'Diblokir';
-          metricNote = 'Nyalakan lewat setelan situs';
-          channelBadgeText = 'Izin Diblokir';
-          channelBadgeClass = 'pill red';
-          channelText = 'Izin sedang dimatikan di setelan peramban';
-          helpText = 'Izin sedang diblokir di peramban ini. Buka blokir di setelan peramban untuk menyalakannya.';
-        } else {
-          // default / prompt
-          badgeText = 'Belum Diaktifkan';
-          badgeClass = 'pill neutral';
-          titleText = 'Notifikasi Layar Belum Aktif';
-          descText = 'Nyalakan agar Anda tidak ketinggalan batas waktu kerja dan kabar penting dari rekan tim.';
-          noticeClass = 'neutral';
-          noticeHtml = `Kami tidak akan memunculkan izin sebelum Anda menekan tombol. Jika Anda memilih tidak menyalakannya, aplikasi tetap bisa digunakan seperti biasa.`;
-          btnText = 'Nyalakan Notifikasi Layar';
-          btnDisabled = false;
-          metricText = 'Belum Aktif';
-          metricNote = 'Klik untuk mengaktifkan';
-          channelBadgeText = 'Belum Diaktifkan';
-          channelBadgeClass = 'pill neutral';
-          channelText = 'Membutuhkan izin Anda pada peramban ini';
-          helpText = 'Pengaturan ini hanya berlaku untuk laptop dan peramban yang sedang Anda gunakan saat ini.';
+      // ==============================================================
+      // BROWSER PUSH ENGINE — MENDUKUNG PENUH 7 STATE PERANGKAT
+      // 1. unsupported
+      // 2. default
+      // 3. granted (+ Unregister button)
+      // 4. denied
+      // 5. no_subscription
+      // 6. delivery_attempted
+      // 7. delivery_failed
+      // ==============================================================
+      const PUSH_STATE_CONFIG = {
+        unsupported: {
+          badgeText: 'Browser Tidak Mendukung Push',
+          badgeClass: 'pill neutral',
+          titleText: 'Browser Tidak Mendukung Push (Unsupported)',
+          descText: 'Peramban atau lingkungan perangkat yang sedang Anda gunakan tidak menyediakan dukungan Web Push / Service Worker API.',
+          noticeClass: 'neutral',
+          noticeHtml: 'Peramban ini tidak mendukung pengiriman Browser Push. Seluruh pemberitahuan tetap tercatat penuh di <strong>Web Notification Center</strong> dan dikirim melalui <strong>Email Resmi</strong> tanpa menghalangi alur kerja Anda.',
+          primaryBtnText: 'Browser Tidak Mendukung Push',
+          primaryBtnDisabled: true,
+          showUnregister: false,
+          metricText: 'Tidak Didukung',
+          metricNote: 'State: unsupported · Web Center tetap aktif',
+          helpText: 'Gunakan peramban modern (Chrome, Edge, Firefox, atau Safari terbaru) bila ingin mengaktifkan Browser Push pada perangkat ini.'
+        },
+        default: {
+          badgeText: 'Izin Belum Diminta',
+          badgeClass: 'pill blue',
+          titleText: 'Izin Browser Push Belum Diminta (Default)',
+          descText: 'Perangkat ini mendukung Browser Push, namun Anda belum memberikan izin pengiriman notifikasi layar.',
+          noticeClass: 'info',
+          noticeHtml: 'WorkPulse menerapkan prinsip <em>opt-in eksplisit</em>: kami tidak pernah memunculkan prompt izin browser secara tiba-tiba sebelum Anda menekan tombol <strong>Aktifkan Browser Push Perangkat Ini</strong> di bawah.',
+          primaryBtnText: 'Aktifkan Browser Push Perangkat Ini',
+          primaryBtnDisabled: false,
+          showUnregister: false,
+          metricText: 'Belum Diminta',
+          metricNote: 'State: default · Klik untuk opt-in',
+          helpText: 'Pengaturan ini hanya berlaku pada peramban dan perangkat yang sedang Anda gunakan saat ini.'
+        },
+        granted: {
+          badgeText: 'Aktif & Terdaftar',
+          badgeClass: 'pill green',
+          titleText: 'Browser Push Aktif & Terdaftar (Granted)',
+          descText: 'Izin peramban telah diberikan dan langganan perangkat (subscription endpoint) terdaftar aktif di server WorkPulse.',
+          noticeClass: 'success',
+          noticeHtml: 'Perangkat ini siap menerima pengingat 60 menit sebelum On-Time Deadline serta eskalasi kendala secara instan. Anda dapat menguji push lokal atau mencabut langganan perangkat ini kapan saja.',
+          primaryBtnText: 'Kirim Uji Push Lokal',
+          primaryBtnDisabled: false,
+          showUnregister: true,
+          metricText: 'Aktif & Terdaftar',
+          metricNote: 'State: granted · Langganan perangkat aktif',
+          helpText: 'Tombol "Nonaktifkan / Cabut Langganan Perangkat Ini (Unregister)" akan menghapus endpoint perangkat ini dari daftar penerima push tanpa memengaruhi akun di perangkat lain.'
+        },
+        denied: {
+          badgeText: 'Izin Ditolak di Browser',
+          badgeClass: 'pill amber',
+          titleText: 'Izin Ditolak di Pengaturan Browser (Denied)',
+          descText: 'Pengiriman Browser Push tidak dapat dilakukan karena izin notifikasi untuk situs ini berstatus Diblokir pada pengaturan peramban.',
+          noticeClass: 'warning',
+          noticeHtml: '<strong>Panduan Tenang Membuka Blokir Izin Situs:</strong> Aplikasi tidak dapat memunculkan ulang dialog izin secara paksa. Jika Anda ingin menyalakannya kembali, buka ikon gembok / pengaturan situs di bilah alamat browser, ubah izin <em>Notifications</em> menjadi <strong>Allow (Izinkan)</strong>, lalu tekan <strong>Periksa Ulang Status Perangkat</strong>. Alur kerja Anda tetap berjalan normal.',
+          primaryBtnText: 'Lihat Panduan Pengaturan Situs Browser',
+          primaryBtnDisabled: false,
+          showUnregister: false,
+          metricText: 'Izin Ditolak',
+          metricNote: 'State: denied · Buka setelan situs browser',
+          helpText: 'Meskipun izin ditolak di browser, Anda tidak akan kehilangan catatan akuntabilitas karena Web Notification Center selalu aktif.'
+        },
+        no_subscription: {
+          badgeText: 'Langganan Belum Terdaftar / Kedaluwarsa',
+          badgeClass: 'pill amber',
+          titleText: 'Izin Diberikan namun Langganan Perangkat Belum Terdaftar / Kedaluwarsa (No Subscription)',
+          descText: 'Izin notifikasi di browser berstatus diizinkan, tetapi token langganan (push subscription) perangkat ini telah dicabut atau kedaluwarsa.',
+          noticeClass: 'warning',
+          noticeHtml: 'Perangkat ini belum memiliki <em>push endpoint</em> aktif di server (misalnya karena langganan baru saja dicabut/unregister atau kunci VAPID diperbarui). Tekan tombol <strong>Daftarkan Ulang Langganan Perangkat</strong> untuk menyambungkan kembali.',
+          primaryBtnText: 'Daftarkan Ulang Langganan Perangkat',
+          primaryBtnDisabled: false,
+          showUnregister: false,
+          metricText: 'Perlu Registrasi Ulang',
+          metricNote: 'State: no_subscription · Endpoint belum terdaftar',
+          helpText: 'Pendaftaran ulang tidak memerlukan pengaturan ulang izin browser karena izin situs sudah diberikan.'
+        },
+        delivery_attempted: {
+          badgeText: 'Pengiriman Dicoba',
+          badgeClass: 'pill blue',
+          titleText: 'Pengiriman Dicoba — Status Akhir Perangkat Belum Diketahui (Delivery Attempted)',
+          descText: 'Server WorkPulse telah menyerahkan payload push ke layanan push gateway peramban (Web Push Service), menunggu konfirmasi penerimaan perangkat.',
+          noticeClass: 'info',
+          noticeHtml: 'Pesan push terakhir berstatus <strong>Delivery Attempted</strong> (telah dikirim ke antrean push service peramban pada pukul <span class="mono-id">08:00:02 WIB</span>). Jika perangkat sempat luring atau berada dalam mode hemat daya sistem operasi, pesan akan tampil saat koneksi pulih.',
+          primaryBtnText: 'Kirim Uji Push Lokal',
+          primaryBtnDisabled: false,
+          showUnregister: true,
+          metricText: 'Pengiriman Dicoba',
+          metricNote: 'State: delivery_attempted · Menunggu konfirmasi OS',
+          helpText: 'Semua isi pemberitahuan yang dikirim melalui push juga sudah tersedia lengkap pada tab Daftar Notifikasi.'
+        },
+        delivery_failed: {
+          badgeText: 'Pengiriman Gagal ke Endpoint',
+          badgeClass: 'pill red',
+          titleText: 'Pengiriman Gagal ke Endpoint Perangkat (Delivery Failed)',
+          descText: 'Layanan Web Push melaporkan kegagalan pengiriman ke endpoint perangkat ini (mis. endpoint tidak lagi valid atau ditolak push service).',
+          noticeClass: 'error',
+          noticeHtml: 'Pengiriman push terakhir ke perangkat ini gagal (kode respons push gateway: <span class="mono-id">HTTP 410 Gone / Endpoint Expired</span>). Silakan tekan tombol <strong>Coba Sinkronisasi Ulang</strong> untuk memperbarui registrasi endpoint perangkat Anda.',
+          primaryBtnText: 'Coba Sinkronisasi Ulang',
+          primaryBtnDisabled: false,
+          showUnregister: false,
+          metricText: 'Pengiriman Gagal',
+          metricNote: 'State: delivery_failed · Klik untuk sinkronisasi ulang',
+          helpText: 'Kegagalan pengiriman push ke perangkat ini tidak memengaruhi pengiriman Email maupun pencatatan di Web Notification Center.'
         }
+      };
 
-        // Terapkan ke DOM
-        $('pushBadge').textContent = badgeText;
-        $('pushBadge').className = badgeClass;
-        $('pushChannelBadge').textContent = channelBadgeText;
-        $('pushChannelBadge').className = channelBadgeClass;
+      function setPushUI(stateOverride) {
+        if (stateOverride && PUSH_STATE_CONFIG[stateOverride]) {
+          currentPushState = stateOverride;
+        }
+        const cfg = PUSH_STATE_CONFIG[currentPushState] || PUSH_STATE_CONFIG.granted;
 
-        $('pushStatusTitle').textContent = titleText;
-        $('pushStatusText').textContent = descText;
+        $('pushBadge').textContent = cfg.badgeText;
+        $('pushBadge').className = cfg.badgeClass;
+        $('pushStateCodePill').textContent = `state: ${currentPushState}`;
+        $('pushStatusTitle').textContent = cfg.titleText;
+        $('pushStatusText').textContent = cfg.descText;
 
         const noticeBox = $('pushNotice');
-        noticeBox.className = `notice ${noticeClass}`;
+        noticeBox.className = `notice ${cfg.noticeClass}`;
         noticeBox.innerHTML = `
           <svg class="notice-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            ${noticeClass === 'success' ? '<polyline points="20 6 9 17 4 12"></polyline>' : 
-              noticeClass === 'warning' ? '<polygon points="12 2 2 22 22 22 12 2"></polygon><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>' :
+            ${cfg.noticeClass === 'success' ? '<polyline points="20 6 9 17 4 12"></polyline>' : 
+              cfg.noticeClass === 'warning' || cfg.noticeClass === 'error' ? '<polygon points="12 2 2 22 22 22 12 2"></polygon><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>' :
               '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>'}
           </svg>
-          <div>${noticeHtml}</div>
+          <div>${cfg.noticeHtml}</div>
         `;
 
-        $('btnEnablePushText').textContent = btnText;
-        $('btnEnablePush').disabled = btnDisabled;
-        $('pushChannelDesc').textContent = channelText;
-        if ($('pushHelpText')) {
-          $('pushHelpText').textContent = helpText;
+        $('btnPrimaryPushText').textContent = cfg.primaryBtnText;
+        $('btnPrimaryPushAction').disabled = cfg.primaryBtnDisabled;
+        $('btnUnregisterPush').style.display = cfg.showUnregister ? 'inline-flex' : 'none';
+        $('pushHelpText').textContent = cfg.helpText;
+
+        $('pushMetricValue').textContent = cfg.metricText;
+        $('pushMetricNote').textContent = cfg.metricNote;
+
+        const simSel = $('simPushStateSelect');
+        if (simSel && simSel.value !== currentPushState) {
+          simSel.value = currentPushState;
         }
 
-        $('pushMetricValue').textContent = metricText;
-        $('pushMetricNote').textContent = metricNote;
+        try {
+          localStorage.setItem('workpulse_push_device_state', currentPushState);
+        } catch (e) {}
       }
 
-      // Event Listener Delegasi untuk Feed Items (Clickable Row & Toggle Action)
+      // Event Listeners untuk Aksi Browser Push (7 State)
+      $('btnPrimaryPushAction').addEventListener('click', () => {
+        if (currentPushState === 'default') {
+          setPushUI('granted');
+          showToast('Izin diberikan & perangkat berhasil didaftarkan untuk menerima Browser Push (state: granted).', 'success');
+        } else if (currentPushState === 'granted' || currentPushState === 'delivery_attempted') {
+          showToast('Notifikasi uji push lokal berhasil dikirim ke perangkat ini.', 'success');
+        } else if (currentPushState === 'no_subscription') {
+          setPushUI('granted');
+          showToast('Langganan perangkat berhasil didaftarkan ulang (state: granted).', 'success');
+        } else if (currentPushState === 'delivery_failed') {
+          setPushUI('granted');
+          showToast('Sinkronisasi ulang berhasil! Endpoint perangkat kembali aktif (state: granted).', 'success');
+        } else if (currentPushState === 'denied') {
+          showToast('Silakan ubah izin situs di bilah alamat browser menjadi Izinkan (Allow), lalu klik Periksa Ulang Status Perangkat.', 'warning');
+        }
+      });
+
+      $('btnUnregisterPush').addEventListener('click', () => {
+        setPushUI('no_subscription');
+        showToast('Langganan Browser Push pada perangkat ini berhasil dicabut (Unregistered → state: no_subscription).', 'warning');
+      });
+
+      $('btnRefreshPush').addEventListener('click', () => {
+        setPushUI(currentPushState);
+        showToast(`Status perangkat diperiksa ulang (state aktif: ${currentPushState}).`, 'success');
+      });
+
+      // Simulation Bar Controls
+      $('simPushStateSelect').addEventListener('change', e => {
+        const chosen = e.target.value;
+        switchMainView('pengaturan');
+        setPushUI(chosen);
+        showToast(`Simulasi Browser Push diubah ke state: ${chosen}`, 'success');
+      });
+
+      $('simOpenTab2Btn').addEventListener('click', () => {
+        switchMainView('pengaturan');
+      });
+
+      $('simRoleSelect').addEventListener('change', e => {
+        syncSidebarForRole(e.target.value);
+        showToast(`Simulasi Sidebar diperbarui untuk peran: ${e.target.options[e.target.selectedIndex].text}`, 'success');
+      });
+
+      // Feed Item Click & Keyboard Delegation
       $('notificationList').addEventListener('click', e => {
         const toggleBtn = e.target.closest('[data-toggle]');
         if (toggleBtn) {
@@ -1782,7 +2085,6 @@
         }
       });
 
-      // Aksesibilitas Keyboard untuk Baris Notifikasi
       $('notificationList').addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
           if (!e.target.closest('[data-toggle]')) {
@@ -1795,14 +2097,11 @@
         }
       });
 
-      // Paginasi Progresif (Muat Lebih Banyak)
       $('btnLoadMore').addEventListener('click', () => {
         visibleCount += PAGE_SIZE;
         render();
       });
 
-      // Filter Tabs
-      // Navigasi Tab Tampilan Utama (Daftar Notifikasi vs Pengaturan Kanal)
       function switchMainView(view) {
         document.querySelectorAll('.view-tab').forEach(t => {
           const isTarget = t.dataset.view === view;
@@ -1822,7 +2121,6 @@
         });
       });
 
-      // Helper untuk Mengubah Filter Status Feed (Semua / Belum Dibaca / Sudah Dibaca)
       function setFeedFilter(filterValue) {
         switchMainView('riwayat');
         activeFilter = filterValue;
@@ -1841,20 +2139,10 @@
         });
       });
 
-      // Interaktivitas 3 Kartu Ringkasan Metrik
-      $('metricCardTotal').addEventListener('click', () => {
-        setFeedFilter('all');
-      });
+      $('metricCardTotal').addEventListener('click', () => setFeedFilter('all'));
+      $('metricCardUnread').addEventListener('click', () => setFeedFilter('unread'));
+      $('metricCardPush').addEventListener('click', () => switchMainView('pengaturan'));
 
-      $('metricCardUnread').addEventListener('click', () => {
-        setFeedFilter('unread');
-      });
-
-      $('metricCardPush').addEventListener('click', () => {
-        switchMainView('pengaturan');
-      });
-
-      // Aksesibilitas Keyboard untuk Kartu Interaktif
       [$('metricCardTotal'), $('metricCardUnread'), $('metricCardPush')].forEach(card => {
         if (!card) return;
         card.addEventListener('keydown', e => {
@@ -1865,7 +2153,6 @@
         });
       });
 
-      // Filter Live Search & Kategori (Reset visibleCount ke PAGE_SIZE)
       $('searchNotifications').addEventListener('input', () => {
         visibleCount = PAGE_SIZE;
         render();
@@ -1875,57 +2162,8 @@
         render();
       });
 
-      // Tandai Semua Dibaca
       $('btnMarkAllTop').addEventListener('click', markAllRead);
 
-      // Aksi Kontrol Izin Browser Push
-      $('btnEnablePush').addEventListener('click', async () => {
-        if (!('Notification' in window)) {
-          showToast('Browser ini tidak mendukung Web Notifications API.', 'warning');
-          return;
-        }
-
-        if (Notification.permission === 'denied') {
-          showToast('Izin diblokir. Ubah izin di pengaturan URL browser lalu klik Periksa Status.', 'warning');
-          return;
-        }
-
-        if (Notification.permission === 'granted') {
-          try {
-            new Notification('WorkPulse — Uji Notifikasi Berhasil', {
-              body: 'Perangkat dan peramban Anda telah terhubung sempurna dengan sistem notifikasi WorkPulse.',
-              tag: 'workpulse-test'
-            });
-            showToast('Notifikasi uji peramban berhasil dikirim ke perangkat Anda.', 'success');
-          } catch (e) {
-            console.warn('Gagal memicu browser notification:', e);
-            showToast('Izin aktif. Peramban siap menerima push notification.', 'success');
-          }
-          return;
-        }
-
-        try {
-          const result = await Notification.requestPermission();
-          setPushUI();
-          if (result === 'granted') {
-            showToast('Izin Browser Push berhasil diaktifkan.', 'success');
-          } else if (result === 'denied') {
-            showToast('Izin ditolak. Notifikasi tetap tercatat di Web Notification Center.', 'warning');
-          } else {
-            showToast('Izin belum ditentukan. Anda dapat mengaktifkannya kapan saja.', 'warning');
-          }
-        } catch (err) {
-          console.error(err);
-          showToast('Gagal memproses permintaan izin peramban.', 'error');
-        }
-      });
-
-      $('btnRefreshPush').addEventListener('click', () => {
-        setPushUI();
-        showToast('Status izin peramban berhasil diperiksa ulang.', 'success');
-      });
-
-      // Dialog Modal Controls
       $('btnCloseModal').addEventListener('click', closeDetail);
       $('btnCloseModalTop').addEventListener('click', closeDetail);
       $('detailModal').addEventListener('click', e => {
@@ -1936,7 +2174,6 @@
         if (e.key === 'Escape') closeDetail();
       });
 
-      // Deep Link Resolver
       $('btnOpenContext').addEventListener('click', () => {
         if (!activeNotification) return;
         const target = activeNotification.targetRoute;
@@ -1963,9 +2200,15 @@
 
       // Inisialisasi Halaman
       syncActiveUser();
-      setPushUI();
+      let initialPushState = 'granted';
+      try {
+        const savedState = localStorage.getItem('workpulse_push_device_state');
+        if (savedState && PUSH_STATE_CONFIG[savedState]) {
+          initialPushState = savedState;
+        }
+      } catch (e) {}
+      setPushUI(initialPushState);
 
-      // Smart Email Auto-Read Link Handler (?read=ID atau ?notif=ID)
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const autoReadId = urlParams.get('read') || urlParams.get('notif');
@@ -1976,9 +2219,7 @@
             showToast(`Notifikasi "${target.title}" otomatis ditandai sudah dibaca dari tautan email.`, 'success');
           }
         }
-      } catch (err) {
-        console.warn('Gagal memproses parameter auto-read:', err);
-      }
+      } catch (err) {}
 
       render();
     })();

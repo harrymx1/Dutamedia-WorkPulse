@@ -4,12 +4,12 @@
 | Document | Value |
 |---|---|
 | Document Owner | Dutamedia |
-| Version | 1.8.0 |
-| Status | FINAL — Fully aligned with PDD v1.4 FINAL & PRD v1.5 FINAL |
-| Date | Oktober 2026 |
-| Referensi | PDD v1.4 FINAL, PRD v1.5 FINAL, ADR-001, ADR-006, ADR-008, ADR-013, ADR-014, ADR-016, ADR-017, ADR-018 |
+| Version | 2.0.0 |
+| Status | FINAL — Fully aligned with PDD v1.5 FINAL & PRD v1.6 FINAL |
+| Date | 28 Oktober 2026 |
+| Referensi | PDD v1.5 FINAL, PRD v1.6 FINAL, 00-Project-Charter-and-Governance.md v1.0 FINAL |
 
-> Dokumen ini mendefinisikan **alur interaksi dan perilaku** berdasarkan PDD v1.4 dan PRD v1.5 yang telah ditetapkan sebagai baseline final: user flow, screen behavior, state, validasi, feedback, error handling, permission-aware visibility, serta transisi. Dokumen ini bukan penetapan visual detail (warna, tipografi, spacing → Design System), bukan prototype, dan bukan keputusan arsitektur teknis. Nilai operasional yang belum ditetapkan tidak boleh dikarang; gunakan Launch Configuration Register yang disahkan sebelum implementasi. Jika sumber requirement tidak menentukan perilaku pada suatu kondisi tepi, UI tidak boleh menjanjikan hasil yang belum ditetapkan.
+> Dokumen ini mendefinisikan **alur interaksi dan perilaku** berdasarkan PDD v1.5 FINAL dan PRD v1.6 FINAL yang telah ditetapkan sebagai baseline mandiri: user flow, screen behavior, state, validasi, feedback, error handling, permission-aware visibility, serta transisi. Dokumen ini bukan penetapan visual detail (warna, tipografi, spacing → Design System), bukan prototype, dan bukan keputusan arsitektur teknis. Nilai operasional yang belum ditetapkan tidak boleh dikarang; gunakan Launch Configuration Register yang disahkan sebelum implementasi. Jika sumber requirement tidak menentukan perilaku pada suatu kondisi tepi, UI tidak boleh menjanjikan hasil yang belum ditetapkan.
 
 ---
 
@@ -40,23 +40,23 @@ Satu aplikasi dengan navigasi yang menyesuaikan role aktif user (bukan portal te
 | PM | My Today, My History + Project Risk (reference-based, scoped); Pulse Dashboard tidak otomatis tersedia |
 | HRGA | Compliance Queue, **Leave Approval (jika Authorized Approver)**, Holiday/Exemption Management (sesuai kewenangan), Coaching/Warning Record (sesuai kewenangan), **Reports (compliance-scoped)**, **Correction & Leave Review (jika Authorized Reviewer/Approver)**; Pulse Dashboard tidak otomatis tersedia |
 | CEO/Management | Menu dasar sesuai role + **Pulse Dashboard** (Management Pulse, company-wide jika berwenang), Escalation Aging, **Reports (company-wide)** |
-| System Admin | Admin: User & Org (sesuai kewenangan), Temporary Reviewer, Notification Setup; Pulse Dashboard tidak otomatis tersedia tanpa permission dashboard |
+| System Admin | Admin: User & Invitation (`/admin/users`), Organizational Mapping (`/admin/organization`) (sesuai kewenangan), Temporary Reviewer, Notification Setup; Pulse Dashboard tidak otomatis tersedia tanpa permission dashboard |
 
 > **Policy Settings bukan lagi menu eksklusif System Admin.** Menu "Policy Settings" muncul untuk **role mana pun yang punya minimal satu kategori kebijakan sebagai kewenangannya** (sesuai FR-34/BR-15) — isinya di-filter per kategori yang jadi authority-nya masing-masing. Lihat Section 4.18.
 
 User dengan multi-role (mis. Head yang juga mengisi check-in sendiri) tetap punya akses "My Today" sebagai Employee — role tambahan menambah menu, tidak menggantikan menu dasar.
 
 **Struktur sidebar dan konteks akun:**
-- Sidebar mengelompokkan menu menjadi **Workspace** (alur pribadi/self-service) dan **Management** (dashboard, queue, reporting, dan governance) bila role aktif memiliki menu pada kedua kelompok. Kelompok yang kosong tidak ditampilkan. Urutan dan nama menu tetap mengikuti tabel role di atas; pengelompokan tidak menciptakan permission baru.
-- Identitas akun (nama dan role aktif) berada pada area akun di bagian bawah sidebar, mengikuti pola shell yang konsisten antarlaman. Jangan menambahkan kartu besar berisi role/scope/permission tepat di bawah logo sebagai elemen wajib global.
+- Sidebar mengelompokkan menu menjadi **Workspace** (alur pribadi/self-service), **Management** (dashboard, queue, reporting, dan kepatuhan), serta **Administration** (`/admin/users`, `/admin/organization`, `/admin/temporary-reviewer`, `/policy-settings`) bila role aktif memiliki menu pada kelompok terkait. Kelompok yang kosong tidak ditampilkan. Urutan dan nama menu tetap mengikuti tabel role di atas; pengelompokan tidak menciptakan permission baru.
+- Identitas akun (nama, fungsi/role aktif ringkas, dan tautan ke `/profile`) berada pada area akun di bagian bawah sidebar, mengikuti pola shell yang konsisten antarlaman. Jangan menambahkan kartu besar berisi role/scope/permission tepat di bawah logo sebagai elemen wajib global.
 - Scope aktif dan permission relevan ditampilkan secara ringkas pada konteks halaman management yang membutuhkannya—misalnya subtitle, badge, atau scope note—bukan diduplikasi sebagai daftar chip di bagian atas setiap sidebar. Pada halaman self-service, tidak perlu menampilkan daftar permission; identitas akun dan menu Workspace sudah memadai.
 - Label role, scope, dan permission harus berasal dari role, permission, dan assignment efektif yang ditetapkan sistem; bukan pilihan bebas pengguna dan bukan sekadar teks dekoratif. Menu hanya ditampilkan jika permission sesuai, dan route/data tetap wajib divalidasi di sisi server. Permission bersyarat (mis. Authorized Reviewer/Approver) yang belum diberikan tidak menampilkan menu terkait. Jangan menampilkan scope atau izin yang tidak dimiliki pengguna.
 
 ---
 
-### Aturan final layout sidebar (revisi v1.7.2)
-- Logo/brand dan awal grup Workspace harus memiliki jarak vertikal yang jelas; jarak tidak boleh tampak menempel. Jarak ini diterapkan konsisten pada seluruh shell halaman Workspace/Management.
-- Bila kedua grup tersedia, Workspace dan Management harus memiliki jarak vertikal yang jelas di antara grup. Jangan mengandalkan margin label saja; gunakan jarak antarkelompok yang eksplisit.
+### Aturan final layout sidebar
+- Logo/brand dan awal grup navigasi pertama harus memiliki jarak vertikal yang jelas; jarak tidak boleh tampak menempel. Jarak ini diterapkan konsisten pada seluruh shell halaman aplikasi.
+- Antargrup navigasi yang tersedia (`Workspace`, `Management`, `Administration`) wajib memiliki jarak vertikal eksplisit yang jelas; jangan mengandalkan margin label saja.
 - Identitas akun berada di bagian paling bawah sidebar, dipisahkan oleh pembatas halus. Jangan menempatkan kartu role/scope/permission besar di bawah logo.
 - Pada halaman self-service, tampilkan identitas akun secara ringkas; daftar permission tidak diperlukan. Pada halaman management, scope efektif dan permission yang relevan dijelaskan di konteks konten, dan bila diperlukan ringkasan ringkas di area akun bawah.
 - Bila viewport pendek, jarak boleh dikurangi secara responsif tetapi urutan, pemisahan grup, dan penempatan identitas di bagian bawah tetap dijaga. Sidebar harus tetap dapat discroll tanpa menutupi navigasi atau identitas akun.
@@ -65,6 +65,9 @@ User dengan multi-role (mis. Head yang juga mengisi check-in sendiri) tetap puny
 
 ```
 /login
+  /login/activate                    Aktivasi Akun via Token Undangan Sekali Pakai
+  /login/forgot-password             Permohonan Tautan Pemulihan Kata Sandi
+  /login/reset-password              Penetapan Kata Sandi Baru via Token Pemulihan
 
 /today
   /today/morning                     Morning Commitment
@@ -72,36 +75,36 @@ User dengan multi-role (mis. Head yang juga mengisi check-in sendiri) tetap puny
   /today/additional-work             Add Additional Work
   /today/eod                         EOD Outcome & Continuation
   /today/eod/correction-request      EOD Correction Request (hanya EOD yang sudah submit dan locked)
-  /today/raise-blocker               Raise Instant Blocker
+  /today/raise-blocker               Raise Instant Blocker (+ Sub-tab Blocker Saya)
   /today/leave-request               Ajukan Leave Request
 
 /history                             My History & Weekly Summary
 /history/:date                       Detail satu hari
 
 /notifications                       Web Notification Center
-/profile                             Profile & Settings
+/profile                             Profile & Account Settings
 
 /team                                Team Pulse Dashboard (target route dari menu Pulse Dashboard; Supervisor/TL, team/assigned scope)
 /team/blockers                       Blocker Queue (scoped)
-/team/reviews                       Correction & Leave Review Queue (scoped; tampil sesuai permission Authorized Reviewer/Approver)
+/team/reviews                        Correction & Leave Review Queue (scoped; tampil sesuai permission Authorized Reviewer/Approver)
 /function                            Function Pulse Dashboard (target route dari menu Pulse Dashboard; Head, function-scoped)
-/function/coaching                   Manager Note / Coaching Record
+/function/coaching                   Manager Note / Coaching Record (scoped)
 /function/escalations                Blocker & Escalation Queue (function-scoped)
 
 /my-scope/project-risk               Project Risk View (PM) — agregasi berbasis Reference/Task
 
 /compliance                          Compliance Queue (HRGA)
-/compliance/exemptions               Holiday & individual Exemption Management (Admin/HRGA berwenang)
+/compliance/exemptions               Holiday & Individual/Role Exemption Management (Admin/HRGA berwenang)
 /compliance/leave-approvals          Leave Approval Queue (Authorized Approver)
-/compliance/records                  Coaching/Warning Record (permission ketat)
+/compliance/records                  Coaching/Warning Record (HRGA / permission ketat)
 
 /management                          Management Pulse Dashboard (target route dari menu Pulse Dashboard; CEO/Management berwenang, company-wide)
 /management/escalations              Escalation Aging (company-wide)
 
-/reports                            Reports (scope mengikuti role — lihat 4.23)
-/policy-settings                    Policy Settings (multi-owner, filtered per kategori kewenangan)
-/admin/users                         User & Role Management
-/admin/organization                  Organizational Mapping (Admin/Management berwenang; effective-dated)
+/reports                             Reports (scope mengikuti role — lihat 4.23)
+/policy-settings                     Policy Settings (multi-owner, filtered per kategori kewenangan)
+/admin/users                         User & Invitation Management (Admin/Management berwenang — lihat 4.24)
+/admin/organization                  Organizational Mapping & Project Authority (Admin/Management berwenang; effective-dated — lihat 4.15)
 /admin/temporary-reviewer            Temporary Reviewer Assignment (Admin/Management berwenang)
 /admin/notifications                 Notification Channel Setup
 ```
@@ -110,79 +113,88 @@ User dengan multi-role (mis. Head yang juga mengisi check-in sendiri) tetap puny
 
 ## 4. Spesifikasi Halaman (Behavior, bukan Visual)
 
+### 4.0 Konvensi Ergonomi & Perilaku Lintas-Halaman
+- **Antarmuka Produksi Bersih (*Zero Jargon & Zero Native Browser Alerts*):** Teks UI yang menghadap pengguna bebas dari kebocoran nama *enum* teknis mentah, nomor pasal internal spesifikasi, karakter markdown tak ter-render, maupun dialog bawaan peramban (`window.alert` / `window.confirm`). Seluruh konfirmasi menggunakan komponen dialog internal yang aksesibel. *(Catatan: pada berkas prototipe HTML di tahap desain, panel penguji state diperbolehkan hanya sebagai bilah simulasi terpisah sesuai Playbook-01, namun tidak pernah menjadi bagian dari antarmuka aplikasi produksi).*
+- **Bebas Emoji Unicode:** Seluruh indikator antarmuka menggunakan ikon garis monokrom (*inline SVG stroke*) secara konsisten disertai label teks yang eksplisit; pelaporan kendala (*Blocker*) menggunakan ikon bendera (*flag*), bukan simbol petir.
+- **Layar `403 Access Restricted` Terstandar:** Apabila pengguna mengakses URL langsung ke rute di luar izin peran/scope aktifnya, seluruh kontainer data dan aksi penyegaran disembunyikan, digantikan oleh panel/halaman `403 Akses Dibatasi` yang tenang (tanpa membocorkan eksistensi data di luar wewenang) disertai tombol kembali ke `/today`.
+- **Fokus Deep-Link & Pembersihan Filter:** Navigasi masuk melalui *deep-link* (mis. dari notifikasi atau *drill-down* dashboard) menggulirkan layar ke item sasaran dengan sorotan satu kali yang menghormati `prefers-reduced-motion`. Tombol `Reset Filter` mengembalikan seluruh saringan dan *query string* ke kondisi awal dalam satu klik.
+- **Ketahanan Tata Letak pada Teks Panjang & Layar Sempit:** Kotak centang (*checkbox*) pada kartu daftar tetap sejajar kiri dengan baris pertama judul (tidak melompat sendirian ke atas judul pada mobile), dan string panjang seperti tautan referensi/tiket dibungkus aman (`overflow-wrap: anywhere` dengan `min-width: 0`) agar tidak menimbulkan luapan horizontal.
+
 ### 4.1 Login & Aktivasi Akun
-- Halaman login menerima kredensial dari akun aktif yang telah dibuat Admin/Management berwenang. Tidak tersedia public self-registration.
-- Karyawan yang belum mengaktifkan akun masuk melalui tautan undangan sekali pakai yang dikirim ke alamat akun yang telah dibuat sebelumnya. Halaman aktivasi menampilkan konteks akun yang diundang, memungkinkan karyawan menetapkan kredensial sendiri, dan tidak pernah menampilkan atau mengirim kata sandi permanen.
-- Token yang sudah digunakan, kedaluwarsa, dicabut, atau tidak cocok dengan akun tidak boleh mengaktifkan akun. Tampilkan state error yang menjelaskan langkah berikutnya (minta undangan baru melalui admin), tanpa membocorkan apakah akun orang lain ada.
-- Setelah aktivasi berhasil, tampilkan konfirmasi dan arahkan ke login. Setelah login, arahkan ke `/today` dan tampilkan navigasi sesuai seluruh role/scope aktif. Tidak menetapkan role atau function dari input pengguna.
-- Alur lupa/reset password hanya memulihkan akses ke akun yang sudah ada; tidak membuat akun baru.
-- State minimum untuk prototype: login default, validasi kredensial gagal, akun nonaktif, undangan valid, undangan kedaluwarsa/terpakai, aktivasi berhasil, dan reset password berhasil/gagal.
+- Halaman login (`/login`) menerima kredensial dari akun aktif yang telah dibuat Admin/Management berwenang melalui `/admin/users` (lihat Section 4.24). Tidak tersedia public self-registration. Pada desktop, tata letak menggunakan *split-screen* proporsional (panel nilai budaya akuntabilitas di kiri dan kartu form bersih di kanan), yang beradaptasi menjadi `MobileBrandHeader` ringkas di atas kartu form pada layar sempit; label CTA utama bersifat inklusif bagi seluruh peran (mis. *"Masuk ke Ruang Kerja"*).
+- Karyawan yang belum mengaktifkan akun masuk melalui tautan undangan sekali pakai (`/login/activate?token=:token`) yang dikirim ke alamat email resmi yang telah didaftarkan Admin. Halaman aktivasi menampilkan konteks akun yang diundang secara *read-only*, menyediakan kontrol intip kata sandi (*show/hide password* aksesibel keyboard) serta `PasswordStrengthMeter` (indikator kekuatan 4 segmen + daftar periksa kriteria keamanan *real-time* yang menahan tombol submit hingga terpenuhi), dan tidak pernah menampilkan atau mengirim kata sandi permanen.
+- Token yang sudah digunakan, kedaluwarsa, dicabut, atau tidak cocok dengan akun tidak boleh mengaktifkan akun. Form penetapan kata sandi disembunyikan dan diganti state error tenang yang menjelaskan langkah berikutnya (meminta pengiriman ulang tautan undangan baru melalui Admin/HRGA), tanpa membocorkan apakah akun orang lain ada.
+- Kegagalan autentikasi beruntun yang dibatasi server (*rate-limit / lockout*) menampilkan banner *countdown* waktu tunggu secara tenang tanpa merusak input email. Setelah aktivasi berhasil, tampilkan konfirmasi dan arahkan ke login. Setelah login, arahkan ke `/today` dan tampilkan navigasi sesuai seluruh role/scope aktif tanpa menetapkan role atau function dari input pengguna.
+- Alur lupa/reset password (`/login/forgot-password` dan `/login/reset-password`) hanya memulihkan akses ke akun yang sudah ada dengan respons permohonan yang netral (tidak membocorkan eksistensi email) dan membatalkan sesi lain setelah kata sandi berhasil diperbarui.
+- Apabila sesi pengguna kedaluwarsa saat sedang mengetik form check-in atau evaluasi, aplikasi menampilkan `SessionLockModal` (*in-place re-authentication*, lihat `UF-04`) di atas layar tanpa me-redirect paksa ke `/login`, sehingga draf ketikan tetap utuh (`NFR-01`).
+- State minimum untuk prototype: login default, validasi kredensial gagal, pembatasan percobaan (*rate-limit*), akun nonaktif, undangan valid, undangan kedaluwarsa/terpakai/dicabut, aktivasi berhasil, reset password berhasil/gagal, dan pemulihan sesi di tempat (`SessionLockModal`).
 
 ### 4.2 My Today — Morning Commitment
-- Halaman menampilkan konteks applicable workday, status submission, On-Time Deadline/Cut-Off yang berlaku, serta state submission (belum diisi, tersimpan On-Time, tersimpan Late, atau locked). Nilai waktu yang ditampilkan berasal dari konfigurasi efektif; jangan menuliskan jam produksi tetap di desain.
+- Bagian atas area kerja `/today` menampilkan `DailyWorkflowStepBar` (bilah progres 3 langkah harian: `[1] Morning Commitment` → `[2] Additional Work` → `[3] EOD Outcome` yang membungkus rapi pada layar mobile tanpa *horizontal scroll*), tombol pintas sekunder *"Laporkan Blocker"* berikon bendera di kanan header, serta **Strip Konteks Harian 4 Kolom Terpadu**: Tanggal Kerja Berlaku, Batas Waktu Efektif (`On-Time Deadline` & `Cut-Off` dari konfigurasi kebijakan aktif—jangan meng-hardcode jam produksi tetap), Status Submisi Pagi (`Belum Diisi`, `On-Time`, `Late`, atau `Locked`), dan hasil agregasi *read-only* **`Initial Daily Status`**.
 - **Indefinite Role Exemption (FR-35, BR-07):** Untuk user/jabatan struktural yang dikecualikan secara terbuka tanpa batas waktu (misal CEO, Dewan Direksi), halaman `/today` menampilkan banner penjelas tenang (`ExemptionBanner`): *"Akun Anda memiliki status Pengecualian Partisipasi Terbuka (Indefinite Role Exemption) sesuai kebijakan organisasi. Pengisian Check-in bersifat opsional."* Form tetap dapat diisi bila user ingin mencatat komitmen harian secara mandiri, tetapi tombol submit tidak dibatasi penalti keterlambatan, tidak ada countdown Cut-Off yang menekan, dan sistem tidak pernah mengevaluasi akun ini sebagai No Submission.
-- Form mendukung **0–3 Commitment**. Untuk setiap Commitment, field wajib: teks Commitment dan Initial Risk (GREEN/AMBER/RED); Reference/Task Link opsional. Initial Risk AMBER/RED menampilkan Known Blocker dan Support Needed yang wajib diisi. Validasi inline harus menjelaskan field yang belum lengkap dan mempertahankan input saat gagal.
-- Jika jumlah Commitment = 0, tampilkan keadaan kosong yang eksplisit dan field alasan wajib. Pilihan nol Commitment adalah keadaan submission yang valid, bukan keadaan form yang gagal atau event No Submission. Setelah submit yang valid, submission tetap dicatat menurut aturan waktu; Initial Daily Status ditampilkan sebagai `NOT_APPLICABLE — NO_COMMITMENT`, bukan GREEN/AMBER/RED dan bukan No Submission.
-- Initial Daily Status ditampilkan sebagai hasil agregasi yang hanya-baca (selama pengisian merupakan preview dari data draft; setelah submit menjadi hasil tersimpan): jika salah satu Initial Risk RED → RED; jika tidak ada RED tetapi ada AMBER → AMBER; jika minimal satu Commitment dan semuanya GREEN → GREEN; jika tidak ada Commitment → `NOT_APPLICABLE — NO_COMMITMENT`. UI tidak menyediakan kontrol untuk mengubah hasil agregasi secara manual.
-- **FR-11 copy-forward (ADR-017):** tampilkan sebagai koleksi draft terpisah yang bersumber secara eksklusif dari seluruh Morning Commitment eligible pada hari kerja sebelumnya untuk karyawan yang sama dengan `continuation = Continue`. Jangan memasukkan Additional Work atau `Tomorrow Priority`; jangan menghilangkan atau menggabungkan item eligible, dan jangan menyiratkan bahwa sistem memilih item berdasarkan penilaian baru. Pengguna memilih maksimal 3 item untuk mengisi slot hari ini; koleksi eligible tetap dapat ditinjau saat pemilihan berlangsung. Memilih draft hanya mengisi form, bukan submit. Item terpilih harus ditinjau, dilengkapi field wajib, dan boleh diedit sebelum submission. Tidak ada auto-submit dan tidak ada slot ke-4.
-- `Tomorrow Priority` dari EOD hari kerja sebelumnya, jika ada, ditampilkan terpisah sebagai **konteks saja**, bukan sebagai draft Commitment, bukan slot yang bisa dikonfirmasi, dan tidak mengubah Initial Daily Status.
-- **FR-12 / AC-37 Role-Based Prompt Hint (ADR-016):** Saat user mengetik teks Commitment, `RoleBasedPromptHint` muncul sebagai teks petunjuk visual miring (*italic* inline placeholder) yang disesuaikan dengan 7 fungsi kanonikal Dutamedia (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`) serta fallback netral sesuai FR-12 PRD v1.5. Hint ini bersifat murni pemandu visual (non-binding), tidak mengontaminasi isi input form pengguna, dan tidak disimpan ke database.
-- **FR-63 / AC-72 Commitment Quality Warning / Prompt:** Jika teks komitmen terdeteksi terlalu abstrak atau generik (misal hanya kata tunggal "development", "meeting", "follow-up", "kerja"), sistem memunculkan quality warning kontekstual di bawah field input (`QualityWarningBadge`): *"Komitmen tampak sangat umum. Sebutkan deliverable teramati yang diharapkan selesai hari ini."* Warning ini bersifat edukatif dan pemandu, **tidak menghalangi tombol submit yang valid**, tidak menghasilkan rating kinerja otomatis, dan pengguna tetap memegang kendali penuh atas komitmen yang disubmit.
-- Sebelum Cut-Off, tombol submit aktif jika validasi lulus. Pada atau sebelum On-Time Deadline → On-Time; setelah deadline hingga dan termasuk Cut-Off → Late; setelah Cut-Off → request ditolak tanpa menulis submission baru. Grace Period `0` berarti Cut-Off sama dengan deadline (menggunakan nullish coalescing `?? 30` sesuai ADR-018). Tampilan error setelah Cut-Off harus mempertahankan draft lokal selama sesi jika aman, menampilkan status Locked, dan menawarkan Correction Request hanya jika policy mengizinkannya.
-- Setelah Cut-Off, baseline Morning menjadi read-only. Jika Correction Request tidak diizinkan, tidak menampilkan tombol tersebut; jika diizinkan, CTA membuka **Morning Correction Request** khusus (4.16a). Tidak ada inline edit atau jalan pintas direct edit.
+- Form mendukung **0–3 Commitment** dengan alokasi slot progresif (dimulai dari 1 slot aktif dengan tombol *"+ Tambah Slot Komitmen"* berpenghitung kuota hingga maksimal 3 slot, serta tombol hapus pada slot tambahan). Untuk setiap Commitment, field wajib: teks Commitment dan Initial Risk (`GREEN`/`AMBER`/`RED`); Reference/Task Link opsional. Saat `Initial Risk` bernilai `AMBER` atau `RED`, form membuka field wajib `Known Blocker` dan `Support Needed`, serta menyediakan pemilih opsional untuk mengaitkan tiket Blocker aktif milik pengguna. Validasi inline menjelaskan field yang belum lengkap dan mempertahankan input saat gagal.
+- Jika pengguna mengaktifkan pilihan eksplisit **0 Commitment**, slot 1–3 disembunyikan dan form menampilkan keadaan kosong yang jelas beserta textarea alasan bebas yang wajib diisi (bukan dropdown terbatas). Pilihan nol Commitment adalah keadaan submission yang valid, bukan keadaan form yang gagal atau event No Submission. Setelah submit yang valid, submission tetap dicatat menurut aturan waktu; `Initial Daily Status` ditampilkan sebagai `NOT_APPLICABLE — NO_COMMITMENT`, bukan `GREEN`/`AMBER`/`RED` dan bukan `No Submission`.
+- `Initial Daily Status` ditampilkan sebagai hasil agregasi yang hanya-baca (selama pengisian merupakan preview dari data draft; setelah submit menjadi hasil tersimpan): jika salah satu Initial Risk `RED` → `RED`; jika tidak ada `RED` tetapi ada `AMBER` → `AMBER`; jika minimal satu Commitment dan semuanya `GREEN` → `GREEN`; jika tidak ada Commitment → `NOT_APPLICABLE — NO_COMMITMENT`. UI tidak menyediakan kontrol untuk mengubah hasil agregasi secara manual.
+- **FR-11 Copy-Forward Draft (`DraftBanner`):** Ditampilkan sebagai panel akordeon yang terlipat secara default (`~50px` dengan indikator jumlah item tersedia + tombol *"Tinjau Draf"*) agar tidak mendorong form utama ke bawah layar, dan bersumber secara eksklusif serta utuh dari seluruh Morning Commitment eligible pada hari kerja sebelumnya untuk karyawan yang sama dengan `Continuation = Continue` (`AC-23`). Jangan memasukkan Additional Work atau `Tomorrow Priority`; jangan menyediakan tombol penghapus permanen item eligible di pagi hari; dan jangan menyiratkan bahwa sistem memilih item berdasarkan penilaian baru. Saat dibuka, setiap item draf menampilkan teks komitmen, tautan referensi bila ada, kutipan `Continuation Reason` kemarin, serta **`CarryOverBadge` informatif** (*"Berlanjut"* / *"Carry-Over Hari ke-N"*). **Penting (`DEC-003`):** `CarryOverBadge` di pagi hari murni penanda konteks informatif; sistem **tidak pernah mengunci atau men-disable pilihan `Initial Risk = GREEN`** pada item *carry-over*. Pengguna memilih maksimal 3 item untuk disalin ke slot hari ini, meninjau/mengedit redaksinya, memilih `Initial Risk`, dan menekan submit secara sadar (tidak ada auto-submit dan tidak ada slot ke-4).
+- `Tomorrow Priority` dari EOD hari kerja sebelumnya, jika ada, ditampilkan terpisah sebagai strip pengingat ringkas berlabel *"Hanya Referensi"* tepat di atas Slot #1—bukan sebagai draft Commitment, bukan slot yang bisa dikonfirmasi, dan tidak mengubah `Initial Daily Status`.
+- **FR-12 / AC-37 Role-Based Prompt Hint:** Saat user memfokuskan atau mengetik teks Commitment, `RoleBasedPromptHint` muncul sebagai teks petunjuk visual miring (*italic* inline guidance di bawah input) yang disesuaikan secara otomatis dengan **10 fungsi kanonikal resmi Dutamedia** (`Engineering`, `Quality`, `Operations & Infrastructure`, `R&D`, `Delivery`, `Business Development`, `Sales Enablement & Presales`, `Finance`, `HRGA`, dan `Management`) serta satu fallback netral sesuai kamus resmi PRD v1.6 `FR-12`. Hint ini bersifat murni pemandu visual (non-binding), tidak mengontaminasi isi input form pengguna, dan tidak disimpan ke database.
+- **FR-63 / AC-72 Commitment Quality Warning / Prompt:** Jika teks komitmen terdeteksi terlalu singkat atau terlalu abstrak/generik (misal hanya kata tunggal *"development"*, *"meeting"*, *"follow-up"*, *"kerja"*), sistem memunculkan quality warning kontekstual di bawah field input (`QualityWarningBadge`): *"Komitmen tampak sangat umum. Sebutkan deliverable teramati yang diharapkan selesai hari ini."* Warning ini bersifat edukatif dan pemandu, **tidak menghalangi tombol submit yang valid**, tidak menghasilkan rating kinerja otomatis, dan pengguna tetap memegang kendali penuh atas komitmen yang disubmit.
+- Sebelum Cut-Off, tombol submit aktif jika validasi lulus (didukung aksi simpan draf lokal dan *sticky action bar* pada layar mobile). Pada atau sebelum On-Time Deadline → `On-Time`; setelah deadline hingga dan termasuk Cut-Off → `Late`; setelah Cut-Off → request ditolak penuh tanpa menulis submission baru (`DEC-002`; tidak ada mode pengisian terlambat pasca-Cut-Off dengan alasan keterlambatan). Grace Period `0` valid dan berarti Cut-Off sama dengan On-Time Deadline. Tampilan error setelah Cut-Off mempertahankan draft lokal selama sesi jika aman, menampilkan status `Locked` (`LockedIndicator`), dan menawarkan CTA ke **Morning Correction Request** (`4.16a`) hanya jika policy mengizinkan dan baseline memang pernah disubmit; tidak ada inline edit atau jalan pintas direct edit.
 
 ### 4.3 Add Additional Work
-- Form terpisah dari Morning Commitment (bukan slot ke-4). Dapat diakses kapan saja sepanjang hari kerja pasca-Morning Check-in.
-- Field: deskripsi, Reason (dropdown: Newly Assigned / Missed in Planning / Priority Change / Operational-Incident / Other).
-- Reason = Newly Assigned → field "Assigned By" muncul dan wajib diisi sebelum submit.
-- Additional Work yang sudah dibuat tetap muncul terpisah secara visual dari Commitment 1–3 di sepanjang hari (termasuk saat EOD), dengan bobot tampilan yang setara — bukan sebagai catatan kecil/sekunder.
-- Sesuai ADR-001, Additional Work tidak memiliki permanent lock setelah Cut-Off, tetapi setiap perubahan dan penambahan dilindungi oleh `AuditLog` append-only yang immutable.
+- Form terpisah dari Morning Commitment (bukan slot ke-4), mempertahankan `DailyWorkflowStepBar` (langkah ke-2 aktif) dan Strip Konteks Harian disertai catatan singkat bahwa penambahan pekerjaan tengah hari tidak mengubah baseline komitmen pagi (`FR-07`, `BR-01`). Dapat diakses kapan saja sepanjang hari kerja pasca-Morning Check-in.
+- Menyediakan akordeon *read-only* **Komitmen Pagi Hari Ini** (terlipat secara default) agar pengguna dapat memeriksa kembali baseline paginya tanpa berpindah halaman, atau menampilkan catatan netral non-penghakiman apabila pagi hari tercatat `No Submission`.
+- Panel form dibuka melalui tombol *"+ Tambah Pekerjaan Tambahan"* dengan field: Deskripsi Pekerjaan (dilengkapi `RoleBasedPromptHint` 10 fungsi kanonikal dan `QualityWarningBadge` non-blocking yang setara dengan Morning), `Reason` (dropdown 5 alasan resmi: `Newly Assigned`, `Missed in Planning`, `Priority Change`, `Operational-Incident`, `Other`), dan `Reference / Task Link` opsional.
+- Jika `Reason = Newly Assigned`, field **"Assigned By"** muncul secara kondisional dengan penanda jelas dan wajib diisi sebelum submit.
+- Additional Work yang sudah dibuat tampil terpisah secara visual dari Commitment 1–3 di sepanjang hari (termasuk saat EOD), dengan bobot tampilan yang setara—bukan sebagai catatan kecil/sekunder. Jika belum ada item tambahan, tampilkan *empty mini-strip* yang ringkas disertai pengarah langkah berikutnya ke `EOD Outcome`.
+- Additional Work tidak memiliki penguncian Cut-Off pagi; selama EOD hari tersebut belum disubmit/terkunci, item dapat diperbarui atau dibatalkan melalui konfirmasi tenang di tempat, dengan setiap pembuatan dan perubahan tercatat pada `AuditLog` append-only yang immutable.
 
 ### 4.4 My Today — EOD Outcome
-- Menampilkan semua Morning Commitment dan Additional Work yang relevan dalam dua kelompok yang teridentifikasi jelas; kedua jenis item mendapat bobot visual dan perlakuan outcome setara. Item Morning tetap merujuk pada baseline yang dikomit; Additional Work tidak pernah menjadi slot Commitment.
-- Setiap item memiliki dua kontrol independen: Outcome (`Completed`, `Partially Completed`, `Not Completed`, `Cancelled`) dan Continuation (`Continue`, `Do Not Continue`). Jika Outcome `Cancelled`, alasan wajib. Jika Continuation `Continue`, Continuation Reason wajib **termasuk saat Outcome `Completed`**. Validasi tidak boleh hanya memicu alasan ketika outcome belum selesai.
-- Field `Final Status` berlaku pada tingkat hari. Jika `AMBER` atau `RED`, penjelasan risiko/blocker tingkat-hari wajib diisi dan dibedakan dari Known Blocker/Support Needed per Commitment.
-- Status Suggestion ditampilkan sebagai saran terpisah dan dihitung dengan heuristik tetap PRD FR-13 / AC-38 (ADR-013):
-  1. Blocker aktif Critical → RED;
-  2. Jika minimal 50% item pekerjaan dengan Outcome valid berstatus Not Completed atau Cancelled → RED;
-  3. Jika carry-over/continuation kedua berturut-turut pada item komitmen yang sama atau terdapat blocker aktif High → minimal AMBER;
-  4. Jika ada Outcome Partially Completed, Not Completed, atau Cancelled tetapi proporsi Not Completed/Cancelled di bawah 50% → minimal AMBER;
-  5. GREEN hanya bila ada item yang dapat dievaluasi, seluruhnya Completed, tidak ada carry-over berulang kedua, dan tidak ada blocker aktif;
-  6. Bila tidak ada item yang dapat dievaluasi dan tidak ada blocker aktif, tidak ada saran. Blocker aktif adalah Open, Acknowledged, atau In Progress.
-- Jika status pilihan user tidak konsisten dengan data, tampilkan `ValidationPromptModal` yang menjelaskan ketidaksesuaian dan menyediakan pilihan untuk mempertahankan status pilihan (dengan penjelasan) atau mengikuti saran sistem. Jangan mengubah pilihan secara diam-diam. Alasan untuk Final Status AMBER/RED tetap wajib sesuai FR-10. Heuristik tidak dapat diubah melalui Policy Configuration.
-- `Tomorrow Priority` bersifat opsional dan tersimpan setelah EOD submit. Pada Morning hari kerja berikutnya, tampilkan sebagai konteks terpisah. Jangan pernah menggunakannya untuk membuat, memilih, mengurutkan, atau mengubah draft FR-11 maupun Initial Daily Status.
-- Submission EOD mengikuti deadline/cutoff yang sama polanya dengan Morning: On-Time pada/sebelum deadline, Late setelah deadline sampai dan termasuk Cut-Off, ditolak tanpa write setelah Cut-Off. State terkunci menunjukkan status submission dan jalur koreksi yang benar.
-- Setelah EOD tersimpan dan terkunci, koreksi hanya melalui **EOD Correction Request** (4.16b). Form ini tidak muncul jika EOD tidak pernah disubmit; tidak dapat membuat EOD baru, menghapus No Submission, atau mengubah Morning baseline.
+- Mempertahankan `DailyWorkflowStepBar` (langkah ke-3 aktif) dan menampilkan semua Morning Commitment serta Additional Work hari kerja tersebut dalam dua kelompok yang teridentifikasi jelas (`Kelompok Morning Commitments` dan `Kelompok Additional Work`; *mini-strip* netral bila 0 Additional Work). Kedua jenis item mendapat bobot visual dan perlakuan evaluasi outcome yang setara; item Morning tetap merujuk pada baseline yang dikomit, sedangkan Additional Work tidak pernah menjadi slot Commitment dan tidak masuk ke koleksi copy-forward `FR-11` esok pagi.
+- Setiap `EODWorkItemCard` menampilkan badge konteks awal (`Initial Risk` pagi atau `Reason` + `Assigned By` tugas tambahan), field opsional tautan bukti/deliverable, serta dua kontrol *segmented* independen: `Outcome` (`Completed`, `Partially Completed`, `Not Completed`, `Cancelled`) dan `Continuation` (`Continue`, `Do Not Continue`). Jika `Outcome = Cancelled`, alasan pembatalan wajib diisi. Jika `Continuation = Continue`, `Continuation Reason` wajib diisi **termasuk saat `Outcome = Completed`**.
+- Field `Final Status` (`GREEN`, `AMBER`, `RED`) berlaku pada tingkat hari. Jika `AMBER` atau `RED`, penjelasan risiko/blocker tingkat-hari (`Daily Risk Explanation`) wajib diisi (dilengkapi penghitung karakter minimum *real-time*) dan dibedakan dari Known Blocker/Support Needed per Commitment.
+- **Status Suggestion Engine (`FR-13` / `AC-38`):** Ditampilkan sebagai panel saran terpisah (menampilkan state netral *"Menunggu Evaluasi Tugas"* saat belum ada item yang dievaluasi) dan dihitung menggunakan heuristik produk tetap yang deterministik:
+  1. Terdapat Blocker aktif ber-severity `Critical` → menyarankan `RED`;
+  2. Minimal 50% item pekerjaan yang dievaluasi berstatus `Not Completed` atau `Cancelled` → menyarankan `RED`;
+  3. Terdapat *carry-over* / `Continuation = Continue` kedua berturut-turut ($\ge 2$ hari) pada item komitmen yang sama atau terdapat Blocker aktif ber-severity `High` → menyarankan minimal `AMBER`;
+  4. Terdapat `Outcome` bernilai `Partially Completed`, `Not Completed`, atau `Cancelled` dengan proporsi `Not Completed`/`Cancelled` di bawah 50% → menyarankan minimal `AMBER`;
+  5. `GREEN` disarankan hanya bila ada item yang dapat dievaluasi, seluruhnya `Completed`, tidak ada *carry-over* berulang kedua, dan tidak ada Blocker aktif;
+  6. Bila tidak ada item yang dapat dievaluasi dan tidak ada Blocker aktif, sistem tidak menampilkan saran status. Blocker aktif mencakup status `Open`, `Acknowledged`, dan `In Progress`.
+- **Tanpa Penguncian Paksa Status (`DEC-003`, `FR-14`, `AC-39`):** Sistem **dilarang keras mengunci atau men-disable pilihan `Final Status = GREEN`**, meskipun terdapat *carry-over* berulang $\ge 2$ hari atau Blocker aktif. Apabila status pilihan pengguna berbeda dari saran sistem, penekanan tombol simpan memicu `ValidationPromptModal` yang seimbang (opsi menggunakan saran sistem atau tetap mempertahankan pilihan pengguna disertai alasan singkat), tanpa pernah mengubah pilihan pengguna secara diam-diam (*no silent mutation*). Heuristik saran ini adalah aturan produk tetap dan tidak dapat diubah melalui Policy Configuration.
+- `Tomorrow Priority` bersifat opsional dan tersimpan setelah EOD submit untuk ditampilkan pada Morning hari kerja berikutnya murni sebagai strip referensi konteks (tidak pernah dipakai membentuk/mengurutkan draf `FR-11` maupun `Initial Daily Status`). *Sticky footer* menampilkan progres kelengkapan evaluasi (`X dari Y item telah dievaluasi`) berdampingan dengan tombol simpan.
+- Submission EOD mengikuti aturan waktu yang simetris dengan Morning (`DEC-002`): `On-Time` pada/sebelum On-Time Deadline, `Late` setelah deadline sampai dan termasuk Cut-Off, dan ditolak penuh tanpa penulisan data setelah Cut-Off.
+- Setelah EOD tersimpan dan terkunci, koreksi hanya dapat diajukan melalui **EOD Correction Request** (`4.16b`). Jalur ini tidak tersedia apabila EOD tidak pernah disubmit (`No Submission`), tidak dapat dipakai membuat EOD baru dari nol, tidak menghapus event `No Submission`, dan tidak mengubah baseline Morning.
 
 ### 4.5 Raise Instant Blocker
-- Dapat diakses kapan saja dari mana pun (tidak terkunci ke siklus Morning/EOD), termasuk saat baseline sudah locked.
-- Form Blocker mewajibkan field taksonomi resmi sesuai PRD FR-16 & AC-55:
-  - **Type (10 enum resmi PRD):** `Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`. (UI dapat menyertakan label deskriptif pembantu, mis. `Requirement (Ambiguitas Spesifikasi)`, `Vendor (Pihak Ketiga)`).
-  - **Severity (4 enum resmi PRD):** `Critical`, `High`, `Medium`, `Low`.
+- Dapat diakses kapan saja dari mana pun melalui tombol pintas *"Laporkan Blocker"* atau rute `/today/raise-blocker` (tidak terkunci ke siklus Morning/EOD), termasuk saat baseline sudah locked.
+- Untuk menjaga struktur menu sidebar tetap ramping sesuai Section 2 (tanpa menambah menu terpisah di sidebar), halaman `/today/raise-blocker` menyediakan **2 Sub-Tab**:
+  1. **`Buat Laporan Baru`:** Formulir pelaporan kendala baru dengan opsi mengaitkan ke komitmen/pekerjaan hari ini.
+  2. **`Blocker Saya`:** Daftar kendala yang dilaporkan oleh pengguna sendiri beserta filter pil (`Semua`, `Aktif`, `Menunggu Konfirmasi Saya [Resolved]`, `Selesai`), sehingga pelapor memiliki akses langsung yang jelas untuk memverifikasi solusi (`Confirm Closed` atau `Reopen`, lihat `UF-18`).
+- Form Blocker mewajibkan field taksonomi resmi sesuai PRD `FR-16` & `AC-55`:
+  - **Type (10 enum resmi PRD):** `Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other` (UI menyertakan label deskriptif Bahasa Indonesia yang membantu).
+  - **Severity (4 enum resmi PRD):** `Critical`, `High`, `Medium`, `Low` (disajikan sebagai kartu pilihan radio yang jelas).
   - **Impact (7 enum resmi PRD):** `Task`, `Milestone`, `Project`, `Production`, `Client`, `Financial`, `Compliance`.
   - **Authority Context:** `Organizational Authority` (default) atau `Project Authority` (eksplisit).
-  - **Pilihan orang tertentu (opsional):** default kosong (*“Tidak memilih orang tertentu”*).
-  - **Expected Resolution (opsional):** target tanggal/waktu atau teks ekspektasi penyelesaian.
-- `Organizational Authority` menjadi Authority Context default. `Project Authority` hanya dipilih secara eksplisit ketika blocker berkaitan dengan project/reference tertentu; jika dipilih, konteks project/reference yang diperlukan harus teridentifikasi.
-- Pilihan orang tertentu bersifat opsional. Gunakan keadaan kosong dengan label seperti **“Tidak memilih orang tertentu”**; jangan menambahkan pilihan terpisah “Biarkan sistem menentukan”. Bantuan singkat menjelaskan bahwa jika kolom dibiarkan kosong, sistem menentukan Owner Needed berdasarkan Authority Context dan aturan penugasan yang berlaku:
-  - Untuk Organizational Authority, Direct Manager (Level 1) adalah kandidat awal bagi blocker pekerjaan sehari-hari.
-  - Untuk Project Authority, sistem menggunakan Project Authority Mapping aktif yang cocok dengan project/reference.
-- Matriks eskalasi bawaan mengikuti hierarki 4 jenjang Dutamedia: Level 1 (Direct Manager/Lead) → Level 2 (Head of Department) → Level 3 (Department Head of Operations / General Management) → Level 4 (CEO / Board of Directors).
-- Jika pengguna memilih orang, sistem memvalidasi status aktif, Authority Context, scope, dan assignment/mapping yang berlaku. Pilihan yang tidak valid menampilkan pesan yang dapat ditindaklanjuti dan tidak diterima diam-diam.
-- Jika penerima otomatis tidak tersedia atau ambigu, sistem menggunakan fallback yang dikonfigurasi. Jika tidak ada penerima valid setelah fallback, submit gagal dengan pesan yang jelas; UI tidak menampilkan status berhasil dan tidak mengirim kepada orang yang tidak sesuai.
-- Setelah penerima berhasil ditentukan, submit memicu notifikasi sesuai Notification/Escalation Rules. Penentuan Owner Needed awal tidak boleh disamakan dengan escalation chain.
+  - **Pilihan orang tertentu (opsional):** default kosong (*"Tidak memilih orang tertentu"* — jangan menambahkan opsi terpisah *"Biarkan sistem menentukan"*).
+  - **Deskripsi Masalah (wajib, dengan penghitung karakter minimum)** dan **Expected Resolution (opsional)**.
+- Seksi `Authority Context` menampilkan **`LiveRoutePreviewBox`** yang memperlihatkan secara langsung siapa `Owner Needed` kandidat hasil resolusi sistem beserta `AuthorityTag` sebelum tombol kirim ditekan:
+  - Untuk `Organizational Authority` (default), `Direct Manager` aktif (Level 1) menjadi kandidat awal; jika tidak tersedia, menggunakan fallback organisasi yang dikonfigurasi.
+  - Untuk `Project Authority` (dipilih eksplisit ketika berkaitan dengan proyek/referensi tertentu), form mewajibkan identifikasi scope proyek/referensi dan menyelesaikan penerima berdasarkan `Project Authority Mapping` aktif yang cocok.
+- Matriks eskalasi bawaan mengikuti hierarki 4 jenjang Dutamedia: Level 1 (Direct Manager/Lead) → Level 2 (Head of Department) → Level 3 (Department Head of Operations / General Management) → Level 4 (CEO / Board of Directors). Penentuan `Owner Needed` awal dibedakan secara tegas dari *escalation chain*.
+- Jika pengguna memilih orang tertentu secara manual, sistem memvalidasi keaktifan akun, kesesuaian `Authority Context`, dan scope mapping. Pilihan tidak valid atau ketiadaan penerima sah pasca-fallback ditolak dengan pesan perbaikan yang jelas tanpa menampilkan status sukses palsu (`AC-60`, `AC-61`). Setelah berhasil dikirim, tampilkan kartu ringkasan tiket resmi (`#BLK-...`, status awal `Open`, pemilik tujuan, dan pintasan ke sub-tab `Blocker Saya`).
 
 ### 4.6 My History & Weekly Summary
-- List/kalender per hari dengan status badge; klik → detail hari tersebut (read-only).
-- Tiap hari menampilkan **dua dimensi berdampingan**: submission timing (On-Time/Late/No Submission) dan Final Status (GREEN/AMBER/RED) bila EOD valid tersedia — keduanya tidak digabung jadi satu badge. Initial Daily Status, jika ditampilkan, merupakan dimensi terpisah; `NOT_APPLICABLE — NO_COMMITMENT` tidak boleh dipetakan menjadi GREEN. Bila belum ada EOD, jangan mengarang Final Status.
-- **Weekly Summary (FR-66, FR-67):** Agregat Commitments, distribusi Outcome, Status Days, recurring pattern Continuation, **Support Contribution yang diberikan (FR-64)**, Open Escalations, serta Manager Notes yang diizinkan dilihat user.
-- Tampilan riwayat dan summary tidak menggunakan streak kompetitif, pemeringkatan rekan kerja, atau elemen leaderboard (FR-66).
-- Riwayat Correction Request (Applied/Rejected) milik user ikut tampil di detail hari terkait, dengan tautan ke detail pengajuannya. 
-- `ExportButton` tersedia untuk export histori/weekly summary milik sendiri sebagai evidence pribadi (FR-42).
+- Diakses melalui `/history`, dilengkapi toolbar periode global (preset minggu/bulan & rentang tanggal) dan `ExportButton` (ekspor CSV ber-UTF-8 BOM sesuai RFC-4180 dan PDF terbatas pada histori milik sendiri, `FR-42`), serta diorganisasikan dalam **2 Tab Utama**:
+  1. **Tab `Riwayat Harian` (Default):** Menampilkan sub-filter kehadiran (`Semua Hari Kerja`, `Ada Submission`, `Tanpa Submission`) dan daftar baris/kalender harian di atas lipatan layar. Tiap hari menampilkan **dua dimensi badge berdampingan secara terpisah**: `SubmissionTimingBadge` (`On-Time` biru info, `Late` oranye, `No Submission` abu-abu netral) dan `StatusBadge` (`GREEN`/`AMBER`/`RED` bila EOD valid tersedia, atau label netral bila EOD belum ada; `Initial Daily Status` `NOT_APPLICABLE — NO_COMMITMENT` untuk 0 komitmen tidak pernah dipetakan menjadi `GREEN`). Tanggal hari libur/cuti/pengecualian menampilkan penanda yang jelas (`Holiday`, `Leave (Pending)`, `Leave (Approved)`, `Exemption`), termasuk penanda audit **`Superseded by Approved Leave`** apabila suatu catatan `No Submission` direkonsiliasi karena persetujuan cuti yang turun pasca-Cut-Off (`DEC-007`).
+  2. **Tab `Ringkasan Mingguan` (`FR-66`, `FR-67`):** Menampilkan badge penghitung `[X Catatan]` pada tab bila terdapat `Manager Note` yang ditandai *Visible to Employee* pada periode terpilih. Bagian teratas menampilkan **Kartu Hero Catatan Pembinaan Pimpinan** (menampilkan 1 catatan terbaru secara utuh + akordeon *"Lihat [X] Catatan Sebelumnya"* bila $>1$, atau 1 baris netral tenang bila belum ada catatan), diikuti **Grid 2×3 Kartu Metrik Akuntabilitas Personal** (Komitmen Pagi, Distribusi Outcome, Distribusi Hari per Final Status, Ketepatan Waktu Submisi, Pola Continuation Berulang, serta `Support Contribution` yang diberikan [`FR-64`] & Eskalasi Terbuka).
+- Seluruh tampilan riwayat dan summary bebas dari *streak* kompetitif, pemeringkatan rekan kerja, skor KPI otomatis, atau elemen *leaderboard* (`FR-66`, `AC-75`).
+- Klik pada salah satu hari membuka **`/history/:date` (*Read-Only Day Detail*)** yang mempertahankan *state* tab/filter sebelumnya saat pengguna menekan tombol kembali, menampilkan konteks snapshot organisasi historis pada tanggal tersebut (`FR-02`, `FR-24`), banner penjelasan objektif bila hari tersebut berstatus `No Submission`, serta panel riwayat `Correction Request` (`Applied`/`Rejected`) berdampingan secara transparan tanpa menimpa rekaman asli.
 
 ### 4.7 Web Notification Center & Browser Push
-- Web Notification Center adalah daftar notifikasi in-app yang tersimpan, terurut waktu, dengan indikator dibaca/belum dan deep link ke konteks terkait. Status dibaca di pusat notifikasi tidak boleh disamakan dengan status delivery Email/Browser Push.
-- Browser Push merupakan delivery nyata pada MVP hanya untuk trigger yang ditetapkan di PRD Section 8. Ringkasan trigger/channel yang harus tercermin di UI:
+- Diakses melalui `/notifications`, menampilkan bar metrik ringkas 1 baris (`Total Notifikasi`, `Belum Dibaca`, serta kartu interaktif `Status Browser Push Perangkat Ini` yang membuka Tab 2 saat diklik) dan diorganisasikan dalam **2 Tab Utama**:
+  1. **Tab `Daftar Notifikasi` (Default):** Daftar notifikasi in-app yang tersimpan dan terurut waktu, dilengkapi filter pil (`Semua`, `Belum Dibaca`, `Sudah Dibaca`), filter kategori sesuai pemicu resmi PRD §8, pencarian teks instan, toggle baca/belum-baca per baris, serta tombol *"Tandai Semua Dibaca"* (disertai *toast* `Urungkan / Undo` berdurasi singkat). Klik item menandai `Read` dan membuka *deep-link* dengan label tombol CTA kontekstual sesuai objek tujuan (serta *fallback* ramah apabila objek tidak lagi dalam scope akses pengguna). Tautan dari notifikasi email yang memuat penanda baca otomatis menandai item in-app terkait sebagai `Read`. Status dibaca di pusat notifikasi murni status in-app dan tidak pernah disamakan dengan status *delivery* Email/Browser Push.
+  2. **Tab `Pengaturan Kanal & Perangkat`:** Menampilkan **Kartu Kontrol Browser Push Spesifik Perangkat** yang membedakan 7 kondisi nyata (`Unsupported`, `Belum Diminta` + tombol opt-in eksplisit, `Granted` + uji kirim perangkat lokal & panduan cabut izin browser, `Denied` + panduan membuka pengaturan situs browser tanpa memblokir alur kerja, `No Subscription`, `Delivery Attempted/Unknown`, dan `Delivery Failed`) berdampingan dengan **Tabel Referensi Read-Only Matriks Kanal per Trigger** sesuai PRD Section 8.
+- Browser Push merupakan delivery nyata pada MVP hanya untuk trigger yang ditetapkan di PRD Section 8:
   - Morning/EOD mendekati On-Time Deadline: Employee — Email + Browser Push.
   - AMBER + support needed: assigned support owner + employee — Email + Browser Push + Web Notification Center.
   - RED, critical/instant blocker, dan blocker unacknowledged melewati threshold: penerima sesuai authority/escalation chain — Email + Browser Push.
@@ -191,158 +203,168 @@ User dengan multi-role (mis. Head yang juga mengisi check-in sendiri) tetap puny
   - Policy/organizational assignment change: affected user + relevant Authorized Policy Owner — Web Notification Center.
   - Morning/EOD Material Correction Request submitted: Authorized Reviewer — Web Notification Center + Email; approaching end of Objection Window — Web Notification Center; Applied/Rejected — employee submitter via Web Notification Center.
   - Invitation issued/resend: account owner — Email; Leave Request submitted: Authorized Approver — Email + Browser Push; Leave approved/rejected: employee submitter — Email + Web Notification Center.
-  Semua notifikasi tercatat di Web Notification Center sesuai PRD; tabel ini bukan izin untuk menambah Push pada trigger yang tidak tercantum.
-- Untuk browser yang mendukung Push dan izin belum diberikan, tampilkan penjelasan singkat dan aksi eksplisit untuk mengaktifkan izin. Jangan meminta izin secara berulang atau menghalangi check-in jika izin ditolak.
-- Jika browser tidak mendukung, izin ditolak, subscription tidak tersedia, atau delivery gagal, UI menampilkan status kanal yang akurat (tidak aktif/tidak didukung/gagal) dan tidak menampilkan “Push terkirim”. Proses inti tetap berjalan; gunakan Email dan Web Notification Center sesuai matriks trigger. Jangan menyamakan “notifikasi tercatat” dengan “push delivered”.
-- Jika ada pengaturan channel, tampilkan status permission browser dan cara membuka pengaturan browser secara informatif; aplikasi tidak boleh berpura-pura dapat mengubah permission browser sendiri.
+  Semua notifikasi tercatat di Web Notification Center sesuai PRD; daftar ini bukan izin untuk menambah Push pada trigger yang tidak tercantum.
+- Untuk browser yang mendukung Push dan izin belum diberikan, permintaan izin hanya dipicu oleh aksi klik sadar pengguna (bukan *auto-popup* berulang) dan penolakan izin tidak pernah menghalangi pengisian check-in maupun eskalasi blocker.
+- Jika browser tidak mendukung, izin ditolak, subscription tidak tersedia, atau delivery gagal, UI menampilkan status kanal yang akurat dan tidak menampilkan *"Push terkirim"*; aplikasi tidak berpura-pura dapat mengubah permission browser secara langsung.
 
 ### 4.8 Team Pulse / Function Pulse / Management Pulse Dashboard
 Pola sama di ketiga level (scope berbeda: team/scoped, function, company-wide):
-- Ketiganya diakses melalui satu item sidebar bernama **Pulse Dashboard**. Item ini bukan dashboard keempat dan bukan pemberian akses universal; ia merupakan pintu navigasi ke dashboard yang diizinkan.
-- Saat pengguna hanya memiliki satu cakupan dashboard, klik membuka dashboard itu langsung: Supervisor/TL → Team Pulse; Head/Function Owner → Function Pulse; CEO/Management yang berwenang → Management Pulse.
-- Jika pengguna memiliki lebih dari satu kewenangan dashboard yang valid, UI menyediakan pemilih cakupan hanya untuk opsi yang memang diizinkan. Tidak boleh menampilkan pilihan cakupan tanpa permission yang sesuai.
-- Employee biasa tidak melihat item Pulse Dashboard dan tidak memperoleh akses ke ketiga dashboard hanya karena memiliki akun. PM, HRGA, dan System Admin juga tidak otomatis memperoleh akses dashboard; akses hanya tersedia jika diberikan secara eksplisit oleh role/permission dan scope yang sah.
-- Route dan data tetap wajib memvalidasi authorization di sisi sistem. Menyembunyikan item sidebar saja tidak cukup. Permintaan tanpa izin atau di luar scope harus ditolak tanpa membocorkan data.
-- **Exception-first layout**: bagian teratas menampilkan RED, unacknowledged blocker, dan no-submission.
-- **Widget Resmi Dashboard Head / Supervisor (FR-68):**
-  1. **Team status summary:** jumlah status GREEN, AMBER, RED, dan No Submission hari ini.
-  2. **Exceptions first:** daftar item berkategori RED, AMBER, carry-over berulang, blocker belum di-acknowledge, dan kejadian No Submission.
-  3. **Open blockers by owner:** daftar blocker terbuka dikelompokkan berdasarkan support owner penanggung jawab.
-  4. **Carry-over trend:** sorotan pekerjaan yang mengalami `Continuation = Continue` berulang $\ge 2$ hari berturut-turut.
-  5. **Cross-project support:** rekaman kontribusi bantuan lintas tim/proyek yang diberikan anggota tim (FR-64).
+- Ketiganya diakses melalui satu item sidebar bernama **Pulse Dashboard**. Item ini bukan dashboard keempat dan bukan pemberian akses universal; ia merupakan pintu navigasi ke dashboard yang diizinkan (`AC-62`).
+- Saat pengguna hanya memiliki satu cakupan dashboard, klik membuka dashboard itu langsung (Supervisor/TL → `/team` Team Pulse; Head/Function Owner → `/function` Function Pulse; CEO/Management yang berwenang → `/management` Management Pulse) dan bilah pemilih cakupan disembunyikan sepenuhnya.
+- Jika pengguna memiliki lebih dari satu kewenangan dashboard yang valid, UI merender pemilih cakupan hanya untuk opsi yang memang diizinkan (`AC-63`) serta mempertahankan cakupan terakhir di URL/sesi saat pengguna kembali dari *drill-down*.
+- Employee biasa tidak melihat item Pulse Dashboard; PM, HRGA, dan System Admin juga tidak otomatis memperoleh akses dashboard kecuali diberi permission/scope eksplisit. Route dan data wajib memvalidasi otorisasi di sisi server (`AC-64`); akses langsung tanpa izin menampilkan layar `403 Access Restricted` tanpa membocorkan data.
+- **Exception-first layout & Interaktivitas Triage:** Bagian teratas menampilkan 4 `InteractiveMetricFilterCard` (`RED`, `Blocker Belum Diakui`, `No Submission`, `AMBER`) yang dapat diklik untuk menyaring dan menggulir halus ke widget target. Daftar `Exceptions First` menyajikan item teratas (`RED` → `AMBER` → `No Submission`) secara ringkas tanpa duplikasi badge disertai tombol *"Lihat Semua"* (modal daftar lengkap berfilter) dan **Modal Drill-Down Anggota** (melihat komitmen pagi, EOD, `Tomorrow Priority`, dan blocker anggota beserta pintasan kontekstual ke Histori, `Manager Note`, atau `Blocker Queue` sesuai wewenang, dengan *back-stack* yang mempertahankan filter sebelumnya).
+- **Widget Resmi Dashboard Head / Supervisor (FR-68, AC-77):**
+  1. **Team status summary:** jumlah status `GREEN`, `AMBER`, `RED`, `NOT_APPLICABLE — NO_COMMITMENT`, dan `No Submission` hari ini (memisahkan dimensi risiko dari ketepatan waktu).
+  2. **Exceptions first:** daftar item berkategori `RED`, `AMBER`, carry-over berulang, blocker belum di-acknowledge, dan kejadian `No Submission`.
+  3. **Open blockers by owner:** daftar blocker terbuka dikelompokkan berdasarkan support owner penanggung jawab (dilengkapi *positive empty state* tenang bila 0 blocker aktif).
+  4. **Carry-over trend:** sorotan pekerjaan yang mengalami `Continuation = Continue` berulang $\ge 2$ hari berturut-turut sebagai sinyal perencanaan kapasitas.
+  5. **Cross-project support:** rekaman kontribusi bantuan lintas tim/proyek yang diberikan anggota tim (`FR-64`).
   6. **Weekly team summary:** ringkasan mingguan keandalan komitmen tim tanpa elemen leaderboard atau pemeringkatan.
-- **Widget Resmi Management Pulse / CEO Dashboard (FR-69):**
+- **Widget Resmi Management Pulse / CEO Dashboard (FR-69, AC-78):**
   1. **Company-wide exception overview by function:** ringkasan komparatif exception lintas divisi.
   2. **RED/AMBER trend per function & project:** grafik tren risiko mingguan/bulanan per fungsi dan proyek.
   3. **Top recurring blockers by category:** visualisasi taksonomi blocker paling sering dari 10 kategori resmi (`Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`).
   4. **No-submission trend & repeated compliance cases:** grafik tren kepatuhan pengisian dan kasus pola No Submission.
-  5. **Unresolved escalation aging:** daftar penuaan eskalasi blocker yang belum tuntas.
+  5. **Unresolved escalation aging:** ringkasan penuaan eskalasi blocker yang belum tuntas dengan pintasan ke `/management/escalations`.
   6. **Project-impact & client-impact incidents:** sorotan blocker dengan dampak `Project`, `Production`, atau `Client`.
-- Dilarang mutlak menampilkan leaderboard, ranking individu berbasis volume task, atau skor KPI otomatis (FR-69).
+- Dilarang mutlak menampilkan leaderboard, ranking individu berbasis volume task, atau skor KPI otomatis (`FR-69`, `NFR-12`).
 - Antrean Correction Request dan Leave Request ditampilkan melalui menu/queue khusus hanya kepada Authorized Reviewer/Approver dalam scope-nya.
 
 ### 4.9 Blocker & Escalation Queue
-- List blocker sesuai scope, dengan filter taksonomi lengkap menggunakan `FilterBar`: Type (10 enum), Severity (4 enum), Impact (7 enum), dan Status (`Open`, `Acknowledged`, `In Progress`, `Resolved`, `Closed`, `Accepted Risk`).
-- Row/detail menampilkan Owner Needed berdasarkan **authority context**: sistem menandai apakah owner ditentukan lewat Organizational Authority (default) atau Project Authority (dipilih eksplisit), dan bila relevan menampilkan bahwa penerima dipilih manual atau ditentukan otomatis. Perbedaan ini terlihat jelas di UI via `AuthorityTag`, bukan disamarkan sebagai satu "assignee" generik.
-- **Action button yang tampil hanya sesuai state blocker dan kewenangan aktor saat ini:**
+- Diakses melalui `/team/blockers` atau `/function/escalations`, menampilkan 3 `InteractiveMetricFilterCard` di atas (`Butuh Respons [Open]`, `Sedang Ditangani [Acknowledged / In Progress]`, `Menunggu Konfirmasi Pelapor [Resolved]`) dan tata letak **`MasterDetailSplitWorkbench`** (`42% : 58%` di desktop; berubah menjadi panel *drawer/bottom-sheet* responsif pada tablet/mobile agar bebas tabel bergulir horizontal):
+  - **Panel Kiri (Daftar Antrean):** Tab filter cepat (`Semua`, `Tanggung Jawab Saya`, `Belum Di-acknowledge`, `Critical/High`, `Menunggu Konfirmasi Pelapor`), `FilterBar` taksonomi lengkap (Type 10 enum, Severity 4 enum, Impact 7 enum, Status 6 state), dan daftar kartu ringkas 3 baris terurut urgensi (mendukung *deep-link* tiket/owner dan *positive empty state* saat 0 hambatan aktif).
+  - **Panel Kanan (Detail & Tindakan):** Rincian masalah, `AuthorityTag` eksplisit (`Organizational Authority` default vs `Project Authority` eksplisit, beserta keterangan penunjukan otomatis vs manual), `ActionPanel` kontekstual, daftar `SupportContributionCard`, serta `AuditTrailTimeline` siklus hidup tiket.
+- **Action button pada `ActionPanel` tampil ketat sesuai state blocker dan kewenangan aktor saat ini (dengan validasi modal inline tanpa `window.alert`):**
   - `Open` → Tombol `Acknowledge` bagi assigned support owner atau hierarki di atasnya.
   - `Acknowledged` → Tombol `Start Progress` / `Update` memindahkan ke `In Progress`.
-  - `In Progress` → Tombol `Resolve` (mewajibkan `Resolution Note` rinci) memindahkan status ke `Resolved`.
-  - `Resolved` → Khusus pelapor (`raisedByUserId`):
+  - `In Progress` → Tombol `Resolve` (mewajibkan `Resolution Note` rinci dengan penghitung karakter minimum) memindahkan status ke `Resolved`.
+  - `Resolved` → Khusus pelapor asli (`raisedByUserId`):
     - Tombol `Confirm Closed` → memindahkan ke status final `Closed`.
-    - Tombol `Reopen / Needs Further Work` → mengembalikan status ke `In Progress` dengan catatan penjelasan wajib jika bantuan belum memadai.
-    - Status tetap `Resolved` (tidak pernah auto-close karena berlalunya waktu) hingga pelapor mengambil tindakan.
-  - `Accepted Risk` → Jalur terpisah khusus authority berwenang (misal Head atau Management) dengan `Risk Acceptance Rationale` wajib; bukan sinonim `Resolve`/`Closed`.
-  - **Pencatatan Dukungan Rekan (Support Contribution - FR-64):** Pada blocker aktif rekan kerja, anggota tim lain dapat mengklik tombol **"+ Berikan Dukungan (Record Support Contribution)"** untuk mencatat bantuan teknis yang diberikan.
-  - Reassignment manual dibedakan dari Auto-Escalation sistematis (kenaikan jenjang Level 1 → 2 → 3 → 4 akibat unacknowledged melewati threshold SLA).
+    - Tombol `Reopen / Needs Further Work` → mengembalikan status ke `In Progress` dengan alasan wajib jika solusi belum memadai.
+    - Pengguna selain pelapor melihat maklumat tenang *"Menunggu verifikasi & konfirmasi Closed dari pelapor"*. Status tetap `Resolved` (tidak pernah auto-close karena berlalunya waktu) hingga pelapor mengambil tindakan.
+  - `Accepted Risk` → Jalur terpisah khusus authority manajerial berwenang (misal Head atau Management) dengan `Risk Acceptance Rationale` dan rencana mitigasi wajib; bukan sinonim `Resolve`/`Closed`.
+  - **Pencatatan Dukungan Rekan (`Support Contribution` — `FR-64`):** Pada blocker aktif rekan kerja, anggota tim lain dapat mengklik tombol **"+ Catat Kontribusi Dukungan"** untuk mencatat tindakan bantuan dan hasilnya.
+  - Reassignment manual (dengan alasan wajib) dibedakan secara visual dan audit dari Auto-Escalation sistematis (kenaikan jenjang Level 1 → 2 → 3 → 4 akibat unacknowledged melewati threshold SLA).
 - Aksi yang tidak relevan/tidak diizinkan tidak ditampilkan; server tetap memvalidasi izin aktor.
 
 ### 4.10 Manager Note / Coaching Record
-- Form membuat note dengan tipe: `Recognition`, `Coaching`, `Corrective`.
-- Mengikuti **Matriks Distingsi Kasus (§13.1 PRD)** untuk membedakan secara adil antara: masalah kemampuan/kapasitas (*performance issue*), kelambatan eskalasi (*accountability issue*), pelanggaran proses (*discipline violation*), dan lupa administratif (*administrative miss*).
-- Visibilitas note mengikuti pilihan yang diizinkan oleh permission/policy: `Private to Managers & HR` atau `Visible to Employee`.
-- Employee hanya melihat note yang eksplisit ditandai visible ke dirinya di halaman History-nya. Catatan manajerial tidak pernah mengubah komitmen asli karyawan.
+- Diakses melalui `/function/coaching` (oleh Supervisor/Head sesuai scope) dan `/compliance/records` (arsip pembinaan & catatan peringatan berizin ketat bagi HRGA/aktor berwenang), menyajikan 3 `InteractiveMetricFilterCard` (`Recognition`, `Coaching`, `Corrective`) dan tata letak **`MasterDetailSplitWorkbench`** (`42%` panel pembuatan catatan di kiri : `58%` panel linimasa riwayat ber-`FilterBar` di kanan; berubah menjadi 2 tab pada layar sempit).
+- Form pembuatan catatan mencakup pemilih anggota tim dalam scope sah, 3 kartu radio tipe catatan (`Recognition`, `Coaching`, `Corrective`), kotak panduan dinamis **`CaseDistinctionCallout`** yang memandu penerapan **Matriks Distingsi Kasus (§13.1 PRD, `FR-73`)** (membedakan masalah kapasitas/hambatan teknis, kelambatan eskalasi, pelanggaran proses, dan lupa administratif tunggal), pemilih rujukan bukti bertingkat (komitmen harian, tiket blocker, atau event kepatuhan), serta pilihan visibilitas eksplisit: `Visible to Employee` atau `Private to Managers & HR`.
+- Employee hanya melihat note yang eksplisit ditandai `Visible to Employee` pada halaman History/Weekly Summary miliknya. Catatan yang telah diterbitkan bersifat *append-only* (koreksi hanya melalui catatan adendum baru, tanpa hapus/timpa diam-diam) dan tidak pernah mengubah komitmen asli karyawan (`FR-40`).
 
 ### 4.11 Compliance Queue (HRGA)
-- Menampilkan flag repeated non-submission (3x dalam 30 hari kerja) dan compliance event lain dengan `FilterBar`.
-- **Review Event Kepatuhan (FR-70–FR-73):** Pattern flag memicu *Review Event* yang mengharuskan pencatatan penjelasan karyawan, pembinaan yang diberikan, dan tindakan kesepakatan.
-- Status tindak lanjut: `Reminder Sent`, `Coaching Scheduled`, `Recorded Warning`, atau `Escalated to Offline Disciplinary`.
-- **Prinsip Non-Otomatisasi Sanksi (FR-30, FR-72):** Sistem DILARANG MUTLAK memiliki tombol "Issue SP" atau menghasilkan SP otomatis. Sistem hanya mencatat arsip pembinaan dan rujukan administratif; proses penegakan disiplin formal berlangsung **di luar sistem (offline HR process)**.
+- Diakses melalui `/compliance`, menampilkan 4 `InteractiveMetricFilterCard` (`Perlu Ditinjau`, `Pattern Flag Berulang`, `Dalam Pembinaan`, `Eskalasi Disipliner Offline`), `FilterBar`, dan tabel berbasis bukti faktual yang memuat `TriggerDateCapsules` (chip tanggal-tanggal `No Submission` terverifikasi setelah mengeluarkan hari libur, pengecualian aktif, dan cuti yang disetujui termasuk yang direkonsiliasi pasca-Cut-Off sesuai `DEC-007`).
+- Menampilkan **Pattern Flag** bagi karyawan yang mencapai ambang tetap 3 kejadian `No Submission` di dalam jendela evaluasi hari kerja bergulir sesuai kebijakan aktif (misal konfigurasi default 30 hari kerja, `FR-29`).
+- **Review Event Kepatuhan Tripartit (`FR-70`–`FR-73`):** Pattern flag memicu *Review Event* kolaboratif (HRGA + Direct Manager + Karyawan) dengan modal tindak lanjut yang menyertakan `CaseDistinctionCallout`, pencatatan wajib penjelasan/konteks karyawan, pembinaan yang diberikan, penanggung jawab tindak lanjut, dan tanggal evaluasi berikutnya.
+- Status tindak lanjut resmi: `Reminder Sent`, `Coaching Scheduled`, `Recorded Warning`, atau `Escalated to Offline Disciplinary`.
+- **Prinsip Non-Otomatisasi Sanksi (`FR-30`, `FR-72`):** Sistem DILARANG MUTLAK memiliki tombol *"Issue SP"* atau menghasilkan surat peringatan/pemotongan insentif otomatis. Sistem hanya mencatat arsip pembinaan dan rujukan administratif; proses penegakan disiplin formal berlangsung **di luar sistem (offline HR process)**.
 
 ### 4.12 Exemption Management
-- **Khusus Holiday dan Exemption administratif** (bukan Leave — lihat 4.20/4.21 untuk Leave Request karyawan).
-- Mendukung dua kategori utama:
-  1. **Holiday (Company-Wide):** Kalender libur resmi perusahaan/nasional.
-  2. **Individual / Role Exemption:**
-     - *Individual Exemption (Bounded):* Pengecualian karyawan tertentu (misal dinas luar/offsite) yang wajib memiliki rentang waktu (`Effective Date` dan `Expiry Date`).
-     - *Indefinite Role Exemption (Open-Ended / Tanpa Batas Waktu):* Pengecualian jabatan struktural (CEO, Board of Directors) sesuai FR-35 & BR-07, yang tidak mewajibkan expiry date dan berlaku terbuka hingga dicabut secara manual oleh Admin/HRGA berwenang.
-- Admin/HRGA berwenang menyimpan konfigurasi yang langsung aktif dan mengecualikan akun dari No Submission detection **tanpa antrean approval tambahan** (berbeda dari Leave yang wajib persetujuan atasan).
-- Header halaman menampilkan catatan singkat yang membedakan: *"Holiday & Exemption berlaku langsung setelah disimpan. Untuk Leave karyawan, lihat Leave Approval Queue."*
+- Diakses melalui `/compliance/exemptions`, **khusus mengelola Holiday dan Exemption administratif** (bukan Leave karyawan — lihat `4.20`/`4.21`), dengan 4 `InteractiveMetricFilterCard` dan tabel ber-`FilterBar` yang secara ketat memetakan **3 kategori resmi PRD** (tanpa kategori dispensasi divisi bebas):
+  1. **Holiday (Company-Wide):** Kalender libur resmi perusahaan/nasional (tanggal tunggal atau rentang).
+  2. **Bounded Individual Exemption:** Pengecualian karyawan tertentu (misal penugasan dinas luar/offsite tanpa akses rutin, `DEC-004`) yang wajib memiliki `Effective Date`, `Expiry Date` (`expiryDate >= effectiveDate`), dan alasan penugasan.
+  3. **Indefinite Role Exemption (Open-Ended / Tanpa Batas Waktu):** Pengecualian jabatan struktural eksekutif (misal CEO, Board of Directors) sesuai `FR-35` & `BR-07`, di mana pilihan ini otomatis menyembunyikan/menonaktifkan kewajiban `Expiry Date` dan berlaku terbuka hingga dicabut secara eksplisit.
+- Tabel menampilkan status periode terhitung (`Sedang Berlaku`, `Akan Datang`, `Telah Berakhir`, `Dinonaktifkan`). Untuk menjaga keutuhan jejak audit historis, penutupan pengecualian yang sedang atau pernah berjalan menggunakan aksi **Nonaktifkan** (bukan penghapusan fisik), sedangkan aksi **Hapus** hanya tersedia bagi jadwal masa depan yang belum pernah mulai berlaku.
+- Konfigurasi yang disimpan Admin/HRGA berwenang langsung aktif seketika **tanpa antrean approval tambahan** (`FR-46`). Header halaman menampilkan catatan singkat: *"Holiday & Exemption berlaku langsung setelah disimpan. Untuk Leave karyawan, lihat Leave Approval Queue."*
 
 ### 4.13 Project Risk View (PM)
-- Menampilkan agregasi Commitment/Additional Work anggota tim berdasarkan Reference/Task Link, **bukan** query terhadap entitas Project formal (tidak ada entitas Project formal di PRD; reference bersifat teks bebas/manual pada MVP).
-- Menyorot item berstatus AMBER/RED atau pola Continuation `Continue` berulang pada kelompok reference yang ditampilkan.
-- UI harus menampilkan nilai reference sumber secara jelas. Aturan pencocokan/pengelompokan reference diserahkan ke SAD; UI/UX tidak mengasumsikan exact match atau fuzzy match.
+- Diakses melalui `/my-scope/project-risk`, menampilkan agregasi *read-only* atas Morning Commitment dan Additional Work anggota tim berdasarkan nilai string `Reference / Task Link`, **bukan** query terhadap entitas CRUD Project formal (tidak ada manajemen proyek penuh di MVP).
+- Menerapkan prinsip visual tenang (*Muted Baseline, Loud Exceptions*): item yang tuntas lancar tampil tenang, sedangkan 5 `InteractiveMetricFilterCard` dan kartu kelompok reference menyorot tegas sinyal risiko (`RED`, `AMBER`, pola `Continuation = Continue` berulang $\ge 2$ hari, dan Blocker aktif). Header setiap kelompok menampilkan nilai `Reference / Task Link` sumber secara jelas (atau penanda tenang *"Semua Item Lancar"* bila 0 anomali), dilengkapi modal detail *read-only* yang membedakan garis `Direct Manager` vs `Project Authority` (`AuthorityTag`) serta `ExportButton` terbatas sesuai scope aktif (`AC-20`, nonaktif aman bila hasil filter kosong). Aturan pencocokan/pengelompokan reference ditetapkan di SAD.
 
 ### 4.14 Escalation Aging (CEO/Management)
-- List seluruh blocker berstatus Open/Acknowledged/In Progress yang melewati threshold waktu tertentu, diurutkan dari yang paling lama belum resolve.
-- Menampilkan Authority Context (siapa saat ini bertanggung jawab) dan riwayat auto-escalation jika ada.
-- Dashboard bersifat overview. Aksi pada blocker hanya ditampilkan bila CEO/Management juga memiliki authority yang sah untuk konteks blocker tersebut; jabatan CEO/Management saja tidak otomatis memberi hak Resolve/Close.
+- Diakses melalui `/management/escalations`, menyajikan 5 `InteractiveMetricFilterCard` eksekutif berdasarkan ambang batas kebijakan eskalasi aktif (tanpa meng-hardcode angka jam SLA mati dan tanpa toggle *company-wide* bagi peran non-company-wide), `FilterBar`, serta `ExportButton` sesuai scope.
+- Hanya memuat blocker berstatus aktif belum selesai (`Open`, `Acknowledged`, `In Progress`) yang telah melewati threshold waktu; tiket berstatus `Resolved`, `Closed`, dan `Accepted Risk` otomatis dikeluarkan dari daftar penuaan aktif. Daftar diurutkan secara deterministik 3 lapis: (1) durasi belum selesai terlama (*descending*), (2) tingkat `Severity` tertinggi (`Critical > High > Medium > Low`), dan (3) urutan waktu lapor paling awal (`FIFO`).
+- Membedakan *Positive Zero-Aging Empty State* (*"Semua Kendala Tertangani Dalam Batas Toleransi"*) dari *Filtered Empty State* (dengan tombol reset filter), serta menyediakan modal investigasi detail yang menampilkan `AuthorityTag` dan `AuditTrailTimeline` rantai *auto-escalation*.
+- Layar bersifat *overview* tata kelola tanpa pemeringkatan individu (`FR-69`). Aksi operasional pada blocker hanya ditampilkan bila pengguna juga memegang authority sah atas konteks blocker tersebut; jabatan CEO/Management saja tidak otomatis memberi hak `Resolve`/`Close`.
 
-### 4.15 Admin: Organizational Mapping
-- List struktur organisasi saat ini + tombol "View History" per person/role untuk melihat assignment sebelumnya (effective-dated).
-- Perubahan assignment (create/edit/reassign) selalu meminta **Effective Date**. UI mempertahankan assignment historis dan tidak menghapus/menimpa histori. Perilaku perubahan dengan tanggal lampau tidak ditentukan di UI/UX ini; UI tidak boleh menjanjikan dampak retroaktif tanpa aturan otorisasi yang disahkan.
-- Perubahan yang mempengaruhi hierarki (direct manager, project authority) menampilkan preview dampak sebelum konfirmasi (siapa yang terpengaruh, mulai kapan).
-- Project Authority ditampilkan sebagai **mapping terpisah per person**, bisa lebih dari satu baris aktif sekaligus untuk scope/reference berbeda — bukan satu field tunggal dalam baris Organizational Assignment. ``
+### 4.15 Admin: Organizational Mapping & Project Authority
+- Diakses melalui `/admin/organization` (terpisah dari pembuatan akun & undangan di `/admin/users` sesuai `DEC-005`), diorganisasikan dalam **2 Tab Utama** (tanpa membuat entitas CRUD manajemen proyek penuh di luar scope MVP):
+  1. **Tab `Penugasan Struktur Organisasi` (`Organizational Assignment`):** Tabel ber-`FilterBar` yang memisahkan secara jelas **Jabatan Fungsional (`Job Title`)**, **Peran Otorisasi Sistem (`System RBAC Role`)**, **Fungsi Organisasi Kanonikal** (dikunci ketat pada **10 fungsi kanonikal resmi Dutamedia**: `Engineering`, `Quality`, `Operations & Infrastructure`, `R&D`, `Delivery`, `Business Development`, `Sales Enablement & Presales`, `Finance`, `HRGA`, dan `Management` — tanpa pembuatan divisi bebas), **`Direct Manager`** (menampilkan label kelembagaan tenang bagi pucuk pimpinan tertinggi tanpa atasan langsung, serta memfilter otomatis personil itu sendiri dan seluruh rantai bawahannya secara rekursif untuk mencegah siklus hierarki melingkar), serta **`Effective Date`**.
+  2. **Tab `Pemetaan Kewenangan Proyek` (`Project Authority Mapping`):** Tabel normal yang dapat dicari dan difilter (tanpa input UUID manual) untuk memetakan personil ke scope/referensi proyek secara independen (satu personil dapat memegang lebih dari satu kewenangan proyek aktif sekaligus tanpa mengubah `Direct Manager` strukturalnya), menampilkan `Effective Date`, `End Date` opsional, serta aksi `Ubah` atau `Akhiri Penugasan` melalui modal konfirmasi tenang ber-alasan wajib.
+- **Aturan Tanggal Efektif & Larangan Backdating (`DEC-008`, `FR-23`, `FR-24`, `AC-54`):** Setiap pembuatan atau pembaruan `OrganizationalAssignment` maupun `ProjectAuthorityMapping` wajib menyertakan `Effective Date` dan alasan perubahan. Sistem menegakkan `effectiveDate >= today` (hari ini atau tanggal masa depan menurut zona waktu organisasi) dan **menolak pemilihan tanggal lampau (*no backdating*)** dengan pesan validasi yang jelas demi menjaga keutuhan snapshot akuntabilitas historis. Rekaman masa lalu tidak pernah dihapus atau ditimpa.
+- **Alur 2-Tahap Pratinjau Dampak (`ImpactPreviewModal` — `UF-40`) & Riwayat:** Perubahan penugasan tidak langsung disimpan, melainkan membuka `ImpactPreviewModal` yang menampilkan perbandingan berdampingan (*Before vs After* mulai `[Effective Date]`) dan daftar bawahan langsung yang ikut terdampak (dengan tombol *"← Kembali ke Formulir"* yang mempertahankan seluruh input). Setiap personil memiliki tombol *"Lihat Riwayat"* yang membuka `AuditTrailTimeline` vertikal penugasan aktif dan masa lalu.
 
 ### 4.16 Correction Requests (dua alur terpisah)
 
 #### 4.16a — Morning Correction Request
-- CTA hanya muncul pada Morning baseline yang sudah locked dan hanya jika policy mengizinkan pengajuan. Targetnya **hanya field Morning Commitment**; tidak termasuk Additional Work, EOD fields, atau `Tomorrow Priority`.
-- Form menampilkan baseline before sebagai read-only, nilai after yang diusulkan, dan Reason wajib. Pengguna dapat membatalkan sebelum submit tanpa mengubah baseline.
-- Setelah submit, tampilkan ID/request reference, timestamp, klasifikasi Minor/Material, status, dan nilai yang diminta. Klasifikasi mengikuti policy efektif; dokumen UI tidak menetapkan sendiri contoh/threshold klasifikasi.
-- **Minor:** langsung Applied setelah validasi; tampilkan ringkasan perubahan dan konfirmasi. **Material:** Pending selama Objection Window; baseline tetap tidak berubah hingga request Applied. Tampilkan sisa waktu, status, dan kapan perubahan akan diterapkan bila tidak ada objection.
-- Authorized Reviewer melihat Material request dalam tab Pending Objection pada `/team/reviews`, hanya dalam scope kewenangannya. Reviewer dapat mengajukan objection dengan alasan selama window aktif; tidak diwajibkan melakukan tindakan. Objection valid → Rejected dan baseline asli tetap berlaku. Window berakhir tanpa objection → Applied. Item yang selesai keluar dari antrean aktif dan tersedia pada histori.
-- Audit/history menampilkan target, reason, classification, status, aktor, timestamp, dan before/after sesuai kewenangan. User tidak boleh melakukan direct edit pada baseline dari layar riwayat.
+- Diakses melalui `/today/morning/correction-request`; CTA hanya muncul pada Morning baseline yang sudah disubmit serta terkunci pasca-Cut-Off, dan hanya jika policy mengizinkan pengajuan. Apabila rute dibuka sebelum Cut-Off saat baseline belum terkunci, tampilkan banner pengarah tenang kembali ke form edit reguler `/today/morning`. Target koreksi **hanya field Morning Commitment** (tidak termasuk Additional Work, field EOD, atau `Tomorrow Priority`).
+- Halaman menyediakan tab pengalih rute eksplisit antar-alur (`Koreksi Komitmen Pagi` ↔ `Koreksi Evaluasi Sore` tanpa mencampur form), kartu snapshot baseline terkunci (*read-only*) dengan pita jaminan integritas, serta panel komparasi berdampingan (`SideBySideDiffPanel`: kolom kiri `Before` *read-only*, kolom kanan `Proposed After` menggunakan kontrol input sesuai tipe data—bukan textarea string mentah untuk pilihan risiko—disertai input kondisional atomik `Known Blocker` & `Support Needed` saat memilih `AMBER`/`RED`, dan textarea `Reason` wajib berpenghitung karakter minimum).
+- Setelah submit, tampilkan ID pengajuan, timestamp, `ClassificationTag` (`Minor`/`Material` sesuai evaluasi kebijakan server aktif), status, dan nilai usulan:
+  - **Minor:** langsung `Applied` setelah validasi server; tampilkan ringkasan perubahan dan konfirmasi.
+  - **Material:** berstatus `Pending` selama `Objection Window` (penguncian cegah-duplikat bersifat granular per slot/target sehingga slot lain yang bebas tetap dapat diajukan); **baseline asli tetap berlaku penuh dan tidak berubah** hingga pengajuan berstatus `Applied`. `ObjectionWindowIndicator` menampilkan hitung mundur sekaligus tanggal/jam berakhir absolut sesuai jam kerja kebijakan aktif.
+- Authorized Reviewer meninjau permohonan `Material` di tab `Pending Objection` pada `/team/reviews` dalam scope kewenangannya: reviewer dapat mengajukan *objection* dengan alasan wajib sebelum window berakhir (`Rejected`, baseline asli tetap berlaku; pemohon melihat alasan penolakan beserta tombol *1-click prefill* *"Gunakan Draf Sebelumnya & Sesuaikan"*), atau membiarkan window berakhir tanpa tindakan sehingga otomatis menjadi `Applied` (*default-approve*).
+- Tabel riwayat dan modal `AuditTrailTimeline` menampilkan target, reason, classification, status, aktor, timestamp, dan diff `Before → After` sesuai kewenangan tanpa mengizinkan direct edit baseline dari layar riwayat.
 
 #### 4.16b — EOD Correction Request
-- CTA hanya muncul pada EOD yang **sudah disubmit dan terkunci**; tidak tersedia jika EOD tidak pernah disubmit. Record dan lifecycle EOD Correction Request terpisah dari Morning Correction Request.
-- Form menampilkan nilai EOD tersimpan sebagai before/read-only, target field, nilai after yang diminta, dan Reason wajib. Target yang boleh dipilih: Outcome, Continuation, Continuation Reason, alasan Cancelled, Final Status, penjelasan risiko tingkat-hari, dan `Tomorrow Priority`; item Outcome/Continuation dapat mengacu ke Commitment atau Additional Work yang relevan.
-- Jangan sediakan target untuk Morning Commitment baseline, deskripsi/reason Additional Work yang bukan field EOD, pembuatan EOD baru, atau penghapusan/pembatalan event No Submission.
-- Klasifikasi dan lifecycle sama secara prinsip: Minor langsung Applied; Material Pending selama Objection Window, lalu Applied bila tidak ada objection sah, atau Rejected jika Authorized Reviewer mengajukan objection dalam window. Baseline EOD tidak berubah selama Material masih Pending.
-- Sisi reviewer memakai antrean dan indikator window yang sama, tetapi item harus diberi label jelas **EOD Correction** agar tidak tertukar dengan Morning Correction. Employee melihat status, alasan rejection, dan audit/history yang sesuai.
+- Diakses melalui `/today/eod/correction-request`; CTA hanya muncul pada EOD yang **sudah pernah disubmit dan terkunci**. Apabila rute dibuka langsung pada hari di mana EOD belum disubmit atau berstatus `No Submission`, form disembunyikan penuh dan diganti *Empty Guard Screen* yang menegaskan bahwa koreksi EOD tidak dapat dipakai membuat EOD baru atau membatalkan `No Submission` (`FR-53`, `FR-55`). Record dan lifecycle terpisah penuh dari Morning Correction Request.
+- Form menampilkan nilai EOD tersimpan sebagai `Before` (*read-only*), pemilih target field yang sah (`Outcome`, `Continuation`, `Continuation Reason`, alasan `Cancelled`, `Final Status`, `Daily Risk Explanation`, dan `Tomorrow Priority` untuk item Commitment maupun Additional Work menggunakan kontrol pilihan terstruktur dan input kondisional atomik), nilai `Proposed After`, serta `Reason` wajib.
+- Klasifikasi dan lifecycle mengikuti prinsip yang sama (`Minor` langsung `Applied`; `Material` `Pending` selama `Objection Window` tanpa mengubah baseline EOD hingga `Applied`, atau `Rejected` bila disanggah dengan alasan sah). Pada antrean reviewer `/team/reviews`, item diberi penanda tegas **EOD Correction** agar tidak tertukar dengan **Morning Correction**.
 
 #### Aturan bersama untuk kedua alur
 - Jangan gunakan satu form ambigu yang memungkinkan target Morning dan EOD bercampur. Pisahkan judul, route, field selector, summary, dan record history.
-- Error submit tidak boleh membuat request duplikat atau menampilkan Applied sebelum server mengonfirmasi. Tampilkan status yang benar berdasarkan hasil server.
-- Objection setelah window berakhir ditolak dan tidak mengubah request yang sudah Applied. Semua transisi dan nilai before/after ter-audit.
+- Error submit tidak boleh membuat request duplikat atau menampilkan `Applied` sebelum server mengonfirmasi. Objection setelah window berakhir ditolak dan tidak mengubah request yang sudah `Applied`. Semua transisi dan nilai `Before/After` ter-audit.
 
 ### 4.17 Admin: Temporary Reviewer
-- Form assignment: reviewer, scope, Effective Date, Expiry Date (wajib diisi, tidak boleh open-ended tanpa batas).
-- List assignment aktif menampilkan hitung mundur ke expiry; setelah expiry, otomatis tidak lagi menerima eskalasi tanpa perlu aksi manual admin.
+- Form assignment pada `/admin/temporary-reviewer` mewajibkan pejabat yang didelegasikan, reviewer pengganti, scope bawahan, **Effective Date**, **Expiry Date** (wajib diisi, tidak boleh *open-ended* tanpa batas kedaluwarsa, `FR-25`), serta alasan pendelegasian.
+- Sistem menegakkan `effectiveDate >= today` (menolak tanggal mulai di masa lampau sesuai `DEC-008`) dan `expiryDate >= effectiveDate`.
+- Daftar penugasan aktif menampilkan hitung mundur menuju waktu kedaluwarsa; setelah melewati `Expiry Date`, wewenang delegasi otomatis berakhir tanpa perlu tindakan manual admin dan rekaman berpindah ke riwayat audit.
 
-### 4.18 Policy Settings ``
-- Diakses lewat `/policy-settings`, **bukan lagi rute khusus Admin** — halaman ini terbuka untuk role apa pun, tapi isinya di-filter penuh sesuai kategori kebijakan yang jadi kewenangan role/user tersebut (FR-34/BR-15).
-- Tiap kategori kebijakan (cutoff, grace period, workday calendar, escalation threshold, retensi, **Objection Window duration**, **batas Minor/Material**, dll.) memiliki halaman/section sendiri.
-- User yang membuka halaman ini hanya melihat kategori yang authority-nya dia pegang — kategori lain **tidak ditampilkan sama sekali** (disembunyikan, bukan disabled dengan tooltip), konsisten dengan behavior lama.
-- Perubahan nilai kebijakan selalu membuat **versi baru** dengan Effective Date — tidak ada "overwrite" nilai lama secara langsung; versi lama tetap tersimpan dan terlihat di riwayat lewat `PolicyVersionHistory`.
-- Contoh konkret: System Admin melihat section Cutoff/Grace Period/Workday Calendar; Head/Management (jika ditetapkan sebagai Authorized Policy Owner untuk kategori tsb) melihat section Coaching Follow-up Period; HRGA melihat section Retention Policy untuk evidence disciplinary — semuanya di halaman yang sama, hanya section yang beda.
+### 4.18 Policy Settings
+- Diakses lewat `/policy-settings`, **bukan lagi rute khusus Admin** — halaman ini terbuka untuk role apa pun yang memiliki minimal satu kategori kebijakan sebagai kewenangannya, namun isinya di-filter penuh sesuai kategori kebijakan yang dipegang role/user tersebut (`FR-34`/`BR-15`).
+- Tiap kategori kebijakan (cutoff, grace period, workday calendar, escalation threshold, retensi, **Objection Window duration**, **batas Minor/Material**, dll.) memiliki section mandiri.
+- User yang membuka halaman ini hanya melihat kategori yang authority-nya dia pegang — kategori lain **tidak dirender sama sekali** (bukan sekadar di-disable dengan tooltip). Aturan tetap produk (*Fixed Product Rules*, seperti batas maksimal 3 komitmen pagi, pengingat tetap 60 menit pra-deadline, heuristik Status Suggestion Engine, dan ambang tetap 3x No Submission untuk Pattern Flag) ditampilkan hanya sebagai informasi ketentuan tetap yang tidak dapat diedit.
+- Perubahan nilai kebijakan selalu membuat **versi baru** dengan `Effective Date` — tidak ada *overwrite* nilai lama secara langsung; versi lama tetap tersimpan dan terlihat di riwayat lewat `PolicyVersionHistory`.
 
 ### 4.19 Admin: Notification Channel Setup
 - Menampilkan matriks channel per trigger yang berasal dari PRD Section 8; konfigurasi tidak boleh memperluas Browser Push ke trigger yang tidak ditetapkan sebagai Push-enabled.
 - Menampilkan status kesiapan konfigurasi Email dan Browser Push secara terpisah serta hasil uji kanal. Status permission/subscription browser bersifat spesifik pada browser/perangkat pengguna terkait; hasil test dari browser Admin tidak membuktikan Push aktif untuk seluruh karyawan. Test-send harus membedakan permintaan uji, status delivery yang benar-benar diketahui, dan kegagalan; pembuatan record saja bukan bukti Push berhasil.
 - Perubahan konfigurasi memiliki validasi dan konfirmasi. Nilai operasional yang belum ditetapkan tidak boleh diisi dengan asumsi UI; Launch Configuration Register harus disahkan sebelum implementasi.
 
-### 4.20 My Leave Request (Employee) 
-- Form: tanggal/date range, Reason (opsional teks bebas).
-- Submit → status **Pending**, notifikasi terkirim ke Authorized Approver dalam scope employee (Supervisor/Head/HRGA sesuai policy).
-- Employee melihat status pengajuan (Pending/Approved/Rejected) di halaman ini dan di My History; tanggal yang diajukan ditandai visual sebagai "Leave (Pending)" sampai disetujui — **belum** mengecualikan dari No Submission selama masih Pending.
-- Setelah Approved → tanggal menjadi valid exception dan dikecualikan dari No Submission detection sesuai FR-48; badge berubah menjadi "Leave (Approved)". PDD/PRD tidak menentukan secara eksplisit bagaimana event No Submission yang sudah tercatat sebelum persetujuan harus direkonsiliasi. Karena itu UI tidak boleh menjanjikan penghapusan diam-diam atau perubahan retroaktif pada evidence yang sudah tercatat; perilaku rekonsiliasi event yang sudah ada harus diputuskan sebagai keputusan produk sebelum implementasi.
+### 4.20 My Leave Request (Employee)
+- Form pada `/today/leave-request`: tanggal tunggal atau rentang tanggal (`endDate >= startDate`), serta `Reason` (opsional teks bebas).
+- Submit → status **`Pending`**, notifikasi terkirim ke Authorized Approver dalam scope employee (Supervisor/Head/HRGA sesuai policy).
+- Employee melihat status pengajuan (`Pending`/`Approved`/`Rejected`) di halaman ini dan di My History; tanggal yang diajukan ditandai visual sebagai `Leave (Pending)` sampai disetujui — **belum** mengecualikan dari `No Submission` selama masih `Pending`.
+- **Rekonsiliasi Persetujuan Leave Pasca-Cut-Off (`DEC-007`, `FR-48`, `BR-18`, `AC-19`):** Setelah `Approved`, tanggal resmi menjadi *valid exception* (`Leave (Approved)`) dan dikecualikan dari kewajiban check-in serta deteksi `No Submission`. Apabila persetujuan baru diberikan setelah jam Cut-Off pada tanggal di mana event `No Submission` terlanjur tercatat (karena sebelumnya masih `Pending`), sistem secara otomatis merekonsiliasi status hari kerja tersebut menjadi `Approved Leave`, mempertahankan rekaman `No Submission` awal secara *append-only* pada riwayat & *audit trail* dengan penanda **`Superseded by Approved Leave`** (tidak dihapus fisik secara diam-diam), serta mengeluarkan tanggal tersebut dari hitungan ambang 3 kejadian `FR-29`.
 
-### 4.21 Leave Approval Queue (Reviewer/HRGA) 
-- List Leave Request Pending dalam scope reviewer, dengan `FilterBar` (per employee, per tanggal, per status).
-- Aksi: **Approve** atau **Reject** (Reject wajib isi alasan singkat).
-- Berbeda dari Correction Request — Leave **bukan** default-approve; tetap butuh aksi eksplisit approve/reject sebelum berlaku, karena dampaknya (mengecualikan dari No Submission) butuh validasi aktif, bukan sekadar koreksi data historis.
+### 4.21 Leave Approval Queue (Reviewer/HRGA)
+- Diakses melalui `/compliance/leave-approvals` (atau tab terkait pada `/team/reviews`), menampilkan daftar `Leave Request` berstatus `Pending` dalam scope approver dengan `FilterBar` (per employee, per tanggal, per status).
+- Aksi eksplisit: **Approve** atau **Reject** (`Reject` mewajibkan modal input alasan singkat). Jika pengajuan yang akan di-*Approve* mencakup tanggal yang sudah melewati Cut-Off dengan catatan `No Submission`, dialog konfirmasi menampilkan informasi tenang bahwa persetujuan ini akan merekonsiliasi hari terkait menjadi `Approved Leave` dan menandai event sebelumnya sebagai `Superseded by Approved Leave` pada jejak audit (`DEC-007`).
+- Berbeda dari Correction Request — Leave **bukan** *default-approve*; tetap membutuhkan keputusan eksplisit `Approve`/`Reject` sebelum berlaku (`FR-47`).
 
-### 4.22 Correction & Leave Review (gabungan, entry point reviewer) 
-- `/team/reviews` adalah entry point bersama bagi user yang ditetapkan sebagai Authorized Reviewer dan/atau Authorized Approver. Halaman menggabungkan tab **Pending Objection** (mencakup Morning dan EOD Correction Request Material) dan **Pending Leave Approval** (jika user juga Authorized Approver).
-- Badge count hanya menjumlahkan item yang memang dapat ditindaklanjuti oleh pengguna dalam scope-nya. Tab tetap terpisah secara visual karena Correction Request Material memakai default-approve setelah Objection Window, sedangkan Leave wajib mendapat keputusan eksplisit; keduanya tidak boleh disamarkan sebagai satu jenis keputusan.
+### 4.22 Correction & Leave Review (gabungan, entry point reviewer)
+- `/team/reviews` adalah entry point bersama bagi user yang ditetapkan sebagai Authorized Reviewer dan/atau Authorized Approver. Halaman menggabungkan tab **Pending Objection** (mencakup Morning dan EOD Correction Request Material dengan pembeda label tegas) dan **Pending Leave Approval** (hanya dirender jika user juga merupakan Authorized Approver).
+- Badge count hanya menjumlahkan item yang memang dapat ditindaklanjuti oleh pengguna dalam scope-nya. Kedua tab tetap dipisahkan secara visual dan perilaku karena Correction Request Material memakai *default-approve* setelah `Objection Window`, sedangkan Leave wajib mendapat keputusan eksplisit.
 
-### 4.23 Reports 
+### 4.23 Reports
 - Diakses lewat `/reports`, scope mengikuti role yang membuka (Head → function-scoped, HRGA → compliance-scoped, CEO/Management → company-wide), mengikuti Permission & Visibility Requirements (PRD Section 7).
 - Tab per jenis laporan (sesuai PRD Section 9 & Section 12):
   - **Daily Exception Report** — snapshot RED/AMBER/no-submission/critical blocker hari terpilih.
-  - **Weekly Team Summary** — agregat mingguan dalam scope, menampilkan tren continuation berulang dan support contribution lintas tim (FR-65).
-  - **Monthly Management Trend** — tren per fungsi, recurring root cause (10 taksonomi), escalation aging, compliance pattern (khusus CEO/Management, FR-69).
-  - **Individual Review Evidence & Performance Transition Framework (FR-56–FR-59, AC-65–AC-68):**
+  - **Weekly Team Summary** — agregat mingguan dalam scope, menampilkan tren continuation berulang dan support contribution lintas tim (`FR-65`).
+  - **Monthly Management Trend** — tren per fungsi, recurring root cause (10 taksonomi), escalation aging, compliance pattern (khusus CEO/Management, `FR-69`).
+  - **Individual Review Evidence & Performance Transition Framework (`FR-56`–`FR-59`, `AC-65`–`AC-68`):**
     - Menyusun bukti akuntabilitas satu karyawan untuk periode terpilih dalam 4 dimensi: **Delivery**, **Quality**, **Accountability**, dan **Collaboration**.
     - Memisahkan secara transparan antara: fakta rekam jejak, catatan pembinaan (*Manager Note*), dan kesimpulan reviewer.
     - Reviewer berwenang dapat mencatat evaluasi kualitatif terpandu: `Strong`, `Meets`, `Needs Improvement`, atau `Unacceptable` beserta alasan dan evidence objektif.
-    - **Guardrails Ketat (FR-57, FR-62):** Sistem DILARANG MUTLAK menghitung rating otomatis atau skor KPI mentah dari status GREEN/AMBER/RED, volume komitmen, atau jumlah task.
+    - **Guardrails Ketat (`FR-57`, `FR-62`):** Sistem DILARANG MUTLAK menghitung rating otomatis atau skor KPI mentah dari status GREEN/AMBER/RED, volume komitmen, atau jumlah task.
   - **Blocker Root Cause Report** — statistik 10 taksonomi blocker paling sering & identifikasi systemic bottleneck organisasi.
 - Filter periode/tanggal via `FilterBar` di setiap tab.
-- `ExportButton` tersedia di tiap tab, mengekspor **hanya** data yang sedang terlihat di layar (scope yang sama, tidak lebih luas) — sesuai AC-20.
+- `ExportButton` tersedia di tiap tab (dilengkapi *defensive gatekeeper* yang menonaktifkan ekspor bila himpunan data hasil saringan = 0), mengekspor **hanya** data yang sedang terlihat di layar dalam scope yang sama (`AC-20`).
 - Tab yang muncul disesuaikan permission user yang membuka (mis. Supervisor/TL tidak melihat tab Monthly Management Trend karena bukan scope-nya).
+
+### 4.24 Admin: User & Invitation Management (`/admin/users`)
+- Diakses melalui `/admin/users` oleh System Admin / Management / HRGA berwenang (`DEC-005`, `FR-01`, `FR-22`, `FR-50`, `FR-54`, `AC-34`, `AC-36`), terpisah secara tegas dari pemetaan hierarki organisasi di `/admin/organization` (`4.15`). Mengelola siklus hidup akun pengguna dan undangan aktivasi sekali pakai tanpa pernah menyediakan *public self-registration* maupun membuat/melihat/mengirim kata sandi permanen.
+- Menampilkan 4 `InteractiveMetricFilterCard` (`Total Akun`, `Aktif`, `Menunggu Aktivasi [Invited]`, `Nonaktif`), `FilterBar` 1 baris (pencarian nama/email/ID karyawan, filter `System RBAC Role`, dan filter status akun/undangan), serta tabel akun yang memisahkan secara jelas **Jabatan Fungsional (`Job Title`)** dari **Peran Otorisasi Sistem (`System RBAC Role`)** dan **Status Token Undangan (`InvitationStatusBadge`: `Pending`, `Expired`, `Used`, `Revoked`)**.
+- **Modal Pembuatan Akun & Penerbitan Undangan Sekali Pakai:** Mewajibkan Nama Lengkap, ID/NIK Karyawan, Alamat Email Resmi, `Job Title`, dan `System RBAC Role`, serta mendukung pengisian penugasan struktur awal (`Canonical Function` dari 10 fungsi resmi, `Direct Manager`, dan `Effective Date >= today`) dalam alur onboarding terpadu tanpa kolom input kata sandi. Penyimpanan akun menerbitkan token undangan sekali pakai berbatas kedaluwarsa sesuai kebijakan aktif dan memicu pengiriman surel undangan (`FR-54`).
+- **Aksi Kontekstual Baris & Audit:**
+  - Akun berstatus belum aktif (`Invited` / `Expired` / `Revoked`): menyediakan aksi **`Kirim Ulang Undangan (Resend Invitation)`** (otomatis menghanguskan token sebelumnya dan menerbitkan token baru) dan **`Cabut Undangan (Revoke Invitation)`**.
+  - Akun terdaftar: menyediakan aksi **`Nonaktifkan Akun`** (menampilkan dialog konfirmasi tenang ber-alasan wajib yang menjelaskan bahwa seluruh sesi login aktif akun tersebut akan dihentikan dan akun dikeluarkan dari jadwal check-in mendatang tanpa menghapus histori masa lalu) serta **`Aktifkan Kembali Akun`**. Seluruh aksi tercatat pada `AuditLog`.
+
+### 4.25 Profile & Account Settings (`/profile`)
+- Diakses oleh seluruh pengguna terautentikasi melalui menu `Profile` di sidebar (`/profile`), menyajikan ringkasan identitas dan konteks kerja pengguna secara bersih dan mandiri:
+  1. **Kartu Identitas & Penugasan Efektif (*Read-Only*):** Menampilkan Nama Lengkap, ID/NIK, Email resmi, `Job Title`, `System RBAC Role` aktif, `Canonical Function` (beserta pratinjau teks `RoleBasedPromptHint` yang berlaku untuk fungsinya), `Direct Manager` efektif saat ini, serta indikator status pengecualian (`Exemption`) apabila berlaku. Pengguna tidak dapat mengubah sendiri role, fungsi, atau atasan langsungnya dari halaman ini.
+  2. **Keamanan & Pembaruan Kata Sandi Mandiri:** Formulir ganti kata sandi yang mewajibkan verifikasi **Kata Sandi Saat Ini**, **Kata Sandi Baru** (dilengkapi kontrol intip kata sandi dan `PasswordStrengthMeter` 4 segmen + checklist kriteria), dan **Konfirmasi Kata Sandi Baru**, serta opsi mengakhiri sesi aktif di perangkat lain setelah kata sandi diperbarui.
+  3. **Ringkasan Kanal Notifikasi Perangkat Ini:** Menampilkan status izin *Browser Push* pada peramban/perangkat yang sedang dipakai beserta pintasan langsung menuju `/notifications` (Tab `Pengaturan Kanal & Perangkat`) tanpa mengklaim status izin perangkat lain.
 
 ---
 
@@ -350,44 +372,58 @@ Pola sama di ketiga level (scope berbeda: team/scoped, function, company-wide):
 
 - Kanal dan trigger mengikuti PRD Section 8. Untuk setiap event, UI membedakan: event terjadi, notification record dibuat, kanal dicoba, dan delivery channel berhasil/gagal jika status tersebut tersedia. Jangan menyatakan Browser Push berhasil hanya karena event/notifikasi in-app tercatat.
 - Browser Push dikirim nyata untuk trigger yang ditetapkan. Push tidak universal; Email dan Web Notification Center digunakan sesuai matriks. Unsupported browser, permission denied, tidak ada subscription, dan delivery failure adalah state yang berbeda, tidak memblokir workflow inti, dan tidak boleh ditampilkan sebagai success.
-- Reminder submission menggunakan aturan tetap ADR-014: hanya pada interval `[On-Time Deadline − 60 menit, On-Time Deadline)`, maksimal satu reminder per employee/per phase/per applicable workday, dan tidak dikirim setelah On-Time Deadline. Ini bukan reminder pada akhir Grace Period/Cut-Off. UI tidak menyediakan konfigurasi untuk mengubah lead time 60 menit atau menampilkan reminder sebagai perubahan status.
-- Validasi submission memakai timestamp request, bukan waktu scheduler: On-Time jika `submittedAt ≤ deadline`; Late jika `deadline < submittedAt ≤ cutoff`; setelah Cut-Off ditolak tanpa write. `GracePeriod = 0` valid. Scheduler hanya menghasilkan cutoff lock/No Submission evaluation; UI tidak menjanjikan bahwa submission setelah cutoff dapat “diselamatkan” oleh job yang belum berjalan.
-- RED/critical blocker dan escalation mengikuti trigger, penerima, authority context, serta threshold aktif yang telah disahkan. Unacknowledged RED melewati threshold → UI menampilkan auto-escalation sebagai event sistem, bukan tindakan manual.
-- Correction Request Material yang mendekati akhir Objection Window memicu reminder kepada Authorized Reviewer sesuai matriks; countdown terlihat, namun reviewer tidak diwajibkan menindaklanjuti. Jika tidak ada objection hingga window berakhir, perubahan otomatis Applied.
-- Leave Request tetap berstatus Pending sampai Authorized Approver mengambil keputusan. Matriks notifikasi PRD tidak menetapkan reminder tambahan hanya karena Leave Request menunggu terlalu lama; UI tidak boleh menjanjikan reminder tersebut.
+- Reminder submission menggunakan aturan tetap produk (`FR-28`, `AC-40`): hanya dikirim pada interval `[On-Time Deadline − 60 menit, On-Time Deadline)`, maksimal satu reminder per employee/per phase/per applicable workday, dan berhenti tepat saat On-Time Deadline (bukan reminder pada akhir Grace Period/Cut-Off). UI tidak menyediakan konfigurasi untuk mengubah lead time tetap 60 menit tersebut atau menampilkan reminder sebagai perubahan status.
+- Validasi submission memakai timestamp request server, bukan waktu scheduler: `On-Time` jika `submittedAt ≤ On-Time Deadline`; `Late` jika `On-Time Deadline < submittedAt ≤ Cut-Off`; setelah `Cut-Off` ditolak penuh tanpa write (`DEC-002`). `GracePeriod = 0` valid. Scheduler hanya menghasilkan cutoff lock/`No Submission` evaluation; UI tidak menjanjikan bahwa submission setelah cutoff dapat "diselamatkan" oleh job yang belum berjalan.
+- RED/critical blocker dan escalation mengikuti trigger, penerima, authority context, serta threshold aktif yang telah disahkan. Unacknowledged RED melewati threshold → UI menampilkan auto-escalation sebagai event sistem pada `AuditTrailTimeline`, bukan tindakan manual.
+- Correction Request Material yang mendekati akhir Objection Window memicu reminder kepada Authorized Reviewer sesuai matriks; countdown terlihat, namun reviewer tidak diwajibkan menindaklanjuti. Jika tidak ada objection hingga window berakhir, perubahan otomatis `Applied`.
+- Leave Request tetap berstatus `Pending` sampai Authorized Approver mengambil keputusan eksplisit (`Approve`/`Reject`). Apabila `Approve` terjadi setelah Cut-Off pada hari yang sempat tercatat `No Submission`, sistem merekonsiliasi hari tersebut menjadi `Approved Leave` dan menandai rekaman sebelumnya sebagai `Superseded by Approved Leave` (`DEC-007`).
 - Browser Push permission prompt harus dipicu oleh aksi pengguna yang jelas; penolakan izin tidak boleh menghalangi pengguna menjalankan check-in, mengajukan blocker, atau melihat Web Notification Center.
 
 ## 6. Komponen Reusable (Fungsional, bukan Visual)
 
 | Komponen | Fungsi | Dipakai di |
 |---|---|---|
-| `StatusBadge` | Menampilkan GREEN/AMBER/RED secara konsisten | Seluruh halaman dengan status |
-| `SubmissionTimingBadge` | Menampilkan On-Time/Late/No Submission — terpisah dari StatusBadge | History, Compliance Queue |
-| `CommitmentCard` | Satu unit commitment/additional work + outcome + continuation | Morning, EOD, History |
-| `BlockerCard` | Detail blocker + action panel sesuai state saat ini, termasuk Resolved menunggu konfirmasi pelapor | Raise Blocker, Blocker Queue, History |
-| `ActionPanel` | Menampilkan hanya aksi valid untuk state saat ini | Blocker Queue, Compliance Queue |
-| `AuthorityTag` | Menandai apakah suatu assignment berasal dari Organizational atau Project Authority | Blocker, Escalation, Org Mapping |
-| `EffectiveDatePicker` | Input tanggal efektif dan preview dampak; aturan tanggal lampau mengikuti kebijakan produk yang disahkan | Admin: Org Mapping, Temporary Reviewer, Policy Settings |
-| `PolicyVersionHistory` | Menampilkan riwayat versi suatu kebijakan | Policy Settings |
-| `ValidationPromptModal` | Modal konfirmasi saat status suggestion berbeda dari pilihan user | EOD Check-in |
-| `ExceptionSummaryWidget` | Ringkasan count status + exception list di scope tertentu | Team/Function/Management Dashboard |
-| `NotificationBell` | Indikator unread + dropdown ke Web Notification Center | Global topbar |
-| `DraftBanner` | Menandai data sebagai draft copy-forward yang perlu konfirmasi | Morning Commitment |
-| `ExemptionBanner` | Menampilkan banner penjelas status pengecualian partisipasi terbuka (Indefinite Role Exemption) bagi role eksekutif | `/today` (Morning & EOD) |
-| `LockedIndicator` | Menandai submission/baseline yang terkunci pasca Cut-Off, alasan, dan jalur koreksi yang sesuai | Morning Commitment dan EOD (setelah cutoff) |
-| `RoleBasedPromptHint` | Menampilkan teks petunjuk visual miring (*italic* inline placeholder) sesuai 7 fungsi kanonikal Dutamedia (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`) serta fallback netral (non-binding, ADR-016) | Morning Commitment |
-| `QualityWarningBadge` | Menampilkan inline warning/prompt saat teks komitmen terlalu generik/abstrak tanpa memblokir tombol submit (FR-63 / AC-72) | Morning Commitment |
-| `SupportContributionCard` | Menampilkan catatan kontribusi dukungan rekan kerja lintas fungsi/proyek pada blocker terkait (FR-64 / AC-73) | Blocker Card, History, Weekly Summary |
-| `ClassificationTag`  | Menandai Correction Request sebagai Minor atau Material | Morning/EOD Correction Request (4.16a, 4.16b) |
-| `ObjectionWindowIndicator` | Countdown sisa waktu Objection Window sebelum auto-applied | Correction Request (4.16a, 4.16b) |
-| `FilterBar` | Filter lintas dimensi (employee/function/project/date/status/blocker category) sesuai FR-37 | Team/Function/Management Pulse, Blocker & Escalation Queue, Compliance Queue, My History, Reports, Leave Approval Queue |
-| `ExportButton`  | Memicu export data sesuai scope yang sedang terlihat di layar (FR-42/AC-20) | Reports, My History |
+| `DailyWorkflowStepBar` | Navigasi progres horizontal 3 tahap siklus harian (`Morning Commitment` → `Additional Work` → `EOD Outcome`) yang responsif tanpa overflow horizontal | `/today/morning`, `/today/additional-work`, `/today/eod` |
+| `StatusBadge` | Menampilkan Daily Status `GREEN`/`AMBER`/`RED` (serta varian netral terpisah `NOT_APPLICABLE — NO_COMMITMENT`) secara konsisten | Seluruh halaman dengan status harian |
+| `SubmissionTimingBadge` | Menampilkan `On-Time` (biru info) / `Late` (oranye) / `No Submission` (abu-abu netral) — terpisah dari `StatusBadge` | Today, History, Pulse Dashboard, Compliance Queue |
+| `WorkflowStatusBadge` | Menampilkan status workflow spesifik domain (`Pending`, `Applied`, `Approved`, `Rejected`, `Open`, `Acknowledged`, `In Progress`, `Resolved`, `Closed`, `Accepted Risk`, serta `Superseded by Approved Leave`) | Correction, Leave, Blocker, History, Compliance |
+| `InvitationStatusBadge` | Menampilkan status siklus token undangan akun (`Pending`, `Expired`, `Used`, `Revoked`) | Admin: User & Invitation (`/admin/users`) |
+| `CarryOverBadge` | Penanda informatif tugas berlanjut lintas hari kerja (*"Berlanjut"* / *"Carry-Over Berulang"*), **tanpa pernah mengunci pilihan `GREEN`** (`DEC-003`) | `DraftBanner` Morning, EOD, History, Project Risk |
+| `CommitmentCard` | Satu unit Morning Commitment / Additional Work / EOD Work Item (memisahkan kontrol `Outcome` dan `Continuation`) | Morning, Additional Work, EOD, History |
+| `BlockerCard` | Detail blocker + `ActionPanel` kontekstual sesuai state & wewenang aktor, termasuk state `Resolved` menunggu konfirmasi pelapor | Raise Blocker, Blocker Queue, History |
+| `ActionPanel` | Menampilkan hanya aksi valid untuk state dan kewenangan aktor saat ini | Blocker Queue, Compliance Queue, Admin Users/Org |
+| `AuthorityTag` | Menandai secara eksplisit apakah penugasan berasal dari `Organizational Authority` atau `Project Authority` | Raise Blocker, Blocker Queue, Escalation Aging, Project Risk |
+| `LiveRoutePreviewBox` | Pratinjau *real-time* penerima awal (`Owner Needed`) dan jalur kewenangan hasil resolusi sistem sebelum laporan blocker dikirim | Raise Instant Blocker |
+| `EffectiveDatePicker` | Input tanggal efektif beserta pratinjau dampak; menegakkan batas minimum `effectiveDate >= today` (menolak tanggal lampau sesuai `DEC-008`) pada penugasan organisasi, kewenangan proyek, dan reviewer sementara | Admin: Org Mapping, User Onboarding, Temporary Reviewer, Policy Settings |
+| `ImpactPreviewModal` | Modal konfirmasi tahap ke-2 yang menampilkan komparasi *Before vs After* dan daftar bawahan terdampak dengan retensi penuh state form | Admin: Organizational Mapping (`UF-40`) |
+| `SideBySideDiffPanel` | Panel perbandingan berdampingan `Before (Read-Only)` vs `Proposed After` dengan kontrol input sesuai tipe data dan input kondisional atomik | Morning & EOD Correction Request (`4.16a`, `4.16b`) |
+| `AuditTrailTimeline` | Linimasa vertikal *read-only* berurutan waktu mundur untuk jejak transisi status, auto-escalation, mutasi penugasan, dan riwayat koreksi | Blocker Queue, Escalation Aging, Org Mapping, Correction Request, Compliance |
+| `PolicyVersionHistory` | Menampilkan riwayat versi berpenanggalan efektif dari suatu kategori kebijakan | Policy Settings |
+| `ValidationPromptModal` | Modal konfirmasi seimbang saat saran Status Suggestion Engine berbeda dari pilihan user (tanpa *silent mutation* dan tanpa mengunci `GREEN`) | EOD Check-in |
+| `InteractiveMetricFilterCard` | Kartu ringkasan metrik angka (`tabular-nums`) yang aksesibel keyboard (`aria-pressed`) untuk *click-to-filter* / *click-to-tab* | Pulse Dashboard, Queues, Project Risk, Escalation Aging, Admin |
+| `MasterDetailSplitWorkbench` | Komposisi kerja 2 panel *sticky* di desktop (`42% : 58%`) yang beradaptasi menjadi *drawer* atau 2 tab pada layar sempit | Blocker & Escalation Queue, Manager Note / Coaching Record |
+| `ExceptionSummaryWidget` | Ringkasan jumlah status & daftar triage *Exceptions First* dalam scope yang diizinkan | Team/Function/Management Pulse Dashboard |
+| `CaseDistinctionCallout` | Panel panduan kontekstual Matriks Distingsi Kasus (§13.1 PRD, `FR-73`) untuk pembedaan adil saat mencatat pembinaan/tindak lanjut | Manager Note, Compliance Queue |
+| `TriggerDateCapsules` | Kumpulan chip tanggal faktual kejadian `No Submission` terverifikasi pembentuk *Pattern Flag* | Compliance Queue |
+| `NotificationBell` | Indikator unread + pratinjau menuju Web Notification Center | Global topbar |
+| `DraftBanner` | Panel akordeon draf copy-forward komitmen berlanjut hari kerja sebelumnya yang perlu ditinjau (tanpa auto-submit) | Morning Commitment |
+| `ExemptionBanner` | Banner tenang penjelas status Pengecualian Partisipasi Terbuka (`Indefinite Role Exemption`) bagi akun eksekutif | `/today` (Morning & EOD) |
+| `LockedIndicator` | Menandai submission/baseline yang terkunci pasca Cut-Off beserta jalur koreksi resmi bila tersedia | Morning Commitment dan EOD (setelah Cut-Off) |
+| `RoleBasedPromptHint` | Menampilkan teks petunjuk visual miring (*italic* inline guidance) sesuai **10 fungsi kanonikal resmi Dutamedia** serta fallback netral (non-binding, `FR-12`) | Morning Commitment, Add Additional Work |
+| `QualityWarningBadge` | Menampilkan inline warning edukatif non-blocking saat teks komitmen/pekerjaan terlalu singkat atau generik (`FR-63` / `AC-72`) | Morning Commitment, Add Additional Work |
+| `SupportContributionCard` | Menampilkan catatan kontribusi dukungan rekan kerja lintas fungsi/proyek pada blocker terkait (`FR-64` / `AC-73`) | Blocker Card, History, Weekly Summary, Pulse Dashboard |
+| `ClassificationTag` | Menandai Correction Request sebagai `Minor` atau `Material` | Morning/EOD Correction Request, Review Queue |
+| `ObjectionWindowIndicator` | Countdown sisa waktu + timestamp berakhir absolut dari `Objection Window` sebelum *default-approve* | Correction Request (`4.16a`, `4.16b`), Review Queue |
+| `PasswordStrengthMeter` | Indikator kekuatan kata sandi 4 segmen disertai checklist kriteria keamanan aksesibel | Aktivasi Akun, Reset Password, Profile (`/profile`) |
+| `SessionLockModal` | Modal re-autentikasi di tempat (*in-place*) saat sesi habis di tengah pengisian form guna mencegah kehilangan draf (`NFR-01`) | Form Check-in & Evaluasi (`/today/*`) |
+| `FilterBar` | Filter lintas dimensi (employee/function/project/date/status/blocker taxonomy) sesuai `FR-37` dengan tombol `Reset Filter` | Dashboards, Queues, History, Reports, Admin |
+| `ExportButton` | Memicu ekspor data (CSV UTF-8 BOM / PDF / Spreadsheet) terbatas sesuai scope yang sedang tampil di layar (`FR-42`/`AC-20`) | Reports, My History, Project Risk, Escalation Aging |
 
 ---
 
 ## 7. User Flows Komprehensif (User-Centric & Interactive Experience)
 
-Bagian ini mendefinisikan seluruh **User Flows** (alur pengalaman dan interaksi pengguna) di dalam sistem WorkPulse secara komprehensif, sekuensial, dan terperinci. Setiap alur disusun dari sudut pandang nyata pengguna (manusia yang berhadapan dengan antarmuka) saat menyelesaikan tugasnya, diturunkan secara disiplin dari **PDD v1.4 FINAL** dan **PRD v1.5 FINAL**.
+Bagian ini mendefinisikan seluruh **44 User Flows (`UF-01` s/d `UF-44`)** di dalam sistem WorkPulse secara komprehensif, sekuensial, dan terperinci. Setiap alur disusun dari sudut pandang nyata pengguna (manusia yang berhadapan dengan antarmuka) saat menyelesaikan tugasnya, diturunkan secara disiplin dan mandiri dari **PDD v1.5 FINAL** serta **PRD v1.6 FINAL**.
 
 Setiap User Flow memuat:
 1. **User Goal (Tujuan Pengguna)**: Kebutuhan atau sasaran yang ingin dicapai pengguna.
@@ -509,7 +545,7 @@ Setiap User Flow memuat:
   1. Karyawan melihat panel konteks pengingat: jika pada EOD kemarin ia mengisi `Tomorrow Priority`, catatan tersebut tampil di panel kuning lembut sebagai bahan pengingat (murni referensi).
   2. Karyawan memilih jumlah komitmen (default 1–3 slot).
   3. Karyawan mengklik textarea **Commitment #1**:
-     - Saat kursor aktif dan mulai mengetik, komponen `RoleBasedPromptHint` muncul tepat di bawah field berupa teks miring (*italic*) visual pemandu sesuai fungsi kanonikal Dutamedia karyawan tersebut (misal fungsi `Engineering`: *"e.g. Selesaikan unit testing modul autentikasi dan push PR ke staging"*). Hint ini murni pemandu visual dan tidak tersimpan ke database (ADR-016).
+     - Pada saat slot masih kosong, komponen `RoleBasedPromptHint` tampil sebagai placeholder visual bergaya miring (*italic*) sesuai atribut `function` pada **10 fungsi kanonikal resmi Dutamedia** karyawan tersebut (misal fungsi `Engineering`: *"Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji"*). Hint tampil konsisten pada slot #1, #2, dan #3, menghilang saat diketik, murni pemandu visual, dan tidak pernah mengontaminasi nilai input form maupun tersimpan ke database (`FR-12`, `AC-37`).
   4. Karyawan memilih radio button **Initial Risk** untuk Commitment #1:
      - `GREEN`: Risiko normal, pekerjaan diantisipasi lancar.
      - `AMBER`: Ada potensi risiko/hambatan moderat.
@@ -521,7 +557,7 @@ Setiap User Flow memuat:
   8. Karyawan mengamati badge **Initial Daily Status Preview** di pojok kanan kartu yang terkalkulasi otomatis secara real-time (hanya-baca): jika ada 1 saja RED $\rightarrow$ RED; jika ada AMBER dan tidak ada RED $\rightarrow$ AMBER; jika semua GREEN $\rightarrow$ GREEN.
   9. Karyawan menekan tombol utama **"Simpan Morning Commitment"**.
 - **Percabangan Interaksi UI:**
-  - **Jalur Sukses On-Time:** Tombol menampilkan spinner sebentar $\rightarrow$ toast hijau muncul: *"Morning Commitment berhasil disimpan tepat waktu!"* $\rightarrow$ kartu Morning berubah menjadi read-only dengan badge hijau *"On-Time"* dan badge status risiko awal.
+  - **Jalur Sukses On-Time:** Tombol menampilkan spinner sebentar $\rightarrow$ toast hijau muncul: *"Morning Commitment berhasil disimpan tepat waktu!"* $\rightarrow$ kartu Morning berubah menjadi read-only dengan badge biru info **`On-Time`** (`timing.ontime`) dan badge status risiko awal.
   - **Jalur Field Belum Lengkap:** Jika pengguna memilih AMBER tetapi membiarkan Known Blocker kosong $\rightarrow$ border field menyala merah kontras dengan pesan inline: *"Known Blocker wajib diisi untuk komitmen berisiko AMBER/RED."* Layar otomatis scroll dan fokus ke field tersebut. Input yang sudah diketik di field lain tetap aman.
 - **Kondisi Akhir Layar:** Komitmen pagi terkunci rapi, tercatat di linimasa hari ini.
 
@@ -533,8 +569,8 @@ Setiap User Flow memuat:
 - **Langkah Interaksi Antarmuka:**
   1. Karyawan mengetik kata yang terlalu abstrak atau generik (misal hanya mengetik: *"development"*, *"meeting"*, *"coding"*, atau *"follow-up"*).
   2. Saat kursor berpindah field (*on blur*) atau setelah jeda mengetik, sistem mendeteksi bahwa komitmen tidak memuat deliverable teramati.
-  3. Komponen `QualityWarningBadge` muncul di bawah textarea dengan aksen oranye lembut:
-     💡 *"Komitmen tampak sangat umum. Sebutkan hasil atau deliverable teramati yang diharapkan selesai hari ini (misal: 'Selesaikan slice UI dashboard dan integrasikan dengan API')."*
+  3. Komponen `QualityWarningBadge` muncul di bawah textarea dengan aksen amber lembut (`status.amber`):
+     *"Komitmen tampak sangat umum. Sebutkan hasil atau deliverable teramati yang diharapkan selesai hari ini (misal: 'Selesaikan slice UI dashboard dan integrasikan dengan API')."*
   4. Karyawan memiliki dua pilihan:
      - **Pilihan A (Menyempurnakan Teks):** Karyawan mengklik kembali textarea dan memperjelas kalimat komitmennya $\rightarrow$ peringatan kualitas otomatis hilang saat teks lebih spesifik.
      - **Pilihan B (Tetap Melanjutkan):** Karyawan merasa teksnya sudah cukup $\rightarrow$ karyawan tetap dapat melanjutkan memilih risiko dan menekan tombol Simpan.
@@ -560,19 +596,19 @@ Setiap User Flow memuat:
 
 #### UF-09: Penggunaan Draf Copy-Forward dari Komitmen Berlanjut Kemarin
 - **User Goal:** Karyawan ingin melanjutkan pekerjaan kemarin yang belum tuntas tanpa harus mengetik ulang dari nol.
-- **Aktor:** Karyawan yang pada EOD kemarin memilih `Continuation = Continue`.
+- **Aktor:** Karyawan yang pada EOD hari kerja sebelumnya memilih `Continuation = Continue` pada item Morning Commitment.
 - **Entry Point & Tampilan Awal Layar:**
   - Karyawan membuka `/today/morning`.
-  - Sistem mendeteksi adanya komitmen kemarin yang berstatus `Continue`.
-  - Di atas form komitmen muncul komponen `DraftBanner` dengan tombol: *"Terdapat :count Komitmen Lanjutan dari Kemarin. Tinjau & Gunakan Draf."*
+  - Sistem mendeteksi adanya item Morning Commitment dari hari kerja sebelumnya yang berstatus `Continue` (tidak termasuk *Additional Work* sesuai `AC-23`).
+  - Di atas form komitmen muncul komponen `DraftBanner` dengan tombol: *"Terdapat :count Komitmen Lanjutan dari Hari Kerja Sebelumnya. Tinjau & Gunakan Draf."*
 - **Langkah Interaksi Antarmuka:**
-  1. Karyawan mengklik banner $\rightarrow$ panel seleksi draf copy-forward terbuka menampilkan daftar item pekerjaan kemarin beserta catatan lanjutannya (`Continuation Reason`).
-  2. Karyawan mencentang item yang ingin dikerjakan hari ini (maksimal 3 item).
+  1. Karyawan mengklik banner $\rightarrow$ panel koleksi draf copy-forward terbuka menampilkan seluruh item eligible secara utuh beserta catatan lanjutannya (`Continuation Reason`) dan lencana informatif `CarryOverBadge` (`Carry-over #1` atau `Carry-over #2+`).
+  2. Karyawan mencentang item yang ingin dikerjakan hari ini (maksimal mengisi hingga batas total 3 komitmen; tidak ada tombol *"Hentikan Pekerjaan"* destruktif di pagi hari karena keputusan tidak melanjutkan telah ditetapkan pada kontrol `Continuation` EOD sebelumnya).
   3. Karyawan menekan tombol **"Salin ke Komitmen Hari Ini"**.
-  4. Teks komitmen dan tautan referensi otomatis terisi ke slot Commitment #1 / #2 / #3.
-  5. **Langkah Peninjauan Wajib:** Form TIDAK langsung tersubmit otomatis. Karyawan wajib meninjau teks, boleh mengedit redaksi, dan wajib memilih kembali **Initial Risk** hari ini (GREEN/AMBER/RED).
+  4. Teks komitmen, lencana `CarryOverBadge`, dan tautan referensi otomatis terisi ke slot Commitment #1 / #2 / #3.
+  5. **Langkah Peninjauan Wajib:** Form TIDAK langsung tersubmit otomatis. Karyawan wajib meninjau teks, boleh mengedit redaksi, dan wajib memilih kembali **Initial Risk** hari ini (`GREEN`/`AMBER`/`RED` — seluruh opsi termasuk `GREEN` tetap aktif penuh dan tidak dikunci).
   6. Karyawan menekan tombol **"Simpan Morning Commitment"**.
-- **Guardrails Bisnis (ADR-017 / FR-11):** Tidak ada auto-submit di balik layar; tidak ada pembuatan slot ke-4 di luar batas maksimal 3 komitmen.
+- **Guardrails Bisnis (`FR-11`, `AC-23`, `DEC-003`, `DEC-004`):** Tidak ada auto-submit di balik layar; tidak ada penghilangan atau penggabungan item eligible; tidak ada pembuatan slot ke-4 di luar batas maksimal 3 komitmen; serta tidak ada penguncian paksa (`disabled`) atas opsi `GREEN`.
 - **Kondisi Akhir Layar:** Pekerjaan bersambung tercatat rapi dengan jejak keterkaitan historis.
 
 #### UF-10: Penanganan Keterlambatan Pengisian Pagi (On-Time vs Late vs Terkunci Pasca Cut-Off)
@@ -580,24 +616,24 @@ Setiap User Flow memuat:
 - **Aktor:** Karyawan.
 - **Entry Point & Skenario Waktu:**
   - **Skenario 1: Mengisi di Antara On-Time Deadline dan Cut-Off (Late Period):**
-    - Karyawan membuka `/today` setelah pk 09:00 (deadline) namun sebelum pk 09:30 (Cut-Off).
-    - Di header muncul badge penjelas warna oranye: *"Pengisian Terlambat (Dalam Masa Tenggang)"*.
+    - Karyawan membuka `/today` setelah jam On-Time Deadline kebijakan aktif (misal contoh ilustrasi pk 09:00) namun pada atau sebelum jam Cut-Off (misal contoh ilustrasi pk 09:30).
+    - Di header muncul badge penjelas warna amber: *"Pengisian Terlambat (Dalam Masa Tenggang)"*.
     - Form tetap terbuka penuh dan dapat diisi normal.
-    - Setelah klik simpan, kartu terkunci dengan badge **`Late`** berwarna oranye netral.
+    - Setelah klik simpan, kartu terkunci dengan badge **`Late`** berwarna amber/oranye netral (`timing.late`).
     - *Feedback:* Sistem mencatat fakta keterlambatan secara objektif tanpa menampilkan kata-kata hukuman atau nada memarahi.
-  - **Skenario 2: Membuka Setelah Batas Akhir Cut-Off (Locked State):**
-    - Karyawan membuka `/today` setelah jam Cut-Off terlampaui (misal pk 09:35).
+  - **Skenario 2: Membuka atau Mencoba Submit Setelah Batas Akhir Cut-Off (Locked State):**
+    - Karyawan membuka `/today` (atau menekan simpan) setelah jam Cut-Off kebijakan aktif terlampaui (misal contoh ilustrasi pk 09:35); percobaan pengiriman pasca-Cut-Off ditolak penuh oleh server tanpa penulisan data (`FR-26`, `AC-57`, `DEC-002`).
     - Seluruh form Morning terkunci permanen (*read-only*).
     - Komponen `LockedIndicator` muncul dengan pesan jelas:
-      🔒 *"Batas waktu pengisian Morning Check-in telah berakhir (Cut-Off: :cutOffTime). Form telah terkunci untuk menjaga keandalan baseline harian."*
-    - Tombol simpan menghilang. Jika kebijakan organisasi mengizinkan koreksi, layar memunculkan tombol alternatif: **"Ajukan Morning Correction Request"**.
-- **Kondisi Akhir Layar:** Integritas waktu terlindungi tanpa menghilangkan jalur koreksi resmi bila diizinkan kebijakan.
+      *"Batas waktu pengisian Morning Check-in telah berakhir (Cut-Off: :cutOffTime). Form telah terkunci untuk menjaga keandalan baseline harian."*
+    - Tombol simpan menghilang. Jika karyawan sebelumnya telah memiliki baseline pagi yang terkunci dan kebijakan mengizinkan koreksi atas record yang ada, layar memunculkan tombol: **"Ajukan Morning Correction Request"** (tidak berlaku untuk menciptakan submission baru atas hari *No Submission*).
+- **Kondisi Akhir Layar:** Integritas waktu terlindungi tanpa menghilangkan jalur koreksi resmi atas record yang sudah ada.
 
 #### UF-11: Pencatatan Tambahan Pekerjaan Tengah Hari (Add Additional Work)
 - **User Goal:** Karyawan mencatat tugas mendadak yang didelegasikan atasan atau insiden teknis darurat di siang hari agar beban kerjanya terekam adil.
 - **Aktor:** Karyawan.
 - **Entry Point & Tampilan Awal Layar:**
-  - Kapan saja di sela jam kerja (misal pk 14:00) setelah Morning Check-in selesai, karyawan membuka `/today`.
+  - Kapan saja di sela jam kerja (misal contoh ilustrasi pk 14:00) setelah Morning Check-in selesai, karyawan membuka `/today`.
   - Di bawah kartu Morning Commitment, terdapat tombol jelas: **"+ Tambah Pekerjaan Tengah Hari (Add Additional Work)"**.
 - **Langkah Interaksi Antarmuka:**
   1. Karyawan mengklik tombol "+ Tambah Pekerjaan Tengah Hari".
@@ -615,7 +651,7 @@ Setiap User Flow memuat:
      - **Reference / Task Link:** Opsional link tiket.
   3. Karyawan menekan tombol **"Simpan Additional Work"**.
 - **Umpan Balik Visual:** Modal tertutup $\rightarrow$ toast hijau muncul $\rightarrow$ kartu *Additional Work* muncul di halaman `/today` dalam kelompok visual terpisah di bawah komitmen pagi, dengan bobot visual dan kejelasan yang setara (bukan catatan kaki kecil).
-- **Guardrails Bisnis (ADR-001):** Additional Work tidak mengubah baseline pagi yang sudah terkunci dan bukan slot ke-4 komitmen pagi.
+- **Guardrails Bisnis (`FR-07`, `BR-01`):** Additional Work tidak mengubah baseline pagi yang sudah terkunci dan bukan slot ke-4 komitmen pagi.
 - **Kondisi Akhir Layar:** Item pekerjaan baru terdaftar dan akan wajib dievaluasi outcome-nya saat EOD sore hari.
 
 #### UF-12: Evaluasi Sore Hari (EOD Check-out: Outcome, Continuation, & Alasan Wajib)
@@ -634,13 +670,13 @@ Setiap User Flow memuat:
      - **Kontrol 2: Continuation (Pilihan Segmented):**
        - `Do Not Continue` (Tidak dilanjutkan besok)
        - `Continue` (Lanjutkan ke hari kerja berikutnya) $\rightarrow$ *Aturan Krusial:* Jika memilih `Continue`, field teks **Continuation Reason WAJIB DIISI, bahkan ketika Outcome bernilai `Completed`** (misal untuk tugas berseri atau pemeliharaan berkala).
-  2. Karyawan mengamati panel **Status Suggestion Engine (FR-13 / AC-38)** di bagian bawah yang secara otomatis menghitung rekomendasi status harian berdasarkan aturan deterministik:
-     - Ada Blocker Critical $\rightarrow$ menyarankan **RED**.
+  2. Karyawan mengamati panel **Status Suggestion Engine (`FR-13` / `AC-38`)** di bagian bawah yang secara otomatis menghitung rekomendasi status harian berdasarkan aturan deterministik:
+     - Ada Blocker Critical atau insiden produksi $\rightarrow$ menyarankan **RED**.
      - $\ge 50\%$ tugas Not Completed/Cancelled $\rightarrow$ menyarankan **RED**.
-     - Ada Blocker High atau carry-over berulang hari ke-2 pada task yang sama $\rightarrow$ menyarankan minimal **AMBER**.
+     - Ada Blocker High atau carry-over berulang hari ke-2 berturut-turut pada item yang sama $\rightarrow$ menyarankan minimal **AMBER** (tanpa pernah mengunci/menonaktifkan opsi `GREEN`, sesuai `DEC-003`).
      - Sebagian selesai atau $< 50\%$ belum selesai $\rightarrow$ menyarankan minimal **AMBER**.
-     - Semua tugas selesai tanpa blocker $\rightarrow$ menyarankan **GREEN**.
-  3. Karyawan memilih **Final Status** harian: `GREEN`, `AMBER`, atau `RED`.
+     - Semua tugas selesai tanpa blocker aktif $\rightarrow$ menyarankan **GREEN**.
+  3. Karyawan memilih **Final Status** harian: `GREEN`, `AMBER`, atau `RED` (seluruh opsi radio selalu dapat dipilih).
      - Jika karyawan memilih `AMBER` atau `RED` $\rightarrow$ field **Penjelasan Risiko Tingkat Hari (Daily Risk Explanation)** wajib diisi secara menyeluruh.
   4. (Opsional) Karyawan mengetik catatan singkat pada field **Tomorrow Priority** (prioritas utama untuk esok pagi).
   5. Karyawan menekan tombol utama **"Simpan EOD Check-out"**.
@@ -653,7 +689,7 @@ Setiap User Flow memuat:
 - **User Goal:** Karyawan mengonfirmasi pilihannya secara adil ketika terdapat perbedaan antara status yang dipilihnya dan kalkulasi sistem.
 - **Aktor:** Karyawan di Form EOD Check-out.
 - **Entry Point & Kondisi Pemicu:**
-  - Karyawan memilih status `GREEN`, namun sistem mendeteksi ada blocker aktif atau tugas belum selesai sehingga sistem menyarankan `AMBER` atau `RED`.
+  - Karyawan memilih status `GREEN`, namun sistem mendeteksi ada blocker aktif, tugas belum selesai, atau carry-over berulang hari ke-2+ sehingga sistem menyarankan `AMBER` atau `RED`.
   - Karyawan menekan tombol Simpan EOD.
 - **Tampilan Antarmuka Dialog Modal:**
   - Muncul modal dialog elegan `ValidationPromptModal` dengan judul: *"Konfirmasi Status Risiko Harian"*.
@@ -675,10 +711,10 @@ Setiap User Flow memuat:
   - Setelah EOD berhasil disubmit (atau saat jam Cut-Off EOD lewat), halaman `/today` berubah ke mode **Read-Only / Locked Summary**.
 - **Tampilan Antarmuka:**
   - Kartu menampilkan badge ganda berdampingan yang terpisah:
-    - Badge Waktu: `On-Time` (hijau) atau `Late` (oranye).
+    - Badge Waktu: `On-Time` (biru info `timing.ontime`) atau `Late` (amber/oranye `timing.late`).
     - Badge Risiko Akhir: `GREEN`, `AMBER`, atau `RED` (atau `NOT_APPLICABLE — NO_COMMITMENT`).
   - Seluruh tombol edit, tambah tugas, dan dropdown outcome berubah menjadi teks statis read-only.
-  - Jika ada kesalahan pencatatan yang baru disadari setelah terkunci, karyawan melihat satu-satunya jalur resmi: tombol *"Ajukan EOD Correction Request"*.
+  - Jika EOD telah pernah disubmit dan ada kesalahan pencatatan yang baru disadari setelah terkunci, karyawan melihat satu-satunya jalur resmi: tombol *"Ajukan EOD Correction Request"*.
 - **Kondisi Akhir Layar:** Hari kerja ditutup dengan integritas data audit yang kokoh.
 
 ---
@@ -708,8 +744,8 @@ Setiap User Flow memuat:
   7. (Opsional) Karyawan mengisi target tanggal pada **Expected Resolution**.
   8. Karyawan menekan tombol utama **"Kirim Laporan Blocker"**.
 - **Percabangan Interaksi UI:**
-  - **Jalur Sukses:** Modal tertutup $\rightarrow$ toast hijau muncul: *"Blocker berhasil dilaporkan dan ditugaskan kepada :namaOwner."* $\rightarrow$ Blocker Card muncul dengan status badge biru **`Open`**. Notifikasi instan terkirim ke gawai penanggung jawab.
-  - **Jalur Gagal (Penerima Tidak Sah / Mapping Kosong):** Sistem menampilkan pesan peringatan yang jelas dan meminta konfirmasi pengalihan ke fallback pimpinan divisi.
+  - **Jalur Sukses:** Modal tertutup $\rightarrow$ toast hijau muncul: *"Blocker berhasil dilaporkan dan ditugaskan kepada :namaOwner."* $\rightarrow$ Blocker Card muncul dengan status badge biru **`Open`**. Notifikasi instan terkirim ke gawai penanggung jawab, dan audit trail menyimpan konteks kewenangan, penerima akhir, serta dasar resolusinya (`AC-58`–`AC-61`).
+  - **Jalur Gagal (Penerima Manual Tidak Sah / Mapping Fallback Belum Terkonfigurasi / Ambigu):** Sistem menolak pengiriman tanpa menampilkan konfirmasi sukses palsu (`AC-60`, `AC-61`), menjelaskan secara spesifik apakah pilihan manual di luar scope sah atau belum ada fallback organisasi/proyek aktif yang terkonfigurasi, serta menampilkan panduan langkah perbaikan yang jelas (mengganti pilihan penerima yang sah atau menghubungi Admin untuk melengkapi mapping kewenangan).
 - **Kondisi Akhir Layar:** Blocker aktif terdaftar, SLA waktu pengakuan (*acknowledgment timer*) mulai berjalan.
 
 #### UF-16: Pengakuan Blocker oleh Penanggung Jawab (Acknowledge Blocker)
@@ -793,7 +829,7 @@ Setiap User Flow memuat:
      - **Dasar Pertimbangan Risiko (Risk Acceptance Rationale):** Alasan mengapa risiko diputuskan diterima.
      - **Rencana Mitigasi Jangka Panjang:** Langkah pengamanan yang disiapkan.
   3. Pimpinan menekan **"Konfirmasi Terima Risiko"**.
-- **Umpan Balik Visual:** Status blocker berubah menjadi **`Accepted Risk`** dengan lencana ungu. Blocker dikeluarkan dari hitungan krisis aktif namun tetap tercantum di laporan risiko eksekutif.
+- **Umpan Balik Visual:** Status blocker berubah menjadi **`Accepted Risk`** dengan lencana amber/oranye informasional (`workflow.accepted-risk`). Blocker dikeluarkan dari hitungan krisis aktif namun tetap tercantum di laporan risiko eksekutif.
 - **Kondisi Akhir Layar:** Keputusan manajerial terekam transparan tanpa membiarkan status blocker menggantung tanpa kejelasan.
 
 #### UF-21: Pengalihan Penanggung Jawab Blocker secara Manual (Reassign Blocker)
@@ -828,7 +864,7 @@ Setiap User Flow memuat:
     - Sistem langsung menerapkan perubahan secara otomatis (**Status: `Applied`**).
     - Toast hijau muncul: *"Koreksi Minor berhasil diterapkan langsung ke baseline pagi Anda."* Baseline diperbarui seketika.
   - **Kasus 2: Koreksi Material (perubahan substansi komitmen atau perubahan risiko):**
-    - Sistem menempatkan pengajuan dalam status **`Pending`** selama **Objection Window** (24 jam kerja).
+    - Sistem menempatkan pengajuan dalam status **`Pending`** selama **Objection Window** (sesuai durasi kebijakan aktif pada Policy Configuration, misal contoh ilustrasi 24 jam kerja).
     - Muncul komponen `ObjectionWindowIndicator` dengan hitung mundur: *"Menunggu Sanggahan Reviewer: :sisaWaktu"*.
     - **PENTING DI LAYAR:** Baseline asli karyawan **TETAP BERLAKU DAN TIDAK BERUBAH** selama jendela sanggahan berjalan. Reviewer menerima notifikasi pengajuan koreksi.
 - **Kondisi Akhir Layar:** Pengajuan tercatat dengan status jelas dan nomor ID pelacakan tersendiri.
@@ -898,7 +934,7 @@ Setiap User Flow memuat:
   - **Cabang A: Menyetujui Permohonan (Approve):**
     1. Atasan mengklik tombol hijau **"Approve"**.
     2. Status permohonan berubah seketika menjadi **`Approved`**.
-    3. Tanggal tersebut resmi menjadi *Valid Exception* (FR-48) di kalender kerja karyawan dan otomatis mengecualikan karyawan dari kewajiban check-in serta deteksi No Submission. Karyawan menerima notifikasi persetujuan.
+    3. Tanggal tersebut resmi menjadi *Valid Exception* (`FR-48`) di kalender kerja karyawan dan otomatis mengecualikan karyawan dari kewajiban check-in serta deteksi No Submission. Apabila persetujuan baru diberikan setelah jam Cut-Off pada tanggal di mana event `No Submission` sempat tercatat, sistem otomatis merekonsiliasi hari tersebut menjadi `Approved Leave`, mempertahankan event `No Submission` sebelumnya secara *append-only* pada *audit trail* dengan penanda `Superseded by Approved Leave`, dan mengeluarkannya dari hitungan ambang 3 kejadian `FR-29` (`AC-19`, `DEC-007`). Karyawan menerima notifikasi persetujuan.
   - **Cabang B: Menolak Permohonan (Reject):**
     1. Atasan mengklik tombol merah **"Reject"**.
     2. Modal dialog muncul mewajibkan pengisian: **Alasan Penolakan Cuti**.
@@ -1004,7 +1040,7 @@ Setiap User Flow memuat:
 - **Aktor:** HRGA & Direct Manager Terkait.
 - **Entry Point & Tampilan Layar:**
   - HRGA membuka rute `/compliance` (Compliance Queue).
-  - Layar menampilkan daftar karyawan yang terdeteksi **Pattern Flag (3x kejadian No Submission dalam 30 hari kerja)**.
+  - Layar menampilkan daftar karyawan yang terdeteksi **Pattern Flag (ambang tetap 3x kejadian No Submission sah dalam jendela hari kerja bergulir sesuai kebijakan aktif, misal contoh ilustrasi 30 hari kerja; tidak menghitung event berstatus `Superseded by Approved Leave`)**.
 - **Langkah Interaksi Antarmuka:**
   1. HRGA mengklik baris karyawan terkait untuk membuka riwayat tanggal kejadian No Submission.
   2. HRGA bersama Manager membuka sesi tinjauan kepatuhan (*Review Event*) dan menerapkan **Matriks Distingsi Kasus (§13.1 PRD)**:
@@ -1114,18 +1150,18 @@ Setiap User Flow memuat:
   6. Sistem menghasilkan unduhan berkas (CSV/Spreadsheet/PDF) yang **HANYA BERISI DATA YANG SEDANG TAMPIL DI LAYAR SESUAI SCOPE SAH PENGGUNA (FR-42 / AC-20)**.
 - **Kondisi Akhir Layar:** Laporan terunduh aman tanpa kebocoran data di luar wewenang.
 
-#### UF-40: Pemetaan Struktur Organisasi Berpenanggalan Efektif oleh Admin (Org Mapping)
-- **User Goal:** Administrator memperbarui struktur organisasi atau atasan langsung dengan tetap menjaga integritas riwayat masa lalu.
+#### UF-40: Pemetaan Struktur Organisasi & Kewenangan Proyek Berpenanggalan Efektif oleh Admin (Org Mapping)
+- **User Goal:** Administrator memperbarui penugasan fungsi/atasan langsung atau pemetaan kewenangan proyek dengan tetap menjaga keutuhan riwayat masa lalu dan mencegah rantai pelaporan melingkar.
 - **Aktor:** System Administrator / HRGA Berwenang.
 - **Entry Point & Langkah Interaksi:**
   1. Admin membuka rute `/admin/organization`.
-  2. Layar menyajikan bagan struktur aktif saat ini: Divisi, Lead, dan Anggota.
-  3. Admin memilih personil untuk mengubah penugasan (misal mutasi divisi atau pergantian Direct Manager).
-  4. Form perubahan mewajibkan pengisian: **Tanggal Berlaku Efektif (Effective Date)**.
-  5. Admin mengklik tombol **"Lihat Preview Dampak"** $\rightarrow$ modal menampilkan siapa saja bawahan yang ikut terpengaruh dan tanggal mulai berlakunya hierarki baru.
-  6. Admin menekan **"Konfirmasi Perubahan"** $\rightarrow$ penugasan tersimpan dengan penanggalan efektif.
-  7. **Integritas Histori (FR-23, FR-24):** Seluruh data masa lalu tidak pernah ditimpa; record akuntabilitas lampau tetap menampilkan konteks atasan dan divisi yang menjabat pada tanggal kejadian tersebut.
-- **Kondisi Akhir Layar:** Struktur organisasi terbarui dengan jejak historis utuh.
+  2. Layar menyajikan dua tab: **Penugasan Hierarki Organisasi** (Fungsi kanonikal dari 10 fungsi resmi Dutamedia, Role, Direct Manager, Reviewer, dan Fallback Organisasi) serta **Pemetaan Kewenangan Proyek (`ProjectAuthorityMapping`)** berbasis teks reference/scope proyek aktif.
+  3. Admin memilih personil untuk mengubah penugasan (misal mutasi ke salah satu dari 10 fungsi kanonikal atau pergantian Direct Manager) atau menambah/mengubah mapping kewenangan proyek.
+  4. Form perubahan mewajibkan pengisian **Tanggal Berlaku Efektif (`Effective Date`)** melalui `EffectiveDatePicker` yang menegakkan aturan `effectiveDate >= today` (pemilihan tanggal lampau ditolak dengan pesan error inline sesuai `DEC-008`), serta memvalidasi pencegahan hierarki melingkar (*circular reporting prevention*) secara rekursif.
+  5. Admin mengklik tombol **"Lihat Preview Dampak"** $\rightarrow$ `ImpactPreviewModal` menampilkan perbandingan `Before -> Proposed After`, daftar bawahan/alur eskalasi yang ikut terdampak, dan tanggal mulai berlakunya penugasan baru.
+  6. Admin menekan **"Konfirmasi Perubahan"** $\rightarrow$ penugasan tersimpan sebagai record versi baru berpenanggalan efektif.
+  7. **Integritas Histori (`FR-23`, `FR-24`, `AC-54`):** Seluruh data masa lalu tidak pernah ditimpa; record akuntabilitas lampau tetap menampilkan konteks atasan, fungsi, dan kewenangan yang menjabat pada tanggal kejadian tersebut.
+- **Kondisi Akhir Layar:** Struktur organisasi dan kewenangan proyek terbarui dengan jejak historis utuh.
 
 #### UF-41: Pendelegasian Reviewer Sementara oleh Pimpinan/Admin (Temporary Reviewer Assignment)
 - **User Goal:** Menunjuk pengganti sementara untuk meninjau blocker dan koreksi bawahan saat manajer berhalangan/cuti panjang.
@@ -1133,31 +1169,63 @@ Setiap User Flow memuat:
 - **Entry Point & Langkah Interaksi:**
   1. Admin/Pimpinan membuka rute `/admin/temporary-reviewer`.
   2. Klik **"+ Tambah Delegasi Reviewer"**.
-  3. Memilih pejabat yang digantikan, memilih personil pengganti (Temporary Reviewer), dan ruang lingkup bawahan.
-  4. Mengisi **Effective Date** dan **Expiry Date** yang **keduanya wajib diisi (FR-25)**.
+  3. Memilih pejabat yang digantikan, memilih personil pengganti aktif (Temporary Reviewer — divalidasi tidak menunjuk ke diri pejabat yang sedang digantikan), dan ruang lingkup bawahan.
+  4. Mengisi **Effective Date** (`effectiveDate >= today`, input tanggal lampau ditolak sesuai `DEC-008`) dan **Expiry Date** (`expiryDate >= effectiveDate`) yang **keduanya wajib diisi (`FR-25`)**.
   5. Menekan tombol **"Simpan Penugasan Sementara"**.
   6. Pada rentang tanggal tersebut, reviewer pengganti otomatis melihat antrean review bawahan terkait di `/team/reviews`.
-  7. Tepat pada jam akhir Expiry Date, wewenang delegasi otomatis dicabut oleh sistem tanpa perlu tindakan manual admin.
-- **Guardrails Bisnis:** Penugasan sementara DILARANG dibuat terbuka tanpa batas kedaluwarsa (*no open-ended delegation*).
+  7. Tepat pada akhir masa berlaku Expiry Date, wewenang delegasi otomatis berakhir oleh sistem tanpa perlu tindakan manual admin.
+- **Guardrails Bisnis:** Penugasan sementara DILARANG dibuat terbuka tanpa batas kedaluwarsa (*no open-ended delegation*) dan dilarang di-*backdate* ke tanggal lampau.
 - **Kondisi Akhir Layar:** Kelancaran operasional review terjamin saat manajer berhalangan.
 
 #### UF-42: Pengaturan Nilai Kebijakan Organisasi oleh Pemilik Kebijakan (Policy Settings)
 - **User Goal:** Pemilik kebijakan yang berwenang mengubah parameter konfigurasi sistem tanpa menyentuh kode program.
-- **Aktor:** Authorized Policy Owner (Admin / Head / HRGA sesuai kewenangan FR-34 / BR-15).
+- **Aktor:** Authorized Policy Owner (Admin / Head / HRGA sesuai kewenangan `FR-34` / `BR-15`).
 - **Entry Point & Langkah Interaksi:**
   1. Pengguna membuka rute `/policy-settings`.
   2. **Tampilan Terfilter Sesuai Wewenang:** Pengguna HANYA melihat section kebijakan yang menjadi kewenangannya:
-     - Admin: Jam kerja, batas On-Time, Grace Period, batas Cut-Off.
-     - Head / Management: Threshold waktu eskalasi SLA blocker.
-     - HRGA: Ketentuan retensi bukti kepatuhan.
-     *(Kategori di luar wewenang disembunyikan sepenuhnya dari antarmuka).*
-  3. Pemilik kebijakan menyunting nilai parameter yang diizinkan dan memasukkan **Tanggal Berlaku Efektif (Effective Date)**.
-  4. Sistem memvalidasi parameter terhadap aturan tetap produk (*Product Fixed Rules* - batas maksimal 3 komitmen dan ambang toleransi 3x non-submission tidak dapat diubah).
+     - Admin: Jam kerja, batas On-Time, Grace Period, batas Cut-Off, masa berlaku undangan.
+     - Head / Management: Threshold waktu eskalasi SLA blocker, Objection Window, dan klasifikasi Minor/Material.
+     - HRGA: Jendela hari kerja evaluasi kepatuhan non-submission dan ketentuan retensi bukti kepatuhan.
+     *(Kategori di luar wewenang tidak dirender sama sekali pada antarmuka dan ditolak oleh server).*
+  3. Pemilik kebijakan menyunting nilai parameter yang diizinkan dan memasukkan **Tanggal Berlaku Efektif (`Effective Date >= today`)**.
+  4. Sistem memvalidasi parameter terhadap aturan tetap produk (*Product Fixed Rules* — batas maksimal 3 komitmen dan ambang toleransi 3x non-submission tidak dapat diubah) serta menampilkan `ImpactPreviewModal`.
   5. Pengguna menekan tombol **"Terapkan Versi Kebijakan Baru"**.
-  6. Sistem menyimpan konfigurasi sebagai versi baru berpenanggalan efektif (`PolicyVersionHistory`), versi lama diarsipkan.
+  6. Sistem menyimpan konfigurasi sebagai versi baru berpenanggalan efektif (`PolicyVersionHistory`), versi lama diarsipkan secara *append-only*.
 - **Kondisi Akhir Layar:** Kebijakan operasional terkelola mandiri dengan tata kelola versi yang akuntabel.
 
----
+#### UF-43: Pembuatan Akun Karyawan & Pengelolaan Undangan Aktivasi Sekali Pakai oleh Admin (`/admin/users`)
+- **User Goal:** Administrator mendaftarkan akun karyawan baru ke dalam WorkPulse, mengirimkan undangan aktivasi sekali pakai, atau mengelola status siklus hidup akun karyawan tanpa mencampuradukkannya dengan layar pemetaan struktur organisasi.
+- **Aktor:** System Administrator (`FR-01`, `FR-50`, `FR-54`, `AC-34`, `AC-36`, `AC-54`, `DEC-005`).
+- **Entry Point & Tampilan Awal Layar:**
+  - Admin mengklik menu **"User & Invitation Management"** di grup Administration sidebar $\rightarrow$ membuka rute `/admin/users`.
+  - Layar menampilkan kartu ringkasan status akun (`Active`, `Invited / Pending Activation`, `Invitation Expired`, `Deactivated`), `FilterBar`, tabel direktori akun lengkap dengan `InvitationStatusBadge`, dan tombol utama **"+ Undang Pengguna Baru"**.
+- **Langkah Interaksi Antarmuka:**
+  1. Admin mengklik tombol **"+ Undang Pengguna Baru"**.
+  2. Drawer/modal pembuatan akun terbuka menyajikan field:
+     - **Nama Lengkap** dan **Alamat Email Kerja Resmi** (unik, tervalidasi formatnya).
+     - **Penugasan Awal Efektif:** Pilihan salah satu dari **10 fungsi kanonikal resmi Dutamedia**, Role awal, Direct Manager awal, serta `Effective Date` (`effectiveDate >= today` sesuai `DEC-008`).
+  3. Admin menekan tombol **"Buat Akun & Kirim Undangan Aktivasi"**.
+- **Percabangan Interaksi UI:**
+  - **Cabang A (Sukses Dibuat & Undangan Terkirim):** Akun tercatat dengan status `Invited` dan token sekali pakai berbatas waktu dikirim ke surel karyawan. Toast hijau muncul: *"Akun :nama berhasil dibuat dan surel undangan aktivasi telah dikirimkan."*
+  - **Cabang B (Pengelolaan Undangan Menggantung / Kedaluwarsa):** Untuk akun berstatus `Invited` atau `Expired`, Admin dapat mengklik aksi baris **"Kirim Ulang Undangan (Resend)"** (menerbitkan token baru & menghanguskan token lama) atau **"Cabut Undangan (Revoke)"** (membatalkan token seketika sehingga tautan lama menampilkan state tidak berlaku pada `UF-01`).
+  - **Cabang C (Deaktivasi / Reaktivasi Akun):** Saat karyawan resign atau nonaktif, Admin mengklik **"Nonaktifkan Akun"** dengan konfirmasi dampak dan alasan wajib $\rightarrow$ seluruh sesi aktif akun tersebut langsung diakhiri tanpa menghapus rekam jejak akuntabilitas historisnya (`FR-24`).
+- **Guardrails Bisnis:** Pendaftaran mandiri publik (*public self-registration*) tidak tersedia di bagian mana pun dari aplikasi; pemutakhiran mutasi hierarki lanjutan setelah akun aktif dikelola secara terpisah di `/admin/organization` (`DEC-005`).
+- **Kondisi Akhir Layar:** Siklus hidup identitas akun dan undangan aktivasi terkendali penuh dengan jejak audit lengkap.
+
+#### UF-44: Pengelolaan Profil, Konteks Penugasan Aktif, & Pembaruan Kata Sandi Mandiri (`/profile`)
+- **User Goal:** Pengguna yang sedang login memeriksa informasi penugasan organisasinya saat ini serta memperbarui kata sandi akunnya secara mandiri dan aman.
+- **Aktor:** Seluruh Pengguna Terautentikasi.
+- **Entry Point & Tampilan Awal Layar:**
+  - Pengguna mengklik menu **"Profile"** pada avatar pengguna atau sidebar $\rightarrow$ membuka rute `/profile`.
+  - Layar menampilkan dua panel bersih: **Panel Identitas & Konteks Penugasan Efektif (Read-Only)** dan **Panel Keamanan & Kata Sandi**.
+- **Langkah Interaksi Antarmuka:**
+  1. Pada Panel Identitas & Konteks Penugasan Efektif, pengguna meninjau Nama, Email resmi, Fungsi kanonikal aktif, Role aktif, Direct Manager efektif saat ini, serta status pengecualian partisipasi (bila ada). Catatan informatif menjelaskan bahwa perubahan data kepegawaian/organisasi dikelola oleh HRGA/Admin.
+  2. Untuk mengganti kata sandi, pengguna mengisi **Kata Sandi Saat Ini**, **Kata Sandi Baru** (dipandu komponen `PasswordStrengthMeter` real-time), dan **Konfirmasi Kata Sandi Baru**.
+  3. Pengguna menekan tombol **"Perbarui Kata Sandi"**.
+- **Percabangan Interaksi UI:**
+  - **Cabang A (Kata Sandi Saat Ini Valid & Kriteria Terpenuhi):** Kata sandi berhasil diperbarui, sesi di perangkat lain dicabut demi keamanan, field password dikosongkan kembali, dan toast sukses muncul.
+  - **Cabang B (Kata Sandi Saat Ini Salah / Konfirmasi Tidak Cocok):** Pesan error inline tampil spesifik pada field terkait tanpa me-refresh halaman.
+- **Kondisi Akhir Layar:** Keamanan kredensial pengguna terbarui secara mandiri tanpa mengganggu konteks kerja.
 
 ---
 
@@ -1192,88 +1260,90 @@ Bagian ini menetapkan state perilaku minimum yang harus dirancang untuk layar ya
 
 | Area | State minimum yang harus ditampilkan | Aturan feedback |
 |---|---|---|
-| Login/Invitation | Default, invalid credentials, inactive account, valid invite, expired/used/revoked invite, activation success | Error tidak membocorkan keberadaan akun lain; public registration tidak tersedia |
-| Morning | Empty 0 commitments, populated 1–3, copy-forward available, validation error, saving, On-Time success, Late success, locked/cutoff rejected, correction unavailable/available | 0 commitment membutuhkan reason; agregat initial status hanya-baca; input dipertahankan pada kegagalan |
-| EOD | Belum ada EOD, EOD draft dengan item, tidak ada item evaluable, cancelled-reason validation, continuation-reason validation, daily risk reason validation, suggestion tersedia/tidak tersedia/mismatch, saving, On-Time/Late success, cutoff rejection, locked, EOD correction available/unavailable | Continuation=Continue selalu membutuhkan reason; AMBER/RED membutuhkan daily explanation; bila tidak ada item evaluable dan tidak ada blocker aktif, jangan tampilkan suggestion; tidak ada silent status mutation |
-| Correction | Draft request, submitting, Minor Applied, Material Pending/countdown, objection submitted, Rejected, Applied after window, failed submission | Morning/EOD dipisahkan; baseline tidak berubah selama Material Pending; no false success |
-| Blocker | Open, Acknowledged, In Progress, Resolved awaiting reporter, Closed, Accepted Risk, auto-escalated, unauthorized action | Resolve membutuhkan resolution note; hanya pelapor mengonfirmasi Closed; Accepted Risk jalur terpisah |
+| Login, Invitation, & Profile | Public login default, invalid credentials, inactive account, forgot/reset password, valid invite, expired/used/revoked invite, activation success, session lock re-auth modal; Admin `/admin/users` (`Invited`, `Expired`, `Revoked`, `Resend`, `Active`, `Deactivated`); `/profile` password update | Error tidak membocorkan keberadaan akun lain; public self-registration tidak tersedia; sesi di perangkat lain dicabut saat password direset/diperbarui |
+| Morning | Empty 0 commitments, populated 1–3, 10-function `RoleBasedPromptHint` placeholder, non-blocking `QualityWarningBadge`, copy-forward available (`CarryOverBadge` non-locking), validation error, saving, On-Time success, Late success, locked/cutoff rejected, correction unavailable/available | 0 commitment membutuhkan reason; agregat initial status hanya-baca; opsi `GREEN` tidak pernah di-disable; input dipertahankan pada kegagalan |
+| EOD | Belum ada EOD, EOD draft dengan item, tidak ada item evaluable, cancelled-reason validation, continuation-reason validation, daily risk reason validation, suggestion tersedia/tidak tersedia/mismatch, saving, On-Time/Late success, cutoff rejection, locked, EOD correction available/unavailable | `Continuation=Continue` selalu membutuhkan reason (termasuk saat `Completed`); `AMBER`/`RED` membutuhkan daily explanation; bila tidak ada item evaluable dan tidak ada blocker aktif, jangan tampilkan suggestion; opsi `GREEN` tetap aktif penuh; tidak ada silent status mutation |
+| Correction | Draft request, submitting, Minor Applied, Material Pending/countdown (`ObjectionWindowIndicator`), objection submitted, Rejected, Applied after window, failed submission | Morning/EOD dipisahkan; hanya untuk submission yang pernah ada (bukan pembatal `No Submission`); baseline tidak berubah selama Material Pending; no false success |
+| Blocker | Open, Acknowledged, In Progress, Resolved awaiting reporter, Reopened (`In Progress`), Closed, Accepted Risk, auto-escalated, invalid/unavailable/ambiguous owner error, unauthorized action | Resolve membutuhkan resolution note; hanya pelapor mengonfirmasi Closed (tidak ada auto-close berbasis waktu); Accepted Risk jalur terpisah; tidak ada klaim terkirim palsu bila penerima tidak valid |
 | Notifications | Push not supported, permission prompt eligible, granted, denied, no subscription, delivery attempted, failed, success only if confirmed; in-app read/unread | Jangan menyamakan notification record dengan push delivery; fallback sesuai matriks trigger |
-| Leave/Exemption | Leave Pending, Approved, Rejected; Holiday/Exemption configured/expired; approval atas tanggal yang sudah dievaluasi | Pending leave tidak mengecualikan tanggal; admin-set exception berlaku sesuai effective period; UI tidak menjanjikan penghapusan/reklasifikasi diam-diam atas No Submission yang sudah tercatat karena PDD/PRD belum menentukan rekonsiliasi retroaktif |
-| Admin/Policy | Read-only unauthorized categories, authorized category, validation error, preview, confirm, effective-dated history | Tidak menampilkan kategori policy yang bukan wewenang; nilai operasional belum disahkan tidak boleh ditebak |
+| Leave/Exemption | Leave Pending, Approved, Rejected; rekonsiliasi pasca-Cut-Off (`Superseded by Approved Leave`); Holiday/Exemption configured/expired; Indefinite Role Exemption (`ExemptionBanner`) | Pending leave tidak mengecualikan tanggal; admin-set exception berlaku sesuai effective period; bila cuti baru disetujui setelah Cut-Off saat `No Submission` sempat tercatat, hari otomatis direkonsiliasi menjadi `Approved Leave` dan event `No Submission` ditandai `Superseded by Approved Leave` secara append-only di audit trail serta dikeluarkan dari ambang 3x `FR-29` (`DEC-007`) |
+| Admin, Org, & Policy | `/admin/users`, `/admin/organization`, `/admin/temporary-reviewer`, `/policy-settings`: unauthorized category hidden, authorized category editable, past-date rejection (`effectiveDate < today`), circular-hierarchy rejection, `ImpactPreviewModal`, confirm, effective-dated history | Tidak merender kategori policy di luar wewenang; `Effective Date` wajib hari ini atau masa depan (`effectiveDate >= today` sesuai `DEC-008`); nilai operasional belum disahkan tidak boleh ditebak |
 
 ### 9.1 Aturan Umum Error, Loading, dan Double Submission
 - Saat request berjalan, tombol submit menunjukkan state loading dan mencegah pengiriman ganda dari aksi berulang, tanpa menghapus input.
 - Jika request gagal, tampilkan error yang actionable, pertahankan input yang aman, dan jangan tampilkan status sukses/Applied/Delivered tanpa konfirmasi server yang relevan.
 - Jika hasil request tidak pasti (misalnya koneksi terputus setelah submit), UI harus menampilkan state yang meminta pengguna memeriksa status request sebelum mencoba lagi, atau memuat ulang status authoritative; jangan mendorong duplikasi.
-- Empty state harus menjelaskan apakah data memang belum ada, tidak ada item yang cocok dengan filter, user tidak memiliki akses, atau data gagal dimuat. Jangan memakai satu empty state untuk semua kondisi.
+- Empty state harus menjelaskan apakah data memang belum ada, tidak ada item yang cocok dengan filter, tidak ada anomali aktif (*Positive / Zero-Exception State*), user tidak memiliki akses (`403 Access Restricted State`), atau data gagal dimuat. Jangan memakai satu empty state untuk semua kondisi.
 - Semua status penting harus memiliki label teks; warna atau ikon tidak boleh menjadi satu-satunya pembawa makna.
 - UI tidak menggantikan server-side authorization. Tombol yang tidak ditampilkan bukan satu-satunya kontrol akses.
 
+---
+
 ## 10. Requirement Traceability — UI/UX Scope
 
-Traceability berikut diperiksa terhadap PDD v1.4 FINAL dan PRD v1.5 FINAL. Setiap ID requirement dicantumkan secara individual agar tidak ada ID yang hanya diasumsikan tercakup karena berada dalam rentang. Lokasi menunjukkan spesifikasi perilaku UI atau disposisi non-UI; traceability bukan pengganti verifikasi acceptance test.
+Traceability berikut diperiksa dan disinkronkan penuh terhadap **PDD v1.5 FINAL** dan **PRD v1.6 FINAL**. Setiap ID requirement dan acceptance criteria dicantumkan secara individual agar tidak ada ID yang terlewat atau hanya diasumsikan tercakup karena berada dalam rentang. Lokasi menunjukkan spesifikasi perilaku UI atau disposisi non-UI; traceability bukan pengganti verifikasi acceptance test.
 
 ### 10.1 Functional Requirement Traceability
 
 | ID | Lokasi UI/UX atau disposisi |
 |---|---|
-| FR-01 | 4.1, UF-01, UF-02 — Autentikasi login dan aktivasi akun via undangan sekali pakai |
-| FR-02 | 4.6, UF-37, UF-40 — Snapshot organisasi historis; histori menampilkan konteks pada tanggal kejadian |
-| FR-03 | 4.2, UF-06 — 0–3 Morning Commitment |
+| FR-01 | 4.1, 4.24, 4.25, UF-01–UF-04, UF-43, UF-44 — Autentikasi login, sesi, profil, dan aktivasi akun via undangan sekali pakai |
+| FR-02 | 4.6, 4.15, UF-37, UF-40 — Snapshot organisasi historis; histori menampilkan konteks pada tanggal kejadian |
+| FR-03 | 4.2, UF-06, UF-08 — 0–3 Morning Commitment |
 | FR-04 | 4.2, UF-06 — Kondisional Known Blocker dan Support Needed saat AMBER/RED |
 | FR-05 | 4.2, 4.16a, UF-10, UF-22 — Baseline Morning terkunci pasca Cut-Off dan tata kelola koreksi |
 | FR-06 | 4.3, UF-11 — Additional Work di tengah hari (5 alasan resmi) |
 | FR-07 | 4.3, 4.4, UF-11, UF-12 — Additional Work tampil terpisah dari komitmen pagi dengan bobot setara |
 | FR-08 | 4.4, UF-12 — Evaluasi EOD Outcome per item (4 status) |
-| FR-09 | 4.4, UF-12 — Kontrol Continuation independen dan Continuation Reason wajib |
+| FR-09 | 4.4, UF-12 — Kontrol Continuation independen dan Continuation Reason wajib (termasuk saat Completed) |
 | FR-10 | 4.4, UF-12 — Final Status harian dan Daily Risk Explanation wajib jika AMBER/RED |
-| FR-11 | 4.2, UF-09 — Koleksi draft copy-forward dari komitmen berlanjut hari kemarin (ADR-017) |
-| FR-12 | 4.2, 6, UF-06 — Role-Based Prompt Hint; 7 fungsi kanonikal Dutamedia + fallback netral inline italic visual placeholder (ADR-016) |
-| FR-13 | 4.4, UF-12 — Deterministic Status Suggestion Engine + deteksi carry-over berulang hari ke-2 (ADR-013) |
-| FR-14 | 4.4, UF-13 — ValidationPromptModal saat status pilihan beda dari saran sistem; tanpa silent mutation |
+| FR-11 | 4.2, 6, UF-09 — Koleksi draf copy-forward dari Morning Commitment berlanjut hari kerja sebelumnya tanpa auto-submit (`DEC-004`) |
+| FR-12 | 4.2, 6, UF-06 — Role-Based Prompt Hint untuk **10 fungsi kanonikal resmi Dutamedia** + fallback netral inline italic visual placeholder (`DEC-005`, `DEC-009`) |
+| FR-13 | 4.2, 4.4, UF-09, UF-12 — Deterministic Status Suggestion Engine + saran minimal AMBER pada carry-over ke-2 tanpa mengunci opsi GREEN (`DEC-003`) |
+| FR-14 | 4.4, 6, UF-13 — ValidationPromptModal saat status pilihan berbeda dari saran sistem; tanpa silent mutation |
 | FR-15 | 4.5, UF-15 — Pembuatan instant blocker kapan saja |
 | FR-16 | 4.5, 4.9, UF-15, UF-16 — Taksonomi Blocker lengkap (10 Type, 4 Severity, 7 Impact resmi PRD) |
 | FR-17 | 4.9, UF-16, UF-17, UF-18 — Siklus hidup blocker & konfirmasi Closed / Reopen oleh pelapor |
 | FR-18 | 4.9, UF-17, UF-18, UF-20 — Wewenang Resolve (support owner), Close (pelapor), dan Accepted Risk (manajerial) |
-| FR-19 | 4.5, 4.9, 4.13, UF-15 — Authority Context (Organizational default vs Project eksplisit) |
-| FR-19a | 4.5, UF-15 — Validasi penerima manual opsional |
-| FR-19b | 4.5, UF-15 — Resolusi otomatis penerima awal, prioritas jenjang, dan fallback |
-| FR-19c | 4.5, UF-15 — Penanganan kondisi penerima tidak valid dan pencatatan audit trail |
+| FR-19 | 4.5, 4.9, 4.13, 4.15, UF-15, UF-40 — Authority Context (Organizational default vs Project eksplisit) |
+| FR-19a | 4.5, UF-15, 9 — Validasi penerima manual opsional terhadap status aktif, konteks kewenangan, dan scope |
+| FR-19b | 4.5, 4.15, UF-15, UF-40 — Resolusi otomatis penerima awal, prioritas jenjang, dan fallback resmi terkonfigurasi |
+| FR-19c | 4.5, 4.9, UF-15, 9 — Penanganan kondisi penerima tidak tersedia/ambigu tanpa klaim terkirim palsu & audit trail |
 | FR-20 | 4.7, 4.9, 5, UF-15, UF-38 — Notifikasi dan eskalasi blocker |
 | FR-21 | 4.9, 4.14, 5, UF-16, UF-32 — Auto-escalation berbasis SLA mengikuti hierarki bawaan 4 jenjang |
-| FR-22 | 4.15, UF-40 — Master data struktur organisasi; CRUD server-authorized |
-| FR-23 | 4.15, UF-40 — Penugasan organisasi efektif tanggal (effective-dated assignment) |
-| FR-24 | 4.6, 4.15, UF-37, UF-40 — Konteks organisasi historis tetap dipertahankan pada data lampau |
-| FR-25 | 4.17, UF-41 — Penugasan Temporary Reviewer wajib tanggal mulai dan kedaluwarsa |
-| FR-26 | 4.2, 4.4, 5, UF-10, UF-14 — Klasifikasi waktu On-Time, Late, dan penolakan Cut-Off (ADR-018) |
-| FR-27 | 4.12, 4.20, 4.21, UF-05, UF-25–UF-29 — Pengecualian sah (Holiday, Leave Approved, Indefinite Exemption) |
-| FR-28 | 4.7, 5, UF-38 — Pengingat tetap 60 menit sebelum batas waktu (ADR-014) |
-| FR-29 | 4.11, 5, UF-33 — Deteksi pola berulang 3x No Submission dalam 30 hari (Pattern Flag, ADR-008) |
+| FR-22 | 4.15, 4.24, UF-40, UF-43 — Master data akun dan struktur organisasi; CRUD server-authorized |
+| FR-23 | 4.15, 4.24, 6, UF-40, UF-43 — Penugasan organisasi berpenanggalan efektif (`effectiveDate >= today`, `DEC-008`) |
+| FR-24 | 4.6, 4.15, 4.24, UF-37, UF-40, UF-43 — Konteks organisasi historis tetap dipertahankan pada data lampau |
+| FR-25 | 4.17, 6, UF-41 — Penugasan Temporary Reviewer wajib tanggal mulai (`effectiveDate >= today`) dan kedaluwarsa (`DEC-008`) |
+| FR-26 | 4.2, 4.4, 5, UF-10, UF-14 — Klasifikasi waktu On-Time, Late, dan penolakan penuh pasca Cut-Off (`DEC-002`) |
+| FR-27 | 4.12, 4.20, 4.21, UF-05, UF-25–UF-29 — Pengecualian sah (Holiday, Leave Approved, Bounded & Indefinite Exemption) |
+| FR-28 | 4.7, 5, UF-38 — Pengingat tetap 60 menit sebelum On-Time Deadline |
+| FR-29 | 4.11, 5, UF-33 — Deteksi pola berulang ambang tetap 3x No Submission sah dalam jendela evaluasi bergulir aktif |
 | FR-30 | 4.11, UF-33 — Tidak ada sanksi atau surat peringatan otomatis dari sistem |
 | FR-31 | 4.18, 4.19, UF-42 — Tata kelola kategori kebijakan multi-owner yang dapat dikonfigurasi |
-| FR-32 | 4.18, UF-42 — Manajemen versi kebijakan dengan tanggal efektif |
+| FR-32 | 4.18, 6, UF-42 — Manajemen versi kebijakan dengan tanggal efektif (`effectiveDate >= today`) |
 | FR-33 | 4.18, UF-42 — Akses versi kebijakan historis |
 | FR-34 | 2, 4.18, UF-42 — Visibilitas pengaturan kebijakan terfilter per kewenangan role pemilik |
-| FR-35 | 4.2, 4.12, 4.18, UF-05, UF-29 — Kebijakan pengecualian: Indefinite Role Exemption (open-ended) vs Bounded Individual Exemption |
+| FR-35 | 4.2, 4.12, 4.18, UF-05, UF-28, UF-29 — Kebijakan pengecualian: Indefinite Role Exemption (open-ended) vs Bounded Individual Exemption (`DEC-004`) |
 | FR-36 | 4.6, UF-37 — Akses riwayat akuntabilitas pribadi karyawan |
-| FR-37 | 4.6, 4.8–4.9, 4.11, 4.21, 4.23, UF-30, UF-39 — Filter antrean dan dashboard yang sadar izin akses |
+| FR-37 | 4.6, 4.8–4.9, 4.11, 4.21, 4.23, UF-30–UF-32, UF-39 — Filter antrean dan dashboard yang sadar izin akses |
 | FR-38 | 4.7, 4.19, 5, UF-38 — Pengiriman nyata Email & Browser Push serta Web Notification Center |
 | FR-39 | 4.10, UF-34 — Pencatatan tindak lanjut manajerial (Manager Note / Coaching Record) |
 | FR-40 | 4.10, 4.16, UF-22–UF-24, UF-34 — Tidak ada pengubahan komitmen diam-diam oleh pimpinan |
 | FR-41 | 4.6, 4.23, UF-37, UF-39 — Ringkasan berkala mingguan dan laporan tren bulanan |
-| FR-42 | 4.6, 4.23, UF-37, UF-39 — Ekspor berkas terbatas sesuai scope yang aktif di layar (AC-20) |
+| FR-42 | 4.6, 4.23, UF-37, UF-39 — Ekspor berkas terbatas sesuai scope yang aktif di layar (`AC-20`) |
 | FR-43 | 4.16a, UF-22 — Pengajuan Morning Correction Request pasca Cut-Off |
 | FR-44 | 4.16a, 4.22, UF-22, UF-24 — Tata kelola siklus hidup koreksi Minor vs Material & Objection Window |
 | FR-45 | 4.16a, 4.6, UF-22, UF-37 — Audit trail dan visibilitas riwayat koreksi pagi |
-| FR-46 | 4.12, UF-27 — Penetapan hari libur dan pengecualian oleh Admin/HRGA langsung aktif seketika |
+| FR-46 | 4.12, UF-27, UF-28 — Penetapan hari libur dan pengecualian oleh Admin/HRGA langsung aktif seketika |
 | FR-47 | 4.20–4.22, UF-25, UF-26 — Pengajuan Cuti mandiri dan persetujuan eksplisit oleh Authorized Approver |
-| FR-48 | 4.12, 4.20–4.21, UF-05, UF-25–UF-29, UF-33 — Pengecualian sah mengecualikan tanggal dari No Submission |
-| FR-49 | 4.11, 5, UF-33 — Maksimal satu pencatatan kejadian No Submission per hari kerja |
-| FR-50 | 4.1, 4.15, UF-01 — Pendaftaran mandiri publik dilarang; akun dibuat oleh Admin |
+| FR-48 | 4.11, 4.12, 4.20–4.22, 5, UF-05, UF-25–UF-29, UF-33 — Pengecualian sah & rekonsiliasi `Superseded by Approved Leave` (`DEC-007`) |
+| FR-49 | 4.11, 5, UF-33 — Maksimal satu pencatatan kejadian No Submission per hari kerja yang berlaku |
+| FR-50 | 4.1, 4.24, UF-01, UF-43 — Pendaftaran mandiri publik dilarang; akun dibuat oleh Admin di `/admin/users` (`DEC-005`) |
 | FR-51 | 4.2, UF-06, UF-08 — Agregasi Initial Daily Status otomatis dan hanya-baca |
 | FR-52 | 4.2, 4.4, UF-06, UF-12 — Tomorrow Priority tersimpan sebagai konteks pengingat non-binding |
 | FR-53 | 4.16b, UF-23 — Pengajuan EOD Correction Request hanya untuk EOD yang pernah disubmit |
-| FR-54 | 4.1, UF-01 — Token aktivasi undangan sekali pakai dengan batas kedaluwarsa |
+| FR-54 | 4.1, 4.24, 6, UF-01, UF-43 — Token aktivasi undangan sekali pakai dengan batas kedaluwarsa, resend, dan revoke |
 | FR-55 | 4.16b, 4.22, UF-23, UF-24 — Tata kelola, larangan bypass, dan audit trail koreksi EOD |
 | FR-56 | 4.23, UF-35 — Kerangka Transisi Kinerja (4 Dimensi: Delivery, Quality, Accountability, Collaboration) |
 | FR-57 | 4.23, UF-35 — Penilaian kualitatif reviewer (Strong, Meets, Needs Improvement, Unacceptable) tanpa auto-skor |
@@ -1282,7 +1352,7 @@ Traceability berikut diperiksa terhadap PDD v1.4 FINAL dan PRD v1.5 FINAL. Setia
 | FR-60 | 4.23, UF-35 — WorkPulse bukan mesin penentu insentif otomatis; keputusan mengikuti kebijakan terpisah |
 | FR-61 | 4.6, 4.11, UF-33, UF-37 — Satu status buruk tidak otomatis menggugurkan insentif atau memicu sanksi |
 | FR-62 | 4.23, UF-35 — Data WorkPulse dilarang diubah menjadi KPI mentah tanpa persetujuan tata kelola formal |
-| FR-63 | 4.2, 6, UF-07 — Commitment Quality Warning / Prompt saat teks terlalu umum/abstrak (QualityWarningBadge) |
+| FR-63 | 4.2, 6, UF-07 — Commitment Quality Warning / Prompt saat teks terlalu umum/abstrak (`QualityWarningBadge`) |
 | FR-64 | 4.6, 4.9, 6, UF-19 — Pencatatan Support Contribution pada blocker rekan kerja sebagai bukti kolaborasi |
 | FR-65 | 4.6, 4.8, UF-30, UF-31 — Penampilan tren carry-over berulang dan dukungan lintas tim di dashboard/summary |
 | FR-66 | 4.6, UF-37 — Personal Weekly Summary untuk karyawan tanpa gamifikasi atau skor perbandingan |
@@ -1292,23 +1362,23 @@ Traceability berikut diperiksa terhadap PDD v1.4 FINAL dan PRD v1.5 FINAL. Setia
 | FR-70 | 4.11, UF-33 — Pembentukan compliance review event saat pattern flag No Submission terbentuk |
 | FR-71 | 4.11, UF-33 — Pencatatan penjelasan karyawan, pembinaan, tindak lanjut, dan audit trail kepatuhan |
 | FR-72 | 4.11, UF-33 — Rujukan disipliner formal hanya melalui aktor berwenang; sistem tanpa auto-SP |
-| FR-73 | 4.10, 4.11, UF-33, UF-34 — Penegakan Matriks Distingsi Kasus (§13.1 PRD) untuk respon adil dan proporsional |
+| FR-73 | 4.10, 4.11, 6, UF-33, UF-34 — Penegakan Matriks Distingsi Kasus (§13.1 PRD) untuk respon adil dan proporsional |
 
 ### 10.2 Non-Functional Requirement Traceability
 
 | ID | UI/UX consequence dan lokasi |
 |---|---|
-| NFR-01 | 4.2–4.4, UF-04, UF-06, 9.1 — Kecepatan pengisian ≤3 menit; retensi input form saat gagal validasi / sesi habis |
-| NFR-02 | Seluruh layar; UF-37–UF-39 — Antarmuka web responsif pada desktop dan perangkat bergerak |
-| NFR-03 | UF-02, 9.1 — Indikator feedback loading dan pencegahan submit ganda |
+| NFR-01 | 4.0, 4.2–4.4, UF-04, UF-06, 9.1 — Kecepatan pengisian ≤3 menit; retensi input form saat gagal validasi / sesi habis |
+| NFR-02 | 4.0, seluruh layar; UF-37–UF-39 — Antarmuka web responsif pada desktop dan perangkat bergerak |
+| NFR-03 | 4.0, UF-02, 9.1 — Indikator feedback loading dan pencegahan submit ganda |
 | NFR-04 | 9.1 — Tidak ada konfirmasi sukses palsu saat pemadaman jaringan |
-| NFR-05 | 2, 4.1, 4.8–4.23, UF-02, 9.1 — Navigasi sadar hak akses dan penegakan otorisasi server-side |
-| NFR-06 | 4.6, 4.9–4.10, 4.15–4.18, UF-19, UF-22–UF-24, UF-34, UF-40 — Jejak audit transparan dalam scope izin |
-| NFR-07 | 4.8, 4.10–4.11, 4.23, UF-30, UF-34, UF-37 — Privasi data dan pembatasan akses data bawahan/pribadi |
-| NFR-08 | 4.15, 4.17–4.19, UF-40–UF-42 — Tata kelola kebijakan berpenanggalan efektif (effective-dated) |
+| NFR-05 | 2, 3, 4.1, 4.8–4.25, UF-02, UF-43, UF-44, 9.1 — Navigasi sadar hak akses dan penegakan otorisasi server-side |
+| NFR-06 | 4.6, 4.9–4.10, 4.15–4.18, 4.24, 6, UF-19, UF-22–UF-24, UF-34, UF-40–UF-43 — Jejak audit transparan dalam scope izin |
+| NFR-07 | 4.8, 4.10–4.11, 4.23, 4.25, UF-30, UF-34, UF-37, UF-44 — Privasi data dan pembatasan akses data bawahan/pribadi |
+| NFR-08 | 4.15, 4.17–4.19, 4.24, UF-40–UF-43 — Tata kelola kebijakan dan penugasan berpenanggalan efektif (`effectiveDate >= today`) |
 | NFR-09 | 4.18, UF-42 — Retensi data operasional ditegakkan teknis tanpa nilai tebakan |
 | NFR-10 | Di luar scope UI; SAD / Operasional — Pencadangan dan pemulihan data teknis |
-| NFR-11 | 4.6, 4.23, UF-37, UF-39, 9.1 — Ekspor data terbatas sesuai scope dan umpan balik kesalahan |
+| NFR-11 | 4.0, 4.6, 4.23, UF-37, UF-39, 9.1 — Ekspor data terbatas sesuai scope dan umpan balik kesalahan |
 | NFR-12 | 4.8, 4.23, UF-30, UF-32, UF-37 — Prinsip non-surveillance; dilarang menampilkan leaderboard/pemeringkatan |
 
 ### 10.3 Acceptance Criteria Coverage Map
@@ -1329,49 +1399,56 @@ Traceability berikut diperiksa terhadap PDD v1.4 FINAL dan PRD v1.5 FINAL. Setia
 | AC-12 | 4.18, UF-42 |
 | AC-13 | 4.17, UF-41 |
 | AC-14 | 4.6, 4.23, UF-37, UF-39 |
-| AC-15 | 4.6, 4.9–4.10, 4.15–4.18, UF-22–UF-24, UF-34, UF-40–UF-42 |
+| AC-15 | 4.6, 4.9–4.10, 4.15–4.18, 4.24, UF-22–UF-24, UF-34, UF-40–UF-43 |
 | AC-16 | 4.8, 4.23, UF-30 |
 | AC-17 | 4.2–4.4, UF-06, 9.1; target uji usabilitas ≤3 menit |
-| AC-18 | 4.16a, UF-22 |
-| AC-19 | 4.20–4.21, UF-25; rekonsiliasi No Submission lampau pasca cuti disetujui terlambat diserahkan ke aturan produk |
-| AC-20 | 4.6, 4.23, UF-37, UF-39 |
+| AC-18 | 4.16a, UF-22, UF-24 |
+| AC-19 | 4.11, 4.20–4.22, 5, UF-25, UF-26, UF-33, 9 — Rekonsiliasi otomatis `Superseded by Approved Leave` pada audit trail append-only dan pengecualian dari ambang 3x `FR-29` (`DEC-007`) |
+| AC-20 | 4.0, 4.6, 4.23, UF-37, UF-39 |
 | AC-21 | 4.7, 4.19, 5, UF-38 |
 | AC-22 | 4.7, 4.19, 5, UF-38 |
-| AC-23 | 4.2, UF-06 |
+| AC-23 | 4.2, UF-09 — Koleksi draf eligible Morning Commitment hari kerja sebelumnya tanpa Additional Work, tanpa slot ke-4, tanpa auto-submit (`DEC-004`) |
 | AC-24 | 4.4, UF-12 |
 | AC-25 | 4.4, UF-12 |
 | AC-26 | 4.11, 5, UF-33 |
-| AC-27 | 4.4, UF-12 |
-| AC-28 | 4.2, UF-06 |
-| AC-29 | 4.2, UF-06 |
+| AC-27 | 4.4, UF-12, UF-13 |
+| AC-28 | 4.2, UF-08 |
+| AC-29 | 4.2, UF-06, UF-08 |
 | AC-30 | 4.2, 4.4, UF-06, UF-12 |
 | AC-31 | 4.16b, UF-23 |
-| AC-32 | 4.16b, UF-23 |
-| AC-33 | 4.9, UF-16 |
-| AC-34 | 4.1, UF-01 |
+| AC-32 | 4.16b, UF-23, UF-24 |
+| AC-33 | 4.9, UF-17, UF-18, UF-20 |
+| AC-34 | 4.1, 4.24, UF-01, UF-43 |
 | AC-35 | 9.1; formula availability dan monitoring diatur di SAD |
-| AC-36 | 4.1, UF-01 |
-| AC-37 | 4.2, 6, UF-06 — Role-Based Prompt Hint (7 fungsi kanonikal Dutamedia + fallback netral inline italic placeholder, ADR-016) |
-| AC-38 | 4.4, UF-12 — Saran status deterministik + cabang carry-over berulang hari ke-2 (minimal AMBER) |
-| AC-39 | 4.4, UF-12 |
+| AC-36 | 4.1, 4.24, UF-01, UF-02, UF-43 |
+| AC-37 | 4.2, 6, UF-06 — Role-Based Prompt Hint untuk **10 fungsi kanonikal resmi Dutamedia** + fallback netral inline italic placeholder (`DEC-005`, `DEC-009`) |
+| AC-38 | 4.2, 4.4, UF-09, UF-12 — Saran status deterministik + cabang carry-over berulang hari ke-2 (minimal AMBER); opsi `GREEN` tidak pernah di-disable (`DEC-003`) |
+| AC-39 | 4.4, UF-13 |
 | AC-40 | 4.7, 5, UF-38 |
 | AC-41 | 4.18, UF-42 |
-| AC-42 | 4.6, 4.8–4.9, 4.11, 4.21, 4.23, UF-30, UF-37, UF-39 |
+| AC-42 | 4.6, 4.8–4.9, 4.11, 4.21, 4.23, UF-30–UF-32, UF-37, UF-39 |
 | AC-43 | 4.10, UF-34 |
 | AC-44 | 4.6, 4.23, UF-37, UF-39 |
 | AC-45 | 4.12, UF-27–UF-29 |
-| AC-46 | 4.5, 4.9, 4.13, UF-15 |
-| AC-47 | Seluruh layar yang relevan; validasi responsif diuji pada prototipe |
+| AC-46 | 4.5, 4.9, 4.13, 4.15, UF-15, UF-40 |
+| AC-47 | 4.0, seluruh layar yang relevan; validasi responsif diuji pada prototipe |
 | AC-48 | 9.1; patokan respons <2 detik diuji pada implementasi dan SAD |
 | AC-49 | 4.8, 4.10–4.11, 4.23, UF-30, UF-33, UF-34; tanpa antarmuka pengawasan aktivitas invasif |
 | AC-50 | 4.18, UF-42; penegakan masa retensi secara operasional |
 | AC-51 | Verifikasi teknis non-UI pada SAD/operasional; tanpa layar backup mandiri pengguna |
 | AC-52 | 4.7, 4.9, 4.14, 5, UF-15, UF-16, UF-38 |
-| AC-53 | 2, 4.1, 4.8–4.23, 9.1; visibilitas UI tidak menggantikan otorisasi server-side |
-| AC-54 | 4.15, UF-40 |
+| AC-53 | 2, 3, 4.1, 4.8–4.25, 9.1; visibilitas UI tidak menggantikan otorisasi server-side |
+| AC-54 | 4.15, 4.24, 6, UF-40, UF-43 — CRUD akun/role/function/direct manager/reviewer/project authority dengan `effectiveDate >= today` (`DEC-008`) |
 | AC-55 | 4.5, 4.9, UF-15, UF-16 — Taksonomi Blocker lengkap (10 Type, 4 Severity, 7 Impact) |
 | AC-56 | 4.3, UF-11 |
-| AC-57 | 4.2, 4.4, 5, UF-10, UF-14 |
+| AC-57 | 4.2, 4.4, 5, UF-10, UF-14 — Klasifikasi On-Time, Late, dan penolakan penuh pasca Cut-Off (`DEC-002`) |
+| AC-58 | 4.5, 4.15, UF-15, UF-40 — Organizational Authority sebagai default; Project Authority saat dipilih eksplisit; resolusi otomatis Owner Needed sesuai mapping efektif |
+| AC-59 | 4.5, 4.15, UF-15, UF-40 — Direct Manager aktif sebagai kandidat awal Organizational Authority dan fallback resmi terkonfigurasi tanpa pemilihan arbitrer |
+| AC-60 | 4.5, UF-15, 9 — Validasi pilihan manual Owner Needed terhadap status aktif, Authority Context, dan scope; penolakan input tidak sah tanpa konfirmasi sukses palsu |
+| AC-61 | 4.5, 4.9, UF-15, 9 — Penanganan penerima tidak tersedia/ambigu tanpa klaim terkirim palsu, panduan langkah lanjut di UI, dan pencatatan audit trail resolusi kewenangan |
+| AC-62 | 2, 3, 4.8, UF-02, UF-30–UF-32 — Visibilitas menu Pulse Dashboard terbatas bagi pemegang wewenang Team, Function, atau Management Pulse |
+| AC-63 | 2, 3, 4.8, UF-02, UF-30–UF-32 — Pembatasan cakupan default dan pemilih mode Pulse Dashboard (Scope Switcher) sesuai role, permission, dan scope efektif pengguna multi-role |
+| AC-64 | 2, 3, 4.8, 9.1 — Penolakan akses langsung ke rute/data Pulse Dashboard di luar izin (`403 Access Restricted State` & otorisasi server-side) |
 | AC-65 | 4.23, UF-35 — Individual Review Evidence 4 dimensi; tanpa kalkulasi KPI skor otomatis |
 | AC-66 | 4.23, UF-35 — Pencatatan predikat kualitatif terpandu beserta alasan/evidence |
 | AC-67 | 4.23, UF-35 — Review periodik berkonteks lintas periode tanpa rating dari 1 hari buruk |
@@ -1389,7 +1466,7 @@ Traceability berikut diperiksa terhadap PDD v1.4 FINAL dan PRD v1.5 FINAL. Setia
 | AC-79 | 4.11, UF-33 — Pattern flag No Submission menghasilkan review event, bukan sanksi otomatis |
 | AC-80 | 4.11, UF-33 — Review event mencatat penjelasan, konteks, coaching, dan rencana tindak lanjut |
 | AC-81 | 4.11, UF-33 — Rujukan warning formal dicatat oleh aktor berwenang; sistem tanpa auto-SP |
-| AC-82 | 4.10, 4.11, UF-33, UF-34 — Penegakan Matriks Distingsi Kasus (§13.1 PRD) |
+| AC-82 | 4.10, 4.11, 6, UF-33, UF-34 — Penegakan Matriks Distingsi Kasus (§13.1 PRD) |
 
 ### 10.4 Rollout and Pilot Governance Traceability
 
@@ -1402,98 +1479,40 @@ Traceability berikut diperiksa terhadap PDD v1.4 FINAL dan PRD v1.5 FINAL. Setia
 | RG-05 | Integrasi KPI hanya dipertimbangkan setelah organisasi stabil lewat tata kelola terpisah |
 | RG-06 | Evaluasi pilot mengacu pada Pilot Success Metrics (PSM-01 s/d PSM-07) |
 
-### 10.5 Boundary dan keputusan yang tidak boleh diasumsikan
+### 10.5 Boundary dan Keputusan yang Tidak Boleh Diasumsikan
 
-- **FR-12 / AC-37:** panduan berdasarkan fungsi organisasi telah dikunci definitif sesuai 7 fungsi kanonikal Dutamedia (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`) + fallback netral. Sesuai ADR-016, hint ini tampil sebagai visual placeholder miring (*italic*) saat mengetik, non-binding, tidak mengontaminasi input form, dan tidak disimpan ke database.
-- **Leave retroaktif / AC-19:** PDD/PRD menyatakan Leave harus disetujui agar menjadi exception valid, tetapi tidak menetapkan secara eksplisit rekonsiliasi terhadap event No Submission yang telah tercatat sebelum persetujuan. UI menampilkan status approval dan tidak menjanjikan penghapusan diam-diam. Keputusan perilaku rekonsiliasi tersebut harus diselesaikan sebagai keputusan produk sebelum implementasi.
-- **Perubahan organizational assignment dengan tanggal lampau:** PDD/PRD mengharuskan effective-dated history tetapi tidak secara eksplisit menetapkan apakah tanggal lampau boleh dipilih. UI wajib meminta Effective Date dan mempertahankan histori; jangan menambahkan larangan retroaktif atau menjanjikan efek retroaktif tanpa aturan produk yang disahkan.
-- **Nilai operasional:** deadline, Grace Period, workday calendar, Objection Window, klasifikasi Minor/Material, threshold eskalasi, retention, invitation expiry, maintenance notice, dan availability service hours mengikuti Launch Configuration Register yang disahkan. UI tidak menampilkan nilai produksi hasil tebakan.
-- **NFR teknis:** backup/restore, enkripsi transport, benchmark <2 detik, dan perhitungan availability harus diverifikasi pada SAD/implementasi; UI/UX hanya menetapkan state dan batas perilaku yang relevan.
-- **Browser Push:** matriks channel mengikuti persis PRD Section 8. Permission merupakan kondisi browser/perangkat user, bukan atribut global yang dapat dibuktikan melalui test-send dari browser Admin.
+- **FR-12 / AC-37 (`DEC-005`, `DEC-009`):** Panduan output berdasarkan fungsi organisasi telah dikunci definitif untuk **10 fungsi kanonikal resmi Dutamedia** (`Engineering`, `Quality`, `Operations & Infrastructure`, `R&D`, `Delivery`, `Business Development`, `Sales Enablement & Presales`, `Finance`, `HRGA`, dan `Management`) + fallback netral. Hint tampil pada seluruh slot #1–#3 sebagai placeholder visual miring (*italic*) saat kosong, menghilang saat diketik, bersifat non-binding, tidak mengontaminasi nilai input form, dan tidak disimpan ke database.
+- **Carry-Over Berulang & Larangan Penguncian GREEN (`DEC-003`):** Pada Morning Check-in ditampilkan `CarryOverBadge` informatif dan pada EOD Status Suggestion Engine disarankan minimal `AMBER` untuk carry-over ke-2 berturut-turut, namun antarmuka **dilarang mengunci atau menonaktifkan (`disabled`) opsi `GREEN`** baik di Morning maupun di EOD.
+- **Persetujuan Cuti Pasca-Cut-Off / AC-19 (`DEC-007`):** Leave Request yang masih `Pending` saat Cut-Off tidak mengecualikan tanggal terkait. Namun, apabila Leave Request baru disetujui (*Approved*) setelah Cut-Off pada tanggal di mana event `No Submission` sempat tercatat, hari tersebut otomatis direkonsiliasi menjadi `Approved Leave`, event `No Submission` lama tetap dipertahankan secara *append-only* pada *audit trail* dengan status `Superseded by Approved Leave`, dan dikeluarkan dari hitungan ambang 3 kejadian `FR-29`.
+- **Larangan Backdating Struktur Organisasi & Delegasi (`DEC-008`):** `Effective Date` pada `OrganizationalAssignment`, `ProjectAuthorityMapping`, dan `TemporaryReviewerAssignment` hanya menerima **hari ini atau masa depan** (`effectiveDate >= today` menurut zona waktu organisasi). Input tanggal lampau ditolak dengan pesan error inline yang jelas agar konteks akuntabilitas historis tidak dapat dimanipulasi surut.
+- **Nilai Operasional (`OPEN-04` — MVP Launch Configuration Register):** Nilai konkret untuk deadline, Grace Period, workday calendar, Objection Window, klasifikasi Minor/Material, threshold eskalasi, retention, invitation expiry, maintenance notice, dan availability service hours wajib mengikuti *MVP Launch Configuration Register* yang disahkan manajemen sebelum implementasi. Angka jam/durasi pada dokumen ini maupun prototipe HTML murni contoh ilustrasi visual, bukan nilai produksi hasil tebakan.
+- **NFR Teknis:** Backup/restore, enkripsi transport, benchmark <2 detik, dan perhitungan availability diverifikasi pada `05-SAD.md` dan implementasi; dokumen UI/UX ini hanya menetapkan state antarmuka dan batas perilaku yang relevan.
+- **Browser Push:** Matriks channel mengikuti persis PRD Section 8. Permission merupakan kondisi browser/perangkat masing-masing pengguna, bukan atribut global yang dapat dibuktikan melalui test-send dari browser Admin.
 
 ---
 
 ## Riwayat Revisi
 
-### Riwayat Revisi v1.5 — Final
-- Memperbarui referensi dari PDD/PRD v1.1 ke baseline final PDD/PRD v1.3.
-- Memisahkan Morning Correction Request dan EOD Correction Request beserta scope field dan guardrails masing-masing.
-- Menetapkan 0 Commitment dengan alasan wajib dan `NOT_APPLICABLE — NO_COMMITMENT` sebagai state UI yang valid.
-- Menetapkan Initial Daily Status sebagai hasil agregasi read-only.
-- Memperjelas FR-11 copy-forward dan `Tomorrow Priority` sebagai konteks terpisah.
-- Memperbaiki lifecycle blocker menjadi Resolved → reporter confirms Closed; Accepted Risk adalah jalur terpisah.
-- Menambahkan invitation activation, Browser Push permission/delivery states, dan cutoff semantics dari ADR-014/ADR-018.
-- Menambahkan state contract, handling error/double-submit, dan traceability lengkap ke seluruh FR/NFR/AC PRD.
-
-### Riwayat Revisi v1.6
-- Menyelaraskan flow Raise Instant Blocker dengan PDD v1.3 dan PRD v1.3: Authority Context default, pilihan Owner Needed opsional, resolusi otomatis, validasi, fallback, kondisi ambigu, dan audit trail.
-- Memperjelas state/error handling dan pembedaan Owner Needed awal dari escalation chain.
-
-### Riwayat Revisi v1.7.2
-- Sinkronisasi arsitektur navigasi dan sidebar layout dengan PDD v1.4 dan PRD v1.4.
-
-### Riwayat Revisi v1.8.0 — FINAL
-- Memperbarui seluruh referensi dokumen induk ke **PDD v1.4 FINAL** dan **PRD v1.5 FINAL**.
-- Menetapkan secara definitif spesifikasi dan flow **Role-Based Prompt Hint** (FR-12 / AC-37 / ADR-016) untuk 7 fungsi kanonikal Dutamedia (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`) + fallback netral.
-- Menetapkan spesifikasi alur **Indefinite Role Exemption** (FR-35 / BR-07) untuk akun eksekutif struktural (CEO/Dewan Direksi) dengan komponen `ExemptionBanner` di `/today`, pengecualian penuh dari No Submission evaluation, dan kontrol konfigurasi open-ended di `/compliance/exemptions`.
-- Mengunci taksonomi Blocker (FR-16 / AC-55) secara komprehensif: 10 Type, 4 Severity, 7 Impact pada form input, filter antrean, dan detail card.
-- Menyempurnakan lifecycle Blocker: penambahan aksi `Reopen / Needs Further Work` oleh pelapor jika bantuan belum memadai, serta auto-escalation sistematis mengikuti hierarki bawaan 4 jenjang Dutamedia.
-- Menyinkronkan heuristik Status Suggestion Engine pada cabang carry-over berulang kedua (FR-13 / AC-38) yang langsung merekomendasikan minimal AMBER.
-- Menyelesaikan seluruh matrix keterlacakan (traceability) FR-01 s/d FR-55, NFR-01 s/d NFR-12, dan AC-01 s/d AC-57 secara konsisten 100%.
+### Riwayat Revisi v2.0.0 — FINAL (Mandiri, Rekonsiliasi DEC-001..DEC-009, & Pengayaan Ergonomi Antarmuka)
+- Memperbarui seluruh acuan normatif ke **PDD v1.5 FINAL** dan **PRD v1.6 FINAL**, serta melepaskan seluruh ketergantungan/rujukan ke dokumen arsitektur Pengerjaan Lama sehingga dokumen ini **100% mandiri** (`DEC-006`).
+- Menambahkan **Section 4.0 (Konvensi Ergonomi & Perilaku Lintas-Halaman)** serta menyerap seluruh pola UX/ergonomi yang valid dari dokumen pendamping lama (`DailyWorkflowStepBar`, `MasterDetailSplitWorkbench`, `InteractiveMetricFilterCard`, `LiveRoutePreviewBox`, `ImpactPreviewModal`, `SideBySideDiffPanel`, `AuditTrailTimeline`, `CaseDistinctionCallout`, `TriggerDateCapsules`, `PasswordStrengthMeter`, dan `SessionLockModal`) sebelum pengarsipan dokumen bayangan ke `_Archive/` (`DEC-001`).
+- Menegaskan pemisahan rute dan spesifikasi layar **`4.24 Admin: User & Invitation Management (/admin/users)`** (`UF-43`) dari **`4.15 Admin: Organizational Mapping (/admin/organization)`** (`UF-40`), serta menambahkan spesifikasi eksplisit **`4.25 Profile & Account Settings (/profile)`** (`UF-44`) dan sub-rute autentikasi publik (`DEC-005`).
+- Memperluas taksonomi `RoleBasedPromptHint` (`FR-12` / `AC-37`) dari 7 fungsi menjadi **10 fungsi kanonikal resmi Dutamedia** dengan teks contoh Bahasa Indonesia resmi + fallback netral (`DEC-005`, `DEC-009`).
+- Menyinkronkan aturan bisnis hasil keputusan proyek pada seluruh layar, komponen, user flows, dan kontrak state: penolakan penuh pasca-Cut-Off (`DEC-002`), larangan penguncian opsi `GREEN` pada carry-over berulang (`DEC-003`), ketiadaan tombol *"Hentikan Pekerjaan"* di pagi hari & pemisahan Dinas Luar via Bounded Exemption (`DEC-004`), rekonsiliasi cuti pasca-Cut-Off `Superseded by Approved Leave` (`DEC-007`), serta larangan *backdating* `effectiveDate >= today` (`DEC-008`).
+- Memperbaiki konsistensi semantik badge pada narasi User Flows (`On-Time` sebagai biru info `timing.ontime`, `Accepted Risk` sebagai amber/oranye informasional `workflow.accepted-risk`), membersihkan karakter emoji Unicode, melengkapi **baris `AC-58` s/d `AC-64`** yang sebelumnya terlewat pada §10.3, serta menghapus duplikasi blok penutup dokumen.
 
 ### Riwayat Revisi v1.9.0 — FINAL (Comprehensive User-Centric Flows)
-- Mengubah seluruh Section 7 menjadi **42 User Flows Interaktif (UF-01 s/d UF-42)** yang murni berorientasi pada pengalaman nyata pengguna manusia di depan layar (User Goals, Steps, UI Decision Nodes, Modals, & Visual Feedback).
-- Mengintegrasikan seluruh requirement dari Baseline Reconciliation Addendum PRD v1.5:
-  - **Commitment Quality Warning Prompt (FR-63 / AC-72)** pada UF-07.
-  - **Pencatatan Support Contribution lintas tim (FR-64 / AC-73)** pada UF-19.
-  - **Individual Review Evidence & Performance Transition Framework 4 Dimensi (FR-56–FR-59 / AC-65–AC-68)** pada UF-35.
-  - **Penegakan Matriks Distingsi Kasus Kepatuhan (§13.1 PRD, FR-70–FR-73 / AC-79–AC-82)** pada UF-33 dan UF-34.
-  - **6 Widget Resmi Dashboard Head/Supervisor (FR-68 / AC-77)** pada UF-30 dan UF-31.
-  - **6 Widget Resmi Dashboard CEO/Management Trend (FR-69 / AC-78)** pada UF-32.
-- Memperbarui Section 10 Traceability Map secara komprehensif mencakup FR-01 s/d FR-73, NFR-01 s/d NFR-12, AC-01 s/d AC-82, dan Governance Criteria RG-01 s/d RG-06.
-- Menyelaraskan seluruh taksonomi Blocker 100% konsisten dengan PRD v1.5 FR-16 (10 Type, 4 Severity, 7 Impact).
-
-### 10.4 Boundary dan keputusan yang tidak boleh diasumsikan
-
-- **FR-12 / AC-37:** panduan berdasarkan fungsi organisasi telah dikunci definitif sesuai 7 fungsi kanonikal Dutamedia (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`) + fallback netral. Sesuai ADR-016, hint ini tampil sebagai visual placeholder miring (*italic*) saat mengetik, non-binding, tidak mengontaminasi input form, dan tidak disimpan ke database.
-- **Leave retroaktif / AC-19:** PDD/PRD menyatakan Leave harus disetujui agar menjadi exception valid, tetapi tidak menetapkan secara eksplisit rekonsiliasi terhadap event No Submission yang telah tercatat sebelum persetujuan. UI menampilkan status approval dan tidak menjanjikan penghapusan diam-diam. Keputusan perilaku rekonsiliasi tersebut harus diselesaikan sebagai keputusan produk sebelum implementasi.
-- **Perubahan organizational assignment dengan tanggal lampau:** PDD/PRD mengharuskan effective-dated history tetapi tidak secara eksplisit menetapkan apakah tanggal lampau boleh dipilih. UI wajib meminta Effective Date dan mempertahankan histori; jangan menambahkan larangan retroaktif atau menjanjikan efek retroaktif tanpa aturan produk yang disahkan.
-- **Nilai operasional:** deadline, Grace Period, workday calendar, Objection Window, klasifikasi Minor/Material, threshold eskalasi, retention, invitation expiry, maintenance notice, dan availability service hours mengikuti Launch Configuration Register yang disahkan. UI tidak menampilkan nilai produksi hasil tebakan.
-- **NFR teknis:** backup/restore, enkripsi transport, benchmark <2 detik, dan perhitungan availability harus diverifikasi pada SAD/implementasi; UI/UX hanya menetapkan state dan batas perilaku yang relevan.
-- **Browser Push:** matriks channel mengikuti persis PRD Section 8. Permission merupakan kondisi browser/perangkat user, bukan atribut global yang dapat dibuktikan melalui test-send dari browser Admin.
-
----
-
-## Riwayat Revisi
-
-### Riwayat Revisi v1.5 — Final
-- Memperbarui referensi dari PDD/PRD v1.1 ke baseline final PDD/PRD v1.3.
-- Memisahkan Morning Correction Request dan EOD Correction Request beserta scope field dan guardrails masing-masing.
-- Menetapkan 0 Commitment dengan alasan wajib dan `NOT_APPLICABLE — NO_COMMITMENT` sebagai state UI yang valid.
-- Menetapkan Initial Daily Status sebagai hasil agregasi read-only.
-- Memperjelas FR-11 copy-forward dan `Tomorrow Priority` sebagai konteks terpisah.
-- Memperbaiki lifecycle blocker menjadi Resolved → reporter confirms Closed; Accepted Risk adalah jalur terpisah.
-- Menambahkan invitation activation, Browser Push permission/delivery states, dan cutoff semantics dari ADR-014/ADR-018.
-- Menambahkan state contract, handling error/double-submit, dan traceability lengkap ke seluruh FR/NFR/AC PRD.
-
-### Riwayat Revisi v1.6
-- Menyelaraskan flow Raise Instant Blocker dengan PDD v1.3 dan PRD v1.3: Authority Context default, pilihan Owner Needed opsional, resolusi otomatis, validasi, fallback, kondisi ambigu, dan audit trail.
-- Memperjelas state/error handling dan pembedaan Owner Needed awal dari escalation chain.
-
-### Riwayat Revisi v1.7.2
-- Sinkronisasi arsitektur navigasi dan sidebar layout dengan PDD v1.4 dan PRD v1.4.
+- Mengubah seluruh Section 7 menjadi User Flows Interaktif yang berorientasi pada pengalaman nyata pengguna manusia di depan layar (User Goals, Steps, UI Decision Nodes, Modals, & Visual Feedback).
+- Mengintegrasikan seluruh requirement dari Baseline Reconciliation Addendum PRD v1.5: Commitment Quality Warning Prompt (`FR-63` / `AC-72`), Pencatatan Support Contribution lintas tim (`FR-64` / `AC-73`), Individual Review Evidence & Performance Transition Framework 4 Dimensi (`FR-56`–`FR-59` / `AC-65`–`AC-68`), Penegakan Matriks Distingsi Kasus Kepatuhan (§13.1 PRD, `FR-70`–`FR-73` / `AC-79`–`AC-82`), 6 Widget Resmi Dashboard Head/Supervisor (`FR-68` / `AC-77`), dan 6 Widget Resmi Dashboard CEO/Management Trend (`FR-69` / `AC-78`).
+- Memperbarui Section 10 Traceability Map mencakup `FR-01` s/d `FR-73`, `NFR-01` s/d `NFR-12`, `AC-01` s/d `AC-82`, dan Governance Criteria `RG-01` s/d `RG-06`.
 
 ### Riwayat Revisi v1.8.0 — FINAL
-- Memperbarui seluruh referensi dokumen induk ke **PDD v1.4 FINAL** dan **PRD v1.5 FINAL**.
-- Menetapkan secara definitif spesifikasi dan flow **Role-Based Prompt Hint** (FR-12 / AC-37 / ADR-016) untuk 7 fungsi kanonikal Dutamedia (`Engineering`, `Ops & Infra`, `Finance`, `Sales Enablement`, `Delivery`, `HRGA`, `Management`) + fallback netral.
-- Menetapkan spesifikasi alur **Indefinite Role Exemption** (FR-35 / BR-07) untuk akun eksekutif struktural (CEO/Dewan Direksi) dengan komponen `ExemptionBanner` di `/today`, pengecualian penuh dari No Submission evaluation, dan kontrol konfigurasi open-ended di `/compliance/exemptions`.
-- Mengunci taksonomi Blocker (FR-16 / AC-55) secara komprehensif: 10 Type, 4 Severity, 7 Impact pada form input, filter antrean, dan detail card.
-- Menyempurnakan lifecycle Blocker: penambahan aksi `Reopen / Needs Further Work` oleh pelapor jika bantuan belum memadai, serta auto-escalation sistematis mengikuti hierarki bawaan 4 jenjang Dutamedia.
-- Menyinkronkan heuristik Status Suggestion Engine pada cabang carry-over berulang kedua (FR-13 / AC-38) yang langsung merekomendasikan minimal AMBER.
-- Menyelesaikan seluruh matrix keterlacakan (traceability) FR-01 s/d FR-55, NFR-01 s/d NFR-12, dan AC-01 s/d AC-57 secara konsisten 100%.
+- Memperbarui referensi dokumen induk ke PDD v1.4 dan PRD v1.5.
+- Menetapkan spesifikasi awal Role-Based Prompt Hint (`FR-12` / `AC-37`), alur Indefinite Role Exemption (`FR-35` / `BR-07`), taksonomi Blocker 10 Type / 4 Severity / 7 Impact (`FR-16` / `AC-55`), aksi `Reopen / Needs Further Work`, serta heuristik Status Suggestion Engine pada carry-over berulang ke-2 (`FR-13` / `AC-38`).
 
-### Riwayat Revisi v1.9.0 — FINAL (Pure Interactive User Flows)
-- Merekonstruksi seluruh Section 7 dari deskripsi teknis menjadi **42 User Flows Interaktif (UF-01 s/d UF-42)** murni berpusat pada interaksi manusia dan layar antarmuka.
-- Mengintegrasikan seluruh requirement baseline PRD v1.5 Addendum: Performance Transition Multi-Dimension (`UF-35`), Incentive Fair Use & Non-penalty, Quality Warning Badge (`UF-07`), Support Contribution Card (`UF-19`), 6 Widget Resmi Dashboard Supervisor (`UF-33`), 6 Widget Resmi Dashboard CEO (`UF-34`), dan Compliance Review Event Matrix (`UF-36`).
-- Menyelesaikan 100% Traceability Matrix di Section 10 mencakup FR-01 s/d FR-73, AC-01 s/d AC-82, NFR-01 s/d NFR-12, dan RG-01 s/d RG-06.
+### Riwayat Revisi v1.7.2 & v1.6 & v1.5
+- v1.7.2: Sinkronisasi arsitektur navigasi dan sidebar layout dengan PDD v1.4 dan PRD v1.4.
+- v1.6: Menyelaraskan flow Raise Instant Blocker (`FR-19` s/d `FR-19c`): Authority Context default, pilihan Owner Needed opsional, resolusi otomatis, validasi, fallback, kondisi ambigu, dan audit trail.
+- v1.5: Memisahkan Morning Correction Request dan EOD Correction Request, menetapkan 0 Commitment dengan alasan wajib (`NOT_APPLICABLE — NO_COMMITMENT`), Initial Daily Status hanya-baca, lifecycle blocker `Resolved` → pelapor mengonfirmasi `Closed`, aktivasi undangan sekali pakai, Browser Push delivery states, dan cutoff semantics.
+
 

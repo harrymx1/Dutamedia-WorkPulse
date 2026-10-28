@@ -1,59 +1,2027 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Pengaturan Kanal Notifikasi — WorkPulse</title>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WorkPulse — Pengaturan Kanal Notifikasi (/admin/notifications)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F7FAF9;--surface:#FFFFFF;--ink:#0E211B;--muted:#5C6E68;--line:#DCE7E2;--green:#00674D;--greenbg:#E6F4EE;--blue:#075985;--bluebg:#E0F2FE;--amber:#92400E;--amberbg:#FEF3C7;--red:#991B1B;--redbg:#FEE2E2;--nav:#FFFFFF;--shadow:0 8px 24px rgba(14,33,27,.12);--radius:10px}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.app{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:232px;background:var(--nav);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;z-index:5}.brand{display:flex;align-items:center;gap:10px;padding:0 10px 28px;font-weight:800;font-size:18px}.logo{width:32px;height:32px;border-radius:10px;background:#E6F4EE;color:#00674D;display:grid;place-items:center;font-weight:900}.navlabel{font-size:12px;font-weight:800;color:#66736E;letter-spacing:.12em;padding:12px 12px 7px}.nav a{display:flex;gap:11px;align-items:center;padding:10px 12px;margin:2px 0;border-radius:9px;color:#5C6E68;text-decoration:none;font-weight:600}.nav a.active{background:#E6F4EE;color:#00674D}.ico{width:19px;text-align:center}.sidefoot{margin-top:auto;border-top:1px solid var(--line);padding:16px 10px 0;display:flex;gap:10px;align-items:center}.avatar{width:34px;height:34px;border-radius:50%;background:#e4eaf3;display:grid;place-items:center;font-weight:800;color:#44536a}.small{font-size:13px;color:var(--muted)}.main{margin-left:232px;padding:32px 32px 56px;max-width:1200px}.topline{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}.crumb{font-size:13px;color:var(--muted);margin-bottom:5px}.title{font-size:29px;letter-spacing:-.04em;margin:0;font-weight:790}.subtitle{color:var(--muted);margin-top:7px;max-width:800px}.top-right{display:flex;align-items:center;gap:9px}.badge{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 10px;font-size:12px;font-weight:750;white-space:nowrap}.badge.amber{background:var(--amberbg);color:var(--amber)}.badge.green{background:var(--greenbg);color:var(--green)}.badge.blue{background:var(--bluebg);color:var(--blue)}.badge.gray{background:#eef1f5;color:#475467}.badge.red{background:var(--redbg);color:var(--red)}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}.metric{padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}.metric-label{color:var(--muted);font-size:12px;font-weight:650}.metric-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px}.metric-value{font-size:22px;font-weight:800;letter-spacing:-.03em}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:none;margin-bottom:18px}.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;padding:20px 22px 15px;border-bottom:1px solid var(--line)}.h2{font-size:17px;letter-spacing:-.02em;font-weight:800;margin:0}.desc{color:var(--muted);font-size:12px;margin-top:5px;max-width:800px}.card-body{padding:20px 22px}.channel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.channel{border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}.channel-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.channel-title{display:flex;gap:12px;align-items:center}.channel-icon{width:42px;height:42px;border-radius:12px;background:#f0f4f9;display:grid;place-items:center;font-size:20px}.channel h3{font-size:15px;margin:0;font-weight:800}.channel p{font-size:12px;color:var(--muted);margin:4px 0 0}.channel-details{display:grid;gap:10px;margin-top:18px}.detail{display:flex;justify-content:space-between;gap:15px;border-top:1px solid #eef1f5;padding-top:10px;font-size:12px}.detail span:first-child{color:var(--muted)}.detail strong{font-weight:700;text-align:right}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:17px}.btn{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:9px 12px;font-weight:700;color:#0E211B;min-height:40px}.btn:hover{background:#EFF5F2}.btn:focus-visible,.tab:focus-visible,.nav a:focus-visible{outline:3px solid #0B8061;outline-offset:2px}.btn.primary{background:#00674D;border-color:#00674D;color:#fff}.btn.primary:hover{background:#004F3B}.btn:disabled{opacity:.5;cursor:not-allowed}.btn.small{font-size:12px;padding:6px 9px}.tabs{display:flex;gap:5px;padding:0 22px;border-bottom:1px solid var(--line);overflow:auto}.tab{border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-weight:750;padding:14px 11px;white-space:nowrap}.tab.active{color:var(--green);border-color:var(--green)}.table-wrap{overflow:auto}.matrix{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}.matrix th,.matrix td{text-align:left;padding:13px 15px;border-bottom:1px solid #edf0f4;vertical-align:middle}.matrix th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#5C6E68;background:#F1F5F4;font-weight:800;white-space:nowrap}.matrix tbody tr:last-child td{border-bottom:0}.matrix td:first-child{min-width:245px;font-weight:700}.matrix td:nth-child(2){min-width:180px}.matrix td:nth-child(n+3){text-align:center;min-width:125px}.channel-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:7px;background:#DCFCE7;color:#166534;font-size:12px;font-weight:750;white-space:nowrap}.channel-pill.email{background:#E0F2FE;color:#075985}.channel-pill.push{background:#FEF3C7;color:#92400E}.channel-pill.off{background:#F1F5F4;color:#334155}.section-note{font-size:13px;color:var(--muted);margin-top:13px}.result-list{display:grid;gap:0}.result-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:14px 0;border-bottom:1px solid #edf0f4;align-items:center}.result-row:last-child{border-bottom:0}.result-row strong{display:block;font-size:13px}.result-row p{font-size:13px;color:var(--muted);margin:3px 0 0}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{min-width:0}.field.full{grid-column:1/-1}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}.field input,.field select{width:100%;border:1px solid #DCE7E2;border-radius:8px;padding:10px 11px;background:#fff;color:var(--ink)}.field input:focus,.field select:focus{outline:3px solid #0B8061;outline-offset:2px;border-color:#00674D}.help{font-size:13px;color:var(--muted);margin-top:5px}.inline-check{display:grid;grid-template-columns:16px minmax(0,1fr);align-items:start;column-gap:10px;font-size:13px;line-height:1.55;color:#0E211B;font-weight:500!important}.inline-check input{width:16px;height:16px;margin:2px 0 0;accent-color:#00674D;justify-self:start}.subtle{font-size:13px;color:var(--muted)}.divider{height:1px;background:var(--line);margin:18px 0}.hidden{display:none!important}.modal-bg{position:fixed;inset:0;background:#10182888;z-index:20;display:none;align-items:center;justify-content:center;padding:18px}.modal-bg.open{display:flex}.modal{width:min(600px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:var(--shadow)}.modal-head{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}.modal-head h2{font-size:18px;margin:0}.modal-body{padding:20px 22px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.error{background:var(--redbg);color:var(--red);padding:10px 12px;border-radius:9px;font-size:12px;margin-bottom:12px}.toast{position:fixed;right:22px;bottom:22px;z-index:30;max-width:390px;background:#172b22;color:#fff;border-radius:10px;padding:13px 16px;box-shadow:var(--shadow)}.hamb{display:none}.footer-note{font-size:11px;color:#66736E;margin:20px 0 0}@media(max-width:1023px){.sidebar{width:205px}.main{margin-left:205px;padding:24px}.metrics{gap:9px}.metric{padding:15px}}@media(max-width:767px){.sidebar{transform:translateX(-100%);transition:transform .2s;width:245px;box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.main{margin-left:0;padding:20px 15px 38px}.hamb{display:inline-flex}.title{font-size:23px}.channel-grid{grid-template-columns:1fr}.topline{align-items:flex-start}.metrics{grid-template-columns:1fr}.metric-row{margin-top:4px}.card-head,.card-body{padding:17px}.tabs{padding:0 12px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}@media(max-width:480px){.top-right .badge{display:none}.card-head{flex-direction:column}.result-row{grid-template-columns:1fr}.modal-actions{flex-direction:column-reverse}.modal-actions .btn{width:100%}}
-</style></head><body><div class="app">
-<aside class="sidebar" id="sidebar"><div class="brand"><div class="logo">W</div><span>WorkPulse</span></div><nav class="nav"><div class="navlabel">RUANG KERJA</div><a href="#" data-inert><span class="ico">▦</span>Dashboard Pulse</a><a href="#" data-inert><span class="ico">◷</span>Riwayat Saya</a><div class="navlabel">MANAJEMEN</div><a href="#" data-inert><span class="ico">▤</span>Tinjauan &amp; Kepatuhan</a><a href="#" data-inert><span class="ico">⚑</span>Usia Eskalasi</a><div class="navlabel">ADMINISTRASI</div><a href="#" data-inert><span class="ico">⚙</span>Pengaturan Kebijakan</a><a href="#" data-inert><span class="ico">♙</span>Pemetaan Organisasi</a><a class="active" href="#channels"><span class="ico">✉</span>Kanal Notifikasi</a></nav><div class="sidefoot"><div class="avatar">SA</div><div><strong style="font-size:12px">Admin Sistem</strong><div class="small">Administrator</div></div></div></aside>
-<main class="main"><div class="topline"><div><div class="crumb">Administrasi <span aria-hidden="true">/</span> Notifikasi</div><h1 class="title">Pengaturan Kanal Notifikasi</h1><div class="subtitle">Kelola kesiapan Email dan Browser Push, tinjau pemicu dan penerima, serta periksa hasil pengujian.</div></div><div class="top-right"><button class="btn hamb" id="mobileMenu" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar">☰</button><span class="badge amber"><span class="dot"></span>Perlu pemeriksaan</span></div></div>
+:root {
+  --color-canvas: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F1F5F9;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-brand-primary: #00674D;
+  --color-brand-hover: #00523D;
+  --color-brand-light: #E6F4F0;
+  --color-border-subtle: #E2E8F0;
+  --color-border-strong: #CBD5E1;
 
-<section class="metrics" aria-label="Ringkasan kanal"><div class="metric"><div class="metric-label">Kanal yang dikelola</div><div class="metric-row"><div class="metric-value">2</div><span class="badge gray">Email · Browser Push</span></div></div><div class="metric"><div class="metric-label">Kesiapan email</div><div class="metric-row"><div class="metric-value">Belum diverifikasi</div><span class="badge amber">Perlu uji</span></div></div><div class="metric"><div class="metric-label">Kesiapan Browser Push</div><div class="metric-row"><div class="metric-value">Belum diverifikasi</div><span class="badge amber">Perlu uji</span></div></div></section>
-<section class="card" id="channels"><div class="card-head"><div><h2 class="h2">Kesiapan kanal</h2><div class="desc">Periksa konfigurasi email dan browser push secara terpisah. Jangan memasukkan kunci rahasia ke dalam catatan atau tangkapan layar.</div></div></div><div class="card-body"><div class="channel-grid">
-<article class="channel"><div class="channel-top"><div class="channel-title"><div class="channel-icon" aria-hidden="true">✉</div><div><h3>Email</h3><p>Pengiriman email melalui Brevo</p></div></div><span class="badge amber" id="emailStatus"><span class="dot"></span>Belum diverifikasi</span></div><div class="channel-details"><div class="detail"><span>Konfigurasi pengirim</span><strong id="senderStatus">Belum diperiksa</strong></div><div class="detail"><span>Kredensial</span><strong id="credentialStatus">Belum diperiksa</strong></div><div class="detail"><span>Uji terakhir</span><strong id="emailTestStatus">Belum ada hasil</strong></div></div><div class="actions"><button class="btn primary" id="configureEmail">Periksa konfigurasi</button><button class="btn" id="testEmail">Kirim email uji</button></div></article>
-<article class="channel"><div class="channel-top"><div class="channel-title"><div class="channel-icon" aria-hidden="true">♧</div><div><h3>Browser Push</h3><p>Notifikasi pada browser/perangkat yang mendukung</p></div></div><span class="badge amber" id="pushStatus"><span class="dot"></span>Belum diverifikasi</span></div><div class="channel-details"><div class="detail"><span>Konfigurasi layanan</span><strong id="pushConfigStatus">Belum diverifikasi</strong></div><div class="detail"><span>Penerima uji</span><strong id="pushRecipientStatus">Belum dipilih</strong></div><div class="detail"><span>Uji terakhir</span><strong id="pushTestStatus">Belum ada hasil</strong></div></div><div class="actions"><button class="btn primary" id="checkPush">Periksa konfigurasi</button><button class="btn" id="testPush">Kirim notifikasi uji</button></div></article>
-</div></div></section>
-<section class="card"><div class="card-head"><div><h2 class="h2">Matriks kanal notifikasi</h2><div class="desc">Kanal untuk setiap pemicu mengikuti matriks PRD. Pilihan kanal di halaman ini tidak dapat memperluas pemicu Browser Push di luar yang telah ditetapkan.</div></div></div><div class="tabs" role="tablist" aria-label="Filter kanal"><button class="tab active" data-filter="all" role="tab" aria-selected="true">Semua pemicu</button><button class="tab" data-filter="Email" role="tab" aria-selected="false">Email</button><button class="tab" data-filter="Browser Push" role="tab" aria-selected="false">Browser Push</button><button class="tab" data-filter="Web Notification Center" role="tab" aria-selected="false">Pusat Notifikasi</button></div><div class="table-wrap"><table class="matrix"><thead><tr><th>Pemicu</th><th>Penerima</th><th>Email</th><th>Browser Push</th><th>Pusat Notifikasi</th></tr></thead><tbody id="matrixBody"></tbody></table></div><div class="card-body"><div class="section-note">Semua pemicu memiliki catatan di Pusat Notifikasi sesuai PRD. Status kanal menunjukkan jalur yang ditetapkan, bukan bukti bahwa pengiriman berhasil pada setiap penerima.</div></div></section>
-<section class="card"><div class="card-head"><div><h2 class="h2">Hasil pengujian terbaru</h2><div class="desc">Hasil hanya dapat disebut berhasil jika ada bukti yang sesuai dari kanal pengiriman. Pengujian Browser Push berlaku untuk browser dan perangkat yang diuji.</div></div><button class="btn small" id="clearResults">Bersihkan tampilan</button></div><div class="card-body"><div class="result-list" id="testResults"><div class="subtle">Belum ada hasil pengujian pada sesi ini.</div></div></div></section>
-</main></div>
-<div class="modal-bg" id="emailModal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle"><div class="modal"><div class="modal-head"><div><h2 id="emailModalTitle">Periksa konfigurasi email</h2><div class="desc">Atur informasi pengirim dan kunci API Brevo.</div></div><button class="btn small" data-close="emailModal" aria-label="Tutup">✕</button></div><div class="modal-body"><div id="emailError" class="error hidden" role="alert"></div><form id="emailForm"><div class="form-grid"><div class="field"><label for="senderName">Nama pengirim</label><input id="senderName" name="senderName" maxlength="100" placeholder="Contoh: WorkPulse" required><div class="help">Nama yang terlihat oleh penerima.</div></div><div class="field"><label for="senderEmail">Alamat email pengirim</label><input id="senderEmail" name="senderEmail" type="email" maxlength="254" placeholder="notifikasi@perusahaan.id" required><div class="help">Gunakan alamat yang telah diverifikasi di penyedia email.</div></div><div class="field full"><label for="brevoApiKey">Kunci API Brevo</label><input id="brevoApiKey" name="brevoApiKey" type="password" autocomplete="new-password" spellcheck="false" placeholder="Masukkan kunci API Brevo" required><div class="help">Masukkan kunci terbaru jika ingin mengganti kredensial email.</div></div><div class="field full"><label class="inline-check"><input type="checkbox" id="emailAck" required><span>Saya memahami bahwa pemeriksaan ini tidak menguji koneksi ke Brevo.</span></label></div></div><div class="modal-actions"><button class="btn" type="button" data-close="emailModal">Batal</button><button class="btn primary" type="submit">Periksa konfigurasi</button></div></form></div></div></div>
-<div class="modal-bg" id="testModal" role="dialog" aria-modal="true" aria-labelledby="testModalTitle"><div class="modal"><div class="modal-head"><div><h2 id="testModalTitle">Kirim email uji</h2><div class="desc">Tentukan alamat penerima dan tinjau hasil uji yang diketahui.</div></div><button class="btn small" data-close="testModal" aria-label="Tutup">✕</button></div><div class="modal-body"><div id="testError" class="error hidden" role="alert"></div><form id="testForm"><div class="field"><label for="recipientEmail">Alamat penerima uji</label><input id="recipientEmail" type="email" maxlength="254" placeholder="nama@perusahaan.id" required><div class="help">Gunakan alamat yang Anda kendalikan untuk menerima pesan uji.</div></div><div class="field"><label class="inline-check"><input type="checkbox" id="testAck" required><span>Saya memahami bahwa permintaan uji pada prototipe ini belum mengirim email.</span></label></div><div class="modal-actions"><button class="btn" type="button" data-close="testModal">Batal</button><button class="btn primary" type="submit">Catat simulasi uji</button></div></form></div></div></div>
-<div class="modal-bg" id="pushTestModal" role="dialog" aria-modal="true" aria-labelledby="pushTestModalTitle"><div class="modal"><div class="modal-head"><div><h2 id="pushTestModalTitle">Kirim notifikasi uji</h2><div class="desc">Pilih akun uji. Hasil hanya dapat dinyatakan berhasil jika ada konfirmasi pengiriman untuk perangkat yang terdaftar.</div></div><button class="btn small" data-close="pushTestModal" aria-label="Tutup">✕</button></div><div class="modal-body"><div id="pushTestError" class="error hidden" role="alert"></div><form id="pushTestForm"><div class="field"><label for="pushRecipientEmail">Email akun penerima uji</label><input id="pushRecipientEmail" type="email" maxlength="254" placeholder="nama@perusahaan.id" required><div class="help">Gunakan akun uji yang memiliki browser/perangkat terdaftar untuk Browser Push.</div></div><div class="field" style="margin-top:14px"><label class="inline-check"><input type="checkbox" id="pushTestAck" required><span>Saya memastikan akun tersebut adalah penerima uji yang sesuai.</span></label></div><div class="modal-actions"><button class="btn" type="button" data-close="pushTestModal">Batal</button><button class="btn primary" type="submit">Kirim notifikasi uji</button></div></form></div></div></div>
-<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+  /* Badge Semantik Kanonikal DS v1.5.0 */
+  --badge-active-fg: #166534;
+  --badge-active-bg: #DCFCE7;
+  --badge-active-border: #86EFAC;
+
+  --badge-warning-fg: #92400E;
+  --badge-warning-bg: #FEF3C7;
+  --badge-warning-border: #FCD34D;
+
+  --badge-danger-fg: #991B1B;
+  --badge-danger-bg: #FEE2E2;
+  --badge-danger-border: #FCA5A5;
+
+  --badge-info-fg: #075985;
+  --badge-info-bg: #E0F2FE;
+  --badge-info-border: #7DD3FC;
+
+  --badge-neutral-fg: #334155;
+  --badge-neutral-bg: #F1F5F9;
+  --badge-neutral-border: #CBD5E1;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.18);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+a {
+  color: var(--color-brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* APP SHELL */
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+}
+
+/* SIDEBAR 3 GRUP KANONIKAL */
+.sidebar {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 30;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--color-brand-primary);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.brand-caption {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.nav-label {
+  padding: 0 10px;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.nav {
+  display: grid;
+  gap: 2px;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav a:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.nav a.active {
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  font-weight: 700;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 14px 8px 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-border-strong);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.identity-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.identity-name {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.identity-role {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* MAIN AREA & TOPBAR (56px) */
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 56px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.breadcrumbs .crumb-current {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.system-clock {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.notif-bell:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.notif-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
+  border: 1px solid var(--badge-warning-border);
+  border-radius: 999px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* SIMULATION BAR */
+.sim-bar {
+  background: #F1F5F9;
+  border-bottom: 1px solid var(--color-border-strong);
+  padding: 10px 28px;
+}
+
+.sim-bar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sim-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sim-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sim-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.sim-btn:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.sim-btn.active {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #FFFFFF;
+}
+
+/* CONTENT CONTAINER (max-width: 1200px) */
+.content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 28px 64px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.page-kicker {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-brand-primary);
+  margin-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+
+.page-header p {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  max-width: 760px;
+}
+
+/* BADGES SEMANTIK */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.badge-active {
+  color: var(--badge-active-fg);
+  background: var(--badge-active-bg);
+  border-color: var(--badge-active-border);
+}
+
+.badge-info {
+  color: var(--badge-info-fg);
+  background: var(--badge-info-bg);
+  border-color: var(--badge-info-border);
+}
+
+.badge-warning {
+  color: var(--badge-warning-fg);
+  background: var(--badge-warning-bg);
+  border-color: var(--badge-warning-border);
+}
+
+.badge-danger {
+  color: var(--badge-danger-fg);
+  background: var(--badge-danger-bg);
+  border-color: var(--badge-danger-border);
+}
+
+.badge-neutral {
+  color: var(--badge-neutral-fg);
+  background: var(--badge-neutral-bg);
+  border-color: var(--badge-neutral-border);
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--color-surface-subtle);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background: var(--color-brand-hover);
+  border-color: var(--color-brand-hover);
+  color: #FFFFFF;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+
+/* METRICS SUMMARY */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.metric-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-xs);
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* CARDS & CHANNELS */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.card-head {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.card-head h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.card-head p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+  max-width: 780px;
+}
+
+.card-body {
+  padding: 20px 22px;
+}
+
+.channel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.channel {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  background: var(--color-surface);
+}
+
+.channel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.channel-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.channel-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.channel h3 {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.channel p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.channel-details {
+  display: grid;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 9px;
+  font-size: 0.75rem;
+}
+
+.detail span:first-child {
+  color: var(--color-text-secondary);
+}
+
+.detail strong {
+  font-weight: 700;
+  text-align: right;
+  color: var(--color-text-primary);
+}
+
+.channel-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* MATRIX TABS & TABLE */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  overflow-x: auto;
+}
+
+.tab {
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  padding: 12px 12px;
+  white-space: nowrap;
+}
+
+.tab.active {
+  color: var(--color-brand-primary);
+  border-bottom-color: var(--color-brand-primary);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 880px;
+}
+
+.matrix th {
+  text-align: left;
+  padding: 11px 16px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.matrix td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+  font-size: 0.8125rem;
+}
+
+.matrix tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.matrix td:nth-child(n+3) {
+  text-align: center;
+}
+
+/* TEST RESULTS LIST */
+.result-list {
+  display: grid;
+  gap: 10px;
+}
+
+.result-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.result-row strong {
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+  display: block;
+}
+
+.result-row p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+}
+
+/* 403 ACCESS RESTRICTED STATE */
+.restricted-panel {
+  max-width: 620px;
+  margin: 48px auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.restricted-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--badge-danger-bg);
+  color: var(--badge-danger-fg);
+  border: 1px solid var(--badge-danger-border);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+}
+
+.restricted-panel h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.restricted-panel p {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+}
+
+/* MODALS */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modal-bg.open {
+  display: flex;
+}
+
+.modal {
+  width: min(600px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.modal-head {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.modal-head h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.modal-head p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  padding: 20px 22px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  min-width: 0;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 5px;
+}
+
+.field input, .field select {
+  width: 100%;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.8125rem;
+}
+
+.help {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.inline-check {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 10px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  font-weight: 500 !important;
+}
+
+.inline-check input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: var(--color-brand-primary);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.error {
+  background: var(--badge-danger-bg);
+  border: 1px solid var(--badge-danger-border);
+  color: var(--badge-danger-fg);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 200;
+  max-width: 420px;
+  background: var(--color-text-primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast.show {
+  display: flex;
+}
+
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 248px;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .channel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 18px 14px 48px;
+  }
+  .page-header {
+    flex-direction: column;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .field.full {
+    grid-column: auto;
+  }
+  .result-row {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR 3 GRUP KANONIKAL -->
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi Utama">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">WorkPulse</div>
+        <div class="brand-caption">Daily Accountability</div>
+      </div>
+    </div>
+
+    <div class="nav-group" id="navGroupWorkspace">
+      <div class="nav-label">Workspace</div>
+      <nav class="nav">
+        <a href="02-Morning-Commitment.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+          <span>My Today</span>
+        </a>
+        <a href="06-My-History-Weekly-Summary.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+          <span>My History</span>
+        </a>
+        <a href="20-My-Leave-Request.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+          <span>My Leave Request</span>
+        </a>
+        <a href="07-Notification-Center-Browser-Push.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+          <span>Notifications</span>
+        </a>
+        <a href="24-Profile-Settings.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+          <span>Profile</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-group" id="navGroupManagement">
+      <div class="nav-label">Management</div>
+      <nav class="nav">
+        <a href="08-Pulse-Dashboard.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a href="09-Blocker-Escalation-Queue.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></span>
+          <span>Blocker &amp; Escalation Queue</span>
+        </a>
+        <a href="14-Escalation-Aging.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 10"></polyline></svg></span>
+          <span>Escalation Aging</span>
+        </a>
+        <a href="13-Project-Risk-View.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></span>
+          <span>Project Risk View</span>
+        </a>
+        <a href="10-Manager-Note-Coaching-Record.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></span>
+          <span>Manager Notes</span>
+        </a>
+        <a href="22-Correction-and-Leave-Review.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
+          <span>Correction &amp; Leave Review</span>
+        </a>
+        <a href="11-Compliance-Queue-HRGA.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+          <span>Compliance Queue</span>
+        </a>
+        <a href="21-Leave-Approval-Queue.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
+          <span>Leave Approval Queue</span>
+        </a>
+        <a href="12-Exemption-Management.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+          <span>Holiday &amp; Exemption</span>
+        </a>
+        <a href="23-Reports.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span>
+          <span>Reports</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-group" id="navGroupAdministration">
+      <div class="nav-label">Administration</div>
+      <nav class="nav">
+        <a href="25-Admin-User-Invitation-Management.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></span>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a href="15-Admin-Organizational-Mapping.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+          <span>Organizational Mapping</span>
+        </a>
+        <a href="17-Admin-Temporary-Reviewer.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg></span>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a href="19-Admin-Notification-Channel-Setup.html" class="active" aria-current="page">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></span>
+          <span>Notification Setup</span>
+        </a>
+        <a href="18-Policy-Settings.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>
+          <span>Policy Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="identity">
+        <div class="avatar" id="sidebarAvatar">SA</div>
+        <div class="identity-info">
+          <div class="identity-name" id="sidebarUserName">System Administrator</div>
+          <div class="identity-role" id="sidebarUserRole">System Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenu" type="button" aria-label="Buka menu navigasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <span>Administration</span>
+          <span>/</span>
+          <span class="crumb-current">Notification Channel Setup</span>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <div class="system-clock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span id="currentTimeDisplay">28 Okt 2026, 09:20 WIB</span>
+        </div>
+        <a class="notif-bell" href="07-Notification-Center-Browser-Push.html" aria-label="Pusat Notifikasi (3 belum dibaca)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span class="notif-count">3</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- BILAH MODE SIMULASI PROTOTIPE -->
+    <section class="sim-bar" aria-label="Mode Simulasi Prototipe">
+      <div class="sim-bar-inner">
+        <div class="sim-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span>[Mode Simulasi Prototipe] Kesiapan Kanal &amp; RBAC:</span>
+        </div>
+        <div class="sim-controls">
+          <button class="sim-btn active" id="simModeVerified" type="button">Kanal Terverifikasi Normal</button>
+          <button class="sim-btn" id="simModeDegraded" type="button">Simulasi Gangguan Layanan Push/Email (Degraded)</button>
+          <button class="sim-btn" id="simModeUnverified" type="button">Belum Diverifikasi</button>
+          <button class="sim-btn" id="simModeRestricted" type="button">403 Access Restricted (Non-Admin)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 403 ACCESS RESTRICTED PANEL -->
+    <div id="restrictedStatePanel" class="content hidden">
+      <div class="restricted-panel" role="region" aria-labelledby="restrictedHeading">
+        <div class="restricted-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h2 id="restrictedHeading">403 — Akses Dibatasi (Access Restricted)</h2>
+        <p>
+          Halaman <strong>Notification Channel Setup (<code>/admin/notifications</code>)</strong> hanya dapat diakses oleh <strong>System Administrator</strong>. Untuk mengatur izin Browser Push perangkat Anda sendiri, buka halaman Pusat Notifikasi.
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-primary" href="07-Notification-Center-Browser-Push.html">
+            <span>Buka Pusat Notifikasi Perangkat Saya</span>
+          </a>
+          <button class="btn" id="btnRestoreAdminFrom403" type="button">Pulihkan Simulasi System Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AUTHORIZED WORKSPACE -->
+    <main class="content" id="authorizedWorkspace">
+      <section class="page-header">
+        <div>
+          <div class="page-kicker">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+            <span>Administration · Delivery Channels &amp; Canonical Trigger Matrix</span>
+          </div>
+          <h1>Pengaturan Kanal Notifikasi</h1>
+          <p>
+            Kelola kesiapan pengiriman Email (Brevo) dan Browser Push (Web Push VAPID), jalankan uji pengiriman terverifikasi, serta tinjau matriks trigger resmi tanpa memperluas pemicu Browser Push di luar yang telah disahkan.
+          </p>
+        </div>
+        <div>
+          <span class="badge badge-active" id="overallHealthBadge">Kanal Terverifikasi Normal</span>
+        </div>
+      </section>
+
+      <!-- METRICS SUMMARY -->
+      <section class="metrics-grid" aria-label="Ringkasan Kanal Pengiriman">
+        <div class="metric-card">
+          <div class="metric-label">Kanal Pengiriman Dikelola</div>
+          <div class="metric-row">
+            <div class="metric-value mono-num">3</div>
+            <span class="badge badge-neutral">Email · Push · In-App</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Kesiapan Layanan Email (Brevo)</div>
+          <div class="metric-row">
+            <div class="metric-value" id="metricEmailVal">Terverifikasi</div>
+            <span class="badge badge-active" id="metricEmailBadge">Verified</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Kesiapan Layanan Browser Push (VAPID)</div>
+          <div class="metric-row">
+            <div class="metric-value" id="metricPushVal">Terverifikasi</div>
+            <span class="badge badge-active" id="metricPushBadge">Verified</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- KESIAPAN KANAL -->
+      <section class="card" id="channels">
+        <div class="card-head">
+          <div>
+            <h2>Kesiapan Konfigurasi &amp; Uji Pengiriman Kanal</h2>
+            <p>Status pengiriman membedakan permintaan uji, bukti delivery terkonfirmasi, dan kegagalan layanan. Hasil uji pada peramban Admin hanya membuktikan perangkat uji tersebut, bukan izin seluruh karyawan.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="channel-grid">
+            <!-- KANAL 1: EMAIL -->
+            <article class="channel">
+              <div class="channel-top">
+                <div class="channel-title">
+                  <div class="channel-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                  </div>
+                  <div>
+                    <h3>Email Transaksional (Brevo API)</h3>
+                    <p>Pengiriman pengingat, eskalasi, dan tautan undangan</p>
+                  </div>
+                </div>
+                <span class="badge badge-active" id="emailStatus">Verified</span>
+              </div>
+              <div class="channel-details">
+                <div class="detail">
+                  <span>Identitas Pengirim</span>
+                  <strong id="senderStatus">WorkPulse &lt;notifikasi@dutamedia.com&gt;</strong>
+                </div>
+                <div class="detail">
+                  <span>Status Kredensial API</span>
+                  <strong id="credentialStatus">Kunci API Aktif (SPF/DKIM Valid)</strong>
+                </div>
+                <div class="detail">
+                  <span>Uji Pengiriman Terakhir</span>
+                  <strong class="mono-num" id="emailTestStatus">28 Okt 2026, 08:15 WIB (202 Accepted)</strong>
+                </div>
+              </div>
+              <div class="channel-actions">
+                <button class="btn btn-primary" id="configureEmail" type="button">Periksa Konfigurasi Email</button>
+                <button class="btn" id="testEmail" type="button">Uji Pengiriman Kanal Email</button>
+              </div>
+            </article>
+
+            <!-- KANAL 2: BROWSER PUSH -->
+            <article class="channel">
+              <div class="channel-top">
+                <div class="channel-title">
+                  <div class="channel-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  </div>
+                  <div>
+                    <h3>Browser Push (Web Push VAPID)</h3>
+                    <p>Notifikasi real-time pada peramban/perangkat terdaftar</p>
+                  </div>
+                </div>
+                <span class="badge badge-active" id="pushStatus">Verified</span>
+              </div>
+              <div class="channel-details">
+                <div class="detail">
+                  <span>Konfigurasi Kunci VAPID &amp; SW</span>
+                  <strong id="pushConfigStatus">VAPID Public Key &amp; Service Worker Aktif</strong>
+                </div>
+                <div class="detail">
+                  <span>Akun Penerima Uji Terakhir</span>
+                  <strong id="pushRecipientStatus">admin@dutamedia.com (Chrome Desktop)</strong>
+                </div>
+                <div class="detail">
+                  <span>Uji Pengiriman Terakhir</span>
+                  <strong class="mono-num" id="pushTestStatus">28 Okt 2026, 08:18 WIB (201 Created)</strong>
+                </div>
+              </div>
+              <div class="channel-actions">
+                <button class="btn btn-primary" id="checkPush" type="button">Periksa Konfigurasi Push</button>
+                <button class="btn" id="testPush" type="button">Uji Pengiriman Kanal Push</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- MATRIKS KANAL NOTIFIKASI RESMI (9 TRIGGER KANONIKAL) -->
+      <section class="card" aria-labelledby="matrixHeading">
+        <div class="card-head">
+          <div>
+            <h2 id="matrixHeading">Matriks Kanal per Trigger Event Resmi WorkPulse</h2>
+            <p>Daftar tetap 9 pemicu resmi WorkPulse. Pengaturan kanal tidak mengizinkan perluasan Browser Push ke pemicu yang tidak ditetapkan sebagai Push-enabled.</p>
+          </div>
+          <span class="badge badge-info mono-num" id="matrixCountBadge">9 trigger resmi</span>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Filter Kanal Matriks">
+          <button class="tab active" data-filter="all" role="tab" aria-selected="true" type="button">Semua Trigger (9)</button>
+          <button class="tab" data-filter="Email" role="tab" aria-selected="false" type="button">Email</button>
+          <button class="tab" data-filter="Browser Push" role="tab" aria-selected="false" type="button">Browser Push</button>
+          <button class="tab" data-filter="Web Notification Center" role="tab" aria-selected="false" type="button">Pusat Notifikasi In-App</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th scope="col">Event Trigger Resmi</th>
+                <th scope="col">Penerima Otoritatif</th>
+                <th scope="col">Email</th>
+                <th scope="col">Browser Push</th>
+                <th scope="col">Pusat Notifikasi In-App</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody">
+              <!-- Diisi melalui JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- LOG HASIL PENGUJIAN KANAL -->
+      <section class="card" aria-labelledby="testLogHeading">
+        <div class="card-head">
+          <div>
+            <h2 id="testLogHeading">Log Verifikasi &amp; Uji Pengiriman Kanal Terbaru</h2>
+            <p>Mencatat perbedaan tegas antara pengiriman terkonfirmasi (Delivered/Verified), belum diverifikasi, dan kegagalan gateway (Failed).</p>
+          </div>
+          <button class="btn btn-small" id="clearResults" type="button">Bersihkan Log Sesi</button>
+        </div>
+        <div class="card-body">
+          <div class="result-list" id="testResults"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 1: KONFIGURASI EMAIL BREVO                                        -->
+<!-- ======================================================================= -->
+<div class="modal-bg" id="emailModal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="emailModalTitle">Periksa &amp; Verifikasi Konfigurasi Email (Brevo)</h2>
+        <p>Validasi parameter identitas pengirim dan kredensial API pengiriman email transaksional.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close="emailModal" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="emailError" class="error hidden" role="alert"></div>
+      <form id="emailForm" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="senderName">Nama Pengirim Resmi *</label>
+            <input id="senderName" name="senderName" maxlength="100" value="WorkPulse Accountability" required>
+            <div class="help">Ditampilkan pada kotak masuk surel penerima.</div>
+          </div>
+          <div class="field">
+            <label for="senderEmail">Alamat Email Pengirim *</label>
+            <input id="senderEmail" name="senderEmail" type="email" maxlength="254" value="notifikasi@dutamedia.com" required>
+            <div class="help">Wajib terverifikasi SPF &amp; DKIM pada domain perusahaan.</div>
+          </div>
+          <div class="field full">
+            <label for="brevoApiKey">Kunci API Brevo (Masked / Pembaruan) *</label>
+            <input id="brevoApiKey" name="brevoApiKey" type="password" autocomplete="new-password" placeholder="Masukkan kunci API Brevo (minimal 12 karakter)" required>
+            <div class="help">Kunci rahasia disimpan di server environment dan tidak pernah ditampilkan kembali di antarmuka.</div>
+          </div>
+          <div class="field full">
+            <label class="inline-check">
+              <input type="checkbox" id="emailAck" required>
+              <span>Saya mengonfirmasi parameter pengirim telah sesuai dengan Launch Configuration Register resmi organisasi.</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" type="button" data-close="emailModal">Batal</button>
+          <button class="btn btn-primary" type="submit">Simpan &amp; Verifikasi Konfigurasi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 2: DIALOG #checkPush (KONFIGURASI WEB PUSH VAPID)                 -->
+<!-- ======================================================================= -->
+<div class="modal-bg" id="pushConfigModal" role="dialog" aria-modal="true" aria-labelledby="pushConfigModalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="pushConfigModalTitle">Periksa &amp; Verifikasi Konfigurasi Browser Push (VAPID)</h2>
+        <p>Periksa kesiapan pasangan kunci VAPID, subjek kontak teknis, dan status registrasi Service Worker.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close="pushConfigModal" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="pushConfigError" class="error hidden" role="alert"></div>
+      <form id="pushConfigForm" novalidate>
+        <div class="form-grid">
+          <div class="field full">
+            <label for="vapidSubject">VAPID Subject Contact (mailto: / https:) *</label>
+            <input id="vapidSubject" type="text" value="mailto:infra-ops@dutamedia.com" required>
+            <div class="help">Identitas kontak teknis yang dikirimkan ke Push Service peramban (FCM / Mozilla Autopush / APNs).</div>
+          </div>
+          <div class="field full">
+            <label for="vapidPublicKey">VAPID Public Key (Base64 URL-Safe) *</label>
+            <input class="mono-num" id="vapidPublicKey" type="text" value="BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U" required>
+            <div class="help">Kunci publik untuk langganan PushManager pada peramban pengguna yang memberikan izin (Granted).</div>
+          </div>
+          <div class="field full">
+            <label for="swEndpointPath">Path Registrasi Service Worker *</label>
+            <input class="mono-num" id="swEndpointPath" type="text" value="/sw-workpulse-push.js" required>
+          </div>
+          <div class="field full">
+            <label class="inline-check">
+              <input type="checkbox" id="pushConfigAck" required>
+              <span>Saya memahami bahwa kesiapan VAPID server tidak menggantikan izin (permission) peramban masing-masing karyawan.</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" type="button" data-close="pushConfigModal">Batal</button>
+          <button class="btn btn-primary" type="submit">Verifikasi Layanan Push</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 3: UJI PENGIRIMAN KANAL EMAIL                                     -->
+<!-- ======================================================================= -->
+<div class="modal-bg" id="testModal" role="dialog" aria-modal="true" aria-labelledby="testModalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="testModalTitle">Uji Pengiriman Kanal Email</h2>
+        <p>Kirim pesan uji diagnostik ke alamat email penerima dan periksa respons gateway pengiriman.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close="testModal" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="testError" class="error hidden" role="alert"></div>
+      <form id="testForm" novalidate>
+        <div class="field">
+          <label for="recipientEmail">Alamat Email Penerima Uji *</label>
+          <input id="recipientEmail" type="email" maxlength="254" value="admin@dutamedia.com" placeholder="nama@dutamedia.com" required>
+          <div class="help">Gunakan kotak masuk yang Anda pantau untuk memastikan pesan uji tiba.</div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label class="inline-check">
+            <input type="checkbox" id="testAck" required>
+            <span>Catat hasil pengiriman aktual (Delivered vs Failed) pada log verifikasi kanal.</span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" type="button" data-close="testModal">Batal</button>
+          <button class="btn btn-primary" type="submit">Jalankan Uji Pengiriman Email</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 4: UJI PENGIRIMAN KANAL BROWSER PUSH                              -->
+<!-- ======================================================================= -->
+<div class="modal-bg" id="pushTestModal" role="dialog" aria-modal="true" aria-labelledby="pushTestModalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="pushTestModalTitle">Uji Pengiriman Kanal Browser Push</h2>
+        <p>Kirim payload uji Web Push ke perangkat terdaftar dari akun uji yang dipilih.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close="pushTestModal" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="pushTestError" class="error hidden" role="alert"></div>
+      <form id="pushTestForm" novalidate>
+        <div class="field">
+          <label for="pushRecipientEmail">Email Akun Penerima Uji *</label>
+          <input id="pushRecipientEmail" type="email" maxlength="254" value="admin@dutamedia.com" placeholder="nama@dutamedia.com" required>
+          <div class="help">Akun wajib memiliki subscription Push aktif pada peramban yang sedang diuji.</div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label class="inline-check">
+            <input type="checkbox" id="pushTestAck" required>
+            <span>Saya memahami bahwa status sukses hanya dicatat bila endpoint Push Service mengembalikan konfirmasi penerimaan payload.</span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" type="button" data-close="pushTestModal">Batal</button>
+          <button class="btn btn-primary" type="submit">Jalankan Uji Pengiriman Push</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="toastMessage">Berhasil.</span>
+</div>
+
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id);const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const triggers=[
-{trigger:'Morning/EOD mendekati cutoff belum submit',recipient:'Employee',channels:['Email','Browser Push']},
-{trigger:'AMBER dengan kebutuhan dukungan',recipient:'Assigned support owner dan employee',channels:['Email','Browser Push','Web Notification Center']},
-{trigger:'RED',recipient:'Supervisor/Head dan PM/owner terkait sesuai authority context',channels:['Email','Browser Push']},
-{trigger:'Critical / instant blocker',recipient:'Rantai eskalasi yang dikonfigurasi',channels:['Email','Browser Push']},
-{trigger:'Blocker belum diakui melewati threshold',recipient:'Level eskalasi berikutnya',channels:['Email','Browser Push']},
-{trigger:'Tiket Blocker diakui (Acknowledged)',recipient:'Employee pelapor kendala',channels:['Browser Push','Web Notification Center']},
-{trigger:'Tiket Blocker berhasil dituntaskan (Resolved)',recipient:'Employee pelapor kendala dan Supervisor',channels:['Email','Browser Push','Web Notification Center']},
-{trigger:'Tiket Blocker ditolak / dibatalkan (Rejected)',recipient:'Employee pelapor kendala',channels:['Email','Web Notification Center']},
-{trigger:'Permintaan dukungan diterima (Support Accepted)',recipient:'Employee pemohon bantuan',channels:['Browser Push','Web Notification Center']},
-{trigger:'Permintaan dukungan ditolak / dialihkan (Support Declined)',recipient:'Employee pemohon bantuan dan Squad Lead',channels:['Email','Browser Push','Web Notification Center']},
-{trigger:'Penugasan pekerjaan tambahan ad-hoc (Additional Work)',recipient:'Employee pelaksana yang ditugaskan',channels:['Email','Browser Push','Web Notification Center']},
-{trigger:'Catatan evaluasi kerja harian (Manager Notes) diterbitkan',recipient:'Employee pemilik catatan kerja',channels:['Email','Web Notification Center']},
-{trigger:'Repeated no-submission flag',recipient:'Supervisor/Head; HRGA jika threshold terpenuhi',channels:['Email']},
-{trigger:'Weekly summary & Catatan Evaluasi Kerja (Manager Notes) tersedia',recipient:'Employee dan Manager sesuai konfigurasi',channels:['Email']},
-{trigger:'Perubahan policy / organizational assignment',recipient:'User terdampak dan Authorized Policy Owner terkait',channels:['Web Notification Center']},
-{trigger:'Morning/EOD Correction Request Material diajukan',recipient:'Authorized Reviewer terkait',channels:['Email','Web Notification Center']},
-{trigger:'Correction Request mendekati akhir Objection Window',recipient:'Authorized Reviewer terkait',channels:['Web Notification Center']},
-{trigger:'Correction Request Applied / Rejected',recipient:'Employee pengaju',channels:['Web Notification Center']},
-{trigger:'User invitation diterbitkan / diterbitkan ulang',recipient:'Karyawan pemilik akun',channels:['Email']},
-{trigger:'Leave Request diajukan',recipient:'Authorized Approver terkait',channels:['Email','Browser Push']},
-{trigger:'Leave Request disetujui / ditolak',recipient:'Employee pengaju',channels:['Email','Web Notification Center']},
-{trigger:'Deteksi sesi login dari perangkat / peramban baru',recipient:'Karyawan pemilik akun',channels:['Email','Web Notification Center']}
-];let filter='all',results=[];
-function renderMatrix(){const rows=triggers.filter(t=>filter==='all'||t.channels.includes(filter));$('matrixBody').innerHTML=rows.map(t=>`<tr><td>${escapeHTML(t.trigger)}</td><td>${escapeHTML(t.recipient)}</td>${['Email','Browser Push','Web Notification Center'].map(c=>`<td>${(c==='Web Notification Center'||t.channels.includes(c))?`<span class="channel-pill ${c==='Email'?'email':c==='Browser Push'?'push':''}"><span class="dot"></span>${c==='Web Notification Center'?'Tercatat':'Ditentukan'}</span>`:'<span class="channel-pill off">—</span>'}</td>`).join('')}</tr>`).join('')}
-function addResult(channel,title,detail,status='amber'){results.unshift({channel,title,detail,status,at:new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})});renderResults()}
-function renderResults(){$('testResults').innerHTML=results.length?results.map(r=>`<div class="result-row"><div><strong>${escapeHTML(r.title)} <span class="small">· ${escapeHTML(r.channel)}</span></strong><p>${escapeHTML(r.detail)}<br><span class="small">${escapeHTML(r.at)}</span></p></div><span class="badge ${r.status}"><span class="dot"></span>${r.status==='green'?'Validasi lokal':r.status==='red'?'Gagal':'Simulasi saja'}</span></div>`).join(''):'<div class="subtle">Belum ada hasil pengujian pada sesi ini.</div>'}
-function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),4500)}const modalReturnFocus=new Map();function open(id){const modal=$(id);if(!modal)return;modalReturnFocus.set(id,document.activeElement);modal.classList.add('open');const target=modal.querySelector('input:not([type=hidden]),button,select,textarea,[tabindex]:not([tabindex="-1"])');if(target)target.focus()}function close(id){const modal=$(id);if(!modal)return;modal.classList.remove('open');const trigger=modalReturnFocus.get(id);if(trigger&&typeof trigger.focus==='function')trigger.focus();modalReturnFocus.delete(id)}
-document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-selected',String(x===b))});renderMatrix()}));
-$('configureEmail').addEventListener('click',()=>open('emailModal'));$('emailForm').addEventListener('submit',e=>{e.preventDefault();const name=$('senderName').value.trim(),email=$('senderEmail').value.trim(),apiKey=$('brevoApiKey').value.trim();if(!name||!email||!apiKey||!$('emailAck').checked){$('emailError').textContent='Lengkapi nama, alamat email, kunci API Brevo, dan konfirmasi.';$('emailError').classList.remove('hidden');return}$('emailError').classList.add('hidden');$('senderStatus').textContent='Input diisi';$('credentialStatus').textContent='Belum diverifikasi';$('emailStatus').innerHTML='<span class="dot"></span>Belum diverifikasi';$('emailTestStatus').textContent='Belum ada hasil';addResult('Email','Informasi konfigurasi diperiksa',`Nama pengirim, format alamat ${email}, dan keberadaan kunci API diperiksa. Koneksi ke Brevo belum diuji dan perubahan belum disimpan.`,'amber');$('brevoApiKey').value='';close('emailModal');toast('Input diperiksa. Koneksi ke Brevo belum diuji dan perubahan belum disimpan.')});
-$('testEmail').addEventListener('click',()=>open('testModal'));$('testForm').addEventListener('submit',e=>{e.preventDefault();const email=$('recipientEmail').value.trim();if(!email||!$('testAck').checked){$('testError').textContent='Isi alamat penerima dan konfirmasi pemahaman.';$('testError').classList.remove('hidden');return}$('testError').classList.add('hidden');$('emailTestStatus').textContent='Simulasi dicatat';addResult('Email','Permintaan uji dicatat (simulasi)',`Tujuan uji: ${email}. Email tidak dikirim. Status penerimaan tidak tersedia.`,'amber');close('testModal');$('recipientEmail').value='';toast('Simulasi dicatat. Tidak ada email yang dikirim.')});
-$('checkPush').addEventListener('click',()=>{ $('pushConfigStatus').textContent='Belum dapat diverifikasi'; $('pushStatus').innerHTML='<span class="dot"></span>Belum diverifikasi'; addResult('Browser Push','Pemeriksaan konfigurasi diminta (prototipe)','Status konfigurasi layanan belum dapat diperoleh dari sistem. Kesiapan kanal tidak berubah menjadi berhasil.','amber'); toast('Status konfigurasi layanan belum dapat diverifikasi pada prototipe ini.')});
-$('testPush').addEventListener('click',()=>open('pushTestModal'));
-$('pushTestForm').addEventListener('submit',e=>{e.preventDefault();const email=$('pushRecipientEmail').value.trim();if(!email||!$('pushTestAck').checked){$('pushTestError').textContent='Isi email akun uji dan konfirmasikan penerima.';$('pushTestError').classList.remove('hidden');return}$('pushTestError').classList.add('hidden');$('pushRecipientStatus').textContent=email;$('pushTestStatus').textContent='Permintaan uji dicatat';addResult('Browser Push','Permintaan uji dicatat (prototipe)',`Akun penerima uji: ${email}. Prototipe tidak mengirim push dan belum menerima bukti delivery.`,'amber');close('pushTestModal');$('pushRecipientEmail').value='';$('pushTestAck').checked=false;toast('Permintaan uji dicatat. Status pengiriman belum tersedia.')});
-$('clearResults').addEventListener('click',()=>{results=[];renderResults();toast('Tampilan hasil pengujian dibersihkan.')});document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>close(b.dataset.close)));document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)close(bg.id)}));document.addEventListener('keydown',e=>{const activeModal=document.querySelector('.modal-bg.open');if(activeModal&&e.key==='Escape'){e.preventDefault();close(activeModal.id);return}if(activeModal&&e.key==='Tab'){const focusables=[...activeModal.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[href],[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}if(e.key==='Escape'&&!activeModal&&$('sidebar').classList.contains('open')){ $('sidebar').classList.remove('open');$('mobileMenu').setAttribute('aria-expanded','false');$('mobileMenu').setAttribute('aria-label','Buka navigasi');$('mobileMenu').focus()}});$('mobileMenu').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('open');$('mobileMenu').setAttribute('aria-expanded',String(open));$('mobileMenu').setAttribute('aria-label',open?'Tutup navigasi':'Buka navigasi')});document.querySelectorAll('[data-inert]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();$('sidebar').classList.remove('open');$('mobileMenu').setAttribute('aria-expanded','false');$('mobileMenu').setAttribute('aria-label','Buka navigasi')}));renderMatrix();renderResults();
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // 9 Trigger Event Resmi WorkPulse (Sinkron 1:1 dengan PRD §8)
+  const triggers = [
+    {
+      trigger: 'Morning Check-In Reminder (60 menit sebelum On-Time Deadline)',
+      recipient: 'Employee wajib check-in yang belum submit Morning Commitment',
+      channels: ['Email', 'Browser Push', 'Web Notification Center']
+    },
+    {
+      trigger: 'EOD Check-In Reminder (60 menit sebelum On-Time Deadline)',
+      recipient: 'Employee wajib check-in yang belum submit EOD Outcome',
+      channels: ['Email', 'Browser Push', 'Web Notification Center']
+    },
+    {
+      trigger: 'Instant Blocker Raised / Assigned',
+      recipient: 'Assigned Support Owner & Direct Manager / Project Authority terkait',
+      channels: ['Email', 'Browser Push', 'Web Notification Center']
+    },
+    {
+      trigger: 'Blocker Escalated / SLA Breach Auto-Escalation',
+      recipient: 'Pejabat pada rantai eskalasi jenjang berikutnya (Level 1 s/d Level 4)',
+      channels: ['Email', 'Browser Push', 'Web Notification Center']
+    },
+    {
+      trigger: 'Blocker Resolved / Reopened',
+      recipient: 'Employee pelapor kendala & Support Owner penanggung jawab',
+      channels: ['Email', 'Browser Push', 'Web Notification Center']
+    },
+    {
+      trigger: 'Material Correction Submitted (Objection Window Opened)',
+      recipient: 'Authorized Reviewer dalam cakupan kewenangan',
+      channels: ['Email', 'Web Notification Center']
+    },
+    {
+      trigger: 'Material Correction Objected (Rejected) / Auto-Approved',
+      recipient: 'Employee pemohon koreksi',
+      channels: ['Web Notification Center']
+    },
+    {
+      trigger: 'Leave Request Submitted / Approved / Rejected',
+      recipient: 'Authorized Approver (Submitted) & Employee pemohon (Approved / Rejected)',
+      channels: ['Email', 'Browser Push', 'Web Notification Center']
+    },
+    {
+      trigger: 'Account Invitation / Activation Link',
+      recipient: 'Pemilik akun karyawan yang diundang',
+      channels: ['Email', 'Web Notification Center']
+    }
+  ];
+
+  let filter = 'all';
+  let simHealthMode = 'verified'; // 'verified' | 'degraded' | 'unverified'
+  let results = [
+    {
+      channel: 'Browser Push',
+      title: 'Uji Pengiriman Web Push Terkonfirmasi',
+      detail: 'Endpoint FCM mengembalikan HTTP 201 Created untuk subscription perangkat admin@dutamedia.com.',
+      status: 'active',
+      label: 'Delivered (201)',
+      at: '28 Okt 2026, 08:18 WIB'
+    },
+    {
+      channel: 'Email',
+      title: 'Uji Pengiriman Email Brevo Terkonfirmasi',
+      detail: 'Gateway Brevo menerima pesan diagnostik ke admin@dutamedia.com (HTTP 202 Accepted · Message-ID tercatat).',
+      status: 'active',
+      label: 'Delivered (202)',
+      at: '28 Okt 2026, 08:15 WIB'
+    }
+  ];
+
+  function renderMatrix() {
+    const rows = triggers.filter(t => filter === 'all' || t.channels.includes(filter));
+    $('matrixCountBadge').textContent = `${rows.length} trigger resmi`;
+
+    $('matrixBody').innerHTML = rows.map(t => `
+      <tr>
+        <td style="font-weight:700;color:var(--color-text-primary)">${escapeHTML(t.trigger)}</td>
+        <td style="color:var(--color-text-secondary)">${escapeHTML(t.recipient)}</td>
+        ${['Email', 'Browser Push', 'Web Notification Center'].map(c => {
+          const enabled = t.channels.includes(c);
+          if (!enabled) {
+            return `<td><span class="badge badge-neutral">Tidak Aktif</span></td>`;
+          }
+          if (c === 'Email') {
+            return `<td><span class="badge badge-info">Email Aktif</span></td>`;
+          }
+          if (c === 'Browser Push') {
+            return `<td><span class="badge badge-warning">Push-Enabled</span></td>`;
+          }
+          return `<td><span class="badge badge-active">Tercatat In-App</span></td>`;
+        }).join('')}
+      </tr>
+    `).join('');
+  }
+
+  function renderResults() {
+    if (!results.length) {
+      $('testResults').innerHTML = `<div style="font-size:0.8125rem;color:var(--color-text-muted)">Belum ada catatan hasil pengujian kanal pada sesi ini.</div>`;
+      return;
+    }
+
+    $('testResults').innerHTML = results.map(r => {
+      const badgeClass = r.status === 'active' ? 'badge-active' : r.status === 'danger' ? 'badge-danger' : 'badge-warning';
+      return `
+        <div class="result-row">
+          <div>
+            <strong>${escapeHTML(r.title)} · <span style="color:var(--color-brand-primary)">${escapeHTML(r.channel)}</span></strong>
+            <p>${escapeHTML(r.detail)}</p>
+            <p class="mono-num" style="margin-top:4px;color:var(--color-text-muted)">${escapeHTML(r.at)}</p>
+          </div>
+          <span class="badge ${badgeClass}">${escapeHTML(r.label)}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addResult(channel, title, detail, status, label) {
+    results.unshift({
+      channel,
+      title,
+      detail,
+      status,
+      label,
+      at: '28 Okt 2026, 09:22 WIB'
+    });
+    renderResults();
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    $('toastMessage').textContent = msg;
+    $('toast').classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3800);
+  }
+
+  function open(id) {
+    const m = $(id);
+    if (!m) return;
+    m.classList.add('open');
+    const first = m.querySelector('input, button, select');
+    if (first) first.focus();
+  }
+
+  function close(id) {
+    const m = $(id);
+    if (!m) return;
+    m.classList.remove('open');
+  }
+
+  // Matrix Tab Filter
+  document.querySelectorAll('[data-filter]').forEach(b => {
+    b.addEventListener('click', () => {
+      filter = b.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(x => {
+        x.classList.toggle('active', x === b);
+        x.setAttribute('aria-selected', String(x === b));
+      });
+      renderMatrix();
+    });
+  });
+
+  // Simulation Modes: Verified / Degraded / Unverified / 403 Restricted
+  function applySimMode(mode) {
+    ['simModeVerified', 'simModeDegraded', 'simModeUnverified', 'simModeRestricted'].forEach(id => $(id).classList.remove('active'));
+
+    if (mode === 'restricted') {
+      $('simModeRestricted').classList.add('active');
+      $('authorizedWorkspace').classList.add('hidden');
+      $('restrictedStatePanel').classList.remove('hidden');
+      $('navGroupAdministration').classList.add('hidden');
+      $('sidebarAvatar').textContent = 'RP';
+      $('sidebarUserName').textContent = 'Rina Putri';
+      $('sidebarUserRole').textContent = 'Supervisor · Engineering';
+      return;
+    }
+
+    $('authorizedWorkspace').classList.remove('hidden');
+    $('restrictedStatePanel').classList.add('hidden');
+    $('navGroupAdministration').classList.remove('hidden');
+    $('sidebarAvatar').textContent = 'SA';
+    $('sidebarUserName').textContent = 'System Administrator';
+    $('sidebarUserRole').textContent = 'System Admin';
+    simHealthMode = mode;
+
+    if (mode === 'verified') {
+      $('simModeVerified').classList.add('active');
+      $('overallHealthBadge').className = 'badge badge-active';
+      $('overallHealthBadge').textContent = 'Kanal Terverifikasi Normal';
+
+      $('metricEmailVal').textContent = 'Terverifikasi';
+      $('metricEmailBadge').className = 'badge badge-active';
+      $('metricEmailBadge').textContent = 'Verified';
+
+      $('metricPushVal').textContent = 'Terverifikasi';
+      $('metricPushBadge').className = 'badge badge-active';
+      $('metricPushBadge').textContent = 'Verified';
+
+      $('emailStatus').className = 'badge badge-active';
+      $('emailStatus').textContent = 'Verified';
+      $('credentialStatus').textContent = 'Kunci API Aktif (SPF/DKIM Valid)';
+      $('emailTestStatus').textContent = '28 Okt 2026, 08:15 WIB (202 Accepted)';
+
+      $('pushStatus').className = 'badge badge-active';
+      $('pushStatus').textContent = 'Verified';
+      $('pushConfigStatus').textContent = 'VAPID Public Key & Service Worker Aktif';
+      $('pushTestStatus').textContent = '28 Okt 2026, 08:18 WIB (201 Created)';
+    } else if (mode === 'degraded') {
+      $('simModeDegraded').classList.add('active');
+      $('overallHealthBadge').className = 'badge badge-danger';
+      $('overallHealthBadge').textContent = 'Gangguan Layanan Pengiriman (Degraded)';
+
+      $('metricEmailVal').textContent = 'Gagal Koneksi';
+      $('metricEmailBadge').className = 'badge badge-danger';
+      $('metricEmailBadge').textContent = 'Failed';
+
+      $('metricPushVal').textContent = 'Subscription Gagal';
+      $('metricPushBadge').className = 'badge badge-danger';
+      $('metricPushBadge').textContent = 'Failed';
+
+      $('emailStatus').className = 'badge badge-danger';
+      $('emailStatus').textContent = 'Delivery Failed';
+      $('credentialStatus').textContent = 'HTTP 401 / Timeout pada Gateway Brevo';
+      $('emailTestStatus').textContent = 'Gagal — Tidak ada bukti pengiriman';
+
+      $('pushStatus').className = 'badge badge-danger';
+      $('pushStatus').textContent = 'Delivery Failed';
+      $('pushConfigStatus').textContent = 'Endpoint Push Mengembalikan HTTP 410 Gone / Timeout';
+      $('pushTestStatus').textContent = 'Gagal — Notifikasi in-app tetap tercatat aman';
+
+      addResult(
+        'Email & Browser Push',
+        'Simulasi Gangguan Layanan Eksternal Diaktifkan',
+        'Pengiriman keluar mengalami kegagalan gateway. Alur kerja inti dan pencatatan di Pusat Notifikasi In-App tetap berjalan tanpa klaim terkirim palsu.',
+        'danger',
+        'Failed (Degraded)'
+      );
+    } else if (mode === 'unverified') {
+      $('simModeUnverified').classList.add('active');
+      $('overallHealthBadge').className = 'badge badge-warning';
+      $('overallHealthBadge').textContent = 'Menunggu Verifikasi Awal';
+
+      $('metricEmailVal').textContent = 'Belum Diuji';
+      $('metricEmailBadge').className = 'badge badge-warning';
+      $('metricEmailBadge').textContent = 'Pending Check';
+
+      $('metricPushVal').textContent = 'Belum Diuji';
+      $('metricPushBadge').className = 'badge badge-warning';
+      $('metricPushBadge').textContent = 'Pending Check';
+
+      $('emailStatus').className = 'badge badge-warning';
+      $('emailStatus').textContent = 'Belum Diverifikasi';
+      $('credentialStatus').textContent = 'Menunggu pemeriksaan kunci API';
+      $('emailTestStatus').textContent = 'Belum ada uji pengiriman';
+
+      $('pushStatus').className = 'badge badge-warning';
+      $('pushStatus').textContent = 'Belum Diverifikasi';
+      $('pushConfigStatus').textContent = 'Menunggu verifikasi kunci VAPID';
+      $('pushTestStatus').textContent = 'Belum ada uji pengiriman';
+    }
+  }
+
+  $('simModeVerified').addEventListener('click', () => applySimMode('verified'));
+  $('simModeDegraded').addEventListener('click', () => applySimMode('degraded'));
+  $('simModeUnverified').addEventListener('click', () => applySimMode('unverified'));
+  $('simModeRestricted').addEventListener('click', () => applySimMode('restricted'));
+  $('btnRestoreAdminFrom403').addEventListener('click', () => applySimMode('verified'));
+
+  // Email Configuration Modal
+  $('configureEmail').addEventListener('click', () => {
+    $('emailError').classList.add('hidden');
+    open('emailModal');
+  });
+
+  $('emailForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('senderName').value.trim();
+    const email = $('senderEmail').value.trim();
+    const apiKey = $('brevoApiKey').value.trim();
+    if (!name || !email || apiKey.length < 8 || !$('emailAck').checked) {
+      $('emailError').textContent = 'Lengkapi Nama Pengirim, Alamat Email valid, Kunci API Brevo (min. 8 karakter), dan centang konfirmasi.';
+      $('emailError').classList.remove('hidden');
+      return;
+    }
+    $('emailError').classList.add('hidden');
+    $('senderStatus').textContent = `${name} <${email}>`;
+
+    if (simHealthMode === 'degraded') {
+      $('credentialStatus').textContent = 'Gagal Verifikasi ke Gateway Brevo (Timeout)';
+      $('emailStatus').className = 'badge badge-danger';
+      $('emailStatus').textContent = 'Failed';
+      addResult('Email', 'Verifikasi Konfigurasi Email Gagal', `Gateway Brevo tidak merespons saat memvalidasi pengirim ${email}.`, 'danger', 'Failed');
+      toast('Verifikasi gagal karena simulasi gangguan layanan sedang aktif.');
+    } else {
+      $('credentialStatus').textContent = 'Kunci API Terverifikasi (SPF/DKIM Valid)';
+      $('emailStatus').className = 'badge badge-active';
+      $('emailStatus').textContent = 'Verified';
+      $('metricEmailVal').textContent = 'Terverifikasi';
+      $('metricEmailBadge').className = 'badge badge-active';
+      $('metricEmailBadge').textContent = 'Verified';
+      addResult('Email', 'Konfigurasi Email Diverifikasi', `Pengirim ${name} <${email}> dan kredensial API Brevo terverifikasi.`, 'active', 'Verified');
+      toast('Konfigurasi kanal Email berhasil diverifikasi.');
+    }
+    $('brevoApiKey').value = '';
+    close('emailModal');
+  });
+
+  // Push Configuration Modal (#checkPush)
+  $('checkPush').addEventListener('click', () => {
+    $('pushConfigError').classList.add('hidden');
+    open('pushConfigModal');
+  });
+
+  $('pushConfigForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const subject = $('vapidSubject').value.trim();
+    const pubKey = $('vapidPublicKey').value.trim();
+    const swPath = $('swEndpointPath').value.trim();
+
+    if (!subject || pubKey.length < 20 || !swPath || !$('pushConfigAck').checked) {
+      $('pushConfigError').textContent = 'Lengkapi VAPID Subject, VAPID Public Key yang sah, Path Service Worker, dan centang konfirmasi.';
+      $('pushConfigError').classList.remove('hidden');
+      return;
+    }
+    $('pushConfigError').classList.add('hidden');
+
+    if (simHealthMode === 'degraded') {
+      $('pushConfigStatus').textContent = 'Gagal Memverifikasi Endpoint Push Service';
+      $('pushStatus').className = 'badge badge-danger';
+      $('pushStatus').textContent = 'Failed';
+      addResult('Browser Push', 'Pemeriksaan Konfigurasi VAPID Gagal', `Layanan Push sedang mengalami gangguan koneksi pada endpoint ${swPath}.`, 'danger', 'Failed');
+      toast('Pemeriksaan Push gagal karena mode gangguan layanan aktif.');
+    } else {
+      $('pushConfigStatus').textContent = `VAPID Aktif (${swPath})`;
+      $('pushStatus').className = 'badge badge-active';
+      $('pushStatus').textContent = 'Verified';
+      $('metricPushVal').textContent = 'Terverifikasi';
+      $('metricPushBadge').className = 'badge badge-active';
+      $('metricPushBadge').textContent = 'Verified';
+      addResult('Browser Push', 'Konfigurasi VAPID & Service Worker Diverifikasi', `Subjek ${subject} dan kunci publik VAPID siap melayani langganan peramban.`, 'active', 'Verified');
+      toast('Konfigurasi layanan Browser Push berhasil diverifikasi.');
+    }
+    close('pushConfigModal');
+  });
+
+  // Test Email Send Modal
+  $('testEmail').addEventListener('click', () => {
+    $('testError').classList.add('hidden');
+    open('testModal');
+  });
+
+  $('testForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = $('recipientEmail').value.trim();
+    if (!email || !$('testAck').checked) {
+      $('testError').textContent = 'Masukkan alamat email penerima uji dan centang konfirmasi pencatatan log.';
+      $('testError').classList.remove('hidden');
+      return;
+    }
+    $('testError').classList.add('hidden');
+
+    if (simHealthMode === 'degraded') {
+      $('emailTestStatus').textContent = `Gagal ke ${email} (HTTP 503)`;
+      addResult('Email', 'Uji Pengiriman Email Gagal', `Pengiriman pesan uji ke ${email} ditolak oleh gateway (HTTP 503 Service Unavailable). Sistem tidak menandai pengiriman sebagai berhasil.`, 'danger', 'Failed (503)');
+      toast(`Pengiriman email uji ke ${email} gagal (simulasi gangguan).`);
+    } else {
+      $('emailTestStatus').textContent = `Terkirim ke ${email} (202 Accepted)`;
+      addResult('Email', 'Uji Pengiriman Email Berhasil', `Pesan diagnostik ke ${email} diterima oleh gateway Brevo (HTTP 202 Accepted).`, 'active', 'Delivered (202)');
+      toast(`Email uji ke ${email} berhasil dikirim dan dikonfirmasi.`);
+    }
+    close('testModal');
+  });
+
+  // Test Push Send Modal
+  $('testPush').addEventListener('click', () => {
+    $('pushTestError').classList.add('hidden');
+    open('pushTestModal');
+  });
+
+  $('pushTestForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = $('pushRecipientEmail').value.trim();
+    if (!email || !$('pushTestAck').checked) {
+      $('pushTestError').textContent = 'Masukkan email akun penerima uji dan centang konfirmasi.';
+      $('pushTestError').classList.remove('hidden');
+      return;
+    }
+    $('pushTestError').classList.add('hidden');
+    $('pushRecipientStatus').textContent = email;
+
+    if (simHealthMode === 'degraded') {
+      $('pushTestStatus').textContent = `Gagal ke ${email} (Push Timeout)`;
+      addResult('Browser Push', 'Uji Pengiriman Browser Push Gagal', `Pengiriman payload Push ke perangkat terdaftar ${email} gagal dikonfirmasi. Catatan di Pusat Notifikasi tetap tersimpan aman.`, 'danger', 'Failed');
+      toast(`Uji pengiriman Push ke ${email} gagal dikonfirmasi.`);
+    } else {
+      $('pushTestStatus').textContent = `Terkonfirmasi ke ${email} (201 Created)`;
+      addResult('Browser Push', 'Uji Pengiriman Browser Push Terkonfirmasi', `Payload Web Push diterima oleh Push Service untuk perangkat terdaftar milik ${email} (HTTP 201 Created).`, 'active', 'Delivered (201)');
+      toast(`Notifikasi uji Push ke ${email} berhasil dikonfirmasi.`);
+    }
+    close('pushTestModal');
+  });
+
+  $('clearResults').addEventListener('click', () => {
+    results = [];
+    renderResults();
+    toast('Log pengujian sesi ini telah dibersihkan.');
+  });
+
+  document.querySelectorAll('[data-close]').forEach(b => {
+    b.addEventListener('click', () => close(b.dataset.close));
+  });
+
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', e => {
+      if (e.target === bg) close(bg.id);
+    });
+  });
+
+  $('mobileMenu').addEventListener('click', () => {
+    $('sidebar').classList.toggle('open');
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      ['emailModal', 'pushConfigModal', 'testModal', 'pushTestModal'].forEach(close);
+      $('sidebar').classList.remove('open');
+    }
+  });
+
+  renderMatrix();
+  renderResults();
 })();
-</script></body></html>
+</script>
+</body>
+</html>

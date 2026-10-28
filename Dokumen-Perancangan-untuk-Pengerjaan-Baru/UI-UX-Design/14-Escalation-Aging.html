@@ -1,39 +1,3094 @@
 <!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>WorkPulse — Keterlambatan Penanganan Blocker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;850&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #00674D;
+      --brand-dark: #00523E;
+      --brand-light: #E6F4EE;
+      --brand-border: #A3D9C9;
+      --bg-app: #F8FAFC;
+      --surface: #FFFFFF;
+      --border-subtle: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --text-main: #0F172A;
+      --text-secondary: #475467;
+      --text-muted: #64748B;
+      --subtle: #F1F5F9;
 
-<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="light" name="color-scheme"/><title>WorkPulse — Escalation Aging</title>
-<style>
-:root{--canvas:#F7FAF9;--surface:#fff;--subtle:#EFF5F2;--muted:#F1F5F4;--border:#DCE7E2;--border-strong:#A9C7BC;--ink:#0E211B;--secondary:#5C6E68;--brand:#00674D;--brand-tint:#E6F4EE;--focus:#0B8061;--blue-bg:#E0F2FE;--blue-fg:#075985;--amber-bg:#FFF3D9;--amber-fg:#7A4B00;--green-bg:#E6F4EC;--green-fg:#145A36;--red-bg:#FDE9E7;--red-fg:#9B2923;--neutral-bg:#EFF2F1;--neutral-fg:#46534E;--shadow:0 8px 24px rgba(14,33,27,.05)}
-*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}.sidebar{background:#fff;border-right:1px solid var(--border);padding:24px 16px 18px;display:flex;flex-direction:column;min-height:100vh}.brand{display:flex;align-items:center;gap:10px;padding:0 8px}.brand-mark{height:38px;width:38px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:850;font-size:21px}.brand-name{font-size:18px;font-weight:850;letter-spacing:-.5px}.brand-caption{font-size:11px;color:var(--secondary);margin-top:-3px}.nav-group{margin-top:30px}.nav-group.management{margin-top:28px}.nav-label{padding:0 12px;margin-bottom:10px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--secondary);font-weight:750}.nav{display:grid;gap:5px}.nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:8px;color:var(--secondary);font-weight:650;text-decoration:none;font-size:13px}.nav a.active{background:var(--brand-tint);color:var(--brand)}.nav-icon{width:20px;text-align:center;font-size:16px}.side-bottom{margin-top:auto;border-top:1px solid var(--border);padding:16px 8px 0;display:flex;gap:10px;align-items:center}.avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#D8EAE2;color:#1B5B46;font-weight:800;font-size:13px;flex-shrink:0}.user-name{font-size:13px;font-weight:750}.user-role{font-size:12px;color:var(--secondary)}.user-scope{font-size:10px;color:var(--secondary);margin-top:3px;max-width:175px}main{min-width:0}.topbar{height:68px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,40px);gap:14px}.breadcrumb{font-size:13px;color:var(--secondary)}.breadcrumb strong{color:var(--ink)}.top-actions{display:flex;align-items:center;gap:10px}.icon-button{height:40px;width:40px;display:grid;place-items:center;border:1px solid var(--border);background:#fff;border-radius:9px;color:var(--secondary)}.mobile-menu{display:none}.content{max-width:1300px;margin:0 auto;padding:30px clamp(18px,3vw,40px) 56px}.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px}.eyebrow{font-size:12px;color:var(--secondary);font-weight:750;letter-spacing:.06em;text-transform:uppercase}h1{font-size:28px;line-height:1.25;letter-spacing:-.7px;margin:5px 0 8px;font-weight:800}h2{font-size:17px;line-height:1.35;letter-spacing:-.25px;margin:0;font-weight:800}.subtitle{color:var(--secondary);max-width:780px;font-size:14px}.tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:11px;font-weight:750;white-space:nowrap}.tag.blue{background:var(--blue-bg);color:var(--blue-fg);border-color:#7DD3FC}.tag.green{background:var(--green-bg);color:var(--green-fg);border-color:#A7D5B8}.tag.amber{background:var(--amber-bg);color:var(--amber-fg);border-color:#E8C77A}.tag.red{background:var(--red-bg);color:var(--red-fg);border-color:#E8B1AC}.tag.neutral{background:var(--neutral-bg);color:var(--neutral-fg);border-color:#C9D2CE}.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);margin-bottom:18px}.panel-head{padding:18px 20px 15px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border)}.panel-body{padding:18px 20px}.small{font-size:12px;color:var(--secondary)}.tiny{font-size:11px;color:var(--secondary)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 11px;border:1px solid var(--border-strong);border-radius:8px;background:#fff;color:var(--ink);font-weight:750;font-size:12px}.btn-primary{background:var(--brand);color:#fff;border-color:var(--brand)}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.metric{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px}.metric-label{font-size:12px;color:var(--secondary);font-weight:650}.metric-value{font-size:25px;font-weight:850;letter-spacing:-.6px;margin:3px 0 1px}.metric-note{font-size:11px;color:var(--secondary)}.notice{display:flex;gap:11px;padding:13px 15px;background:#EEF5FA;border:1px solid #C5DCEB;color:#234D68;border-radius:9px;font-size:12px;margin-bottom:18px}.notice-icon{font-size:18px;font-weight:800;flex-shrink:0}.filter-grid{display:grid;grid-template-columns:minmax(200px,1.6fr) repeat(3,minmax(130px,1fr)) auto;gap:10px;align-items:end}.field label{display:block;font-size:11px;font-weight:750;color:var(--secondary);margin-bottom:5px}.field input,.field select{width:100%;min-height:39px;border:1px solid var(--border-strong);border-radius:8px;background:#fff;color:var(--ink);padding:8px 10px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1050px}th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.045em;color:var(--secondary);background:#F8FAF9;padding:12px 13px;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:14px 13px;border-bottom:1px solid var(--border);vertical-align:top;font-size:12px}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#FBFDFC}.blocker-title{font-weight:800;font-size:13px;margin-bottom:4px}.subline{font-size:11px;color:var(--secondary);margin-top:4px}.age{font-weight:850;font-size:14px;white-space:nowrap;color:var(--red-fg)}.authority-name{font-weight:750}.actions{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:35px 15px;text-align:center;color:var(--secondary)}.footnote{padding:12px 20px;background:#FAFCFB;border-top:1px solid var(--border);font-size:11px;color:var(--secondary)}.modal-backdrop{position:fixed;inset:0;background:rgba(10,30,23,.38);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal-backdrop.open{display:flex}.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.22)}.modal-head{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px}.modal-body{padding:20px 22px}.close-x{border:0;background:transparent;font-size:22px;color:var(--secondary)}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.detail-cell{padding:12px;background:var(--muted);border-radius:8px}.detail-label{font-size:11px;color:var(--secondary);margin-bottom:3px}.detail-value{font-weight:750;font-size:12px}.timeline{display:grid;gap:12px;margin-top:14px}.timeline-item{display:grid;grid-template-columns:12px minmax(0,1fr);gap:10px}.timeline-dot{width:10px;height:10px;border-radius:50%;background:var(--brand);margin-top:5px}.timeline-copy{padding-bottom:12px;border-bottom:1px solid var(--border)}.hidden{display:none!important}.toast{position:fixed;bottom:20px;right:20px;background:#123B2E;color:white;padding:12px 16px;border-radius:9px;box-shadow:var(--shadow);max-width:min(400px,calc(100vw - 40px));z-index:30;font-size:13px}
-@media(max-width:1050px){.app{grid-template-columns:220px minmax(0,1fr)}.filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-grid .search-field{grid-column:1/-1}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.page-heading{flex-direction:column}}@media(max-width:720px){.app{display:block}.sidebar{position:fixed;top:0;bottom:0;left:0;width:250px;z-index:15;transform:translateX(-105%);transition:transform .2s;box-shadow:0 8px 30px rgba(0,0,0,.12)}.sidebar.open{transform:translateX(0)}.mobile-menu{display:grid}.topbar{padding:0 16px}.content{padding:22px 14px 40px}h1{font-size:24px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric{padding:12px}.metric-value{font-size:22px}.filter-grid{grid-template-columns:1fr}.filter-grid .search-field{grid-column:auto}.panel-head,.panel-body{padding-left:15px;padding-right:15px}.detail-grid{grid-template-columns:1fr}}
-</style></head><body>
-<div class="app"><aside class="sidebar" id="sidebar"><div class="brand"><div class="brand-mark">W</div><div><div class="brand-name">WorkPulse</div><div class="brand-caption">Daily Accountability</div></div></div>
-<div class="nav-group"><div class="nav-label">Workspace</div><nav aria-label="Workspace" class="nav"><a data-inert="" href="#"><span class="nav-icon">◫</span> Pulse Dashboard</a><a data-inert="" href="#"><span class="nav-icon">▤</span> Blocker Queue</a><a data-inert="" href="#"><span class="nav-icon">▣</span> Reports</a></nav></div>
-<div class="nav-group management"><div class="nav-label">Management</div><nav aria-label="Management" class="nav"><a data-inert="" href="#"><span class="nav-icon">▦</span> Management Pulse</a><a aria-current="page" class="active" href="/management/escalations"><span class="nav-icon">◷</span> Escalation Aging</a><a data-inert="" href="#"><span class="nav-icon">▥</span> Company Reports</a></nav></div>
-<div class="side-bottom"><div class="avatar">CM</div><div><div class="user-name">CEO / Management</div><div class="user-role">Company-wide overview</div><div class="user-scope">Overview access · action authority checked per blocker</div></div></div></aside>
-<main><header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button aria-label="Buka navigasi" class="icon-button mobile-menu" id="mobileMenu">☰</button><div class="breadcrumb">Management <span aria-hidden="true">/</span> <strong>Escalation Aging</strong></div></div><div class="top-actions"></div></header>
-<div class="content"><div class="page-heading"><div><div class="eyebrow">CEO / Management</div><h1>Escalation Aging</h1><div class="subtitle">Pantau blocker yang belum terselesaikan dan telah melewati threshold waktu yang berlaku. Daftar diurutkan dari blocker dengan waktu belum terselesaikan paling lama.</div></div></div>
+      /* Semantic Status Palette (Calm UI: Muted Baseline, Loud Exceptions) */
+      --amber-bg: #FEF3C7;
+      --amber-border: #FCD34D;
+      --amber-text: #92400E;
 
-<section aria-label="Ringkasan escalation aging" class="metrics"><div class="metric"><div class="metric-label">Unresolved melewati threshold</div><div class="metric-value" id="metricTotal">5</div><div class="metric-note">Open, Acknowledged, atau In Progress</div></div><div class="metric"><div class="metric-label">Belum di-acknowledge</div><div class="metric-value" id="metricOpen">2</div><div class="metric-note">Status Open</div></div><div class="metric"><div class="metric-label">Auto-escalation tercatat</div><div class="metric-value" id="metricAuto">3</div><div class="metric-note">Riwayat auto-escalation tersedia</div></div><div class="metric"><div class="metric-label">Authority context perlu dilihat</div><div class="metric-value" id="metricAuthority">5</div><div class="metric-note">Penanggung jawab saat ini ditampilkan per blocker</div></div></section>
-<section class="panel"><div class="panel-head"><div><h2>Filter escalation aging</h2><p class="small" style="margin:5px 0 0">Cari blocker dan persempit daftar berdasarkan status atau riwayat eskalasi.</p></div><button class="btn" id="resetFilters" type="button">Reset filter</button></div><div class="panel-body"><div class="filter-grid"><div class="field search-field"><label for="searchInput">Cari blocker, ID, pelapor, atau authority</label><input autocomplete="off" id="searchInput" placeholder="Mis. BLK-241, API pembayaran…" type="search"/></div><div class="field"><label for="statusFilter">Status blocker</label><select id="statusFilter"><option value="all">Semua status unresolved</option><option value="Open">Open</option><option value="Acknowledged">Acknowledged</option><option value="In Progress">In Progress</option></select></div><div class="field"><label for="authorityFilter">Authority context</label><select id="authorityFilter"><option value="all">Semua context</option><option value="Organizational">Organizational</option><option value="Project">Project</option></select></div><div class="field"><label for="autoFilter">Riwayat auto-escalation</label><select id="autoFilter"><option value="all">Semua</option><option value="yes">Ada event</option><option value="no">Belum ada event</option></select></div><button class="btn btn-primary" id="applyFilters" type="button">Terapkan</button></div></div></section>
-<section class="panel"><div class="panel-head"><div><h2>Unresolved blockers melewati threshold</h2><p class="small" style="margin:5px 0 0">Urutan: blocker dengan unresolved age terlama ditampilkan lebih dahulu.</p></div><span class="tag neutral" id="resultCount">5 blocker</span></div><div class="table-wrap"><table><thead><tr><th>Blocker</th><th>Status</th><th>Belum terselesaikan</th><th>Authority context</th><th>Auto-escalation</th><th>Detail</th></tr></thead><tbody id="queueBody"></tbody></table><div class="empty hidden" id="emptyState">Tidak ada blocker yang sesuai dengan filter ini.</div></div><div class="footnote">Hanya blocker berstatus Open, Acknowledged, dan In Progress yang masuk daftar ini. Resolved, Closed, dan Accepted Risk tidak termasuk unresolved aging.</div></section>
-<section class="panel"><div class="panel-head"><div><h2>Catatan pembacaan</h2><p class="small" style="margin:5px 0 0">Informasi yang perlu dibaca bersama daftar aging.</p></div></div><div class="panel-body"><ul style="margin:0;padding-left:20px;display:grid;gap:8px"><li><strong>Unresolved age</strong> adalah durasi sejak blocker dibuat hingga saat ini, selama statusnya belum selesai.</li><li><strong>Authority Context</strong> menampilkan konteks kewenangan dan penanggung jawab yang tercatat untuk blocker.</li><li><strong>Auto-escalation history</strong> ditampilkan jika terdapat riwayat auto-escalation.</li><li>Halaman ini tidak melakukan acknowledge, reassign, resolve, close, atau mengubah severity maupun status blocker.</li></ul></div></section>
-</div></main></div>
-<div class="modal-backdrop" id="modalBackdrop" role="presentation"><section aria-labelledby="modalTitle" aria-modal="true" class="modal" role="dialog"><div class="modal-head"><div><h2 id="modalTitle">Detail blocker</h2><div class="small" id="modalSub" style="margin-top:4px"></div></div><button aria-label="Tutup detail" class="close-x" id="closeModal">×</button></div><div class="modal-body" id="modalBody"></div></section></div><div aria-live="polite" class="toast hidden" id="toast" role="status"></div>
+      --blue-bg: #E0F2FE;
+      --blue-border: #BAE6FD;
+      --blue-text: #075985;
+
+      --green-bg: #DCFCE7;
+      --green-border: #86EFAC;
+      --green-text: #166534;
+
+      /* DS v1.5.0 Deep Orange for Accepted Risk & Escalation Accents (Zero Purple) */
+      --orange-bg: #FFEDD5;
+      --orange-border: #FDBA74;
+      --orange-text: #9A3412;
+
+      --red-bg: #FEE2E2;
+      --red-border: #FCA5A5;
+      --red-text: #991B1B;
+
+      --neutral-bg: #F1F5F9;
+      --neutral-border: #CBD5E1;
+      --neutral-text: #334155;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+      --radius-pill: 9999px;
+
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 2px 5px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 14px 34px rgba(15, 23, 42, 0.12);
+      --shadow-modal: 0 24px 60px rgba(15, 23, 42, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      font-size: 13.5px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    /* Screen Reader Only Utility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Layout Structure */
+    .app-layout {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 232px;
+      background: var(--surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 40;
+      transition: left 0.25s ease;
+    }
+
+    .brand-wrap {
+      padding: 16px 18px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--brand);
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 850;
+      font-size: 17px;
+      box-shadow: 0 4px 10px rgba(0, 103, 77, 0.25);
+    }
+    .brand-text h2 {
+      font-size: 15px;
+      font-weight: 850;
+      color: var(--text-main);
+      line-height: 1.2;
+      letter-spacing: -0.3px;
+    }
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-group {
+      padding: 14px 10px 6px;
+    }
+    .nav-group-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 10px 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 650;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .nav-link:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+    }
+    .nav-link.active {
+      background: var(--brand-light);
+      color: var(--brand);
+      font-weight: 750;
+    }
+    .nav-link svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .badge-count {
+      margin-left: auto;
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--amber-border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .user-footer {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--brand-light);
+      color: var(--brand);
+      font-weight: 800;
+      font-size: 13px;
+      display: grid;
+      place-items: center;
+      border: 1.5px solid var(--brand-border);
+      flex-shrink: 0;
+    }
+    .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .user-name {
+      font-size: 12.5px;
+      font-weight: 750;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .user-role {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Sticky Topbar */
+    .topbar {
+      height: 56px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      gap: 16px;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .breadcrumb strong {
+      color: var(--text-main);
+      font-weight: 750;
+    }
+    .route-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand);
+      background: var(--brand-light);
+      border: 1px solid var(--brand-border);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* RBAC Role Switcher Box */
+    .role-switcher-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--subtle);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 4px 10px;
+      gap: 8px;
+    }
+    .role-tag-icon {
+      color: var(--brand);
+      display: grid;
+      place-items: center;
+    }
+    .role-select {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--surface);
+      color: var(--text-secondary);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .icon-btn:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    /* Content Area */
+    .content,
+    .content-area {
+      padding: 28px 32px 64px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Page Heading */
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .heading-title-wrap {
+      max-width: 760px;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 850;
+      color: var(--text-main);
+      letter-spacing: -0.6px;
+      line-height: 1.25;
+    }
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Locked RBAC Scope Banner (§4.14: Zero Cross-Function Toggle for Non-Executive) */
+    .scope-lock-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-xs);
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 650;
+    }
+    .scope-lock-banner svg {
+      color: var(--brand);
+      flex-shrink: 0;
+    }
+    .scope-lock-banner strong {
+      color: var(--text-main);
+      font-weight: 800;
+    }
+    .scope-lock-tag {
+      font-size: 12px;
+      font-weight: 750;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--brand-light);
+      color: var(--brand);
+      border: 1px solid var(--brand-border);
+    }
+
+    /* 10 Canonical Functions Landscape Bar */
+    .fn-landscape-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-xs);
+    }
+    .fn-landscape-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .fn-landscape-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .fn-landscape-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .fn-pills-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .fn-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-app);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .fn-chip:hover:not(:disabled) {
+      border-color: var(--border-strong);
+      color: var(--text-main);
+      background: var(--subtle);
+    }
+    .fn-chip.active {
+      background: var(--brand-light);
+      color: var(--brand);
+      border-color: var(--brand-border);
+      font-weight: 800;
+    }
+    .fn-chip:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .fn-chip-count {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      font-variant-numeric: tabular-nums;
+    }
+    .fn-chip.active .fn-chip-count {
+      background: var(--brand);
+      color: #FFFFFF;
+      border-color: var(--brand);
+    }
+
+    .heading-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Standard Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+    .btn-primary {
+      background: var(--brand);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0, 103, 77, 0.2);
+    }
+    .btn-primary:hover {
+      background: var(--brand-dark);
+    }
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+    .btn-outline:hover {
+      background: var(--subtle);
+      border-color: var(--text-muted);
+    }
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+    }
+    .btn.disabled,
+    .btn[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    /* 5 Metric Summary Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-xs);
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-strong);
+    }
+    .metric-card:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+    .metric-card.card-red:focus-visible {
+      outline-color: var(--red-border);
+    }
+    .metric-card.card-amber:focus-visible {
+      outline-color: var(--amber-border);
+    }
+    .metric-card.card-blue:focus-visible {
+      outline-color: var(--blue-border);
+    }
+    .metric-card.card-orange:focus-visible {
+      outline-color: var(--orange-border);
+    }
+    .metric-card.active {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.20), var(--shadow-sm);
+      background: #FBFCFC;
+    }
+    .metric-card.card-neutral.active {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.20), var(--shadow-sm);
+      background: #F8FAF9;
+    }
+    .metric-card.card-red.active {
+      border-color: var(--red-border);
+      box-shadow: 0 0 0 2.5px rgba(220, 38, 38, 0.25), var(--shadow-sm);
+      background: #FEF7F7;
+    }
+    .metric-card.card-amber.active {
+      border-color: var(--amber-border);
+      box-shadow: 0 0 0 2.5px rgba(217, 119, 6, 0.25), var(--shadow-sm);
+      background: #FFFDF8;
+    }
+    .metric-card.card-blue.active {
+      border-color: var(--blue-border);
+      box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.25), var(--shadow-sm);
+      background: #F6FBFE;
+    }
+    .metric-card.card-orange.active {
+      border-color: var(--orange-border);
+      box-shadow: 0 0 0 2.5px rgba(154, 52, 18, 0.22), var(--shadow-sm);
+      background: #FFFBF7;
+    }
+    .metric-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .metric-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-icon-box {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+    }
+    .metric-icon-box svg {
+      width: 14px;
+      height: 14px;
+    }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 850;
+      line-height: 1.15;
+      letter-spacing: -0.6px;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* Semantic color accents on metric cards */
+    .metric-card.card-neutral .metric-icon-box { background: var(--subtle); color: var(--text-secondary); }
+    .metric-card.card-red .metric-value { color: var(--red-text); }
+    .metric-card.card-red .metric-icon-box { background: var(--red-bg); color: var(--red-text); }
+    .metric-card.card-amber .metric-value { color: var(--amber-text); }
+    .metric-card.card-amber .metric-icon-box { background: var(--amber-bg); color: var(--amber-text); }
+    .metric-card.card-blue .metric-value { color: var(--blue-text); }
+    .metric-card.card-blue .metric-icon-box { background: var(--blue-bg); color: var(--blue-text); }
+    .metric-card.card-orange .metric-value { color: var(--orange-text); }
+    .metric-card.card-orange .metric-icon-box { background: var(--orange-bg); color: var(--orange-text); }
+
+    /* Main Data Panel */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .panel-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .panel-title-wrap h2 {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+    .panel-title-wrap p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .result-pill {
+      font-size: 12px;
+      font-weight: 750;
+      background: var(--subtle);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Single-Row Unified Filter Bar */
+    .filter-bar {
+      padding: 12px 20px;
+      background: #FDFEFE;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1 1 180px;
+      min-width: 160px;
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 7px 10px 7px 32px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--text-main);
+      outline: none;
+      background: #FFFFFF;
+      transition: all 0.15s ease;
+    }
+    .search-input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.12);
+    }
+    .filter-select {
+      padding: 7px 9px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--text-main);
+      background: #FFFFFF;
+      outline: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: border-color 0.15s ease;
+    }
+    .filter-select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.12);
+    }
+    .filter-select:disabled {
+      background: var(--subtle);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 11px;
+      border: 1px solid var(--border-strong);
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-reset:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+      border-color: var(--text-muted);
+    }
+
+    /* Table Styles */
+    .table-wrap {
+      overflow-x: auto;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #F8FAFC;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+      font-size: 12.5px;
+    }
+    tbody tr {
+      transition: background 0.15s ease;
+    }
+    tbody tr:hover {
+      background: #FAFCFB;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Table Column Typography & Components */
+    .ticket-head-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 3px;
+      min-width: 0;
+    }
+    .ticket-title {
+      font-weight: 750;
+      color: var(--text-main);
+      font-size: 13.5px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+      margin-bottom: 5px;
+    }
+    .sev-badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .sev-critical {
+      background: var(--red-bg);
+      color: var(--red-text);
+      border: 1px solid var(--red-border);
+    }
+    .sev-high {
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      border: 1px solid var(--amber-border);
+    }
+    .sev-medium {
+      background: var(--blue-bg);
+      color: var(--blue-text);
+      border: 1px solid var(--blue-border);
+    }
+    .sev-low {
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+      border: 1px solid var(--neutral-border);
+    }
+
+    .ticket-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ticket-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 650;
+      color: var(--text-secondary);
+      background: var(--subtle);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .meta-sep {
+      color: var(--border-strong);
+    }
+
+    /* Status Badges (DS v1.5.0 Compliant) */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 750;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .status-badge.status-open {
+      background: #F1F5F9;
+      color: #334155;
+      border: 1px solid #CBD5E1;
+    }
+    .status-badge.status-ack {
+      background: var(--blue-bg);
+      color: var(--blue-text);
+      border: 1px solid var(--blue-border);
+    }
+    .status-badge.status-prog {
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      border: 1px solid var(--amber-border);
+    }
+    .status-badge.status-risk {
+      background: #FFEDD5;
+      color: #9A3412;
+      border: 1px solid #FDBA74;
+    }
+    .status-badge.status-resolved {
+      background: var(--green-bg);
+      color: var(--green-text);
+      border: 1px solid var(--green-border);
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Aging Duration Styles */
+    .age-val {
+      font-size: 16px;
+      font-weight: 850;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-main);
+    }
+
+    .age-sub {
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 2px;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+    .age-sub.text-red { color: #DC2626; }
+    .age-sub.text-amber { color: #D97706; }
+    .age-sub.text-muted { color: var(--text-muted); font-weight: 600; }
+
+    /* Authority Context */
+    .owner-name {
+      font-weight: 750;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+    .owner-role {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .context-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+    .context-pill {
+      font-size: 12px;
+      font-weight: 750;
+      padding: 1px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .context-org {
+      background: var(--subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+    .context-proj {
+      background: var(--blue-bg);
+      color: var(--blue-text);
+      border: 1px solid var(--blue-border);
+    }
+    .context-path {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 550;
+      white-space: nowrap;
+    }
+
+    /* Auto-Escalation Trail */
+    .auto-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 750;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .auto-badge.has-event {
+      background: var(--orange-bg);
+      color: var(--orange-text);
+      border: 1px solid var(--orange-border);
+    }
+    .auto-badge.no-event {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .auto-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--subtle);
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 12px;
+    }
+    .empty-icon.icon-success {
+      background: #DCFCE7;
+      color: #16A34A;
+    }
+    .empty-state h3 {
+      font-size: 14.5px;
+      font-weight: 750;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .empty-state p {
+      font-size: 12.5px;
+      max-width: 420px;
+      margin: 0 auto 14px;
+    }
+
+    /* Footnote Governance */
+    .panel-foot {
+      padding: 12px 22px;
+      background: #FAFCFB;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* 403 Forbidden Screen */
+    .forbidden-screen {
+      display: none;
+      padding: 60px 24px;
+      text-align: center;
+      max-width: 600px;
+      margin: 40px auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+    }
+    .forbidden-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--red-bg);
+      color: var(--red-text);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+    }
+    .forbidden-icon svg {
+      width: 30px;
+      height: 30px;
+    }
+    .forbidden-screen h2 {
+      font-size: 20px;
+      font-weight: 850;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .forbidden-screen p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+    .forbidden-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Modal Backdrop & Framework */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.48);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-dialog {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-modal);
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .modal-header-title h3 {
+      font-size: 17px;
+      font-weight: 850;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+    .modal-header-title p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .modal-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--surface);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.15s ease;
+    }
+    .modal-close-btn:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+    .modal-close-btn svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+    }
+    .modal-body {
+      padding: 22px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #FAFCFB;
+      flex-shrink: 0;
+    }
+    .modal-footer.footer-split {
+      justify-content: space-between;
+    }
+    .modal-foot-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.35;
+    }
+    .modal-foot-note svg {
+      color: var(--brand);
+      flex-shrink: 0;
+    }
+
+    /* Modal 5 Sections (Anti-Squash with smooth vertical flow) */
+    .section-card {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .section-card-head {
+      padding: 10px 14px;
+      background: var(--subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-card-body {
+      padding: 14px 16px;
+    }
+    .prop-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .prop-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .prop-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .prop-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Timeline in Modal */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      padding-left: 20px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--border-strong);
+    }
+    .timeline-node {
+      position: relative;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--brand);
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1px var(--brand);
+    }
+    .timeline-dot.dot-orange {
+      background: var(--orange-text);
+      box-shadow: 0 0 0 1px var(--orange-text);
+    }
+    .timeline-content {
+      background: var(--subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+    .timeline-time {
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--text-muted);
+    }
+    .timeline-title {
+      font-size: 12.5px;
+      font-weight: 750;
+      color: var(--text-main);
+      margin: 2px 0 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .timeline-current-pill {
+      font-size: 12px;
+      font-weight: 750;
+      background: var(--orange-bg);
+      color: var(--orange-text);
+      border: 1px solid var(--orange-border);
+      padding: 1px 7px;
+      border-radius: var(--radius-pill);
+      display: inline-block;
+    }
+    .timeline-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Governance Note in Modal */
+    .governance-note {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      color: #166534;
+      line-height: 1.45;
+      flex-shrink: 0;
+    }
+    .governance-note svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Export Modal Elements */
+    .export-option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .export-radio-card {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      user-select: none;
+    }
+    .export-radio-card:hover {
+      border-color: var(--brand-border);
+      background: #FAFCFB;
+    }
+    .export-radio-card.selected {
+      border-color: var(--brand);
+      background: var(--brand-light);
+    }
+    .export-radio-card:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+    .export-radio-card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: var(--border-subtle);
+      background: var(--subtle);
+    }
+    .radio-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .radio-card-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .radio-circle {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border-strong);
+      display: grid;
+      place-items: center;
+    }
+    .export-radio-card.selected .radio-circle {
+      border-color: var(--brand);
+    }
+    .export-radio-card.selected .radio-circle::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+    .radio-card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .export-meta-box {
+      background: var(--subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .meta-row strong {
+      color: var(--text-main);
+    }
+
+    /* Toast Notification */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 650;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+      transform: translateY(20px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast-box.show {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1100px) {
+      .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      }
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -260px;
+        transition: left 0.25s ease;
+      }
+      .sidebar.open {
+        left: 0;
+      }
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.4);
+        z-index: 35;
+        display: none;
+      }
+      .sidebar-backdrop.active {
+        display: block;
+      }
+      .mobile-menu-btn {
+        display: grid;
+      }
+      .topbar {
+        padding: 0 16px;
+      }
+      .content-area {
+        padding: 20px 16px 48px;
+      }
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .metrics-grid .metric-card:last-child {
+        grid-column: span 2;
+      }
+      .page-heading {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .heading-actions {
+        width: 100%;
+      }
+      .heading-actions .btn {
+        width: 100%;
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+      .export-option-grid, .prop-grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .modal-footer.footer-split {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 10px;
+      }
+    }
+    @media (max-width: 500px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .metrics-grid .metric-card:last-child {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- Mobile Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- Sidebar Navigation (100% Anti-Deadlink) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-wrap">
+      <div class="brand-logo">W</div>
+      <div class="brand-text">
+        <h2>WorkPulse</h2>
+        <p>Daily Accountability</p>
+      </div>
+    </div>
+
+    <!-- Group: Workspace -->
+    <div class="nav-group">
+      <div class="nav-group-title">Workspace</div>
+      <a class="nav-link" href="02-Morning-Commitment.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>My Today</span>
+      </a>
+      <a class="nav-link" href="05-Raise-Instant-Blocker.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        <span>My Blockers</span>
+      </a>
+      <a class="nav-link" href="06-My-History-Weekly-Summary.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>My History</span>
+      </a>
+      <a class="nav-link" href="20-My-Leave-Request.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        <span>My Leave</span>
+      </a>
+      <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>Notifications</span>
+        <span class="badge-count">3</span>
+      </a>
+    </div>
+
+    <!-- Group: Management -->
+    <div class="nav-group" id="navGroupManagement">
+      <div class="nav-group-title">Management</div>
+      <a class="nav-link" href="08-Pulse-Dashboard.html" id="navPulse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Pulse Dashboard</span>
+      </a>
+      <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="navBlocker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        <span>Blocker Queue</span>
+      </a>
+      <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="navCoaching">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Coaching Notes</span>
+      </a>
+      <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="navCompliance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>Compliance Queue</span>
+      </a>
+      <a class="nav-link" href="12-Exemption-Management.html" id="navExemption">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>Holiday / Exemption</span>
+      </a>
+      <a class="nav-link" href="13-Project-Risk-View.html" id="navProjectRisk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>Project Risk View</span>
+      </a>
+      <a class="nav-link active" href="14-Escalation-Aging.html" id="navAging" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline><line x1="12" y1="2" x2="12" y2="4"></line></svg>
+        <span>Escalation Aging</span>
+      </a>
+      <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="navReviewQueue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <span>Review Queue</span>
+      </a>
+      <a class="nav-link" href="23-Reports.html" id="navReports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Reports</span>
+      </a>
+    </div>
+
+    <!-- Current User Footer with Avatar -->
+    <div class="user-footer">
+      <div class="user-avatar" id="sideUserAvatar">RS</div>
+      <div class="user-info">
+        <div class="user-name" id="sideUserName">Rian Suryadi</div>
+        <div class="user-role" id="sideUserRole">CEO / Direktur Utama</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Application Wrapper -->
+  <div class="main-wrapper">
+    <!-- Topbar Navigation -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Buka Navigasi">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="breadcrumb">
+          <span>Manajemen</span>
+          <span>/</span>
+          <strong>Keterlambatan Penanganan Blocker</strong>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- RBAC Role Switcher -->
+        <div class="role-switcher-wrap" title="Simulasi Hak Akses Pengguna">
+          <div class="role-tag-icon">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <select class="role-select" id="roleSwitcher" aria-label="Simulasikan Peran Pengguna">
+            <optgroup label="Manajemen Eksekutif (Akses Penuh)">
+              <option value="rian" selected>Rian Suryadi (CEO / Direksi · Company-Wide)</option>
+            </optgroup>
+            <optgroup label="Pimpinan Departemen / Proyek (Akses Terbatas)">
+              <option value="ayu">Ayu Nirmala (Head of Eng · Function Scoped)</option>
+              <option value="ardi">Ardi Pratama (Project Manager · Project Scoped)</option>
+            </optgroup>
+            <optgroup label="Bukan Pengelola / Staff (Simulasi 403)">
+              <option value="budi">Budi Pratama (Staff Developer · 403 Dibatasi)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Refresh Button -->
+        <button class="icon-btn" id="refreshBtn" title="Segarkan Data Keterlambatan" aria-label="Segarkan Data">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area (Dashboard Mode) -->
+    <main class="content-area" id="mainDashboardContent">
+      <!-- Page Heading Section -->
+      <section class="page-heading">
+        <div class="heading-title-wrap">
+          <h1 class="page-title">Keterlambatan Penanganan Blocker</h1>
+          <p class="page-subtitle">
+            Pantau kendala operasional yang belum tuntas melampaui batas waktu toleransi yang ditetapkan. Daftar diurutkan dari keterlambatan terlama untuk percepatan intervensi pimpinan.
+          </p>
+          <!-- Scope Toggle Pills (Dimensi 4: Opsi 3 Hybrid Approach) -->
+          <div class="scope-toggle-group" id="scopeToggleGroup" style="display: none;">
+            <span class="scope-toggle-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
+              <span>Lingkup Radar:</span>
+            </span>
+            <div class="scope-pills-box" role="radiogroup" aria-label="Pilih Lingkup Visibilitas">
+              <button type="button" class="scope-pill-btn active" id="scopePillMy" role="radio" aria-checked="true">
+                <span id="scopePillMyLabel">Lingkup Divisi Saya</span>
+                <span class="scope-pill-count" id="scopePillMyCount">3</span>
+              </button>
+              <button type="button" class="scope-pill-btn" id="scopePillAll" role="radio" aria-checked="false">
+                <span>Seluruh Perusahaan</span>
+                <span class="scope-pill-count" id="scopePillAllCount">5</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="heading-actions">
+          <button class="btn btn-primary" id="openExportBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Ekspor Rekap Eskalasi (PDF / XLSX)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 5 Metric Cards (Click-to-Filter & Keyboard Accessible) -->
+      <section aria-label="Ringkasan Metrik Eskalasi" class="metrics-grid">
+        <!-- Card 1: Semua Kendala -->
+        <div class="metric-card card-neutral active" id="cardTotal" data-metric="all" role="button" tabindex="0" aria-pressed="true" aria-label="Semua kendala. Klik untuk menampilkan seluruh kendala." title="Mencakup seluruh kendala yang melewati batas toleransi respons awal (≥4 Jam).">
+          <div class="metric-top">
+            <span class="metric-title">Semua Kendala</span>
+            <div class="metric-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="valTotal">5</div>
+          <div class="metric-note">Lewat batas toleransi waktu (≥4 Jam)</div>
+        </div>
+
+        <!-- Card 2: Kritis >48 Jam (Loud Exception) -->
+        <div class="metric-card card-red" id="cardCritical" data-metric="critical" role="button" tabindex="0" aria-pressed="false" aria-label="Filter kendala kritis lebih dari 48 jam. Perlu intervensi pimpinan." title="Klik untuk menyaring kendala kritis > 48 jam">
+          <div class="metric-top">
+            <span class="metric-title">Kritis (>48 Jam)</span>
+            <div class="metric-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="valCritical">2</div>
+          <div class="metric-note">Perlu intervensi pimpinan</div>
+        </div>
+
+        <!-- Card 3: Perlu Perhatian (24–48 Jam) -->
+        <div class="metric-card card-amber" id="cardModerate" data-metric="moderate" role="button" tabindex="0" aria-pressed="false" aria-label="Filter kendala perlu perhatian 24 hingga 48 jam. Penanganan tingkat divisi." title="Klik untuk menyaring kendala yang perlu perhatian 24–48 jam">
+          <div class="metric-top">
+            <span class="metric-title">Perlu Perhatian (24–48 Jam)</span>
+            <div class="metric-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="valModerate">2</div>
+          <div class="metric-note">Penanganan tingkat divisi</div>
+        </div>
+
+        <!-- Card 4: Belum Ditangani (Open) -->
+        <div class="metric-card card-blue" id="cardOpen" data-metric="open" role="button" tabindex="0" aria-pressed="false" aria-label="Filter kendala belum ditangani (Status Open)." title="Klik untuk menyaring kendala yang belum ditangani">
+          <div class="metric-top">
+            <span class="metric-title">Belum Ditangani</span>
+            <div class="metric-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="valOpen">2</div>
+          <div class="metric-note">Belum ada respons atasan (Status Open)</div>
+        </div>
+
+        <!-- Card 5: Eskalasi Sistem -->
+        <div class="metric-card card-purple" id="cardAuto" data-metric="auto" role="button" tabindex="0" aria-pressed="false" aria-label="Filter kendala yang dinaikkan ke jenjang lebih tinggi." title="Klik untuk menyaring kendala yang mengalami eskalasi sistem">
+          <div class="metric-top">
+            <span class="metric-title">Eskalasi Sistem</span>
+            <div class="metric-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            </div>
+          </div>
+          <div class="metric-value" id="valAuto">3</div>
+          <div class="metric-note">Dinaikkan ke jenjang lebih tinggi</div>
+        </div>
+      </section>
+
+      <!-- Main Data Table Panel -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <h2>Daftar Kendala Tertahan</h2>
+            <p>Urutan baku: Kendala dengan keterlambatan terlama disajikan di baris paling atas.</p>
+          </div>
+          <span class="result-pill" id="resultCounter">Menampilkan 5 kendala</span>
+        </div>
+
+        <!-- Single-Row Unified Filter Bar -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input autocomplete="off" class="search-input" id="searchInput" placeholder="Cari kendala, kode ID, pelapor, atau penanggung jawab..." type="search">
+          </div>
+
+          <select class="filter-select" id="statusFilter" aria-label="Saring berdasarkan status tiket">
+            <option value="all">Semua Status</option>
+            <option value="Open">Baru (Open)</option>
+            <option value="Acknowledged">Diterima (Acknowledged)</option>
+            <option value="In Progress">Sedang Dikerjakan (In Progress)</option>
+          </select>
+
+          <select class="filter-select" id="severityFilter" aria-label="Saring berdasarkan tingkat keparahan">
+            <option value="all">Semua Keparahan</option>
+            <option value="Critical">Kritis (Critical)</option>
+            <option value="High">Tinggi (High)</option>
+            <option value="Medium">Sedang (Medium)</option>
+            <option value="Low">Rendah (Low)</option>
+          </select>
+
+          <select class="filter-select" id="authorityFilter" aria-label="Saring berdasarkan jalur wewenang">
+            <option value="all">Semua Jalur</option>
+            <option value="Organizational">Jalur Organisasi</option>
+            <option value="Project">Jalur Proyek</option>
+          </select>
+
+          <select class="filter-select" id="autoFilter" aria-label="Saring berdasarkan riwayat eskalasi otomatis">
+            <option value="all">Semua Eskalasi Sistem</option>
+            <option value="yes">Pernah Dinaikkan Sistem</option>
+            <option value="no">Belum Pernah Dinaikkan</option>
+          </select>
+
+          <button class="btn-reset" id="resetBtn" type="button" title="Kembalikan semua saringan ke default">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-wrap">
+          <table aria-label="Tabel Keterlambatan Penanganan Kendala">
+            <thead>
+              <tr>
+                <th scope="col" style="min-width: 260px;">Kendala & Identitas Tiket</th>
+                <th scope="col" style="width: 150px;">Status Tiket</th>
+                <th scope="col" style="width: 150px;" title="Durasi keterlambatan dihitung berdasarkan jam kerja operasional resmi (Working Hours SLA), tidak menghitung hari libur & akhir pekan.">Lama Tertahan</th>
+                <th scope="col" style="width: 230px;">Penanggung Jawab & Jalur</th>
+                <th scope="col" style="width: 160px;" title="Frekuensi kenaikan jenjang kewenangan yang dipicu otomatis oleh sistem akibat melampaui batas toleransi SLA.">Eskalasi Sistem</th>
+                <th scope="col" style="width: 90px; text-align: right;" aria-label="Aksi Pemeriksaan Kendala">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="agingTableBody">
+              <!-- Dynamically Populated by JavaScript -->
+            </tbody>
+          </table>
+
+          <!-- Empty State (Hidden by default) -->
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon" id="emptyIconBox">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <h3 id="emptyTitle">Tidak Ada Kendala yang Sesuai Saringan</h3>
+            <p id="emptyDesc">Cobalah mengatur ulang kata kunci pencarian atau melonggarkan filter status dan tingkat keparahan yang dipilih.</p>
+            <button class="btn btn-outline btn-sm" id="emptyResetBtn" type="button">Kembalikan Saringan Awal</button>
+          </div>
+        </div>
+
+        <!-- Panel Footer Governance Note -->
+        <div class="panel-foot">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Hanya kendala aktif berstatus <strong>Baru, Diterima,</strong> dan <strong>Sedang Dikerjakan</strong> yang dipantau keterlambatannya. Kendala yang telah diselesaikan atau disetujui risikonya otomatis dikeluarkan dari <strong>daftar pemantauan ini</strong>.</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- 403 Forbidden Screen (Displayed when Staff role is simulated) -->
+    <section class="forbidden-screen" id="forbiddenScreen">
+      <div class="forbidden-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+      <h2>403 · Akses Dibatasi untuk Manajemen Eksekutif</h2>
+      <p>
+        Halaman <strong>Keterlambatan Penanganan Blocker</strong> dirancang khusus sebagai instrumen tata kelola bagi CEO, Direksi, dan Kepala Divisi dalam memantau hambatan kerja lintas organisasi. Peran Staff Developer tidak memiliki wewenang analitis pada layar ini.
+      </p>
+      <div class="forbidden-actions">
+        <a class="btn btn-outline" href="02-Morning-Commitment.html">
+          <span>Buka Komitmen Pagi</span>
+        </a>
+        <button class="btn btn-primary" id="switchBackToCeoBtn" type="button">
+          <span>Simulasikan Akun CEO (Rian Suryadi)</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Modal 1: Detail Investigasi Keterlambatan Blocker (5 Seksi Anti-Squash) -->
+<div class="modal-backdrop" id="agingDetailModal" role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div class="modal-header-title">
+        <h3 id="modalDetailTitle">Rincian Keterlambatan Penanganan Blocker</h3>
+        <p id="modalDetailSubtitle">ID Tiket: BLK-219 · Dibuat 09 Okt 2026</p>
+      </div>
+      <button class="modal-close-btn" id="closeDetailModalBtn" aria-label="Tutup Rincian" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="modal-body" id="modalDetailBody">
+      <!-- Section 1: Identitas Kendala & Pelapor -->
+      <div class="section-card">
+        <div class="section-card-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span>1. Identitas Kendala & Pelapor</span>
+        </div>
+        <div class="section-card-body">
+          <div style="font-size: 15px; font-weight: 850; color: var(--text-main); margin-bottom: 8px;" id="mdTitle">
+            Dependency kontrak API pembayaran vendor
+          </div>
+          <div class="prop-grid-2">
+            <div class="prop-item">
+              <span class="prop-label">Tingkat Keparahan</span>
+              <span class="prop-val" id="mdSeverity"><span class="sev-badge sev-critical">CRITICAL</span></span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Pelapor Kendala</span>
+              <span class="prop-val" id="mdReporter">Raka Aditya (DevOps Engineer)</span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Waktu Dibuat</span>
+              <span class="prop-val" id="mdCreated">09 Okt 2026 · 09:10 WIB</span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">ID Kendala</span>
+              <span class="prop-val" id="mdId" style="font-family: 'JetBrains Mono', monospace;">BLK-219</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Penanganan & Penanggung Jawab Saat Ini -->
+      <div class="section-card">
+        <div class="section-card-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>2. Status Penanganan & Penanggung Jawab Saat Ini</span>
+        </div>
+        <div class="section-card-body">
+          <div class="prop-grid-2">
+            <div class="prop-item">
+              <span class="prop-label">Status Penanganan Tiket</span>
+              <span class="prop-val" id="mdStatus"><span class="status-badge status-open"><span class="status-dot"></span> Open</span></span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Penanggung Jawab Saat Ini</span>
+              <span class="prop-val" id="mdOwner">Ayu Nirmala (Head of Engineering)</span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Konteks Wewenang</span>
+              <span class="prop-val" id="mdContext"><span class="context-pill context-org">Jalur Organisasi</span></span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Unit Kerja Penugasan</span>
+              <span class="prop-val" id="mdAssignment">Divisi Engineering</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Analisis Keterlambatan & Dampak Operasional -->
+      <div class="section-card">
+        <div class="section-card-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>3. Analisis Keterlambatan & Dampak Operasional</span>
+        </div>
+        <div class="section-card-body">
+          <div class="prop-grid-2" style="margin-bottom: 12px;">
+            <div class="prop-item">
+              <span class="prop-label">Lama Tertahan (Durasi Keterlambatan)</span>
+              <span class="prop-val" id="mdAge" style="font-size: 15px; font-weight: 850; color: var(--text-main);">71 Jam (Tertahan)</span>
+            </div>
+            <div class="prop-item">
+              <span class="prop-label">Kepatuhan Batas Waktu</span>
+              <span class="prop-val" id="mdSla" style="color: var(--red-text);">Melampaui Batas Toleransi 48 Jam</span>
+            </div>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Uraian Hambatan & Dampak Bisnis</span>
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5;" id="mdSummary">
+              Kontrak API pembayaran belum disepakati oleh vendor pihak ketiga; integrasi payment gateway tertahan dan berisiko menunda peluncuran fitur transaksi kuartal ini.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Riwayat Rantai Eskalasi Otomatis (Timeline Audit) -->
+      <div class="section-card">
+        <div class="section-card-head">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          <span>4. Riwayat Rantai Eskalasi Otomatis (Timeline Audit)</span>
+        </div>
+        <div class="section-card-body">
+          <div class="timeline" id="mdTimeline">
+            <!-- Dynamically populated timeline nodes -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer footer-split">
+      <div class="modal-foot-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <span>Rincian ini bersifat informasi. Penyelesaian kendala dilakukan langsung oleh penanggung jawab terkait.</span>
+      </div>
+      <button class="btn btn-outline" id="closeDetailModalBtn2" type="button">Tutup Rincian</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Ekspor Rekapitulasi Eskalasi (PDF / XLSX) -->
+<div class="modal-backdrop" id="exportAgingModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+  <div class="modal-dialog" style="max-width: 580px;">
+    <div class="modal-header">
+      <div class="modal-header-title">
+        <h3 id="exportModalTitle">Ekspor Rekapitulasi Keterlambatan Blocker</h3>
+        <p>Unduh laporan keterlambatan penanganan blocker untuk rapat koordinasi pimpinan dan evaluasi ketepatan waktu penanganan.</p>
+      </div>
+      <button class="modal-close-btn" id="closeExportModalBtn" aria-label="Tutup Jendela Ekspor" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Format Selection -->
+      <div>
+        <label id="exportFormatLabel" style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px;">
+          Pilih Format Laporan
+        </label>
+        <div class="export-option-grid" role="radiogroup" aria-labelledby="exportFormatLabel">
+          <div class="export-radio-card selected" id="fmtPdfCard" data-format="pdf" role="radio" aria-checked="true" tabindex="0">
+            <div class="radio-card-header">
+              <span class="radio-card-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <span>Ringkasan PDF</span>
+              </span>
+              <div class="radio-circle"></div>
+            </div>
+            <p class="radio-card-desc">Laporan visual eksekutif siap cetak / presentasi dewan direksi.</p>
+          </div>
+
+          <div class="export-radio-card" id="fmtXlsxCard" data-format="xlsx" role="radio" aria-checked="false" tabindex="0">
+            <div class="radio-card-header">
+              <span class="radio-card-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                <span>Lembar Kerja XLSX</span>
+              </span>
+              <div class="radio-circle"></div>
+            </div>
+            <p class="radio-card-desc">Format data tabular mentah lengkap untuk analisis spreadsheet audit.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scope Selection -->
+      <div>
+        <label id="exportScopeLabel" style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px;">
+          Cakupan Data yang Diekspor
+        </label>
+        <div class="export-option-grid" role="radiogroup" aria-labelledby="exportScopeLabel">
+          <div class="export-radio-card selected" id="scopeAllCard" data-scope="all" role="radio" aria-checked="true" tabindex="0">
+            <div class="radio-card-header">
+              <span class="radio-card-title">Semua Tiket Menua</span>
+              <div class="radio-circle"></div>
+            </div>
+            <p class="radio-card-desc" id="scopeAllDesc">Mencakup seluruh 5 blocker yang melampaui batas waktu toleransi.</p>
+          </div>
+
+          <div class="export-radio-card" id="scopeFilteredCard" data-scope="filtered" role="radio" aria-checked="false" tabindex="0">
+            <div class="radio-card-header">
+              <span class="radio-card-title">Hasil Saringan Aktif</span>
+              <div class="radio-circle"></div>
+            </div>
+            <p class="radio-card-desc" id="scopeFilteredDesc">Mencakup 5 blocker yang sedang disaring di layar.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Metadata Info -->
+      <div class="export-meta-box">
+        <div class="meta-row">
+          <span>Tanggal & Jam Penarikan:</span>
+          <strong id="exportTimestamp">27 Okt 2026 · 11:20 WIB</strong>
+        </div>
+        <div class="meta-row">
+          <span>Pejabat Pemohon:</span>
+          <strong id="exportRequester">Rian Suryadi (CEO / Direktur Utama)</strong>
+        </div>
+        <div class="meta-row">
+          <span>Klasifikasi Tata Kelola:</span>
+          <strong>Dokumen Terbatas (Manajemen Eksekutif)</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelExportBtn" type="button">Batal</button>
+      <button class="btn btn-primary" id="confirmExportBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span id="confirmExportBtnLabel">Unduh Laporan (PDF)</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast Feedback -->
+<div aria-live="polite" class="toast-box" id="toastBox" role="status">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+  <span id="toastMsg">Laporan keterlambatan penanganan blocker berhasil disiapkan.</span>
+</div>
+
+<!-- Screen Reader Live Status Announcer (WCAG 2.1 SC 4.1.3) -->
+<div class="sr-only" aria-live="polite" aria-atomic="true" id="srStatusAnnouncer"></div>
+
 <script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);let activeTrigger=null;
-const blockers=[
-{id:'BLK-219',title:'Dependency kontrak API pembayaran',status:'Open',ageHours:71,ageLabel:'71 jam',reporter:'Raka Aditya',authorityContext:'Organizational',owner:'Ayu Nirmala',ownerRole:'Head / Function Owner',ownerAssignment:'Current authority mapping',severity:'Critical',autoEvents:[{when:'12 Okt · 08.20',level:'Level berikutnya',recipient:'Authority berikutnya sesuai rule',reason:'Unacknowledged melewati threshold yang berlaku'}],summary:'Kontrak API belum tersedia untuk validasi integrasi pembayaran; dampak delivery masih terbuka.',createdLabel:'9 Okt · 09.10'},
-{id:'BLK-224',title:'Build pipeline gagal berulang',status:'In Progress',ageHours:49,ageLabel:'49 jam',reporter:'Dimas Putra',authorityContext:'Organizational',owner:'Raka Aditya',ownerRole:'DevOps Engineer',ownerAssignment:'Current authority mapping',severity:'High',autoEvents:[{when:'11 Okt · 16.25',level:'Level berikutnya',recipient:'Authority berikutnya sesuai rule',reason:'Auto-escalation tercatat sesuai kebijakan yang berlaku'}],summary:'Pipeline masih gagal setelah pembaruan dependency runner; perbaikan belum dikonfirmasi selesai.',createdLabel:'10 Okt · 16.10'},
-{id:'BLK-228',title:'Akses staging untuk QA',status:'Acknowledged',ageHours:36,ageLabel:'36 jam',reporter:'Nadia Safitri',authorityContext:'Project',owner:'Dimas Putra',ownerRole:'Platform Engineer',ownerAssignment:'Project Authority · Project Atlas (sample)',severity:'High',autoEvents:[{when:'12 Okt · 07.45',level:'Project Authority',recipient:'Dimas Putra',reason:'Eskalasi dampak proyek tercatat sesuai konteks blocker'}],summary:'Akun QA belum memiliki akses staging; pengujian end-to-end masih tertahan.',createdLabel:'11 Okt · 01.15'},
-{id:'BLK-231',title:'Keputusan skema data lintas layanan',status:'Open',ageHours:28,ageLabel:'28 jam',reporter:'Sinta Maharani',authorityContext:'Organizational',owner:'Ayu Nirmala',ownerRole:'Head / Function Owner',ownerAssignment:'Current authority mapping',severity:'Medium',autoEvents:[],summary:'Tim menunggu keputusan tentang kompatibilitas skema sebelum migrasi.',createdLabel:'11 Okt · 09.10'},
-{id:'BLK-235',title:'Lingkungan pengujian tidak stabil',status:'Acknowledged',ageHours:17,ageLabel:'17 jam',reporter:'Fajar Nugroho',authorityContext:'Project',owner:'Nadia Safitri',ownerRole:'Backend Lead',ownerAssignment:'Project Authority · Project Orion',severity:'Medium',autoEvents:[],summary:'Environment mengalami restart berulang sehingga hasil pengujian belum konsisten.',createdLabel:'11 Okt · 20.10'}
-];
-function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function matches(b,q,status,authority,auto){const text=[b.id,b.title,b.reporter,b.owner,b.ownerRole,b.authorityContext,b.ownerAssignment,b.summary].join(' ').toLowerCase();return(!q||text.includes(q))&&(status==='all'||b.status===status)&&(authority==='all'||b.authorityContext===authority)&&(auto==='all'||(auto==='yes'?b.autoEvents.length>0:b.autoEvents.length===0))}
-function render(){const q=$('searchInput').value.trim().toLowerCase(),status=$('statusFilter').value,authority=$('authorityFilter').value,auto=$('autoFilter').value;const list=blockers.filter(b=>matches(b,q,status,authority,auto)).sort((a,b)=>b.ageHours-a.ageHours);$('queueBody').innerHTML=list.map(b=>`<tr><td><div class="blocker-title">${esc(b.title)}</div><div class="subline">${esc(b.id)} · Dilaporkan oleh ${esc(b.reporter)}</div><div class="subline">Severity: <strong>${esc(b.severity)}</strong></div></td><td><span class="tag ${b.status==='Open'?'red':b.status==='Acknowledged'?'blue':'amber'}">${esc(b.status)}</span></td><td><div class="age">${esc(b.ageLabel)}</div><div class="subline">Threshold berlaku: terlampaui</div></td><td><div class="authority-name">${esc(b.owner)}</div><div class="subline">${esc(b.ownerRole)}</div><div style="margin-top:5px"><span class="tag ${b.authorityContext==='Project'?'blue':'neutral'}">${esc(b.authorityContext)}</span></div><div class="subline">${esc(b.ownerAssignment)}</div></td><td>${b.autoEvents.length?`<span class="tag red">${b.autoEvents.length} event</span><div class="subline">${esc(b.autoEvents[b.autoEvents.length-1].when)}</div>`:'<span class="tag neutral">Belum tercatat</span>'}</td><td><button class="btn" type="button" data-detail="${esc(b.id)}">Lihat detail</button></td></tr>`).join('');$('emptyState').classList.toggle('hidden',list.length!==0);$('resultCount').textContent=`${list.length} blocker`;const countOpen=list.filter(b=>b.status==='Open').length;$('metricTotal').textContent=list.length;$('metricOpen').textContent=countOpen;$('metricAuto').textContent=list.filter(b=>b.autoEvents.length).length;$('metricAuthority').textContent=list.length}
-function openDetail(id,trigger){const b=blockers.find(x=>x.id===id);if(!b)return;activeTrigger=trigger||document.activeElement;$('modalTitle').textContent=b.title;$('modalSub').textContent=`${b.id}`;const events=b.autoEvents.length?`<div class="timeline">${b.autoEvents.map(e=>`<div class="timeline-item"><span class="timeline-dot" aria-hidden="true"></span><div class="timeline-copy"><strong>${esc(e.when)} · ${esc(e.level)}</strong><div class="small" style="margin-top:3px">Penerima: ${esc(e.recipient)}</div><div class="small">Alasan: ${esc(e.reason)}</div></div></div>`).join('')}</div>`:'<p class="small">Belum ada riwayat auto-escalation.</p>';$('modalBody').innerHTML=`<div class="detail-grid"><div class="detail-cell"><div class="detail-label">Status</div><div class="detail-value">${esc(b.status)}</div></div><div class="detail-cell"><div class="detail-label">Unresolved age</div><div class="detail-value">${esc(b.ageLabel)} · threshold terlampaui</div></div><div class="detail-cell"><div class="detail-label">Authority Context</div><div class="detail-value">${esc(b.authorityContext)}</div></div><div class="detail-cell"><div class="detail-label">Penanggung jawab saat ini</div><div class="detail-value">${esc(b.owner)} · ${esc(b.ownerRole)}</div></div><div class="detail-cell"><div class="detail-label">Dibuat</div><div class="detail-value">${esc(b.createdLabel)}</div></div><div class="detail-cell"><div class="detail-label">Pelapor</div><div class="detail-value">${esc(b.reporter)}</div></div></div><h3>Ringkasan</h3><p>${esc(b.summary)}</p><h3 style="margin-top:20px">Riwayat auto-escalation</h3>${events}<p class="small" style="margin-top:18px">Read-only: layar overview tidak memberikan kewenangan acknowledge, reassign, resolve, atau close. Hak tindakan harus diperiksa untuk konteks blocker secara terpisah.</p>`;$('modalBackdrop').classList.add('open');$('closeModal').focus()}
-function closeDetail(){ $('modalBackdrop').classList.remove('open');if(activeTrigger&&typeof activeTrigger.focus==='function')activeTrigger.focus();activeTrigger=null }
-$('queueBody').addEventListener('click',e=>{const btn=e.target.closest('[data-detail]');if(btn)openDetail(btn.dataset.detail,btn)});$('closeModal').addEventListener('click',closeDetail);$('modalBackdrop').addEventListener('click',e=>{if(e.target===$('modalBackdrop'))closeDetail()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modalBackdrop').classList.contains('open'))closeDetail()});['searchInput','statusFilter','authorityFilter','autoFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',render));$('applyFilters').addEventListener('click',render);$('resetFilters').addEventListener('click',()=>{$('searchInput').value='';$('statusFilter').value='all';$('authorityFilter').value='all';$('autoFilter').value='all';render();$('searchInput').focus()});$('mobileMenu').addEventListener('click',()=>$('sidebar').classList.toggle('open'));document.querySelectorAll('[data-inert]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));render();
+(() => {
+  'use strict';
+
+  // Helper selectors
+  const $ = id => document.getElementById(id);
+
+  // Realistic Data Seed for WorkPulse Escalation Aging
+  const blockers = [
+    {
+      id: 'BLK-219',
+      title: 'Dependency kontrak API pembayaran vendor',
+      status: 'Open',
+      ageHours: 71,
+      ageLabel: '71 Jam',
+      ageTier: 'critical', // >48 jam
+      slaLevel: 'Lewat batas 48 jam',
+      severity: 'Critical',
+      reporter: 'Raka Aditya',
+      reporterRole: 'DevOps Engineer',
+      authorityContext: 'Organizational',
+      owner: 'Ayu Nirmala',
+      ownerRole: 'Head of Engineering',
+      ownerAssignment: 'Divisi Engineering',
+      createdDate: '09 Okt 2026',
+      createdTime: '09:10 WIB',
+      summary: 'Kontrak API pembayaran belum disepakati oleh vendor pihak ketiga; integrasi payment gateway tertahan dan berisiko menunda peluncuran fitur transaksi kuartal ini.',
+      autoEvents: [
+        {
+          when: '12 Okt 2026 · 08:20 WIB',
+          level: 'Level 3: Eskalasi Pimpinan Operasional',
+          recipient: 'Ayu Nirmala (Head of Eng) & PM Utama',
+          reason: 'Tiket belum direspons melampaui batas toleransi waktu 48 jam'
+        },
+        {
+          when: '10 Okt 2026 · 14:15 WIB',
+          level: 'Level 2: Eskalasi Kepala Departemen',
+          recipient: 'Lead Integration Engineer',
+          reason: 'Tiket belum direspons melampaui batas toleransi waktu 4 jam'
+        }
+      ]
+    },
+    {
+      id: 'BLK-224',
+      title: 'Kegagalan berulang build pipeline staging production',
+      status: 'In Progress',
+      ageHours: 49,
+      ageLabel: '49 Jam',
+      ageTier: 'critical', // >48 jam
+      slaLevel: 'Lewat batas 48 jam',
+      severity: 'High',
+      reporter: 'Dimas Putra',
+      reporterRole: 'Platform Engineer',
+      authorityContext: 'Organizational',
+      owner: 'Raka Aditya',
+      ownerRole: 'Lead DevOps & Infrastructure',
+      ownerAssignment: 'Tim Infrastruktur',
+      createdDate: '10 Okt 2026',
+      createdTime: '16:10 WIB',
+      summary: 'Pipeline CI/CD runner kehabisan resource memori secara konsisten pasca-upgrade cluster Kubernetes; proses deploy rilis tertunda lebih dari 2 hari.',
+      autoEvents: [
+        {
+          when: '12 Okt 2026 · 16:30 WIB',
+          level: 'Level 3: Eskalasi Pimpinan Operasional',
+          recipient: 'Raka Aditya (Lead DevOps)',
+          reason: 'Penanganan kendala melampaui batas toleransi resolusi 48 jam'
+        }
+      ]
+    },
+    {
+      id: 'BLK-228',
+      title: 'Izin akses staging & sandbox perbankan untuk tim QA',
+      status: 'Acknowledged',
+      ageHours: 36,
+      ageLabel: '36 Jam',
+      ageTier: 'moderate', // 24-48 jam
+      slaLevel: 'Lewat batas 24 jam',
+      severity: 'High',
+      reporter: 'Nadia Safitri',
+      reporterRole: 'QA Lead',
+      authorityContext: 'Project',
+      owner: 'Dimas Putra',
+      ownerRole: 'Platform Security Officer',
+      ownerAssignment: 'Project Atlas',
+      createdDate: '11 Okt 2026',
+      createdTime: '01:15 WIB',
+      summary: 'Akun 5 QA engineer belum diberikan sertifikat mTLS sandbox bank; pengujian end-to-end integrasi kartu kredit terhenti.',
+      autoEvents: [
+        {
+          when: '12 Okt 2026 · 07:45 WIB',
+          level: 'Level 2: Eskalasi Pimpinan Proyek (PM)',
+          recipient: 'Ardi Pratama (PM Project Atlas)',
+          reason: 'Eskalasi dampak keterlambatan sprint pengujian QA melampaui batas toleransi'
+        }
+      ]
+    },
+    {
+      id: 'BLK-231',
+      title: 'Keputusan skema database & backward compatibility',
+      status: 'Open',
+      ageHours: 28,
+      ageLabel: '28 Jam',
+      ageTier: 'moderate', // 24-48 jam
+      slaLevel: 'Lewat batas 24 jam',
+      severity: 'Medium',
+      reporter: 'Sinta Maharani',
+      reporterRole: 'Data Architect',
+      authorityContext: 'Organizational',
+      owner: 'Ayu Nirmala',
+      ownerRole: 'Head of Engineering',
+      ownerAssignment: 'Dewan Arsitek',
+      createdDate: '11 Okt 2026',
+      createdTime: '09:10 WIB',
+      summary: 'Perubahan skema kolom audit user log berbenturan dengan legacy data warehouse; butuh keputusan dewan arsitek sebelum migrasi dijalankan.',
+      autoEvents: []
+    },
+    {
+      id: 'BLK-235',
+      title: 'Fluktuasi koneksi redis cache lingkungan pengujian',
+      status: 'Acknowledged',
+      ageHours: 17,
+      ageLabel: '17 Jam',
+      ageTier: 'low', // <24 jam
+      slaLevel: 'Lewat batas 4 jam',
+      severity: 'Medium',
+      reporter: 'Fajar Nugroho',
+      reporterRole: 'Backend Engineer',
+      authorityContext: 'Project',
+      owner: 'Nadia Safitri',
+      ownerRole: 'Backend Team Lead',
+      ownerAssignment: 'Project Orion',
+      createdDate: '11 Okt 2026',
+      createdTime: '20:10 WIB',
+      summary: 'Redis cluster kerap merestart sendiri setiap beban testing load spike; hasil validasi benchmark performance belum stabil.',
+      autoEvents: []
+    }
+  ];
+
+  // State Management
+  let activeMetricFilter = 'all'; // 'all', 'critical', 'moderate', 'open', 'auto'
+  let activeRole = 'rian';
+  let activeScopeView = 'scoped'; // 'scoped' or 'all' (Dimensi 4: Opsi 3 Hybrid Approach)
+  let activeTriggerEl = null;
+  let exportFormat = 'pdf';
+  let exportScope = 'all';
+
+  // Role Configurations (Dimensi 4: RBAC & Wewenang Tata Kelola)
+  const roles = {
+    rian: {
+      name: 'Rian Suryadi',
+      role: 'CEO / Direktur Utama',
+      initials: 'RS',
+      scope: 'Cakupan: Seluruh Perusahaan (Executive Radar)',
+      allowed: true,
+      hasScopeToggle: false,
+      myScopeLabel: 'Seluruh Perusahaan',
+      matchesScope: () => true
+    },
+    ayu: {
+      name: 'Ayu Nirmala',
+      role: 'Head of Engineering',
+      initials: 'AN',
+      scope: 'Cakupan: Divisi Engineering (Function Scoped)',
+      allowed: true,
+      hasScopeToggle: true,
+      myScopeLabel: 'Divisi Engineering',
+      matchesScope: b => b.authorityContext === 'Organizational'
+    },
+    ardi: {
+      name: 'Ardi Pratama',
+      role: 'Project Manager',
+      initials: 'AP',
+      scope: 'Cakupan: Portofolio Proyek Terkait (Project Scoped)',
+      allowed: true,
+      hasScopeToggle: true,
+      myScopeLabel: 'Proyek Terkait',
+      matchesScope: b => b.authorityContext === 'Project'
+    },
+    budi: {
+      name: 'Budi Pratama',
+      role: 'Staff Developer',
+      initials: 'BP',
+      scope: 'Cakupan: Akses Ditolak (Staff)',
+      allowed: false,
+      hasScopeToggle: false,
+      matchesScope: () => false
+    }
+  };
+
+  // Utility HTML Escape
+  function esc(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+  }
+
+  // Toast Function
+  function showToast(msg) {
+    const box = $('toastBox');
+    $('toastMsg').textContent = msg;
+    box.classList.add('show');
+    setTimeout(() => {
+      box.classList.remove('show');
+    }, 3600);
+  }
+
+  // Business Rule Constants (Dimensi 2: Spec & PRD Compliance)
+  const ELIGIBLE_AGING_STATUSES = ['Open', 'Acknowledged', 'In Progress'];
+  const SEVERITY_WEIGHT = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1 };
+
+  // Multi-Tier Deterministic Sorting (Dimensi 2)
+  // Lapis 1: Durasi penuaan terlama (Descending)
+  // Lapis 2 (Tie-Breaker): Tingkat keparahan risiko tertinggi (Critical > High > Medium > Low)
+  // Lapis 3 (Tie-Breaker): Masuk lebih awal (FIFO / ID tiket terkecil)
+  function sortAgingBlockers(a, b) {
+    if (b.ageHours !== a.ageHours) {
+      return b.ageHours - a.ageHours;
+    }
+    const sevDiff = (SEVERITY_WEIGHT[b.severity] || 0) - (SEVERITY_WEIGHT[a.severity] || 0);
+    if (sevDiff !== 0) {
+      return sevDiff;
+    }
+    return a.id.localeCompare(b.id);
+  }
+
+  // Filter Matcher
+  function filterMatches(b, q, status, severity, authority, auto, metric) {
+    // 0. Defensive Guard (Dimensi 2): Hanya kendala aktif belum tuntas yang berhak masuk radar penuaan
+    if (!ELIGIBLE_AGING_STATUSES.includes(b.status)) return false;
+
+    // 1. Text Search query
+    if (q) {
+      const corpus = [b.id, b.title, b.reporter, b.owner, b.ownerRole, b.ownerAssignment, b.summary].join(' ').toLowerCase();
+      if (!corpus.includes(q)) return false;
+    }
+
+    // 2. Status Filter
+    if (status !== 'all' && b.status !== status) return false;
+
+    // 3. Severity Filter
+    if (severity !== 'all' && b.severity !== severity) return false;
+
+    // 4. Authority Context Filter
+    if (authority !== 'all' && b.authorityContext !== authority) return false;
+
+    // 5. Auto-Escalation Filter
+    if (auto !== 'all') {
+      if (auto === 'yes' && b.autoEvents.length === 0) return false;
+      if (auto === 'no' && b.autoEvents.length > 0) return false;
+    }
+
+    // 6. Active Click-to-Filter Metric
+    if (metric === 'critical' && b.ageHours <= 48) return false;
+    if (metric === 'moderate' && (b.ageHours < 24 || b.ageHours > 48)) return false;
+    if (metric === 'open' && b.status !== 'Open') return false;
+    if (metric === 'auto' && b.autoEvents.length === 0) return false;
+
+    return true;
+  }
+
+  // Render Table & Metrics
+  function render() {
+    const q = $('searchInput').value.trim().toLowerCase();
+    const status = $('statusFilter').value;
+    const severity = $('severityFilter').value;
+    const authority = $('authorityFilter').value;
+    const auto = $('autoFilter').value;
+
+    // 1. Himpunan data blocker yang memenuhi syarat aturan bisnis (Open, Acknowledged, In Progress)
+    const allEligible = blockers.filter(b => ELIGIBLE_AGING_STATUSES.includes(b.status));
+
+    // 2. Terapkan Lingkup Peran (Dimensi 4: Opsi 3 Hybrid Approach)
+    const curRole = roles[activeRole];
+    const eligibleBlockers = (curRole && curRole.hasScopeToggle && activeScopeView === 'scoped')
+      ? allEligible.filter(curRole.matchesScope)
+      : allEligible;
+
+    // Filter & Sort deterministik multi-tier (oldest unresolved age -> severity -> FIFO)
+    const filtered = eligibleBlockers
+      .filter(b => filterMatches(b, q, status, severity, authority, auto, activeMetricFilter))
+      .sort(sortAgingBlockers);
+
+    // Calculate Global Counts for Metric Cards (berdasarkan himpunan eligible)
+    $('valTotal').textContent = eligibleBlockers.length;
+    $('valCritical').textContent = eligibleBlockers.filter(b => b.ageHours > 48).length;
+    $('valModerate').textContent = eligibleBlockers.filter(b => b.ageHours >= 24 && b.ageHours <= 48).length;
+    $('valOpen').textContent = eligibleBlockers.filter(b => b.status === 'Open').length;
+    $('valAuto').textContent = eligibleBlockers.filter(b => b.autoEvents.length > 0).length;
+
+    // Update Result Counter
+    $('resultCounter').textContent = filtered.length === eligibleBlockers.length
+      ? `Menampilkan ${filtered.length} kendala`
+      : `Menampilkan ${filtered.length} dari ${eligibleBlockers.length} kendala`;
+
+    // Screen Reader Announcer for Dynamic Filter Updates (WCAG 2.1 SC 4.1.3)
+    const srAnnouncer = $('srStatusAnnouncer');
+    if (srAnnouncer) {
+      if (filtered.length === 0) {
+        srAnnouncer.textContent = 'Tidak ada kendala operasional yang sesuai dengan kriteria saringan aktif.';
+      } else {
+        const metricNames = {
+          critical: 'Kritis (>48 Jam)',
+          moderate: 'Perlu Perhatian (24–48 Jam)',
+          open: 'Belum Ditangani',
+          auto: 'Eskalasi Sistem',
+          all: 'Semua Kendala'
+        };
+        const activeName = metricNames[activeMetricFilter] || 'Semua Kendala';
+        srAnnouncer.textContent = `Menampilkan ${filtered.length} dari ${eligibleBlockers.length} kendala. Saringan aktif: ${activeName}.`;
+      }
+    }
+
+    // Render Table Rows
+    const tbody = $('agingTableBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '';
+      $('emptyState').style.display = 'block';
+
+      if (eligibleBlockers.length === 0) {
+        // Company-Wide Zero Aging State (Pencapaian Disiplin Operasional)
+        $('emptyIconBox').className = 'empty-icon icon-success';
+        $('emptyIconBox').innerHTML = `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>`;
+        $('emptyTitle').textContent = 'Semua Kendala Operasional Tertangani Tepat Waktu';
+        $('emptyDesc').textContent = 'Luar biasa! Tidak ada kendala operasional yang melampaui batas waktu toleransi penanganan saat ini. Seluruh hambatan berada dalam batas penanganan yang sehat atau telah diselesaikan oleh tim pelaksana.';
+        $('emptyResetBtn').style.display = 'none';
+      } else {
+        // Filtered Empty State (Saringan Terlalu Ketat)
+        $('emptyIconBox').className = 'empty-icon';
+        $('emptyIconBox').innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+        $('emptyTitle').textContent = 'Tidak Ada Kendala yang Sesuai Saringan';
+        $('emptyDesc').textContent = 'Tidak ditemukan kendala tertahan yang cocok dengan kombinasi kata kunci atau filter aktif. Cobalah mengatur ulang parameter saringan Anda.';
+        $('emptyResetBtn').style.display = 'inline-flex';
+      }
+    } else {
+      $('emptyState').style.display = 'none';
+      tbody.innerHTML = filtered.map(b => {
+        // Status Badge class & label (diselaraskan 1:1 dengan filter status)
+        const statusClass = b.status === 'Open' ? 'status-open' : b.status === 'Acknowledged' ? 'status-ack' : 'status-prog';
+        const statusLabel = b.status === 'Open' ? 'Baru' : b.status === 'Acknowledged' ? 'Diterima' : 'Sedang Dikerjakan';
+
+        // Severity Badge class & label
+        const sevClass = b.severity === 'Critical' ? 'sev-critical' : b.severity === 'High' ? 'sev-high' : b.severity === 'Medium' ? 'sev-medium' : 'sev-low';
+        const sevLabel = b.severity === 'Critical' ? 'KRITIS' : b.severity === 'High' ? 'TINGGI' : b.severity === 'Medium' ? 'SEDANG' : 'RENDAH';
+
+        // Dynamic Human-Centric Age Formatter (< 1 jam vs >= 1 jam)
+        const displayAge = b.ageHours < 1 ? '< 1 Jam' : (b.ageLabel || `${Math.round(b.ageHours)} Jam`);
+        
+        // Status Ambang Batas Waktu SLA (1 baris bersih, murni berbicara durasi toleransi)
+        let displaySub = '';
+        if (b.ageHours < 4) {
+          displaySub = b.ageHours < 1 ? 'Dalam toleransi (<1 jam)' : 'Dalam toleransi (≤4 jam)';
+        } else if (b.ageHours > 48) {
+          displaySub = 'Lewat batas 48 jam';
+        } else if (b.ageHours >= 24) {
+          displaySub = 'Lewat batas 24 jam';
+        } else {
+          displaySub = 'Lewat batas 4 jam';
+        }
+
+        // Age styling
+        const ageColorClass = b.ageHours > 48 ? 'text-red' : b.ageHours >= 24 ? 'text-amber' : 'text-neutral';
+        const slaColorClass = b.ageHours > 48 ? 'text-red' : b.ageHours >= 24 ? 'text-amber' : 'text-muted';
+
+        // Context Badge class & label (diselaraskan 1:1 dengan filter wewenang)
+        const ctxClass = b.authorityContext === 'Project' ? 'context-proj' : 'context-org';
+        const contextLabel = b.authorityContext === 'Project' ? 'Jalur Proyek' : 'Jalur Organisasi';
+        const displayAssignment = b.ownerAssignment;
+
+        // Auto events markup
+        const autoMarkup = b.autoEvents.length > 0
+          ? `<span class="auto-badge has-event">${b.autoEvents.length}x Eskalasi Sistem</span><div class="auto-sub">${esc(b.autoEvents[0].when)}</div>`
+          : `<span class="auto-badge no-event" title="Belum pernah dieskalasi otomatis oleh sistem (masih dalam penanganan awal)">—</span>`;
+
+        return `
+          <tr>
+            <td>
+              <div class="ticket-title">${esc(b.title)}</div>
+              <div class="ticket-meta">
+                <span class="sev-badge ${sevClass}">${esc(sevLabel)}</span>
+                <span class="ticket-id">${esc(b.id)}</span>
+                <span class="meta-sep">·</span>
+                <span><strong>${esc(b.reporter)}</strong></span>
+                <span class="meta-sep">·</span>
+                <span>${esc(b.createdDate)}</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge ${statusClass}">
+                <span class="status-dot"></span>
+                <span>${esc(statusLabel)}</span>
+              </span>
+            </td>
+            <td>
+              <div class="age-val">${esc(displayAge)}</div>
+              <div class="age-sub ${slaColorClass}">${esc(displaySub)}</div>
+            </td>
+            <td>
+              <div class="owner-name">${esc(b.owner)}</div>
+              <div class="owner-role">${esc(b.ownerRole)}</div>
+              <div class="context-row">
+                <span class="context-pill ${ctxClass}">${contextLabel}</span>
+                <span class="context-path">${esc(displayAssignment)}</span>
+              </div>
+            </td>
+            <td>
+              ${autoMarkup}
+            </td>
+            <td style="text-align: right;">
+              <button class="btn btn-sm btn-outline" type="button" data-detail="${esc(b.id)}" aria-label="Lihat rincian keterlambatan penanganan kendala ${esc(b.id)}: ${esc(b.title)}">
+                Lihat Detail
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Update Export Scope Count
+    $('scopeAllDesc').textContent = `Mencakup seluruh ${eligibleBlockers.length} blocker yang melampaui batas waktu toleransi.`;
+    $('scopeFilteredDesc').textContent = `Mencakup ${filtered.length} blocker yang sedang disaring di layar.`;
+    
+    // Disable filtered scope if filtered count is 0
+    const filteredCard = $('scopeFilteredCard');
+    if (filtered.length === 0) {
+      filteredCard.classList.add('disabled');
+      if (exportScope === 'filtered') {
+        setExportScope('all');
+      }
+    } else {
+      filteredCard.classList.remove('disabled');
+    }
+
+    // Defensive Export Button State (Header Button)
+    const openExportBtn = $('openExportBtn');
+    if (eligibleBlockers.length === 0) {
+      openExportBtn.classList.add('disabled');
+      openExportBtn.setAttribute('disabled', 'true');
+      openExportBtn.setAttribute('title', 'Tidak ada data keterlambatan penanganan untuk diekspor (seluruh kendala tertangani tepat waktu)');
+    } else {
+      openExportBtn.classList.remove('disabled');
+      openExportBtn.removeAttribute('disabled');
+      openExportBtn.setAttribute('title', 'Unduh rekapitulasi data keterlambatan penanganan blocker');
+    }
+  }
+
+  // Metric Cards Click-to-Filter & Keyboard Accessibility Handler (WCAG 2.1 SC 2.1.1)
+  function setupMetricCards() {
+    const cards = [
+      { id: 'cardTotal', metric: 'all' },
+      { id: 'cardCritical', metric: 'critical' },
+      { id: 'cardModerate', metric: 'moderate' },
+      { id: 'cardOpen', metric: 'open' },
+      { id: 'cardAuto', metric: 'auto' }
+    ];
+
+    cards.forEach(c => {
+      const el = $(c.id);
+      if (!el) return;
+
+      const triggerCard = () => {
+        if (activeMetricFilter === c.metric && c.metric !== 'all') {
+          // Toggle off if clicked again -> return to 'all'
+          activeMetricFilter = 'all';
+        } else {
+          activeMetricFilter = c.metric;
+        }
+
+        // Update active class & aria-pressed state
+        cards.forEach(item => {
+          const cardEl = $(item.id);
+          const isActive = item.metric === activeMetricFilter;
+          cardEl.classList.toggle('active', isActive);
+          cardEl.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        render();
+      };
+
+      el.addEventListener('click', triggerCard);
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          triggerCard();
+        }
+      });
+    });
+  }
+
+  // Reset Filters to Default
+  function resetAllFilters() {
+    $('searchInput').value = '';
+    $('statusFilter').value = 'all';
+    $('severityFilter').value = 'all';
+    $('authorityFilter').value = 'all';
+    $('autoFilter').value = 'all';
+    activeMetricFilter = 'all';
+
+    ['cardTotal', 'cardCritical', 'cardModerate', 'cardOpen', 'cardAuto'].forEach(id => {
+      const isTotal = id === 'cardTotal';
+      const el = $(id);
+      el.classList.toggle('active', isTotal);
+      el.setAttribute('aria-pressed', isTotal ? 'true' : 'false');
+    });
+
+    render();
+    $('searchInput').focus();
+  }
+
+  // Open Detail Modal (5 Sections)
+  function openDetailModal(id, triggerEl) {
+    const b = blockers.find(x => x.id === id);
+    if (!b) return;
+
+    activeTriggerEl = triggerEl || document.activeElement;
+
+    // Fill Modal Data
+    $('modalDetailTitle').textContent = `Rincian Keterlambatan Penanganan Kendala`;
+    $('modalDetailSubtitle').textContent = `ID Tiket: ${b.id} · Dibuat ${b.createdDate} pukul ${b.createdTime}`;
+    $('mdTitle').textContent = b.title;
+
+    // Section 1
+    const sevClass = b.severity === 'Critical' ? 'sev-critical' : b.severity === 'High' ? 'sev-high' : b.severity === 'Medium' ? 'sev-medium' : 'sev-low';
+    const sevLabel = b.severity === 'Critical' ? 'KRITIS' : b.severity === 'High' ? 'TINGGI' : b.severity === 'Medium' ? 'SEDANG' : 'RENDAH';
+    $('mdSeverity').innerHTML = `<span class="sev-badge ${sevClass}">${esc(sevLabel)}</span>`;
+    $('mdReporter').textContent = `${b.reporter} (${b.reporterRole})`;
+    $('mdCreated').textContent = `${b.createdDate} · ${b.createdTime}`;
+    $('mdId').textContent = b.id;
+
+    // Section 2
+    const statusClass = b.status === 'Open' ? 'status-open' : b.status === 'Acknowledged' ? 'status-ack' : 'status-prog';
+    const statusLabel = b.status === 'Open' ? 'Baru' : b.status === 'Acknowledged' ? 'Diterima' : 'Sedang Dikerjakan';
+    $('mdStatus').innerHTML = `<span class="status-badge ${statusClass}"><span class="status-dot"></span> ${esc(statusLabel)}</span>`;
+    $('mdOwner').textContent = `${b.owner} (${b.ownerRole})`;
+    const ctxClass = b.authorityContext === 'Project' ? 'context-proj' : 'context-org';
+    const ctxLabel = b.authorityContext === 'Project' ? 'Jalur Proyek' : 'Jalur Organisasi';
+    const displayAssignment = b.ownerAssignment;
+    $('mdContext').innerHTML = `<span class="context-pill ${ctxClass}">${ctxLabel}</span>`;
+    $('mdAssignment').textContent = displayAssignment;
+
+    // Section 3
+    $('mdAge').style.color = 'var(--text-main)';
+    $('mdAge').textContent = `${b.ageLabel} (Tertahan Sejak Dibuat)`;
+    const slaDetailLabel = b.ageHours > 48 ? 'Melampaui Batas Toleransi 48 Jam' : b.ageHours >= 24 ? 'Melampaui Batas Toleransi 24 Jam' : b.ageHours >= 4 ? 'Melampaui Batas Toleransi Awal (≥4 Jam)' : 'Dalam Batas Toleransi Normal (≤4 Jam)';
+    $('mdSla').textContent = slaDetailLabel;
+    $('mdSla').style.color = b.ageHours > 48 ? '#DC2626' : b.ageHours >= 24 ? '#D97706' : 'var(--text-secondary)';
+    $('mdSummary').textContent = b.summary;
+
+    // Section 4: Timeline
+    const timelineEl = $('mdTimeline');
+    if (b.autoEvents.length > 0) {
+      timelineEl.innerHTML = b.autoEvents.map((evt, idx) => `
+        <div class="timeline-node">
+          <div class="timeline-dot dot-purple"></div>
+          <div class="timeline-content">
+            <div class="timeline-time">${esc(evt.when)}</div>
+            <div class="timeline-title">
+              <span>${esc(evt.level)}</span>
+              ${idx === 0 ? '<span class="timeline-current-pill">Terkini</span>' : ''}
+            </div>
+            <div class="timeline-desc">
+              <div><strong>Penerima:</strong> ${esc(evt.recipient)}</div>
+              <div><strong>Alasan Pemicu:</strong> ${esc(evt.reason)}</div>
+            </div>
+          </div>
+        </div>
+      `).join('') + `
+        <div class="timeline-node">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-time">${esc(b.createdDate)} · ${esc(b.createdTime)}</div>
+            <div class="timeline-title">Tiket Blocker Dibuat</div>
+            <div class="timeline-desc">Dilaporkan oleh ${esc(b.reporter)} (${esc(b.reporterRole)}). Penanganan awal dialokasikan ke ${esc(displayAssignment)}.</div>
+          </div>
+        </div>
+      `;
+    } else {
+      timelineEl.innerHTML = `
+        <div class="timeline-node">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-time">${esc(b.createdDate)} · ${esc(b.createdTime)}</div>
+            <div class="timeline-title">Tiket Blocker Dibuat</div>
+            <div class="timeline-desc">Dilaporkan oleh ${esc(b.reporter)} (${esc(b.reporterRole)}). Penanganan awal dialokasikan ke ${esc(displayAssignment)}. Belum ada eskalasi otomatis sistem; tiket masih dalam penanganan awal.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    $('agingDetailModal').classList.add('open');
+    $('closeDetailModalBtn').focus();
+  }
+
+  function closeDetailModal() {
+    $('agingDetailModal').classList.remove('open');
+    if (activeTriggerEl && typeof activeTriggerEl.focus === 'function') {
+      activeTriggerEl.focus();
+    }
+    activeTriggerEl = null;
+  }
+
+  // Export Modal Handlers
+  function openExportModal() {
+    activeTriggerEl = document.activeElement;
+    const eligibleBlockers = blockers.filter(b => ELIGIBLE_AGING_STATUSES.includes(b.status));
+    if (eligibleBlockers.length === 0) {
+      showToast('ℹ Tidak ada blocker menua untuk diekspor saat ini.');
+      return;
+    }
+
+    $('exportTimestamp').textContent = new Date().toLocaleString('id-ID', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) + ' WIB';
+
+    const curRole = roles[activeRole];
+    $('exportRequester').textContent = `${curRole.name} (${curRole.role})`;
+
+    $('exportAgingModal').classList.add('open');
+    $('closeExportModalBtn').focus();
+  }
+
+  function closeExportModal() {
+    $('exportAgingModal').classList.remove('open');
+    if (activeTriggerEl && typeof activeTriggerEl.focus === 'function') {
+      activeTriggerEl.focus();
+    }
+    activeTriggerEl = null;
+  }
+
+  function setExportFormat(fmt) {
+    exportFormat = fmt;
+    $('fmtPdfCard').classList.toggle('selected', fmt === 'pdf');
+    $('fmtXlsxCard').classList.toggle('selected', fmt === 'xlsx');
+    $('fmtPdfCard').setAttribute('aria-checked', fmt === 'pdf' ? 'true' : 'false');
+    $('fmtXlsxCard').setAttribute('aria-checked', fmt === 'xlsx' ? 'true' : 'false');
+    $('confirmExportBtnLabel').textContent = fmt === 'pdf' ? 'Unduh Laporan (PDF)' : 'Unduh Lembar Kerja (XLSX)';
+  }
+
+  function setExportScope(scp) {
+    if (scp === 'filtered' && $('scopeFilteredCard').classList.contains('disabled')) {
+      return;
+    }
+    exportScope = scp;
+    $('scopeAllCard').classList.toggle('selected', scp === 'all');
+    $('scopeFilteredCard').classList.toggle('selected', scp === 'filtered');
+    $('scopeAllCard').setAttribute('aria-checked', scp === 'all' ? 'true' : 'false');
+    $('scopeFilteredCard').setAttribute('aria-checked', scp === 'filtered' ? 'true' : 'false');
+  }
+
+  // Scope View Toggle Handler (Dimensi 4: Opsi 3 Hybrid Approach)
+  function setScopeView(viewMode) {
+    activeScopeView = viewMode;
+    const r = roles[activeRole];
+    if (!r) return;
+
+    $('scopePillMy').classList.toggle('active', viewMode === 'scoped');
+    $('scopePillAll').classList.toggle('active', viewMode === 'all');
+    $('scopePillMy').setAttribute('aria-checked', String(viewMode === 'scoped'));
+    $('scopePillAll').setAttribute('aria-checked', String(viewMode === 'all'));
+
+    if (viewMode === 'scoped') {
+      showToast(`Menampilkan keterlambatan penanganan: ${r.myScopeLabel}`);
+    } else {
+      showToast(`Menampilkan seluruh keterlambatan penanganan perusahaan`);
+    }
+
+    render();
+  }
+
+  // RBAC Role Switcher (Dimensi 4: Hak Akses & Tata Kelola)
+  function applyRole(roleKey, notify = false) {
+    activeRole = roleKey;
+    const r = roles[roleKey];
+    if (!r) return;
+
+    // 1. Update Sidebar User Profile
+    $('sideUserAvatar').textContent = r.initials;
+    $('sideUserName').textContent = r.name;
+    $('sideUserRole').textContent = r.role;
+
+    // 2. RBAC Elements Control
+    const navAging = $('navAging');
+    const refreshBtn = $('refreshBtn');
+    const scopeToggleGroup = $('scopeToggleGroup');
+
+    if (!r.allowed) {
+      // Forbidden for Staff Developer
+      $('mainDashboardContent').style.display = 'none';
+      $('forbiddenScreen').style.display = 'block';
+
+      // Temuan 2: Sembunyikan item Escalation Aging dari navigasi staf
+      if (navAging) navAging.style.display = 'none';
+
+      // Temuan 3: Kunci tombol refresh di topbar saat 403 aktif
+      if (refreshBtn) {
+        refreshBtn.setAttribute('disabled', 'true');
+        refreshBtn.style.opacity = '0.35';
+        refreshBtn.style.cursor = 'not-allowed';
+        refreshBtn.setAttribute('title', 'Penyegaran data tidak tersedia pada akun staf (Akses 403 Dibatasi)');
+      }
+
+      // Sembunyikan toggle lingkup pada layar 403
+      if (scopeToggleGroup) scopeToggleGroup.style.display = 'none';
+
+      // Temuan 4: Toast feedback pembatasan akses
+      if (notify) {
+        showToast('Akses Dibatasi: Halaman ini khusus untuk manajemen eksekutif.');
+      }
+    } else {
+      // Allowed for Management Roles
+      $('forbiddenScreen').style.display = 'none';
+      $('mainDashboardContent').style.display = 'block';
+
+      // Temuan 2: Pulihkan item Escalation Aging pada navigasi manajemen
+      if (navAging) navAging.style.display = 'flex';
+
+      // Temuan 3: Aktifkan kembali tombol refresh di topbar
+      if (refreshBtn) {
+        refreshBtn.removeAttribute('disabled');
+        refreshBtn.style.opacity = '1';
+        refreshBtn.style.cursor = 'pointer';
+        refreshBtn.setAttribute('title', 'Segarkan Data Keterlambatan');
+      }
+
+      // Temuan 5: Setup Scope Toggle Pills (Opsi 3 Hybrid Approach)
+      if (r.hasScopeToggle) {
+        activeScopeView = 'scoped';
+        if (scopeToggleGroup) scopeToggleGroup.style.display = 'inline-flex';
+
+        $('scopePillMy').classList.add('active');
+        $('scopePillAll').classList.remove('active');
+        $('scopePillMy').setAttribute('aria-checked', 'true');
+        $('scopePillAll').setAttribute('aria-checked', 'false');
+        $('scopePillMyLabel').textContent = r.myScopeLabel;
+
+        const allEligible = blockers.filter(b => ELIGIBLE_AGING_STATUSES.includes(b.status));
+        const myEligible = allEligible.filter(r.matchesScope);
+        $('scopePillMyCount').textContent = myEligible.length;
+        $('scopePillAllCount').textContent = allEligible.length;
+      } else {
+        activeScopeView = 'all';
+        if (scopeToggleGroup) scopeToggleGroup.style.display = 'none';
+      }
+
+      // Render data sesuai peran & lingkup yang aktif
+      render();
+
+      // Temuan 4: Toast feedback peralihan peran manajemen
+      if (notify) {
+        showToast(`Beralih ke peran: ${r.name} (${r.role})`);
+      }
+    }
+  }
+
+  // Event Listeners Initialization
+  function initEvents() {
+    // Live filter inputs
+    ['searchInput', 'statusFilter', 'severityFilter', 'authorityFilter', 'autoFilter'].forEach(id => {
+      const el = $(id);
+      if (el) {
+        el.addEventListener(id === 'searchInput' ? 'input' : 'change', render);
+      }
+    });
+
+    // Reset buttons
+    $('resetBtn').addEventListener('click', resetAllFilters);
+    $('emptyResetBtn').addEventListener('click', resetAllFilters);
+
+    // Refresh button simulation (Temuan 3: Guard non-allowed role)
+    $('refreshBtn').addEventListener('click', () => {
+      if (!roles[activeRole].allowed) return;
+      render();
+      showToast('Data keterlambatan penanganan blocker berhasil diperbarui.');
+    });
+
+    // Table delegated click for "Lihat Detail"
+    $('agingTableBody').addEventListener('click', e => {
+      const btn = e.target.closest('[data-detail]');
+      if (btn) {
+        openDetailModal(btn.dataset.detail, btn);
+      }
+    });
+
+    // Detail Modal Close Buttons
+    $('closeDetailModalBtn').addEventListener('click', closeDetailModal);
+    $('closeDetailModalBtn2').addEventListener('click', closeDetailModal);
+    $('agingDetailModal').addEventListener('click', e => {
+      if (e.target === $('agingDetailModal')) closeDetailModal();
+    });
+
+    // Export Modal Triggers
+    $('openExportBtn').addEventListener('click', openExportModal);
+    $('closeExportModalBtn').addEventListener('click', closeExportModal);
+    $('cancelExportBtn').addEventListener('click', closeExportModal);
+    $('exportAgingModal').addEventListener('click', e => {
+      if (e.target === $('exportAgingModal')) closeExportModal();
+    });
+
+    // Export Options Selection & Radio Group Keyboard Navigation
+    const formatCards = [
+      { id: 'fmtPdfCard', format: 'pdf' },
+      { id: 'fmtXlsxCard', format: 'xlsx' }
+    ];
+    formatCards.forEach((c, idx) => {
+      const el = $(c.id);
+      if (!el) return;
+      el.addEventListener('click', () => setExportFormat(c.format));
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setExportFormat(c.format);
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const next = formatCards[(idx + 1) % formatCards.length];
+          setExportFormat(next.format);
+          $(next.id).focus();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prev = formatCards[(idx - 1 + formatCards.length) % formatCards.length];
+          setExportFormat(prev.format);
+          $(prev.id).focus();
+        }
+      });
+    });
+
+    const scopeCards = [
+      { id: 'scopeAllCard', scope: 'all' },
+      { id: 'scopeFilteredCard', scope: 'filtered' }
+    ];
+    scopeCards.forEach((c, idx) => {
+      const el = $(c.id);
+      if (!el) return;
+      el.addEventListener('click', () => setExportScope(c.scope));
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setExportScope(c.scope);
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const next = scopeCards[(idx + 1) % scopeCards.length];
+          setExportScope(next.scope);
+          $(next.id).focus();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prev = scopeCards[(idx - 1 + scopeCards.length) % scopeCards.length];
+          setExportScope(prev.scope);
+          $(prev.id).focus();
+        }
+      });
+    });
+
+    // Confirm Export Trigger
+    $('confirmExportBtn').addEventListener('click', () => {
+      closeExportModal();
+      const ext = exportFormat.toUpperCase();
+      const scpText = exportScope === 'all' ? 'seluruh data keterlambatan' : 'hasil saringan aktif';
+      showToast(`Berhasil mengunduh rekapitulasi keterlambatan penanganan (${ext}) untuk ${scpText}.`);
+    });
+
+    // Scope View Toggle Buttons (Dimensi 4: Opsi 3 Hybrid Approach)
+    $('scopePillMy').addEventListener('click', () => setScopeView('scoped'));
+    $('scopePillAll').addEventListener('click', () => setScopeView('all'));
+
+    // Role Switcher Change (Temuan 4: trigger notify = true)
+    $('roleSwitcher').addEventListener('change', e => {
+      applyRole(e.target.value, true);
+    });
+
+    // Switch back to CEO button in 403 screen
+    $('switchBackToCeoBtn').addEventListener('click', () => {
+      $('roleSwitcher').value = 'rian';
+      applyRole('rian', true);
+    });
+
+    // Mobile Sidebar Toggle
+    $('mobileMenuBtn').addEventListener('click', () => {
+      $('sidebar').classList.add('open');
+      $('sidebarBackdrop').classList.add('active');
+    });
+    $('sidebarBackdrop').addEventListener('click', () => {
+      $('sidebar').classList.remove('open');
+      $('sidebarBackdrop').classList.remove('active');
+    });
+
+    // Modal Focus Trapping Function (WCAG 2.1 SC 2.1.2)
+    function trapModalFocus(modalEl, e) {
+      if (e.key !== 'Tab') return;
+      const focusables = modalEl.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables || focusables.length === 0) return;
+      const firstEl = focusables[0];
+      const lastEl = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    }
+
+    // Modal Keyboard Management (Escape Key & Tab Focus Trapping)
+    document.addEventListener('keydown', e => {
+      const detailModal = $('agingDetailModal');
+      const exportModal = $('exportAgingModal');
+      const isDetailOpen = detailModal && detailModal.classList.contains('open');
+      const isExportOpen = exportModal && exportModal.classList.contains('open');
+
+      if (e.key === 'Escape') {
+        if (isDetailOpen) closeDetailModal();
+        if (isExportOpen) closeExportModal();
+      } else if (e.key === 'Tab') {
+        if (isDetailOpen) {
+          trapModalFocus(detailModal, e);
+        } else if (isExportOpen) {
+          trapModalFocus(exportModal, e);
+        }
+      }
+    });
+  }
+
+  // Boot Application
+  setupMetricCards();
+  initEvents();
+  applyRole('rian');
+  render();
+
 })();
-</script></body></html>
+</script>
+</body>
+</html>

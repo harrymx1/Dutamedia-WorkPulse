@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>WorkPulse — Profil & Pengaturan Akun</title>
+  <title>WorkPulse — Profil &amp; Pengaturan Akun</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* ==========================================================================
-       DESIGN SYSTEM TOKENS (04-Design-System.md v1.4.0 FINAL)
+       DESIGN SYSTEM TOKENS (04-Design-System.md v1.5.0 CANONICAL)
        ========================================================================== */
     :root {
       --color-canvas: #F7FAF9;
@@ -27,29 +27,40 @@
       --color-brand-secondary: #12915F;
       --color-brand-tint: #E6F4EE;
       --color-brand-focus: #0B8061;
+      --color-focus-ring: #0B8061;
 
-      /* Status Tokens */
-      --color-status-green-bg: #E6F4EC;
-      --color-status-green-fg: #145A36;
-      --color-status-green-border: #A7D5B8;
-      --color-status-amber-bg: #FFF3D9;
-      --color-status-amber-fg: #7A4B00;
-      --color-status-amber-border: #E8C77A;
-      --color-status-red-bg: #FDE9E7;
-      --color-status-red-fg: #9B2923;
-      --color-status-red-border: #E8B1AC;
-      --color-status-neutral-bg: #EFF2F1;
-      --color-status-neutral-fg: #46534E;
-      --color-status-neutral-border: #C9D2CE;
+      /* Canonical Status & Workflow Tokens v1.5.0 */
+      --color-status-green-fg: #166534;
+      --color-status-green-bg: #DCFCE7;
+      --color-status-green-border: #86EFAC;
+      --color-status-amber-fg: #92400E;
+      --color-status-amber-bg: #FEF3C7;
+      --color-status-amber-border: #FCD34D;
+      --color-status-red-fg: #991B1B;
+      --color-status-red-bg: #FEE2E2;
+      --color-status-red-border: #FCA5A5;
+      --color-status-blue-fg: #075985;
+      --color-status-blue-bg: #E0F2FE;
+      --color-status-blue-border: #7DD3FC;
+      --color-timing-late-fg: #9A3412;
+      --color-timing-late-bg: #FFEDD5;
+      --color-timing-late-border: #FDBA74;
+      --color-status-neutral-fg: #334155;
+      --color-status-neutral-bg: #F1F5F9;
+      --color-status-neutral-border: #CBD5E1;
+      --color-status-na-fg: #334155;
+      --color-status-na-bg: #F1F5F9;
+      --color-status-na-border: #94A3B8;
 
-      /* Geometry & Elevation */
+      /* Geometry & Typography */
       --radius-sm: 8px;
       --radius-md: 10px;
-      --radius-lg: 14px;
-      --shadow-subtle: 0 4px 16px rgba(14, 33, 27, 0.04);
-      --shadow-card: 0 8px 24px rgba(14, 33, 27, 0.05);
+      --radius-lg: 12px;
+      --shadow-subtle: none;
+      --shadow-card: none;
       --shadow-modal: 0 16px 36px rgba(14, 33, 27, 0.12);
       --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
     * {
@@ -65,6 +76,7 @@
       font-size: 14.5px;
       line-height: 1.5;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     button, input, textarea, select {
@@ -91,60 +103,83 @@
     }
 
     :focus-visible {
-      outline: 3px solid var(--color-brand-focus);
+      outline: 3px solid var(--color-focus-ring);
       outline-offset: 2px;
     }
 
-    /* App Shell */
+    .skip {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: #fff;
+      padding: 12px;
+      z-index: 100;
+    }
+    .skip:focus {
+      left: 12px;
+      top: 12px;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .mono-id {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ==========================================================================
+       APP SHELL & 3-GROUP SIDEBAR NAVIGATION
+       ========================================================================== */
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 232px minmax(0, 1fr);
     }
 
-    /* Sidebar Navigation */
     .sidebar {
       background: var(--color-surface);
       border-right: 1px solid var(--color-border-subtle);
-      padding: 24px 16px;
+      padding: 20px 14px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
       position: sticky;
       top: 0;
       height: 100vh;
       overflow-y: auto;
+      z-index: 50;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 0 8px;
+      gap: 10px;
+      padding: 0 6px;
     }
 
     .brand-mark {
-      height: 38px;
-      width: 38px;
+      height: 36px;
+      width: 36px;
       border-radius: 10px;
       background: var(--color-brand-primary);
       display: grid;
       place-items: center;
       color: #FFFFFF;
       font-weight: 800;
-      font-size: 20px;
+      font-size: 18px;
       flex-shrink: 0;
     }
 
     .brand-name {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--color-text-primary);
     }
 
     .brand-caption {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--color-text-secondary);
       margin-top: 1px;
       font-weight: 500;
@@ -152,28 +187,28 @@
 
     .nav-group {
       display: grid;
-      gap: 4px;
+      gap: 3px;
     }
 
     .nav-label {
-      padding: 0 12px;
-      font-size: 11px;
-      letter-spacing: 0.08em;
+      padding: 0 10px;
+      font-size: 12px;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       color: var(--color-text-secondary);
-      font-weight: 750;
+      font-weight: 700;
       margin-bottom: 4px;
     }
 
     .nav-link {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
-      padding: 10px 12px;
+      padding: 9px 10px;
       border-radius: var(--radius-sm);
       color: var(--color-text-secondary);
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13.5px;
       text-decoration: none;
       transition: background 0.15s, color 0.15s;
     }
@@ -201,7 +236,7 @@
     .side-bottom {
       margin-top: auto;
       border-top: 1px solid var(--color-border-subtle);
-      padding: 16px 8px 0;
+      padding: 14px 6px 0;
       display: flex;
       gap: 10px;
       align-items: center;
@@ -247,16 +282,19 @@
 
     .user-name {
       font-size: 13px;
-      font-weight: 750;
+      font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .user-role {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--color-brand-primary);
       font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .logout-btn {
@@ -274,6 +312,40 @@
       color: #DC2626;
     }
 
+    /* Mobile Drawer Backdrop & Controls */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 99;
+    }
+    .sidebar-backdrop.show {
+      display: block;
+    }
+    .mobile-hamburger-btn {
+      display: none;
+      background: transparent;
+      border: 0;
+      padding: 8px;
+      margin: -8px 8px -8px -8px;
+      color: var(--color-text-primary);
+      border-radius: var(--radius-sm);
+    }
+    .mobile-close-sidebar-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      margin-left: auto;
+    }
+
     /* Main Area */
     main {
       min-width: 0;
@@ -282,27 +354,30 @@
     }
 
     .topbar {
-      height: 64px;
+      height: 56px;
       border-bottom: 1px solid var(--color-border-subtle);
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 clamp(20px, 3.5vw, 48px);
+      padding: 0 clamp(16px, 3vw, 36px);
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
     }
 
     .breadcrumb {
-      font-size: 13px;
+      font-size: 13.5px;
       color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .breadcrumb strong {
       color: var(--color-text-primary);
-      font-weight: 750;
+      font-weight: 700;
     }
 
     .top-actions {
@@ -312,8 +387,8 @@
     }
 
     .icon-button {
-      height: 38px;
-      width: 38px;
+      height: 36px;
+      width: 36px;
       display: grid;
       place-items: center;
       border: 1px solid var(--color-border-subtle);
@@ -321,37 +396,97 @@
       border-radius: var(--radius-sm);
       color: var(--color-text-secondary);
       position: relative;
+      text-decoration: none;
     }
 
     .icon-button:hover {
       background: var(--color-surface-subtle);
       color: var(--color-text-primary);
+      text-decoration: none;
     }
 
     .badge-dot {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 7px;
+      right: 7px;
       width: 7px;
       height: 7px;
-      background: #B45309;
+      background: #D97706;
       border: 1.5px solid #FFFFFF;
       border-radius: 50%;
     }
 
     .content {
-      max-width: 980px;
+      max-width: 1200px;
       width: 100%;
       margin: 0 auto;
-      padding: 32px clamp(20px, 3.5vw, 48px) 72px;
+      padding: 28px clamp(1.5rem, 4vw, 3.5rem) 72px;
+    }
+
+    /* Prototype Simulation Bar */
+    .sim-bar {
+      background: var(--color-surface-subtle);
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .sim-bar-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      letter-spacing: 0.03em;
+    }
+    .sim-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .sim-btn {
+      background: #fff;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      transition: all 0.15s;
+    }
+    .sim-btn:hover {
+      border-color: var(--color-brand-primary);
+      color: var(--color-brand-primary);
+      background: var(--color-brand-tint);
+    }
+    .sim-btn.active {
+      background: var(--color-brand-primary);
+      color: #fff;
+      border-color: var(--color-brand-primary);
+    }
+    .sim-select {
+      background: #fff;
+      border: 1px solid var(--color-border-strong);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-primary);
     }
 
     .page-heading {
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .eyebrow {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--color-brand-primary);
       font-weight: 800;
       letter-spacing: 0.08em;
@@ -370,15 +505,55 @@
     .subtitle {
       font-size: 14px;
       color: var(--color-text-secondary);
-      max-width: 680px;
+      max-width: 740px;
     }
 
-    /* Cards & Panels */
+    /* Pills */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-subtle);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .pill.green {
+      background: var(--color-status-green-bg);
+      color: var(--color-status-green-fg);
+      border-color: var(--color-status-green-border);
+    }
+    .pill.amber {
+      background: var(--color-status-amber-bg);
+      color: var(--color-status-amber-fg);
+      border-color: var(--color-status-amber-border);
+    }
+    .pill.red {
+      background: var(--color-status-red-bg);
+      color: var(--color-status-red-fg);
+      border-color: var(--color-status-red-border);
+    }
+    .pill.blue {
+      background: var(--color-status-blue-bg);
+      color: var(--color-status-blue-fg);
+      border-color: var(--color-status-blue-border);
+    }
+    .pill.neutral {
+      background: var(--color-status-neutral-bg);
+      color: var(--color-status-neutral-fg);
+      border-color: var(--color-status-neutral-border);
+    }
+
+    /* Cards & Panels (box-shadow: none) */
     .panel {
       background: var(--color-surface);
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-card);
+      box-shadow: none;
       margin-bottom: 24px;
       overflow: hidden;
     }
@@ -389,16 +564,18 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     .panel-head h2 {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 800;
       color: var(--color-text-primary);
     }
 
     .panel-head p {
-      font-size: 12.5px;
+      font-size: 13px;
       color: var(--color-text-secondary);
       margin-top: 2px;
     }
@@ -415,20 +592,21 @@
       background: #FFFFFF;
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-lg);
-      padding: 24px 28px;
+      padding: 22px 26px;
       margin-bottom: 24px;
-      box-shadow: var(--shadow-card);
+      box-shadow: none;
+      flex-wrap: wrap;
     }
 
     .hero-avatar {
-      width: 72px;
-      height: 72px;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
       background: var(--color-brand-tint);
       color: var(--color-brand-primary);
       display: grid;
       place-items: center;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       border: 2px solid var(--color-border-strong);
       flex-shrink: 0;
@@ -436,13 +614,13 @@
 
     .hero-info {
       flex: 1;
-      min-width: 0;
+      min-width: 240px;
     }
 
     .hero-title-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 4px;
     }
@@ -460,7 +638,7 @@
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 750;
+      font-weight: 700;
       background: var(--color-status-green-bg);
       color: var(--color-status-green-fg);
       border: 1px solid var(--color-status-green-border);
@@ -477,38 +655,75 @@
     .hero-meta {
       font-size: 13.5px;
       color: var(--color-text-secondary);
+      font-variant-numeric: tabular-nums;
     }
 
-    /* Info Grid */
+    /* Info Grid (Panel 1 Read-Only Master Data) */
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px 24px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px 20px;
     }
 
     .info-item {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      padding: 12px 14px;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface-subtle);
     }
 
     .info-label {
       font-size: 12px;
-      font-weight: 750;
+      font-weight: 700;
       color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
     .info-value {
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--color-text-primary);
     }
 
-    .info-note-box {
+    /* RoleBasedPromptHint Preview Box */
+    .prompt-hint-box {
       margin-top: 20px;
-      padding: 14px 16px;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: var(--color-brand-tint);
+      border: 1px solid #B7DCCB;
+      border-left: 4px solid var(--color-brand-primary);
+    }
+    .prompt-hint-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .prompt-hint-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prompt-hint-text {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.5;
+    }
+
+    .info-note-box {
+      margin-top: 16px;
+      padding: 13px 16px;
       border-radius: var(--radius-sm);
       background: var(--color-surface-subtle);
       border: 1px solid var(--color-border-subtle);
@@ -528,7 +743,7 @@
       margin-top: 1px;
     }
 
-    /* Form Elements */
+    /* Form Elements & Password Strength Meter (Panel 2) */
     .form-group {
       margin-bottom: 18px;
     }
@@ -549,7 +764,7 @@
       width: 100%;
       border: 1px solid var(--color-border-strong);
       border-radius: var(--radius-sm);
-      padding: 10px 14px;
+      padding: 10px 40px 10px 14px;
       font-size: 14px;
       color: var(--color-text-primary);
       background: #FFFFFF;
@@ -560,6 +775,22 @@
       outline: none;
       border-color: var(--color-brand-focus);
       box-shadow: 0 0 0 3px rgba(11, 128, 97, 0.12);
+    }
+
+    input[aria-invalid="true"] {
+      border-color: var(--color-status-red-fg);
+      background: #FFFBFB;
+    }
+
+    .field-error {
+      display: none;
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-status-red-fg);
+    }
+    .field-error.show {
+      display: block;
     }
 
     .input-icon-btn {
@@ -580,17 +811,117 @@
       color: var(--color-text-primary);
     }
 
+    /* 4-Segment PasswordStrengthMeter (height: 6px) */
+    .pwd-meter-wrap {
+      margin-top: 10px;
+    }
+    .pwd-meter-bars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      height: 6px;
+    }
+    .pwd-segment {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--color-border-subtle);
+      transition: background 0.2s ease;
+    }
+    .pwd-segment.level-1 { background: var(--color-status-red-fg); }
+    .pwd-segment.level-2 { background: var(--color-timing-late-fg); }
+    .pwd-segment.level-3 { background: var(--color-status-amber-fg); }
+    .pwd-segment.level-4 { background: var(--color-status-green-fg); }
+    .pwd-meter-caption {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+    }
+
+    /* Real-time Security Criteria Checklist */
+    .pwd-criteria-list {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--color-surface-subtle);
+      border: 1px solid var(--color-border-subtle);
+    }
+    .pwd-criteria-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+    }
+    .pwd-criteria-item.met {
+      color: var(--color-status-green-fg);
+    }
+    .pwd-criteria-icon {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    /* Checkbox Row */
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 16px 0 20px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--color-surface-subtle);
+      border: 1px solid var(--color-border-subtle);
+      font-size: 13px;
+      color: var(--color-text-primary);
+      cursor: pointer;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      margin-top: 2px;
+      accent-color: var(--color-brand-primary);
+      flex-shrink: 0;
+    }
+
+    .pwd-success-banner {
+      display: none;
+      margin-bottom: 18px;
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--color-status-green-bg);
+      border: 1px solid var(--color-status-green-border);
+      color: var(--color-status-green-fg);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .pwd-success-banner.show {
+      display: block;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-weight: 750;
+      font-size: 13.5px;
+      font-weight: 700;
       border: 1px solid transparent;
       transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      text-decoration: none;
     }
 
     .btn-primary {
@@ -612,77 +943,38 @@
       background: var(--color-surface-subtle);
     }
 
-    /* Switch Toggles for Notifications */
-    .setting-row {
+    /* Panel 3: Device Notification Channel Summary */
+    .device-channel-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .device-channel-card {
+      padding: 14px 16px;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .device-channel-card-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--color-border-subtle);
+      gap: 8px;
+      flex-wrap: wrap;
     }
-
-    .setting-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .setting-row:first-child {
-      padding-top: 0;
-    }
-
-    .setting-meta strong {
-      display: block;
-      font-size: 14px;
+    .device-channel-name {
+      font-size: 13.5px;
+      font-weight: 800;
       color: var(--color-text-primary);
     }
-
-    .setting-meta span {
+    .device-channel-desc {
       font-size: 12.5px;
       color: var(--color-text-secondary);
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background-color: var(--color-status-neutral-border);
-      border-radius: 24px;
-      transition: 0.2s;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      border-radius: 50%;
-      transition: 0.2s;
-    }
-
-    input:checked + .slider {
-      background-color: var(--color-brand-primary);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
+      line-height: 1.45;
     }
 
     /* Toast Notification */
@@ -707,12 +999,40 @@
       display: flex;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .app {
         grid-template-columns: 1fr;
       }
       .sidebar {
         display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        z-index: 100;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+      }
+      .sidebar.open {
+        display: flex;
+      }
+      .mobile-hamburger-btn {
+        display: block;
+      }
+      .mobile-close-sidebar-btn {
+        display: inline-flex;
+      }
+      .info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .device-channel-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .content {
+        padding: 20px 16px 72px;
       }
       .info-grid {
         grid-template-columns: 1fr;
@@ -721,49 +1041,55 @@
   </style>
 </head>
 <body>
+  <a class="skip" href="#main-content">Lewati ke konten utama</a>
+
+  <!-- Mobile Drawer Backdrop -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
   <div class="app">
 
     <!-- ==============================================================
-         SIDEBAR NAVIGATION (RESMI MY TODAY - BEBAS EMOTICON)
+         SIDEBAR NAVIGATION (3 GRUP: WORKSPACE, MANAGEMENT, ADMINISTRATION)
          ============================================================== -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="mainSidebar" aria-label="Navigasi Utama">
       <div class="brand">
         <div class="brand-mark">W</div>
         <div>
           <div class="brand-name">WorkPulse</div>
           <div class="brand-caption">PT Dutamedia</div>
         </div>
+        <button class="mobile-close-sidebar-btn" type="button" id="btnCloseSidebar" aria-label="Tutup navigasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
 
-      <!-- Workspace Menu (Self-Service) -->
-      <div class="nav-group">
+      <!-- Grup 1: Workspace (Tampil untuk semua role) -->
+      <div class="nav-group" id="workspace-nav-group">
         <div class="nav-label">Workspace</div>
         <a class="nav-link" href="02-Morning-Commitment.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <span>My Today</span>
         </a>
-        <a class="nav-link" href="05-Raise-Instant-Blocker.html#my-blockers">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-          <span>My Blockers</span>
-          <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">2</span>
-        </a>
         <a class="nav-link" href="06-My-History-Weekly-Summary.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>My History</span>
         </a>
-        <a class="nav-link" href="20-My Leave Request (Employee).html">
+        <a class="nav-link" href="20-My-Leave-Request.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <span>My Leave</span>
+          <span>My Leave Request</span>
         </a>
         <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span>Notifications</span>
-          <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">3</span>
+          <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:12px;font-weight:800;border-radius:999px">3</span>
+        </a>
+        <a class="nav-link active" href="24-Profile-Settings.html" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profile</span>
         </a>
       </div>
 
-      <!-- Management Menu (Dynamic for Supervisor / Head / HRGA / CEO) -->
+      <!-- Grup 2: Management (Kondisional sesuai role aktif) -->
       <div class="nav-group" id="mgmt-nav-group" style="display: none;">
         <div class="nav-label">Management</div>
         <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
@@ -771,38 +1097,75 @@
           <span>Pulse Dashboard</span>
         </a>
         <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span>Blocker Queue</span>
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          <span>Blocker &amp; Escalation Queue</span>
         </a>
-        <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching" style="display: none;">
+        <a class="nav-link" href="14-Escalation-Aging.html" id="link-escalation-aging">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Escalation Aging</span>
+        </a>
+        <a class="nav-link" href="13-Project-Risk-View.html" id="link-project-risk">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22 12 2"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Project Risk View</span>
+        </a>
+        <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          <span>Coaching Notes</span>
+          <span>Manager Notes</span>
         </a>
-        <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance" style="display: none;">
+        <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="link-correction-review">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Correction &amp; Leave Review</span>
+        </a>
+        <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
           <span>Compliance Queue</span>
         </a>
-        <a class="nav-link" href="21-Leave Approval Queue (ReviewerHRGA).html" id="link-leave-approval" style="display: none;">
+        <a class="nav-link" href="21-Leave-Approval-Queue.html" id="link-leave-approval">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Leave Approvals</span>
+          <span>Leave Approval Queue</span>
         </a>
-        <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions" style="display: none;">
+        <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Exemptions</span>
+          <span>Holiday &amp; Exemption</span>
         </a>
-        <a class="nav-link" href="23-Reports.html">
+        <a class="nav-link" href="23-Reports.html" id="link-reports">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
           <span>Reports</span>
         </a>
       </div>
 
-      <!-- Account Bottom Area (Aktif di Halaman Profil) -->
+      <!-- Grup 3: Administration (Kondisional sesuai role aktif) -->
+      <div class="nav-group" id="admin-nav-group" style="display: none;">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="25-Admin-User-Invitation-Management.html" id="link-admin-users">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a class="nav-link" href="15-Admin-Organizational-Mapping.html" id="link-admin-org">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Organizational Mapping</span>
+        </a>
+        <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" id="link-admin-temp-rev">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" id="link-admin-notif">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span>Notification Setup</span>
+        </a>
+        <a class="nav-link" href="18-Policy-Settings.html" id="link-admin-policy">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Policy Settings</span>
+        </a>
+      </div>
+
+      <!-- Account Bottom Area -->
       <div class="side-bottom">
         <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
           <div class="avatar" id="side-avatar">BP</div>
           <div class="user-meta">
             <div class="user-name" id="side-user-name">Budi Pratama</div>
-            <div class="user-role" id="side-user-role">Software Engineer</div>
+            <div class="user-role" id="side-user-role">Software Engineer · Engineering</div>
           </div>
         </a>
         <a href="01-Login-Activation.html" class="logout-btn" title="Keluar / Ganti Akun" aria-label="Keluar">
@@ -814,11 +1177,18 @@
     <!-- ==============================================================
          MAIN CONTENT AREA
          ============================================================== -->
-    <main>
+    <main id="main-content">
       <!-- Topbar Header -->
       <header class="topbar">
-        <div class="breadcrumb">
-          Akun & Pengaturan <span style="color: #A9C7BC;">/</span> <strong>Profil Pengguna</strong>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="mobile-hamburger-btn" type="button" id="btnOpenSidebar" aria-label="Buka navigasi menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="breadcrumb">
+            <a href="02-Morning-Commitment.html" style="color:inherit;text-decoration:none">Workspace</a>
+            <span style="color: #A9C7BC;">/</span>
+            <strong>Profile</strong>
+          </div>
         </div>
         <div class="top-actions">
           <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi">
@@ -831,165 +1201,275 @@
 
       <div class="content">
 
+        <!-- Bar Mode Simulasi Prototipe -->
+        <div class="sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+          <div class="sim-bar-label">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>[Mode Simulasi Prototipe]</span>
+          </div>
+          <div class="sim-actions">
+            <button type="button" class="sim-btn active" data-sim-profile="EMP_ENG">Employee — Engineering</button>
+            <button type="button" class="sim-btn" data-sim-profile="SUP_QA">Supervisor — Quality</button>
+            <button type="button" class="sim-btn" data-sim-profile="HEAD_OPS">Head — Operations &amp; Infrastructure</button>
+            <button type="button" class="sim-btn" data-sim-profile="HRGA_HR">HRGA — HRGA</button>
+            <button type="button" class="sim-btn" data-sim-profile="CEO_MGMT">CEO — Management [Indefinite Role Exemption]</button>
+            <label for="simFuncSelect" style="font-size:12px;font-weight:700;color:var(--color-text-secondary);margin-left:4px">Uji 10 Fungsi Kanonikal:</label>
+            <select id="simFuncSelect" class="sim-select" aria-label="Pilih Fungsi Organisasi Kanonikal">
+              <option value="Engineering">1. Engineering</option>
+              <option value="Quality">2. Quality</option>
+              <option value="Operations & Infrastructure">3. Operations &amp; Infrastructure</option>
+              <option value="R&D">4. R&amp;D</option>
+              <option value="Delivery">5. Delivery</option>
+              <option value="Business Development">6. Business Development</option>
+              <option value="Sales Enablement & Presales">7. Sales Enablement &amp; Presales</option>
+              <option value="Finance">8. Finance</option>
+              <option value="HRGA">9. HRGA</option>
+              <option value="Management">10. Management</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Page Heading -->
         <div class="page-heading">
-          <div class="eyebrow">Identitas & Konteks Akun</div>
-          <h1>Profil Pengguna</h1>
+          <div class="eyebrow">Identitas &amp; Konteks Akun</div>
+          <h1>Profil Pengguna &amp; Keamanan Akun</h1>
           <p class="subtitle">
-            Informasi identitas kerja, penugasan organisasi terdaftar, preferensi notifikasi, dan pengaturan keamanan akses akun Anda.
+            Informasi identitas resmi, penugasan organisasi efektif (<em>read-only</em>), pratinjau panduan komitmen sesuai fungsi kanonikal, pembaruan kata sandi mandiri, serta ringkasan kanal notifikasi perangkat ini.
           </p>
         </div>
 
-        <!-- 1. Hero Identity Card -->
+        <!-- Hero Identity Strip -->
         <div class="profile-hero-card">
           <div class="hero-avatar" id="hero-avatar">BP</div>
           <div class="hero-info">
             <div class="hero-title-row">
               <span class="hero-name" id="hero-name">Budi Pratama</span>
+              <span class="pill neutral mono-id" id="hero-nik-pill">EMP-2024-0118</span>
               <span class="status-badge">
                 <span class="status-indicator-dot"></span>
                 <span>Aktif · Terdaftar</span>
               </span>
             </div>
             <div class="hero-meta" id="hero-meta">
-              budi.pratama@dutamedia.com · Software Engineer · Technology Squad A
+              budi.pratama@dutamedia.com · Software Engineer · Engineering
             </div>
           </div>
         </div>
 
-        <!-- 2. Organizational Context Panel (Read-only / Master Data) -->
-        <section class="panel">
+        <!-- PANEL 1: Kartu Identitas & Penugasan Efektif Read-Only -->
+        <section class="panel" aria-labelledby="panel1-title">
           <div class="panel-head">
             <div>
-              <h2>Konteks & Struktur Organisasi</h2>
-              <p>Struktur penugasan resmi yang tercatat pada setiap komitmen dan evaluasi harian Anda.</p>
+              <h2 id="panel1-title">1. Kartu Identitas &amp; Penugasan Efektif (Read-Only)</h2>
+              <p>Atribut identitas resmi dan pemetaan organisasi yang berlaku saat ini pada setiap komitmen harian Anda.</p>
             </div>
+            <span class="pill neutral">Master Data Organisasi (Read-Only)</span>
           </div>
           <div class="panel-body">
             <div class="info-grid">
               <div class="info-item">
-                <span class="info-label">Peran Sistem (Role)</span>
+                <span class="info-label">Nama Lengkap</span>
+                <span class="info-value" id="profile-name-val">Budi Pratama</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">ID / NIK Karyawan</span>
+                <span class="info-value mono-id" id="profile-nik-val">EMP-2024-0118</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Alamat Email Resmi</span>
+                <span class="info-value mono-id" id="profile-email-val">budi.pratama@dutamedia.com</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Jabatan Fungsional (Job Title)</span>
+                <span class="info-value" id="profile-jobtitle-val">Software Engineer</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Peran Otorisasi Sistem (System RBAC Role)</span>
                 <span class="info-value" id="profile-role-val">Employee</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Fungsi / Divisi</span>
+                <span class="info-label">Fungsi Organisasi Kanonikal (Canonical Function)</span>
                 <span class="info-value" id="profile-function-val">Engineering</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Departemen / Squad</span>
-                <span class="info-value" id="profile-dept-val">Technology Squad A</span>
+                <span class="info-label">Atasan Langsung Efektif (Direct Manager)</span>
+                <span class="info-value" id="profile-manager-val">Siti Aminah (Engineering Supervisor)</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Atasan Langsung (Direct Reviewer)</span>
-                <span class="info-value" id="profile-reviewer-val">Siti Aminah (Supervisor)</span>
+                <span class="info-label">Tanggal Efektif Penugasan</span>
+                <span class="info-value tabular-nums" id="profile-effdate-val">05 Januari 2026</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Status Kebijakan Partisipasi</span>
-                <span class="info-value" id="profile-policy-val">Standar Wajib (Baseline 1–3 Komitmen)</span>
+                <span class="info-label">Status Pengecualian (Exemption)</span>
+                <span class="info-value" id="profile-exemption-val">Tidak Ada Pengecualian Aktif</span>
               </div>
-              <div class="info-item">
-                <span class="info-label">Tanggal Aktif Organisasi</span>
-                <span class="info-value">05 Januari 2026</span>
+            </div>
+
+            <!-- Kotak Pratinjau RoleBasedPromptHint Aktif -->
+            <div class="prompt-hint-box" aria-live="polite">
+              <div class="prompt-hint-head">
+                <div class="prompt-hint-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <span>Pratinjau Panduan Komitmen Pagi Aktif (RoleBasedPromptHint)</span>
+                </div>
+                <span class="pill green" id="prompt-hint-func-badge">Fungsi: Engineering</span>
+              </div>
+              <div class="prompt-hint-text" id="prompt-hint-text">
+                Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji
               </div>
             </div>
 
             <div class="info-note-box">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
               <div>
-                Data struktur organisasi dan pelaporan diatur secara terpusat melalui Organization Master Data oleh HRGA. Jika terdapat mutasi, perubahan squad, atau perbedaan atasan reviewer, silakan hubungi tim HRGA organisasi.
+                Atribut identitas, pemetaan <em>Canonical Function</em>, <em>Direct Manager</em>, dan status <em>Exemption</em> dikelola secara terpusat oleh HRGA &amp; System Administrator melalui menu Pemetaan Organisasi. Jika terdapat pembaruan jabatan atau perpindahan unit, silakan hubungi HRGA.
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 3. Notification Preferences (FR-27 / FR-28) -->
-        <section class="panel">
+        <!-- PANEL 2: Keamanan & Pembaruan Kata Sandi Mandiri -->
+        <section class="panel" aria-labelledby="panel2-title">
           <div class="panel-head">
             <div>
-              <h2>Preferensi Notifikasi</h2>
-              <p>Atur saluran pengingat untuk jadwal Cut-Off dan eskalasi blocker harian.</p>
+              <h2 id="panel2-title">2. Keamanan &amp; Pembaruan Kata Sandi Mandiri</h2>
+              <p>Perbarui kata sandi akun Anda secara mandiri dengan validasi kekuatan kata sandi <em>real-time</em>.</p>
             </div>
           </div>
           <div class="panel-body">
-            <div class="setting-row">
-              <div class="setting-meta">
-                <strong>Pengingat Browser Push (Cut-Off Pagi & Sore)</strong>
-                <span>Menerima peringatan otomatis 30 menit sebelum batas waktu komitmen (08:30 WIB) dan EOD (17:30 WIB).</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="pref-push" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
+            <div class="pwd-success-banner" id="pwd-success-banner" role="status"></div>
 
-            <div class="setting-row">
-              <div class="setting-meta">
-                <strong>Notifikasi Feedback & Manager Notes</strong>
-                <span>Pemberitahuan instan saat atasan memberikan coaching note atau umpan balik pada komitmen harian Anda.</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="pref-notes" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-meta">
-                <strong>Eskalasi Blocker Tim</strong>
-                <span>Pemberitahuan bila ada pembaruan resolusi terhadap blocker teknis atau dependensi yang Anda laporkan.</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="pref-blocker" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <!-- 4. Account Security & Password -->
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <h2>Keamanan & Kata Sandi</h2>
-              <p>Perbarui kata sandi akun secara berkala untuk menjaga keamanan akses kerja Anda.</p>
-            </div>
-          </div>
-          <div class="panel-body">
-            <form id="pwd-form" style="max-width: 520px;">
+            <form id="pwd-form" style="max-width: 560px;" novalidate>
               <div class="form-group">
                 <label class="form-label" for="curr-pwd">Kata Sandi Saat Ini</label>
                 <div class="input-container">
-                  <input type="password" id="curr-pwd" placeholder="Masukkan kata sandi saat ini" required>
-                  <button type="button" class="input-icon-btn" data-toggle="curr-pwd" aria-label="Lihat kata sandi">
+                  <input type="password" id="curr-pwd" placeholder="Masukkan kata sandi saat ini" required aria-describedby="curr-pwd-error">
+                  <button type="button" class="input-icon-btn" data-toggle="curr-pwd" aria-label="Lihat kata sandi saat ini">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   </button>
                 </div>
+                <div class="field-error" id="curr-pwd-error">Kata sandi saat ini wajib diisi.</div>
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="new-pwd">Kata Sandi Baru</label>
                 <div class="input-container">
-                  <input type="password" id="new-pwd" placeholder="Minimal 8 karakter kombinasi" required>
-                  <button type="button" class="input-icon-btn" data-toggle="new-pwd" aria-label="Lihat kata sandi">
+                  <input type="password" id="new-pwd" placeholder="Minimal 8 karakter kombinasi huruf &amp; angka" required aria-describedby="new-pwd-error">
+                  <button type="button" class="input-icon-btn" data-toggle="new-pwd" aria-label="Lihat kata sandi baru">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   </button>
                 </div>
+                <div class="field-error" id="new-pwd-error">Kata sandi baru belum memenuhi seluruh kriteria keamanan di bawah.</div>
+
+                <!-- PasswordStrengthMeter 4 Segmen (height: 6px) -->
+                <div class="pwd-meter-wrap" aria-live="polite">
+                  <div class="pwd-meter-bars" role="progressbar" aria-label="Kekuatan kata sandi baru" aria-valuemin="0" aria-valuemax="4" id="pwd-meter-bars">
+                    <span class="pwd-segment" id="pwd-seg-1"></span>
+                    <span class="pwd-segment" id="pwd-seg-2"></span>
+                    <span class="pwd-segment" id="pwd-seg-3"></span>
+                    <span class="pwd-segment" id="pwd-seg-4"></span>
+                  </div>
+                  <div class="pwd-meter-caption">
+                    <span>Kekuatan Kata Sandi:</span>
+                    <span id="pwd-strength-label">Belum diisi (0/4 segmen)</span>
+                  </div>
+                </div>
+
+                <!-- Checklist Kriteria Keamanan Real-Time -->
+                <ul class="pwd-criteria-list" aria-label="Kriteria keamanan kata sandi">
+                  <li class="pwd-criteria-item" id="crit-len">
+                    <svg class="pwd-criteria-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+                    <span>Minimal 8 karakter</span>
+                  </li>
+                  <li class="pwd-criteria-item" id="crit-alnum">
+                    <svg class="pwd-criteria-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+                    <span>Kombinasi huruf &amp; angka</span>
+                  </li>
+                  <li class="pwd-criteria-item" id="crit-diff">
+                    <svg class="pwd-criteria-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+                    <span>Berbeda dari kata sandi saat ini</span>
+                  </li>
+                </ul>
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="confirm-pwd">Konfirmasi Kata Sandi Baru</label>
                 <div class="input-container">
-                  <input type="password" id="confirm-pwd" placeholder="Ulangi kata sandi baru" required>
-                  <button type="button" class="input-icon-btn" data-toggle="confirm-pwd" aria-label="Lihat kata sandi">
+                  <input type="password" id="confirm-pwd" placeholder="Ketik ulang kata sandi baru" required aria-describedby="confirm-pwd-error">
+                  <button type="button" class="input-icon-btn" data-toggle="confirm-pwd" aria-label="Lihat konfirmasi kata sandi">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   </button>
                 </div>
+                <div class="field-error" id="confirm-pwd-error">Konfirmasi kata sandi baru tidak cocok dengan kata sandi baru.</div>
               </div>
 
+              <!-- Checkbox Opsional Akhiri Sesi Aktif Lain -->
+              <label class="checkbox-row" for="revoke-other-sessions">
+                <input type="checkbox" id="revoke-other-sessions" checked>
+                <span><strong>Akhiri seluruh sesi aktif di perangkat/peramban lain setelah kata sandi diperbarui</strong> (direkomendasikan untuk menjaga keamanan akses akun Anda).</span>
+              </label>
+
               <button type="submit" class="btn btn-primary" id="btn-save-pwd">
-                Simpan Kata Sandi Baru
+                <span>Simpan Kata Sandi Baru</span>
               </button>
             </form>
+          </div>
+        </section>
+
+        <!-- PANEL 3: Ringkasan Kanal Notifikasi Perangkat Ini (Tanpa Toggle Palsu) -->
+        <section class="panel" aria-labelledby="panel3-title">
+          <div class="panel-head">
+            <div>
+              <h2 id="panel3-title">3. Ringkasan Kanal Notifikasi Perangkat Ini</h2>
+              <p>Status izin pengiriman Browser Push pada perangkat/peramban saat ini beserta aturan tetap pengingat produk.</p>
+            </div>
+            <span class="pill green" id="profile-push-status-badge">Browser Push: Aktif &amp; Terdaftar (Granted)</span>
+          </div>
+          <div class="panel-body">
+            <div class="device-channel-summary">
+              <div class="device-channel-card">
+                <div class="device-channel-card-top">
+                  <span class="device-channel-name">Browser Push Perangkat Ini</span>
+                  <span class="pill green" id="card-push-pill">Granted</span>
+                </div>
+                <div class="device-channel-desc" id="card-push-desc">
+                  Status izin dan langganan bersifat spesifik pada browser/perangkat yang sedang Anda gunakan saat ini.
+                </div>
+              </div>
+
+              <div class="device-channel-card">
+                <div class="device-channel-card-top">
+                  <span class="device-channel-name">Aturan Tetap Pengingat</span>
+                  <span class="pill blue tabular-nums">60 Menit Sebelum Deadline</span>
+                </div>
+                <div class="device-channel-desc tabular-nums">
+                  Pengingat Morning Commitment (<span class="mono-id">08:00 WIB</span>) dan EOD Update (<span class="mono-id">16:00 WIB</span>) dikirim tepat <strong>60 menit sebelum On-Time Deadline</strong> (<span class="mono-id">[Deadline - 60m, Deadline)</span>) dan berhenti tepat saat On-Time Deadline.
+                </div>
+              </div>
+
+              <div class="device-channel-card">
+                <div class="device-channel-card-top">
+                  <span class="device-channel-name">Web Center &amp; Email Resmi</span>
+                  <span class="pill neutral">Kanal Sistem Tetap</span>
+                </div>
+                <div class="device-channel-desc">
+                  Pencatatan di Web Notification Center dan pengiriman Email resmi dikelola secara terpusat berdasarkan matriks trigger produk.
+                </div>
+              </div>
+            </div>
+
+            <div class="info-note-box" style="margin-top:0;margin-bottom:18px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <div class="tabular-nums">
+                Untuk menguji pengiriman push lokal, mendaftarkan ulang langganan perangkat, atau mencabut langganan perangkat ini (<em>Unregister</em>), silakan buka pengaturan perangkat di halaman Pusat Notifikasi.
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-start">
+              <a href="07-Notification-Center-Browser-Push.html" class="btn btn-secondary">
+                <span>Kelola Kanal &amp; Uji Perangkat di Pusat Notifikasi →</span>
+              </a>
+            </div>
           </div>
         </section>
 
@@ -999,131 +1479,397 @@
 
   <!-- Toast Notification Feedback -->
   <div class="toast" id="profile-toast" role="status" aria-live="polite">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A7D5B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#86EFAC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     <span id="toast-text">Pengaturan berhasil diperbarui.</span>
   </div>
 
   <script>
-    // SVGs for Password Toggle
-    const eyeSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-    const eyeOffSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    (() => {
+      const $ = id => document.getElementById(id);
 
-    // Password Visibility Toggles
-    document.querySelectorAll('[data-toggle]').forEach(btn => {
-      btn.onclick = () => {
-        const input = document.getElementById(btn.dataset.toggle);
-        if (!input) return;
-        const isPwd = input.type === 'password';
-        input.type = isPwd ? 'text' : 'password';
-        btn.innerHTML = isPwd ? eyeOffSvg : eyeSvg;
+      // Kamus Resmi 10 Fungsi Kanonikal beserta RoleBasedPromptHint
+      const CANONICAL_PROMPT_HINTS = {
+        'Engineering': 'Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji',
+        'Quality': 'Contoh: Menyelesaikan pengujian fitur, verifikasi kualitas, atau penelusuran temuan defect hari ini',
+        'Operations & Infrastructure': 'Contoh: Menyelesaikan konfigurasi atau pekerjaan infrastruktur yang direncanakan hari ini',
+        'R&D': 'Contoh: Menyelesaikan eksplorasi teknis, evaluasi arsitektur, atau penyusunan rekomendasi riset hari ini',
+        'Delivery': 'Contoh: Menyelesaikan koordinasi atau pekerjaan yang mendukung delivery proyek hari ini',
+        'Business Development': 'Contoh: Menyelesaikan penjajakan kemitraan, tindak lanjut prospek, atau penyusunan proposal bisnis hari ini',
+        'Sales Enablement & Presales': 'Contoh: Menyelesaikan materi atau kebutuhan pendukung aktivitas penjualan hari ini',
+        'Finance': 'Contoh: Menyelesaikan rekonsiliasi atau proses administrasi keuangan yang menjadi prioritas hari ini',
+        'HRGA': 'Contoh: Menyelesaikan proses administrasi atau kebutuhan operasional karyawan hari ini',
+        'Management': 'Contoh: Menyelesaikan prioritas koordinasi atau keputusan yang perlu ditindaklanjuti hari ini'
       };
-    });
 
-    // Reactive Session Management from localStorage
-    function loadActiveUserSession() {
-      let user = null;
-      try {
-        const stored = localStorage.getItem('workpulse_active_user');
-        if (stored) user = JSON.parse(stored);
-      } catch (e) {
-        console.warn('Failed parsing active user', e);
-      }
-
-      if (!user) {
-        user = {
+      // Preset Profil Simulasi
+      const SIM_PROFILES = {
+        EMP_ENG: {
           name: 'Budi Pratama',
+          nik: 'EMP-2024-0118',
           email: 'budi.pratama@dutamedia.com',
+          jobTitle: 'Software Engineer',
           role: 'EMPLOYEE',
-          roleLabel: 'Software Engineer',
-          function: 'Engineering',
-          department: 'Technology Squad A',
+          roleDisplay: 'Employee',
+          canonicalFunction: 'Engineering',
+          directManager: 'Siti Aminah (Engineering Supervisor)',
+          effectiveDate: '05 Januari 2026',
+          exemption: 'Tidak Ada Pengecualian Aktif',
           isExempt: false,
           avatar: 'BP'
-        };
-      }
-
-      // Update UI elements
-      document.getElementById('side-avatar').textContent = user.avatar || 'BP';
-      document.getElementById('top-avatar').textContent = user.avatar || 'BP';
-      document.getElementById('side-user-name').textContent = user.name;
-      document.getElementById('side-user-role').textContent = user.roleLabel || user.role;
-
-      document.getElementById('hero-avatar').textContent = user.avatar || 'BP';
-      document.getElementById('hero-name').textContent = user.name;
-      document.getElementById('hero-meta').textContent = `${user.email} · ${user.roleLabel || user.role} · ${user.department}`;
-
-      document.getElementById('profile-role-val').textContent = user.roleLabel || user.role;
-      document.getElementById('profile-function-val').textContent = user.function || 'General';
-      document.getElementById('profile-dept-val').textContent = user.department || '-';
-
-      if (user.isExempt || user.role === 'CEO') {
-        document.getElementById('profile-policy-val').textContent = 'Pengecualian Terbuka (Indefinite Role Exemption)';
-        document.getElementById('profile-reviewer-val').textContent = 'Direksi / Dewan Pengawas';
-      } else if (user.role === 'SUPERVISOR') {
-        document.getElementById('profile-reviewer-val').textContent = 'Hendra Gunawan (Head of Technology)';
-      } else if (user.role === 'HEAD_OF_DEPARTMENT') {
-        document.getElementById('profile-reviewer-val').textContent = 'Ir. Bambang Soedirgo (Chief Executive Officer)';
-      } else if (user.role === 'HRGA') {
-        document.getElementById('profile-reviewer-val').textContent = 'Head of HRGA & Operations';
-      } else {
-        document.getElementById('profile-reviewer-val').textContent = 'Siti Aminah (Supervisor)';
-      }
-
-      // Show Management Nav Group if applicable
-      const mgmtNav = document.getElementById('mgmt-nav-group');
-      if (['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HRGA', 'CEO'].includes(user.role)) {
-        mgmtNav.style.display = 'grid';
-        if (['SUPERVISOR', 'HEAD_OF_DEPARTMENT'].includes(user.role)) {
-          const c = document.getElementById('link-coaching');
-          if (c) c.style.display = 'flex';
-          const la = document.getElementById('link-leave-approval');
-          if (la) la.style.display = 'flex';
+        },
+        SUP_QA: {
+          name: 'Siti Aminah',
+          nik: 'EMP-2022-0045',
+          email: 'siti.aminah@dutamedia.com',
+          jobTitle: 'Quality Assurance Supervisor',
+          role: 'SUPERVISOR',
+          roleDisplay: 'Supervisor',
+          canonicalFunction: 'Quality',
+          directManager: 'Hendra Gunawan (Head of Technology)',
+          effectiveDate: '12 Maret 2025',
+          exemption: 'Tidak Ada Pengecualian Aktif',
+          isExempt: false,
+          avatar: 'SA'
+        },
+        HEAD_OPS: {
+          name: 'Hendra Gunawan',
+          nik: 'EMP-2020-0012',
+          email: 'hendra.gunawan@dutamedia.com',
+          jobTitle: 'Head of Infrastructure & Cloud Operations',
+          role: 'HEAD_OF_DEPARTMENT',
+          roleDisplay: 'Head of Department',
+          canonicalFunction: 'Operations & Infrastructure',
+          directManager: 'Ir. Bambang Soedirgo (Chief Executive Officer)',
+          effectiveDate: '01 Februari 2025',
+          exemption: 'Tidak Ada Pengecualian Aktif',
+          isExempt: false,
+          avatar: 'HG'
+        },
+        HRGA_HR: {
+          name: 'Nadia Kusuma',
+          nik: 'EMP-2021-0029',
+          email: 'nadia.kusuma@dutamedia.com',
+          jobTitle: 'HRGA People Operations Specialist',
+          role: 'HRGA',
+          roleDisplay: 'HRGA',
+          canonicalFunction: 'HRGA',
+          directManager: 'Ratna Sari (Head of HRGA)',
+          effectiveDate: '10 Januari 2025',
+          exemption: 'Tidak Ada Pengecualian Aktif',
+          isExempt: false,
+          avatar: 'NK'
+        },
+        CEO_MGMT: {
+          name: 'Ir. Bambang Soedirgo',
+          nik: 'EMP-2018-0001',
+          email: 'bambang.soedirgo@dutamedia.com',
+          jobTitle: 'Chief Executive Officer',
+          role: 'CEO',
+          roleDisplay: 'CEO',
+          canonicalFunction: 'Management',
+          directManager: 'Dewan Komisaris ( Tidak Memiliki Atasan Langsung Operasional )',
+          effectiveDate: '01 Januari 2024',
+          exemption: 'Indefinite Role Exemption — Pengisian Check-in Opsional',
+          isExempt: true,
+          avatar: 'BS'
         }
-        if (user.role === 'HRGA') {
-          const cp = document.getElementById('link-compliance');
-          if (cp) cp.style.display = 'flex';
-          const ex = document.getElementById('link-exemptions');
-          if (ex) ex.style.display = 'flex';
-          const la = document.getElementById('link-leave-approval');
-          if (la) la.style.display = 'flex';
-        }
-      } else {
-        mgmtNav.style.display = 'none';
-      }
-    }
-
-    // Toast Feedback Helper
-    function showToast(msg) {
-      const toast = document.getElementById('profile-toast');
-      document.getElementById('toast-text').textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
-
-    // Handle Password Submit
-    document.getElementById('pwd-form').onsubmit = (e) => {
-      e.preventDefault();
-      const newP = document.getElementById('new-pwd').value;
-      const confP = document.getElementById('confirm-pwd').value;
-      if (newP !== confP) {
-        alert('Konfirmasi kata sandi baru tidak cocok. Periksa kembali.');
-        return;
-      }
-      document.getElementById('pwd-form').reset();
-      showToast('Kata sandi berhasil diperbarui.');
-    };
-
-    // Handle Switch Changes
-    ['pref-push', 'pref-notes', 'pref-blocker'].forEach(id => {
-      document.getElementById(id).onchange = () => {
-        showToast('Preferensi notifikasi disimpan.');
       };
-    });
 
-    // Run on load
-    loadActiveUserSession();
+      let activeProfile = { ...SIM_PROFILES.EMP_ENG };
+
+      // Dynamic 3-Group Sidebar Role Renderer
+      function syncSidebarForRole(roleCode) {
+        const role = (roleCode || 'EMPLOYEE').toUpperCase();
+        const mgmtGroup = $('mgmt-nav-group');
+        const adminGroup = $('admin-nav-group');
+
+        const mgmtRules = {
+          'link-pulse': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO'],
+          'link-blockers': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD'],
+          'link-escalation-aging': ['CEO'],
+          'link-project-risk': ['PM'],
+          'link-coaching': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+          'link-correction-review': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+          'link-compliance': ['HRGA'],
+          'link-leave-approval': ['HRGA'],
+          'link-exemptions': ['HRGA', 'SYSTEM_ADMIN', 'ADMIN'],
+          'link-reports': ['HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA', 'CEO']
+        };
+
+        const adminRules = {
+          'link-admin-users': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'CEO'],
+          'link-admin-org': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+          'link-admin-temp-rev': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+          'link-admin-notif': ['SYSTEM_ADMIN', 'ADMIN'],
+          'link-admin-policy': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO']
+        };
+
+        let anyMgmt = false;
+        for (const [id, allowed] of Object.entries(mgmtRules)) {
+          const el = $(id);
+          if (!el) continue;
+          const show = allowed.includes(role);
+          el.style.display = show ? 'flex' : 'none';
+          if (show) anyMgmt = true;
+        }
+        if (mgmtGroup) mgmtGroup.style.display = anyMgmt ? 'grid' : 'none';
+
+        let anyAdmin = false;
+        for (const [id, allowed] of Object.entries(adminRules)) {
+          const el = $(id);
+          if (!el) continue;
+          const show = allowed.includes(role);
+          el.style.display = show ? 'flex' : 'none';
+          if (show) anyAdmin = true;
+        }
+        if (adminGroup) adminGroup.style.display = anyAdmin ? 'grid' : 'none';
+      }
+
+      function renderProfile(p) {
+        $('side-avatar').textContent = p.avatar;
+        $('top-avatar').textContent = p.avatar;
+        $('side-user-name').textContent = p.name;
+        $('side-user-role').textContent = `${p.jobTitle} · ${p.canonicalFunction}`;
+
+        $('hero-avatar').textContent = p.avatar;
+        $('hero-name').textContent = p.name;
+        $('hero-nik-pill').textContent = p.nik;
+        $('hero-meta').textContent = `${p.email} · ${p.jobTitle} · ${p.canonicalFunction}`;
+
+        $('profile-name-val').textContent = p.name;
+        $('profile-nik-val').textContent = p.nik;
+        $('profile-email-val').textContent = p.email;
+        $('profile-jobtitle-val').textContent = p.jobTitle;
+        $('profile-role-val').textContent = p.roleDisplay;
+        $('profile-function-val').textContent = p.canonicalFunction;
+        $('profile-manager-val').textContent = p.directManager;
+        $('profile-effdate-val').textContent = p.effectiveDate;
+        $('profile-exemption-val').textContent = p.exemption;
+        $('profile-exemption-val').style.color = p.isExempt ? 'var(--color-brand-primary)' : 'var(--color-text-primary)';
+
+        const hint = CANONICAL_PROMPT_HINTS[p.canonicalFunction] || CANONICAL_PROMPT_HINTS['Engineering'];
+        $('prompt-hint-func-badge').textContent = `Fungsi: ${p.canonicalFunction}`;
+        $('prompt-hint-text').textContent = hint;
+
+        const funcSelect = $('simFuncSelect');
+        if (funcSelect && [...funcSelect.options].some(o => o.value === p.canonicalFunction)) {
+          funcSelect.value = p.canonicalFunction;
+        }
+
+        syncSidebarForRole(p.role);
+      }
+
+      function syncDevicePushSummary() {
+        let state = 'granted';
+        try {
+          const saved = localStorage.getItem('workpulse_push_device_state');
+          if (saved) state = saved;
+        } catch (e) {}
+
+        const stateLabels = {
+          granted: { badge: 'Browser Push: Aktif & Terdaftar (Granted)', pill: 'Granted', cls: 'pill green' },
+          default: { badge: 'Browser Push: Izin Belum Diminta (Default)', pill: 'Default', cls: 'pill blue' },
+          denied: { badge: 'Browser Push: Izin Ditolak di Browser (Denied)', pill: 'Denied', cls: 'pill amber' },
+          unsupported: { badge: 'Browser Push: Tidak Didukung (Unsupported)', pill: 'Unsupported', cls: 'pill neutral' },
+          no_subscription: { badge: 'Browser Push: Langganan Belum Terdaftar (No Subscription)', pill: 'No Subscription', cls: 'pill amber' },
+          delivery_attempted: { badge: 'Browser Push: Pengiriman Dicoba (Delivery Attempted)', pill: 'Delivery Attempted', cls: 'pill blue' },
+          delivery_failed: { badge: 'Browser Push: Pengiriman Gagal (Delivery Failed)', pill: 'Delivery Failed', cls: 'pill red' }
+        };
+        const cfg = stateLabels[state] || stateLabels.granted;
+        $('profile-push-status-badge').textContent = cfg.badge;
+        $('profile-push-status-badge').className = cfg.cls;
+        $('card-push-pill').textContent = cfg.pill;
+        $('card-push-pill').className = cfg.cls;
+      }
+
+      // SVGs for Password Toggle & Checklist
+      const eyeSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+      const eyeOffSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+      const checkCircleSvg = `<svg class="pwd-criteria-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+      const emptyCircleSvg = `<svg class="pwd-criteria-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`;
+
+      document.querySelectorAll('[data-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = $(btn.dataset.toggle);
+          if (!input) return;
+          const isPwd = input.type === 'password';
+          input.type = isPwd ? 'text' : 'password';
+          btn.innerHTML = isPwd ? eyeOffSvg : eyeSvg;
+        });
+      });
+
+      function showToast(msg) {
+        const toast = $('profile-toast');
+        $('toast-text').textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(window.__profileToastTimer);
+        window.__profileToastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3500);
+      }
+
+      // Real-Time Password Strength Meter & Checklist
+      const currPwdInput = $('curr-pwd');
+      const newPwdInput = $('new-pwd');
+      const confPwdInput = $('confirm-pwd');
+
+      function setCriteriaItem(elId, isMet, text) {
+        const el = $(elId);
+        if (!el) return;
+        el.classList.toggle('met', isMet);
+        el.innerHTML = `${isMet ? checkCircleSvg : emptyCircleSvg}<span>${text}</span>`;
+      }
+
+      function evaluatePasswordStrength() {
+        const currVal = currPwdInput.value;
+        const newVal = newPwdInput.value;
+
+        const hasMinLen = newVal.length >= 8;
+        const hasLetterAndNum = /[A-Za-z]/.test(newVal) && /[0-9]/.test(newVal);
+        const isDiffFromCurr = newVal.length > 0 && (currVal.length === 0 || newVal !== currVal);
+        const hasSpecialOrLong = newVal.length >= 12 || /[^A-Za-z0-9]/.test(newVal);
+
+        setCriteriaItem('crit-len', hasMinLen, 'Minimal 8 karakter');
+        setCriteriaItem('crit-alnum', hasLetterAndNum, 'Kombinasi huruf & angka');
+        setCriteriaItem('crit-diff', isDiffFromCurr, 'Berbeda dari kata sandi saat ini');
+
+        let score = 0;
+        if (newVal.length > 0) {
+          if (hasMinLen) score++;
+          if (hasLetterAndNum) score++;
+          if (isDiffFromCurr) score++;
+          if (hasMinLen && hasLetterAndNum && isDiffFromCurr && hasSpecialOrLong) score++;
+        }
+
+        const segs = [$('pwd-seg-1'), $('pwd-seg-2'), $('pwd-seg-3'), $('pwd-seg-4')];
+        segs.forEach((seg, idx) => {
+          seg.className = 'pwd-segment';
+          if (idx < score) {
+            seg.classList.add(`level-${score}`);
+          }
+        });
+
+        const labels = [
+          'Belum diisi (0/4 segmen)',
+          'Lemah (1/4 segmen)',
+          'Cukup (2/4 segmen)',
+          'Kuat — Memenuhi Kriteria (3/4 segmen)',
+          'Sangat Kuat (4/4 segmen)'
+        ];
+        $('pwd-strength-label').textContent = labels[score];
+        $('pwd-meter-bars').setAttribute('aria-valuenow', String(score));
+
+        return { hasMinLen, hasLetterAndNum, isDiffFromCurr, allMandatoryMet: hasMinLen && hasLetterAndNum && isDiffFromCurr };
+      }
+
+      currPwdInput.addEventListener('input', () => {
+        currPwdInput.setAttribute('aria-invalid', 'false');
+        $('curr-pwd-error').classList.remove('show');
+        evaluatePasswordStrength();
+      });
+
+      newPwdInput.addEventListener('input', () => {
+        newPwdInput.setAttribute('aria-invalid', 'false');
+        $('new-pwd-error').classList.remove('show');
+        evaluatePasswordStrength();
+      });
+
+      confPwdInput.addEventListener('input', () => {
+        confPwdInput.setAttribute('aria-invalid', 'false');
+        $('confirm-pwd-error').classList.remove('show');
+      });
+
+      $('pwd-form').addEventListener('submit', e => {
+        e.preventDefault();
+        $('pwd-success-banner').classList.remove('show');
+
+        const currVal = currPwdInput.value.trim();
+        const newVal = newPwdInput.value;
+        const confVal = confPwdInput.value;
+        const { allMandatoryMet } = evaluatePasswordStrength();
+
+        let valid = true;
+
+        if (!currVal) {
+          currPwdInput.setAttribute('aria-invalid', 'true');
+          $('curr-pwd-error').classList.add('show');
+          valid = false;
+        }
+
+        if (!allMandatoryMet) {
+          newPwdInput.setAttribute('aria-invalid', 'true');
+          $('new-pwd-error').classList.add('show');
+          valid = false;
+        }
+
+        if (!confVal || newVal !== confVal) {
+          confPwdInput.setAttribute('aria-invalid', 'true');
+          $('confirm-pwd-error').classList.add('show');
+          valid = false;
+        }
+
+        if (!valid) {
+          const firstInvalid = $('pwd-form').querySelector('[aria-invalid="true"]');
+          if (firstInvalid) firstInvalid.focus();
+          return;
+        }
+
+        const revokeOthers = $('revoke-other-sessions').checked;
+        $('pwd-form').reset();
+        $('revoke-other-sessions').checked = true;
+        evaluatePasswordStrength();
+
+        const bannerMsg = revokeOthers
+          ? 'Kata sandi akun berhasil diperbarui dan seluruh sesi aktif di perangkat/peramban lain telah diakhiri.'
+          : 'Kata sandi akun berhasil diperbarui untuk sesi Anda.';
+        $('pwd-success-banner').textContent = bannerMsg;
+        $('pwd-success-banner').classList.add('show');
+        showToast(bannerMsg);
+      });
+
+      // Simulation Bar Controls
+      document.querySelectorAll('[data-sim-profile]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.simProfile;
+          const preset = SIM_PROFILES[key];
+          if (!preset) return;
+          activeProfile = { ...preset };
+          document.querySelectorAll('[data-sim-profile]').forEach(b => b.classList.toggle('active', b === btn));
+          renderProfile(activeProfile);
+          showToast(`Simulasi profil beralih ke: ${activeProfile.roleDisplay} — ${activeProfile.canonicalFunction}`);
+        });
+      });
+
+      $('simFuncSelect').addEventListener('change', e => {
+        activeProfile.canonicalFunction = e.target.value;
+        renderProfile(activeProfile);
+        showToast(`Fungsi Kanonikal & RoleBasedPromptHint diubah ke: ${activeProfile.canonicalFunction}`);
+      });
+
+      // Mobile Drawer Controls
+      const sidebar = $('mainSidebar');
+      const backdrop = $('sidebarBackdrop');
+      const btnOpen = $('btnOpenSidebar');
+      const btnClose = $('btnCloseSidebar');
+
+      function closeDrawer() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+      }
+      if (btnOpen) {
+        btnOpen.addEventListener('click', () => {
+          sidebar.classList.add('open');
+          backdrop.classList.add('show');
+        });
+      }
+      if (btnClose) btnClose.addEventListener('click', closeDrawer);
+      if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+      // Initialize
+      renderProfile(activeProfile);
+      syncDevicePushSummary();
+      evaluatePasswordStrength();
+    })();
   </script>
 </body>
 </html>

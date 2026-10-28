@@ -70,6 +70,11 @@ Saat login berhasil, sistem menyusun objek `workpulse_active_user` pada `localSt
 | **HEAD_OF_DEPARTMENT** | `hendra.gunawan@dutamedia.com` | [`08-Pulse-Dashboard.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/08-Pulse-Dashboard.html) | `false` |
 | **HRGA** | `dewi.anggraeni@dutamedia.com` | [`11-Compliance-Queue-HRGA.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/11-Compliance-Queue-HRGA.html) | `false` |
 | **EXECUTIVE / DIREKSI** | `bambang.soedirgo@dutamedia.com` | [`02-Morning-Commitment.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/02-Morning-Commitment.html) | `true` (*Exemption Aktif*) |
+| **ADMINISTRATOR** | `hendra.wijaya@dutamedia.com` | [`15-Admin-Organizational-Mapping.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/15-Admin-Organizational-Mapping.html) | `false` |
+
+> [!NOTE]
+> **Kontrak Penyimpanan Sesi Pengguna (`localStorage: workpulse_active_user`):**  
+> Sistem menyimpan profil pengguna aktif baik dalam bentuk objek JSON terstruktur (`{ name, role, email, isExempt, ... }`) maupun rujukan string slug peran (`'ahmad-fauzan'`, `'dewi-anggraeni'`). Seluruh halaman hilir (khususnya Halaman 02 s.d. 15) diwajibkan menerapkan pemindaian defensif (*safe try-catch parsing*) guna mencegah kegagalan runtime (*SyntaxError*) saat membaca identitas sesi.
 
 ### 3.2 Penyesuaian Responsif & Mobile Brand Header
 - **Desktop (> 900px):** Layout 2 kolom split-screen 100vh.
@@ -96,10 +101,11 @@ Dievaluasi secara *real-time* pada aktivasi akun (panjang $\ge 8$ karakter, huru
 | **TC-02** | Login Supervisor Tim | Kredensial Siti Aminah valid | Sesi tersimpan $\rightarrow$ dialihkan ke `/dashboard` ([`08-Pulse-Dashboard.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/08-Pulse-Dashboard.html)). |
 | **TC-03** | Login Verifikator HRGA | Kredensial Dewi Anggraeni valid | Sesi tersimpan $\rightarrow$ dialihkan ke `/compliance` ([`11-Compliance-Queue-HRGA.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/11-Compliance-Queue-HRGA.html)). |
 | **TC-04** | Login Akun Pengecualian | Kredensial Bambang Soedirgo | Dialihkan ke Halaman 02 dengan `isExempt: true` (*Exemption Banner* aktif). |
-| **TC-05** | Kredensial Tidak Valid | Email atau sandi salah | Tampil banner merah lembut: *"Email atau kata sandi tidak sesuai"*. Counter percobaan bertambah. |
-| **TC-06** | Lockout Percobaan Login | 5x gagal berurutan | Tombol submit dikunci, banner lockout aktif, timer mundur 60 detik berjalan. |
-| **TC-07** | Aktivasi Akun Baru | Buka rute aktivasi dengan token | Formulir aktivasi terbuka, live 4-bar password strength meter aktif, validasi konfirmasi sandi. |
-| **TC-08** | Pemulihan Sesi (UF-03) | Token sesi habis saat kerja | Modal dialog re-autentikasi muncul di tempat; input sandi memulihkan sesi tanpa reload. |
+| **TC-05** | Login Administrator Sistem | Kredensial Hendra Wijaya | Sesi tersimpan $\rightarrow$ dialihkan ke `/admin/mapping` ([`15-Admin-Organizational-Mapping.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/15-Admin-Organizational-Mapping.html)). |
+| **TC-06** | Kredensial Tidak Valid | Email atau sandi salah | Tampil banner merah lembut: *"Email atau kata sandi tidak sesuai"*. Counter percobaan bertambah. |
+| **TC-07** | Lockout Percobaan Login | 5x gagal berurutan | Tombol submit dikunci, banner lockout aktif, timer mundur 60 detik berjalan. |
+| **TC-08** | Aktivasi Akun Baru | Buka rute aktivasi dengan token | Formulir aktivasi terbuka, live 4-bar password strength meter aktif, validasi konfirmasi sandi. |
+| **TC-09** | Pemulihan Sesi (UF-03) | Token sesi habis saat kerja | Modal dialog re-autentikasi muncul di tempat; input sandi memulihkan sesi tanpa reload. |
 
 ---
 
@@ -110,7 +116,8 @@ Dievaluasi secara *real-time* pada aktivasi akun (panjang $\ge 8$ karakter, huru
 | **Halaman 02 (Morning Commitment)** | Menerima pengalihan peran `EMPLOYEE` dan menyajikan data profil pengguna pada sidebar bawah dari `localStorage: workpulse_active_user`. |
 | **Halaman 08 (Pulse Dashboard)** | Menerima pengalihan peran `SUPERVISOR` dan `HEAD_OF_DEPARTMENT`. |
 | **Halaman 11 (Compliance HRGA)** | Menerima pengalihan peran `HRGA`. |
-| **Halaman 24 (Profile Settings)** | Menjadi tujuan pengelolaan profil lanjutan dan penggantian kata sandi setelah masuk ke sistem. |
+| **Halaman 12 (Exemption Management)** | Menerima akses tim HRGA/Administrator untuk menetapkan kebijakan hari libur dan dispensasi dinas karyawan. |
+| **Halaman 15 (Admin Organizational Mapping)** | Menerima pengalihan peran `ADMINISTRATOR` untuk mengelola master hierarki struktur organisasi dan kewenangan proyek. |
 
 ---
 

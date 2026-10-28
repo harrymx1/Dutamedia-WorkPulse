@@ -89,6 +89,13 @@
 - **Fitur Sunting Fleksibel:** Tombol `Edit` pada kartu log mengubah formulir ke **Mode Sunting** (badge amber, ikon pensil, tombol `Perbarui` & `Batal Sunting`), disertai *smooth scroll* otomatis.
 - **Horizontal Mini-Strip Empty State (~50px):** Jika belum ada item dan formulir tertutup, sistem menampilkan strip horizontal ramping satu baris dengan ikon plus, bukan kotak placeholder besar yang memboroskan layar.
 
+### 3.5 Perilaku Tombol "+ Tambah Pekerjaan Tambahan", Formulir Toggle & Resiliensi Sesi
+- **Tombol Toggle Header (`#btn-toggle-add-form`):** Berfungsi membuka dan menutup panel formulir input tugas (`#add-task-form`) secara mulus tanpa reload halaman.
+- **Label Dinamis Adaptif:** Teks tombol berganti otomatis antara `+ Tambah Pekerjaan Tambahan` (saat formulir tertutup) dan `Tutup Form Input` (saat formulir terbuka).
+- **Pencatatan Tugas ke Kontainer Entri:** Saat formulir disimpan, kartu tugas baru disisipkan secara langsung ke `#entries-container`, lencana counter bertambah (`X Item Tercatat`), form di-reset dan ditutup otomatis, serta data disimpan ke `localStorage: workpulse_additional_work_items`.
+- **Aksi Kartu Tugas:** Setiap kartu dilengkapi tombol `Edit` (mengalihkan form ke mode revisi in-place) dan tombol `Hapus` (menghapus item dari memori lokal dan memunculkan kembali Horizontal Mini-Strip jika daftar kosong).
+- **Resiliensi Penguraian Sesi Pengguna:** Logika inisialisasi membaca identitas dari `localStorage: workpulse_active_user` secara defensif (*try-catch guard*), mendukung format JSON lengkap maupun string slug peran (seperti `'ahmad-fauzan'`) tanpa risiko penghentian runtime script.
+
 ---
 
 ## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)
@@ -106,6 +113,7 @@
 | **TC-09** | Quick-Picker Blocker Tim | Dropdown blocker aktif dibuka | Klik tiket auto-fill referensi & deskripsi ke formulir. |
 | **TC-10** | Mode Sunting (*In-Place Edit*) | Klik tombol `Edit` pada kartu tugas | Form beralih ke Mode Sunting (badge amber, tombol `Perbarui Pekerjaan`). |
 | **TC-11** | Hapus Item Tugas | Klik tombol `Hapus` pada kartu tugas | Item dihapus dari daftar; jika kosong, tampil Horizontal Mini-Strip (~50px). |
+| **TC-12** | Toggle Form Input & Simpan | Klik [+ Tambah Pekerjaan Tambahan], isi & simpan | Form membuka/menutup adaptif, kartu masuk ke daftar, counter bertambah, form reset otomatis. |
 
 ---
 
@@ -118,6 +126,8 @@
 | **Halaman 04 (EOD Outcome)** | Seluruh item pekerjaan tambahan yang tersimpan otomatis dimuat di Panel 3 Halaman 04 untuk dievaluasi setara dengan komitmen utama. |
 | **Halaman 05 (Raise Blocker)** | Tugas tambahan dapat mengaitkan tiket blocker aktif yang dilaporkan di Halaman 05. |
 | **Halaman 06 (My History)** | Pekerjaan tambahan yang diselesaikan terekam pada riwayat harian dan laporan mingguan. |
+| **Halaman 08 (Pulse Dashboard)** | Menampilkan volume tugas ad-hoc harian tim pada widget beban kerja dan rincian anggota. |
+| **Halaman 10 (Manager Notes)** | Pekerjaan tambahan yang melampaui kapasitas normal dapat menjadi bahan catatan apresiasi atau evaluasi pembagian kerja. |
 
 ---
 

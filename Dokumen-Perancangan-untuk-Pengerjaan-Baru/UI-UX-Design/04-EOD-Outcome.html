@@ -7,11 +7,10 @@
   <title>WorkPulse — My Today · EOD Outcome</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* ==========================================================================
-       DESIGN SYSTEM TOKENS (04-Design-System.md & Pedoman Konsistensi)
-       100% Selaras dengan 02-Morning-Commitment.html & 03-Additional-Work.html
+       DESIGN SYSTEM TOKENS (Kanonikal v1.5.0)
        ========================================================================== */
     :root {
       --color-canvas: #F7FAF9;
@@ -28,29 +27,59 @@
       --color-brand-secondary: #12915F;
       --color-brand-tint: #E6F4EE;
       --color-brand-focus: #0B8061;
+      --color-focus-ring: #0B8061;
 
-      /* Status Tokens */
-      --color-status-green-bg: #E6F4EC;
-      --color-status-green-fg: #145A36;
-      --color-status-green-border: #A7D5B8;
-      --color-status-amber-bg: #FFF3D9;
-      --color-status-amber-fg: #7A4B00;
-      --color-status-amber-border: #E8C77A;
-      --color-status-red-bg: #FFF8F8;
+      /* Status Tokens (v1.5.0) */
+      --color-status-green-fg: #166534;
+      --color-status-green-bg: #DCFCE7;
+      --color-status-green-border: #86EFAC;
+      --color-status-amber-fg: #92400E;
+      --color-status-amber-bg: #FEF3C7;
+      --color-status-amber-border: #FCD34D;
       --color-status-red-fg: #991B1B;
-      --color-status-red-border: #FECDCA;
-      --color-status-neutral-bg: #EFF2F1;
-      --color-status-neutral-fg: #46534E;
-      --color-status-neutral-border: #C9D2CE;
+      --color-status-red-bg: #FEE2E2;
+      --color-status-red-border: #FCA5A5;
+
+      /* Timing & Workflow Tokens (v1.5.0) */
+      --color-timing-ontime-fg: #075985;
+      --color-timing-ontime-bg: #E0F2FE;
+      --color-timing-ontime-border: #7DD3FC;
+      --color-workflow-pending-fg: #075985;
+      --color-workflow-pending-bg: #E0F2FE;
+      --color-workflow-pending-border: #7DD3FC;
+
+      --color-timing-late-fg: #9A3412;
+      --color-timing-late-bg: #FFEDD5;
+      --color-timing-late-border: #FDBA74;
+      --color-severity-high-fg: #9A3412;
+      --color-severity-high-bg: #FFEDD5;
+      --color-severity-high-border: #FDBA74;
+
+      --color-status-neutral-fg: #334155;
+      --color-status-neutral-bg: #F1F5F9;
+      --color-status-neutral-border: #CBD5E1;
+      --color-timing-nosub-fg: #334155;
+      --color-timing-nosub-bg: #F1F5F9;
+      --color-timing-nosub-border: #CBD5E1;
+
+      --color-status-na-fg: #334155;
+      --color-status-na-bg: #F1F5F9;
+      --color-status-na-border: #94A3B8;
+
+      --color-workflow-accepted-risk-fg: #7C2D12;
+      --color-workflow-accepted-risk-bg: #FFEDD5;
+      --color-workflow-accepted-risk-border: #FDBA74;
 
       /* Geometry & Elevation */
+      --radius-xs: 6px;
       --radius-sm: 8px;
       --radius-md: 10px;
       --radius-lg: 14px;
-      --shadow-subtle: 0 4px 16px rgba(14, 33, 27, 0.04);
-      --shadow-card: 0 8px 24px rgba(14, 33, 27, 0.05);
+      --shadow-subtle: none;
+      --shadow-card: none;
       --shadow-modal: 0 16px 36px rgba(14, 33, 27, 0.12);
       --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
 
     * {
@@ -71,6 +100,10 @@
       font-size: 14.5px;
       line-height: 1.5;
       min-height: 100vh;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
     }
 
     button, input, textarea, select {
@@ -97,7 +130,7 @@
     }
 
     :focus-visible {
-      outline: 3px solid var(--color-brand-focus);
+      outline: 3px solid var(--color-focus-ring);
       outline-offset: 2px;
     }
 
@@ -107,16 +140,16 @@
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 232px minmax(0, 1fr);
     }
 
     .sidebar {
       background: var(--color-surface);
       border-right: 1px solid var(--color-border-subtle);
-      padding: 24px 16px;
+      padding: 20px 14px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
       position: sticky;
       top: 0;
       height: 100vh;
@@ -131,27 +164,27 @@
     }
 
     .brand-mark {
-      height: 38px;
-      width: 38px;
+      height: 36px;
+      width: 36px;
       border-radius: 10px;
       background: var(--color-brand-primary);
       display: grid;
       place-items: center;
       color: #FFFFFF;
       font-weight: 800;
-      font-size: 20px;
+      font-size: 18px;
       flex-shrink: 0;
     }
 
     .brand-name {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--color-text-primary);
     }
 
     .brand-caption {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--color-text-secondary);
       margin-top: 1px;
       font-weight: 500;
@@ -159,13 +192,13 @@
 
     .nav-group {
       display: grid;
-      gap: 4px;
+      gap: 3px;
     }
 
     .nav-label {
-      padding: 0 12px;
-      font-size: 11px;
-      letter-spacing: 0.08em;
+      padding: 0 10px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--color-text-secondary);
       font-weight: 750;
@@ -174,13 +207,13 @@
 
     .nav-link {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
-      padding: 10px 12px;
+      padding: 9px 10px;
       border-radius: var(--radius-sm);
       color: var(--color-text-secondary);
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13.5px;
       text-decoration: none;
       transition: background 0.15s, color 0.15s;
     }
@@ -198,8 +231,8 @@
     }
 
     .nav-icon {
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
       flex-shrink: 0;
       stroke: currentColor;
     }
@@ -207,7 +240,7 @@
     .side-bottom {
       margin-top: auto;
       border-top: 1px solid var(--color-border-subtle);
-      padding: 16px 8px 0;
+      padding: 14px 6px 0;
       display: flex;
       gap: 10px;
       align-items: center;
@@ -233,15 +266,15 @@
     }
 
     .avatar {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: #D8EAE2;
+      background: var(--color-brand-tint);
       color: var(--color-brand-primary);
       font-weight: 800;
-      font-size: 13px;
+      font-size: 12.5px;
       flex-shrink: 0;
     }
 
@@ -259,8 +292,11 @@
     }
 
     .user-role {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--color-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .logout-btn {
@@ -275,7 +311,7 @@
 
     .logout-btn:hover {
       background: var(--color-surface-subtle);
-      color: #DC2626;
+      color: var(--color-status-red-fg);
     }
 
     /* ==========================================================================
@@ -290,14 +326,14 @@
     }
 
     .topbar {
-      height: 64px;
+      height: 56px;
       border-bottom: 1px solid var(--color-border-subtle);
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 clamp(1.5rem, 4vw, 3.75rem);
+      padding: 0 clamp(1.25rem, 3vw, 2.5rem);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -316,12 +352,36 @@
     .top-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+    }
+
+    .btn-topbar-blocker {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border-strong);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-topbar-blocker:hover {
+      background: var(--color-surface-subtle);
+      border-color: var(--color-brand-primary);
+      color: var(--color-brand-primary);
+      text-decoration: none;
     }
 
     .icon-button {
-      height: 38px;
-      width: 38px;
+      height: 36px;
+      width: 36px;
       display: grid;
       place-items: center;
       border: 1px solid var(--color-border-subtle);
@@ -340,21 +400,21 @@
 
     .badge-dot {
       position: absolute;
-      right: 8px;
-      top: 8px;
+      right: 7px;
+      top: 7px;
       width: 7px;
       height: 7px;
-      background: #E11D48;
+      background: var(--color-status-red-fg);
       border: 1px solid #FFFFFF;
       border-radius: 50%;
     }
 
-    /* Daily Workflow Navigation Bar (100% Selaras dengan Halaman 02 & 03) */
+    /* Daily Workflow Navigation Bar */
     .daily-workflow-bar {
       display: flex;
       border-bottom: 1px solid var(--color-border-subtle);
       background: #FFFFFF;
-      padding: 0 clamp(1.5rem, 4vw, 3.75rem);
+      padding: 0 clamp(1.25rem, 3vw, 2.5rem);
       min-width: 0;
       max-width: 100%;
     }
@@ -363,7 +423,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 14px 20px;
+      padding: 13px 20px;
       font-size: 13px;
       color: var(--color-text-secondary);
       text-decoration: none;
@@ -400,9 +460,10 @@
       background: var(--color-surface-muted);
       display: grid;
       place-items: center;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
       color: var(--color-text-secondary);
+      font-variant-numeric: tabular-nums;
     }
 
     .daily-step.active .step-num {
@@ -411,15 +472,71 @@
     }
 
     .daily-step.completed .step-num {
-      background: #E6F4EC;
-      color: #12915F;
+      background: var(--color-status-green-bg);
+      color: var(--color-status-green-fg);
     }
 
-    /* Content Area (Fluid Grid Seimbang) */
+    /* Content Area */
     .content {
       width: 100%;
-      margin: 0;
-      padding: 2.25rem clamp(1.5rem, 4vw, 3.75rem) 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.75rem clamp(1.25rem, 3vw, 2.5rem) 4rem;
+    }
+
+    /* Prototype Simulation Bar */
+    .proto-sim-bar {
+      background: var(--color-surface-subtle);
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .proto-sim-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .proto-sim-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .proto-sim-btn {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      transition: all 0.15s ease;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .proto-sim-btn:hover {
+      border-color: var(--color-border-strong);
+      color: var(--color-text-primary);
+    }
+
+    .proto-sim-btn.active {
+      background: var(--color-brand-primary);
+      color: #FFFFFF;
+      border-color: var(--color-brand-primary);
     }
 
     .page-heading {
@@ -427,7 +544,7 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 20px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     h1 {
@@ -452,10 +569,10 @@
       flex-shrink: 0;
     }
 
-    .btn-danger-cta {
-      background: #B42318;
-      color: #FFFFFF;
-      border: 1px solid #B42318;
+    .btn-blocker-secondary {
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-strong);
       font-weight: 750;
       display: inline-flex;
       align-items: center;
@@ -464,14 +581,14 @@
       border-radius: var(--radius-sm);
       font-size: 13.5px;
       text-decoration: none;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
       white-space: nowrap;
     }
 
-    .btn-danger-cta:hover {
-      background: #912018;
-      border-color: #912018;
-      color: #FFFFFF;
+    .btn-blocker-secondary:hover {
+      background: var(--color-surface-subtle);
+      border-color: var(--color-brand-primary);
+      color: var(--color-brand-primary);
       text-decoration: none;
     }
 
@@ -480,7 +597,7 @@
       background: var(--color-surface);
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-md);
-      box-shadow: var(--shadow-card);
+      box-shadow: none;
       margin-bottom: 24px;
     }
 
@@ -500,7 +617,7 @@
     }
 
     .section-kicker {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--color-text-secondary);
       font-weight: 800;
       text-transform: uppercase;
@@ -540,7 +657,7 @@
     }
 
     .context-label {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--color-text-secondary);
       margin-bottom: 4px;
     }
@@ -549,13 +666,15 @@
       font-size: 14px;
       font-weight: 800;
       color: var(--color-text-primary);
+      font-variant-numeric: tabular-nums;
     }
 
     .context-subtext {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--color-text-secondary);
       margin-top: 3px;
+      font-variant-numeric: tabular-nums;
     }
 
     .panel-integrated-notice {
@@ -567,7 +686,7 @@
       gap: 8px;
       font-size: 12px;
       color: var(--color-text-secondary);
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     /* Pills & Status */
@@ -575,13 +694,14 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
       border: 1px solid var(--color-border-subtle);
       background: #FFFFFF;
       font-size: 12px;
       font-weight: 700;
       white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
     .pill.green {
@@ -602,10 +722,28 @@
       border-color: var(--color-status-red-border);
     }
 
-    .pill.neutral {
+    .pill.ontime, .pill.info {
+      background: var(--color-timing-ontime-bg);
+      color: var(--color-timing-ontime-fg);
+      border-color: var(--color-timing-ontime-border);
+    }
+
+    .pill.late {
+      background: var(--color-timing-late-bg);
+      color: var(--color-timing-late-fg);
+      border-color: var(--color-timing-late-border);
+    }
+
+    .pill.neutral, .pill.nosub {
       background: var(--color-status-neutral-bg);
       color: var(--color-status-neutral-fg);
       border-color: var(--color-status-neutral-border);
+    }
+
+    .pill.na {
+      background: var(--color-status-na-bg);
+      color: var(--color-status-na-fg);
+      border-color: var(--color-status-na-border);
     }
 
     .status-indicator-dot {
@@ -616,7 +754,7 @@
     }
 
     /* ==========================================================================
-       EOD EVALUATION CARDS (FR-08, FR-09)
+       EOD EVALUATION CARDS
        ========================================================================== */
     .eod-cards-container {
       display: grid;
@@ -628,12 +766,12 @@
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-md);
       overflow: hidden;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      box-shadow: none;
+      transition: border-color 0.15s;
     }
 
     .eod-card:hover {
       border-color: var(--color-border-strong);
-      box-shadow: var(--shadow-subtle);
     }
 
     .eod-card-head {
@@ -657,19 +795,21 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 800;
       color: var(--color-brand-primary);
       background: #FFFFFF;
       border: 1px solid var(--color-border-subtle);
       border-radius: var(--radius-sm);
       padding: 4px 9px;
+      font-variant-numeric: tabular-nums;
     }
 
     .eod-card-meta {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .eod-card-body {
@@ -715,11 +855,11 @@
     .eod-task-blocker-info {
       margin-top: 8px;
       padding: 8px 12px;
-      background: #FFFBF0;
-      border: 1px solid #F6E0A4;
+      background: var(--color-status-amber-bg);
+      border: 1px solid var(--color-status-amber-border);
       border-radius: var(--radius-sm);
       font-size: 12px;
-      color: #7A4B00;
+      color: var(--color-status-amber-fg);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -756,7 +896,7 @@
     }
 
     .required-mark {
-      color: #DC2626;
+      color: var(--color-status-red-fg);
       font-weight: 800;
     }
 
@@ -813,7 +953,7 @@
       border: 1px dashed var(--color-border-subtle);
       border-radius: var(--radius-sm);
       background: var(--color-surface-subtle);
-      padding: 12px 16px;
+      padding: 14px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -822,7 +962,7 @@
     }
 
     /* ==========================================================================
-       PANEL 4: FINAL STATUS & TOMORROW PRIORITY (FR-10, FR-52)
+       PANEL 4: FINAL STATUS & TOMORROW PRIORITY
        ========================================================================== */
     .suggested-status-card {
       background: var(--color-surface-subtle);
@@ -838,7 +978,7 @@
     }
 
     .suggested-meta-title {
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -887,20 +1027,20 @@
 
     .final-status-radio-card.active.green {
       border-color: var(--color-brand-primary);
-      background: #F0FDF4;
+      background: var(--color-brand-tint);
       box-shadow: 0 0 0 2px var(--color-brand-primary);
     }
 
     .final-status-radio-card.active.amber {
-      border-color: #D97706;
-      background: #FFFBEB;
-      box-shadow: 0 0 0 2px #D97706;
+      border-color: var(--color-status-amber-fg);
+      background: var(--color-status-amber-bg);
+      box-shadow: 0 0 0 2px var(--color-status-amber-fg);
     }
 
     .final-status-radio-card.active.red {
-      border-color: #DC2626;
-      background: #FEF2F2;
-      box-shadow: 0 0 0 2px #DC2626;
+      border-color: var(--color-status-red-fg);
+      background: var(--color-status-red-bg);
+      box-shadow: 0 0 0 2px var(--color-status-red-fg);
     }
 
     .final-status-card-header {
@@ -939,17 +1079,17 @@
     }
 
     .final-status-radio-card.active.amber .final-status-selection-mark {
-      background: #D97706;
-      border-color: #D97706;
+      background: var(--color-status-amber-fg);
+      border-color: var(--color-status-amber-fg);
     }
 
     .final-status-radio-card.active.red .final-status-selection-mark {
-      background: #DC2626;
-      border-color: #DC2626;
+      background: var(--color-status-red-fg);
+      border-color: var(--color-status-red-fg);
     }
 
     .final-status-desc {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--color-text-secondary);
       line-height: 1.45;
     }
@@ -961,13 +1101,12 @@
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(10px);
       border-top: 1px solid var(--color-border-subtle);
-      padding: 14px clamp(1.5rem, 4vw, 3.75rem);
+      padding: 14px clamp(1.25rem, 3vw, 2.5rem);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       z-index: 15;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
     }
 
     .footer-summary-txt {
@@ -976,6 +1115,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      font-variant-numeric: tabular-nums;
     }
 
     .footer-actions {
@@ -1042,8 +1182,10 @@
       background: #FFFFFF;
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-modal);
-      width: min(520px, 100%);
+      width: min(560px, 100%);
       padding: 24px;
+      max-height: 92vh;
+      overflow-y: auto;
       animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -1074,6 +1216,7 @@
       font-size: 12.5px;
       display: grid;
       gap: 6px;
+      font-variant-numeric: tabular-nums;
     }
 
     .modal-recap-row {
@@ -1088,7 +1231,7 @@
       gap: 10px;
     }
 
-    /* Status Mismatch Validation Modal (FR-14 & AC-39: Anti-Silent-Mutation) */
+    /* Status Mismatch Validation Modal */
     .mismatch-comparison-box {
       display: flex;
       align-items: center;
@@ -1110,7 +1253,7 @@
     }
 
     .mismatch-label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 750;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -1126,12 +1269,12 @@
     }
 
     .mismatch-rationale-box {
-      background: #FFFDF5;
-      border: 1px solid #E8C77A;
+      background: var(--color-status-amber-bg);
+      border: 1px solid var(--color-status-amber-border);
       border-radius: var(--radius-sm);
       padding: 12px 14px;
       font-size: 13px;
-      color: #7A4B00;
+      color: var(--color-status-amber-fg);
       line-height: 1.5;
     }
 
@@ -1190,13 +1333,21 @@
       margin-bottom: 20px;
       display: none;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 16px;
       font-size: 13.5px;
       font-weight: 600;
+      flex-wrap: wrap;
     }
 
     .locked-banner.show {
       display: flex;
+    }
+
+    .locked-banner.nosub {
+      background: var(--color-status-neutral-bg);
+      border-color: var(--color-status-neutral-border);
+      color: var(--color-status-neutral-fg);
     }
 
     /* Mobile Drawer */
@@ -1273,7 +1424,7 @@
         width: 100%;
       }
 
-      .btn-danger-cta {
+      .btn-blocker-secondary {
         width: 100%;
         justify-content: center;
       }
@@ -1307,12 +1458,12 @@
       }
 
       .topbar {
-        height: 58px;
+        height: 56px;
         padding: 0 12px;
       }
 
       .daily-workflow-bar {
-        font-size: 11px;
+        font-size: 12px;
         padding: 0 12px;
       }
 
@@ -1325,7 +1476,7 @@
       .step-num {
         width: 20px;
         height: 20px;
-        font-size: 10.5px;
+        font-size: 12px;
       }
 
       .page-heading {
@@ -1428,7 +1579,7 @@
   <div class="app">
 
     <!-- ==============================================================
-         SIDEBAR NAVIGATION (RESMI MY TODAY - BEBAS EMOTICON)
+         SIDEBAR NAVIGATION (3 GRUP KANONIKAL - BEBAS EMOTICON)
          ============================================================== -->
     <aside class="sidebar" id="main-sidebar">
       <div class="brand">
@@ -1442,63 +1593,99 @@
         </button>
       </div>
 
-      <!-- Workspace Menu (Self-Service) -->
-      <div class="nav-group">
+      <!-- Grup 1: Workspace (Tampil untuk Semua Role) -->
+      <div class="nav-group" id="workspace-nav-group">
         <div class="nav-label">Workspace</div>
         <a class="nav-link active" href="02-Morning-Commitment.html" aria-current="page">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span>My Today</span>
         </a>
-        <a class="nav-link" href="05-Raise-Instant-Blocker.html#my-blockers">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-          <span>My Blockers</span>
-          <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">2</span>
-        </a>
         <a class="nav-link" href="06-My-History-Weekly-Summary.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           <span>My History</span>
         </a>
-        <a class="nav-link" href="20-My Leave Request (Employee).html">
+        <a class="nav-link" href="20-My-Leave-Request.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          <span>My Leave</span>
+          <span>My Leave Request</span>
         </a>
         <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span>Notifications</span>
-          <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">3</span>
+          <span class="pill amber tabular-nums" style="margin-left:auto;padding:1px 7px;font-size:12px;font-weight:800;border-radius:999px">3</span>
+        </a>
+        <a class="nav-link" href="24-Profile-Settings.html">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>Profile</span>
         </a>
       </div>
 
-      <!-- Management Menu (Dynamic for Supervisor / Head / HRGA / CEO) -->
+      <!-- Grup 2: Management (Kondisional sesuai Role; Disembunyikan jika Kosong) -->
       <div class="nav-group" id="mgmt-nav-group" style="display: none;">
         <div class="nav-label">Management</div>
-        <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
+        <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse" style="display: none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
           <span>Pulse Dashboard</span>
         </a>
-        <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-          <span>Blocker Queue</span>
+        <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span>Blocker &amp; Escalation Queue</span>
+        </a>
+        <a class="nav-link" href="14-Escalation-Aging.html" id="link-escalation-aging" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Escalation Aging</span>
+        </a>
+        <a class="nav-link" href="13-Project-Risk-View.html" id="link-project-risk" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <span>Project Risk View</span>
         </a>
         <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching" style="display: none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          <span>Coaching Notes</span>
+          <span>Manager Notes</span>
+        </a>
+        <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="link-correction-review" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><polyline points="9 15 11 17 15 13"></polyline></svg>
+          <span>Correction &amp; Leave Review</span>
         </a>
         <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance" style="display: none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
           <span>Compliance Queue</span>
         </a>
-        <a class="nav-link" href="21-Leave Approval Queue (ReviewerHRGA).html" id="link-leave-approval" style="display: none;">
+        <a class="nav-link" href="21-Leave-Approval-Queue.html" id="link-leave-approval" style="display: none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span>Leave Approvals</span>
+          <span>Leave Approval Queue</span>
         </a>
         <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions" style="display: none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          <span>Exemptions</span>
+          <span>Holiday &amp; Exemption</span>
         </a>
-        <a class="nav-link" href="23-Reports.html">
+        <a class="nav-link" href="23-Reports.html" id="link-reports" style="display: none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
           <span>Reports</span>
+        </a>
+      </div>
+
+      <!-- Grup 3: Administration (Kondisional sesuai Role; Disembunyikan jika Kosong) -->
+      <div class="nav-group" id="admin-nav-group" style="display: none;">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="25-Admin-User-Invitation-Management.html" id="link-admin-users" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a class="nav-link" href="15-Admin-Organizational-Mapping.html" id="link-admin-org" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Organizational Mapping</span>
+        </a>
+        <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" id="link-admin-reviewer" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" id="link-admin-notif" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>Notification Setup</span>
+        </a>
+        <a class="nav-link" href="18-Policy-Settings.html" id="link-admin-policy" style="display: none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Policy Settings</span>
         </a>
       </div>
 
@@ -1528,10 +1715,14 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <div class="breadcrumb">
-            My Today <span style="color: #A9C7BC;">/</span> <strong>EOD Outcome</strong>
+            <a href="02-Morning-Commitment.html" style="color: inherit; text-decoration: none;">My Today</a> <span style="color: var(--color-border-strong);">/</span> <strong>EOD Outcome</strong>
           </div>
         </div>
         <div class="top-actions">
+          <a class="btn-topbar-blocker" href="05-Raise-Instant-Blocker.html" title="Laporkan kendala atau blocker">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+            <span>Laporkan Blocker</span>
+          </a>
           <a class="icon-button" href="07-Notification-Center-Browser-Push.html" title="Pusat Notifikasi">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
             <span class="badge-dot"></span>
@@ -1540,7 +1731,7 @@
         </div>
       </header>
 
-      <!-- Daily Step Bar (100% Selaras: Langkah 1 & 2 Selesai, Langkah 3 Aktif) -->
+      <!-- Daily Step Bar -->
       <nav class="daily-workflow-bar" aria-label="Alur Akuntabilitas Harian">
         <a class="daily-step completed" href="02-Morning-Commitment.html" title="Komitmen Pagi Telah Dikunci">
           <span class="step-num">
@@ -1562,6 +1753,22 @@
 
       <div class="content">
 
+        <!-- Bar Mode Simulasi Prototipe -->
+        <div class="proto-sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+          <div class="proto-sim-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span>[Mode Simulasi Prototipe]</span>
+          </div>
+          <div class="proto-sim-actions">
+            <button type="button" class="proto-sim-btn active" data-sim="ontime">Waktu: On-Time (17:15)</button>
+            <button type="button" class="proto-sim-btn" data-sim="late">Waktu: Grace Period / Late (18:15)</button>
+            <button type="button" class="proto-sim-btn" data-sim="post_cutoff_nosub">Waktu: Pasca Cut-Off — Belum Submit (No Submission)</button>
+            <button type="button" class="proto-sim-btn" data-sim="post_cutoff_submitted">Waktu: Pasca Cut-Off — Sudah Submit (Locked + CTA Koreksi)</button>
+            <button type="button" class="proto-sim-btn" data-sim="carryover_critical">Skenario: Ada Carry-Over #2 &amp; Critical Blocker</button>
+            <button type="button" class="proto-sim-btn" data-sim="zero_commitment">Skenario: Hari Zero Commitment (0 Item)</button>
+          </div>
+        </div>
+
         <!-- Page Heading -->
         <div class="page-heading">
           <div>
@@ -1571,19 +1778,27 @@
             </p>
           </div>
           <div class="heading-side">
-            <a class="btn-danger-cta" href="05-Raise-Instant-Blocker.html" title="Laporkan kendala kritis atau dependensi">
+            <a class="btn-blocker-secondary" href="05-Raise-Instant-Blocker.html" title="Laporkan kendala kritis atau dependensi">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-              <span>Lapor Blocker</span>
+              <span>Laporkan Blocker</span>
             </a>
           </div>
         </div>
 
-        <!-- Read-Only Locked State Banner (Muncul saat EOD telah dikirim) -->
+        <!-- Read-Only Locked State / Post-Cutoff Banner -->
         <div class="locked-banner" id="locked-banner">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <div>
-            <strong>EOD Outcome Hari Ini Telah Diserahkan dan Terkunci</strong><br>
-            <span style="font-size: 12.5px; opacity: 0.9;">Rekaman hasil harian Anda telah disimpan sebagai baseline resmi. Jika terdapat kekeliruan data, pengajuan perubahan dilakukan melalui alur EOD Correction Request.</span>
+          <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 240px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <div>
+              <strong id="locked-banner-title">EOD Outcome Hari Ini Telah Diserahkan dan Terkunci</strong><br>
+              <span id="locked-banner-desc" style="font-size: 12.5px; opacity: 0.92; font-weight: 500;">Rekaman hasil harian Anda telah disimpan sebagai baseline resmi. Jika terdapat kekeliruan data pada EOD yang sudah diserahkan, ajukan perubahan melalui alur EOD Correction Request.</span>
+            </div>
+          </div>
+          <div id="locked-banner-cta-wrap" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <a href="16b-EOD-Correction-Request.html" class="btn btn-secondary" id="btn-cta-correction" style="height: 36px; padding: 0 14px; font-size: 12.5px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Ajukan Koreksi EOD</span>
+            </a>
           </div>
         </div>
 
@@ -1601,16 +1816,16 @@
             <div class="context-grid">
               <div class="context-item">
                 <div class="context-label">Tanggal Kerja</div>
-                <div class="context-value">Senin, 19 Oktober 2026</div>
+                <div class="context-value tabular-nums">Senin, 19 Oktober 2026</div>
                 <div class="context-subtext" id="workday-type-txt">Hari Kerja Aktif</div>
               </div>
               <div class="context-item">
                 <div class="context-label">Jendela Penyerahan EOD</div>
-                <div class="context-value">16:30 – 18:00 WIB</div>
+                <div class="context-value tabular-nums">16:30 – 18:00 WIB</div>
                 <div class="context-subtext" id="submission-window-wrap">
-                  <span class="pill green" id="submission-window-pill" style="font-size: 11px; padding: 2px 7px;">
+                  <span class="pill ontime" id="submission-window-pill" style="font-size: 12px; padding: 2px 8px;">
                     <span class="status-indicator-dot"></span>
-                    <span id="submission-window-txt">Tepat Waktu (On-Time)</span>
+                    <span id="submission-window-txt">On-Time (Tepat Waktu)</span>
                   </span>
                 </div>
               </div>
@@ -1622,7 +1837,7 @@
                     <span id="eod-status-txt">Sesi Dibuka</span>
                   </span>
                 </div>
-                <div class="context-subtext" id="eod-status-subtext">Batas waktu hari ini: 18:00 WIB</div>
+                <div class="context-subtext tabular-nums" id="eod-status-subtext">Batas waktu hari ini: 18:00 WIB (Tenggang s.d. 18:30 WIB)</div>
               </div>
               <div class="context-item">
                 <div class="context-label">Status Risiko Harian</div>
@@ -1636,16 +1851,16 @@
               </div>
             </div>
 
-            <!-- Integrated Footer Notice (FR-08 & FR-09) -->
+            <!-- Integrated Footer Notice -->
             <div class="panel-integrated-notice">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--color-brand-primary);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span>Hasil capaian (Outcome) dan kelanjutan pekerjaan (Continuation) dicatat secara terpisah untuk setiap item. Item yang ditandai <strong>Continue</strong> akan otomatis disiapkan sebagai draf komitmen pagi esok hari.</span>
+              <span>Hasil capaian (Outcome) dan kelanjutan pekerjaan (Continuation) dicatat secara terpisah. Hanya item <strong>Morning Commitment</strong> yang berstatus <strong>Continue</strong> yang disiapkan otomatis sebagai kandidat draf <em>copy-forward</em> esok pagi.</span>
             </div>
           </div>
         </section>
 
         <!-- ==============================================================
-             PANEL 2: EVALUASI MORNING COMMITMENT (FR-08, FR-09)
+             PANEL 2: EVALUASI MORNING COMMITMENT
              ============================================================== -->
         <section class="panel" style="margin-bottom: 24px;">
           <div class="panel-head">
@@ -1653,17 +1868,17 @@
               <div class="section-kicker">Kelompok 1 · Rencana Awal Pagi</div>
               <h2>Capaian Morning Commitment</h2>
             </div>
-            <span class="pill neutral" id="badge-morning-count">2 Komitmen Terdaftar</span>
+            <span class="pill neutral tabular-nums" id="badge-morning-count">2 Komitmen Terdaftar</span>
           </div>
           <div class="panel-body">
             <div class="eod-cards-container" id="morning-cards-container">
-              <!-- Dynamically rendered or pre-populated via JS -->
+              <!-- Dynamically rendered via JS -->
             </div>
           </div>
         </section>
 
         <!-- ==============================================================
-             PANEL 3: EVALUASI ADDITIONAL WORK (FR-08, FR-09)
+             PANEL 3: EVALUASI ADDITIONAL WORK
              ============================================================== -->
         <section class="panel" style="margin-bottom: 24px;">
           <div class="panel-head">
@@ -1671,17 +1886,21 @@
               <div class="section-kicker">Kelompok 2 · Pekerjaan Tambahan Siang</div>
               <h2>Capaian Additional Work</h2>
             </div>
-            <span class="pill neutral" id="badge-additional-count">1 Tugas Tambahan</span>
+            <span class="pill neutral tabular-nums" id="badge-additional-count">1 Tugas Tambahan</span>
           </div>
           <div class="panel-body">
+            <div style="margin-bottom: 14px; padding: 10px 14px; background: var(--color-surface-subtle); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); font-size: 12px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--color-brand-primary);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span><strong>Aturan Carry-Over Eksklusif:</strong> Item <em>Additional Work</em> yang ditandai <strong>Continue</strong> dicatat sebagai tindak lanjut operasional, tetapi <strong>tidak masuk</strong> ke dalam draf otomatis <em>copy-forward</em> Morning Commitment esok pagi.</span>
+            </div>
             <div class="eod-cards-container" id="additional-cards-container">
-              <!-- Dynamically rendered or pre-populated via JS -->
+              <!-- Dynamically rendered via JS -->
             </div>
           </div>
         </section>
 
         <!-- ==============================================================
-             PANEL 4: RINGKASAN HARIAN, FINAL STATUS & CATATAN PRIORITAS (FR-10, FR-52)
+             PANEL 4: RINGKASAN HARIAN, FINAL STATUS & CATATAN PRIORITAS
              ============================================================== -->
         <section class="panel" style="margin-bottom: 32px;">
           <div class="panel-head">
@@ -1692,7 +1911,7 @@
           </div>
           <div class="panel-body">
 
-            <!-- Saran Status Otomatis Sistem (FR-13 / AC-38) -->
+            <!-- Saran Status Otomatis Sistem -->
             <div class="suggested-status-card" id="suggested-status-card">
               <div>
                 <div class="suggested-meta-title">Rekomendasi Status Sistem</div>
@@ -1706,26 +1925,26 @@
               </span>
             </div>
 
-            <!-- Pemilihan Final Status Harian (Radio Cards: GREEN, AMBER, RED) -->
+            <!-- Pemilihan Final Status Harian (Radio Cards: GREEN, AMBER, RED — Tidak pernah di-disabled) -->
             <div class="field-group" style="margin-bottom: 20px;">
               <label class="field-label">
                 <span>Final Status Hari Ini</span>
-                <span class="required-mark">*</span>
+                <span class="required-mark" id="final-status-required-mark">*</span>
               </label>
               <div class="final-status-cards-row">
                 <label class="final-status-radio-card green" id="card-status-green">
                   <input type="radio" name="final-status-choice" value="GREEN" required>
                   <div class="final-status-card-header">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="final-status-name" style="color: #145A36;">GREEN</span>
-                      <span class="pill green" style="padding: 2px 7px; font-size: 11px;">Tuntas</span>
+                      <span class="final-status-name" style="color: var(--color-status-green-fg);">GREEN</span>
+                      <span class="pill green" style="padding: 2px 8px; font-size: 12px;">Tuntas</span>
                     </div>
                     <div class="final-status-selection-mark">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </div>
                   </div>
-                  <div class="final-status-desc">Terkendali penuh, seluruh komitmen utama selesai tanpa blocker aktif.</div>
-                  <div class="green-carryover-warning" id="green-carryover-warning" style="margin-top: 8px; padding: 6px 8px; background: #FFFBF0; border: 1px solid #F6E0A4; border-radius: var(--radius-xs); font-size: 11px; color: #7A4B00; display: none;">
+                  <div class="final-status-desc">Terkendali penuh, seluruh komitmen utama selesai tanpa kendala kritis aktif.</div>
+                  <div class="green-carryover-warning" id="green-carryover-warning" style="margin-top: 8px; padding: 6px 8px; background: var(--color-status-amber-bg); border: 1px solid var(--color-status-amber-border); border-radius: var(--radius-xs); font-size: 12px; color: var(--color-status-amber-fg); display: none;">
                     <strong>Peringatan Sistem:</strong> Terdapat tugas carry-over ≥ 2 hari. Sistem merekomendasikan minimal AMBER.
                   </div>
                 </label>
@@ -1734,8 +1953,8 @@
                   <input type="radio" name="final-status-choice" value="AMBER" required>
                   <div class="final-status-card-header">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="final-status-name" style="color: #7A4B00;">AMBER</span>
-                      <span class="pill amber" style="padding: 2px 7px; font-size: 11px;">Perhatian</span>
+                      <span class="final-status-name" style="color: var(--color-status-amber-fg);">AMBER</span>
+                      <span class="pill amber" style="padding: 2px 8px; font-size: 12px;">Perhatian</span>
                     </div>
                     <div class="final-status-selection-mark">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1748,8 +1967,8 @@
                   <input type="radio" name="final-status-choice" value="RED" required>
                   <div class="final-status-card-header">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="final-status-name" style="color: #991B1B;">RED</span>
-                      <span class="pill red" style="padding: 2px 7px; font-size: 11px;">Risiko Tinggi</span>
+                      <span class="final-status-name" style="color: var(--color-status-red-fg);">RED</span>
+                      <span class="pill red" style="padding: 2px 8px; font-size: 12px;">Risiko Tinggi</span>
                     </div>
                     <div class="final-status-selection-mark">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1760,29 +1979,29 @@
               </div>
             </div>
 
-            <!-- Field Penjelasan Risiko Harian (Kondisional jika AMBER/RED - FR-10) -->
+            <!-- Field Penjelasan Risiko Harian (Kondisional jika AMBER/RED) -->
             <div class="field-group" id="daily-risk-group" style="display: none; margin-bottom: 20px;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <label class="field-label" for="daily-risk-explanation" style="margin-bottom: 0;">
                   <span>Penjelasan Risiko atau Kendala Tingkat Hari</span>
                   <span class="required-mark">*</span>
                 </label>
-                <span id="daily-risk-counter" style="font-size: 11px; font-weight: 700; color: #DC2626;">0 / 15 karakter minimal</span>
+                <span id="daily-risk-counter" class="tabular-nums" style="font-size: 12px; font-weight: 700; color: var(--color-status-red-fg);">0 / 15 karakter minimal</span>
               </div>
-              <textarea class="form-textarea" id="daily-risk-explanation" rows="3" placeholder="Jelaskan faktor, kendala, atau ketergantungan utama yang memengaruhi hasil kerja hari ini secara keseluruhan (berbeda dari blocker per tugas pada pagi hari)..."></textarea>
-              <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 4px;">
+              <textarea class="form-textarea" id="daily-risk-explanation" rows="3" placeholder="Jelaskan faktor, kendala, atau ketergantungan utama yang memengaruhi hasil kerja hari ini secara keseluruhan (berbeda dari catatan pagi per tugas)..."></textarea>
+              <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">
                 Wajib diisi minimal 15 karakter saat menetapkan status AMBER atau RED sebagai dasar transparansi dan bahan koordinasi tim.
               </div>
             </div>
 
-            <!-- Field Tomorrow Priority (Opsional - FR-52) -->
+            <!-- Field Tomorrow Priority (Opsional) -->
             <div class="field-group">
               <label class="field-label" for="tomorrow-priority-input">
                 <span>Prioritas Esok Hari (Tomorrow Priority)</span>
-                <span style="font-size: 11.5px; font-weight: 500; color: var(--color-text-secondary);">(Opsional)</span>
+                <span style="font-size: 12px; font-weight: 500; color: var(--color-text-secondary);">(Opsional)</span>
               </label>
               <textarea class="form-textarea" id="tomorrow-priority-input" placeholder="Tuliskan catatan fokus atau prioritas yang perlu langsung ditangani pada awal hari kerja berikutnya..."></textarea>
-              <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 2px;">
+              <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">
                 Catatan ini akan otomatis muncul sebagai banner pengingat konteks di bagian atas formulir Morning Commitment esok hari. Bersifat murni referensi dan tidak menjadi komitmen otomatis.
               </div>
             </div>
@@ -1816,54 +2035,79 @@
   </div>
 
   <!-- ==============================================================
-       MODAL VALIDASI INKONSISTENSI STATUS (FR-14 & AC-39: ANTI-SILENT-MUTATION)
+       VALIDATION PROMPT MODAL (ANTI-SILENT-MUTATION & COMPLETED+CONTINUE)
        ============================================================== -->
   <div class="modal-backdrop" id="modal-status-mismatch" role="dialog" aria-modal="true" aria-labelledby="modal-mismatch-title">
     <div class="modal-card">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-        <span class="pill amber" style="font-size: 11px; padding: 2px 8px;">Pemberitahuan Rekomendasi</span>
-        <span style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #7A4B00;">Kesesuaian Status Harian</span>
+        <span class="pill amber" style="font-size: 12px; padding: 2px 8px;">Pemberitahuan Validasi</span>
+        <span style="font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--color-status-amber-fg);">Konfirmasi Keputusan Evaluasi</span>
       </div>
       <h3 class="modal-title" id="modal-mismatch-title">Perbedaan Pilihan Status Harian</h3>
       <div class="modal-body">
-        <p style="margin-bottom: 12px;">
-          Pilihan Final Status Anda berbeda dari rekomendasi kalkulasi sistem berdasarkan evaluasi capaian tugas hari ini:
-        </p>
+        <div id="mismatch-status-section">
+          <p style="margin-bottom: 12px;">
+            Pilihan Final Status Anda berbeda dari rekomendasi kalkulasi sistem berdasarkan evaluasi capaian tugas hari ini:
+          </p>
 
-        <div class="mismatch-comparison-box">
-          <div class="mismatch-side">
-            <div class="mismatch-label">Pilihan Anda:</div>
-            <span class="pill green" id="mismatch-user-pill">
-              <span class="status-indicator-dot"></span>
-              <span id="mismatch-user-txt">GREEN</span>
-            </span>
+          <div class="mismatch-comparison-box">
+            <div class="mismatch-side">
+              <div class="mismatch-label">Pilihan Anda:</div>
+              <span class="pill green" id="mismatch-user-pill">
+                <span class="status-indicator-dot"></span>
+                <span id="mismatch-user-txt">GREEN</span>
+              </span>
+            </div>
+            <div class="mismatch-arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </div>
+            <div class="mismatch-side">
+              <div class="mismatch-label">Rekomendasi Sistem:</div>
+              <span class="pill red" id="mismatch-suggested-pill">
+                <span class="status-indicator-dot"></span>
+                <span id="mismatch-suggested-txt">RED</span>
+              </span>
+            </div>
           </div>
-          <div class="mismatch-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </div>
-          <div class="mismatch-side">
-            <div class="mismatch-label">Rekomendasi Sistem:</div>
-            <span class="pill red" id="mismatch-suggested-pill">
-              <span class="status-indicator-dot"></span>
-              <span id="mismatch-suggested-txt">RED</span>
-            </span>
+
+          <div class="mismatch-rationale-box">
+            <strong>Dasar Rekomendasi Sistem:</strong>
+            <div id="mismatch-rationale-desc" style="margin-top: 4px; color: var(--color-text-primary);">
+              Sebanyak 50% atau lebih komitmen hari ini berstatus Not Completed/Cancelled.
+            </div>
           </div>
         </div>
 
-        <div class="mismatch-rationale-box">
-          <strong>Dasar Rekomendasi Sistem:</strong>
-          <div id="mismatch-rationale-desc" style="margin-top: 4px; color: var(--color-text-secondary);">
-            Sebanyak 50% atau lebih komitmen hari ini berstatus Not Completed/Cancelled.
+        <!-- Peringatan Kombinasi Outcome = Completed + Continuation = Continue -->
+        <div id="mismatch-completed-continue-box" style="display: none; margin-top: 12px; padding: 12px 14px; background: var(--color-timing-ontime-bg); border: 1px solid var(--color-timing-ontime-border); border-radius: var(--radius-sm); color: var(--color-timing-ontime-fg); font-size: 13px; line-height: 1.5;">
+          <strong>Konfirmasi Tugas Completed + Continue:</strong>
+          <div id="mismatch-completed-continue-desc" style="margin-top: 4px;">
+            Terdapat item dengan kombinasi Outcome = Completed sekaligus Continuation = Continue. Pastikan Anda memang sengaja melanjutkan tugas yang output hariannya telah selesai penuh.
           </div>
         </div>
 
-        <div style="font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); margin-top: 14px; background: #F8FAF9; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle);">
-          <strong>Prinsip Anti-Silent Mutation:</strong> Sistem tidak mengubah status Anda secara otomatis. Anda berhak mempertahankan keputusan profesional Anda atau menyelaraskan dengan rekomendasi sistem.
+        <!-- Textarea Wajib Alasan Mempertahankan Pilihan Status -->
+        <div class="field-group" style="margin-top: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label class="field-label" for="mismatch-override-reason">
+              <span>Alasan Mempertahankan Pilihan Status</span>
+              <span class="required-mark">*</span>
+            </label>
+            <span id="mismatch-override-counter" class="tabular-nums" style="font-size: 12px; font-weight: 700; color: var(--color-text-secondary);">0 / 10 karakter minimal</span>
+          </div>
+          <textarea class="form-textarea" id="mismatch-override-reason" rows="2" placeholder="Jelaskan pertimbangan profesional Anda mempertahankan pilihan ini (wajib minimal 10 karakter)..."></textarea>
+          <div id="mismatch-override-error" style="display: none; font-size: 12px; font-weight: 700; color: var(--color-status-red-fg); margin-top: 2px;">
+            Alasan mempertahankan pilihan wajib diisi minimal 10 karakter.
+          </div>
+        </div>
+
+        <div style="font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); margin-top: 14px; background: var(--color-surface-subtle); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle);">
+          <strong>Prinsip Anti-Silent Mutation:</strong> Sistem tidak mengubah status Anda secara otomatis. Anda berhak mempertahankan keputusan profesional Anda (dengan menyertakan alasan) atau menyelaraskan dengan rekomendasi sistem.
         </div>
       </div>
       <div class="modal-actions" style="flex-wrap: wrap; justify-content: flex-end; gap: 8px;">
         <button type="button" class="btn btn-secondary" id="btn-mismatch-cancel">Periksa Kembali</button>
-        <button type="button" class="btn btn-secondary" id="btn-mismatch-keep" style="border-color: #A9C7BC; color: var(--color-brand-primary);">Pertahankan Pilihan Saya</button>
+        <button type="button" class="btn btn-secondary" id="btn-mismatch-keep" style="border-color: var(--color-border-strong); color: var(--color-brand-primary);">Pertahankan Pilihan Saya</button>
         <button type="button" class="btn btn-primary" id="btn-mismatch-adopt">Gunakan Saran Sistem</button>
       </div>
     </div>
@@ -1874,10 +2118,10 @@
        ============================================================== -->
   <div class="modal-backdrop" id="modal-confirm" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-title">
     <div class="modal-card">
-      <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: var(--color-brand-primary); margin-bottom: 4px;">Konfirmasi Penyerahan</div>
+      <div style="font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--color-brand-primary); margin-bottom: 4px;">Konfirmasi Penyerahan</div>
       <h3 class="modal-title" id="modal-confirm-title">Kirim EOD Outcome Hari Ini?</h3>
       <div class="modal-body">
-        Setelah dikirimkan, rekaman evaluasi capaian hasil hari ini akan dikunci sebagai baseline penutupan hari. Seluruh item yang ditandai <strong>Continue</strong> akan otomatis tersedia di koleksi draf komitmen pagi esok hari.
+        Setelah dikirimkan, rekaman evaluasi capaian hasil hari ini akan dikunci sebagai baseline penutupan hari. Hanya item <strong>Morning Commitment</strong> yang berstatus <strong>Continue</strong> yang akan otomatis tersedia di koleksi draf <em>copy-forward</em> esok pagi.
         
         <div class="modal-recap-box">
           <div class="modal-recap-row">
@@ -1889,7 +2133,7 @@
             <strong id="recap-completed-count">0</strong>
           </div>
           <div class="modal-recap-row">
-            <span>Tugas Berlanjut Besok (Continue):</span>
+            <span>Carry-Over ke Draf Pagi Besok (Morning Commitment):</span>
             <strong id="recap-continue-count">0</strong>
           </div>
         </div>
@@ -1906,15 +2150,16 @@
        ============================================================== -->
   <div class="modal-backdrop" id="modal-success" role="dialog" aria-modal="true" aria-labelledby="modal-success-title">
     <div class="modal-card" style="text-align: center;">
-      <div style="width: 52px; height: 52px; border-radius: 50%; background: #E6F4EC; color: #12915F; display: grid; place-items: center; margin: 0 auto 16px;">
+      <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--color-status-green-bg); color: var(--color-status-green-fg); display: grid; place-items: center; margin: 0 auto 16px;">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
       </div>
       <h3 class="modal-title" id="modal-success-title">EOD Outcome Berhasil Diserahkan!</h3>
       <div class="modal-body">
-        Terima kasih atas akuntabilitas dan dedikasi Anda hari ini. Sesi kerja hari ini telah resmi ditutup dengan status <strong id="success-status-txt">GREEN</strong>. Selamat beristirahat!
+        Terima kasih atas akuntabilitas dan dedikasi Anda hari ini. Sesi kerja hari ini telah resmi ditutup dan terkunci dengan status <strong id="success-status-txt">GREEN</strong>. Apabila terdapat kekeliruan data pada rekaman yang telah terkunci, Anda dapat mengajukan koreksi resmi.
       </div>
-      <div class="modal-actions" style="justify-content: center; gap: 10px;">
+      <div class="modal-actions" style="justify-content: center; gap: 10px; flex-wrap: wrap;">
         <button type="button" class="btn btn-secondary" id="btn-stay-page">Lihat Halaman Ini</button>
+        <a href="16b-EOD-Correction-Request.html" class="btn btn-secondary" id="btn-modal-correction">Ajukan Koreksi EOD</a>
         <a href="06-My-History-Weekly-Summary.html" class="btn btn-primary">Buka Riwayat Saya</a>
       </div>
     </div>
@@ -1929,14 +2174,14 @@
   </div>
 
   <!-- ==============================================================
-       JAVASCRIPT LOGIC & BUSINESS RULES (PRODUCTION READY)
+       JAVASCRIPT LOGIC & BUSINESS RULES
        ============================================================== -->
   <script>
     // DOM Helpers
     const $ = id => document.getElementById(id);
     const $$ = selector => document.querySelectorAll(selector);
 
-    // Active User Profile loader from localStorage (shared across pages)
+    // Active User Profile & 3-Group Sidebar Role Visibility
     function loadActiveUser() {
       try {
         const stored = localStorage.getItem('workpulse_active_user');
@@ -1958,23 +2203,59 @@
         $('side-avatar').textContent = activeUser.avatar || (activeUser.name ? activeUser.name.substring(0, 2).toUpperCase() : 'BP');
         $('top-avatar').textContent = activeUser.avatar || (activeUser.name ? activeUser.name.substring(0, 2).toUpperCase() : 'BP');
 
-        // Atur visibilitas Menu Management di Sidebar sesuai Role
-        const isMgmtRole = ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HRGA', 'CEO'].includes(activeUser.role);
-        if (isMgmtRole && $('mgmt-nav-group')) {
-          $('mgmt-nav-group').style.display = 'grid';
-          if (activeUser.role === 'SUPERVISOR' || activeUser.role === 'HEAD_OF_DEPARTMENT') {
-            if ($('link-coaching')) $('link-coaching').style.display = 'flex';
+        const role = (activeUser.role || 'EMPLOYEE').toUpperCase();
+
+        // Grup 2: Management (Kondisional sesuai Role)
+        const mgmtRules = {
+          'link-pulse': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO'],
+          'link-blockers': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD'],
+          'link-escalation-aging': ['CEO'],
+          'link-project-risk': ['PM', 'PROJECT_MANAGER'],
+          'link-coaching': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+          'link-correction-review': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+          'link-compliance': ['HRGA'],
+          'link-leave-approval': ['HRGA'],
+          'link-exemptions': ['HRGA', 'SYSTEM_ADMIN', 'ADMIN'],
+          'link-reports': ['HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA', 'CEO'] // Jangan tampilkan untuk Supervisor
+        };
+
+        let mgmtVisibleCount = 0;
+        Object.keys(mgmtRules).forEach(linkId => {
+          const el = $(linkId);
+          if (!el) return;
+          if (mgmtRules[linkId].includes(role)) {
+            el.style.display = 'flex';
+            mgmtVisibleCount++;
+          } else {
+            el.style.display = 'none';
           }
-          if (activeUser.role === 'HRGA') {
-            if ($('link-compliance')) $('link-compliance').style.display = 'flex';
-            if ($('link-leave-approval')) $('link-leave-approval').style.display = 'flex';
-            if ($('link-exemptions')) $('link-exemptions').style.display = 'flex';
+        });
+        if ($('mgmt-nav-group')) {
+          $('mgmt-nav-group').style.display = mgmtVisibleCount > 0 ? 'grid' : 'none';
+        }
+
+        // Grup 3: Administration (Kondisional sesuai Role)
+        const adminRules = {
+          'link-admin-users': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'CEO'],
+          'link-admin-org': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+          'link-admin-reviewer': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+          'link-admin-notif': ['SYSTEM_ADMIN', 'ADMIN'],
+          'link-admin-policy': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO']
+        };
+
+        let adminVisibleCount = 0;
+        Object.keys(adminRules).forEach(linkId => {
+          const el = $(linkId);
+          if (!el) return;
+          if (adminRules[linkId].includes(role)) {
+            el.style.display = 'flex';
+            adminVisibleCount++;
+          } else {
+            el.style.display = 'none';
           }
-          if (activeUser.role === 'CEO') {
-            if ($('link-coaching')) $('link-coaching').style.display = 'flex';
-            if ($('link-compliance')) $('link-compliance').style.display = 'flex';
-            if ($('link-exemptions')) $('link-exemptions').style.display = 'flex';
-          }
+        });
+        if ($('admin-nav-group')) {
+          $('admin-nav-group').style.display = adminVisibleCount > 0 ? 'grid' : 'none';
         }
       } catch (e) {
         console.error('Error loading active user session:', e);
@@ -1990,9 +2271,11 @@
         initialRisk: 'GREEN',
         initialRiskLabel: 'GREEN · Terkendali',
         carryOverDays: 1,
+        hasCriticalBlocker: false,
         outcome: '',
         continuation: '',
-        reason: '',
+        cancelReason: '',
+        continuationReason: '',
         link: ''
       },
       {
@@ -2001,11 +2284,13 @@
         title: 'Integrasi API riwayat komitmen mingguan dan unit testing controller.',
         initialRisk: 'AMBER',
         initialRiskLabel: 'AMBER · Menunggu Dependensi',
-        blockerInfo: 'Menunggu persetujuan skema migration database dari Tech Lead',
+        blockerInfo: 'Catatan pagi: menunggu konfirmasi skema migration database dari Tech Lead',
         carryOverDays: 1,
+        hasCriticalBlocker: false,
         outcome: '',
         continuation: '',
-        reason: '',
+        cancelReason: '',
+        continuationReason: '',
         link: ''
       }
     ];
@@ -2020,7 +2305,8 @@
         reference: '[#BLK-011] Staging server timeout',
         outcome: '',
         continuation: '',
-        reason: '',
+        cancelReason: '',
+        continuationReason: '',
         link: ''
       }
     ];
@@ -2028,9 +2314,22 @@
     let morningList = [];
     let additionalList = [];
     let isEodLocked = false;
+    let isPostCutoffNoSub = false;
+    let isZeroCommitmentDay = false;
+    let currentWindowMode = 'ONTIME'; // 'ONTIME' | 'LATE' | 'POST_CUTOFF'
+    let simActiveCriticalBlocker = false;
 
     // Load data from localStorage or fallback
     function initData() {
+      isZeroCommitmentDay = localStorage.getItem('workpulse_zero_commitment') === 'true';
+
+      if (isZeroCommitmentDay) {
+        morningList = [];
+        additionalList = [];
+        isEodLocked = localStorage.getItem('workpulse_eod_submitted') === 'true';
+        return;
+      }
+
       // 1. Morning Commitments
       try {
         const storedMorning = localStorage.getItem('workpulse_morning_commitments');
@@ -2045,9 +2344,11 @@
               initialRiskLabel: item.risk || item.initialRisk || 'GREEN',
               blockerInfo: item.knownBlocker || item.supportNeeded || '',
               carryOverDays: item.carryOverLevel || item.carryOverDays || 1,
+              hasCriticalBlocker: Boolean(item.hasCriticalBlocker),
               outcome: item.eodOutcome || '',
               continuation: item.eodContinuation || '',
-              reason: item.eodReason || '',
+              cancelReason: item.eodCancelReason || '',
+              continuationReason: item.eodContinuationReason || item.eodReason || '',
               link: item.eodLink || item.evidenceLink || item.reference || ''
             }));
           }
@@ -2074,7 +2375,8 @@
               assignedBy: item.assignedBy || '',
               outcome: item.eodOutcome || '',
               continuation: item.eodContinuation || '',
-              reason: item.eodReason || '',
+              cancelReason: item.eodCancelReason || '',
+              continuationReason: item.eodContinuationReason || item.eodReason || '',
               link: item.eodLink || ''
             }));
           }
@@ -2098,12 +2400,27 @@
       // 1. Morning Cards
       const morningContainer = $('morning-cards-container');
       morningContainer.innerHTML = '';
-      $('badge-morning-count').textContent = `${morningList.length} Komitmen Terdaftar`;
 
-      morningList.forEach(item => {
-        const card = createCardElement(item, 'Komitmen Pagi');
-        morningContainer.appendChild(card);
-      });
+      if (isZeroCommitmentDay || morningList.length === 0) {
+        $('badge-morning-count').textContent = '0 Komitmen (Zero Commitment)';
+        $('badge-morning-count').className = 'pill na tabular-nums';
+        morningContainer.innerHTML = `
+          <div class="empty-horizontal-strip" style="background: var(--color-status-na-bg); border-color: var(--color-status-na-border); color: var(--color-status-na-fg);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-status-na-fg); flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <div>
+              <strong>Hari Zero Commitment (NOT_APPLICABLE — NO_COMMITMENT)</strong><br>
+              <span>Tidak ada komitmen pagi yang didaftarkan hari ini. Anda tetap dapat meninjau ringkasan hari, mengisi Final Status atau Prioritas Esok Hari secara opsional, lalu menyelesaikan check-out sore.</span>
+            </div>
+          </div>
+        `;
+      } else {
+        $('badge-morning-count').textContent = `${morningList.length} Komitmen Terdaftar`;
+        $('badge-morning-count').className = 'pill neutral tabular-nums';
+        morningList.forEach(item => {
+          const card = createCardElement(item, 'Komitmen Pagi', true);
+          morningContainer.appendChild(card);
+        });
+      }
 
       // 2. Additional Cards
       const additionalContainer = $('additional-cards-container');
@@ -2114,12 +2431,12 @@
         additionalContainer.innerHTML = `
           <div class="empty-horizontal-strip">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary); flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-            <span>Tidak ada pekerjaan tambahan yang dicatat hari ini. Seluruh evaluasi difokuskan pada Morning Commitment.</span>
+            <span>Tidak ada pekerjaan tambahan yang dicatat hari ini.</span>
           </div>
         `;
       } else {
         additionalList.forEach(item => {
-          const card = createCardElement(item, 'Tugas Tambahan');
+          const card = createCardElement(item, 'Tugas Tambahan', false);
           additionalContainer.appendChild(card);
         });
       }
@@ -2130,18 +2447,26 @@
       calculateSuggestedStatus();
     }
 
-    // Create single Card DOM Element
-    function createCardElement(item, kindLabel) {
+    // Create single Card DOM Element (with 2 separate conditional reason blocks)
+    function createCardElement(item, kindLabel, isMorningCommitment) {
       const card = document.createElement('article');
       card.className = 'eod-card';
       card.id = `card-${item.id}`;
       card.dataset.itemId = item.id;
+      card.dataset.isMorning = isMorningCommitment ? 'true' : 'false';
 
       const riskPillClass = (item.initialRisk || '').toLowerCase();
+      const criticalBlockerBadge = item.hasCriticalBlocker ? `
+        <div class="eod-task-blocker-info" style="background: var(--color-status-red-bg); border-color: var(--color-status-red-border); color: var(--color-status-red-fg);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span><strong>Tiket Blocker Kritis Aktif (#BLK-2026-1048 · Severity: Critical):</strong> Kredensial API Payment Gateway Sandbox Kadaluarsa</span>
+        </div>
+      ` : '';
+
       const blockerHtml = item.blockerInfo ? `
         <div class="eod-task-blocker-info">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-          <span><strong>Kendala Pagi:</strong> ${item.blockerInfo}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span><strong>Catatan Risiko Pagi:</strong> ${item.blockerInfo}</span>
         </div>
       ` : '';
 
@@ -2151,22 +2476,20 @@
           <span>Initial: ${item.initialRisk}</span>
         </span>
       ` : (item.reasonBadge ? `
-        <span class="pill neutral" style="font-size: 11.5px;">${item.reasonBadge}</span>
+        <span class="pill neutral" style="font-size: 12px;">${item.reasonBadge}</span>
       ` : '');
 
       const carryOverBadge = (item.carryOverDays && item.carryOverDays >= 2) ? `
-        <span class="pill amber" style="font-size: 11px; padding: 2px 7px;">Carry-over Hari ke-${item.carryOverDays}</span>
+        <span class="pill amber tabular-nums" style="font-size: 12px; padding: 2px 8px;">Carry-Over #${item.carryOverDays}</span>
       ` : '';
 
-      // Referensi / Blocker dari Halaman 03 (jika ada)
       const referenceHtml = item.reference ? `
         <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-brand-primary); margin-top: 6px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-          <span>Tautan / Blocker: <strong style="font-weight: 600;">${item.reference}</strong></span>
+          <span>Tautan / Referensi: <strong style="font-weight: 600;">${item.reference}</strong></span>
         </div>
       ` : '';
 
-      // Pemberi Tugas: Tampil jika berasal dari Tugas Tambahan dengan assignedBy (FR-06)
       const assignedByHtml = item.assignedBy ? `
         <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); margin-top: 6px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-secondary); flex-shrink: 0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -2174,10 +2497,14 @@
         </div>
       ` : '';
 
+      const continueOptionLabel = isMorningCommitment
+        ? 'Continue (Lanjut Besok — Masuk Draf Copy-Forward Pagi)'
+        : 'Continue (Masih Berlanjut — Tanpa Carry-Over Otomatis ke Slot Pagi)';
+
       card.innerHTML = `
         <div class="eod-card-head">
           <div class="eod-card-title">
-            <span class="eod-slot-badge">
+            <span class="eod-slot-badge tabular-nums">
               <span>[ ${item.slotNumber} ]</span>
               <span>${kindLabel}</span>
             </span>
@@ -2185,7 +2512,7 @@
           <div class="eod-card-meta">
             ${carryOverBadge}
             ${headerMetaBadge}
-            <span class="pill neutral" style="font-size: 11px;">Terkunci</span>
+            <span class="pill neutral" style="font-size: 12px;">Baseline Terkunci</span>
           </div>
         </div>
 
@@ -2194,10 +2521,11 @@
             <div class="eod-task-desc">${item.title}</div>
             ${assignedByHtml}
             ${referenceHtml}
+            ${criticalBlockerBadge}
             ${blockerHtml}
           </div>
 
-          <!-- 2-Column Responsive Controls Grid (FR-08, FR-09) -->
+          <!-- 2-Column Responsive Controls Grid -->
           <div class="eod-controls-grid">
             <div class="field-group">
               <label class="field-label" for="outcome-${item.id}">
@@ -2220,28 +2548,38 @@
               </label>
               <select class="form-select continuation-select" id="continuation-${item.id}" required>
                 <option value="">Pilih Kelanjutan Operasional...</option>
-                <option value="Continue" ${item.continuation === 'Continue' ? 'selected' : ''}>Continue (Lanjut Besok — Masuk Draf Pagi)</option>
+                <option value="Continue" ${item.continuation === 'Continue' ? 'selected' : ''}>${continueOptionLabel}</option>
                 <option value="Do Not Continue" ${item.continuation === 'Do Not Continue' ? 'selected' : ''}>Do Not Continue (Tidak Dilanjutkan)</option>
               </select>
             </div>
           </div>
 
-          <!-- Conditional Reason Panel (Wajib jika Cancelled atau Continue - FR-09) -->
-          <div class="conditional-reason-panel ${item.outcome === 'Cancelled' || item.continuation === 'Continue' ? 'show' : ''}" id="reason-panel-${item.id}">
-            <div class="reason-panel-header" id="reason-label-${item.id}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #D97706;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-              <span>Alasan Penjelasan:</span>
+          <!-- Blok Kondisional 1: Alasan Pembatalan (Tampil & Wajib setiap kali Outcome === 'Cancelled') -->
+          <div class="conditional-reason-panel ${item.outcome === 'Cancelled' ? 'show' : ''}" id="cancel-reason-wrap-${item.id}">
+            <label class="reason-panel-header" for="cancel-reason-${item.id}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-status-red-fg);"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              <span>Alasan Pembatalan</span>
               <span class="required-mark">*</span>
-            </div>
-            <textarea class="form-textarea reason-textarea" id="reason-${item.id}" placeholder="Jelaskan alasan pembatalan atau pertimbangan mengapa pekerjaan ini perlu dilanjutkan esok hari...">${item.reason || ''}</textarea>
+            </label>
+            <textarea class="form-textarea cancel-reason-textarea" id="cancel-reason-${item.id}" placeholder="Jelaskan alasan mengapa tugas ini dibatalkan hari ini...">${item.cancelReason || ''}</textarea>
           </div>
 
-          <!-- Optional Evidence Link Input (FR-08) -->
+          <!-- Blok Kondisional 2: Alasan Melanjutkan / Continuation Reason (Tampil & Wajib setiap kali Continuation === 'Continue', termasuk saat Outcome === 'Completed') -->
+          <div class="conditional-reason-panel ${item.continuation === 'Continue' ? 'show' : ''}" id="continue-reason-wrap-${item.id}">
+            <label class="reason-panel-header" for="continue-reason-${item.id}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-status-amber-fg);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>Alasan Melanjutkan (Continuation Reason)</span>
+              <span class="required-mark">*</span>
+            </label>
+            <textarea class="form-textarea continue-reason-textarea" id="continue-reason-${item.id}" placeholder="Jelaskan lingkup lanjutan atau alasan mengapa pekerjaan ini perlu diteruskan ke hari kerja berikutnya...">${item.continuationReason || ''}</textarea>
+          </div>
+
+          <!-- Optional Evidence Link Input -->
           <div class="field-group" style="margin-top: 14px;">
             <label class="field-label" for="link-${item.id}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-brand-primary);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
               <span>Tautan Bukti Kerja / Deliverable</span>
-              <span style="font-size: 11.5px; font-weight: 500; color: var(--color-text-secondary);">(Opsional — PR Git, Dokumen, Tiket)</span>
+              <span style="font-size: 12px; font-weight: 500; color: var(--color-text-secondary);">(Opsional — PR Git, Dokumen, Tiket)</span>
             </label>
             <input type="url" class="form-input evidence-input" id="link-${item.id}" placeholder="https://github.com/... atau https://docs.google.com/..." value="${item.link || ''}">
           </div>
@@ -2250,7 +2588,7 @@
       return card;
     }
 
-    // Attach Change Listeners
+    // Attach Change Listeners to Outcome & Continuation selects
     function attachCardListeners() {
       $$('.outcome-select, .continuation-select').forEach(sel => {
         sel.onchange = () => {
@@ -2258,27 +2596,24 @@
           const id = card.dataset.itemId;
           const outcome = card.querySelector('.outcome-select').value;
           const continuation = card.querySelector('.continuation-select').value;
-          const reasonPanel = $(`reason-panel-${id}`);
-          const reasonLabel = $(`reason-label-${id}`);
 
-          // FR-09: Alasan wajib jika Cancelled atau Continuation = Continue
-          if (outcome === 'Cancelled' || continuation === 'Continue') {
-            reasonPanel.classList.add('show');
+          const cancelWrap = $(`cancel-reason-wrap-${id}`);
+          const continueWrap = $(`continue-reason-wrap-${id}`);
+
+          if (cancelWrap) {
             if (outcome === 'Cancelled') {
-              reasonLabel.innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #DC2626;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                <span>Alasan Pembatalan Tugas:</span>
-                <span class="required-mark">*</span>
-              `;
+              cancelWrap.classList.add('show');
             } else {
-              reasonLabel.innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #D97706;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>Alasan Kelanjutan Pekerjaan ke Esok Hari:</span>
-                <span class="required-mark">*</span>
-              `;
+              cancelWrap.classList.remove('show');
             }
-          } else {
-            reasonPanel.classList.remove('show');
+          }
+
+          if (continueWrap) {
+            if (continuation === 'Continue') {
+              continueWrap.classList.add('show');
+            } else {
+              continueWrap.classList.remove('show');
+            }
           }
 
           updateEvaluationProgress();
@@ -2289,10 +2624,22 @@
 
     // Live Evaluation Progress Calculation
     function updateEvaluationProgress() {
+      if (isPostCutoffNoSub) return;
+
       const allCards = $$('.eod-card');
       const total = allCards.length;
-      let completedEvaluations = 0;
+      const footerTxt = $('footer-eval-status');
 
+      if (isZeroCommitmentDay || total === 0) {
+        footerTxt.innerHTML = '<strong>Hari Zero Commitment (0 tugas)</strong> · Siap menyelesaikan check-out EOD';
+        if (!isEodLocked) {
+          $('eod-status-txt').textContent = 'Siap Check-Out (0 Item)';
+          $('eod-status-pill').className = 'pill ontime';
+        }
+        return;
+      }
+
+      let completedEvaluations = 0;
       allCards.forEach(card => {
         const outcome = card.querySelector('.outcome-select').value;
         const continuation = card.querySelector('.continuation-select').value;
@@ -2301,23 +2648,64 @@
         }
       });
 
-      const footerTxt = $('footer-eval-status');
       if (completedEvaluations === total) {
         footerTxt.innerHTML = `<strong>${completedEvaluations} dari ${total} tugas telah dievaluasi</strong> · Siap serahkan EOD Outcome`;
-        $('eod-status-txt').textContent = 'Evaluasi Lengkap';
-        $('eod-status-pill').className = 'pill green';
+        if (!isEodLocked) {
+          $('eod-status-txt').textContent = 'Evaluasi Lengkap';
+          $('eod-status-pill').className = 'pill green';
+        }
       } else {
         footerTxt.innerHTML = `${completedEvaluations} dari ${total} tugas telah dievaluasi · Lengkapi seluruh isian`;
-        $('eod-status-txt').textContent = 'Sedang Berlangsung';
-        $('eod-status-pill').className = 'pill amber';
+        if (!isEodLocked) {
+          $('eod-status-txt').textContent = 'Sedang Berlangsung';
+          $('eod-status-pill').className = 'pill amber';
+        }
       }
     }
 
-    // Deterministic Heuristic Suggestion Engine (FR-13 & AC-38, ADR-013)
+    // Check if there is an active Critical Blocker ticket in localStorage or simulation
+    function hasActiveCriticalBlockerTicket() {
+      if (simActiveCriticalBlocker) return true;
+      try {
+        const raw = localStorage.getItem('workpulse_active_blockers');
+        if (raw) {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            return list.some(b =>
+              b.severity === 'Critical' &&
+              ['Open', 'Acknowledged', 'In Progress'].includes(b.status)
+            );
+          }
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    // Deterministic Heuristic Suggestion Engine
     let currentSuggestedStatus = 'NONE';
     let currentSuggestedReason = '';
 
     function calculateSuggestedStatus() {
+      const pill = $('suggested-status-pill');
+      const txt = $('suggested-status-txt');
+      const desc = $('suggested-status-desc');
+      const carryWarningEl = $('green-carryover-warning');
+
+      if (isZeroCommitmentDay || (morningList.length === 0 && additionalList.length === 0)) {
+        currentSuggestedStatus = 'NOT_APPLICABLE';
+        currentSuggestedReason = 'Hari ini tercatat sebagai Zero Commitment (NOT_APPLICABLE — NO_COMMITMENT) dengan 0 tugas tambahan. Anda dapat langsung menyelesaikan check-out sore atau memilih status secara opsional.';
+        pill.className = 'pill na';
+        txt.textContent = 'NOT_APPLICABLE — NO_COMMITMENT';
+        desc.textContent = currentSuggestedReason;
+        if (carryWarningEl) carryWarningEl.style.display = 'none';
+        if (!document.querySelector('input[name="final-status-choice"]:checked')) {
+          $('risk-status-badge').className = 'pill na';
+          $('risk-status-badge-txt').textContent = 'NOT_APPLICABLE — NO_COMMITMENT';
+          $('risk-status-desc').textContent = 'Hari Tanpa Komitmen (0 Item)';
+        }
+        return;
+      }
+
       const allCards = $$('.eod-card');
       if (allCards.length === 0) return;
 
@@ -2327,20 +2715,19 @@
       let notCompletedCount = 0;
       let cancelledCount = 0;
       let hasCarryOver2Days = false;
-      let hasActiveBlocker = false;
+      let hasCriticalBlockerOnItem = false;
 
       allCards.forEach(card => {
         const id = card.dataset.itemId;
         const outcome = card.querySelector('.outcome-select').value;
-        const continuation = card.querySelector('.continuation-select').value;
 
-        // Check carry-over or blocker metadata
         const itemData = [...morningList, ...additionalList].find(i => i.id === id);
         if (itemData && itemData.carryOverDays >= 2) {
           hasCarryOver2Days = true;
         }
-        if (itemData && ((itemData.blockerInfo && outcome !== 'Completed') || (itemData.initialRisk === 'RED' && outcome !== 'Completed'))) {
-          hasActiveBlocker = true;
+        // Hanya tiket Blocker aktif ber-severity Critical yang memicu saran RED (bukan sekadar teks catatan pagi)
+        if (itemData && itemData.hasCriticalBlocker && outcome !== 'Completed') {
+          hasCriticalBlockerOnItem = true;
         }
 
         if (outcome) {
@@ -2352,103 +2739,114 @@
         }
       });
 
-      const pill = $('suggested-status-pill');
-      const txt = $('suggested-status-txt');
-      const desc = $('suggested-status-desc');
+      const hasActiveCriticalBlocker = hasCriticalBlockerOnItem || hasActiveCriticalBlockerTicket();
 
-      // Branch 6: Belum ada evaluasi
-      if (evaluatedCount === 0) {
-        currentSuggestedStatus = 'NONE';
-        currentSuggestedReason = 'Lengkapi evaluasi capaian seluruh tugas di atas untuk mengaktifkan kalkulasi status akhir secara otomatis.';
-        pill.className = 'pill neutral';
-        txt.textContent = 'Menunggu Evaluasi Tugas';
-        desc.textContent = currentSuggestedReason;
-      }
-
-      // Tampilkan peringatan dini carry-over pada kartu GREEN jika ada carry-over >= 2 hari
-      const carryWarningEl = $('green-carryover-warning');
+      // Peringatan dini carry-over pada kartu GREEN jika ada carry-over >= 2 hari
       if (carryWarningEl) {
         carryWarningEl.style.display = hasCarryOver2Days ? 'block' : 'none';
       }
 
-      if (evaluatedCount === 0) return;
+      if (evaluatedCount === 0) {
+        if (hasActiveCriticalBlocker) {
+          currentSuggestedStatus = 'RED';
+          currentSuggestedReason = 'Terdapat tiket Blocker aktif ber-severity Critical yang memengaruhi penyelesaian komitmen hari ini.';
+          pill.className = 'pill red';
+          txt.textContent = 'Saran: RED';
+          desc.textContent = currentSuggestedReason;
+        } else if (hasCarryOver2Days) {
+          currentSuggestedStatus = 'AMBER';
+          currentSuggestedReason = 'Terdapat tugas komitmen berulang (Carry-Over ≥ 2 hari) yang membutuhkan pengawalan operasional.';
+          pill.className = 'pill amber';
+          txt.textContent = 'Saran: AMBER';
+          desc.textContent = currentSuggestedReason;
+        } else {
+          currentSuggestedStatus = 'NONE';
+          currentSuggestedReason = 'Lengkapi evaluasi capaian seluruh tugas di atas untuk mengaktifkan kalkulasi status akhir secara otomatis.';
+          pill.className = 'pill neutral';
+          txt.textContent = 'Menunggu Evaluasi Tugas';
+          desc.textContent = currentSuggestedReason;
+        }
+        return;
+      }
 
       const failureRatio = (notCompletedCount + cancelledCount) / evaluatedCount;
 
-      // FR-13: 6 Deterministic Branches
-      if (hasActiveBlocker) {
-        // Branch 1: Kendala Kritis Aktif
+      if (hasActiveCriticalBlocker) {
         currentSuggestedStatus = 'RED';
-        currentSuggestedReason = 'Terdapat kendala kritis (Critical Blocker) yang aktif dan memengaruhi penyelesaian komitmen hari ini.';
+        currentSuggestedReason = 'Terdapat tiket Blocker aktif ber-severity Critical yang memengaruhi penyelesaian komitmen hari ini.';
         pill.className = 'pill red';
         txt.textContent = 'Saran: RED';
         desc.textContent = currentSuggestedReason;
       } else if (failureRatio >= 0.5) {
-        // Branch 2: >= 50% Not Completed atau Cancelled
         currentSuggestedStatus = 'RED';
         currentSuggestedReason = `Sebanyak ${Math.round(failureRatio * 100)}% tugas hari ini berstatus Belum Selesai (Not Completed) atau Dibatalkan (Cancelled).`;
         pill.className = 'pill red';
         txt.textContent = 'Saran: RED';
         desc.textContent = currentSuggestedReason;
       } else if (hasCarryOver2Days) {
-        // Branch 3: Carry-over berulang >= 2 hari
         currentSuggestedStatus = 'AMBER';
-        currentSuggestedReason = 'Terdapat tugas komitmen berulang (carry-over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan.';
+        currentSuggestedReason = 'Terdapat tugas komitmen berulang (Carry-Over ≥ 2 hari) yang membutuhkan pengawalan operasional berkelanjutan.';
         pill.className = 'pill amber';
         txt.textContent = 'Saran: AMBER';
         desc.textContent = currentSuggestedReason;
       } else if (partiallyCount > 0 || (notCompletedCount + cancelledCount) > 0) {
-        // Branch 4: Partially Completed atau < 50% Not Completed/Cancelled
         currentSuggestedStatus = 'AMBER';
         currentSuggestedReason = 'Pekerjaan selesai sebagian (Partially Completed) atau terdapat penundaan tugas yang berlanjut ke esok hari.';
         pill.className = 'pill amber';
         txt.textContent = 'Saran: AMBER';
         desc.textContent = currentSuggestedReason;
       } else if (completedCount === evaluatedCount) {
-        // Branch 5: Seluruh tugas Completed tanpa kendala
         currentSuggestedStatus = 'GREEN';
-        currentSuggestedReason = 'Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa kendala terbuka.';
+        currentSuggestedReason = 'Seluruh komitmen pagi dan tugas tambahan diselesaikan penuh (Completed) tanpa tiket Critical Blocker aktif.';
         pill.className = 'pill green';
         txt.textContent = 'Saran: GREEN';
         desc.textContent = currentSuggestedReason;
       }
     }
 
-    // Live Submission Window Verification (FR-26 & AC-25)
-    function checkSubmissionWindow() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const totalMinutes = hours * 60 + minutes;
-
+    // Apply Submission Window Mode ('ONTIME' | 'LATE' | 'POST_CUTOFF')
+    function applySubmissionWindowMode(mode) {
+      currentWindowMode = mode;
       const pill = $('submission-window-pill');
       const txt = $('submission-window-txt');
       if (!pill || !txt) return;
 
-      // Batas waktu: 18:00 WIB (1080 menit), Grace period: 18:30 WIB (1110 menit)
-      if (totalMinutes <= 1080) {
-        pill.className = 'pill green';
-        txt.textContent = 'Tepat Waktu (On-Time)';
-      } else if (totalMinutes <= 1110) {
-        pill.className = 'pill amber';
-        txt.textContent = 'Masa Tenggang (Grace Period)';
-      } else {
-        pill.className = 'pill red';
-        txt.textContent = 'Terlambat (Late Submission)';
+      if (mode === 'ONTIME') {
+        // Jendela On-Time (<= 18:00): Wajib memakai Info Blue (On-Time, BUKAN hijau!)
+        pill.className = 'pill ontime';
+        txt.textContent = 'On-Time (≤ 18:00 WIB)';
+        if (!isEodLocked) {
+          $('eod-status-subtext').textContent = 'Batas waktu On-Time: 18:00 WIB (Masa tenggang s.d. 18:30 WIB)';
+        }
+      } else if (mode === 'LATE') {
+        // Jendela Grace Period / Late (18:00 < t <= 18:30): Submit sah sebagai Late (badge oranye)
+        pill.className = 'pill late';
+        txt.textContent = 'Late · Grace Period (18:00–18:30 WIB)';
+        if (!isEodLocked) {
+          $('eod-status-subtext').textContent = 'Masa tenggang aktif (18:00–18:30 WIB) · Penyerahan tercatat sebagai Late';
+        }
+      } else if (mode === 'POST_CUTOFF') {
+        if (isEodLocked) {
+          pill.className = 'pill ontime';
+          txt.textContent = 'Pasca Cut-Off (> 18:30 WIB) · Sudah Diserahkan';
+        } else {
+          pill.className = 'pill nosub';
+          txt.textContent = 'Pasca Cut-Off (> 18:30 WIB) · Ditutup';
+        }
       }
     }
 
-    // Final Status Radio Cards Interaction (FR-10)
+    // Final Status Radio Cards Interaction (Opsi GREEN tidak pernah di-disabled)
     function initFinalStatusRadios() {
       const radios = $$('input[name="final-status-choice"]');
       radios.forEach(radio => {
+        radio.disabled = false;
         radio.addEventListener('change', () => {
           $$('.final-status-radio-card').forEach(c => c.classList.remove('active'));
           const card = radio.closest('.final-status-radio-card');
           card.classList.add('active');
 
           const val = radio.value;
-          // Synchronize Panel 1 Risk Status
           $('risk-status-badge-txt').textContent = val;
           $('risk-status-badge').className = `pill ${val.toLowerCase()}`;
           if (val === 'GREEN') {
@@ -2474,8 +2872,8 @@
           const len = riskExp.value.trim().length;
           if (len < 15) {
             riskCounter.textContent = `${len} / 15 karakter minimal`;
-            riskCounter.style.color = '#DC2626';
-            riskExp.style.borderColor = '#DC2626';
+            riskCounter.style.color = 'var(--color-status-red-fg)';
+            riskExp.style.borderColor = 'var(--color-status-red-fg)';
           } else {
             riskCounter.textContent = `${len} karakter (Memenuhi syarat)`;
             riskCounter.style.color = 'var(--color-brand-primary)';
@@ -2483,9 +2881,28 @@
           }
         });
       }
+
+      // Character counter listener for Mismatch Override Reason
+      const overrideReasonEl = $('mismatch-override-reason');
+      const overrideCounterEl = $('mismatch-override-counter');
+      const overrideErrEl = $('mismatch-override-error');
+      if (overrideReasonEl && overrideCounterEl) {
+        overrideReasonEl.addEventListener('input', () => {
+          const len = overrideReasonEl.value.trim().length;
+          if (len < 10) {
+            overrideCounterEl.textContent = `${len} / 10 karakter minimal`;
+            overrideCounterEl.style.color = 'var(--color-status-red-fg)';
+          } else {
+            overrideCounterEl.textContent = `${len} karakter (Memenuhi syarat)`;
+            overrideCounterEl.style.color = 'var(--color-brand-primary)';
+            overrideReasonEl.style.borderColor = 'var(--color-brand-primary)';
+            if (overrideErrEl) overrideErrEl.style.display = 'none';
+          }
+        });
+      }
     }
 
-    // Toast helper with variant support (success, warning, error)
+    // Toast helper
     const TOAST_ICONS = {
       success: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #34D399; flex-shrink: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
       warning: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #FBBF24; flex-shrink: 0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
@@ -2512,71 +2929,100 @@
 
     // Save Draft to LocalStorage
     function saveDraft() {
+      if (isEodLocked || isPostCutoffNoSub) return;
       const draftPayload = gatherPayload();
       localStorage.setItem('workpulse_eod_draft', JSON.stringify(draftPayload));
-      
-      // Also save tomorrow priority
+
       const tp = $('tomorrow-priority-input').value.trim();
       if (tp) {
         localStorage.setItem('workpulse_tomorrow_priority', tp);
       }
-      
+
       showToast('Draf evaluasi EOD dan catatan prioritas berhasil disimpan!');
     }
 
-    // Gather payload from UI (FR-08: Termasuk tautan bukti kerja opsional)
+    // Gather payload from UI (menyimpan cancelReason dan continuationReason secara terpisah)
     function gatherPayload() {
       const morningData = [];
       $('morning-cards-container').querySelectorAll('.eod-card').forEach(card => {
+        const id = card.dataset.itemId;
+        const sourceItem = morningList.find(m => m.id === id) || {};
+        const cancelReason = $(`cancel-reason-${id}`) ? $(`cancel-reason-${id}`).value.trim() : '';
+        const continuationReason = $(`continue-reason-${id}`) ? $(`continue-reason-${id}`).value.trim() : '';
+
         morningData.push({
-          id: card.dataset.itemId,
+          id,
+          title: sourceItem.title || '',
+          carryOverDays: sourceItem.carryOverDays || 1,
           outcome: card.querySelector('.outcome-select').value,
           continuation: card.querySelector('.continuation-select').value,
-          reason: card.querySelector('.reason-textarea') ? card.querySelector('.reason-textarea').value : '',
+          cancelReason,
+          continuationReason,
+          reason: continuationReason || cancelReason,
           evidenceLink: card.querySelector('.evidence-input') ? card.querySelector('.evidence-input').value.trim() : ''
         });
       });
 
       const additionalData = [];
       $('additional-cards-container').querySelectorAll('.eod-card').forEach(card => {
+        const id = card.dataset.itemId;
+        const sourceItem = additionalList.find(a => a.id === id) || {};
+        const cancelReason = $(`cancel-reason-${id}`) ? $(`cancel-reason-${id}`).value.trim() : '';
+        const continuationReason = $(`continue-reason-${id}`) ? $(`continue-reason-${id}`).value.trim() : '';
+
         additionalData.push({
-          id: card.dataset.itemId,
+          id,
+          title: sourceItem.title || '',
           outcome: card.querySelector('.outcome-select').value,
           continuation: card.querySelector('.continuation-select').value,
-          reason: card.querySelector('.reason-textarea') ? card.querySelector('.reason-textarea').value : '',
+          cancelReason,
+          continuationReason,
+          reason: continuationReason || cancelReason,
           evidenceLink: card.querySelector('.evidence-input') ? card.querySelector('.evidence-input').value.trim() : ''
         });
       });
 
       const selectedRadio = document.querySelector('input[name="final-status-choice"]:checked');
-      const finalStatus = selectedRadio ? selectedRadio.value : '';
+      const finalStatus = selectedRadio
+        ? selectedRadio.value
+        : (isZeroCommitmentDay ? 'NOT_APPLICABLE — NO_COMMITMENT' : '');
       const dailyRisk = $('daily-risk-explanation').value.trim();
       const tomorrowPriority = $('tomorrow-priority-input').value.trim();
+      const overrideReason = $('mismatch-override-reason') ? $('mismatch-override-reason').value.trim() : '';
 
       return {
         timestamp: new Date().toISOString(),
+        timeliness: currentWindowMode === 'LATE' ? 'Late' : 'On-Time',
         morningData,
         additionalData,
         finalStatus,
         dailyRisk,
-        tomorrowPriority
+        tomorrowPriority,
+        overrideReason
       };
     }
 
     // Validation before submission
     function validateEodForm() {
+      if (isPostCutoffNoSub) {
+        showToast('Penyerahan EOD ditolak: batas waktu cut-off pukul 18:30 WIB telah terlewati (No Submission).', 'error');
+        return false;
+      }
+
       let valid = true;
       let firstInvalidEl = null;
 
-      // Validate all cards
+      // Validate all cards (2 blok kondisional terpisah: cancel-reason & continue-reason)
       $$('.eod-card').forEach(card => {
+        const id = card.dataset.itemId;
         const out = card.querySelector('.outcome-select');
         const cont = card.querySelector('.continuation-select');
-        const reason = card.querySelector('.reason-textarea');
+        const cancelTextarea = $(`cancel-reason-${id}`);
+        const continueTextarea = $(`continue-reason-${id}`);
 
         if (!out.value) {
           valid = false;
-          out.style.borderColor = '#DC2626';
+          out.style.borderColor = 'var(--color-status-red-fg)';
           if (!firstInvalidEl) firstInvalidEl = out;
         } else {
           out.style.borderColor = '';
@@ -2584,26 +3030,40 @@
 
         if (!cont.value) {
           valid = false;
-          cont.style.borderColor = '#DC2626';
+          cont.style.borderColor = 'var(--color-status-red-fg)';
           if (!firstInvalidEl) firstInvalidEl = cont;
         } else {
           cont.style.borderColor = '';
         }
 
-        if (out.value === 'Cancelled' || cont.value === 'Continue') {
-          if (!reason || !reason.value.trim()) {
+        if (out.value === 'Cancelled') {
+          if (!cancelTextarea || !cancelTextarea.value.trim()) {
             valid = false;
-            if (reason) reason.style.borderColor = '#DC2626';
-            if (!firstInvalidEl) firstInvalidEl = reason;
+            if (cancelTextarea) cancelTextarea.style.borderColor = 'var(--color-status-red-fg)';
+            if (!firstInvalidEl) firstInvalidEl = cancelTextarea;
           } else {
-            if (reason) reason.style.borderColor = '';
+            if (cancelTextarea) cancelTextarea.style.borderColor = '';
           }
+        } else if (cancelTextarea) {
+          cancelTextarea.style.borderColor = '';
+        }
+
+        if (cont.value === 'Continue') {
+          if (!continueTextarea || !continueTextarea.value.trim()) {
+            valid = false;
+            if (continueTextarea) continueTextarea.style.borderColor = 'var(--color-status-red-fg)';
+            if (!firstInvalidEl) firstInvalidEl = continueTextarea;
+          } else {
+            if (continueTextarea) continueTextarea.style.borderColor = '';
+          }
+        } else if (continueTextarea) {
+          continueTextarea.style.borderColor = '';
         }
       });
 
-      // Validate Final Status
+      // Validate Final Status (Opsional jika Hari Zero Commitment)
       const selectedRadio = document.querySelector('input[name="final-status-choice"]:checked');
-      if (!selectedRadio) {
+      if (!selectedRadio && !isZeroCommitmentDay) {
         valid = false;
         showToast('Pilih salah satu Final Status harian (GREEN/AMBER/RED).', 'warning');
         if (!firstInvalidEl) firstInvalidEl = $('card-status-green');
@@ -2611,19 +3071,19 @@
       }
 
       // If AMBER or RED, validate daily risk explanation with minimum 15 characters
-      if (selectedRadio.value === 'AMBER' || selectedRadio.value === 'RED') {
+      if (selectedRadio && (selectedRadio.value === 'AMBER' || selectedRadio.value === 'RED')) {
         const riskExp = $('daily-risk-explanation');
         const trimmed = riskExp.value.trim();
         if (!trimmed) {
           valid = false;
-          riskExp.style.borderColor = '#DC2626';
+          riskExp.style.borderColor = 'var(--color-status-red-fg)';
           if (!firstInvalidEl) firstInvalidEl = riskExp;
           showToast('Penjelasan risiko harian wajib diisi untuk status AMBER / RED.', 'warning');
           riskExp.focus();
           return false;
         } else if (trimmed.length < 15) {
           valid = false;
-          riskExp.style.borderColor = '#DC2626';
+          riskExp.style.borderColor = 'var(--color-status-red-fg)';
           if (!firstInvalidEl) firstInvalidEl = riskExp;
           showToast(`Penjelasan risiko minimal 15 karakter (saat ini ${trimmed.length} karakter).`, 'warning');
           riskExp.focus();
@@ -2641,7 +3101,7 @@
       return valid;
     }
 
-    // Modal Confirmation & Mismatch Handlers (FR-14 / AC-39: Anti-Silent-Mutation)
+    // Modal Confirmation & ValidationPromptModal Handlers
     function setupSubmission() {
       $('btn-submit-eod').onclick = () => {
         if (!validateEodForm()) return;
@@ -2649,21 +3109,62 @@
         const payload = gatherPayload();
         const selectedStatus = payload.finalStatus;
 
-        // Anti-Silent-Mutation Check (FR-14 & AC-39 & ADR-013)
-        if (currentSuggestedStatus !== 'NONE' && selectedStatus !== currentSuggestedStatus) {
-          // Buka modal peringatan inkonsistensi status tanpa mengubah pilihan user secara diam-diam
-          $('mismatch-user-txt').textContent = selectedStatus;
-          $('mismatch-user-pill').className = `pill ${selectedStatus.toLowerCase()}`;
-          $('mismatch-suggested-txt').textContent = currentSuggestedStatus;
-          $('mismatch-suggested-pill').className = `pill ${currentSuggestedStatus.toLowerCase()}`;
-          $('mismatch-rationale-desc').textContent = currentSuggestedReason;
-          $('btn-mismatch-adopt').textContent = `Gunakan Saran Sistem (${currentSuggestedStatus})`;
-          $('btn-mismatch-keep').textContent = `Pertahankan Pilihan Saya (${selectedStatus})`;
+        const isStatusMismatch = (
+          currentSuggestedStatus !== 'NONE' &&
+          currentSuggestedStatus !== 'NOT_APPLICABLE' &&
+          selectedStatus &&
+          selectedStatus !== currentSuggestedStatus
+        );
+
+        const completedContinueItems = [...payload.morningData, ...payload.additionalData].filter(
+          i => i.outcome === 'Completed' && i.continuation === 'Continue'
+        );
+        const hasCompletedAndContinue = completedContinueItems.length > 0;
+
+        // Picu ValidationPromptModal jika ada perbedaan status ATAU kombinasi Completed + Continue
+        if (isStatusMismatch || hasCompletedAndContinue) {
+          const statusSec = $('mismatch-status-section');
+          const compContBox = $('mismatch-completed-continue-box');
+          const compContDesc = $('mismatch-completed-continue-desc');
+          const adoptBtn = $('btn-mismatch-adopt');
+
+          if (isStatusMismatch) {
+            statusSec.style.display = 'block';
+            $('mismatch-user-txt').textContent = selectedStatus;
+            $('mismatch-user-pill').className = `pill ${selectedStatus.toLowerCase()}`;
+            $('mismatch-suggested-txt').textContent = currentSuggestedStatus;
+            $('mismatch-suggested-pill').className = `pill ${currentSuggestedStatus.toLowerCase()}`;
+            $('mismatch-rationale-desc').textContent = currentSuggestedReason;
+            adoptBtn.style.display = 'inline-flex';
+            adoptBtn.textContent = `Gunakan Saran Sistem (${currentSuggestedStatus})`;
+            $('btn-mismatch-keep').textContent = `Pertahankan Pilihan Saya (${selectedStatus})`;
+          } else {
+            statusSec.style.display = 'none';
+            adoptBtn.style.display = 'none';
+            $('btn-mismatch-keep').textContent = 'Pertahankan Pilihan Saya';
+          }
+
+          if (hasCompletedAndContinue) {
+            compContBox.style.display = 'block';
+            const titles = completedContinueItems.map(i => `"${i.title}"`).join(', ');
+            compContDesc.textContent = `Tugas ${titles} ditandai Outcome = Completed sekaligus Continuation = Continue. Pastikan Anda memang sengaja melanjutkan tugas yang output hariannya telah selesai penuh.`;
+          } else {
+            compContBox.style.display = 'none';
+          }
+
+          if (isStatusMismatch && hasCompletedAndContinue) {
+            $('modal-mismatch-title').textContent = 'Perbedaan Status & Konfirmasi Tugas Completed + Continue';
+          } else if (hasCompletedAndContinue) {
+            $('modal-mismatch-title').textContent = 'Konfirmasi Kombinasi Outcome Completed + Continue';
+          } else {
+            $('modal-mismatch-title').textContent = 'Perbedaan Pilihan Status Harian';
+          }
+
+          $('mismatch-override-error').style.display = 'none';
           $('modal-status-mismatch').classList.add('show');
           return;
         }
 
-        // Jika selaras, langsung buka modal konfirmasi
         openConfirmationModal(payload);
       };
 
@@ -2674,13 +3175,11 @@
 
       $('btn-mismatch-adopt').onclick = () => {
         $('modal-status-mismatch').classList.remove('show');
-        // Adopsi rekomendasi sistem
         const radioToAdopt = document.querySelector(`input[name="final-status-choice"][value="${currentSuggestedStatus}"]`);
         if (radioToAdopt) {
           radioToAdopt.checked = true;
           radioToAdopt.dispatchEvent(new Event('change'));
         }
-        // Jika status adopsi adalah AMBER atau RED, pastikan penjelasan risiko terisi
         if ((currentSuggestedStatus === 'AMBER' || currentSuggestedStatus === 'RED') && !$('daily-risk-explanation').value.trim()) {
           showToast(`Mohon lengkapi penjelasan risiko harian untuk status ${currentSuggestedStatus}.`, 'warning');
           $('daily-risk-explanation').focus();
@@ -2691,7 +3190,25 @@
       };
 
       $('btn-mismatch-keep').onclick = () => {
-        // Pertahankan pilihan user murni (Zero Silent Mutation)
+        // Wajib mengisi #mismatch-override-reason minimal 10 karakter
+        const overrideInput = $('mismatch-override-reason');
+        const overrideErr = $('mismatch-override-error');
+        const reasonVal = overrideInput ? overrideInput.value.trim() : '';
+
+        if (reasonVal.length < 10) {
+          if (overrideErr) {
+            overrideErr.textContent = `Alasan mempertahankan pilihan wajib diisi minimal 10 karakter (saat ini ${reasonVal.length} karakter).`;
+            overrideErr.style.display = 'block';
+          }
+          if (overrideInput) {
+            overrideInput.style.borderColor = 'var(--color-status-red-fg)';
+            overrideInput.focus();
+          }
+          return;
+        }
+
+        if (overrideErr) overrideErr.style.display = 'none';
+        if (overrideInput) overrideInput.style.borderColor = '';
         $('modal-status-mismatch').classList.remove('show');
         const payload = gatherPayload();
         openConfirmationModal(payload);
@@ -2701,6 +3218,15 @@
       $('btn-cancel-modal').onclick = () => {
         $('modal-confirm').classList.remove('show');
       };
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          ['modal-confirm', 'modal-status-mismatch', 'modal-success'].forEach(id => {
+            const el = $(id);
+            if (el && el.classList.contains('show')) el.classList.remove('show');
+          });
+        }
+      });
 
       $('btn-confirm-submit').onclick = () => {
         $('modal-confirm').classList.remove('show');
@@ -2715,17 +3241,28 @@
     // Helper untuk membuka modal konfirmasi pengiriman
     function openConfirmationModal(payload) {
       $('recap-final-status').textContent = payload.finalStatus;
-      $('recap-final-status').style.color = payload.finalStatus === 'GREEN' ? '#145A36' : (payload.finalStatus === 'AMBER' ? '#7A4B00' : '#991B1B');
+      $('recap-final-status').style.color =
+        payload.finalStatus === 'GREEN'
+          ? 'var(--color-status-green-fg)'
+          : payload.finalStatus === 'AMBER'
+          ? 'var(--color-status-amber-fg)'
+          : payload.finalStatus === 'RED'
+          ? 'var(--color-status-red-fg)'
+          : 'var(--color-status-na-fg)';
 
       let completedCount = 0;
-      let continueCount = 0;
       [...payload.morningData, ...payload.additionalData].forEach(i => {
         if (i.outcome === 'Completed') completedCount++;
-        if (i.continuation === 'Continue') continueCount++;
+      });
+
+      // Hanya item Morning Commitment yang berstatus Continue yang masuk ke draf copy-forward besok pagi
+      let morningContinueCount = 0;
+      payload.morningData.forEach(i => {
+        if (i.continuation === 'Continue') morningContinueCount++;
       });
 
       $('recap-completed-count').textContent = `${completedCount} Tugas`;
-      $('recap-continue-count').textContent = `${continueCount} Tugas`;
+      $('recap-continue-count').textContent = `${morningContinueCount} Komitmen Pagi`;
 
       $('modal-confirm').classList.add('show');
     }
@@ -2736,20 +3273,20 @@
       localStorage.setItem('workpulse_eod_record', JSON.stringify(payload));
       localStorage.setItem('workpulse_eod_submitted', 'true');
 
-      // Save tomorrow priority so it appears in Morning Commitment tomorrow
       if (payload.tomorrowPriority) {
         localStorage.setItem('workpulse_tomorrow_priority', payload.tomorrowPriority);
       }
 
-      // Save continuation items to carry-over pool for Morning Commitment
+      // Eksklusif: HANYA masukkan item dari payload.morningData yang berstatus continuation === 'Continue'
       const continueItems = [];
-      [...payload.morningData, ...payload.additionalData].forEach(item => {
+      payload.morningData.forEach(item => {
         if (item.continuation === 'Continue') {
           continueItems.push({
             id: item.id,
-            title: item.title || 'Tugas Berlanjut dari Kemarin',
-            reason: item.reason || 'Pekerjaan membutuhkan tindak lanjut esok hari',
-            carryOverDays: 1
+            title: item.title || 'Komitmen Pagi Berlanjut dari Kemarin',
+            continuationReason: item.continuationReason || 'Pekerjaan membutuhkan tindak lanjut esok hari',
+            reason: item.continuationReason || 'Pekerjaan membutuhkan tindak lanjut esok hari',
+            carryOverDays: (item.carryOverDays || 1) + 1
           });
         }
       });
@@ -2763,15 +3300,37 @@
       $('modal-success').classList.add('show');
     }
 
-    // Apply Locked State to Page
+    // Unlock Form Controls (untuk perpindahan skenario simulasi)
+    function unlockFormState() {
+      isEodLocked = false;
+      isPostCutoffNoSub = false;
+      $('locked-banner').className = 'locked-banner';
+      $$('select, textarea, input').forEach(el => {
+        el.disabled = false;
+      });
+      $('btn-submit-eod').disabled = false;
+      $('btn-submit-eod').innerHTML = `
+        <span>Kirim EOD Outcome</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      `;
+      $('btn-save-draft').disabled = false;
+    }
+
+    // Apply Locked State to Page (Sudah Submit EOD — Tampilkan CTA ke 16b-EOD-Correction-Request.html)
     function applyLockedState(finalStatus) {
       isEodLocked = true;
-      $('locked-banner').classList.add('show');
-      $('eod-status-txt').textContent = 'Diserahkan · Terkunci';
-      $('eod-status-pill').className = 'pill green';
-      $('eod-status-subtext').textContent = 'Diserahkan pukul ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+      isPostCutoffNoSub = false;
+      const banner = $('locked-banner');
+      banner.className = 'locked-banner show';
+      $('locked-banner-title').textContent = 'EOD Outcome Hari Ini Telah Diserahkan dan Terkunci';
+      $('locked-banner-desc').textContent = 'Rekaman hasil harian Anda telah disimpan sebagai baseline resmi. Jika terdapat kekeliruan data pada EOD yang sudah diserahkan, ajukan perubahan melalui alur EOD Correction Request.';
+      $('locked-banner-cta-wrap').style.display = 'flex';
 
-      // Disable inputs
+      const timelinessBadge = currentWindowMode === 'LATE' ? 'Late' : 'On-Time';
+      $('eod-status-txt').textContent = `Diserahkan (${timelinessBadge}) · Terkunci`;
+      $('eod-status-pill').className = currentWindowMode === 'LATE' ? 'pill late' : 'pill ontime';
+      $('eod-status-subtext').textContent = 'Diserahkan pukul ' + (currentWindowMode === 'LATE' ? '18:15' : '17:15') + ' WIB';
+
       $$('select, textarea, input').forEach(el => {
         el.disabled = true;
       });
@@ -2779,7 +3338,124 @@
       $('btn-submit-eod').disabled = true;
       $('btn-submit-eod').innerHTML = '<span>EOD Terkunci</span>';
       $('btn-save-draft').disabled = true;
-      $('footer-eval-status').innerHTML = '<strong>EOD Outcome telah terkunci</strong> · Baseline penutupan hari aman.';
+      $('footer-eval-status').innerHTML = '<strong>EOD Outcome telah terkunci</strong> · Gunakan tombol Ajukan Koreksi EOD jika diperlukan.';
+    }
+
+    // Apply Post Cut-Off No Submission State (> 18:30 WIB & Belum Submit — Tolak Penuh Tanpa CTA ke 16b)
+    function applyPostCutoffNoSubmissionState() {
+      isEodLocked = false;
+      isPostCutoffNoSub = true;
+      applySubmissionWindowMode('POST_CUTOFF');
+
+      const banner = $('locked-banner');
+      banner.className = 'locked-banner show nosub';
+      $('locked-banner-title').textContent = 'Penyerahan EOD Ditutup — Status: No Submission';
+      $('locked-banner-desc').textContent = 'Batas akhir penyerahan EOD sore (18:30 WIB) telah terlewati tanpa pengiriman rekaman. Penulisan EOD baru telah dikunci sepenuhnya dan alur koreksi EOD tidak tersedia untuk hari tanpa pengiriman.';
+      // Tanpa tombol menuju 16b karena belum pernah submit EOD hari ini
+      $('locked-banner-cta-wrap').style.display = 'none';
+
+      $('eod-status-txt').textContent = 'No Submission';
+      $('eod-status-pill').className = 'pill nosub';
+      $('eod-status-subtext').textContent = 'Jendela penyerahan ditutup pukul 18:30 WIB';
+
+      $$('select, textarea, input').forEach(el => {
+        el.disabled = true;
+      });
+
+      $('btn-submit-eod').disabled = true;
+      $('btn-submit-eod').innerHTML = '<span>Ditutup (No Submission)</span>';
+      $('btn-save-draft').disabled = true;
+      $('footer-eval-status').innerHTML = '<strong>Jendela EOD telah ditutup (No Submission)</strong> · Penulisan baru ditolak pasca pukul 18:30 WIB.';
+    }
+
+    // Prototype Simulation Bar Handler
+    function setupSimulationBar() {
+      const simBtns = $$('.proto-sim-btn');
+      simBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          simBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const mode = btn.dataset.sim;
+
+          // Reset base states
+          localStorage.removeItem('workpulse_zero_commitment');
+          localStorage.removeItem('workpulse_eod_submitted');
+          isZeroCommitmentDay = false;
+          simActiveCriticalBlocker = false;
+          unlockFormState();
+
+          if (mode === 'ontime') {
+            morningList = JSON.parse(JSON.stringify(fallbackMorningItems));
+            additionalList = JSON.parse(JSON.stringify(fallbackAdditionalItems));
+            applySubmissionWindowMode('ONTIME');
+            renderCards();
+            showToast('Simulasi diaktifkan: Waktu On-Time (17:15 WIB · Info Blue).');
+          } else if (mode === 'late') {
+            morningList = JSON.parse(JSON.stringify(fallbackMorningItems));
+            additionalList = JSON.parse(JSON.stringify(fallbackAdditionalItems));
+            applySubmissionWindowMode('LATE');
+            renderCards();
+            showToast('Simulasi diaktifkan: Masa Tenggang / Late (18:15 WIB · Badge Oranye).', 'warning');
+          } else if (mode === 'post_cutoff_nosub') {
+            morningList = JSON.parse(JSON.stringify(fallbackMorningItems));
+            additionalList = JSON.parse(JSON.stringify(fallbackAdditionalItems));
+            renderCards();
+            applyPostCutoffNoSubmissionState();
+            showToast('Simulasi diaktifkan: Pasca Cut-Off (> 18:30 WIB) — Belum Submit (No Submission, tanpa CTA 16b).', 'error');
+          } else if (mode === 'post_cutoff_submitted') {
+            morningList = JSON.parse(JSON.stringify(fallbackMorningItems));
+            morningList[0].outcome = 'Completed';
+            morningList[0].continuation = 'Do Not Continue';
+            morningList[1].outcome = 'Partially Completed';
+            morningList[1].continuation = 'Continue';
+            morningList[1].continuationReason = 'Menunggu sinkronisasi skema migration di staging esok pagi.';
+            additionalList = JSON.parse(JSON.stringify(fallbackAdditionalItems));
+            additionalList[0].outcome = 'Completed';
+            additionalList[0].continuation = 'Do Not Continue';
+            renderCards();
+
+            const amberRadio = document.querySelector('input[name="final-status-choice"][value="AMBER"]');
+            if (amberRadio) {
+              amberRadio.checked = true;
+              amberRadio.dispatchEvent(new Event('change'));
+            }
+            $('daily-risk-explanation').value = 'Integrasi endpoint mingguan tertunda sebagian menunggu deployment migration skema database staging.';
+            $('daily-risk-explanation').dispatchEvent(new Event('input'));
+
+            currentWindowMode = 'POST_CUTOFF';
+            applyLockedState('AMBER');
+            applySubmissionWindowMode('POST_CUTOFF');
+            showToast('Simulasi diaktifkan: Pasca Cut-Off — Sudah Submit (Rekaman Terkunci + CTA Ajukan Koreksi EOD).');
+          } else if (mode === 'carryover_critical') {
+            simActiveCriticalBlocker = true;
+            morningList = JSON.parse(JSON.stringify(fallbackMorningItems));
+            morningList[0].carryOverDays = 2;
+            morningList[0].outcome = 'Partially Completed';
+            morningList[0].continuation = 'Continue';
+            morningList[0].continuationReason = 'Masih membutuhkan penyesuaian guard permission untuk modul laporan.';
+            morningList[1].hasCriticalBlocker = true;
+            morningList[1].outcome = 'Not Completed';
+            morningList[1].continuation = 'Continue';
+            morningList[1].continuationReason = 'Terhambat tiket Critical Blocker #BLK-2026-1048 pada kredensial sandbox.';
+            additionalList = JSON.parse(JSON.stringify(fallbackAdditionalItems));
+            additionalList[0].outcome = 'Completed';
+            additionalList[0].continuation = 'Do Not Continue';
+            applySubmissionWindowMode('ONTIME');
+            renderCards();
+            showToast('Simulasi diaktifkan: Ada Carry-Over #2 & Tiket Critical Blocker Aktif (Saran Sistem: RED).', 'warning');
+          } else if (mode === 'zero_commitment') {
+            isZeroCommitmentDay = true;
+            morningList = [];
+            additionalList = [];
+            $$('input[name="final-status-choice"]').forEach(r => { r.checked = false; });
+            $$('.final-status-radio-card').forEach(c => c.classList.remove('active'));
+            $('daily-risk-group').style.display = 'none';
+            applySubmissionWindowMode('ONTIME');
+            renderCards();
+            showToast('Simulasi diaktifkan: Hari Zero Commitment (NOT_APPLICABLE — NO_COMMITMENT · 0 Item).');
+          }
+        });
+      });
     }
 
     // Mobile Hamburger & Drawer
@@ -2808,11 +3484,12 @@
     // On Load Lifecycle
     window.addEventListener('DOMContentLoaded', () => {
       loadActiveUser();
-      checkSubmissionWindow();
+      applySubmissionWindowMode('ONTIME');
       initData();
       renderCards();
       initFinalStatusRadios();
       setupSubmission();
+      setupSimulationBar();
       setupMobileNavigation();
 
       $('btn-save-draft').onclick = saveDraft;
@@ -2825,7 +3502,6 @@
           try {
             const p = JSON.parse(stored);
             if (p.finalStatus) status = p.finalStatus;
-            // Pre-select radio
             const r = document.querySelector(`input[name="final-status-choice"][value="${status}"]`);
             if (r) {
               r.checked = true;

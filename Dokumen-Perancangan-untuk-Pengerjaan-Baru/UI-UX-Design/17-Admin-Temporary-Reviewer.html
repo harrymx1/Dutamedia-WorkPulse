@@ -1,39 +1,2145 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>WorkPulse — Admin: Temporary Reviewer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WorkPulse — Pendelegasian Reviewer Sementara (/admin/temporary-reviewer)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-:root{--canvas:#F7FAF9;--surface:#fff;--subtle:#EFF5F2;--border:#DCE7E2;--border-strong:#A9C7BC;--ink:#0E211B;--secondary:#5C6E68;--brand:#00674D;--brand-tint:#E6F4EE;--focus:#0B8061;--amber-bg:#FFF3D9;--amber-fg:#7A4B00;--green-bg:#E6F4EC;--green-fg:#145A36;--red-bg:#FDE9E7;--red-fg:#9B2923;--blue-bg:#E0F2FE;--blue-fg:#075985;--neutral-bg:#EFF2F1;--neutral-fg:#46534E;--shadow:0 8px 24px rgba(14,33,27,.05)}
-*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}.sidebar{background:#fff;border-right:1px solid var(--border);padding:24px 16px 18px;display:flex;flex-direction:column;min-height:100vh}.brand{display:flex;align-items:center;gap:10px;padding:0 8px}.brand-mark{height:38px;width:38px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:850;font-size:21px}.brand-name{font-size:18px;font-weight:850;letter-spacing:-.5px}.brand-caption{font-size:11px;color:var(--secondary);margin-top:-3px}.nav-group{margin-top:30px}.nav-group.management{margin-top:28px}.nav-label{padding:0 12px;margin-bottom:10px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--secondary);font-weight:750}.nav{display:grid;gap:5px}.nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:8px;color:var(--secondary);font-weight:650;text-decoration:none;font-size:13px}.nav a.active{background:var(--brand-tint);color:var(--brand);font-weight:800}.nav-icon{width:20px;text-align:center;font-size:16px}.sidebar-bottom{margin-top:auto;padding:18px 8px 0;border-top:1px solid var(--border)}.identity{display:flex;gap:10px;align-items:center}.avatar{width:36px;height:36px;border-radius:50%;background:#D9EEE5;color:var(--brand);display:grid;place-items:center;font-weight:800}.identity-name{font-weight:800;font-size:13px}.identity-role{font-size:11px;color:var(--secondary)}.main{min-width:0}.topbar{height:70px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;gap:12px}.crumb{font-size:12px;color:var(--secondary)}.topbar-title{font-weight:750}.mobile-menu{display:none}.content{max-width:1440px;margin:0 auto;padding:28px 32px 44px}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.eyebrow{color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:11px}.page-head h1{font-size:27px;line-height:1.2;letter-spacing:-.7px;margin:5px 0 8px}.page-head p{margin:0;color:var(--secondary);max-width:800px}.btn{border:1px solid var(--border-strong);background:#fff;color:var(--ink);border-radius:8px;padding:9px 13px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn:hover{background:var(--subtle)}.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}.btn-primary:hover{background:#00553F}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-small{padding:6px 9px;font-size:12px}.panel{background:#fff;border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow);margin-bottom:18px;min-width:0}.panel-head{padding:17px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:14px}.panel-head h2{font-size:15px;margin:0;letter-spacing:-.2px}.panel-body{padding:18px 20px}.small{font-size:12px;color:var(--secondary)}.tiny{font-size:11px;color:var(--secondary)}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.metric{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;min-width:0}.metric-label{font-size:12px;color:var(--secondary);font-weight:700}.metric-value{font-size:25px;font-weight:850;letter-spacing:-.7px;margin:5px 0 2px}.metric-note{font-size:11px;color:var(--secondary)}.filter-grid{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(150px,.8fr) minmax(150px,.8fr) auto;gap:12px;align-items:end}.field{display:grid;gap:6px;min-width:0}.field label{font-size:12px;font-weight:750;color:#344840}.field input,.field select,.field textarea{width:100%;min-width:0;border:1px solid #C9D9D2;border-radius:8px;background:#fff;color:var(--ink);padding:10px 11px}.field textarea{min-height:84px;resize:vertical}.field .hint{font-size:11px;color:var(--secondary)}.table-wrap{overflow:auto;width:100%}table{width:100%;border-collapse:collapse;min-width:900px}th{text-align:left;background:#F7FAF9;color:#5C6E68;font-size:10px;text-transform:uppercase;letter-spacing:.07em;padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:13px 14px;border-bottom:1px solid #EAF0ED;vertical-align:top}tbody tr:last-child td{border-bottom:0}.person{font-weight:800}.subline{font-size:11px;color:var(--secondary);margin-top:3px}.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800;white-space:nowrap}.pill.green{background:var(--green-bg);color:var(--green-fg)}.pill.blue{background:var(--blue-bg);color:var(--blue-fg)}.pill.amber{background:var(--amber-bg);color:var(--amber-fg)}.pill.neutral{background:var(--neutral-bg);color:var(--neutral-fg)}.pill.red{background:var(--red-bg);color:var(--red-fg)}.table-actions{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:30px 18px;text-align:center;color:var(--secondary)}.empty strong{display:block;color:var(--ink);margin-bottom:5px}.section-note{padding:12px 14px;border-radius:9px;background:#F7FAF9;border:1px solid var(--border);color:var(--secondary);font-size:12px;margin-bottom:14px}.warning-note{padding:12px 14px;border-radius:9px;background:var(--amber-bg);border:1px solid #F0D7A1;color:#684400;font-size:12px;margin:12px 0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.span-2{grid-column:1/-1}.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}.backdrop{position:fixed;inset:0;background:#0E211B70;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.backdrop.open{display:flex}.modal{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 80px #0003}.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px;border-bottom:1px solid var(--border)}.modal-head h2{margin:0;font-size:18px}.modal-body{padding:20px}.close-x{border:1px solid var(--border);background:#fff;border-radius:8px;width:34px;height:34px;font-size:20px}.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.preview-card{padding:13px;border:1px solid var(--border);border-radius:9px;background:#fff}.preview-card .label{font-size:11px;color:var(--secondary);font-weight:700}.preview-card .value{font-size:14px;font-weight:800;margin-top:4px}.toast{position:fixed;bottom:20px;right:20px;max-width:min(420px,calc(100vw - 40px));background:#12382B;color:#fff;padding:13px 16px;border-radius:9px;box-shadow:var(--shadow);z-index:40}.hidden{display:none!important}.footnote{font-size:11px;color:var(--secondary);padding:12px 18px;border-top:1px solid var(--border)}
-@media(max-width:1120px){.app{grid-template-columns:220px minmax(0,1fr)}.content{padding:24px 22px 36px}.topbar{padding:0 22px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:760px){.app{display:block}.sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:30;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.mobile-menu{display:inline-flex}.topbar{height:62px;padding:0 15px}.content{padding:20px 14px 32px}.page-head{display:block}.page-head>.btn{margin-top:15px}.page-head h1{font-size:24px}.panel-head{padding:15px;align-items:flex-start}.panel-body{padding:15px}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:22px}.filter-grid{grid-template-columns:1fr}.form-grid,.preview-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.topbar-title{font-size:12px}}
-</style></head>
-<body><div class="app">
-<aside class="sidebar" id="sidebar"><div class="brand"><div class="brand-mark">W</div><div><div class="brand-name">WorkPulse</div><div class="brand-caption">Daily Accountability</div></div></div>
-<div class="nav-group"><div class="nav-label">Workspace</div><nav class="nav"><a href="#" data-inert><span class="nav-icon">◷</span>My Day</a><a href="#" data-inert><span class="nav-icon">▤</span>My History</a></nav></div>
-<div class="nav-group management"><div class="nav-label">Management</div><nav class="nav"><a href="#" data-inert><span class="nav-icon">▦</span>Pulse Dashboard</a><a href="#" data-inert><span class="nav-icon">⚑</span>Blocker & Escalation</a><a href="#" data-inert><span class="nav-icon">♙</span>Organizational Mapping</a><a class="active" href="#page" aria-current="page"><span class="nav-icon">◷</span>Temporary Reviewer</a></nav></div>
-<div class="sidebar-bottom"><div class="identity"><div class="avatar">SA</div><div><div class="identity-name">System Admin</div><div class="identity-role">System Admin</div></div></div></div></aside>
-<main class="main"><header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="btn mobile-menu" id="mobileMenu" aria-label="Buka navigasi">☰</button><div><div class="crumb">Management / Administration</div><div class="topbar-title">Temporary Reviewer Assignment</div></div></div></header>
-<div class="content" id="page"><section class="page-head"><div><div class="eyebrow">Admin · Effective-dated assignment</div><h1>Temporary Reviewer</h1><p>Tunjuk reviewer sementara untuk scope tertentu ketika posisi reviewer kosong atau tidak tersedia. Penugasan tidak mengubah struktur organisasi permanen dan berakhir otomatis pada Expiry Date.</p></div><button class="btn btn-primary" id="newBtn">＋ Buat assignment</button></section>
+:root {
+  --color-canvas: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F1F5F9;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-brand-primary: #00674D;
+  --color-brand-hover: #00523D;
+  --color-brand-light: #E6F4F0;
+  --color-border-subtle: #E2E8F0;
+  --color-border-strong: #CBD5E1;
 
-<section class="metrics" aria-label="Ringkasan assignment"><div class="metric"><div class="metric-label">Sedang berlaku</div><div class="metric-value" id="activeCount">—</div><div class="metric-note">Hari ini berada dalam periode efektif</div></div><div class="metric"><div class="metric-label">Akan dimulai</div><div class="metric-value" id="upcomingCount">—</div><div class="metric-note">Effective Date masih di masa depan</div></div><div class="metric"><div class="metric-label">Segera berakhir</div><div class="metric-value" id="endingCount">—</div><div class="metric-note">Berakhir dalam 7 hari kalender</div></div><div class="metric"><div class="metric-label">Sudah berakhir</div><div class="metric-value" id="expiredCount">—</div><div class="metric-note">Tidak lagi menerima eskalasi</div></div></section>
-<section class="panel"><div class="panel-head"><div><h2>Temporary Reviewer Assignments</h2><div class="small">Periode, reviewer, scope, dan status assignment</div></div><span class="pill neutral" id="recordCount">0 records</span></div><div class="panel-body"><div class="filter-grid"><div class="field"><label for="search">Cari reviewer, scope, alasan</label><input id="search" type="search" placeholder="Contoh: Engineering atau nama reviewer"></div><div class="field"><label for="statusFilter">Status periode</label><select id="statusFilter"><option value="all">Semua status</option><option value="active">Sedang berlaku</option><option value="upcoming">Akan dimulai</option><option value="expired">Sudah berakhir</option></select></div><div class="field"><label for="scopeFilter">Scope</label><select id="scopeFilter"><option value="all">Semua scope</option><option>Engineering</option><option>Operations</option><option>Finance</option><option>People & Culture</option></select></div><button class="btn" id="resetFilters">Reset filter</button></div></div>
-<div class="table-wrap"><table><thead><tr><th>Reviewer</th><th>Scope</th><th>Effective period</th><th>Countdown</th><th>Status</th><th>Reason</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty hidden"><strong>Tidak ada assignment yang cocok</strong>Ubah kata kunci atau filter untuk melihat hasil lainnya.</div></div><div class="footnote">Status periode dan hitung mundur mengikuti tanggal efektif assignment.</div></section>
-<section class="panel"><div class="panel-head"><h2>Aturan yang harus dipertahankan</h2></div><div class="panel-body"><div class="preview-grid"><div class="preview-card"><div class="label">Effective dating</div><div class="value">Riwayat tidak ditimpa</div><div class="small">Assignment historis dipertahankan; assignment baru menjadi record baru.</div></div><div class="preview-card"><div class="label">Expiry wajib</div><div class="value">Tidak open-ended</div><div class="small">Setiap assignment harus memiliki Expiry Date.</div></div><div class="preview-card"><div class="label">Scope & authority</div><div class="value">Dibatasi kewenangan</div><div class="small">Akses dan kewenangan reviewer dibatasi oleh scope serta periode assignment.</div></div><div class="preview-card"><div class="label">Audit</div><div class="value">Seluruh proses tercatat</div><div class="small"></div></div></div></div></section>
-</div></main></div>
-<div class="backdrop" id="formBackdrop" role="dialog" aria-modal="true" aria-labelledby="formTitle"><div class="modal"><div class="modal-head"><div><h2 id="formTitle">Buat Temporary Reviewer Assignment</h2><div class="small">Semua field bertanda wajib harus diisi.</div></div><button class="close-x" id="closeForm" aria-label="Tutup">×</button></div><div class="modal-body"><form id="assignmentForm" novalidate><div class="form-grid"><div class="field span-2"><label for="reviewer">Reviewer *</label><select id="reviewer" required><option value="">Pilih reviewer</option><option value="u2">Bima Santoso · Head, Engineering</option><option value="u3">Citra Lestari · Head, Operations</option><option value="u4">Dewi Anggraini · Head, Finance</option><option value="u5">Farhan Wijaya · Supervisor, Engineering</option></select><span class="hint">Pilih reviewer yang sesuai dengan scope penugasan.</span></div><div class="field"><label for="scope">Scope / tim yang di-cover *</label><select id="scope" required><option value="">Pilih scope</option><option>Engineering</option><option>Operations</option><option>Finance</option><option>People & Culture</option></select></div><div class="field"><label for="reason">Reason *</label><input id="reason" maxlength="500" required placeholder="Jelaskan alasan penugasan sementara."><span class="hint">Jelaskan kebutuhan penugasan.</span></div><div class="field"><label for="effectiveDate">Effective Date *</label><input id="effectiveDate" type="date" required></div><div class="field"><label for="expiryDate">Expiry Date *</label><input id="expiryDate" type="date" required><span class="hint">Wajib diisi; harus sama dengan atau setelah Effective Date.</span></div></div><div id="formError" class="warning-note hidden" role="alert"></div><div class="actions"><button type="button" class="btn" id="cancelForm">Batal</button><button type="submit" class="btn btn-primary">Tinjau assignment</button></div></form></div></div></div>
-<div class="backdrop" id="previewBackdrop" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="modal"><div class="modal-head"><div><h2 id="previewTitle">Konfirmasi assignment</h2><div class="small">Periksa reviewer, scope, dan periode penugasan sebelum menyimpan.</div></div><button class="close-x" id="closePreview" aria-label="Tutup">×</button></div><div class="modal-body"><div class="warning-note"></div><div id="previewContent" class="preview-grid"></div><div class="actions"><button class="btn" id="backToForm">Kembali</button><button class="btn btn-primary" id="confirmBtn">Konfirmasi penugasan</button></div></div></div></div>
-<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  /* Badge Semantik Kanonikal DS v1.5.0 */
+  --badge-active-fg: #166534;
+  --badge-active-bg: #DCFCE7;
+  --badge-active-border: #86EFAC;
+
+  --badge-warning-fg: #92400E;
+  --badge-warning-bg: #FEF3C7;
+  --badge-warning-border: #FCD34D;
+
+  --badge-danger-fg: #991B1B;
+  --badge-danger-bg: #FEE2E2;
+  --badge-danger-border: #FCA5A5;
+
+  --badge-info-fg: #075985;
+  --badge-info-bg: #E0F2FE;
+  --badge-info-border: #7DD3FC;
+
+  --badge-neutral-fg: #334155;
+  --badge-neutral-bg: #F1F5F9;
+  --badge-neutral-border: #CBD5E1;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.18);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+a {
+  color: var(--color-brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* APP SHELL */
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+}
+
+/* SIDEBAR 3 GRUP KANONIKAL */
+.sidebar {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 30;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--color-brand-primary);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.brand-caption {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.nav-label {
+  padding: 0 10px;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.nav {
+  display: grid;
+  gap: 2px;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav a:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.nav a.active {
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  font-weight: 700;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 14px 8px 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-border-strong);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.identity-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.identity-name {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.identity-role {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* MAIN AREA & TOPBAR (56px) */
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 56px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.breadcrumbs .crumb-current {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.system-clock {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.notif-bell:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.notif-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
+  border: 1px solid var(--badge-warning-border);
+  border-radius: 999px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* SIMULATION BAR */
+.sim-bar {
+  background: #F1F5F9;
+  border-bottom: 1px solid var(--color-border-strong);
+  padding: 10px 28px;
+}
+
+.sim-bar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sim-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sim-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sim-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.sim-btn:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.sim-btn.active {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #FFFFFF;
+}
+
+/* CONTENT CONTAINER (max-width: 1200px) */
+.content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 28px 64px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.page-kicker {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-brand-primary);
+  margin-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+
+.page-header p {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  max-width: 760px;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--color-surface-subtle);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background: var(--color-brand-hover);
+  border-color: var(--color-brand-hover);
+  color: #FFFFFF;
+}
+
+.btn-danger {
+  background: var(--badge-danger-bg);
+  border-color: var(--badge-danger-border);
+  color: var(--badge-danger-fg);
+}
+
+.btn-danger:hover {
+  background: #FECACA;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+
+/* 4 INTERACTIVE METRIC FILTER CARDS */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.metric-card {
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-xs);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.metric-card[aria-pressed="true"] {
+  border-color: var(--color-brand-primary);
+  background: var(--color-brand-light);
+}
+
+.metric-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-brand-primary);
+}
+
+.metric-card.accent-blue::before { background: var(--badge-info-fg); }
+.metric-card.accent-amber::before { background: var(--badge-warning-fg); }
+.metric-card.accent-slate::before { background: var(--color-text-secondary); }
+
+.metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.15;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}
+
+/* PANEL & TABLE */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.panel-title h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.panel-title p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.panel-body {
+  padding: 20px 22px;
+}
+
+/* FILTER BAR */
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) minmax(170px, 1fr) minmax(170px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.filter-group {
+  display: grid;
+  gap: 5px;
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 8px 11px;
+  font-size: 0.8125rem;
+  transition: border-color 0.15s ease;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--color-brand-primary);
+}
+
+.form-textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+/* TABLE */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+}
+
+thead th {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-align: left;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: top;
+  font-size: 0.8125rem;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: #F8FAFC;
+}
+
+/* BADGES SEMANTIK */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.badge-active {
+  color: var(--badge-active-fg);
+  background: var(--badge-active-bg);
+  border-color: var(--badge-active-border);
+}
+
+.badge-info {
+  color: var(--badge-info-fg);
+  background: var(--badge-info-bg);
+  border-color: var(--badge-info-border);
+}
+
+.badge-warning {
+  color: var(--badge-warning-fg);
+  background: var(--badge-warning-bg);
+  border-color: var(--badge-warning-border);
+}
+
+.badge-danger {
+  color: var(--badge-danger-fg);
+  background: var(--badge-danger-bg);
+  border-color: var(--badge-danger-border);
+}
+
+.badge-neutral {
+  color: var(--badge-neutral-fg);
+  background: var(--badge-neutral-bg);
+  border-color: var(--badge-neutral-border);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* AUDIT TIMELINE */
+.timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 155px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.timeline-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.timeline-content {
+  display: grid;
+  gap: 4px;
+}
+
+.timeline-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timeline-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* 403 ACCESS RESTRICTED STATE */
+.restricted-panel {
+  max-width: 620px;
+  margin: 48px auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.restricted-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--badge-danger-bg);
+  color: var(--badge-danger-fg);
+  border: 1px solid var(--badge-danger-border);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+}
+
+.restricted-panel h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.restricted-panel p {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+}
+
+/* MODALS */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 100;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  width: min(720px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.modal-header {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.modal-header h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.modal-header p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-group {
+  display: grid;
+  gap: 5px;
+}
+
+.form-group.col-span-2 {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.required {
+  color: var(--badge-danger-fg);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.inline-error {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--badge-danger-bg);
+  border: 1px solid var(--badge-danger-border);
+  color: var(--badge-danger-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.preview-card {
+  padding: 13px 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+}
+
+.preview-card.col-span-2 {
+  grid-column: span 2;
+}
+
+.preview-card-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.preview-card-value {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-top: 4px;
+}
+
+.callout-box {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.callout-info {
+  background: var(--badge-info-bg);
+  border: 1px solid var(--badge-info-border);
+  color: var(--badge-info-fg);
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  background: var(--color-text-primary);
+  color: #FFFFFF;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  z-index: 200;
+  max-width: 440px;
+}
+
+.toast.show {
+  display: flex;
+}
+
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 248px;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 18px 14px 48px;
+  }
+  .page-header {
+    flex-direction: column;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .filter-bar, .form-grid, .preview-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-group.col-span-2, .preview-card.col-span-2 {
+    grid-column: auto;
+  }
+  .timeline-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR 3 GRUP KANONIKAL -->
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi Utama">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div>
+        <div class="brand-name">WorkPulse</div>
+        <div class="brand-caption">Daily Accountability</div>
+      </div>
+    </div>
+
+    <div class="nav-group" id="navGroupWorkspace">
+      <div class="nav-label">Workspace</div>
+      <nav class="nav">
+        <a href="02-Morning-Commitment.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+          <span>My Today</span>
+        </a>
+        <a href="06-My-History-Weekly-Summary.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+          <span>My History</span>
+        </a>
+        <a href="20-My-Leave-Request.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+          <span>My Leave Request</span>
+        </a>
+        <a href="07-Notification-Center-Browser-Push.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+          <span>Notifications</span>
+        </a>
+        <a href="24-Profile-Settings.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+          <span>Profile</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-group" id="navGroupManagement">
+      <div class="nav-label">Management</div>
+      <nav class="nav">
+        <a href="08-Pulse-Dashboard.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a href="09-Blocker-Escalation-Queue.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></span>
+          <span>Blocker &amp; Escalation Queue</span>
+        </a>
+        <a href="14-Escalation-Aging.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 10"></polyline></svg></span>
+          <span>Escalation Aging</span>
+        </a>
+        <a href="13-Project-Risk-View.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></span>
+          <span>Project Risk View</span>
+        </a>
+        <a href="10-Manager-Note-Coaching-Record.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></span>
+          <span>Manager Notes</span>
+        </a>
+        <a href="22-Correction-and-Leave-Review.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
+          <span>Correction &amp; Leave Review</span>
+        </a>
+        <a href="11-Compliance-Queue-HRGA.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+          <span>Compliance Queue</span>
+        </a>
+        <a href="21-Leave-Approval-Queue.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
+          <span>Leave Approval Queue</span>
+        </a>
+        <a href="12-Exemption-Management.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+          <span>Holiday &amp; Exemption</span>
+        </a>
+        <a href="23-Reports.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span>
+          <span>Reports</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-group" id="navGroupAdministration">
+      <div class="nav-label">Administration</div>
+      <nav class="nav">
+        <a href="25-Admin-User-Invitation-Management.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></span>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a href="15-Admin-Organizational-Mapping.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+          <span>Organizational Mapping</span>
+        </a>
+        <a href="17-Admin-Temporary-Reviewer.html" class="active" aria-current="page">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg></span>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a href="19-Admin-Notification-Channel-Setup.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></span>
+          <span>Notification Setup</span>
+        </a>
+        <a href="18-Policy-Settings.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>
+          <span>Policy Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="identity">
+        <div class="avatar" id="sidebarAvatar">DL</div>
+        <div class="identity-info">
+          <div class="identity-name" id="sidebarUserName">Dewi Lestari</div>
+          <div class="identity-role" id="sidebarUserRole">HRGA &amp; System Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Buka menu navigasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <span>Administration</span>
+          <span>/</span>
+          <span class="crumb-current">Temporary Reviewer Assignment</span>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <div class="system-clock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span id="currentTimeDisplay">28 Okt 2026, 09:20 WIB</span>
+        </div>
+        <a class="notif-bell" href="07-Notification-Center-Browser-Push.html" aria-label="Pusat Notifikasi (3 belum dibaca)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span class="notif-count">3</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- BILAH MODE SIMULASI PROTOTIPE -->
+    <section class="sim-bar" aria-label="Mode Simulasi Prototipe">
+      <div class="sim-bar-inner">
+        <div class="sim-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span>[Mode Simulasi Prototipe] Peran &amp; Uji Delegasi:</span>
+        </div>
+        <div class="sim-controls">
+          <button class="sim-btn active" id="simRoleAdmin" type="button">System Admin / Head (200 OK)</button>
+          <button class="sim-btn" id="simRoleRestricted" type="button">Employee (403 Access Restricted)</button>
+          <button class="sim-btn" id="simTestSelfDelegation" type="button">Uji Anti-Self-Delegation</button>
+          <button class="sim-btn" id="simTestBackdating" type="button">Uji Larangan Backdating</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 403 ACCESS RESTRICTED PANEL -->
+    <div id="restrictedStatePanel" class="content hidden">
+      <div class="restricted-panel" role="region" aria-labelledby="restrictedHeading">
+        <div class="restricted-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h2 id="restrictedHeading">403 — Akses Dibatasi (Access Restricted)</h2>
+        <p>
+          Halaman <strong>Temporary Reviewer Assignment (<code>/admin/temporary-reviewer</code>)</strong> hanya dapat diakses oleh Administrator atau Pimpinan Berwenang untuk menunjuk pejabat pengganti sementara.
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-primary" href="02-Morning-Commitment.html">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Kembali ke My Today (<code>/today</code>)</span>
+          </a>
+          <button class="btn" id="btnRestoreAdminFrom403" type="button">Pulihkan Simulasi Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AUTHORIZED WORKSPACE -->
+    <main class="content" id="authorizedWorkspace">
+      <section class="page-header">
+        <div>
+          <div class="page-kicker">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+            <span>Administration · Bounded Temporary Reviewer Delegation</span>
+          </div>
+          <h1>Pendelegasian Reviewer Sementara (Temporary Reviewer)</h1>
+          <p>
+            Tunjuk pejabat pengganti sementara untuk meninjau blocker, koreksi material, dan persetujuan cuti bawahan saat pejabat utama berhalangan/cuti panjang. Penugasan wajib memiliki tanggal kedaluwarsa (tidak boleh terbuka) dan berakhir otomatis.
+          </p>
+        </div>
+        <div>
+          <button class="btn btn-primary" id="newBtn" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>+ Tambah Delegasi Reviewer</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 4 INTERACTIVE METRIC FILTER CARDS -->
+      <section class="metrics-grid" aria-label="Ringkasan Delegasi Reviewer Sementara">
+        <button class="metric-card" id="metricCardActive" type="button" aria-pressed="false" data-card-status="active">
+          <div class="metric-top">
+            <span class="metric-label">Sedang Berlaku (Active)</span>
+            <span class="badge badge-active">Active</span>
+          </div>
+          <div class="metric-value" id="activeCount">0</div>
+          <div class="metric-sub">Hari ini berada dalam rentang efektif</div>
+        </button>
+
+        <button class="metric-card accent-blue" id="metricCardUpcoming" type="button" aria-pressed="false" data-card-status="upcoming">
+          <div class="metric-top">
+            <span class="metric-label">Terjadwal (Scheduled)</span>
+            <span class="badge badge-info">Scheduled</span>
+          </div>
+          <div class="metric-value" id="upcomingCount">0</div>
+          <div class="metric-sub">Tanggal mulai efektif di masa depan</div>
+        </button>
+
+        <button class="metric-card accent-amber" id="metricCardEnding" type="button" aria-pressed="false" data-card-status="expiring">
+          <div class="metric-top">
+            <span class="metric-label">Segera Berakhir (Expiring Soon)</span>
+            <span class="badge badge-warning">Warning</span>
+          </div>
+          <div class="metric-value" id="endingCount">0</div>
+          <div class="metric-sub">Berakhir dalam 7 hari kalender</div>
+        </button>
+
+        <button class="metric-card accent-slate" id="metricCardExpired" type="button" aria-pressed="false" data-card-status="expired">
+          <div class="metric-top">
+            <span class="metric-label">Telah Berakhir (Expired)</span>
+            <span class="badge badge-neutral">Expired</span>
+          </div>
+          <div class="metric-value" id="expiredCount">0</div>
+          <div class="metric-sub">Otomatis berakhir pasca Expiry Date</div>
+        </button>
+      </section>
+
+      <!-- PANEL TABEL DELEGASI -->
+      <section class="panel" aria-labelledby="tableHeading">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2 id="tableHeading">Daftar Penugasan Temporary Reviewer</h2>
+            <p>Memuat Pejabat yang Digantikan, Pejabat Pengganti Sementara, Lingkup Fungsi Kanonikal, Periode Berlaku, dan Hitung Mundur.</p>
+          </div>
+          <span class="badge badge-neutral mono-num" id="recordCount">0 penugasan</span>
+        </div>
+
+        <div class="panel-body">
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label for="search">Cari Pejabat / Pengganti / Alasan / ID</label>
+              <input class="form-input" id="search" type="search" placeholder="Ketik nama pejabat, pengganti, atau TR-..." autocomplete="off">
+            </div>
+
+            <div class="filter-group">
+              <label for="statusFilter">Status Periode</label>
+              <select class="form-select" id="statusFilter">
+                <option value="all">Semua Status Periode</option>
+                <option value="active">Sedang Berlaku (Active)</option>
+                <option value="expiring">Segera Berakhir (&lt;= 7 Hari)</option>
+                <option value="upcoming">Terjadwal (Scheduled)</option>
+                <option value="expired">Telah Berakhir (Expired)</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="scopeFilter">Lingkup Fungsi Kanonikal (10 Fungsi)</label>
+              <select class="form-select" id="scopeFilter">
+                <option value="all">Semua Fungsi Kanonikal</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Quality">Quality</option>
+                <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+                <option value="R&D">R&amp;D</option>
+                <option value="Delivery">Delivery</option>
+                <option value="Business Development">Business Development</option>
+                <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+                <option value="Finance">Finance</option>
+                <option value="HRGA">HRGA</option>
+                <option value="Management">Management</option>
+              </select>
+            </div>
+
+            <div>
+              <button class="btn" id="resetFilters" type="button">Reset Filter</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">ID &amp; Pejabat yang Digantikan</th>
+                  <th scope="col">Pejabat Pengganti Sementara</th>
+                  <th scope="col">Lingkup Fungsi &amp; Bawahan</th>
+                  <th scope="col">Periode Efektif (Bounded)</th>
+                  <th scope="col">Hitung Mundur</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Alasan Delegasi</th>
+                  <th scope="col" style="text-align:right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="rows">
+                <!-- Diisi melalui JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL AUDIT TRAIL TIMELINE DELEGASI REVIEWER SEMENTARA -->
+      <section class="panel" aria-labelledby="auditHeading">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2 id="auditHeading">AuditTrailTimeline — Riwayat Siklus Pendelegasian Reviewer Sementara</h2>
+            <p>Rekam jejak pembuatan delegasi, berlakunya wewenang sementara, dan pengakhiran otomatis saat melewati Expiry Date.</p>
+          </div>
+          <span class="badge badge-info mono-num" id="auditCountBadge">0 entri audit</span>
+        </div>
+        <div class="panel-body">
+          <div class="timeline" id="auditTimelineContainer">
+            <!-- Diisi melalui JavaScript -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 1: FORM BUAT DELEGASI TEMPORARY REVIEWER                          -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="formBackdrop" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h3 id="formTitle">Buat Penugasan Temporary Reviewer Baru</h3>
+        <p>Tentukan Pejabat yang Digantikan, Pejabat Pengganti Sementara, Lingkup Fungsi Kanonikal, serta Tanggal Mulai &amp; Berakhir.</p>
+      </div>
+      <button class="modal-close-btn" id="closeForm" type="button" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form id="assignmentForm" novalidate>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="originalReviewer">Pejabat yang Digantikan (Original Reviewer / Approver) <span class="required">*</span></label>
+            <select class="form-select" id="originalReviewer" required>
+              <option value="">-- Pilih Pejabat yang Digantikan --</option>
+              <option value="USR-002">Budi Santoso (USR-002) · Head of Engineering</option>
+              <option value="USR-003">Dimas Prayoga (USR-003) · Head of Ops &amp; Infrastructure</option>
+              <option value="USR-004">Dian Permata (USR-004) · QA / QC Lead Independen</option>
+              <option value="USR-008">Farhan Pratama (USR-008) · Head of Sales &amp; Presales</option>
+              <option value="USR-009">Bima Santoso (USR-009) · Delivery Lead &amp; PM Utama</option>
+              <option value="USR-006">Siti Rahma (USR-006) · Senior Finance Lead</option>
+            </select>
+            <span class="form-hint">Pejabat definitif yang sedang berhalangan/cuti panjang.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="temporaryReviewer">Pejabat Pengganti Sementara (Temporary Reviewer) <span class="required">*</span></label>
+            <select class="form-select" id="temporaryReviewer" required>
+              <option value="">-- Pilih Pejabat Pengganti Sementara --</option>
+              <option value="USR-001">Rina Putri (USR-001) · Technical Lead Tim Core</option>
+              <option value="USR-002">Budi Santoso (USR-002) · Head of Engineering</option>
+              <option value="USR-003">Dimas Prayoga (USR-003) · Head of Ops &amp; Infrastructure</option>
+              <option value="USR-004">Dian Permata (USR-004) · QA / QC Lead Independen</option>
+              <option value="USR-005">Andi Wicaksono (USR-005) · Principal R&amp;D Engineer</option>
+              <option value="USR-007">Dewi Lestari (USR-007) · HRGA Specialist</option>
+              <option value="USR-009">Bima Santoso (USR-009) · Delivery Lead &amp; PM Utama</option>
+            </select>
+            <span class="form-hint">Divalidasi tidak menunjuk ke orang yang sama (Anti-Self-Delegation).</span>
+          </div>
+
+          <div class="form-group">
+            <label for="scope">Lingkup Fungsi Kanonikal (10 Fungsi Tetap) <span class="required">*</span></label>
+            <select class="form-select" id="scope" required>
+              <option value="">-- Pilih Fungsi Kanonikal --</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Quality">Quality</option>
+              <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+              <option value="R&D">R&amp;D</option>
+              <option value="Delivery">Delivery</option>
+              <option value="Business Development">Business Development</option>
+              <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+              <option value="Finance">Finance</option>
+              <option value="HRGA">HRGA</option>
+              <option value="Management">Management</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="subordinateScope">Cakupan Bawahan yang Di-cover <span class="required">*</span></label>
+            <input class="form-input" id="subordinateScope" type="text" required placeholder="Contoh: Seluruh bawahan langsung Tim Core Engineering (6 anggota)">
+          </div>
+
+          <div class="form-group">
+            <label for="effectiveDate">Tanggal Mulai Efektif (Effective Date) <span class="required">*</span></label>
+            <input class="form-input mono-num" id="effectiveDate" type="date" required>
+            <span class="form-hint">Wajib hari ini atau masa depan (<code>effectiveDate &gt;= today</code>).</span>
+          </div>
+
+          <div class="form-group">
+            <label for="expiryDate">Tanggal Berakhir (Expiry Date — Wajib Bounded) <span class="required">*</span></label>
+            <input class="form-input mono-num" id="expiryDate" type="date" required>
+            <span class="form-hint">Wajib diisi dan <code>expiryDate &gt;= effectiveDate</code> (dilarang open-ended).</span>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="reason">Alasan Pendelegasian Sementara <span class="required">*</span></label>
+            <textarea class="form-textarea" id="reason" required placeholder="Jelaskan alasan pendelegasian sementara (misal: Cuti tahunan / ibadah / dinas luar negeri pejabat definitif)..."></textarea>
+          </div>
+        </div>
+
+        <div class="inline-error hidden" id="formError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span id="formErrorText"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="cancelForm" type="button">Batal</button>
+        <button class="btn btn-primary" type="submit">Tinjau Konfirmasi Penugasan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 2: PRATINJAU & KONFIRMASI PENUGASAN SEMENTARA                     -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="previewBackdrop" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h3 id="previewTitle">Konfirmasi Pendelegasian Temporary Reviewer</h3>
+        <p>Periksa Pejabat yang Digantikan, Pejabat Pengganti, Lingkup Fungsi, dan Periode Berlaku.</p>
+      </div>
+      <button class="modal-close-btn" id="closePreview" type="button" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-grid" id="previewContent"></div>
+      <div class="callout-box callout-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <div>
+          <strong>Pengakhiran Otomatis Tanpa Ubah Struktur Permanen:</strong> Selama rentang tanggal efektif, Pejabat Pengganti Sementara menerima antrean review koreksi material, persetujuan cuti, dan eskalasi blocker pada scope tersebut. Tepat setelah melewati Expiry Date, wewenang berakhir otomatis tanpa mengubah Direct Manager permanen di struktur organisasi.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="backToForm" type="button">Kembali ke Formulir</button>
+      <button class="btn btn-primary" id="confirmBtn" type="button">Konfirmasi &amp; Simpan Delegasi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 3: DETAIL DELEGASI & AUDIT TRAIL TIMELINE                         -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="detailBackdrop" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h3 id="detailTitle">Rincian Penugasan Temporary Reviewer &amp; AuditTrailTimeline</h3>
+        <p id="detailSubtitle">Informasi lengkap pendelegasian dan jejak audit siklus hidupnya.</p>
+      </div>
+      <button class="modal-close-btn" id="closeDetail" type="button" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-grid" id="detailSummaryGrid"></div>
+      <div style="margin-top:16px">
+        <h4 style="font-size:0.875rem;font-weight:800;color:var(--color-text-primary);margin-bottom:10px">AuditTrailTimeline Penugasan Ini</h4>
+        <div class="timeline" id="detailAuditTimeline"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="closeDetailFooterBtn" type="button">Tutup Rincian</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="toastMessage">Berhasil disimpan.</span>
+</div>
+
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id);const pad=n=>String(n).padStart(2,'0');const localDate=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;const parseDate=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,12,0,0,0)};const fmt=s=>parseDate(s).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});const diff=(a,b)=>Math.round((parseDate(a)-parseDate(b))/86400000);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const today=localDate(new Date());
-let assignments=[
-{id:'TR-001',reviewerId:'u2',reviewer:'Bima Santoso',role:'Head · Engineering',scope:'Engineering',reason:'Head vacant sementara selama proses transisi',effectiveDate:'2026-10-01',expiryDate:'2026-10-30',createdBy:'System Admin'},
-{id:'TR-002',reviewerId:'u3',reviewer:'Citra Lestari',role:'Head · Operations',scope:'Operations',reason:'Cakupan review sementara saat Head berhalangan',effectiveDate:'2026-10-08',expiryDate:'2026-10-16',createdBy:'Head · Operations'},
-{id:'TR-003',reviewerId:'u4',reviewer:'Dewi Anggraini',role:'Head · Finance',scope:'Finance',reason:'Penugasan sementara untuk menjaga kontinuitas review',effectiveDate:'2026-10-15',expiryDate:'2026-11-14',createdBy:'System Admin'},
-{id:'TR-004',reviewerId:'u5',reviewer:'Farhan Wijaya',role:'Supervisor · Engineering',scope:'Engineering',reason:'Penugasan sementara yang telah berakhir',effectiveDate:'2026-09-01',expiryDate:'2026-10-10',createdBy:'System Admin'}];let pending=null;
-function state(a){if(today<a.effectiveDate)return'upcoming';if(today>a.expiryDate)return'expired';return'active'}function daysRemaining(a){return diff(a.expiryDate,today)}function statusPill(s){return s==='active'?'<span class="pill green">Sedang berlaku</span>':s==='upcoming'?'<span class="pill blue">Akan dimulai</span>':'<span class="pill neutral">Sudah berakhir</span>'}function countdown(a){const s=state(a);if(s==='upcoming')return`Mulai dalam ${diff(a.effectiveDate,today)} hari`;if(s==='expired')return`Berakhir ${Math.abs(daysRemaining(a))} hari lalu`;const n=daysRemaining(a);return n===0?'Berakhir hari ini':`${n} hari tersisa`}
-function render(){const q=$('search').value.trim().toLowerCase(),sf=$('statusFilter').value,sc=$('scopeFilter').value;const list=assignments.filter(a=>(!q||[a.reviewer,a.scope,a.reason,a.id,a.role].join(' ').toLowerCase().includes(q))&&(sf==='all'||state(a)===sf)&&(sc==='all'||a.scope===sc)).sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate));$('rows').innerHTML=list.map(a=>`<tr><td><div class="person">${esc(a.reviewer)}</div><div class="subline">${esc(a.role)}</div><div class="tiny">${esc(a.id)}</div></td><td>${esc(a.scope)}</td><td><div>${esc(fmt(a.effectiveDate))}</div><div class="subline">s.d. ${esc(fmt(a.expiryDate))}</div></td><td><strong>${esc(countdown(a))}</strong><div class="tiny">${state(a)==='active'&&daysRemaining(a)<=7?'Segera berakhir':''}</div></td><td>${statusPill(state(a))}</td><td>${esc(a.reason)}</td><td><button class="btn btn-small" data-detail="${esc(a.id)}">Detail</button></td></tr>`).join('');$('empty').classList.toggle('hidden',list.length!==0);$('recordCount').textContent=`${list.length} record${list.length===1?'':'s'}`;$('activeCount').textContent=assignments.filter(a=>state(a)==='active').length;$('upcomingCount').textContent=assignments.filter(a=>state(a)==='upcoming').length;$('endingCount').textContent=assignments.filter(a=>state(a)==='active'&&daysRemaining(a)<=7).length;$('expiredCount').textContent=assignments.filter(a=>state(a)==='expired').length}
-function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),3500)}function openForm(){pending=null;$('assignmentForm').reset();$('formError').classList.add('hidden');$('effectiveDate').value=today;const plus=new Date();plus.setDate(plus.getDate()+30);$('expiryDate').value=localDate(plus);$('formBackdrop').classList.add('open');$('reviewer').focus()}function closeForm(){$('formBackdrop').classList.remove('open')}function showError(msg){$('formError').textContent=msg;$('formError').classList.remove('hidden')}
-$('newBtn').addEventListener('click',openForm);$('closeForm').addEventListener('click',closeForm);$('cancelForm').addEventListener('click',closeForm);$('assignmentForm').addEventListener('submit',e=>{e.preventDefault();$('formError').classList.add('hidden');const reviewerId=$('reviewer').value,scope=$('scope').value,reason=$('reason').value.trim(),effectiveDate=$('effectiveDate').value,expiryDate=$('expiryDate').value;if(!reviewerId||!scope||!reason||!effectiveDate||!expiryDate){showError('Lengkapi semua field wajib: Reviewer, Scope, Reason, Effective Date, dan Expiry Date.');return}if(expiryDate<effectiveDate){showError('Expiry Date tidak boleh lebih awal daripada Effective Date.');return}const option=$('reviewer').selectedOptions[0];const [reviewer,rolePart]=option.textContent.split(' · ');pending={id:`TR-${String(assignments.length+1).padStart(3,'0')}`,reviewerId,reviewer,role:rolePart||'Role perlu divalidasi',scope,reason,effectiveDate,expiryDate,createdBy:'System Admin'};$('previewContent').innerHTML=[['Reviewer',pending.reviewer],['Peran',pending.role],['Scope',pending.scope],['Reason',pending.reason],['Effective Date',fmt(effectiveDate)],['Expiry Date',fmt(expiryDate)],['Periode',`${diff(expiryDate,effectiveDate)+1} hari kalender (inklusif)`],['Dampak',`Reviewer menerima escalation dalam scope selama periode efektif; tidak mengubah struktur permanen.`]].map(([l,v])=>`<div class="preview-card"><div class="label">${esc(l)}</div><div class="value">${esc(v)}</div></div>`).join('');closeForm();$('previewBackdrop').classList.add('open');$('confirmBtn').focus()});$('closePreview').addEventListener('click',()=>{$('previewBackdrop').classList.remove('open');pending=null});$('backToForm').addEventListener('click',()=>{$('previewBackdrop').classList.remove('open');$('formBackdrop').classList.add('open')});$('confirmBtn').addEventListener('click',()=>{if(!pending)return;assignments.push(pending);pending=null;$('previewBackdrop').classList.remove('open');render();toast('Penugasan reviewer berhasil ditambahkan.');});$('resetFilters').addEventListener('click',()=>{$('search').value='';$('statusFilter').value='all';$('scopeFilter').value='all';render()});['search','statusFilter','scopeFilter'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));$('rows').addEventListener('click',e=>{const b=e.target.closest('[data-detail]');if(!b)return;const a=assignments.find(x=>x.id===b.dataset.detail);if(a)toast(`${a.id} · ${a.reviewer} · ${a.scope} · ${fmt(a.effectiveDate)}–${fmt(a.expiryDate)}.`)});$('mobileMenu').addEventListener('click',()=>$('sidebar').classList.toggle('open'));document.querySelectorAll('[data-inert]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeForm();$('previewBackdrop').classList.remove('open');pending=null}});render();
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const localDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseDate = s => {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0, 0);
+  };
+  const fmt = s => {
+    if (!s) return '—';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const [y, m, d] = s.split('-');
+    return `${d} ${months[parseInt(m, 10) - 1]} ${y}`;
+  };
+  const diff = (a, b) => Math.round((parseDate(a) - parseDate(b)) / 86400000);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const today = localDate(new Date());
+  const addDays = (baseStr, days) => {
+    const dt = parseDate(baseStr);
+    dt.setDate(dt.getDate() + days);
+    return localDate(dt);
+  };
+
+  let assignments = [
+    {
+      id: 'TR-001',
+      originalReviewerId: 'USR-002',
+      originalReviewer: 'Budi Santoso (USR-002)',
+      originalRole: 'Head of Engineering',
+      temporaryReviewerId: 'USR-001',
+      temporaryReviewer: 'Rina Putri (USR-001)',
+      temporaryRole: 'Technical Lead Tim Core',
+      scope: 'Engineering',
+      subordinateScope: 'Seluruh bawahan langsung Engineering (8 anggota)',
+      reason: 'Pejabat definitif melaksanakan cuti tahunan & ibadah keluarga.',
+      effectiveDate: addDays(today, -3),
+      expiryDate: addDays(today, 4),
+      createdBy: 'Dewi Lestari (HRGA)',
+      createdAt: '25 Okt 2026, 09:00 WIB'
+    },
+    {
+      id: 'TR-002',
+      originalReviewerId: 'USR-003',
+      originalReviewer: 'Dimas Prayoga (USR-003)',
+      originalRole: 'Head of Ops & Infrastructure',
+      temporaryReviewerId: 'USR-005',
+      temporaryReviewer: 'Andi Wicaksono (USR-005)',
+      temporaryRole: 'Principal R&D Engineer',
+      scope: 'Operations & Infrastructure',
+      subordinateScope: 'Tim Cloud & DevOps Infrastructure (5 anggota)',
+      reason: 'Kunjungan audit data center regional luar kota selama 2 minggu.',
+      effectiveDate: addDays(today, -2),
+      expiryDate: addDays(today, 12),
+      createdBy: 'Dewi Lestari (HRGA)',
+      createdAt: '26 Okt 2026, 10:15 WIB'
+    },
+    {
+      id: 'TR-003',
+      originalReviewerId: 'USR-008',
+      originalReviewer: 'Farhan Pratama (USR-008)',
+      originalRole: 'Head of Sales & Presales',
+      temporaryReviewerId: 'USR-009',
+      temporaryReviewer: 'Bima Santoso (USR-009)',
+      temporaryRole: 'Delivery Lead & PM Utama',
+      scope: 'Sales Enablement & Presales',
+      subordinateScope: 'Unit Presales Solution Consultant (4 anggota)',
+      reason: 'Pendelegasian terjadwal selama konferensi mitra regional.',
+      effectiveDate: addDays(today, 3),
+      expiryDate: addDays(today, 14),
+      createdBy: 'Hendra Wijaya (CEO)',
+      createdAt: '27 Okt 2026, 14:20 WIB'
+    },
+    {
+      id: 'TR-004',
+      originalReviewerId: 'USR-006',
+      originalReviewer: 'Siti Rahma (USR-006)',
+      originalRole: 'Senior Finance Lead',
+      temporaryReviewerId: 'USR-007',
+      temporaryReviewer: 'Dewi Lestari (USR-007)',
+      temporaryRole: 'HRGA Specialist',
+      scope: 'Finance',
+      subordinateScope: 'Sub-unit Administrasi Keuangan (3 anggota)',
+      reason: 'Penugasan sementara selama masa pemulihan medis.',
+      effectiveDate: addDays(today, -25),
+      expiryDate: addDays(today, -5),
+      createdBy: 'System Admin',
+      createdAt: '01 Okt 2026, 08:00 WIB'
+    }
+  ];
+
+  let auditLogs = [
+    {
+      time: '27 Okt 2026, 14:20 WIB',
+      actor: 'Hendra Wijaya (CEO)',
+      action: 'Delegation Scheduled',
+      badgeClass: 'badge-info',
+      target: 'TR-003 · Sales Enablement & Presales',
+      detail: 'Farhan Pratama (USR-008) didelegasikan sementara kepada Bima Santoso (USR-009) untuk periode ' + fmt(addDays(today, 3)) + ' s.d. ' + fmt(addDays(today, 14)) + '.'
+    },
+    {
+      time: '26 Okt 2026, 10:15 WIB',
+      actor: 'Dewi Lestari (HRGA)',
+      action: 'Delegation Active',
+      badgeClass: 'badge-active',
+      target: 'TR-002 · Operations & Infrastructure',
+      detail: 'Dimas Prayoga (USR-003) didelegasikan sementara kepada Andi Wicaksono (USR-005) untuk periode ' + fmt(addDays(today, -2)) + ' s.d. ' + fmt(addDays(today, 12)) + '.'
+    },
+    {
+      time: fmt(addDays(today, -4)) + ', 00:01 WIB',
+      actor: 'System Scheduler',
+      action: 'Delegation Auto-Expired',
+      badgeClass: 'badge-neutral',
+      target: 'TR-004 · Finance',
+      detail: 'Masa berlaku pendelegasian TR-004 berakhir otomatis setelah melewati Expiry Date (' + fmt(addDays(today, -5)) + '). Wewenang kembali ke pejabat definitif.'
+    }
+  ];
+
+  let pending = null;
+
+  function state(a) {
+    if (today < a.effectiveDate) return 'upcoming';
+    if (today > a.expiryDate) return 'expired';
+    return 'active';
+  }
+
+  function daysRemaining(a) {
+    return diff(a.expiryDate, today);
+  }
+
+  function statusBadge(a) {
+    const s = state(a);
+    if (s === 'upcoming') {
+      return '<span class="badge badge-info">Scheduled (Akan Dimulai)</span>';
+    }
+    if (s === 'expired') {
+      return '<span class="badge badge-neutral">Expired (Telah Berakhir)</span>';
+    }
+    if (daysRemaining(a) <= 7) {
+      return '<span class="badge badge-warning">Expiring Soon (&lt;= 7 Hari)</span>';
+    }
+    return '<span class="badge badge-active">Active (Sedang Berlaku)</span>';
+  }
+
+  function countdown(a) {
+    const s = state(a);
+    if (s === 'upcoming') return `Mulai dalam ${diff(a.effectiveDate, today)} hari`;
+    if (s === 'expired') return `Berakhir ${Math.abs(daysRemaining(a))} hari lalu`;
+    const n = daysRemaining(a);
+    return n === 0 ? 'Berakhir hari ini (23:59 WIB)' : `${n} hari tersisa`;
+  }
+
+  function render() {
+    const q = $('search').value.trim().toLowerCase();
+    const sf = $('statusFilter').value;
+    const sc = $('scopeFilter').value;
+
+    const list = assignments.filter(a => {
+      const matchQ = !q || [a.id, a.originalReviewer, a.temporaryReviewer, a.scope, a.subordinateScope, a.reason].join(' ').toLowerCase().includes(q);
+      const s = state(a);
+      let matchSf = true;
+      if (sf === 'expiring') {
+        matchSf = s === 'active' && daysRemaining(a) <= 7;
+      } else if (sf !== 'all') {
+        matchSf = s === sf;
+      }
+      const matchSc = sc === 'all' || a.scope === sc;
+      return matchQ && matchSf && matchSc;
+    });
+
+    $('recordCount').textContent = `${list.length} dari ${assignments.length} penugasan`;
+    $('activeCount').textContent = assignments.filter(a => state(a) === 'active').length;
+    $('upcomingCount').textContent = assignments.filter(a => state(a) === 'upcoming').length;
+    $('endingCount').textContent = assignments.filter(a => state(a) === 'active' && daysRemaining(a) <= 7).length;
+    $('expiredCount').textContent = assignments.filter(a => state(a) === 'expired').length;
+
+    const tbody = $('rows');
+    if (!list.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align:center;padding:30px;color:var(--color-text-secondary)">
+            <strong>Tidak ada penugasan Temporary Reviewer yang cocok dengan filter.</strong>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = list.map(a => `
+      <tr>
+        <td>
+          <div class="mono-num" style="font-size:0.75rem;font-weight:700;color:var(--color-brand-primary)">${esc(a.id)}</div>
+          <div style="font-weight:700;color:var(--color-text-primary);margin-top:2px">${esc(a.originalReviewer)}</div>
+          <div style="font-size:0.75rem;color:var(--color-text-muted)">${esc(a.originalRole)}</div>
+        </td>
+        <td>
+          <div style="font-weight:700;color:var(--color-text-primary)">${esc(a.temporaryReviewer)}</div>
+          <div style="font-size:0.75rem;color:var(--color-text-muted)">${esc(a.temporaryRole)}</div>
+        </td>
+        <td>
+          <span class="badge badge-neutral">${esc(a.scope)}</span>
+          <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:4px">${esc(a.subordinateScope)}</div>
+        </td>
+        <td>
+          <div class="mono-num" style="font-weight:700;color:var(--color-text-primary)">${esc(fmt(a.effectiveDate))}</div>
+          <div class="mono-num" style="font-size:0.75rem;color:var(--color-text-muted);margin-top:2px">s.d. ${esc(fmt(a.expiryDate))}</div>
+        </td>
+        <td>
+          <div class="mono-num" style="font-weight:700;color:var(--color-text-primary)">${esc(countdown(a))}</div>
+        </td>
+        <td>${statusBadge(a)}</td>
+        <td style="max-width:220px">${esc(a.reason)}</td>
+        <td style="text-align:right">
+          <div class="row-actions">
+            <button class="btn btn-small" type="button" data-detail="${esc(a.id)}">Detail</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderAuditTimeline() {
+    $('auditCountBadge').textContent = `${auditLogs.length} entri audit`;
+    $('auditTimelineContainer').innerHTML = auditLogs.map(log => `
+      <div class="timeline-item">
+        <div class="timeline-time">${esc(log.time)}</div>
+        <div class="timeline-content">
+          <div class="timeline-title">
+            <span class="badge ${esc(log.badgeClass)}">${esc(log.action)}</span>
+            <span>${esc(log.target)}</span>
+            <span style="font-size:0.75rem;color:var(--color-text-muted);font-weight:600">oleh ${esc(log.actor)}</span>
+          </div>
+          <div class="timeline-desc">${esc(log.detail)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    $('toastMessage').textContent = msg;
+    $('toast').classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3600);
+  }
+
+  function openForm() {
+    pending = null;
+    $('assignmentForm').reset();
+    $('formError').classList.add('hidden');
+    $('effectiveDate').value = today;
+    $('expiryDate').value = addDays(today, 14);
+    $('subordinateScope').value = 'Seluruh bawahan langsung pada fungsi terkait';
+    $('formBackdrop').classList.add('open');
+    setTimeout(() => $('originalReviewer').focus(), 40);
+  }
+
+  function closeForm() {
+    $('formBackdrop').classList.remove('open');
+  }
+
+  function showError(msg) {
+    $('formErrorText').textContent = msg;
+    $('formError').classList.remove('hidden');
+  }
+
+  $('newBtn').addEventListener('click', openForm);
+  $('closeForm').addEventListener('click', closeForm);
+  $('cancelForm').addEventListener('click', closeForm);
+
+  // Quick Simulation Buttons for Self-Delegation & Backdating
+  $('simTestSelfDelegation').addEventListener('click', () => {
+    setRoleState('admin');
+    openForm();
+    $('originalReviewer').value = 'USR-002';
+    $('temporaryReviewer').value = 'USR-002';
+    $('scope').value = 'Engineering';
+    $('reason').value = 'Uji coba delegasi ke pejabat yang sama.';
+    $('assignmentForm').requestSubmit();
+  });
+
+  $('simTestBackdating').addEventListener('click', () => {
+    setRoleState('admin');
+    openForm();
+    $('originalReviewer').value = 'USR-002';
+    $('temporaryReviewer').value = 'USR-001';
+    $('scope').value = 'Engineering';
+    $('effectiveDate').value = addDays(today, -5);
+    $('reason').value = 'Uji coba tanggal mulai efektif di masa lampau.';
+    $('assignmentForm').requestSubmit();
+  });
+
+  $('assignmentForm').addEventListener('submit', e => {
+    e.preventDefault();
+    $('formError').classList.add('hidden');
+
+    const origId = $('originalReviewer').value;
+    const tempId = $('temporaryReviewer').value;
+    const scope = $('scope').value;
+    const subordinateScope = $('subordinateScope').value.trim();
+    const reason = $('reason').value.trim();
+    const effectiveDate = $('effectiveDate').value;
+    const expiryDate = $('expiryDate').value;
+
+    if (!origId || !tempId || !scope || !subordinateScope || !reason || !effectiveDate || !expiryDate) {
+      showError('Lengkapi seluruh field wajib: Pejabat yang Digantikan, Pejabat Pengganti Sementara, Lingkup Fungsi, Cakupan Bawahan, Tanggal Mulai Efektif, Tanggal Berakhir, dan Alasan.');
+      return;
+    }
+
+    // Validasi Anti-Self-Delegation
+    if (origId === tempId) {
+      showError('Validasi Anti-Self-Delegation Ditolak: Pejabat Pengganti Sementara tidak boleh menunjuk ke diri Pejabat yang Digantikan yang sama.');
+      return;
+    }
+
+    // Validasi Larangan Backdating (DEC-008: effectiveDate >= today)
+    if (effectiveDate < today) {
+      showError(`Larangan Backdating: Tanggal Mulai Efektif (${fmt(effectiveDate)}) tidak boleh di masa lalu. Wajib hari ini (${fmt(today)}) atau tanggal masa depan.`);
+      return;
+    }
+
+    // Validasi Expiry Date >= Effective Date
+    if (expiryDate < effectiveDate) {
+      showError(`Tanggal Berakhir (${fmt(expiryDate)}) wajib sama dengan atau setelah Tanggal Mulai Efektif (${fmt(effectiveDate)}). Penugasan sementara tidak boleh berakhir sebelum dimulai.`);
+      return;
+    }
+
+    if (reason.length < 10) {
+      showError('Alasan Pendelegasian Sementara wajib diisi minimal 10 karakter.');
+      return;
+    }
+
+    const origOpt = $('originalReviewer').selectedOptions[0].textContent.split(' · ');
+    const tempOpt = $('temporaryReviewer').selectedOptions[0].textContent.split(' · ');
+
+    pending = {
+      id: `TR-${String(assignments.length + 1).padStart(3, '0')}`,
+      originalReviewerId: origId,
+      originalReviewer: origOpt[0],
+      originalRole: origOpt[1] || 'Pejabat Definitif',
+      temporaryReviewerId: tempId,
+      temporaryReviewer: tempOpt[0],
+      temporaryRole: tempOpt[1] || 'Reviewer Pengganti',
+      scope,
+      subordinateScope,
+      reason,
+      effectiveDate,
+      expiryDate,
+      createdBy: 'Dewi Lestari (HRGA)',
+      createdAt: 'Baru saja'
+    };
+
+    $('previewContent').innerHTML = [
+      ['Pejabat yang Digantikan (Original Reviewer)', `${pending.originalReviewer} — ${pending.originalRole}`],
+      ['Pejabat Pengganti Sementara (Temporary Reviewer)', `${pending.temporaryReviewer} — ${pending.temporaryRole}`],
+      ['Lingkup Fungsi Kanonikal', pending.scope],
+      ['Cakupan Bawahan', pending.subordinateScope],
+      ['Tanggal Mulai Efektif (Effective Date)', fmt(effectiveDate)],
+      ['Tanggal Berakhir (Expiry Date)', `${fmt(expiryDate)} (${diff(expiryDate, effectiveDate) + 1} hari kalender)`],
+      ['Alasan Pendelegasian', pending.reason]
+    ].map(([l, v], idx) => `
+      <div class="preview-card ${idx === 6 ? 'col-span-2' : ''}">
+        <div class="preview-card-label">${esc(l)}</div>
+        <div class="preview-card-value">${esc(v)}</div>
+      </div>
+    `).join('');
+
+    closeForm();
+    $('previewBackdrop').classList.add('open');
+    $('confirmBtn').focus();
+  });
+
+  $('closePreview').addEventListener('click', () => {
+    $('previewBackdrop').classList.remove('open');
+    pending = null;
+  });
+
+  $('backToForm').addEventListener('click', () => {
+    $('previewBackdrop').classList.remove('open');
+    $('formBackdrop').classList.add('open');
+  });
+
+  $('confirmBtn').addEventListener('click', () => {
+    if (!pending) return;
+    assignments.unshift(pending);
+    auditLogs.unshift({
+      time: 'Baru saja',
+      actor: 'Dewi Lestari (HRGA)',
+      action: state(pending) === 'upcoming' ? 'Delegation Scheduled' : 'Delegation Active',
+      badgeClass: state(pending) === 'upcoming' ? 'badge-info' : 'badge-active',
+      target: `${pending.id} · ${pending.scope}`,
+      detail: `${pending.originalReviewer} didelegasikan sementara kepada ${pending.temporaryReviewer} (${fmt(pending.effectiveDate)} s.d. ${fmt(pending.expiryDate)}). Alasan: ${pending.reason}`
+    });
+    const savedId = pending.id;
+    pending = null;
+    $('previewBackdrop').classList.remove('open');
+    render();
+    renderAuditTimeline();
+    toast(`Penugasan Temporary Reviewer ${savedId} berhasil disimpan.`);
+  });
+
+  // Detail Modal with Full AuditTrailTimeline
+  $('rows').addEventListener('click', e => {
+    const b = e.target.closest('[data-detail]');
+    if (!b) return;
+    const a = assignments.find(x => x.id === b.dataset.detail);
+    if (!a) return;
+
+    $('detailTitle').textContent = `Rincian Delegasi ${a.id} — Fungsi ${a.scope}`;
+    $('detailSubtitle').textContent = `Dicatat oleh ${a.createdBy} pada ${a.createdAt}`;
+
+    $('detailSummaryGrid').innerHTML = `
+      <div class="preview-card">
+        <div class="preview-card-label">Pejabat yang Digantikan</div>
+        <div class="preview-card-value">${esc(a.originalReviewer)}</div>
+        <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:2px">${esc(a.originalRole)}</div>
+      </div>
+      <div class="preview-card">
+        <div class="preview-card-label">Pejabat Pengganti Sementara</div>
+        <div class="preview-card-value">${esc(a.temporaryReviewer)}</div>
+        <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:2px">${esc(a.temporaryRole)}</div>
+      </div>
+      <div class="preview-card">
+        <div class="preview-card-label">Lingkup Fungsi &amp; Bawahan</div>
+        <div class="preview-card-value">${esc(a.scope)}</div>
+        <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:2px">${esc(a.subordinateScope)}</div>
+      </div>
+      <div class="preview-card">
+        <div class="preview-card-label">Periode Berlaku (Bounded)</div>
+        <div class="preview-card-value mono-num">${esc(fmt(a.effectiveDate))} s.d. ${esc(fmt(a.expiryDate))}</div>
+        <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:2px">${esc(countdown(a))}</div>
+      </div>
+      <div class="preview-card col-span-2">
+        <div class="preview-card-label">Alasan Pendelegasian</div>
+        <div style="font-size:0.8125rem;color:var(--color-text-primary);margin-top:4px">${esc(a.reason)}</div>
+      </div>
+    `;
+
+    const s = state(a);
+    const itemTimeline = [
+      {
+        time: a.createdAt,
+        badge: 'badge-info',
+        title: 'Delegation Record Created',
+        desc: `Dibuat oleh ${a.createdBy}. Validasi Anti-Self-Delegation dan aturan tanggal efektif lulus.`
+      },
+      {
+        time: `${fmt(a.effectiveDate)}, 00:00 WIB`,
+        badge: s === 'upcoming' ? 'badge-info' : 'badge-active',
+        title: s === 'upcoming' ? 'Scheduled Effective Start' : 'Delegation Authority Activated',
+        desc: `Antrean review koreksi material, persetujuan cuti, dan eskalasi blocker untuk ${a.subordinateScope} dialihkan sementara dari ${a.originalReviewer} ke ${a.temporaryReviewer}.`
+      },
+      {
+        time: `${fmt(a.expiryDate)}, 23:59 WIB`,
+        badge: s === 'expired' ? 'badge-neutral' : 'badge-warning',
+        title: s === 'expired' ? 'Auto-Expired by System' : 'Scheduled Automatic Expiry',
+        desc: s === 'expired'
+          ? `Wewenang sementara telah berakhir otomatis tepat setelah melewati Expiry Date. Kewenangan kembali penuh ke ${a.originalReviewer}.`
+          : `Wewenang delegasi akan berakhir otomatis tanpa tindakan manual admin setelah melewati tanggal ${fmt(a.expiryDate)}.`
+      }
+    ];
+
+    $('detailAuditTimeline').innerHTML = itemTimeline.map(ev => `
+      <div class="timeline-item">
+        <div class="timeline-time">${esc(ev.time)}</div>
+        <div class="timeline-content">
+          <div class="timeline-title">
+            <span class="badge ${esc(ev.badge)}">${esc(ev.title)}</span>
+          </div>
+          <div class="timeline-desc">${esc(ev.desc)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    $('detailBackdrop').classList.add('open');
+  });
+
+  $('closeDetail').addEventListener('click', () => $('detailBackdrop').classList.remove('open'));
+  $('closeDetailFooterBtn').addEventListener('click', () => $('detailBackdrop').classList.remove('open'));
+
+  // Metric Card Filter Clicks
+  document.querySelectorAll('[data-card-status]').forEach(card => {
+    card.addEventListener('click', () => {
+      const val = card.dataset.cardStatus;
+      const current = $('statusFilter').value;
+      const next = current === val ? 'all' : val;
+      $('statusFilter').value = next;
+      document.querySelectorAll('[data-card-status]').forEach(c => {
+        c.setAttribute('aria-pressed', c.dataset.cardStatus === next ? 'true' : 'false');
+      });
+      render();
+    });
+  });
+
+  $('resetFilters').addEventListener('click', () => {
+    $('search').value = '';
+    $('statusFilter').value = 'all';
+    $('scopeFilter').value = 'all';
+    document.querySelectorAll('[data-card-status]').forEach(c => c.setAttribute('aria-pressed', 'false'));
+    render();
+  });
+
+  ['search', 'statusFilter', 'scopeFilter'].forEach(id => {
+    $(id).addEventListener(id === 'search' ? 'input' : 'change', render);
+  });
+
+  // Simulation Role Toggle
+  const setRoleState = (mode) => {
+    const isAdmin = mode === 'admin';
+    $('simRoleAdmin').classList.toggle('active', isAdmin);
+    $('simRoleRestricted').classList.toggle('active', !isAdmin);
+    $('authorizedWorkspace').classList.toggle('hidden', !isAdmin);
+    $('restrictedStatePanel').classList.toggle('hidden', isAdmin);
+    $('navGroupAdministration').classList.toggle('hidden', !isAdmin);
+  };
+
+  $('simRoleAdmin').addEventListener('click', () => setRoleState('admin'));
+  $('simRoleRestricted').addEventListener('click', () => setRoleState('restricted'));
+  $('btnRestoreAdminFrom403').addEventListener('click', () => setRoleState('admin'));
+
+  $('mobileMenuBtn').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+
+  document.querySelectorAll('.modal-backdrop').forEach(bg => {
+    bg.addEventListener('click', e => {
+      if (e.target === bg) bg.classList.remove('open');
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeForm();
+      $('previewBackdrop').classList.remove('open');
+      $('detailBackdrop').classList.remove('open');
+      $('sidebar').classList.remove('open');
+      pending = null;
+    }
+  });
+
+  render();
+  renderAuditTimeline();
 })();
-</script></body></html>
+</script>
+</body>
+</html>

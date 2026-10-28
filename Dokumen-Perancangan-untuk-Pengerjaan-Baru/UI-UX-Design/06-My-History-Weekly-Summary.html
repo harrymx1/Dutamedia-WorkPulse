@@ -7,20 +7,28 @@
 <title>WorkPulse — My History &amp; Weekly Summary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --color-canvas:#F7FAF9;--color-surface:#FFFFFF;--color-surface-subtle:#EFF5F2;--color-surface-muted:#F1F5F4;
-  --color-border-subtle:#DCE7E2;--color-border-strong:#A9C7BC;--color-text-primary:#0E211B;--color-text-secondary:#5C6E68;
-  --color-text-disabled:#8C9B95;--color-brand-primary:#00674D;--color-brand-secondary:#12915F;--color-brand-tint:#E6F4EE;--color-brand-focus:#0B8061;
-  --color-status-green-bg:#E6F4EC;--color-status-green-fg:#145A36;--color-status-green-border:#A7D5B8;
-  --color-status-amber-bg:#FFF3D9;--color-status-amber-fg:#7A4B00;--color-status-amber-border:#E8C77A;
-  --color-status-red-bg:#FDE9E7;--color-status-red-fg:#9B2923;--color-status-red-border:#E8B1AC;
-  --color-status-blue-bg:#EFF6FF;--color-status-blue-fg:#1E40AF;--color-status-blue-border:#BFDBFE;
-  --color-status-neutral-bg:#EFF2F1;--color-status-neutral-fg:#46534E;--color-status-neutral-border:#C9D2CE;
-  --shadow-subtle:0 4px 16px rgba(14,33,27,.04);--shadow-card:0 8px 24px rgba(14,33,27,.05);--shadow-modal:0 16px 36px rgba(14,33,27,.12);
+  --color-border-subtle:#DCE7E2;--color-border-strong:#A9C7BC;
+  --color-text-primary:#0E211B;--color-text-secondary:#5C6E68;--color-text-disabled:#66736E;
+  --color-brand-primary:#00674D;--color-brand-secondary:#12915F;--color-brand-tint:#E6F4EE;
+  --color-brand-focus:#0B8061;--color-focus-ring:#0B8061;
+
+  /* Status & Workflow Canonical Tokens v1.5.0 */
+  --color-status-green-fg:#166534;--color-status-green-bg:#DCFCE7;--color-status-green-border:#86EFAC;
+  --color-status-amber-fg:#92400E;--color-status-amber-bg:#FEF3C7;--color-status-amber-border:#FCD34D;
+  --color-status-red-fg:#991B1B;--color-status-red-bg:#FEE2E2;--color-status-red-border:#FCA5A5;
+  --color-status-blue-fg:#075985;--color-status-blue-bg:#E0F2FE;--color-status-blue-border:#7DD3FC;
+  --color-timing-late-fg:#9A3412;--color-timing-late-bg:#FFEDD5;--color-timing-late-border:#FDBA74;
+  --color-status-neutral-fg:#334155;--color-status-neutral-bg:#F1F5F9;--color-status-neutral-border:#CBD5E1;
+  --color-status-na-fg:#334155;--color-status-na-bg:#F1F5F9;--color-status-na-border:#94A3B8;
+
+  --shadow-subtle:none;--shadow-card:none;--shadow-modal:0 16px 36px rgba(14,33,27,.12);
   --radius-sm:8px;--radius-card:12px;--radius-modal:16px;
   --font-sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 
   /* Aliases for compatibility */
   --canvas:var(--color-canvas);--surface:var(--color-surface);--subtle:var(--color-surface-subtle);--muted:var(--color-surface-muted);
@@ -40,22 +48,24 @@ button,a{cursor:pointer}
 button:disabled{cursor:not-allowed;opacity:.55}
 a{color:var(--color-brand-primary);text-decoration:none;font-weight:600}
 a:hover{text-decoration:underline}
-:focus-visible{outline:3px solid var(--color-brand-focus);outline-offset:2px}
+:focus-visible{outline:3px solid var(--color-focus-ring);outline-offset:2px}
 .skip{position:absolute;left:-9999px;top:0;background:#fff;padding:12px;z-index:100}
 .skip:focus{left:12px;top:12px}
+.tabular-nums{font-variant-numeric:tabular-nums}
+.mono-id{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
 /* ==========================================================================
-   APP SHELL & SIDEBAR NAVIGATION (100% KONSISTEN DENGAN HALAMAN 02, 03, 04, 05)
+   APP SHELL & 3-GROUP SIDEBAR NAVIGATION
    ========================================================================== */
-.app{min-height:100vh;display:grid;grid-template-columns:260px minmax(0,1fr)}
+.app{min-height:100vh;display:grid;grid-template-columns:232px minmax(0,1fr)}
 
 .sidebar{
   background:var(--color-surface);
   border-right:1px solid var(--color-border-subtle);
-  padding:24px 16px;
+  padding:20px 14px;
   display:flex;
   flex-direction:column;
-  gap:24px;
+  gap:20px;
   position:sticky;
   top:0;
   height:100vh;
@@ -63,37 +73,37 @@ a:hover{text-decoration:underline}
   z-index:50;
 }
 
-.brand{display:flex;align-items:center;gap:12px;padding:0 8px}
-.brand-mark{height:38px;width:38px;border-radius:10px;background:var(--color-brand-primary);display:grid;place-items:center;color:#FFFFFF;font-weight:800;font-size:20px;flex-shrink:0}
-.brand-name{font-size:18px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
-.brand-caption{font-size:11px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand-mark{height:36px;width:36px;border-radius:10px;background:var(--color-brand-primary);display:grid;place-items:center;color:#FFFFFF;font-weight:800;font-size:18px;flex-shrink:0}
+.brand-name{font-size:17px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
+.brand-caption{font-size:12px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
 
-.nav-group{display:grid;gap:4px}
-.nav-label{padding:0 12px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-secondary);font-weight:750;margin-bottom:4px}
-.nav-link{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:var(--radius-sm);color:var(--color-text-secondary);font-weight:600;font-size:14px;text-decoration:none;transition:background .15s,color .15s}
+.nav-group{display:grid;gap:3px}
+.nav-label{padding:0 10px;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--color-text-secondary);font-weight:700;margin-bottom:4px}
+.nav-link{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:var(--radius-sm);color:var(--color-text-secondary);font-weight:600;font-size:13.5px;text-decoration:none;transition:background .15s,color .15s}
 .nav-link:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
 .nav-link.active{background:var(--color-brand-tint);color:var(--color-brand-primary);font-weight:700}
 .nav-icon{width:18px;height:18px;flex-shrink:0;stroke:currentColor}
 
-.side-bottom{margin-top:auto;border-top:1px solid var(--color-border-subtle);padding:16px 8px 0;display:flex;gap:10px;align-items:center}
+.side-bottom{margin-top:auto;border-top:1px solid var(--color-border-subtle);padding:14px 6px 0;display:flex;gap:10px;align-items:center}
 .user-profile-link{display:flex;gap:10px;align-items:center;min-width:0;flex:1;text-decoration:none;color:inherit;padding:6px;margin:-6px;border-radius:var(--radius-sm);transition:background .15s}
 .user-profile-link:hover{background:var(--color-surface-subtle);text-decoration:none}
 .avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#D8EAE2;color:var(--color-brand-primary);font-weight:800;font-size:13px;flex-shrink:0}
 .user-meta{min-width:0;flex:1}
-.user-name{font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-role{font-size:11px;color:var(--color-text-secondary);line-height:1.35}
+.user-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:12px;color:var(--color-text-secondary);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logout-btn{background:transparent;border:0;color:var(--color-text-secondary);padding:6px;border-radius:6px;display:grid;place-items:center;transition:background .15s,color .15s}
 .logout-btn:hover{background:var(--color-surface-subtle);color:#DC2626}
 
 /* Topbar */
 main{min-width:0;display:flex;flex-direction:column}
-.topbar{height:64px;border-bottom:1px solid var(--color-border-subtle);background:rgba(255,255,255,.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,36px);position:sticky;top:0;z-index:20}
+.topbar{height:56px;border-bottom:1px solid var(--color-border-subtle);background:rgba(255,255,255,.95);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,36px);position:sticky;top:0;z-index:20}
 .breadcrumb{font-size:13.5px;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px}
 .breadcrumb strong{color:var(--color-text-primary)}
 .top-actions{display:flex;align-items:center;gap:12px}
-.icon-button{height:38px;width:38px;display:grid;place-items:center;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);position:relative;text-decoration:none}
+.icon-button{height:36px;width:36px;display:grid;place-items:center;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);position:relative;text-decoration:none}
 .icon-button:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
-.badge-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;background:#C77A12;border:1.5px solid #fff;border-radius:50%}
+.badge-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#D97706;border:1.5px solid #fff;border-radius:50%}
 .mobile-hamburger-btn{display:none;background:transparent;border:0;padding:8px;margin:-8px 8px -8px -8px;color:var(--color-text-primary);border-radius:var(--radius-sm)}
 
 /* Mobile Drawer Backdrop */
@@ -101,10 +111,55 @@ main{min-width:0;display:flex;flex-direction:column}
 .sidebar-backdrop.show{display:block}
 .mobile-close-sidebar-btn{display:none;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--color-border-subtle);background:var(--color-surface);border-radius:var(--radius-sm);color:var(--color-text-secondary);cursor:pointer;margin-left:auto}
 
+/* Prototype Simulation Bar */
+.sim-bar{
+  background:var(--color-surface-subtle);
+  border:1px dashed var(--color-border-strong);
+  border-radius:var(--radius-card);
+  padding:12px 16px;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.sim-bar-label{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:800;
+  color:var(--color-brand-primary);
+  letter-spacing:.03em;
+}
+.sim-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sim-btn{
+  background:#fff;
+  border:1px solid var(--color-border-subtle);
+  border-radius:6px;
+  padding:6px 11px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--color-text-primary);
+  transition:all .15s;
+}
+.sim-btn:hover{border-color:var(--color-brand-primary);color:var(--color-brand-primary);background:var(--color-brand-tint)}
+.sim-btn.active{background:var(--color-brand-primary);color:#fff;border-color:var(--color-brand-primary)}
+.sim-select{
+  background:#fff;
+  border:1px solid var(--color-border-strong);
+  border-radius:6px;
+  padding:5px 10px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--color-text-primary);
+}
+
 /* Main Content Container */
-.content{max-width:1140px;margin:0 auto;width:100%;padding:28px clamp(1.5rem,4vw,3.75rem) 100px}
-.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px}
-.eyebrow{font-size:12px;color:var(--color-text-secondary);font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+.content{max-width:1200px;margin:0 auto;width:100%;padding:28px clamp(1.5rem,4vw,3.5rem) 100px}
+.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
+.eyebrow{font-size:12px;color:var(--color-text-secondary);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 h1{font-size:26px;line-height:1.25;letter-spacing:-.03em;margin:4px 0 6px;font-weight:800;color:var(--color-text-primary)}
 h2{font-size:17px;line-height:1.35;letter-spacing:-.02em;margin:0;font-weight:800}
 h3{font-size:15px;line-height:1.4;margin:0;font-weight:800}
@@ -113,7 +168,7 @@ p{margin:0}
 .heading-side{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border:1px solid transparent;border-radius:var(--radius-sm);font-weight:700;font-size:13.5px;text-decoration:none;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 14px;border:1px solid transparent;border-radius:var(--radius-sm);font-weight:700;font-size:13px;text-decoration:none;transition:background .15s ease,border-color .15s ease}
 .btn-primary{background:var(--color-brand-primary);color:#fff}
 .btn-primary:hover:not(:disabled){background:#00543F;text-decoration:none}
 .btn-secondary{background:var(--color-surface);color:var(--color-text-primary);border-color:var(--color-border-subtle)}
@@ -122,73 +177,79 @@ p{margin:0}
 .btn-ghost:hover:not(:disabled){background:var(--color-brand-tint);text-decoration:none}
 
 /* Badges & Pills */
-.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--color-border-subtle);background:#fff;font-size:12px;font-weight:750;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;border:1px solid var(--color-border-subtle);background:#fff;font-size:12px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
 .pill.neutral{background:var(--color-status-neutral-bg);color:var(--color-status-neutral-fg);border-color:var(--color-status-neutral-border)}
+.pill.not-applicable{background:var(--color-status-na-bg);color:var(--color-status-na-fg);border-color:var(--color-status-na-border)}
 .pill.brand{background:var(--color-brand-tint);color:var(--color-brand-primary);border-color:#B7DCCB}
 .pill.green{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border-color:var(--color-status-green-border)}
 .pill.amber{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border-color:var(--color-status-amber-border)}
 .pill.red{background:var(--color-status-red-bg);color:var(--color-status-red-fg);border-color:var(--color-status-red-border)}
 .pill.timing{background:var(--color-status-blue-bg);color:var(--color-status-blue-fg);border-color:var(--color-status-blue-border)}
-.pill.late{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border-color:var(--color-status-amber-border)}
+.pill.late{background:var(--color-timing-late-bg);color:var(--color-timing-late-fg);border-color:var(--color-timing-late-border)}
 .pill.no-submission{background:var(--color-status-neutral-bg);color:var(--color-status-neutral-fg);border-color:var(--color-status-neutral-border)}
 .dot-sm{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
 
 /* Panels & Cards */
-.panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:var(--shadow-card);margin-bottom:20px}
+.panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);box-shadow:none;margin-bottom:20px}
 .panel-head{padding:18px 22px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--color-border-subtle)}
 .panel-head-titles{min-width:0;flex:1}
 .panel-body{padding:20px 22px}
-.section-kicker{font-size:11.5px;color:var(--color-text-secondary);font-weight:750;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.section-kicker{font-size:12px;color:var(--color-text-secondary);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .small{font-size:13px;color:var(--color-text-secondary)}
 
-/* Main View Tabs (Konsisten dengan Halaman 07) */
+/* Main View Tabs */
 .view-tabs{display:inline-flex;align-items:center;background:var(--color-surface-subtle);border:1px solid var(--color-border-subtle);padding:4px;border-radius:10px;gap:4px;margin-bottom:20px}
-.view-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;background:transparent;border-radius:var(--radius-sm);font-size:13.5px;font-weight:750;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
+.view-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;background:transparent;border-radius:var(--radius-sm);font-size:13.5px;font-weight:700;color:var(--color-text-secondary);cursor:pointer;transition:all .15s ease}
 .view-tab:hover{color:var(--color-text-primary);background:rgba(255,255,255,.6)}
-.view-tab.active{background:#fff;color:var(--color-brand-primary);box-shadow:0 1px 4px rgba(14,33,27,.08)}
+.view-tab.active{background:#fff;color:var(--color-brand-primary);border:1px solid var(--color-border-subtle)}
 .view-tab svg{width:15px;height:15px;flex-shrink:0}
-.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--color-brand-tint);color:var(--color-brand-primary);font-size:11.5px;font-weight:800}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--color-brand-tint);color:var(--color-brand-primary);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
 .tab-badge.amber{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border:1px solid var(--color-status-amber-border)}
 .view-panel{display:none}
 .view-panel.active{display:block}
 
 /* Toolbar & Filters */
-.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;background:#fff;border:1px solid var(--color-border-subtle);padding:14px 18px;border-radius:var(--radius-card);box-shadow:var(--shadow-subtle);box-sizing:border-box;max-width:100%}
+.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;background:#fff;border:1px solid var(--color-border-subtle);padding:14px 18px;border-radius:var(--radius-card);box-shadow:none;box-sizing:border-box;max-width:100%}
 .history-toolbar-left,.history-toolbar-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0;max-width:100%}
 .toolbar-filter-group{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%}
 .toolbar-label{font-size:12.5px;font-weight:700;color:var(--color-text-secondary);white-space:nowrap;flex-shrink:0}
-.history-toolbar select,.toolbar-select{border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--color-text-primary);background:#fff;min-width:160px;max-width:100%;box-sizing:border-box;text-overflow:ellipsis}
+.history-toolbar select,.toolbar-select{border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:8px 12px;font-size:13.5px;font-weight:600;color:var(--color-text-primary);background:#fff;min-width:160px;max-width:100%;box-sizing:border-box;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .history-toolbar select:focus,.toolbar-select:focus{border-color:var(--color-brand-focus);outline:none}
 
 /* Summary Grid */
 .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}
-.summary-card{min-width:0;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);padding:20px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+.summary-card{min-width:0;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-card);padding:20px;box-shadow:none;display:flex;flex-direction:column}
 .summary-card.wide{grid-column:1 / -1}
-.summary-label{font-size:12.5px;color:var(--color-text-secondary);font-weight:750;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
-.summary-number{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.15;color:var(--color-text-primary)}
+.summary-label{font-size:12.5px;color:var(--color-text-secondary);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.summary-number{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.15;color:var(--color-text-primary);font-variant-numeric:tabular-nums}
 .summary-foot{font-size:12px;color:var(--color-text-secondary);margin-top:auto;padding-top:10px;line-height:1.45}
 .metric-rows{display:grid;gap:8px;margin-top:10px}
-.metric-row{display:grid;grid-template-columns:minmax(95px,1fr) minmax(50px,1.2fr) auto;align-items:center;gap:10px;font-size:12.5px}
+.metric-row{display:grid;grid-template-columns:minmax(125px,1.2fr) minmax(45px,1fr) auto;align-items:center;gap:10px;font-size:12.5px;font-variant-numeric:tabular-nums}
 .metric-row .metric-label{color:var(--color-text-secondary);font-weight:600}
 .meter{height:6px;background:var(--color-surface-subtle);border-radius:999px;overflow:hidden}
 .meter span{display:block;height:100%;border-radius:999px;background:var(--color-brand-primary)}
-.meter .m-green{background:#2F855A}.meter .m-amber{background:#B7791F}.meter .m-red{background:#B8322A}.meter .m-blue{background:#26749B}
+.meter .m-green{background:var(--color-status-green-fg)}
+.meter .m-amber{background:var(--color-status-amber-fg)}
+.meter .m-red{background:var(--color-status-red-fg)}
+.meter .m-blue{background:var(--color-status-blue-fg)}
+.meter .m-late{background:var(--color-timing-late-fg)}
+.meter .m-na{background:var(--color-status-na-fg)}
 
 .outcome-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.outcome-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--color-border-subtle);border-radius:6px;font-size:12px;background:var(--color-surface-muted);color:var(--color-text-primary)}
+.outcome-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--color-border-subtle);border-radius:6px;font-size:12px;background:var(--color-surface-muted);color:var(--color-text-primary);font-variant-numeric:tabular-nums}
 .outcome-chip strong{font-size:12.5px;color:var(--color-brand-primary)}
 
 /* Daily History List */
 .history-panel{overflow:hidden}
 .history-list{display:grid}
-.history-day{display:grid;grid-template-columns:160px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 22px;border-bottom:1px solid var(--color-border-subtle);background:#fff;transition:background .15s}
+.history-day{display:grid;grid-template-columns:175px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 22px;border-bottom:1px solid var(--color-border-subtle);background:#fff;transition:background .15s}
 .history-day:last-child{border-bottom:0}
 .history-day:hover{background:var(--color-surface-subtle)}
-.day-date{font-weight:800;font-size:14.5px;color:var(--color-text-primary)}
+.day-date{font-weight:800;font-size:14.5px;color:var(--color-text-primary);font-variant-numeric:tabular-nums}
 .day-weekday{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
-.day-title{font-size:14px;font-weight:750;margin-bottom:6px;color:var(--color-text-primary)}
+.day-title{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--color-text-primary)}
 .day-badges{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.day-meta{font-size:12.5px;color:var(--color-text-secondary);margin-top:6px;line-height:1.45}
+.day-meta{font-size:12.5px;color:var(--color-text-secondary);margin-top:6px;line-height:1.45;font-variant-numeric:tabular-nums}
 .empty-filter{display:none;padding:40px 20px;text-align:center;color:var(--color-text-secondary);font-size:13.5px;background:#fff}
 .empty-filter.show{display:block}
 
@@ -197,17 +258,17 @@ p{margin:0}
 .note-card:hover{border-color:var(--color-border-strong)}
 .note-card.subtle{background:#fff;border:1px solid var(--color-border-subtle)}
 .note-mark{width:36px;height:36px;border-radius:8px;background:var(--color-brand-tint);color:var(--color-brand-primary);display:grid;place-items:center;flex-shrink:0}
-.note-mark.recognition{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border:1px solid #A7D5B8}
-.note-mark.coaching{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border:1px solid #E8C77A}
-.note-mark.corrective{background:var(--color-status-red-bg);color:var(--color-status-red-fg);border:1px solid #E8B1AC}
+.note-mark.recognition{background:var(--color-status-green-bg);color:var(--color-status-green-fg);border:1px solid var(--color-status-green-border)}
+.note-mark.coaching{background:var(--color-status-amber-bg);color:var(--color-status-amber-fg);border:1px solid var(--color-status-amber-border)}
+.note-mark.corrective{background:var(--color-status-red-bg);color:var(--color-status-red-fg);border:1px solid var(--color-status-red-border)}
 .note-body{flex:1;min-width:0}
 .note-head-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
 .note-title{font-size:13px;font-weight:800;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .note-author{font-size:13px;font-weight:700;color:var(--color-text-primary)}
-.note-date-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#fff;border:1px solid var(--color-border-subtle);font-size:12px;font-weight:750;color:var(--color-brand-primary);box-shadow:0 1px 3px rgba(14,33,27,.05);white-space:nowrap}
+.note-date-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#fff;border:1px solid var(--color-border-subtle);font-size:12px;font-weight:700;color:var(--color-brand-primary);white-space:nowrap;font-variant-numeric:tabular-nums}
 .note-copy{font-size:13px;line-height:1.55;color:var(--color-text-secondary)}
-.note-meta{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--color-text-secondary);margin-top:6px}
-.btn-toggle-notes{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 14px;margin-top:10px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);background:#fff;font-size:12px;font-weight:750;color:var(--color-brand-primary);cursor:pointer;transition:all .15s ease}
+.note-meta{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--color-text-secondary);margin-top:6px;font-variant-numeric:tabular-nums}
+.btn-toggle-notes{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 14px;margin-top:10px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);background:#fff;font-size:12px;font-weight:700;color:var(--color-brand-primary);cursor:pointer;transition:all .15s ease}
 .btn-toggle-notes:hover{background:var(--color-surface-subtle);border-color:var(--color-border-strong)}
 .btn-toggle-notes .toggle-arrow{transition:transform .2s ease}
 .btn-toggle-notes.expanded .toggle-arrow{transform:rotate(180deg)}
@@ -215,9 +276,10 @@ p{margin:0}
 .older-notes-container.open{display:grid}
 .note-empty-box{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px dashed var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-surface-subtle);font-size:13px;color:var(--color-text-secondary);line-height:1.45;margin-top:8px}
 
-/* Detail View */
+/* Detail View & Historical Organizational Snapshot */
 .detail-view{display:none}.detail-view.show{display:block}.history-overview.hidden{display:none}
 .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.detail-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .detail-section{margin-bottom:18px}
 .detail-section .panel-body{display:grid;gap:12px}
 .detail-work{padding:14px 16px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:#fff}
@@ -225,24 +287,47 @@ p{margin:0}
 .detail-work-title{font-size:14px;font-weight:800;color:var(--color-text-primary)}
 .detail-work p{font-size:13px;line-height:1.55;color:var(--color-text-secondary)}
 .detail-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.detail-fields-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .detail-field{padding:12px 14px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-surface-subtle)}
-.detail-field label{display:block;font-size:11.5px;color:var(--color-text-secondary);font-weight:700;text-transform:uppercase;margin-bottom:4px}
-.detail-field strong{font-size:13.5px;color:var(--color-text-primary)}
+.detail-field label{display:block;font-size:12px;color:var(--color-text-secondary);font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.detail-field strong{font-size:13.5px;color:var(--color-text-primary);font-variant-numeric:tabular-nums}
+
+.snapshot-box{
+  background:var(--color-surface);
+  border:1px solid var(--color-border-subtle);
+  border-left:4px solid var(--color-brand-primary);
+  border-radius:var(--radius-card);
+  padding:16px 20px;
+  margin-bottom:18px;
+}
+.snapshot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.snapshot-title{font-size:13.5px;font-weight:800;color:var(--color-text-primary);display:flex;align-items:center;gap:8px}
+.audit-banner{margin-bottom:18px;padding:14px 18px;border:1px solid var(--color-status-neutral-border);border-radius:var(--radius-sm);background:var(--color-status-neutral-bg);color:var(--color-status-neutral-fg);font-size:13px;line-height:1.55}
+.audit-banner.info{border-color:var(--color-status-blue-border);background:var(--color-status-blue-bg);color:var(--color-status-blue-fg)}
+.audit-banner.na{border-color:var(--color-status-na-border);background:var(--color-status-na-bg);color:var(--color-status-na-fg)}
 
 /* Toast */
-.toast{position:fixed;right:24px;bottom:24px;z-index:99;max-width:min(420px,calc(100vw - 32px));display:none;padding:12px 16px;background:#113426;color:#E6F4EC;border:1px solid #1D5E44;border-radius:8px;box-shadow:0 12px 35px rgba(14,33,27,.25);font-size:13.5px}
+.toast{position:fixed;right:24px;bottom:24px;z-index:99;max-width:min(440px,calc(100vw - 32px));display:none;padding:12px 16px;background:#113426;color:#E6F4EC;border:1px solid #1D5E44;border-radius:8px;box-shadow:0 12px 35px rgba(14,33,27,.25);font-size:13.5px;font-variant-numeric:tabular-nums}
 .toast.show{display:block}
 
+/* Print / PDF Export Helper */
+@media print{
+  .sidebar,.topbar,.sim-bar,.heading-side,.detail-actions,#backBtn,#bottomBackBtn{display:none!important}
+  .app{grid-template-columns:1fr!important}
+  .content{max-width:100%!important;padding:0!important}
+}
+
 /* Responsive */
-@media(max-width:900px){
+@media(max-width:960px){
   .app{grid-template-columns:1fr}
-  .sidebar{display:none;position:fixed;left:0;top:0;bottom:0;width:280px;z-index:100;box-shadow:0 0 40px rgba(0,0,0,.2)}
+  .sidebar{display:none;position:fixed;left:0;top:0;bottom:0;width:260px;z-index:100;box-shadow:0 0 40px rgba(0,0,0,.2)}
   .sidebar.open{display:flex}
   .mobile-hamburger-btn{display:block}
   .mobile-close-sidebar-btn{display:inline-flex}
   .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .summary-card.wide{grid-column:span 2}
-  .history-day{grid-template-columns:130px minmax(0,1fr)}
+  .detail-fields-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .history-day{grid-template-columns:140px minmax(0,1fr)}
   .day-action{grid-column:2;justify-self:start}
 }
 @media(max-width:680px){
@@ -251,19 +336,17 @@ p{margin:0}
   .summary-card.wide{grid-column:auto}
   .history-day{grid-template-columns:1fr;gap:10px;padding:16px}
   .day-action{grid-column:auto}
-  /* Responsif Tab Navigasi Utama di Mobile (1 Baris Ringkas & Rapi) */
   .view-tabs{display:flex;width:100%;padding:3px;gap:4px;border-radius:9px;margin-bottom:16px;box-sizing:border-box}
-  .view-tab{flex:1;justify-content:center;text-align:center;padding:8px 6px;font-size:11.5px;gap:5px;white-space:nowrap}
+  .view-tab{flex:1;justify-content:center;text-align:center;padding:8px 6px;font-size:12px;gap:5px;white-space:nowrap}
   .view-tab svg{width:13px;height:13px}
-  .tab-badge{min-width:18px;height:18px;font-size:10px;padding:0 4px}
-
+  .tab-badge{min-width:18px;height:18px;font-size:12px;padding:0 4px}
   .history-toolbar{padding:14px;gap:12px}
   .history-toolbar-left,.history-toolbar-right{width:100%;gap:10px}
   .toolbar-filter-group{width:100%;display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:8px}
   .history-toolbar select,.toolbar-select{width:100%;min-width:0;flex:none}
   .history-toolbar-right{padding-top:4px;border-top:1px dashed var(--color-border-subtle)}
   .panel-head{flex-direction:column;align-items:stretch;gap:12px}
-  .detail-fields{grid-template-columns:1fr}
+  .detail-fields,.detail-fields-4{grid-template-columns:1fr}
   .note-head-row{flex-direction:column;align-items:flex-start;gap:8px}
   .note-date-chip{align-self:flex-start}
 }
@@ -278,9 +361,9 @@ p{margin:0}
 <div class="app">
 
   <!-- ==============================================================
-       SIDEBAR NAVIGATION (100% KONSISTEN DENGAN HALAMAN 02, 03, 04, 05)
+       SIDEBAR NAVIGATION (3 GRUP: WORKSPACE, MANAGEMENT, ADMINISTRATION)
        ============================================================== -->
-  <aside class="sidebar" id="main-sidebar">
+  <aside class="sidebar" id="main-sidebar" aria-label="Navigasi Utama">
     <div class="brand">
       <div class="brand-mark">W</div>
       <div>
@@ -292,34 +375,33 @@ p{margin:0}
       </button>
     </div>
 
-    <!-- Workspace Menu (Self-Service) -->
-    <div class="nav-group">
+    <!-- Grup 1: Workspace (Tampil untuk semua role) -->
+    <div class="nav-group" id="workspace-nav-group">
       <div class="nav-label">Workspace</div>
       <a class="nav-link" href="02-Morning-Commitment.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
         <span>My Today</span>
       </a>
-      <a class="nav-link" href="05-Raise-Instant-Blocker.html#my-blockers">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-        <span>My Blockers</span>
-        <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">2</span>
-      </a>
       <a class="nav-link active" href="06-My-History-Weekly-Summary.html" aria-current="page">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
         <span>My History</span>
       </a>
-      <a class="nav-link" href="20-My Leave Request (Employee).html">
+      <a class="nav-link" href="20-My-Leave-Request.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-        <span>My Leave</span>
+        <span>My Leave Request</span>
       </a>
       <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         <span>Notifications</span>
-        <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:11px;font-weight:800;border-radius:999px">3</span>
+        <span class="pill amber" style="margin-left:auto;padding:1px 7px;font-size:12px;font-weight:800;border-radius:999px">3</span>
+      </a>
+      <a class="nav-link" href="24-Profile-Settings.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Profile</span>
       </a>
     </div>
 
-    <!-- Management Menu (Dynamic for Supervisor / Head / HRGA / CEO) -->
+    <!-- Grup 2: Management (Kondisional sesuai role aktif) -->
     <div class="nav-group" id="mgmt-nav-group" style="display: none;">
       <div class="nav-label">Management</div>
       <a class="nav-link" href="08-Pulse-Dashboard.html" id="link-pulse">
@@ -327,38 +409,75 @@ p{margin:0}
         <span>Pulse Dashboard</span>
       </a>
       <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="link-blockers">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        <span>Blocker Queue</span>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        <span>Blocker &amp; Escalation Queue</span>
       </a>
-      <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching" style="display: none;">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-        <span>Coaching Notes</span>
+      <a class="nav-link" href="14-Escalation-Aging.html" id="link-escalation-aging">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Escalation Aging</span>
       </a>
-      <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance" style="display: none;">
+      <a class="nav-link" href="13-Project-Risk-View.html" id="link-project-risk">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22 12 2"></polygon><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>Project Risk View</span>
+      </a>
+      <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="link-coaching">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Manager Notes</span>
+      </a>
+      <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="link-correction-review">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <span>Correction &amp; Leave Review</span>
+      </a>
+      <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="link-compliance">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
         <span>Compliance Queue</span>
       </a>
-      <a class="nav-link" href="21-Leave Approval Queue (ReviewerHRGA).html" id="link-leave-approval" style="display: none;">
+      <a class="nav-link" href="21-Leave-Approval-Queue.html" id="link-leave-approval">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Leave Approvals</span>
+        <span>Leave Approval Queue</span>
       </a>
-      <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions" style="display: none;">
+      <a class="nav-link" href="12-Exemption-Management.html" id="link-exemptions">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-        <span>Exemptions</span>
+        <span>Holiday &amp; Exemption</span>
       </a>
-      <a class="nav-link" href="23-Reports.html">
+      <a class="nav-link" href="23-Reports.html" id="link-reports">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
         <span>Reports</span>
       </a>
     </div>
 
-    <!-- Account Bottom Area (Klik untuk ke Halaman Profil) -->
+    <!-- Grup 3: Administration (Kondisional sesuai role aktif) -->
+    <div class="nav-group" id="admin-nav-group" style="display: none;">
+      <div class="nav-label">Administration</div>
+      <a class="nav-link" href="25-Admin-User-Invitation-Management.html" id="link-admin-users">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span>User &amp; Invitation</span>
+      </a>
+      <a class="nav-link" href="15-Admin-Organizational-Mapping.html" id="link-admin-org">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Organizational Mapping</span>
+      </a>
+      <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" id="link-admin-temp-rev">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+        <span>Temporary Reviewer</span>
+      </a>
+      <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" id="link-admin-notif">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>Notification Setup</span>
+      </a>
+      <a class="nav-link" href="18-Policy-Settings.html" id="link-admin-policy">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Policy Settings</span>
+      </a>
+    </div>
+
+    <!-- Account Bottom Area -->
     <div class="side-bottom">
       <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
         <div class="avatar" id="side-avatar">BP</div>
         <div class="user-meta">
           <div class="user-name" id="side-user-name">Budi Pratama</div>
-          <div class="user-role" id="side-user-role">Software Engineer · Technology Squad A</div>
+          <div class="user-role" id="side-user-role">Software Engineer · Engineering</div>
         </div>
       </a>
       <a href="01-Login-Activation.html" class="logout-btn" title="Keluar / Ganti Akun" aria-label="Keluar">
@@ -391,18 +510,46 @@ p{margin:0}
     </header>
 
     <div class="content">
+      <!-- Bar Mode Simulasi Prototipe -->
+      <div class="sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+        <div class="sim-bar-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <span>[Mode Simulasi Prototipe]</span>
+        </div>
+        <div class="sim-actions">
+          <button type="button" class="sim-btn active" id="simBtnTab1">Tab 1: Riwayat Harian</button>
+          <button type="button" class="sim-btn" id="simBtnDetailLeave">Buka Detail Hari: Rekonsiliasi Superseded by Approved Leave</button>
+          <button type="button" class="sim-btn" id="simBtnDetailNA">Buka Detail Hari: 0 Komitmen (NOT_APPLICABLE)</button>
+          <button type="button" class="sim-btn" id="simBtnTab2">Tab 2: Ringkasan Mingguan</button>
+          <label for="simRoleSelect" style="font-size:12px;font-weight:700;color:var(--color-text-secondary);margin-left:4px">Peran Sidebar:</label>
+          <select id="simRoleSelect" class="sim-select" aria-label="Pilih Peran Simulasi Sidebar">
+            <option value="EMPLOYEE">Employee</option>
+            <option value="SUPERVISOR">Supervisor</option>
+            <option value="HEAD_OF_DEPARTMENT">Head of Dept</option>
+            <option value="PM">Project Manager</option>
+            <option value="HRGA">HRGA</option>
+            <option value="SYSTEM_ADMIN">System Admin</option>
+            <option value="CEO">CEO</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Section 1: History Overview -->
       <section class="history-overview" id="historyOverview">
         <div class="page-heading">
           <div>
             <div class="eyebrow">Catatan Pribadi</div>
             <h1>My History &amp; Weekly Summary</h1>
-            <p class="subtitle">Tinjau komitmen, hasil kerja, status harian, dan tindak lanjut yang tercatat pada periode yang dipilih.</p>
+            <p class="subtitle">Tinjau komitmen pagi, evaluasi hasil kerja, status harian, rekonsiliasi cuti, serta catatan umpan balik yang tercatat pada periode yang dipilih.</p>
           </div>
           <div class="heading-side">
-            <button class="btn btn-primary" type="button" id="exportBtn">
+            <button class="btn btn-secondary" type="button" id="exportPdfBtn" title="Cetak atau simpan PDF Bukti Pribadi">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>Ekspor PDF (Bukti Pribadi)</span>
+            </button>
+            <button class="btn btn-primary" type="button" id="exportBtn" title="Unduh berkas CSV UTF-8 BOM">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <span>Export Histori</span>
+              <span>Ekspor CSV (UTF-8 BOM)</span>
             </button>
           </div>
         </div>
@@ -413,14 +560,14 @@ p{margin:0}
             <div class="toolbar-filter-group">
               <label for="periodFilter" class="toolbar-label">Periode:</label>
               <select id="periodFilter" class="toolbar-select">
-                <option value="last-week" selected>Minggu Sebelumnya · 5–9 Okt</option>
-                <option value="this-week">Minggu Ini · 12–16 Okt</option>
-                <option value="this-month">Bulan Ini · Oktober</option>
+                <option value="last-week" selected>Minggu Sebelumnya · 1–9 Okt 2026</option>
+                <option value="this-week">Minggu Ini · 12–16 Okt 2026 (Kosong)</option>
+                <option value="this-month">Bulan Ini · Oktober 2026</option>
               </select>
             </div>
           </div>
           <div class="history-toolbar-right">
-            <span class="small" id="periodCaption" style="font-weight:600;color:var(--color-brand-primary)">Senin, 5 Oktober – Jumat, 9 Oktober 2026</span>
+            <span class="small tabular-nums" id="periodCaption" style="font-weight:700;color:var(--color-brand-primary)">Kamis, 1 Oktober – Jumat, 9 Oktober 2026</span>
           </div>
         </div>
 
@@ -429,80 +576,56 @@ p{margin:0}
           <button class="view-tab active" id="tabDailyBtn" role="tab" aria-selected="true" aria-controls="panelDailyHistory" type="button">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span>Riwayat Harian</span>
-            <span class="tab-badge" id="tabDaysBadge">5</span>
+            <span class="tab-badge" id="tabDaysBadge">7</span>
           </button>
           <button class="view-tab" id="tabWeeklyBtn" role="tab" aria-selected="false" aria-controls="panelWeeklySummary" type="button">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             <span>Ringkasan Mingguan</span>
-            <span class="tab-badge amber" id="tabNotesIndicator" style="display:inline-flex" title="Terdapat Catatan Evaluasi Kerja dari Pimpinan">1 Catatan</span>
+            <span class="tab-badge amber" id="tabNotesIndicator" style="display:inline-flex" title="Terdapat Catatan Evaluasi Kerja dari Pimpinan">2 Catatan</span>
           </button>
         </nav>
 
         <!-- Tab Panel 1: Riwayat Harian (Default Active) -->
         <div class="view-panel active" id="panelDailyHistory" role="tabpanel" aria-labelledby="tabDailyBtn">
-          <!-- History Day List Panel -->
           <section class="panel history-panel" aria-labelledby="dailyHistoryTitle">
             <div class="panel-head">
               <div class="panel-head-titles">
                 <div style="display:flex;align-items:center;gap:8px">
                   <div class="section-kicker">Rincian per Hari</div>
-                  <span class="pill neutral" id="daysCount" style="padding:2px 8px;font-size:11px">5 hari</span>
+                  <span class="pill neutral" id="daysCount" style="padding:2px 8px;font-size:12px">7 hari</span>
                 </div>
                 <h2 id="dailyHistoryTitle">Daftar Riwayat Harian</h2>
-                <p class="small" style="margin-top:3px">Pilih satu hari untuk melihat catatan lengkap. Data historis bersifat arsip resmi baca-saja (*read-only*).</p>
+                <p class="small" style="margin-top:3px">Pilih satu hari untuk melihat catatan lengkap beserta Snapshot Konteks Organisasi saat tanggal kejadian. Data historis bersifat arsip resmi baca-saja (<em>read-only</em>).</p>
               </div>
               <div class="toolbar-filter-group">
                 <label for="recordFilter" class="toolbar-label">Tampilkan:</label>
                 <select id="recordFilter" class="toolbar-select">
                   <option value="all">Semua Hari Kerja</option>
-                  <option value="submitted">Ada Submission</option>
-                  <option value="no-submission">Tanpa Submission</option>
+                  <option value="submitted">Ada Submission Check-in</option>
+                  <option value="exempt-leave">Cuti / Holiday / Exemption</option>
+                  <option value="no-submission">Tanpa Submission Murni</option>
                 </select>
               </div>
             </div>
             <div class="history-list" id="dayList"></div>
-            <div class="empty-filter" id="emptyFilter">Tidak ada hari yang sesuai dengan filter ini.</div>
+            <div class="empty-filter" id="emptyFilter">Tidak ada hari yang sesuai dengan filter ini. Tombol ekspor dinonaktifkan otomatis saat daftar kosong.</div>
           </section>
         </div>
 
         <!-- Tab Panel 2: Ringkasan Mingguan -->
         <div class="view-panel" id="panelWeeklySummary" role="tabpanel" aria-labelledby="tabWeeklyBtn">
-          <!-- Summary Grid -->
           <div class="summary-grid" id="summaryGrid">
             <!-- 1. Catatan Evaluasi Kerja (Manager Notes) - Top Hero Card -->
             <article class="summary-card wide">
               <div class="summary-label">Catatan Evaluasi Kerja (Manager Notes)</div>
-              <div id="managerNoteWrapper">
-                <div class="note-card">
-                  <div class="note-mark recognition" title="Apresiasi (Recognition)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  </div>
-                  <div class="note-body">
-                    <div class="note-head-row">
-                      <div class="note-title">
-                        <span class="pill green">Apresiasi (Recognition)</span>
-                        <span class="note-author">Budi Santoso — Head of Engineering</span>
-                      </div>
-                      <div class="note-date-chip">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <span>Jumat, 9 Okt 2026</span>
-                      </div>
-                    </div>
-                    <div class="note-copy">“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”</div>
-                    <div class="note-meta">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-status-green-fg);flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                      <span>Terverifikasi Sistem</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div id="managerNoteWrapper"></div>
             </article>
 
-            <!-- 2. Metrik Kinerja Mingguan (6 Kartu Pendukung) -->
+            <!-- 2. Metrik Kinerja Mingguan -->
             <article class="summary-card">
               <div class="summary-label">Komitmen Pagi (Commitments)</div>
-              <div class="summary-number" id="commitmentTotal">7</div>
-              <div class="summary-foot">Morning Commitment; Additional Work dicatat terpisah</div>
+              <div class="summary-number" id="commitmentTotal">6</div>
+              <div class="summary-foot">Total Morning Commitment pada periode aktif; Additional Work dicatat terpisah dari rasio baseline.</div>
             </article>
 
             <article class="summary-card">
@@ -510,12 +633,12 @@ p{margin:0}
               <div class="metric-rows">
                 <div class="metric-row">
                   <span class="metric-label">Completed</span>
-                  <div class="meter"><span style="width:78%"></span></div>
-                  <strong id="completedCount">7</strong>
+                  <div class="meter"><span class="m-green" style="width:62%"></span></div>
+                  <strong id="completedCount">5</strong>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Partially Completed</span>
-                  <div class="meter"><span class="m-amber" style="width:22%"></span></div>
+                  <div class="meter"><span class="m-amber" style="width:25%"></span></div>
                   <strong id="partialCount">2</strong>
                 </div>
                 <div class="metric-row">
@@ -523,50 +646,67 @@ p{margin:0}
                   <div class="meter"><span class="m-red" style="width:0%"></span></div>
                   <strong id="notCompletedCount">0</strong>
                 </div>
+                <div class="metric-row">
+                  <span class="metric-label">Cancelled</span>
+                  <div class="meter"><span class="m-na" style="width:13%"></span></div>
+                  <strong id="cancelledCount">1</strong>
+                </div>
               </div>
+              <div class="summary-foot">Mencakup 4 status hasil kerja resmi termasuk Cancelled.</div>
             </article>
 
             <article class="summary-card">
-              <div class="summary-label">Evaluasi Harian (Final Status)</div>
+              <div class="summary-label">Distribusi Hari per Final/Daily Status</div>
               <div class="metric-rows">
                 <div class="metric-row">
-                  <span class="metric-label"><span class="dot-sm" style="color:#2F855A"></span> GREEN</span>
-                  <div class="meter"><span class="m-green" style="width:50%"></span></div>
-                  <strong id="greenDays">2 hari</strong>
+                  <span class="metric-label"><span class="dot-sm" style="color:var(--color-status-green-fg)"></span> GREEN</span>
+                  <div class="meter"><span class="m-green" style="width:25%"></span></div>
+                  <strong id="greenDays">1 hari</strong>
                 </div>
                 <div class="metric-row">
-                  <span class="metric-label"><span class="dot-sm" style="color:#B7791F"></span> AMBER</span>
+                  <span class="metric-label"><span class="dot-sm" style="color:var(--color-status-amber-fg)"></span> AMBER</span>
                   <div class="meter"><span class="m-amber" style="width:25%"></span></div>
                   <strong id="amberDays">1 hari</strong>
                 </div>
                 <div class="metric-row">
-                  <span class="metric-label"><span class="dot-sm" style="color:#B8322A"></span> RED</span>
+                  <span class="metric-label"><span class="dot-sm" style="color:var(--color-status-red-fg)"></span> RED</span>
                   <div class="meter"><span class="m-red" style="width:25%"></span></div>
                   <strong id="redDays">1 hari</strong>
                 </div>
+                <div class="metric-row">
+                  <span class="metric-label"><span class="dot-sm" style="color:var(--color-status-na-fg)"></span> NOT_APPLICABLE — NO_COMMITMENT</span>
+                  <div class="meter"><span class="m-na" style="width:25%"></span></div>
+                  <strong id="naNoCommitmentDays">1 hari</strong>
+                </div>
               </div>
-              <div class="summary-foot">No Submission ditampilkan terpisah dari Final Status.</div>
+              <div class="summary-foot">Hari dengan 0 komitmen pagi beralasan sah ditampilkan terpisah sebagai NOT_APPLICABLE — NO_COMMITMENT dan tidak pernah dipetakan ke GREEN.</div>
             </article>
 
             <article class="summary-card">
-              <div class="summary-label">Kepatuhan Waktu (Timing)</div>
+              <div class="summary-label">Kepatuhan Waktu &amp; Pengecualian</div>
               <div class="metric-rows">
                 <div class="metric-row">
                   <span class="metric-label">On-Time</span>
-                  <div class="meter"><span class="m-blue" style="width:60%"></span></div>
+                  <div class="meter"><span class="m-blue" style="width:43%"></span></div>
                   <strong id="onTimeDays">3 hari</strong>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Late</span>
-                  <div class="meter"><span class="m-amber" style="width:20%"></span></div>
+                  <div class="meter"><span class="m-late" style="width:14%"></span></div>
                   <strong id="lateDays">1 hari</strong>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">No Submission</span>
-                  <div class="meter"><span style="width:20%;background:#64748B"></span></div>
+                  <div class="meter"><span class="m-na" style="width:14%"></span></div>
                   <strong id="noSubmissionDays">1 hari</strong>
                 </div>
+                <div class="metric-row">
+                  <span class="metric-label">Approved Leave / Exempt</span>
+                  <div class="meter"><span class="m-green" style="width:29%"></span></div>
+                  <strong id="exemptLeaveDays">2 hari</strong>
+                </div>
               </div>
+              <div class="summary-foot">Termasuk 1 hari Approved Leave hasil rekonsiliasi pasca-Cut-Off (Superseded by Approved Leave).</div>
             </article>
 
             <article class="summary-card">
@@ -575,13 +715,13 @@ p{margin:0}
               <div class="summary-foot">Pola pekerjaan yang berlanjut pada hari kerja berturut-turut</div>
               <div class="outcome-list">
                 <span class="outcome-chip">Continue <strong id="continueCount">3</strong></span>
-                <span class="outcome-chip">Do Not Continue <strong id="stopCount">6</strong></span>
+                <span class="outcome-chip">Do Not Continue <strong id="stopCount">5</strong></span>
               </div>
             </article>
 
             <article class="summary-card">
               <div class="summary-label">Dukungan &amp; Eskalasi</div>
-              <div style="display:grid;gap:8px;margin-top:10px">
+              <div style="display:grid;gap:8px;margin-top:10px" class="tabular-nums">
                 <div style="display:flex;justify-content:space-between;font-size:13px">
                   <span style="color:var(--color-text-secondary)">Dukungan Diberikan:</span>
                   <strong id="supportCount" style="color:var(--color-brand-primary)">1 aktivitas</strong>
@@ -603,26 +743,78 @@ p{margin:0}
           <div>
             <button class="btn btn-ghost" type="button" id="backBtn" style="padding-left:0;margin-bottom:8px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-              <span>Kembali ke Histori</span>
+              <span>Kembali ke Daftar Riwayat</span>
             </button>
             <div class="eyebrow">Rincian Hari Kerja</div>
-            <h1 id="detailDate">Detail Hari</h1>
+            <h1 id="detailDate" class="tabular-nums">Detail Hari</h1>
             <p class="subtitle" id="detailSubtitle">Catatan lengkap yang tersimpan untuk hari kerja yang dipilih.</p>
             <div class="day-badges" id="detailBadges" style="margin-top:10px"></div>
           </div>
           <div class="detail-actions">
-            <button class="btn btn-secondary" type="button" id="detailExportBtn">
+            <button class="btn btn-secondary" type="button" id="detailExportPdfBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span>Ekspor PDF Hari Ini</span>
+            </button>
+            <button class="btn btn-primary" type="button" id="detailExportBtn">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <span>Export Hari Ini</span>
+              <span>Ekspor CSV Hari Ini</span>
             </button>
           </div>
         </div>
 
-        <!-- No Submission Audit Notice Banner -->
-        <div id="noSubmissionNotice" style="display:none;margin-bottom:18px;padding:14px 18px;border:1px solid #C5DCEB;border-radius:var(--radius-sm);background:#EEF5FA;color:#234D68;font-size:13px;line-height:1.5">
-          <div style="font-weight:750;margin-bottom:2px">Catatan Audit Sistem</div>
-          <div>Hari ini tercatat sebagai <strong>Tidak Ada Submission (No Submission)</strong> karena laporan komitmen pagi dan evaluasi sore tidak diserahkan dalam batas waktu kerja yang berlaku.</div>
+        <!-- Historical Organizational Snapshot Box -->
+        <div class="snapshot-box" id="orgSnapshotBox">
+          <div class="snapshot-head">
+            <div class="snapshot-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-brand-primary)"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Snapshot Konteks Organisasi Saat Tanggal Kejadian</span>
+            </div>
+            <span class="pill neutral">Immutable Historical Snapshot</span>
+          </div>
+          <div class="detail-fields-4">
+            <div class="detail-field">
+              <label>Canonical Function</label>
+              <strong id="snapFunction">Engineering</strong>
+            </div>
+            <div class="detail-field">
+              <label>Job Title / System Role</label>
+              <strong id="snapRole">Software Engineer (Employee)</strong>
+            </div>
+            <div class="detail-field">
+              <label>Direct Manager Saat Itu</label>
+              <strong id="snapManager">Siti Aminah (Supervisor)</strong>
+            </div>
+            <div class="detail-field">
+              <label>Authorized Reviewer Saat Itu</label>
+              <strong id="snapReviewer">Siti Aminah (Direct Manager)</strong>
+            </div>
+          </div>
         </div>
+
+        <!-- Dynamic Audit / Reconciliation / Status Banner -->
+        <div id="detailAuditBanner" class="audit-banner" style="display:none"></div>
+
+        <!-- Ketepatan Waktu Morning & EOD Submission Terpisah -->
+        <section class="panel detail-section">
+          <div class="panel-head">
+            <div>
+              <div class="section-kicker">Ketepatan Waktu Pelaporan</div>
+              <h2>Status Waktu Morning &amp; EOD Submission</h2>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="detail-fields">
+              <div class="detail-field">
+                <label>Morning Submission Timing</label>
+                <div id="detailMorningTimingBox" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px"></div>
+              </div>
+              <div class="detail-field">
+                <label>EOD Submission Timing</label>
+                <div id="detailEodTimingBox" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px"></div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section class="panel detail-section">
           <div class="panel-head">
@@ -660,7 +852,7 @@ p{margin:0}
           <div class="panel-head">
             <div>
               <div class="section-kicker">Riwayat Perubahan Resmi</div>
-              <h2>Permohonan Koreksi (Correction Request)</h2>
+              <h2>Permohonan Koreksi &amp; Jejak Audit Rekonsiliasi</h2>
             </div>
           </div>
           <div class="panel-body" id="correctionDetail"></div>
@@ -680,7 +872,7 @@ p{margin:0}
         <div style="display:flex;justify-content:flex-start;margin-top:24px;padding-top:16px;border-top:1px solid var(--color-border-subtle)">
           <button class="btn btn-secondary" type="button" id="bottomBackBtn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>Kembali ke Histori</span>
+            <span>Kembali ke Daftar Riwayat</span>
           </button>
         </div>
       </section>
@@ -692,30 +884,129 @@ p{margin:0}
 
 <script>
 (function() {
+  const $ = id => document.getElementById(id);
+
+  // Data Riwayat Harian Lengkap (mencakup GREEN, AMBER, RED, NOT_APPLICABLE — NO_COMMITMENT, Approved Leave + Superseded by Approved Leave, Bounded Exemption / Holiday, dan No Submission)
   const records = {
-    '2026-10-05': {
-      date: 'Senin, 5 Oktober 2026', weekday: 'Senin', timing: 'On-Time', final: 'GREEN', initial: 'GREEN', morningTime: '08.42', eodTime: '16.48',
+    '2026-10-09': {
+      date: 'Jumat, 9 Oktober 2026', weekday: 'Jumat',
+      dayCategory: 'exempt-leave',
+      timing: 'Approved Leave',
+      morningTiming: 'No Submission (Awal 09:30 WIB)',
+      eodTiming: 'Dikecualikan (Approved Leave)',
+      supersededByLeave: true,
+      leaveTicketId: 'LVR-2026-1009-04',
+      final: 'Approved Leave',
+      initial: null,
+      morningTime: null,
+      eodTime: null,
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Siti Aminah (Direct Manager)'
+      },
+      auditBannerType: 'neutral',
+      auditBannerTitle: 'Jejak Audit Rekonsiliasi Cuti Pasca-Cut-Off (Superseded by Approved Leave)',
+      auditBannerCopy: 'Pada pukul 09:30 WIB (batas Cut-Off pagi), sistem mencatat event awal No Submission secara append-only pada log audit. Pada pukul 10:45 WIB, permohonan Cuti Sakit Mendadak (#LVR-2026-1009-04) disetujui oleh pejabat berwenang sehingga status hari kerja direkonsiliasi secara sah menjadi Approved Leave (Superseded by Approved Leave) dan dikeluarkan dari penghitungan 3x ketidakpatuhan beruntun.',
+      commitments: [],
+      additional: [],
+      blockers: 'Tidak ada kendala karena hari kerja berstatus Approved Leave.',
+      corrections: [
+        {
+          title: 'Rekonsiliasi Otomatis Pasca-Cut-Off · #LVR-2026-1009-04',
+          status: 'Superseded by Approved Leave',
+          detail: 'Event No Submission pukul 09:30 WIB tetap tersimpan secara append-only di jejak audit, namun status efektif hari kerja telah digantikan oleh persetujuan cuti resmi pukul 10:45 WIB dan tidak dihitung sebagai pelanggaran kepatuhan.'
+        }
+      ],
+      notes: [
+        {
+          type: 'Recognition',
+          author: 'Budi Santoso — Head of Engineering',
+          detail: 'Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal sebelum beristirahat sakit.',
+          meta: 'Jumat, 9 Oktober 2026 · Terverifikasi Sistem'
+        }
+      ]
+    },
+    '2026-10-08': {
+      date: 'Kamis, 8 Oktober 2026', weekday: 'Kamis',
+      dayCategory: 'submitted',
+      timing: 'On-Time',
+      morningTiming: 'On-Time (08:35 WIB)',
+      eodTiming: 'On-Time (16:50 WIB)',
+      supersededByLeave: false,
+      final: 'NOT_APPLICABLE — NO_COMMITMENT',
+      initial: 'NOT_APPLICABLE — NO_COMMITMENT',
+      noCommitmentReason: 'Mengikuti audit keamanan informasi ISO 27001 & lokakarya arsitektur korporat sehari penuh tanpa target deliverable terpisah.',
+      morningTime: '08:35 WIB',
+      eodTime: '16:50 WIB',
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Rizal Mahendra (Temporary Reviewer Aktif)'
+      },
+      auditBannerType: 'na',
+      auditBannerTitle: 'Hari Kerja Tanpa Komitmen Pagi Beralasan Sah (NOT_APPLICABLE — NO_COMMITMENT)',
+      auditBannerCopy: 'Karyawan melakukan check-in tepat waktu dengan 0 komitmen pagi disertai alasan sah yang terverifikasi. Hari ini diberi status netral NOT_APPLICABLE — NO_COMMITMENT dan tidak pernah dipetakan ke status GREEN.',
+      commitments: [],
+      additional: [],
+      blockers: 'Tidak ada kendala yang tercatat selama sesi lokakarya dan audit.',
+      corrections: [],
+      notes: []
+    },
+    '2026-10-07': {
+      date: 'Rabu, 7 Oktober 2026', weekday: 'Rabu',
+      dayCategory: 'submitted',
+      timing: 'Late',
+      morningTiming: 'Late (09:18 WIB)',
+      eodTiming: 'On-Time (16:54 WIB)',
+      supersededByLeave: false,
+      final: 'RED',
+      initial: 'RED',
+      morningTime: '09:18 WIB',
+      eodTime: '16:54 WIB',
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Siti Aminah (Direct Manager)'
+      },
       commitments: [
-        { title: 'Menyelesaikan validasi alur checkout', outcome: 'Completed', continuation: 'Do Not Continue', description: 'Validasi skenario checkout utama dan pencatatan temuan selesai.' },
-        { title: 'Meninjau bug pada invoice export', outcome: 'Completed', continuation: 'Continue', description: 'Menemukan satu kasus edge yang perlu diverifikasi pada hari berikutnya.' }
+        { title: 'Menyelesaikan perbaikan invoice export', outcome: 'Partially Completed', continuation: 'Continue', description: 'Pekerjaan tertunda karena menunggu keputusan pada format keluaran pajak.' }
       ],
       additional: [
-        { title: 'Membantu QA memeriksa invoice export', outcome: 'Completed', continuation: 'Do Not Continue' }
+        { title: 'Investigasi error pada staging server Squad A', outcome: 'Completed', continuation: 'Do Not Continue' }
       ],
-      blockers: 'Tidak ada kendala (blocker) yang tercatat.',
+      blockers: 'Kendala kritis #BLK-2026-0042 terkait keputusan format keluaran dicatat dan masih terbuka dalam antrean eskalasi.',
       corrections: [],
       notes: []
     },
     '2026-10-06': {
-      date: 'Selasa, 6 Oktober 2026', weekday: 'Selasa', timing: 'On-Time', final: 'AMBER', initial: 'AMBER', morningTime: '08.51', eodTime: '17.02',
+      date: 'Selasa, 6 Oktober 2026', weekday: 'Selasa',
+      dayCategory: 'submitted',
+      timing: 'On-Time',
+      morningTiming: 'On-Time (08:51 WIB)',
+      eodTiming: 'Late (17:12 WIB)',
+      supersededByLeave: false,
+      final: 'AMBER',
+      initial: 'AMBER',
+      morningTime: '08:51 WIB',
+      eodTime: '17:12 WIB',
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Siti Aminah (Direct Manager)'
+      },
       commitments: [
         { title: 'Memperbaiki kasus edge invoice export', outcome: 'Partially Completed', continuation: 'Continue', description: 'Perbaikan utama selesai; verifikasi lintas format masih diperlukan.' },
-        { title: 'Menyiapkan catatan pengujian', outcome: 'Completed', continuation: 'Do Not Continue', description: 'Catatan pengujian diperbarui.' }
+        { title: 'Menyiapkan catatan pengujian regresi', outcome: 'Completed', continuation: 'Do Not Continue', description: 'Catatan pengujian diperbarui bersama QA.' }
       ],
       additional: [],
       blockers: 'Ketergantungan pada konfirmasi format berkas dari tim terkait; tindak lanjut dicatat.',
       corrections: [
-        { title: 'EOD Correction Request · EOD-2026-1006-01', status: 'Applied', detail: 'Keterangan Continuation diperjelas setelah pengajuan koreksi disetujui reviewer.' }
+        { title: 'EOD Correction Request · #EOD-2026-1006-01', status: 'Applied', detail: 'Keterangan Continuation diperjelas setelah pengajuan koreksi melewati jendela keberatan dan diterapkan resmi.' }
       ],
       notes: [
         {
@@ -726,54 +1017,97 @@ p{margin:0}
         }
       ]
     },
-    '2026-10-07': {
-      date: 'Rabu, 7 Oktober 2026', weekday: 'Rabu', timing: 'Late', final: 'RED', initial: 'RED', morningTime: '09.18', eodTime: '17.20',
+    '2026-10-05': {
+      date: 'Senin, 5 Oktober 2026', weekday: 'Senin',
+      dayCategory: 'submitted',
+      timing: 'On-Time',
+      morningTiming: 'On-Time (08:42 WIB)',
+      eodTiming: 'On-Time (16:48 WIB)',
+      supersededByLeave: false,
+      final: 'GREEN',
+      initial: 'GREEN',
+      morningTime: '08:42 WIB',
+      eodTime: '16:48 WIB',
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Siti Aminah (Direct Manager)'
+      },
       commitments: [
-        { title: 'Menyelesaikan perbaikan invoice export', outcome: 'Partially Completed', continuation: 'Continue', description: 'Pekerjaan tertunda karena menunggu keputusan pada format keluaran.' }
+        { title: 'Menyelesaikan validasi alur checkout pembayaran', outcome: 'Completed', continuation: 'Do Not Continue', description: 'Validasi skenario checkout utama dan pencatatan temuan selesai.' },
+        { title: 'Meninjau bug pada invoice export', outcome: 'Completed', continuation: 'Continue', description: 'Menemukan satu kasus edge yang perlu diverifikasi pada hari berikutnya.' },
+        { title: 'Sinkronisasi endpoint pembayaran lama v1', outcome: 'Cancelled', continuation: 'Do Not Continue', description: 'Dibatalkan karena migrasi arsitektur langsung dialihkan ke endpoint v2 oleh Principal Architect.' }
       ],
       additional: [
-        { title: 'Investigasi error pada staging server Squad A', outcome: 'Completed', continuation: 'Do Not Continue' }
+        { title: 'Membantu QA memeriksa skenario invoice export', outcome: 'Completed', continuation: 'Do Not Continue' }
       ],
-      blockers: 'Kendala terkait keputusan format keluaran dicatat dan masih terbuka dalam antrean eskalasi.',
+      blockers: 'Tidak ada kendala (blocker) yang tercatat.',
       corrections: [],
       notes: []
     },
-    '2026-10-08': {
-      date: 'Kamis, 8 Oktober 2026', weekday: 'Kamis', timing: 'On-Time', final: 'GREEN', initial: 'GREEN', morningTime: '08.39', eodTime: '16.55',
-      commitments: [
-        { title: 'Melanjutkan perbaikan invoice export', outcome: 'Completed', continuation: 'Do Not Continue', description: 'Perbaikan dan verifikasi format keluaran selesai tuntas.' },
-        { title: 'Meninjau regression test checkout flow', outcome: 'Completed', continuation: 'Do Not Continue', description: 'Regression test untuk alur terkait telah dijalankan dan seluruh test suite lulus.' }
-      ],
-      additional: [],
-      blockers: 'Kendala sebelumnya telah diperbarui; persetujuan yang dibutuhkan sudah diterima dari PM.',
-      corrections: [],
-      notes: []
-    },
-    '2026-10-09': {
-      date: 'Jumat, 9 Oktober 2026', weekday: 'Jumat', timing: 'No Submission', final: null, initial: null, morningTime: null, eodTime: null,
+    '2026-10-02': {
+      date: 'Jumat, 2 Oktober 2026', weekday: 'Jumat',
+      dayCategory: 'exempt-leave',
+      timing: 'Holiday / Bounded Exemption',
+      morningTiming: 'Dikecualikan (Bounded Exemption)',
+      eodTiming: 'Dikecualikan (Bounded Exemption)',
+      supersededByLeave: false,
+      final: 'Holiday / Bounded Exemption',
+      initial: null,
+      morningTime: null,
+      eodTime: null,
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Siti Aminah (Direct Manager)'
+      },
+      auditBannerType: 'info',
+      auditBannerTitle: 'Hari Pengecualian Terbatas Resmi (Bounded Exemption / Holiday)',
+      auditBannerCopy: 'Tanggal ini tercatat sebagai Bounded Exemption resmi (Penugasan Instalasi Jaringan & Observasi Lapangan Klien Luar Kota #EXM-2026-019). Kewajiban check-in harian dikecualikan tanpa mengurangi tingkat kepatuhan.',
       commitments: [],
       additional: [],
-      blockers: 'Tidak ada catatan kendala baru pada hari ini.',
+      blockers: 'Hari pengecualian resmi terjadwal.',
       corrections: [],
-      notes: [
-        {
-          type: 'Recognition',
-          author: 'Budi Santoso — Head of Engineering',
-          detail: 'Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.',
-          meta: 'Jumat, 9 Oktober 2026 · Terverifikasi Sistem'
-        }
-      ]
+      notes: []
+    },
+    '2026-10-01': {
+      date: 'Kamis, 1 Oktober 2026', weekday: 'Kamis',
+      dayCategory: 'no-submission',
+      timing: 'No Submission',
+      morningTiming: 'No Submission (Melewati Cut-Off 09:30 WIB)',
+      eodTiming: 'No Submission (Melewati Cut-Off 21:00 WIB)',
+      supersededByLeave: false,
+      final: null,
+      initial: null,
+      morningTime: null,
+      eodTime: null,
+      snapshot: {
+        canonicalFunction: 'Engineering',
+        jobTitleRole: 'Software Engineer (Employee)',
+        directManager: 'Siti Aminah (Engineering Supervisor)',
+        authorizedReviewer: 'Siti Aminah (Direct Manager)'
+      },
+      auditBannerType: 'neutral',
+      auditBannerTitle: 'Catatan Audit Sistem — Tanpa Submission (No Submission)',
+      auditBannerCopy: 'Hari ini tercatat sebagai No Submission karena laporan komitmen pagi dan evaluasi sore tidak diserahkan hingga batas Cut-Off kerja yang berlaku dan tidak terdapat persetujuan cuti maupun pengecualian aktif.',
+      commitments: [],
+      additional: [],
+      blockers: 'Tidak ada catatan kendala pada hari ini.',
+      corrections: [],
+      notes: []
     }
   };
 
   const periodData = {
     'last-week': {
-      caption: 'Senin, 5 Oktober – Jumat, 9 Oktober 2026',
-      keys: ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09'],
-      commitments: 7, completed: 7, partial: 2, notCompleted: 0,
-      green: 2, amber: 1, red: 1,
-      onTime: 3, late: 1, noSubmission: 1,
-      continuation: 2, continueCount: 3, stopCount: 6,
+      caption: 'Kamis, 1 Oktober – Jumat, 9 Oktober 2026',
+      keys: ['2026-10-09', '2026-10-08', '2026-10-07', '2026-10-06', '2026-10-05', '2026-10-02', '2026-10-01'],
+      commitments: 6, completed: 5, partial: 2, notCompleted: 0, cancelled: 1,
+      green: 1, amber: 1, red: 1, naNoCommitment: 1,
+      onTime: 3, late: 1, noSubmission: 1, exemptLeave: 2,
+      continuation: 2, continueCount: 3, stopCount: 5,
       support: 1, escalations: 1,
       managerNotes: [
         {
@@ -781,34 +1115,34 @@ p{margin:0}
           author: 'Budi Santoso — Head of Engineering',
           date: 'Jumat, 9 Okt 2026',
           verified: 'Terverifikasi Sistem',
-          copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”'
+          copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal sebelum beristirahat sakit.”'
         },
         {
           type: 'Coaching',
           author: 'Dewi Lestari — Lead Product Engineer',
-          date: 'Rabu, 7 Okt 2026',
+          date: 'Selasa, 6 Okt 2026',
           verified: 'Terverifikasi Sistem',
-          copy: '“Pastikan log error pada endpoint pembayaran dicek berkala bersama tim backend sebelum merilis patch baru.”'
+          copy: '“Untuk verifikasi format ekspor berikutnya, koordinasikan contoh berkas bersama tim QA sejak sesi komitmen pagi agar tidak terhambat saat evaluasi sore.”'
         }
       ]
     },
     'this-week': {
       caption: 'Senin, 12 Oktober – Jumat, 16 Oktober 2026',
       keys: [],
-      commitments: null, completed: null, partial: null, notCompleted: null,
-      green: null, amber: null, red: null,
-      onTime: null, late: null, noSubmission: null,
+      commitments: null, completed: null, partial: null, notCompleted: null, cancelled: null,
+      green: null, amber: null, red: null, naNoCommitment: null,
+      onTime: null, late: null, noSubmission: null, exemptLeave: null,
       continuation: null, continueCount: null, stopCount: null,
       support: null, escalations: null,
       managerNotes: []
     },
     'this-month': {
       caption: '1–31 Oktober 2026',
-      keys: ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09'],
-      commitments: 7, completed: 7, partial: 2, notCompleted: 0,
-      green: 2, amber: 1, red: 1,
-      onTime: 3, late: 1, noSubmission: 1,
-      continuation: 2, continueCount: 3, stopCount: 6,
+      keys: ['2026-10-09', '2026-10-08', '2026-10-07', '2026-10-06', '2026-10-05', '2026-10-02', '2026-10-01'],
+      commitments: 6, completed: 5, partial: 2, notCompleted: 0, cancelled: 1,
+      green: 1, amber: 1, red: 1, naNoCommitment: 1,
+      onTime: 3, late: 1, noSubmission: 1, exemptLeave: 2,
+      continuation: 2, continueCount: 3, stopCount: 5,
       support: 1, escalations: 1,
       managerNotes: [
         {
@@ -816,7 +1150,7 @@ p{margin:0}
           author: 'Budi Santoso — Head of Engineering',
           date: 'Jumat, 9 Okt 2026',
           verified: 'Terverifikasi Sistem',
-          copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal.”'
+          copy: '“Terima kasih sudah mengantisipasi kebutuhan pada modul checkout dan menyampaikan risiko lebih awal sebelum beristirahat sakit.”'
         },
         {
           type: 'Coaching',
@@ -832,15 +1166,19 @@ p{margin:0}
   let currentPeriod = 'last-week';
   let currentKey = null;
 
-  const $ = id => document.getElementById(id);
-
   function badge(label, cls = 'neutral') {
     return `<span class="pill ${cls}">${label}</span>`;
   }
 
-  function timingBadge(t) {
-    if (t === 'On-Time') return badge('On-Time', 'timing');
-    if (t === 'Late') return badge('Late', 'late');
+  function timingBadge(r) {
+    if (r.supersededByLeave) {
+      return badge('Approved Leave', 'green') + ' ' + badge('Superseded by Approved Leave', 'neutral');
+    }
+    if (r.timing === 'Holiday / Bounded Exemption') {
+      return badge('Bounded Exemption · #EXM-2026-019', 'timing');
+    }
+    if (r.timing === 'On-Time') return badge('Morning · On-Time', 'timing');
+    if (r.timing === 'Late') return badge('Morning · Late', 'late');
     return badge('No Submission', 'no-submission');
   }
 
@@ -848,6 +1186,9 @@ p{margin:0}
     if (s === 'GREEN') return badge('Final Status · GREEN', 'green');
     if (s === 'AMBER') return badge('Final Status · AMBER', 'amber');
     if (s === 'RED') return badge('Final Status · RED', 'red');
+    if (s === 'NOT_APPLICABLE — NO_COMMITMENT') return badge('NOT_APPLICABLE — NO_COMMITMENT', 'not-applicable');
+    if (s === 'Approved Leave') return badge('Dikecualikan dari Hitungan Ketidakpatuhan', 'neutral');
+    if (s === 'Holiday / Bounded Exemption') return badge('Hari Pengecualian Resmi', 'neutral');
     return badge('Final Status belum tersedia', 'neutral');
   }
 
@@ -857,6 +1198,7 @@ p{margin:0}
     if (o === 'Completed') cls = 'green';
     else if (o === 'Partially Completed') cls = 'amber';
     else if (o === 'Not Completed') cls = 'red';
+    else if (o === 'Cancelled') cls = 'not-applicable';
     return badge('Outcome · ' + o, cls);
   }
 
@@ -930,27 +1272,51 @@ p{margin:0}
     `;
   }
 
+  function getFilteredKeys() {
+    const d = periodData[currentPeriod];
+    const filter = $('recordFilter').value;
+    return d.keys.filter(k => {
+      const r = records[k];
+      if (filter === 'submitted') return r.dayCategory === 'submitted';
+      if (filter === 'exempt-leave') return r.dayCategory === 'exempt-leave';
+      if (filter === 'no-submission') return r.dayCategory === 'no-submission';
+      return true;
+    });
+  }
+
   function renderSummary() {
     const d = periodData[currentPeriod];
     const empty = d.keys.length === 0;
     $('periodCaption').textContent = d.caption;
-    $('daysCount').textContent = d.keys.length + ' hari kerja';
 
     const fields = {
-      commitmentTotal: 'commitments', completedCount: 'completed', partialCount: 'partial', notCompletedCount: 'notCompleted',
-      greenDays: 'green', amberDays: 'amber', redDays: 'red',
-      onTimeDays: 'onTime', lateDays: 'late', noSubmissionDays: 'noSubmission',
-      continuationCount: 'continuation', continueCount: 'continueCount', stopCount: 'stopCount',
-      supportCount: 'support', escalationCount: 'escalations'
+      commitmentTotal: 'commitments',
+      completedCount: 'completed',
+      partialCount: 'partial',
+      notCompletedCount: 'notCompleted',
+      cancelledCount: 'cancelled',
+      greenDays: 'green',
+      amberDays: 'amber',
+      redDays: 'red',
+      naNoCommitmentDays: 'naNoCommitment',
+      onTimeDays: 'onTime',
+      lateDays: 'late',
+      noSubmissionDays: 'noSubmission',
+      exemptLeaveDays: 'exemptLeave',
+      continuationCount: 'continuation',
+      continueCount: 'continueCount',
+      stopCount: 'stopCount',
+      supportCount: 'support',
+      escalationCount: 'escalations'
     };
 
     for (const [id, key] of Object.entries(fields)) {
       const el = $(id);
       if (!el) continue;
       let val = d[key];
-      if (val === null) {
+      if (val === null || val === undefined) {
         el.textContent = '—';
-      } else if (['greenDays', 'amberDays', 'redDays', 'onTimeDays', 'lateDays', 'noSubmissionDays'].includes(id)) {
+      } else if (['greenDays', 'amberDays', 'redDays', 'naNoCommitmentDays', 'onTimeDays', 'lateDays', 'noSubmissionDays', 'exemptLeaveDays', 'continuationCount'].includes(id)) {
         el.textContent = val + ' hari';
       } else if (id === 'supportCount') {
         el.textContent = val + ' aktivitas';
@@ -964,10 +1330,7 @@ p{margin:0}
     const noteEl = $('managerNoteWrapper');
     const tabNotesBadge = $('tabNotesIndicator');
     if (noteEl) {
-      const notes = Array.isArray(d.managerNotes)
-        ? d.managerNotes
-        : (d.managerNote ? [d.managerNote] : []);
-
+      const notes = Array.isArray(d.managerNotes) ? d.managerNotes : [];
       if (notes.length === 0) {
         noteEl.innerHTML = `
           <div class="note-empty-box">
@@ -978,9 +1341,7 @@ p{margin:0}
             </svg>
             <span>Belum ada catatan evaluasi atau apresiasi resmi pada periode ini. Catatan dari atasan akan otomatis muncul di sini setelah diterbitkan.</span>
           </div>`;
-        if (tabNotesBadge) {
-          tabNotesBadge.style.display = 'none';
-        }
+        if (tabNotesBadge) tabNotesBadge.style.display = 'none';
       } else {
         const heroNoteHtml = renderNoteCardHtml(notes[0], false);
         if (notes.length === 1) {
@@ -1034,13 +1395,7 @@ p{margin:0}
 
   function renderList() {
     const d = periodData[currentPeriod];
-    const filter = $('recordFilter').value;
-    let keys = d.keys.filter(k => {
-      const r = records[k];
-      if (filter === 'submitted') return r.timing !== 'No Submission';
-      if (filter === 'no-submission') return r.timing === 'No Submission';
-      return true;
-    });
+    const keys = getFilteredKeys();
 
     const list = $('dayList');
     list.innerHTML = '';
@@ -1048,17 +1403,37 @@ p{margin:0}
     $('daysCount').textContent = keys.length + ' hari';
     if ($('tabDaysBadge')) $('tabDaysBadge').textContent = d.keys.length;
 
+    // Gatekeeper tombol ekspor nonaktif bila hasil filter = 0 baris
+    $('exportBtn').disabled = keys.length === 0;
+    $('exportPdfBtn').disabled = keys.length === 0;
+
     if (currentPeriod === 'this-week' && keys.length === 0) {
-      $('emptyFilter').textContent = 'Belum ada catatan akuntabilitas untuk minggu ini.';
+      $('emptyFilter').textContent = 'Belum ada catatan akuntabilitas untuk minggu ini. Tombol ekspor CSV & PDF dinonaktifkan karena jumlah baris = 0.';
       return;
     }
-    $('emptyFilter').textContent = 'Tidak ada hari yang sesuai dengan filter ini.';
+    $('emptyFilter').textContent = 'Tidak ada hari yang sesuai dengan filter ini. Tombol ekspor CSV & PDF dinonaktifkan karena jumlah baris = 0.';
 
     keys.forEach(k => {
       const r = records[k];
       const count = r.commitments.length + r.additional.length;
-      const title = r.timing === 'No Submission' ? 'Tidak ada submission' : count + ' item kerja tercatat';
-      const timing = timingBadge(r.timing);
+      let title = count + ' item kerja tercatat';
+      let metaText = `Morning ${r.morningTime || '—'} · EOD ${r.eodTime || '—'} · ${r.commitments.length} komitmen${r.additional.length ? ' · ' + r.additional.length + ' tugas tambahan' : ''}`;
+
+      if (r.supersededByLeave) {
+        title = 'Cuti Disetujui Pasca-Cut-Off (Rekonsiliasi Sah)';
+        metaText = `Event No Submission awal (09:30 WIB) tetap di jejak audit append-only · Digantikan oleh Approved Leave (${r.leaveTicketId}) pukul 10:45 WIB & dikeluarkan dari hitungan 3x ketidakpatuhan.`;
+      } else if (r.final === 'NOT_APPLICABLE — NO_COMMITMENT') {
+        title = '0 Komitmen Pagi dengan Alasan Sah';
+        metaText = `Morning ${r.morningTime} · EOD ${r.eodTime} · Alasan sah: "${r.noCommitmentReason}"`;
+      } else if (r.timing === 'Holiday / Bounded Exemption') {
+        title = 'Hari Pengecualian Terbatas Resmi (Bounded Exemption)';
+        metaText = 'Penugasan lapangan luar kota #EXM-2026-019 · Kewajiban check-in dikecualikan secara sah.';
+      } else if (r.timing === 'No Submission') {
+        title = 'Tidak ada submission (No Submission)';
+        metaText = 'Final Status tidak tersedia karena laporan komitmen pagi & EOD tidak diserahkan hingga batas Cut-Off.';
+      }
+
+      const timing = timingBadge(r);
       const status = statusBadge(r.final);
 
       const row = document.createElement('article');
@@ -1066,16 +1441,12 @@ p{margin:0}
       row.innerHTML = `
         <div>
           <div class="day-date">${r.date}</div>
-          <div class="day-weekday">Riwayat Harian Resmi</div>
+          <div class="day-weekday">Snapshot: ${escapeHtml(r.snapshot.canonicalFunction)}</div>
         </div>
         <div>
-          <div class="day-title">${title}</div>
+          <div class="day-title">${escapeHtml(title)}</div>
           <div class="day-badges">${timing}${status}</div>
-          <div class="day-meta">
-            ${r.timing === 'No Submission'
-              ? 'Final Status tidak tersedia karena laporan EOD tidak di-submit.'
-              : `Morning ${r.morningTime || '—'} · EOD ${r.eodTime || '—'} · ${r.commitments.length} komitmen${r.additional.length ? ' · ' + r.additional.length + ' tugas tambahan' : ''}`}
-          </div>
+          <div class="day-meta">${escapeHtml(metaText)}</div>
         </div>
         <button class="btn btn-secondary day-action" type="button" data-open-day="${k}">
           <span>Lihat Detail</span>
@@ -1097,8 +1468,34 @@ p{margin:0}
     $('historyOverview').classList.add('hidden');
     $('detailView').classList.add('show');
     $('detailDate').textContent = r.date;
-    $('detailSubtitle').textContent = 'Catatan lengkap yang tersimpan untuk hari ' + r.weekday.toLowerCase() + '.';
-    $('detailBadges').innerHTML = timingBadge(r.timing) + statusBadge(r.final) + (r.initial ? badge('Initial Status · ' + r.initial, r.initial.toLowerCase()) : '');
+    $('detailSubtitle').textContent = 'Catatan lengkap dan snapshot organisasi pada hari ' + r.weekday.toLowerCase() + '.';
+    $('detailBadges').innerHTML = timingBadge(r) + statusBadge(r.final) + (r.initial && r.initial !== r.final ? badge('Initial Status · ' + r.initial, 'neutral') : '');
+
+    // Populate Historical Organizational Snapshot
+    if (r.snapshot) {
+      $('snapFunction').textContent = r.snapshot.canonicalFunction;
+      $('snapRole').textContent = r.snapshot.jobTitleRole;
+      $('snapManager').textContent = r.snapshot.directManager;
+      $('snapReviewer').textContent = r.snapshot.authorizedReviewer;
+    }
+
+    // Populate Separate Morning & EOD Submission Timeliness
+    const mBox = $('detailMorningTimingBox');
+    const eBox = $('detailEodTimingBox');
+    if (mBox && eBox) {
+      if (r.supersededByLeave) {
+        mBox.innerHTML = `${badge('Superseded by Approved Leave', 'neutral')} <span class="small tabular-nums">Event awal No Submission (09:30 WIB) digantikan oleh Cuti (${r.leaveTicketId}) pukul 10:45 WIB</span>`;
+        eBox.innerHTML = `${badge('Approved Leave', 'green')} <span class="small">Dikecualikan secara sah</span>`;
+      } else if (r.timing === 'Holiday / Bounded Exemption') {
+        mBox.innerHTML = `${badge('Bounded Exemption', 'timing')} <span class="small">Dikecualikan (#EXM-2026-019)</span>`;
+        eBox.innerHTML = `${badge('Bounded Exemption', 'timing')} <span class="small">Dikecualikan (#EXM-2026-019)</span>`;
+      } else {
+        const mCls = r.morningTiming.startsWith('On-Time') ? 'timing' : (r.morningTiming.startsWith('Late') ? 'late' : 'no-submission');
+        const eCls = r.eodTiming.startsWith('On-Time') ? 'timing' : (r.eodTiming.startsWith('Late') ? 'late' : 'no-submission');
+        mBox.innerHTML = `${badge(r.morningTiming, mCls)}`;
+        eBox.innerHTML = `${badge(r.eodTiming, eCls)}`;
+      }
+    }
 
     // Synchronize Topbar Breadcrumb
     const bc = $('pageBreadcrumb');
@@ -1108,20 +1505,26 @@ p{margin:0}
         <span style="color:#A9C7BC">/</span>
         <button type="button" id="breadcrumbBack" style="background:none;border:none;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer">My History</button>
         <span style="color:#A9C7BC">/</span>
-        <strong>${escapeHtml(r.date)}</strong>
+        <strong class="tabular-nums">${escapeHtml(r.date)}</strong>
       `;
       const bBack = $('breadcrumbBack');
       if (bBack) bBack.addEventListener('click', back);
     }
 
-    // Toggle No Submission Notice
-    const noSubNotice = $('noSubmissionNotice');
-    if (noSubNotice) {
-      noSubNotice.style.display = r.timing === 'No Submission' ? 'block' : 'none';
+    // Dynamic Audit Banner
+    const auditBanner = $('detailAuditBanner');
+    if (auditBanner) {
+      if (r.auditBannerTitle) {
+        auditBanner.style.display = 'block';
+        auditBanner.className = 'audit-banner ' + (r.auditBannerType || 'neutral');
+        auditBanner.innerHTML = `<div style="font-weight:800;margin-bottom:4px">${escapeHtml(r.auditBannerTitle)}</div><div>${escapeHtml(r.auditBannerCopy)}</div>`;
+      } else {
+        auditBanner.style.display = 'none';
+      }
     }
 
-    $('morningState').textContent = r.timing === 'No Submission' ? 'Tidak Ada Submission' : 'Tercatat';
-    $('eodState').textContent = r.final ? 'Tersedia' : 'Belum Tersedia';
+    $('morningState').textContent = r.morningTime ? ('Tercatat · ' + r.morningTime) : (r.supersededByLeave ? 'Direkonsiliasi Cuti' : 'Tidak Ada Submission');
+    $('eodState').textContent = r.eodTime ? ('Tercatat · ' + r.eodTime) : (r.final ? r.final : 'Belum Tersedia');
 
     const morningItems = r.commitments.map((x, i) => `
       <div class="detail-work">
@@ -1134,7 +1537,7 @@ p{margin:0}
     `).join('');
 
     const additionalItems = r.additional.length ? `
-      <div class="small" style="margin-top:10px;font-weight:750">Pekerjaan Tambahan (Additional Work)</div>
+      <div class="small" style="margin-top:10px;font-weight:700">Pekerjaan Tambahan (Additional Work)</div>
       ${r.additional.map(x => `
         <div class="detail-work">
           <div class="detail-work-head">
@@ -1149,19 +1552,34 @@ p{margin:0}
       `).join('')}
     ` : '';
 
-    $('morningDetail').innerHTML = (r.commitments.length ? `<div class="small" style="margin-bottom:6px;font-weight:750">Komitmen Pagi (Morning Commitment)</div>${morningItems}` : `<div class="small" style="color:var(--color-text-secondary)">Tidak ada Morning Commitment yang tercatat untuk hari ini.</div>`) + additionalItems;
+    if (r.final === 'NOT_APPLICABLE — NO_COMMITMENT') {
+      $('morningDetail').innerHTML = `
+        <div class="detail-work">
+          <div class="detail-work-head">
+            <div class="detail-work-title">0 Komitmen Pagi — Alasan Sah Tercatat</div>
+            ${badge('NOT_APPLICABLE — NO_COMMITMENT', 'not-applicable')}
+          </div>
+          <p>${escapeHtml(r.noCommitmentReason)}</p>
+        </div>
+      `;
+    } else if (r.supersededByLeave) {
+      $('morningDetail').innerHTML = `<div class="small">Karyawan berstatus <strong>Approved Leave (${escapeHtml(r.leaveTicketId)})</strong> hasil rekonsiliasi persetujuan cuti pasca-Cut-Off. Event <em>No Submission</em> awal pada pukul 09:30 WIB tetap tersimpan secara <em>append-only</em> di jejak audit namun telah digantikan secara sah (<em>Superseded by Approved Leave</em>).</div>`;
+    } else {
+      $('morningDetail').innerHTML = (r.commitments.length ? `<div class="small" style="margin-bottom:6px;font-weight:700">Komitmen Pagi (Morning Commitment)</div>${morningItems}` : `<div class="small" style="color:var(--color-text-secondary)">Tidak ada Morning Commitment yang tercatat untuk hari ini.</div>`) + additionalItems;
+    }
 
     $('eodDetail').innerHTML = r.final ? `
       <div class="detail-fields">
         <div class="detail-field">
-          <label>Final Status Evaluasi</label>
-          <strong>${r.final}</strong>
+          <label>Final / Daily Status</label>
+          <strong>${escapeHtml(r.final)}</strong>
         </div>
         <div class="detail-field">
           <label>Waktu Submission EOD</label>
-          <strong>${r.eodTime || '—'}</strong>
+          <strong>${escapeHtml(r.eodTime || r.eodTiming || '—')}</strong>
         </div>
       </div>
+      ${(r.commitments.length || r.additional.length) ? `
       <div style="margin-top:10px;display:grid;gap:8px">
         ${[...r.commitments, ...r.additional].map(x => `
           <div class="detail-work">
@@ -1172,7 +1590,7 @@ p{margin:0}
             </div>
           </div>
         `).join('')}
-      </div>
+      </div>` : ''}
     ` : `<div class="small" style="color:var(--color-text-secondary)">Final Status tidak tersedia karena laporan EOD tidak tercatat pada hari ini.</div>`;
 
     $('blockerDetail').innerHTML = `
@@ -1205,7 +1623,6 @@ p{margin:0}
     $('historyOverview').classList.remove('hidden');
     currentKey = null;
 
-    // Restore Topbar Breadcrumb
     const bc = $('pageBreadcrumb');
     if (bc) {
       bc.innerHTML = `
@@ -1222,7 +1639,7 @@ p{margin:0}
     t.textContent = message;
     t.classList.add('show');
     clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    window.__toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
   }
 
   function escapeHtml(str) {
@@ -1235,17 +1652,25 @@ p{margin:0}
       .replace(/'/g, '&#039;');
   }
 
-  function exportRows(keys, filename) {
-    const rows = [['Tanggal', 'Submission Timing', 'Initial Status', 'Final Status', 'Morning Commitments', 'Additional Work', 'Correction Request']];
+  function exportRowsCsv(keys, filename) {
+    if (!keys || keys.length === 0) {
+      showToast('Ekspor dibatalkan: tidak ada baris data pada filter saat ini.');
+      return;
+    }
+    const rows = [['Tanggal', 'Morning Timing', 'EOD Timing', 'Initial Status', 'Final Status', 'Canonical Function Snapshot', 'Direct Manager Snapshot', 'Authorized Reviewer Snapshot', 'Morning Commitments', 'Additional Work', 'Jejak Audit / Koreksi']];
     keys.forEach(k => {
       const r = records[k];
       if (!r) return;
       rows.push([
         r.date,
-        r.timing,
+        r.morningTiming || r.timing,
+        r.eodTiming || '—',
         r.initial || 'Tidak tersedia',
         r.final || 'Tidak tersedia',
-        r.commitments.map(x => x.title + ' [' + x.outcome + '; ' + x.continuation + ']').join(' | '),
+        r.snapshot ? r.snapshot.canonicalFunction : 'Engineering',
+        r.snapshot ? r.snapshot.directManager : '—',
+        r.snapshot ? r.snapshot.authorizedReviewer : '—',
+        r.commitments.map(x => x.title + ' [' + x.outcome + '; ' + x.continuation + ']').join(' | ') || (r.noCommitmentReason || '—'),
         r.additional.map(x => x.title + ' [' + x.outcome + '; ' + x.continuation + ']').join(' | '),
         r.corrections.map(x => x.title + ' (' + x.status + ')').join(' | ')
       ]);
@@ -1259,7 +1684,85 @@ p{margin:0}
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`Berhasil mengekspor ${rows.length - 1} baris catatan riwayat akuntabilitas.`);
+    showToast(`Berhasil mengekspor CSV UTF-8 BOM (${rows.length - 1} baris catatan riwayat).`);
+  }
+
+  function exportRowsPdf(keys, label) {
+    if (!keys || keys.length === 0) {
+      showToast('Ekspor PDF dibatalkan: tidak ada baris data pada filter saat ini.');
+      return;
+    }
+    showToast(`Menyiapkan dokumen PDF Ringkasan Cetak Bukti Pribadi (${keys.length} hari — ${label})…`);
+  }
+
+  // Dynamic 3-Group Sidebar Role Renderer
+  function syncSidebarForRole(roleCode) {
+    const role = (roleCode || 'EMPLOYEE').toUpperCase();
+    const mgmtGroup = $('mgmt-nav-group');
+    const adminGroup = $('admin-nav-group');
+
+    const mgmtRules = {
+      'link-pulse': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO'],
+      'link-blockers': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD'],
+      'link-escalation-aging': ['CEO'],
+      'link-project-risk': ['PM'],
+      'link-coaching': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+      'link-correction-review': ['SUPERVISOR', 'HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA'],
+      'link-compliance': ['HRGA'],
+      'link-leave-approval': ['HRGA'],
+      'link-exemptions': ['HRGA', 'SYSTEM_ADMIN', 'ADMIN'],
+      'link-reports': ['HEAD_OF_DEPARTMENT', 'HEAD', 'HRGA', 'CEO']
+    };
+
+    const adminRules = {
+      'link-admin-users': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'CEO'],
+      'link-admin-org': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+      'link-admin-temp-rev': ['SYSTEM_ADMIN', 'ADMIN', 'CEO'],
+      'link-admin-notif': ['SYSTEM_ADMIN', 'ADMIN'],
+      'link-admin-policy': ['SYSTEM_ADMIN', 'ADMIN', 'HRGA', 'HEAD_OF_DEPARTMENT', 'HEAD', 'CEO']
+    };
+
+    let anyMgmt = false;
+    for (const [id, allowed] of Object.entries(mgmtRules)) {
+      const el = $(id);
+      if (!el) continue;
+      const show = allowed.includes(role);
+      el.style.display = show ? 'flex' : 'none';
+      if (show) anyMgmt = true;
+    }
+    if (mgmtGroup) mgmtGroup.style.display = anyMgmt ? 'grid' : 'none';
+
+    let anyAdmin = false;
+    for (const [id, allowed] of Object.entries(adminRules)) {
+      const el = $(id);
+      if (!el) continue;
+      const show = allowed.includes(role);
+      el.style.display = show ? 'flex' : 'none';
+      if (show) anyAdmin = true;
+    }
+    if (adminGroup) adminGroup.style.display = anyAdmin ? 'grid' : 'none';
+  }
+
+  function loadSessionRole() {
+    let role = 'EMPLOYEE';
+    try {
+      const raw = localStorage.getItem('workpulse_active_user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        if (user.role) role = user.role.toUpperCase();
+        if (user.name) $('side-user-name').textContent = user.name;
+        if (user.roleLabel) $('side-user-role').textContent = `${user.roleLabel} · ${user.function || 'Engineering'}`;
+        if (user.avatar) {
+          $('side-avatar').textContent = user.avatar;
+          $('top-avatar').textContent = user.avatar;
+        }
+      }
+    } catch (e) {}
+    const sel = $('simRoleSelect');
+    if (sel && [...sel.options].some(o => o.value === role)) {
+      sel.value = role;
+    }
+    syncSidebarForRole(role);
   }
 
   // Event Listeners
@@ -1269,6 +1772,7 @@ p{margin:0}
   const panelWeekly = $('panelWeeklySummary');
 
   function switchTab(tabName) {
+    if (currentKey) back();
     if (tabName === 'daily') {
       tabDailyBtn.classList.add('active');
       tabDailyBtn.setAttribute('aria-selected', 'true');
@@ -1300,11 +1804,65 @@ p{margin:0}
   if (bottomBack) bottomBack.addEventListener('click', back);
 
   $('exportBtn').addEventListener('click', () => {
-    exportRows(periodData[currentPeriod].keys, 'workpulse-history-' + currentPeriod + '.csv');
+    exportRowsCsv(getFilteredKeys(), 'workpulse-history-' + currentPeriod + '.csv');
+  });
+
+  $('exportPdfBtn').addEventListener('click', () => {
+    exportRowsPdf(getFilteredKeys(), periodData[currentPeriod].caption);
   });
 
   $('detailExportBtn').addEventListener('click', () => {
-    if (currentKey) exportRows([currentKey], 'workpulse-history-' + currentKey + '.csv');
+    if (currentKey) exportRowsCsv([currentKey], 'workpulse-history-' + currentKey + '.csv');
+  });
+
+  $('detailExportPdfBtn').addEventListener('click', () => {
+    if (currentKey && records[currentKey]) exportRowsPdf([currentKey], records[currentKey].date);
+  });
+
+  // Simulation Bar Handlers
+  function setActiveSimBtn(activeId) {
+    ['simBtnTab1', 'simBtnDetailLeave', 'simBtnDetailNA', 'simBtnTab2'].forEach(id => {
+      const btn = $(id);
+      if (btn) btn.classList.toggle('active', id === activeId);
+    });
+  }
+
+  $('simBtnTab1').addEventListener('click', () => {
+    currentPeriod = 'last-week';
+    $('periodFilter').value = 'last-week';
+    $('recordFilter').value = 'all';
+    renderSummary();
+    switchTab('daily');
+    setActiveSimBtn('simBtnTab1');
+  });
+
+  $('simBtnDetailLeave').addEventListener('click', () => {
+    currentPeriod = 'last-week';
+    $('periodFilter').value = 'last-week';
+    renderSummary();
+    openDetail('2026-10-09');
+    setActiveSimBtn('simBtnDetailLeave');
+  });
+
+  $('simBtnDetailNA').addEventListener('click', () => {
+    currentPeriod = 'last-week';
+    $('periodFilter').value = 'last-week';
+    renderSummary();
+    openDetail('2026-10-08');
+    setActiveSimBtn('simBtnDetailNA');
+  });
+
+  $('simBtnTab2').addEventListener('click', () => {
+    currentPeriod = 'last-week';
+    $('periodFilter').value = 'last-week';
+    renderSummary();
+    switchTab('weekly');
+    setActiveSimBtn('simBtnTab2');
+  });
+
+  $('simRoleSelect').addEventListener('change', e => {
+    syncSidebarForRole(e.target.value);
+    showToast(`Simulasi Sidebar diperbarui untuk peran: ${e.target.options[e.target.selectedIndex].text}`);
   });
 
   // Mobile drawer handlers
@@ -1335,6 +1893,7 @@ p{margin:0}
   }
 
   // Init
+  loadSessionRole();
   renderSummary();
 })();
 </script>

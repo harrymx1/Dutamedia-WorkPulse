@@ -20,7 +20,7 @@
 6. [Standar Penyajian Informasi & Hierarki Data (3-Baris Baku)](#6-standar-penyajian-informasi--hierarki-data-3-baris-baku)
 7. [Aturan Bisnis & Penegakan Sistem Lintas Halaman (*Engine Rules*)](#7-aturan-bisnis--penegakan-sistem-lintas-halaman-engine-rules)
 8. [Standar Pola Interaksi Formulir & Validasi](#8-standar-pola-interaksi-formulir--validasi)
-9. [Registri Keputusan Desain Tiap Halaman (Halaman 01 s.d. 08)](#9-registri-keputusan-desain-tiap-halaman)
+9. [Registri Keputusan Desain Tiap Halaman (Halaman 01 s.d. 09)](#9-registri-keputusan-desain-tiap-halaman)
 10. [Checklist Wajib Sebelum Memulai Halaman Baru](#10-checklist-wajib-sebelum-memulai-halaman-baru)
 
 ---
@@ -418,6 +418,31 @@ Setiap kartu tugas riwayat, draf pengerjaan, atau rekap log tugas di seluruh hal
   12. **Modal Daftar Lengkap Anomali Operasional (`#allExceptionsModal`):** Mengeliminasi tautan buntu `href="#exceptions"` dengan dialog pop-up yang menyajikan seluruh anomali lengkap dengan filter pill (`Semua`, `Hanya RED`, `Hanya AMBER`, `No Submission`) dan pencarian nama anggota.
   13. **Reaktivitas Filter Proyek Global:** Dropdown `#projectFilter` secara reaktif menyaring daftar exception dan memperbarui kalkulasi angka 4 kartu metrik darurat secara dinamis.
   14. **Zero Dead Markup & Disiplin Kode:** Menghapus seluruh markup mengambang dan event listener yatim (seperti modal switch akun yang tidak lagi memiliki pemicu di topbar) demi integritas kode produksi.
+
+### Halaman 09: Blocker & Escalation Queue (Antrean Kendala & Eskalasi Tim)
+- **Berkas Prototipe:** [`09-Blocker-Escalation-Queue.html`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/09-Blocker-Escalation-Queue.html)
+- **Dokumen Penjelasan Detail:** [`Penjelasan-Halaman-09-Blocker-Escalation-Queue.md`](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/Dokumen-Perancangan-untuk-Pengerjaan-Baru/Penjelasan-Halaman/Penjelasan-Halaman-09-Blocker-Escalation-Queue.md)
+- **Keputusan Terkunci:**
+  1. **Master-Detail Split View Berimbang (42% : 58%):** Mengeliminasi tabel spreadsheet kaku yang meluap horizontal. Kolom kiri menyajikan daftar kartu antrean 3-baris terurut *Exception-First* (tiket `Open` butuh respon di atas); kolom kanan menyajikan lembar kerja rincian tiket, kronologi masalah, jejak audit, dan panel aksi kontekstual yang lega.
+  2. **Deep-Linking Engine Reaktif Lintas Halaman:** Halaman otomatis mem-parsing dan merespons 4 parameter URL saat dibuka:
+     - `?owner=slug`: Otomatis menyaring antrean sesuai PIC penanggung jawab (menjamin integritas navigasi 1-klik dari widget Halaman 08) disertai banner aktif dan tombol *Hapus Filter*.
+     - `?ticket_id=ID`: Otomatis memilih dan membuka detail tiket terkait di panel kanan.
+     - `?highlight=ID`: Memicu animasi sorotan lembut (*pulse glow*) selama 3 detik pada kartu target.
+     - `?filter=tab`: Mengaktifkan tab filter cepat yang sesuai (`urgent`, `my_tickets`, dll.).
+  3. **Standardisasi 10 Taksonomi Resmi Baku (PRD FR-16 & AC-55):** Menggunakan 10 enum resmi (`Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`), 4 tingkat keparahan (*Critical*, *High*, *Medium*, *Low*), 7 kategori dampak (*Task*, *Milestone*, *Project*, *Production*, *Client*, *Financial*, *Compliance*), dan 2 konteks wewenang (*Organizational* vs *Project Authority*).
+  4. **Panel Aksi Kontekstual Berbasis Hak Akses & State (State-Aware Action Panel):**
+     - Tiket `Open`: PIC melihat tombol *Akui Tanggung Jawab (Acknowledge)*, *Alihkan Penanggung Jawab*, dan *Eskalasi ke Level 2*.
+     - Tiket `Acknowledged`: PIC melihat tombol *Mulai Penanganan (Start Progress)* dan *Perbarui ETA*.
+     - Tiket `In Progress`: PIC melihat tombol *Tandai Selesai (Resolve)* yang mewajibkan input Catatan Solusi (*Resolution Note*); Pimpinan melihat opsi *Terima Risiko (Accept Risk)* dengan dasar pertimbangan wajib.
+     - Tiket `Resolved`: **HANYA Pelapor Asli (`raisedByUserId`)** yang melihat tombol *Konfirmasi Selesai (Confirm Closed)* untuk menutup tiket atau *Buka Kembali (Reopen)* jika solusi belum tuntas. Pengguna lain melihat maklumat tenang. Dilarang keras melakukan auto-close berbasis waktu.
+  5. **Pencatatan Bantuan Rekan Kerja (*Support Contribution* - PRD FR-64 & AC-73):** Setiap anggota tim dapat mencatat bantuan teknis yang diberikan pada tiket rekan melalui tombol *+ Catat Kontribusi Bantuan (FR-64)*, yang langsung direkam pada jejak audit tiket dan rekap mingguan kedua belah pihak.
+  6. **3 Kartu Metrik Ringkas Atas (Exception-First & Interaktif):**
+     - Kartu 1: *Butuh Respon Segera* (Merah Lembut `#FFF8F8`, border `#FECDCA`, teks `#991B1B`).
+     - Kartu 2: *Sedang Ditangani* (Biru `#EFF8FF`, border `#B2DDFF`, teks `#175CD3`).
+     - Kartu 3: *Menunggu Konfirmasi* (Amber `#FEF3C7`, border `#FDE68A`, teks `#92400E`).
+     - Seluruh kartu dapat diklik untuk menyaring antrean tiket secara instan.
+  7. **Simulasi Sudut Pandang & Persistensi Data Riil:** Mengintegrasikan pembacaan sesi dari `localStorage: workpulse_active_user` dan persistensi status/audit trail ke `localStorage: workpulse_active_blockers`. Penguji dapat berganti peran secara instan (Ahmad Fauzan / Budi Pratama / Ayu Nirmala) untuk memvalidasi hak aksi masing-masing peran.
+  8. **Zero Jargon & Zero Dummy:** Bersih dari istilah pemrograman mentah, bebas emoji (murni inline SVG monokrom resmi), dan bebas dari teks prototipe/dummy ("data contoh").
 
 ---
 

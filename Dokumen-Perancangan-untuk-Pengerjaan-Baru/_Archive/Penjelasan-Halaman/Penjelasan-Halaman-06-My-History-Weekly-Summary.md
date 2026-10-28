@@ -204,7 +204,9 @@ Sistem mendukung 3 jenis catatan manajerial resmi dengan identitas visual tersta
 | **Halaman 04 (EOD Outcome)** | Menjadi sumber data untuk *Final Status*, jam penyerahan sore, evaluasi capaian (*Outcome*), kelanjutan kerja (*Continuation*), dan justifikasi risiko harian. |
 | **Halaman 05 (Raise Blocker)** | Menjadi sumber data riwayat kendala (*blockers*) yang dilaporkan atau ditindaklanjuti pada hari bersangkutan. |
 | **Halaman 07 (Notifications)** | Aksi publikasi catatan manajer (*Manager Note*) atau persetujuan koreksi menghasilkan notifikasi yang terhubung ke arsip Halaman 06. |
+| **Halaman 08 (Pulse Dashboard)** | Data keandalan mingguan dan histori carry-over $\ge 2$ hari diagregasikan ke grafik tren dashboard manajer. |
 | **Halaman 10 (Manager Notes)** | Catatan evaluasi kerja (Manager Notes) berstatus `visible: true` yang dibuat oleh manajer pada Halaman 10 otomatis mengalir ke Card 7 ringkasan mingguan dan Panel 5 detail harian. |
+| **Halaman 11 (Compliance HRGA)** | Jejak ketidakhadiran laporan (*No Submission*) dan sesi dialog pembinaan tim tersinkronisasi sebagai bukti audit objektif. |
 | **Halaman 16a & 16b (Correction Requests)** | Permohonan koreksi pagi atau sore yang berstatus `Applied` ditampilkan secara berdampingan di Panel 4 untuk menjaga integritas jejak audit tanpa menimpa data asli. |
 
 ---

@@ -1,11 +1,11 @@
 # Product Definition Document (PDD)
 ## WorkPulse — Daily Accountability & Blocker Log System (Dutamedia)
 
-**Versi:** 1.4
-**Tanggal:** Oktober 2026
-**Status:** FINAL — Diselaraskan dengan PRD Baseline v1.0 & Hasil Rekonsiliasi Audit Pengerjaan Lama
+**Versi:** 1.5
+**Tanggal:** 28 Oktober 2026
+**Status:** FINAL — Mandiri & Diselaraskan dengan PRD Baseline v1.0 serta Keputusan Proyek (DEC-001 s/d DEC-009)
 **Pemilik Produk:** Dutamedia
-**Referensi:** PRD Baseline "Dutamedia Work Pulse" v1.0 (Management), PRD v1.5 REVISED, ADR-001 s/d ADR-018, dan Dokumen Temuan Audit S1–S3
+**Referensi:** PRD Baseline "Dutamedia Work Pulse" v1.0 (Management), `00-Governance/00-Project-Charter-and-Governance.md` v1.0, dan PRD v1.6 FINAL
 
 ---
 
@@ -56,22 +56,22 @@ Organisasi membutuhkan mekanisme pembinaan dan konsekuensi yang terdokumentasi s
   - **Morning Commitment** — 0–3 commitment. Jika ada commitment, masing-masing memiliki Initial Risk (GREEN/AMBER/RED), serta Known Blocker dan Support Needed jika Initial Risk AMBER/RED. Jika tidak ada Commitment, Employee wajib memberikan alasan; Initial Daily Status menjadi `NOT_APPLICABLE — NO_COMMITMENT`, bukan status risiko GREEN/AMBER/RED dan bukan `No Submission`.
   - **Additional Work** — pencatatan pekerjaan material yang muncul setelah Morning Check-in (Newly Assigned/Missed in Planning/Priority Change/Operational-Incident/Other), tidak mengubah baseline Morning
   - **EOD Outcome** — per commitment/additional work: Outcome (Completed / Partially Completed / Not Completed / Cancelled with reason) **dipisah** dari **Continuation** (Continue / Do Not Continue); Employee menetapkan Final Status GREEN/AMBER/RED dan wajib memberi penjelasan tingkat-hari jika AMBER/RED. EOD juga menyediakan field opsional `Tomorrow Priority`, yang disimpan sebagai catatan konteks terpisah dan bukan sumber copy-forward Commitment.
-- **Status Suggestion Engine** (non-otomatis) — sistem memberikan saran berdasarkan heuristik produk deterministik yang ditetapkan pada PRD/ADR (severity blocker aktif dan hasil pekerjaan), tanpa mengubah pilihan Employee secara diam-diam; inkonsistensi memicu validation prompt
+- **Status Suggestion Engine** (non-otomatis) — sistem memberikan saran berdasarkan heuristik produk deterministik yang ditetapkan pada PRD (severity blocker aktif, carry-over berulang, dan hasil pekerjaan), tanpa mengubah atau mengunci pilihan Employee secara diam-diam; inkonsistensi memicu validation prompt
 - **Blocker & Escalation Management** — lifecycle Open → Acknowledged → In Progress → Resolved → Closed (dengan jalur alternatif Accepted Risk), severity/impact/owner needed, SLA eskalasi configurable
 - **Authority Model** — organizational authority (baseline, effective-dated) + contextual project authority yang dapat dipilih eksplisit per blocker/escalation, tanpa mengubah direct manager karyawan
 - **Temporary Reviewer** — penunjukan reviewer sementara (mis. saat posisi Head vacant) dengan effective date & expiry date
 - **Submission Compliance** — model On-Time / Late (grace period) / No Submission, dengan reminder otomatis; missed submission dicatat sebagai *compliance event* faktual, bukan otomatis konsekuensi disipliner
 - **Morning Correction Request** — mekanisme ter-audit untuk mengoreksi Morning Commitment yang sudah terkunci setelah Cut-Off, menggunakan klasifikasi Minor/Material dan default-approve dengan objection window untuk perubahan Material. Tidak mencakup Additional Work maupun field EOD.
 - **EOD Correction Request** — mekanisme terpisah untuk mengoreksi data EOD yang telah disubmit dan terkunci, dengan tata kelola koreksi dan audit trail yang setara, tetapi target, rekaman, dan alurnya dibedakan dari Morning Correction Request. Tidak dapat digunakan untuk membuat submission EOD yang tidak pernah ada atau menghapus fakta No Submission.
-- **Leave & Exemption Management** — Leave (employee request → authorized approval), Holiday & individual Exemption (admin/HRGA-set langsung tanpa approval tambahan), masing-masing dengan single date/date range, effective period, dan audit trail; hari valid exception tidak dihitung No Submission
-- **Function-Based Output Guidance (FR-12)** — panduan dan contoh output kontekstual yang relevan dengan fungsi organisasi pengguna (Engineering, Quality/QA, Operations & Infrastructure, Delivery, Sales Enablement & Presales, Finance, HRGA). Teks panduan bersifat non-binding (hanya placeholder visual bergaya miring untuk memandu spesifisitas output berkualitas, tidak mengotori atau mengontaminasi input form pengguna). Taksonomi fungsi melekat pada penugasan organisasi pengguna; jabatan atau system role tidak boleh dipakai sebagai pengganti fungsi organisasi.
+- **Leave & Exemption Management** — Leave (employee request → authorized approval), Holiday & individual Exemption (admin/HRGA-set langsung tanpa approval tambahan), masing-masing dengan single date/date range, effective period, dan audit trail; hari valid exception tidak dihitung No Submission. Jika Leave disetujui setelah Cut-Off ketika event No Submission terlanjur tercatat, tanggal terkait otomatis direkonsiliasi menjadi Approved Leave dan event No Submission sebelumnya ditandai `Superseded by Approved Leave` pada audit trail (tidak dihapus secara fisik, namun tidak dihitung dalam pola ketidakpatuhan berulang).
+- **Function-Based Output Guidance (FR-12)** — panduan dan contoh output kontekstual dalam Bahasa Indonesia yang relevan dengan 10 fungsi kanonikal resmi Dutamedia (`Engineering`, `Quality`, `Operations & Infrastructure`, `R&D`, `Delivery`, `Business Development`, `Sales Enablement & Presales`, `Finance`, `HRGA`, dan `Management`, disertai fallback netral). Teks panduan bersifat non-binding (hanya placeholder visual bergaya miring untuk memandu spesifisitas output berkualitas, tidak mengotori atau mengontaminasi input form pengguna). Taksonomi fungsi melekat pada penugasan organisasi efektif pengguna; jabatan atau system role tidak boleh dipakai sebagai pengganti fungsi organisasi.
 - **Dashboard & Monitoring** — Pulse Dashboard menjadi satu menu navigasi untuk cakupan Team Pulse (Supervisor/TL), Function Pulse (Head/Function Owner), dan Management Pulse (CEO/Management berwenang). Dashboard mengikuti role, permission, dan scope efektif; Employee biasa tidak mendapat akses dashboard manajerial hanya karena memiliki akun. Tampilan exception-first, bukan leaderboard
 - **Weekly Accountability Summary** & **Monthly Management Trend**
 - **Manager Notes** — coaching / recognition / corrective, dengan visibilitas dan permission lebih ketat dari daily log biasa
 - **Reporting** — Daily Exception, Weekly Team Summary, Monthly Trend, Individual Review Evidence, Blocker Root Cause
 - **Audit Trail** — immutable, mencakup perubahan commitment setelah cutoff, status, blocker, dan manager note
 - **Notification** — Email dan **Browser Push yang benar-benar berfungsi pada MVP** sebagai kanal pengiriman utama untuk trigger yang ditetapkan, disertai Web Notification Center in-system sebagai kanal/riwayat notifikasi. Browser Push bukan sekadar stub, placeholder, atau rencana fase berikutnya. Email dan Web Notification Center tetap menangani alur yang sesuai ketika Browser Push tidak tersedia atau tidak diizinkan oleh pengguna; keterbatasan tersebut tidak boleh disamarkan sebagai pengiriman Browser Push yang berhasil.
-- **Organization Master Data** — struktur organisasi, role, fungsi, reporting line, dan project authority yang **dapat diedit** oleh Admin/Management berwenang, dengan **effective date** dan **audit trail**, tanpa merusak historical accountability
+- **User & Invitation Management serta Organization Master Data** — pengelolaan akun pengguna & undangan aktivasi sekali pakai terpisah secara jelas dari pengelolaan struktur organisasi, role, fungsi, reporting line, dan project authority. Perubahan penugasan organisasi/otoritas ditetapkan oleh Admin/Management berwenang dengan **effective date mulai hari ini atau masa depan** (`effectiveDate >= today`, tanpa *backdating* tanggal lampau) dan **audit trail**, sehingga tidak pernah merusak historical accountability
 - **Policy Configuration Framework** — seluruh nilai kebijakan (cutoff, grace period, workday/calendar, exemption, escalation threshold & recipient, coaching period, retensi, objection window duration, batas minor vs material change, dll.) bersifat configurable dengan **versioning** (effective date, optional end date, owner, audit trail)
 - **Export** — Authorized role dapat mengekspor data (summary/evidence) sesuai scope visibility yang berlaku untuknya; tidak boleh mengekspos data di luar kewenangan
 - Web-based (bukan sesuatu yang harus dibuka terus-menerus sepanjang hari)
@@ -228,11 +228,11 @@ Reminder (belum cutoff)
 - Satu missed submission atau satu hari RED **tidak otomatis** menjadi konsekuensi disipliner
 - Tidak ada leaderboard/task-count ranking dalam bentuk apa pun
 - Manager tidak dapat diam-diam mengubah pernyataan employee — koreksi harus melalui manager note atau correction workflow yang ter-audit
-- Perubahan struktur organisasi (person, role, fungsi, direct manager, reviewer, project authority) tidak boleh mengubah historical accountability — data historis tetap merefleksikan konteks organisasi yang berlaku saat event terjadi (effective-dated)
-- Akun user dibuat oleh Authorized Admin/Management melalui Organization Master Data; tidak ada self-registration publik. Aktivasi awal dilakukan melalui undangan yang terikat ke akun yang sudah dibuat, token sekali pakai dengan masa berlaku, dan penetapan kredensial oleh karyawan. Masa berlaku undangan ditetapkan dalam konfigurasi peluncuran sebelum implementasi.
-- Temporary Reviewer memiliki effective date & expiry date, tidak mengubah struktur permanen, dan seluruh penugasannya ter-audit
+- Perubahan struktur organisasi (person, role, fungsi, direct manager, reviewer, project authority) hanya berlaku mulai hari ini atau tanggal masa depan (`effectiveDate >= today` menurut zona waktu organisasi, tanpa *backdating* tanggal lampau) agar tidak mengubah historical accountability — data historis tetap merefleksikan konteks organisasi yang berlaku saat event terjadi (effective-dated)
+- Akun user dibuat dan dikelola oleh Authorized Admin/Management melalui manajemen pengguna khusus; tidak ada self-registration publik. Aktivasi awal dilakukan melalui undangan yang terikat ke akun yang sudah dibuat, token sekali pakai dengan masa berlaku, dan penetapan kredensial oleh karyawan. Masa berlaku undangan ditetapkan dalam konfigurasi peluncuran sebelum implementasi.
+- Temporary Reviewer memiliki effective date (mulai hari ini atau masa depan) & expiry date, tidak mengubah struktur permanen, dan seluruh penugasannya ter-audit
 - Nilai kebijakan yang memang ditetapkan configurable harus berversi dan memiliki effective date; data historis tunduk pada versi yang berlaku saat event terjadi. Aturan tetap produk tidak boleh ditampilkan sebagai konfigurasi yang dapat diubah.
-- Leave wajib melalui Authorized Approval sebelum berlaku sebagai valid exception; Holiday dan individual Exemption dapat langsung di-set oleh Admin/HRGA berwenang tanpa approval tambahan — keduanya sama-sama mengecualikan tanggal terkait dari No Submission detection. Pengecualian pada jabatan tertentu (mis. CEO/Board) dapat bersifat permanen tanpa batas waktu (*open-ended / indefinite*, tanpa tanggal kedaluwarsa) sejak tanggal efektif diberlakukan.
+- Leave wajib melalui Authorized Approval sebelum berlaku sebagai valid exception; jika Leave disetujui setelah Cut-Off pada tanggal yang terlanjur tercatat sebagai No Submission, sistem merekonsiliasi tanggal tersebut menjadi Approved Leave dan menandai event No Submission sebelumnya sebagai `Superseded by Approved Leave` pada audit trail tanpa menghapus catatan historis dan tanpa menghitungnya dalam ambang pola ketidakpatuhan. Holiday dan individual Exemption dapat langsung di-set oleh Admin/HRGA berwenang tanpa approval tambahan — keduanya sama-sama mengecualikan tanggal terkait dari No Submission detection. Pengecualian pada jabatan tertentu (mis. CEO/Board) dapat bersifat permanen tanpa batas waktu (*open-ended / indefinite*, tanpa tanggal kedaluwarsa) sejak tanggal efektif diberlakukan.
 - `Tomorrow Priority` adalah catatan opsional yang disimpan pada EOD dan ditampilkan ke Employee pada Morning hari kerja berikutnya sebagai konteks terpisah. Ia tidak menghasilkan, menggantikan, mengurutkan, atau mengubah draft Commitment FR-11 dan tidak memengaruhi Initial Daily Status.
 - Taksonomi Blocker resmi mencakup: **Type** (`Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`), **Severity** (`Low`, `Medium`, `High`, `Critical`), dan **Impact** (`Task`, `Milestone`, `Project`, `Production`, `Client`, `Financial`, `Compliance`).
 - Prinsip pembedaan penanganan kasus (*Important Distinction*): (1) Pekerjaan tidak selesai karena kompleksitas teknis dengan eskalasi awal diperlakukan sebagai *Delivery Issue* (dukungan, penjadwalan ulang, *coaching*); (2) Mengetahui keterlambatan tetapi tidak mengeskalasi diperlakukan sebagai *Accountability Issue* (tinjauan tercatat, tindakan korektif jika berulang); (3) Mem-bypass proses wajib QA/rilis secara sengaja diperlakukan sebagai *Process Violation* (eskalasi penegakan disiplin); (4) Lupa mengisi satu kali diperlakukan sebagai *Administrative Miss* (pengingat); (5) Pengabaian pengisian berulang setelah pembinaan diperlakukan sebagai *Discipline Pattern* (peringatan tercatat menuju proses formal).
@@ -258,11 +258,17 @@ Pilihan teknologi dan desain internal belum ditetapkan pada tahap PDD ini dan ak
 
 ---
 
+### Riwayat Revisi v1.5
+
+- Melepaskan seluruh ketergantungan rujukan ke artefak Pengerjaan Lama (`ADR-001 s/d ADR-018` dan audit lama) sehingga PDD menjadi dokumen mandiri yang mengacu pada PRD Baseline v1.0 dan `00-Project-Charter-and-Governance.md` (`DEC-006`).
+- Memperluas dan menyeragamkan taksonomi `Function-Based Output Guidance (FR-12)` menjadi 10 fungsi kanonikal resmi Dutamedia (`Engineering`, `Quality`, `Operations & Infrastructure`, `R&D`, `Delivery`, `Business Development`, `Sales Enablement & Presales`, `Finance`, `HRGA`, dan `Management`) + fallback netral, serta memisahkan ranah manajemen akun/undangan dari pemetaan organisasi (`DEC-005`, `DEC-009`).
+- Menegaskan bahwa Status Suggestion Engine tidak pernah mengunci pilihan pengguna (`DEC-003`), menetapkan rekonsiliasi ter-audit `Superseded by Approved Leave` untuk persetujuan cuti pasca-Cut-Off (`DEC-007`), serta mengunci larangan *backdating* tanggal lampau pada perubahan struktur organisasi/otoritas (`DEC-008`).
+
 ### Riwayat Revisi v1.4
  
 - Menegaskan akses dan navigasi Pulse Dashboard: satu menu navigasi yang menyaring scope sesuai role dan permission (Team Pulse untuk Supervisor/TL, Function Pulse untuk Head, Management Pulse untuk CEO/Direksi; bukan dashboard universal terbuka untuk Employee biasa).
-- Menetapkan taksonomi 7 fungsi kanonikal Dutamedia secara definitif pada Function-Based Output Guidance (FR-12) tanpa klausul penundaan keputusan, dengan teks panduan non-binding bergaya italic yang melekat pada fungsi organisasi pengguna.
-- Menyelaraskan seluruh prinsip dan aturan bisnis dengan PRD Baseline v1.0 dan keputusan arsitektural ADR-001 s/d ADR-018 hasil pembelajaran pengerjaan lama.
+- Menetapkan taksonomi 7 fungsi kanonikal Dutamedia pada Function-Based Output Guidance (FR-12) dengan teks panduan non-binding bergaya italic yang melekat pada fungsi organisasi pengguna.
+- Menyelaraskan prinsip dan aturan bisnis dengan PRD Baseline v1.0.
 
 ### Riwayat Revisi v1.3
 
@@ -282,4 +288,4 @@ Pilihan teknologi dan desain internal belum ditetapkan pada tahap PDD ini dan ak
 
 ---
 
-*Dokumen ini adalah baseline definisi produk WorkPulse v1.4 FINAL dan menjadi acuan normatif bagi PRD v1.5 serta artefak perancangan berikutnya. Detail kebutuhan yang dapat diuji ditetapkan di PRD; dokumen berikutnya tidak boleh diam-diam mengubah keputusan produk di sini.*
+*Dokumen ini adalah baseline definisi produk WorkPulse v1.5 FINAL dan menjadi acuan normatif bagi PRD v1.6 serta artefak perancangan berikutnya. Detail kebutuhan yang dapat diuji ditetapkan di PRD; dokumen berikutnya tidak boleh diam-diam mengubah keputusan produk di sini.*

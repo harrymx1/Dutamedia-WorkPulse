@@ -161,7 +161,11 @@
 | **Halaman 04 (EOD Outcome)** | Membaca blocker aktif untuk kalkulasi Rekomendasi Status Sistem (Critical Blocker $\rightarrow$ RED). |
 | **Halaman 06 (My History)** | Tiket blocker dan riwayat resolusinya ditampilkan pada panel kendala di rincian histori harian. |
 | **Halaman 07 (Notifications)** | Tiket Critical memicu notifikasi push berprioritas tinggi pada Notification Center. |
+| **Halaman 08 (Pulse Dashboard)** | Menyuplai data blocker aktif tim ke Widget 3 (*Blockers by Support Owner*) dan Widget 2 (*Top Recurring Blockers*). |
 | **Halaman 09 (Escalation Queue)** | Tiket baru berstatus `Open` langsung masuk ke antrean tinjauan manajer pada Halaman 09 untuk diakui (*Acknowledge*) atau ditindaklanjuti. |
+| **Halaman 13 (Project Risk View)** | Kendala yang mengaitkan proyek terdaftar otomatis terhubung ke matriks pemantauan risiko pengiriman proyek. |
+| **Halaman 14 (Escalation Aging)** | Menyuplai data kendala yang mengalami penuaan waktu (*aging*) melebihi ambang batas toleransi respon SLA (24 jam / 48 jam). |
+| **Halaman 15 (Admin Mapping)** | Menggunakan struktur atasan langsung (*Organizational Authority*) dan penanggung jawab proyek (*Project Authority*) yang dipetakan di Halaman 15. |
 
 ---
 

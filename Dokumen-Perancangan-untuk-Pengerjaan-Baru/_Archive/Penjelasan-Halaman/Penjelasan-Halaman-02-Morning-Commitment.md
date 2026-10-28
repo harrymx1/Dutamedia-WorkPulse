@@ -93,6 +93,14 @@
 - **09:01 – 09:30 WIB:** Masa Toleransi (*Grace Period* — banner amber aktif).
 - **> 09:30 WIB:** Terlambat (*Late* — banner merah aktif, textarea alasan keterlambatan wajib diisi).
 
+### 3.6 Mekanisme Dinamis Tambah & Hapus Slot Komitmen (PRD FR-01)
+- **Batas Alokasi 1 s.d. 3 Slot:** Secara default antarmuka menyajikan 1 slot komitmen utama.
+- **Tombol Tambah Slot (`#btn-add-slot`):** Pengguna dapat mengeklik `+ Tambah Slot Komitmen` untuk memunculkan Slot 2 dan Slot 3 secara bertahap.
+- **Penghitung Slot Real-Time (`#slot-counter`):** Menampilkan status kuota aktif secara transparan (`1 dari maks 3 slot`, `2 dari maks 3 slot`, `3 dari maks 3 slot`).
+- **Penguncian Batas Maksimal:** Begitu slot ke-3 dibuka, tombol otomatis berstatus `disabled` dengan label penjelas `Batas Maksimum 3 Slot Tercapai`.
+- **Aksi Hapus Slot Tambahan:** Slot 2 dan Slot 3 dilengkapi tombol `Hapus Slot` bernuansa merah lembut (*soft-rose*) yang memungkinkan karyawan membatalkan alokasi slot tambahan kembali ke batas minimal 1 slot.
+- **Resiliensi Penguraian Sesi Pengguna:** Logika inisialisasi membaca profil dari `localStorage: workpulse_active_user` secara defensif (*try-catch guard*), mendukung format JSON lengkap maupun string slug peran (seperti `'ahmad-fauzan'`) tanpa menghentikan pendaftaran event listener tombol.
+
 ---
 
 ## 4. KATALOG SKENARIO PENGUJIAN SISTEM (*TEST CASES*)
@@ -110,6 +118,7 @@
 | **TC-09** | Tautkan Tiket Blocker | Pilih tiket `#BLK-014` dari dropdown | Tanda bintang merah wajib pada penjelasan risiko berubah menjadi opsional. |
 | **TC-10** | Simpan Draf Lokal | Klik tombol [Simpan Draf] | Data tersimpan ke `localStorage`; notifikasi toast sukses hijau muncul. |
 | **TC-11** | Penguncian Pasca-Kirim | Konfirmasi pengiriman disetujui | Formulir menjadi *read-only* permanen; panel aksi transisi berikutnya tampil. |
+| **TC-12** | Tambah & Hapus Slot (1-3) | Klik [+ Tambah Slot] hingga 3x lalu [Hapus Slot] | Slot 2 dan 3 bertambah dinamis, counter terbarui, tombol disabled saat 3 slot, dan pulih saat dihapus. |
 
 ---
 
@@ -122,6 +131,9 @@
 | **Halaman 04 (EOD Outcome)** | Komitmen pagi menjadi input evaluasi capaian tugas pada Panel 2 Halaman 04. |
 | **Halaman 05 (Raise Blocker)** | Tombol darurat merah di kanan atas mengarahkan ke formulir pelaporan blocker; tiket aktif menjadi sumber dropdown picker. |
 | **Halaman 06 (My History)** | Komitmen yang dikirimkan tercatat permanen pada arsip riwayat harian dan ringkasan mingguan. |
+| **Halaman 08 (Pulse Dashboard)** | Baseline komitmen pagi tersinkronisasi ke widget pemantauan tim (Team Pulse & Executive Pulse). |
+| **Halaman 11 (Compliance HRGA)** | Ketiadaan penyerahan komitmen pagi melewati batas toleransi memicu pencatatan event *No Submission*. |
+| **Halaman 12 (Exemption Management)** | Membaca status hari libur resmi atau dispensasi dinas karyawan untuk mengaktifkan mode pengecualian (*Exempt Banner*). |
 | **Halaman 16a (Morning Correction)** | Menjadi rute permohonan koreksi resmi jika terdapat kekeliruan data pasca formulir dikunci. |
 
 ---

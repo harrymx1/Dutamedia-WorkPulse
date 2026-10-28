@@ -197,15 +197,19 @@ Sistem WorkPulse menerapkan matriks 22 pemicu resmi untuk memastikan tidak ada c
 
 | Halaman Terkait | Sifat Keterhubungan (*Contractual Relationship*) |
 | :--- | :--- |
-| **Halaman 01 (Login)** | Membaca sesi aktif dari `localStorage: workpulse_active_user` untuk menampilkan profil Budi Pratama di sidebar dan header. |
+| **Halaman 01 (Login)** | Membaca sesi aktif dari `localStorage: workpulse_active_user` untuk menampilkan profil pengguna di sidebar dan header. |
 | **Halaman 02 (Morning Commitment)** | Menerima pengalihan pengguna dari notifikasi pengingat batas waktu pengisian pagi (08:00–09:00 WIB). |
 | **Halaman 03 (Additional Work)** | Menerima pengalihan pengguna dari notifikasi penugasan ad-hoc siang hari (*Newly Assigned*). |
 | **Halaman 04 (EOD Outcome)** | Menerima pengalihan pengguna dari notifikasi pengingat evaluasi sore hari (16:30–18:00 WIB). |
 | **Halaman 05 (Raise Blocker)** | Menerima pengalihan pengguna dari notifikasi kendala kritis (*Critical Blocker*) dan pembaruan tiket penanganan. |
 | **Halaman 06 (My History)** | Menerima pengalihan pengguna dari notifikasi penerbitan Weekly Summary dan publikasi Catatan Evaluasi Kerja (*Manager Notes*). |
+| **Halaman 08 (Pulse Dashboard)** | Menyalurkan notifikasi peringatan dini kepada atasan saat terdapat anggota tim dengan status harian RED atau kendala kritis. |
+| **Halaman 09 (Escalation Queue)** | Memicu notifikasi darurat ke gawai penanggung jawab saat tiket di-escalate otomatis ke Level 2 (Head) akibat batas waktu SLA terlampaui. |
+| **Halaman 10 (Manager Notes)** | Menerima pengalihan pengguna dari notifikasi penerbitan catatan apresiasi (*Recognition*) atau bimbingan (*Coaching*). |
+| **Halaman 11 (Compliance HRGA)** | Menerima pengalihan notifikasi terkait jadwal sesi dialog pembinaan kepatuhan No Submission. |
+| **Halaman 12 (Exemption Management)** | Mengirimkan konfirmasi notifikasi saat dispensasi penugasan dinas luar kota disetujui dan diberlakukan. |
+| **Halaman 14 (Escalation Aging)** | Menyalurkan peringatan penuaan blocker (*aging warning*) saat kendala kritis belum tertangani melewati 24/48 jam. |
 | **Halaman 16a & 16b (Correction Requests)** | Menerima pengalihan pengguna dari notifikasi permohonan koreksi material yang diajukan atau disetujui (*Applied*). |
-| **Halaman 20 (My Leave Request)** | Menerima pengalihan pengguna dari notifikasi persetujuan atau penolakan izin cuti resmi. |
-| **Halaman 24 (Profile Settings)** | Menerima pengalihan pengguna dari notifikasi pembaruan struktur organisasi akun. |
 
 ---
 

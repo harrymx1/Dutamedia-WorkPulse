@@ -4,11 +4,11 @@
 | Document | Value |
 |---|---|
 | Document Owner | Dutamedia |
-| Version | 1.5 |
-| Status | FINAL — baseline reconciliation addendum & finalisasi definitif FR-12/AC-37 |
-| Date | Oktober 2026 |
+| Version | 1.6 |
+| Status | FINAL — Mandiri & Diselaraskan dengan PDD v1.5, Baseline Management v1.0, dan Keputusan Proyek (DEC-001 s/d DEC-009) |
+| Date | 28 Oktober 2026 |
 | Classification | Internal & Confidential |
-| Referensi | PDD v1.4 FINAL; baseline Management v1.0; ADR-006, ADR-008, ADR-013, ADR-014, ADR-017, ADR-018, dan keputusan produk lain yang relevan |
+| Referensi | PDD v1.5 FINAL; Baseline Management v1.0; `00-Governance/00-Project-Charter-and-Governance.md` v1.0 |
 
 ## 1. Actors & Access Summary
 
@@ -129,7 +129,7 @@
 |---|---|
 | FR-01 | Sistem menyediakan login dan pemetaan role/function per user. |
 | FR-02 | Setiap Daily Accountability Record menyimpan snapshot konteks organisasi (role, direct manager, function) yang berlaku pada tanggal tersebut. |
-| FR-50 | User account dibuat dan dikelola oleh System Admin/Management yang berwenang melalui Organization Master Data; tidak ada self-registration publik untuk role apa pun. |
+| FR-50 | User account dibuat dan dikelola oleh System Admin/Management yang berwenang melalui antarmuka User & Invitation Management khusus (terpisah dari antarmuka Organizational Mapping); tidak ada self-registration publik untuk role apa pun. |
 | FR-54 | Aktivasi awal dilakukan melalui undangan yang terikat pada akun yang telah dibuat Admin/Management berwenang. Token undangan hanya dapat digunakan sekali, memiliki masa berlaku, dan setelah valid digunakan karyawan menetapkan kredensialnya sendiri. Undangan dapat dibatalkan atau diterbitkan ulang oleh aktor berwenang; masa berlaku ditetapkan dalam konfigurasi keamanan awal sebelum implementasi. Sistem tidak mengirim kata sandi permanen melalui undangan. |
 
 ### 3.2 Daily Accountability Record
@@ -144,14 +144,14 @@
 | FR-09 | Sistem menyediakan field Continuation (`Continue`/`Do Not Continue`) yang terpisah dari Outcome. Jika Continuation = `Continue`, Continuation Reason wajib diisi terlepas dari nilai Outcome. Outcome dan Continuation tidak boleh digabung menjadi satu status. |
 | FR-10 | Employee menetapkan Final Status (`GREEN`/`AMBER`/`RED`) pada EOD Check-in. Jika Final Status = `AMBER` atau `RED`, pengguna wajib mencatat penjelasan risiko/blocker tingkat-hari. Penjelasan ini berbeda dari Known Blocker/Support Needed per Commitment pada Morning Check-in. |
 | FR-11 | Sistem menyediakan **koleksi draft copy-forward** yang bersumber secara eksklusif dari Morning Commitment pada hari kerja sebelumnya milik karyawan yang sama, dengan `continuation = Continue`. Semua item yang memenuhi syarat harus dipertahankan sebagai koleksi. Pengguna memilih item yang ingin dimasukkan ke slot Morning Commitment yang tersedia (maksimal 3), lalu meninjau/mengedit dan melengkapi data wajib sebelum submit. Draft hanya mengisi form; tidak pernah submit otomatis. `Additional Work` bukan sumber FR-11 dan `Tomorrow Priority` bukan sumber kebenaran FR-11. |
-| FR-12 | Sistem menampilkan Role-Based Output Prompt/panduan kontekstual sesuai fungsi organisasi pengguna saat pengisian Morning Check-in. Pemilihan panduan bersumber langsung dari atribut `function` penugasan organisasi aktif pengguna (`authStore.user.function`), bukan dari system role atau job title. Teks panduan seragam di seluruh slot Commitment #1, #2, dan #3, berorientasi aksi (*action-oriented*), disajikan dalam Bahasa Indonesia sebagai placeholder visual bergaya miring (*italic, text-secondary*), bersifat murni *inline hint* non-binding yang tidak mengunci format, tidak mengotori form input, dan tidak ikut tersimpan ke database. Sistem mendukung 7 fungsi kanonikal: (1) **Engineering**: *"Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji"*; (2) **Ops & Infra**: *"Contoh: Menyelesaikan konfigurasi atau pekerjaan infrastruktur yang direncanakan hari ini"*; (3) **Finance**: *"Contoh: Menyelesaikan rekonsiliasi atau proses administrasi keuangan yang menjadi prioritas hari ini"*; (4) **Sales Enablement**: *"Contoh: Menyelesaikan materi atau kebutuhan pendukung aktivitas penjualan hari ini"*; (5) **Delivery**: *"Contoh: Menyelesaikan koordinasi atau pekerjaan yang mendukung delivery proyek hari ini"*; (6) **HRGA**: *"Contoh: Menyelesaikan proses administrasi atau kebutuhan operasional karyawan hari ini"*; (7) **Management**: *"Contoh: Menyelesaikan prioritas koordinasi atau keputusan yang perlu ditindaklanjuti hari ini"*. Jika fungsi kosong, null, atau belum terpetakan, sistem menggunakan fallback netral resmi: *"Contoh: Tuliskan rencana pekerjaan yang ingin Anda selesaikan hari ini"*. |
+| FR-12 | Sistem menampilkan Role-Based Output Prompt/panduan kontekstual sesuai fungsi organisasi pengguna saat pengisian Morning Check-in. Pemilihan panduan bersumber langsung dari atribut fungsi (`function`) pada penugasan organisasi efektif pengguna saat itu, bukan dari system role atau job title. Teks panduan seragam di seluruh slot Commitment #1, #2, dan #3, berorientasi aksi (*action-oriented*), disajikan dalam Bahasa Indonesia sebagai placeholder visual bergaya miring (*italic, text-secondary*), bersifat murni *inline hint* non-binding yang tidak mengunci format, tidak mengotori form input, dan tidak ikut tersimpan ke database. Sistem mendukung **10 fungsi kanonikal resmi Dutamedia**: (1) **Engineering**: *"Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji"*; (2) **Quality**: *"Contoh: Menyelesaikan pengujian fitur, verifikasi kualitas, atau penelusuran temuan defect hari ini"*; (3) **Operations & Infrastructure**: *"Contoh: Menyelesaikan konfigurasi atau pekerjaan infrastruktur yang direncanakan hari ini"*; (4) **R&D**: *"Contoh: Menyelesaikan eksplorasi teknis, evaluasi arsitektur, atau penyusunan rekomendasi riset hari ini"*; (5) **Delivery**: *"Contoh: Menyelesaikan koordinasi atau pekerjaan yang mendukung delivery proyek hari ini"*; (6) **Business Development**: *"Contoh: Menyelesaikan penjajakan kemitraan, tindak lanjut prospek, atau penyusunan proposal bisnis hari ini"*; (7) **Sales Enablement & Presales**: *"Contoh: Menyelesaikan materi atau kebutuhan pendukung aktivitas penjualan hari ini"*; (8) **Finance**: *"Contoh: Menyelesaikan rekonsiliasi atau proses administrasi keuangan yang menjadi prioritas hari ini"*; (9) **HRGA**: *"Contoh: Menyelesaikan proses administrasi atau kebutuhan operasional karyawan hari ini"*; (10) **Management**: *"Contoh: Menyelesaikan prioritas koordinasi atau keputusan yang perlu ditindaklanjuti hari ini"*. Jika fungsi kosong, null, atau belum terpetakan, sistem menggunakan fallback netral resmi: *"Contoh: Tuliskan rencana pekerjaan yang ingin Anda selesaikan hari ini"*. |
 | FR-51 | Sistem menghitung Initial Daily Status dari Initial Risk seluruh Morning Commitment: RED jika ada minimal satu Commitment RED; selain itu AMBER jika ada minimal satu Commitment AMBER; selain itu GREEN jika terdapat minimal satu Commitment dan semuanya GREEN. Jika tidak ada Commitment, Initial Daily Status adalah `NOT_APPLICABLE — NO_COMMITMENT` dan alasan wajib disimpan. Status ini bukan Final Status EOD, bukan `No Submission`, dan tidak dapat diperlakukan sebagai GREEN. |
 | FR-52 | Employee dapat mengisi `Tomorrow Priority` secara opsional pada EOD. Sistem menyimpan catatan tersebut dan menampilkannya pada Morning Check-in hari kerja berikutnya sebagai konteks terpisah. Catatan ini tidak menjadi sumber, tidak membuat, tidak memilih, tidak mengurutkan, dan tidak mengubah draft Commitment FR-11 serta tidak memengaruhi Initial Daily Status. |
 
 ### 3.3 Status Suggestion
 | ID | Requirement |
 |---|---|
-| FR-13 | Sistem memberikan saran status (GREEN/AMBER/RED) melalui heuristik produk deterministik, tanpa memutasi pilihan pengguna, dengan urutan evaluasi: (1) blocker aktif berseverity Critical atau insiden produksi menghasilkan RED; (2) jika sekurang-kurangnya 50% item pekerjaan dengan Outcome valid berstatus Not Completed atau Cancelled, menghasilkan RED; (3) jika terdapat carry-over/continuation kedua berturut-turut pada item komitmen yang sama atau terdapat blocker aktif berseverity High, menghasilkan minimal AMBER; (4) jika ada Outcome Partially Completed, Not Completed, atau Cancelled tetapi proporsi Not Completed/Cancelled di bawah 50%, menghasilkan minimal AMBER; (5) GREEN hanya jika terdapat item yang dapat dievaluasi, seluruhnya Completed, dan tidak ada blocker aktif. Jika tidak ada item yang dapat dievaluasi dan tidak ada blocker aktif, sistem tidak memberikan saran status. Blocker aktif adalah blocker dalam state Open, Acknowledged, atau In Progress. Heuristik ini adalah aturan produk tetap, bukan konfigurasi runtime Policy Configuration. |
+| FR-13 | Sistem memberikan saran status (GREEN/AMBER/RED) pada EOD melalui heuristik produk deterministik, tanpa pernah mengunci opsi status (termasuk tidak pernah menonaktifkan opsi GREEN di Morning maupun EOD) dan tanpa memutasi pilihan pengguna, dengan urutan evaluasi: (1) blocker aktif berseverity Critical atau insiden produksi menghasilkan RED; (2) jika sekurang-kurangnya 50% item pekerjaan dengan Outcome valid berstatus Not Completed atau Cancelled, menghasilkan RED; (3) jika terdapat carry-over/continuation kedua berturut-turut pada item komitmen yang sama atau terdapat blocker aktif berseverity High, menghasilkan minimal AMBER; (4) jika ada Outcome Partially Completed, Not Completed, atau Cancelled tetapi proporsi Not Completed/Cancelled di bawah 50%, menghasilkan minimal AMBER; (5) GREEN hanya jika terdapat item yang dapat dievaluasi, seluruhnya Completed, dan tidak ada blocker aktif. Jika tidak ada item yang dapat dievaluasi dan tidak ada blocker aktif, sistem tidak memberikan saran status. Blocker aktif adalah blocker dalam state Open, Acknowledged, atau In Progress. Heuristik ini adalah aturan produk tetap, bukan konfigurasi runtime Policy Configuration. |
 | FR-14 | Sistem menampilkan validation prompt ketika status yang dipilih user tidak konsisten dengan data terkait (mis. GREEN dengan critical blocker tercatat). |
 
 ### 3.4 Blocker & Escalation
@@ -172,16 +172,16 @@
 | ID | Requirement |
 |---|---|
 | FR-22 | Authorized Admin/Management dapat create, edit, activate, deactivate, dan reassign person, role, function, direct manager, reviewer, dan project authority. |
-| FR-23 | Setiap perubahan struktur organisasi disimpan dengan effective date dan (opsional) end date, tanpa menimpa/menghapus riwayat sebelumnya. |
+| FR-23 | Setiap perubahan struktur organisasi dan wewenang proyek disimpan dengan effective date dan (opsional) end date, tanpa menimpa/menghapus riwayat sebelumnya. `Effective Date` pada pembuatan atau pembaruan penugasan hanya menerima **hari ini atau tanggal masa depan** (`effectiveDate >= tanggal hari ini` menurut zona waktu organisasi; pengisian tanggal lampau/*backdating* ditolak) agar keutuhan histori akuntabilitas masa lalu terlindungi penuh. |
 | FR-24 | Data accountability historis selalu merujuk pada konteks organisasi yang berlaku pada tanggal event terjadi, bukan struktur terkini. |
-| FR-25 | Authorized Admin/Management dapat menunjuk Temporary Reviewer dengan effective date dan expiry date tanpa mengubah struktur permanen. |
+| FR-25 | Authorized Admin/Management dapat menunjuk Temporary Reviewer dengan effective date (mulai hari ini atau tanggal masa depan, tanpa *backdating*) dan expiry date (`expiryDate >= effectiveDate`) tanpa mengubah struktur permanen. |
 
 ### 3.6 Submission Compliance
 | ID | Requirement |
 |---|---|
 | FR-26 | Sistem mengklasifikasikan submission Morning dan EOD sebagai On-Time jika `submittedAt ≤ On-Time Deadline`, Late jika `On-Time Deadline < submittedAt ≤ Cut-Off`, dan No Submission jika tidak ada submission valid sampai Cut-Off. `Cut-Off = On-Time Deadline + Grace Period`; nilai Grace Period `0` valid. Request setelah Cut-Off ditolak tanpa menulis data. Validitas request ditentukan dari timestamp request, bukan timing scheduler; scheduler hanya melakukan cutoff locking dan evaluasi No Submission. |
 | FR-27 | Hari non-working (leave/holiday/exemption valid) tidak dihitung sebagai No Submission. |
-| FR-28 | Sistem mengirim reminder otomatis mendekati deadline/cutoff. **Semantik reminder (ADR-014):** (1) Jendela aktif dimulai tepat 60 menit sebelum On-Time Deadline dan berakhir tepat pada On-Time Deadline, yaitu `[Deadline - 60m, Deadline)` / `OnTimeDeadline - 60m <= now < OnTimeDeadline` (contoh untuk jadwal default: Morning `[08:00, 09:00)` dan EOD `[17:00, 18:00)`). (2) Ambang 60 menit adalah aturan tetap produk MVP, bukan kategori policy runtime. (3) Reminder hanya dievaluasi sebelum On-Time Deadline; reminder tidak menandakan keterlambatan atau mengubah status submission. Grace Period setelah deadline tidak termasuk jendela reminder. (4) Pengiriman reminder idempoten dan maksimum satu reminder dikirim per karyawan, per fase, per applicable workday. Reminder untuk karyawan yang belum submit tidak bergantung pada keberadaan Daily Accountability Record yang baru dibuat saat pengguna submit; `relatedEntityId` untuk reminder sebelum record ada bernilai `null`. |
+| FR-28 | Sistem mengirim reminder otomatis mendekati deadline/cutoff. **Semantik reminder:** (1) Jendela aktif dimulai tepat 60 menit sebelum On-Time Deadline dan berakhir tepat pada On-Time Deadline, yaitu `[Deadline - 60m, Deadline)` / `OnTimeDeadline - 60m <= now < OnTimeDeadline` (contoh untuk jadwal default: Morning `[08:00, 09:00)` dan EOD `[17:00, 18:00)`). (2) Ambang 60 menit adalah aturan tetap produk MVP, bukan kategori policy runtime. (3) Reminder hanya dievaluasi sebelum On-Time Deadline; reminder tidak menandakan keterlambatan atau mengubah status submission. Grace Period setelah deadline tidak termasuk jendela reminder. (4) Pengiriman reminder idempoten dan maksimum satu reminder dikirim per karyawan, per fase, per applicable workday. Reminder untuk karyawan yang belum submit tidak bergantung pada keberadaan Daily Accountability Record yang baru dibuat saat pengguna submit; `relatedEntityId` untuk reminder sebelum record ada bernilai `null`. |
 | FR-29 | Sistem memicu pattern flag untuk coaching setelah **3 kejadian No Submission** dalam jendela evaluasi yang dapat dikonfigurasi. Ambang jumlah 3 kejadian adalah aturan tetap produk, bukan policy runtime; jendela evaluasinya merupakan nilai kebijakan. Satu applicable workday menyumbang maksimum satu kejadian untuk pattern detection meskipun Morning dan EOD sama-sama terlewat; bukti submission yang terlewat tetap dicatat per fase. |
 | FR-30 | Sistem tidak pernah menerbitkan sanksi/SP secara otomatis atas compliance event apa pun; hanya menghasilkan evidence/flag untuk keputusan manusia. |
 | FR-49 | Sistem menghitung maksimum satu No Submission occurrence per applicable workday untuk keperluan pattern detection (FR-29), meskipun Morning dan EOD sama-sama terlewat; sistem tetap menyimpan submission spesifik (Morning/EOD/keduanya) mana yang terlewat sebagai evidence. |
@@ -189,7 +189,7 @@
 ### 3.7 Policy Configuration
 | ID | Requirement |
 |---|---|
-| FR-31 | Authorized Policy Owner dapat mengonfigurasi nilai yang secara eksplisit ditetapkan sebagai kebijakan operasional (cutoff, grace period, workday/holiday calendar, escalation threshold & recipient, coaching follow-up period, retention period dalam rentang yang diizinkan, exemption/participation rules yang didukung, objection window duration, dan batas minor/material change) tanpa mengubah kode. **Batas aturan:** aturan tetap produk dan batas keamanan tidak dapat diubah melalui policy runtime. **Semantik export retention (ADR-009):** parameter `exportRetentionMinutes` mengatur masa berlaku tautan unduh report export (PDF/XLSX) yang diterbitkan on-demand; nilai default 15 menit dan rentang yang diizinkan 1–60 menit; 60 menit merupakan batas keamanan maksimum. Parameter ini tidak mengatur masa berlaku tautan unduh evidence/manager-note (tetap 15 menit sesuai kontrak terkait) maupun retensi fisik file pada storage bucket. |
+| FR-31 | Authorized Policy Owner dapat mengonfigurasi nilai yang secara eksplisit ditetapkan sebagai kebijakan operasional (cutoff, grace period, workday/holiday calendar, escalation threshold & recipient, coaching follow-up period, retention period dalam rentang yang diizinkan, participation rules yang didukung, objection window duration, batas minor/material change, serta ambang jam pengingat peninjauan untuk Objection Window dan Leave Pending) tanpa mengubah kode. **Batas aturan:** aturan tetap produk dan batas keamanan tidak dapat diubah melalui policy runtime. **Semantik export retention:** parameter `exportRetentionMinutes` mengatur masa berlaku tautan unduh report export (PDF/XLSX) yang diterbitkan on-demand; nilai default 15 menit dan rentang yang diizinkan 1–60 menit; 60 menit merupakan batas keamanan maksimum. Parameter ini tidak mengatur masa berlaku tautan unduh evidence/manager-note (tetap 15 menit sebagai batas keamanan tetap) maupun retensi fisik file pada storage bucket. |
 | FR-32 | Setiap perubahan kebijakan tersimpan sebagai versi baru dengan effective date, optional end date, status aktif/nonaktif, dan owner. |
 | FR-33 | Data historis selalu dievaluasi menggunakan versi kebijakan yang berlaku pada tanggal event, bukan versi kebijakan terkini. |
 | FR-34 | Sistem membatasi kewenangan edit tiap jenis kebijakan sesuai Authorized Policy Owner yang ditetapkan (bukan satu Admin berkuasa atas semua kebijakan). |
@@ -202,16 +202,16 @@ Nilai awal di bawah harus ditetapkan dalam satu register konfigurasi peluncuran,
 | Kelompok | Nilai awal yang wajib disahkan | Aturan tata kelola |
 |---|---|---|
 | Kalender dan waktu | Zona waktu organisasi, applicable workdays, hari libur, jam layanan operasional | Effective-dated; sumber kalender dan pemiliknya jelas |
-| Submission | On-Time Deadline Morning dan EOD; Grace Period masing-masing | Nilai 0 valid; cutoff = deadline + grace period; submission setelah cutoff ditolak sesuai ADR-018 |
-| Correction | Objection Window duration; kriteria klasifikasi Minor vs Material untuk Morning dan EOD | Versi dan effective date; aturan tetap produk tidak dapat diubah sebagai policy |
+| Submission | On-Time Deadline Morning dan EOD; Grace Period masing-masing | Nilai 0 valid; cutoff = deadline + grace period; submission setelah cutoff ditolak sesuai FR-26 |
+| Correction | Objection Window duration; kriteria klasifikasi Minor vs Material untuk Morning dan EOD; ambang jam pengingat akhir Objection Window | Versi dan effective date; aturan tetap produk tidak dapat diubah sebagai policy |
 | Compliance/coaching | Jendela evaluasi No Submission; coaching follow-up period | Ambang kejadian No Submission tetap 3; hanya jendela waktu yang configurable |
 | Blocker/escalation | Threshold aging/acknowledgement, escalation recipients, assignment authority | Pemilik kebijakan dan konteks authority wajib jelas |
-| Participation/exemption | Included/excluded role/function/individual, masa berlaku exemption, alur approval Leave | Tidak boleh mengecualikan tanggal tanpa exception yang valid |
-| Retention | Retensi data operasional dan evidence yang memiliki aturan berbeda | Harus berada dalam batas legal/keamanan yang disahkan |
+| Participation/exemption | Included/excluded role/function/individual, masa berlaku exemption, alur approval Leave, ambang jam pengingat Leave Pending | Tidak boleh mengecualikan tanggal tanpa exception yang valid |
+| Retention | Retensi data operasional dan evidence yang memiliki aturan berbeda; durasi tautan ekspor dalam batas 1–60 menit | Harus berada dalam batas legal/keamanan yang disahkan |
 | Account invitation | Masa berlaku undangan dan prosedur revoke/resend | Token sekali pakai; tidak mengirim kata sandi permanen |
 | Availability | Jam layanan yang dijanjikan, mekanisme pengumuman maintenance, notice period untuk maintenance terjadwal | Target minimal 99% per bulan kalender pada jam layanan yang diumumkan |
 
-Nilai default sistem yang telah dikunci oleh ADR atau kontrak keamanan (misalnya `exportRetentionMinutes`) tetap mengikuti sumber keputusan tersebut dan tidak boleh ditimpa oleh register ini.
+Nilai default sistem yang telah dikunci oleh aturan tetap produk atau batas keamanan pada PRD ini (misalnya batas maksimum 60 menit pada `exportRetentionMinutes` dan TTL tetap 15 menit untuk unduhan bukti) wajib dipatuhi dan tidak boleh dilanggar oleh register ini.
 
 ### 3.8 History, Notification & Reporting
 | ID | Requirement |
@@ -236,7 +236,7 @@ Nilai default sistem yang telah dikunci oleh ADR atau kontrak keamanan (misalnya
 |---|---|
 | FR-46 | HRGA/Admin dapat membuat, mengedit, dan menonaktifkan Holiday dan individual Exemption (single date/date range, effective period) tanpa memerlukan approval tambahan. |
 | FR-47 | Employee dapat mengajukan Leave Request; Leave hanya berlaku sebagai valid exception setelah disetujui oleh Authorized Approval sesuai policy. |
-| FR-48 | Leave/Holiday/Exemption yang berstatus valid mengecualikan tanggal terkait secara otomatis dari No Submission detection (FR-27), tanpa memerlukan aksi manual tambahan pada tanggal berjalan. |
+| FR-48 | Leave/Holiday/Exemption yang berstatus valid mengecualikan tanggal terkait secara otomatis dari No Submission detection (FR-27), tanpa memerlukan aksi manual tambahan pada tanggal berjalan. Apabila suatu `Leave Request` baru disetujui (*Approved*) oleh Authorized Approver setelah jam Cut-Off pada tanggal terkait (ketika event `No Submission` terlanjur tercatat karena status permohonan masih `Pending`), sistem secara otomatis merekonsiliasi status tanggal tersebut menjadi `Approved Leave`, memberi penanda status `Superseded by Approved Leave` pada event `No Submission` sebelumnya beserta entri audit trail lengkap (tanpa menghapus rekaman historis secara fisik), serta mengeluarkan tanggal tersebut dari perhitungan ambang 3 kejadian pola ketidakpatuhan (FR-29). |
 
 ### 3.11 EOD Correction Request (mekanisme terpisah)
 | ID | Requirement |
@@ -278,15 +278,15 @@ Nilai default sistem yang telah dikunci oleh ADR atau kontrak keamanan (misalnya
 | BR-07 | No Submission tidak berlaku pada leave, holiday, maupun exemption valid. Untuk jabatan tertentu yang dikecualikan secara terbuka tanpa batas waktu (*indefinite role exemption* seperti CEO/Board), sistem tidak pernah membebankan kewajiban check-in harian, tidak memicu reminder, dan tidak pernah mencatat event No Submission. |
 | BR-08 | Tidak ada leaderboard atau ranking berbasis jumlah task dalam bentuk apa pun. |
 | BR-09 | Manager tidak dapat mengubah pernyataan employee secara langsung; koreksi hanya melalui Manager Note/correction workflow ter-audit. |
-| BR-10 | Perubahan struktur organisasi tidak boleh mengubah historical accountability; data historis tetap merefleksikan konteks organisasi yang berlaku saat event terjadi. |
-| BR-11 | Temporary Reviewer memiliki effective date & expiry date, tidak mengubah struktur permanen, dan seluruh penugasan ter-audit. |
+| BR-10 | Perubahan struktur organisasi dan wewenang proyek hanya menerima `Effective Date` mulai hari ini atau masa depan (`effectiveDate >= today`, tanpa *backdating* tanggal lampau) dan tidak boleh mengubah historical accountability; data historis tetap merefleksikan konteks organisasi yang berlaku saat event terjadi. |
+| BR-11 | Temporary Reviewer memiliki effective date (mulai hari ini atau masa depan, tanpa *backdating*) & expiry date, tidak mengubah struktur permanen, dan seluruh penugasan ter-audit. |
 | BR-12 | Hanya nilai yang secara eksplisit ditetapkan sebagai configurable policy yang dapat diubah dan harus berversi dengan effective date. Aturan tetap produk (termasuk maksimal 3 Morning Commitment, ambang 3 kejadian No Submission, jendela reminder 60 menit, dan heuristik Status Suggestion) serta batas keamanan tidak dapat diubah melalui policy. Data historis tunduk pada versi policy yang berlaku saat event terjadi. |
 | BR-13 | Cross-project support tetap wajib sesuai kompetensi dan prioritas (primary ownership ≠ exclusive ownership). |
 | BR-14 | Data disciplinary/coaching memiliki permission lebih ketat daripada daily record biasa. |
 | BR-15 | Kewenangan mengubah tiap jenis kebijakan dibatasi ke Authorized Policy Owner yang ditetapkan untuk jenis kebijakan tersebut. |
 | BR-16 | Morning Correction Request tidak boleh langsung mengubah baseline. Kategori Minor diterapkan langsung dengan audit trail; kategori Material melalui Objection Window dan default-approve (otomatis Applied) jika tidak ada objection eksplisit dari Authorized Reviewer dalam periode configurable. EOD Correction Request mengikuti prinsip tata kelola yang sama tetapi memiliki target dan record terpisah. |
 | BR-17 | Maksimum satu No Submission occurrence dihitung per applicable workday untuk pattern detection, meskipun Morning dan EOD sama-sama terlewat pada hari yang sama; sistem tetap menyimpan submission spesifik mana yang terlewat sebagai evidence. |
-| BR-18 | Leave wajib melalui Authorized Approval sebelum berlaku sebagai valid exception; Holiday dan individual Exemption dapat langsung di-set oleh Admin/HRGA berwenang tanpa approval tambahan. |
+| BR-18 | Leave wajib melalui Authorized Approval sebelum berlaku sebagai valid exception; persetujuan Leave pasca-Cut-Off merekonsiliasi tanggal tersebut menjadi Approved Leave dan menandai event No Submission sebelumnya sebagai `Superseded by Approved Leave` pada audit trail (tidak lagi dihitung dalam FR-29). Holiday dan individual Exemption dapat langsung di-set oleh Admin/HRGA berwenang tanpa approval tambahan. |
 | BR-19 | Initial Daily Status diturunkan dari Initial Risk dengan prioritas RED > AMBER > GREEN. Jika tidak ada Commitment, Employee wajib memberi alasan dan status menjadi `NOT_APPLICABLE — NO_COMMITMENT`; status ini bukan GREEN dan bukan No Submission. |
 | BR-20 | `Tomorrow Priority` adalah catatan opsional EOD yang disimpan dan ditampilkan terpisah pada Morning berikutnya; bukan sumber, bukan pembentuk draft, dan tidak memengaruhi FR-11 atau Initial Daily Status. |
 | BR-21 | Morning Correction Request hanya mencakup Morning Commitment yang terkunci. EOD Correction Request adalah alur terpisah untuk EOD yang sudah disubmit dan terkunci; keduanya tidak boleh mengubah baseline atau compliance evidence secara diam-diam. |
@@ -410,7 +410,7 @@ Seluruh report tunduk pada Permission & Visibility Requirements (Section 7) dan 
 | AC-16 | Sistem tidak menampilkan leaderboard/ranking task-completion dalam kondisi apa pun. |
 | AC-17 | User dapat menyelesaikan check-in normal dalam ≤3 menit pada usability test internal. |
 | AC-18 | Morning Correction Request Minor langsung Applied dengan audit trail; Morning Correction Request Material yang tidak mendapat objection dalam Objection Window otomatis menjadi Applied; pengajuan yang di-objection secara sah dalam window menjadi Rejected dan baseline Morning asli tetap berlaku. |
-| AC-19 | Leave Request yang belum disetujui tidak mengecualikan tanggal terkait dari No Submission; setelah disetujui, tanggal tersebut otomatis dikecualikan. |
+| AC-19 | Leave Request yang belum disetujui pada saat Cut-Off tidak mengecualikan tanggal terkait dari No Submission; setelah disetujui oleh Authorized Approver (baik sebelum maupun sesudah Cut-Off), tanggal tersebut otomatis dikecualikan sebagai Approved Leave, dan apabila sebelumnya telah tercatat event No Submission pada tanggal tersebut, event ditandai `Superseded by Approved Leave` pada audit trail (tidak dihapus secara fisik) serta tidak dihitung dalam ambang 3 kejadian FR-29. |
 | AC-20 | Export data hanya menghasilkan data sesuai scope visibility user yang melakukan export; tidak ada data di luar kewenangannya yang ikut terekspor. |
 | AC-21 | Browser Push pada MVP melakukan delivery nyata untuk trigger yang menetapkannya; pengujian tidak cukup hanya memverifikasi record notifikasi atau pemanggilan stub. |
 | AC-22 | Ketika browser tidak mendukung Push, izin ditolak, atau delivery gagal, sistem tidak mengklaim push berhasil, proses utama tetap berjalan, dan kanal alternatif yang ditetapkan tetap digunakan. |
@@ -428,8 +428,8 @@ Seluruh report tunduk pada Permission & Visibility Requirements (Section 7) dan 
 | AC-34 | Undangan aktivasi hanya berlaku untuk akun yang telah dibuat Admin, token hanya dapat digunakan sekali dan kedaluwarsa, karyawan menetapkan kredensial sendiri, dan self-registration publik tidak tersedia. |
 | AC-35 | Availability report menghitung target bulanan dengan rumus NFR-04; konfigurasi jam layanan, monitoring, definisi unavailable, dan prosedur pengumuman maintenance disetujui sebelum implementasi. |
 | AC-36 | User hanya dapat login melalui akun aktif yang dibuat Admin/Management berwenang; role/function dan akses yang berlaku sesuai assignment efektif, dan self-registration publik tidak tersedia. |
-| AC-37 | Panduan output (Role-Based Prompt Hint) pada Morning Check-in terpilih secara reaktif berdasarkan atribut `function` pengguna (`authStore.user.function`). Pengguna dari 7 fungsi kanonikal melihat salinan teks baku yang tepat sesuai FR-12 di seluruh slot #1, #2, #3; pengguna tanpa fungsi atau fungsi tak dikenal melihat teks fallback resmi. Teks prompt tampil sebagai placeholder visual bergaya miring (*italic*), menghilang saat input difokuskan/diketik, tidak mengunci teks pengguna, dan terbukti tidak mengontaminasi nilai input form maupun payload network saat submission. |
-| AC-38 | Status Suggestion mengikuti setiap cabang FR-13 secara deterministik: Critical blocker atau insiden produksi → RED; proporsi Not Completed/Cancelled ≥50% → RED; carry-over kedua berturut-turut pada item yang sama atau High blocker aktif atau Partially Completed/proporsi Not Completed/Cancelled di bawah 50% → minimal AMBER; seluruh item Completed tanpa blocker aktif → GREEN; tidak ada item evaluable dan tidak ada blocker aktif → tidak ada saran. Tidak ada cabang yang mengubah pilihan pengguna secara otomatis. |
+| AC-37 | Panduan output (Role-Based Prompt Hint) pada Morning Check-in terpilih secara reaktif berdasarkan atribut `function` penugasan organisasi efektif pengguna. Pengguna dari **10 fungsi kanonikal resmi Dutamedia** melihat salinan teks baku yang tepat sesuai FR-12 di seluruh slot #1, #2, #3; pengguna tanpa fungsi atau fungsi tak dikenal melihat teks fallback resmi. Teks prompt tampil sebagai placeholder visual bergaya miring (*italic*), menghilang saat input difokuskan/diketik, tidak mengunci teks pengguna, dan terbukti tidak mengontaminasi nilai input form maupun payload network saat submission. |
+| AC-38 | Status Suggestion mengikuti setiap cabang FR-13 secara deterministik: Critical blocker atau insiden produksi → RED; proporsi Not Completed/Cancelled ≥50% → RED; carry-over kedua berturut-turut pada item yang sama atau High blocker aktif atau Partially Completed/proporsi Not Completed/Cancelled di bawah 50% → minimal AMBER; seluruh item Completed tanpa blocker aktif → GREEN; tidak ada item evaluable dan tidak ada blocker aktif → tidak ada saran. Sistem tidak pernah menonaktifkan/mengunci opsi GREEN (di Morning maupun EOD) dan tidak mengubah pilihan pengguna secara otomatis. |
 | AC-39 | Ketika status yang dipilih tidak konsisten dengan data (mis. GREEN dengan Critical blocker aktif), sistem menampilkan validation prompt dan tidak mengubah pilihan pengguna diam-diam. |
 | AC-40 | Reminder hanya dikirim pada jendela tetap `[On-Time Deadline − 60 menit, On-Time Deadline)`, maksimal sekali per employee/per fase/per applicable workday, tidak dikirim setelah On-Time Deadline, dan tidak mengubah status submission. |
 | AC-41 | Hanya Authorized Policy Owner dengan kewenangan untuk kategori terkait yang dapat membuat versi policy baru; perubahan memiliki effective date, data historis memakai versi yang berlaku saat event, dan aturan tetap produk/batas keamanan tidak dapat diubah melalui Policy Configuration. MVP Launch Configuration Register wajib disahkan sebelum implementasi. |
@@ -442,7 +442,7 @@ Seluruh report tunduk pada Permission & Visibility Requirements (Section 7) dan 
 | AC-48 | Dengan beban normal dan skenario pengukuran yang ditetapkan dalam SAD sebelum implementasi, dashboard dan entri harian memenuhi target respons <2 detik; hasil benchmark disimpan sebagai bukti verifikasi. |
 | AC-52 | Blocker/escalation dikirim ke penerima yang benar berdasarkan severity, status, aging, dan authority context; RED yang tidak di-acknowledge dalam threshold yang berlaku memicu eskalasi ke level berikutnya, dan setiap transisi/eskalasi tercatat. |
 | AC-53 | Seluruh akses aplikasi yang terproteksi menggunakan transport terenkripsi; operasi server-side memverifikasi autentikasi, role, resource scope, dan least privilege sehingga UI yang menyembunyikan tombol saja tidak dianggap sebagai kontrol akses yang cukup. |
-| AC-54 | Admin/Management berwenang dapat membuat, mengubah, mengaktifkan, menonaktifkan, dan menetapkan ulang person/role/function/direct manager/reviewer/project authority; setiap perubahan memiliki effective date dan tidak menimpa assignment historis. |
+| AC-54 | Admin/Management berwenang dapat membuat, mengubah, mengaktifkan, menonaktifkan, dan menetapkan ulang person/role/function/direct manager/reviewer/project authority; setiap perubahan memiliki effective date mulai hari ini atau masa depan (`effectiveDate >= today`, input tanggal lampau ditolak) dan tidak menimpa assignment historis. |
 | AC-55 | Blocker menyimpan Type resmi (`Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`), Severity (`Low`, `Medium`, `High`, `Critical`), Impact (`Task`, `Milestone`, `Project`, `Production`, `Client`, `Financial`, `Compliance`), Owner Needed, Raised At yang dibuat sistem, Expected Resolution opsional, Status, Resolution Note wajib saat ditutup, serta identitas pelapor dan aktor transisi yang relevan. |
 | AC-56 | Additional Work dapat ditambahkan setelah Morning Check-in dengan alasan dari daftar yang ditetapkan; Assigned By wajib bila alasan Newly Assigned; item tidak mengubah baseline Morning dan tidak dihitung sebagai Commitment ke-4. |
 | AC-57 | Submission Morning/EOD pada atau sebelum On-Time Deadline diklasifikasikan On-Time; setelah deadline sampai dan termasuk Cut-Off diklasifikasikan Late; setelah Cut-Off ditolak tanpa penulisan data. Grace Period `0` menghasilkan Cut-Off tepat pada deadline, dan hasil validasi tidak bergantung pada waktu scheduler. |
@@ -450,19 +450,15 @@ Seluruh report tunduk pada Permission & Visibility Requirements (Section 7) dan 
 | AC-59 | Direct Manager yang aktif menjadi kandidat awal untuk Organizational Authority. Jika tidak tersedia, sistem hanya menggunakan fallback organisasi yang telah dikonfigurasi; tidak ada penerima yang dipilih secara arbitrer. Project Authority menggunakan mapping aktif yang cocok dengan project/reference. |
 | AC-60 | Pilihan Owner Needed manual bersifat opsional dan diterima hanya jika aktif serta valid untuk Authority Context dan scope terkait. Pilihan yang tidak valid ditolak dengan pesan perbaikan; pengguna tidak mendapat konfirmasi sukses palsu. |
 | AC-61 | Jika tidak ada penerima valid setelah fallback atau terdapat ambiguitas yang tidak terselesaikan oleh aturan prioritas, blocker tidak diklaim berhasil dikirim. UI memberikan langkah berikutnya yang jelas. Audit trail menyimpan Authority Context, penerima akhir jika ada, dasar resolusi, fallback yang digunakan, timestamp, dan aktor terkait. |
-
-
-### Riwayat Revisi v1.3
-
-- Memperjelas FR-19 dan menambahkan FR-19a–FR-19c untuk pilihan Owner Needed opsional, resolusi otomatis, validasi manual, fallback, kondisi ambigu/tidak tersedia, dan audit trail.
-- Menambahkan AC-58–AC-61 dan memperbarui traceability terkait penentuan Owner Needed.
-
 | AC-62 | Pulse Dashboard hanya ditampilkan bagi pengguna yang memiliki kewenangan Team Pulse, Function Pulse, atau Management Pulse; Employee biasa tidak mendapat akses dashboard manajerial hanya karena memiliki akun. |
 | AC-63 | Saat pengguna membuka Pulse Dashboard, sistem hanya membuka cakupan dashboard yang diizinkan oleh role, permission, dan scope efektifnya; pengguna multi-role hanya dapat berpindah ke cakupan lain yang juga diizinkan. |
 | AC-64 | Akses langsung ke route atau permintaan data dashboard tanpa permission/scope yang sah ditolak oleh kontrol akses; menyembunyikan item sidebar saja tidak dianggap cukup. |
 | AC-49 | Sistem tidak merekam telemetry pengawasan aktivitas seperti keystroke, pergerakan mouse, atau durasi aplikasi aktif; data yang disimpan terbatas pada entitas dan evidence yang didefinisikan dalam requirement produk. |
 | AC-50 | Retensi data operasional dan evidence yang memiliki kebutuhan berbeda mengikuti policy retention yang disahkan dan berversi; masa berlaku signed URL export tidak mengubah retensi fisik file atau retention kategori evidence lain. |
 | AC-51 | Backup database dapat dipulihkan melalui prosedur restore yang diuji; hasil verifikasi mencakup konsistensi jumlah data dan relasi sesuai kriteria pemulihan yang ditetapkan pada SAD. |
+
+---
+
 ## 11. Requirement Traceability
 
 Matriks ini menghubungkan setiap Functional Requirement (FR) dan Non-Functional Requirement (NFR) dengan acceptance criteria yang memverifikasinya. Matriks ini tidak menggantikan teks requirement; jika ada perubahan requirement, mapping ini wajib diperbarui bersama acceptance criteria terkait.
@@ -547,24 +543,6 @@ Matriks ini menghubungkan setiap Functional Requirement (FR) dan Non-Functional 
 | NFR-11 | AC-20 |
 | NFR-12 | AC-16 |
 
-
----
-
-## Riwayat Revisi v1.2 — Baseline Final
-
-- Menyelaraskan FR-11 dengan keputusan copy-forward ADR-017; seluruh draft eligible dipertahankan dan pengguna memilih item tanpa auto-submit.
-- Menetapkan Browser Push sebagai delivery nyata pada MVP untuk trigger yang disebut dalam matriks notifikasi; tidak semua notifikasi wajib menggunakan Push.
-- Menegaskan aturan tetap produk vs. configurable policy berdasarkan ADR terkait.
-- Menetapkan Initial Daily Status sebagai agregasi deterministik Initial Risk; nol Commitment diperbolehkan dengan alasan wajib dan status `NOT_APPLICABLE — NO_COMMITMENT`.
-- Menetapkan `Tomorrow Priority` sebagai catatan opsional yang disimpan dan ditampilkan terpisah dari draft FR-11. Keputusan produk ini merupakan penyelesaian follow-up design debt yang terpisah dari remediasi FR-11; ADR-017 tetap mengatur sumber copy-forward dan batas scope remediasi sebelumnya.
-- Memisahkan Morning Correction Request dari EOD Correction Request; masing-masing memiliki target dan record sendiri, tata kelola koreksi, dan audit trail. Ini memperjelas kebutuhan produk yang akan direkonsiliasi ke SAD pada tahapnya; dokumen ini tidak mengklaim implementasi/SAD saat ini sudah mendukung alur EOD Correction Request.
-- Menetapkan lifecycle blocker `Resolved` oleh support owner dan `Closed` setelah konfirmasi pelapor, tanpa auto-close berbasis waktu.
-- Menetapkan aktivasi akun melalui undangan sekali pakai yang kedaluwarsa; tidak ada self-registration publik.
-- Menetapkan target availability minimal 99% per bulan kalender selama jam layanan operasional yang diumumkan dan menambahkan prasyarat MVP Launch Configuration Register sebelum implementasi.
-- Menambahkan acceptance criteria untuk keputusan baru dan mempertahankan ID requirement lama agar referensi yang sudah ada tetap terjaga.
-- Konten/pemetaan prompt FR-12, spesifikasi UI/UX, Design System, prototype, SAD, dan Product Backlog sengaja tidak diubah atau diselesaikan dalam PRD ini; mengikuti urutan kerja yang telah disepakati.
-
-**Status:** Baseline requirement final v1.2. Perubahan setelah baseline ini harus melalui perubahan terkontrol dengan alasan, dampak, persetujuan, dan pembaruan ketertelusuran.
 ---
 
 ## 12. Baseline Reconciliation — Performance, Contribution & Reporting
@@ -670,7 +648,7 @@ Pilot tidak dinyatakan berhasil hanya berdasarkan tingkat submission. Hasil pilo
 | Sanksi terlalu cepat | Fear culture dan blocker disembunyikan | Reminder → review/coaching → recorded warning atau proses formal hanya jika sesuai kebijakan dan berulang/serius; tidak ada auto-SP atau konsekuensi otomatis. |
 | Manager overload | Data tidak dibaca dan dashboard tidak berguna | Dashboard exception-first, queue berdasarkan urgency/aging, dan ringkasan periodik. |
 | Blocker menjadi dumping ground | Semua masalah dilempar ke Head tanpa owner jelas | Tetapkan owner, severity, authority context, acknowledgement, escalation threshold, resolution responsibility, dan lifecycle blocker. |
-| Role-based guidance tidak relevan | Pengguna mengisi commitment generik atau asal | Pilot per function; FR-12 menetapkan 7 taksonomi kanonikal resmi dan teks baku berorientasi aksi dengan fallback netral; prompt bersifat inline hint yang membantu orientasi output tanpa mengunci kebebasan penulisan pengguna. |
+| Role-based guidance tidak relevan | Pengguna mengisi commitment generik atau asal | Pilot per function; FR-12 menetapkan 10 fungsi kanonikal resmi Dutamedia dan teks baku berorientasi aksi dengan fallback netral; prompt bersifat inline hint yang membantu orientasi output tanpa mengunci kebebasan penulisan pengguna. |
 | Data dipakai sebagai KPI mentah | Penilaian tidak adil dan konteks hilang | Tegaskan fase awal non-KPI; governance sebelum integrasi KPI; gunakan evidence lintas periode dan review manusia. |
 | Support lintas proyek tidak terlihat | Kontribusi kolaborasi tidak tercermin pada review | Catat Support Contribution yang tertaut ke blocker/request dan tampilkan sesuai permission. |
 | Commitment terlalu generik | Sulit diverifikasi apakah output tercapai | Quality warning yang membantu memperjelas output; warning bukan penilaian otomatis atau alasan menolak submission valid. |
@@ -768,13 +746,38 @@ WorkPulse harus membuat masalah terlihat lebih cepat, bukan membuat karyawan ter
 
 ---
 
-## Riwayat Revisi v1.5 — Baseline Reconciliation Addendum
+## 20. Riwayat Revisi
 
+### Riwayat Revisi v1.6 — Mandiri & Rekonsiliasi Keputusan Proyek (DEC-001 s/d DEC-009)
+- Melepaskan seluruh rujukan ke nomor dokumen Pengerjaan Lama (`ADR-xxx`) dan menyerap substansi aturannya langsung ke dalam teks requirement sehingga PRD v1.6 **100% mandiri** (`DEC-006`).
+- Memperluas dan menyeragamkan taksonomi `FR-12` dan `AC-37` dari 7 fungsi menjadi **10 fungsi kanonikal resmi Dutamedia** (`Engineering`, `Quality`, `Operations & Infrastructure`, `R&D`, `Delivery`, `Business Development`, `Sales Enablement & Presales`, `Finance`, `HRGA`, dan `Management`) + fallback netral, serta membersihkan kebocoran implementasi frontend dari teks requirement (`DEC-005`, `DEC-009`).
+- Menegaskan pemisahan antarmuka User & Invitation Management (`FR-50`, `FR-54`) dari antarmuka Organizational Mapping (`DEC-005`).
+- Menegaskan larangan penguncian paksa opsi `GREEN` di Morning maupun EOD pada `FR-13` & `AC-38` (`DEC-003`).
+- Menetapkan aturan rekonsiliasi otomatis `Superseded by Approved Leave` pada `FR-48`, `BR-18`, dan `AC-19` untuk persetujuan cuti yang terjadi setelah jam Cut-Off (`DEC-007`).
+- Menetapkan larangan *backdating* tanggal lampau (`effectiveDate >= today`) pada `FR-23`, `FR-25`, `BR-10`, `BR-11`, dan `AC-54` untuk melindungi keutuhan histori akuntabilitas (`DEC-008`).
+- Memperbaiki penataan tabel Section 10 dan mengonsolidasikan seluruh riwayat revisi (`v1.2`, `v1.3`, `v1.5`, `v1.6`) ke bagian akhir dokumen.
+
+### Riwayat Revisi v1.5 — Baseline Reconciliation Addendum
 - Mempertahankan seluruh isi PRD v1.4 dan menambahkan bagian rekonsiliasi untuk requirement baseline v1.0 yang belum dinyatakan secara eksplisit atau belum terwakili secara setara.
 - Menambahkan FR-56–FR-73 untuk Performance Transition Framework, rating review berbasis evidence, fair use/incentive boundaries, commitment quality warning, Support Contribution, reporting detail, serta jalur review non-submission.
 - Menambahkan rollout plan, pilot success metrics, key risks/mitigations, recommended policy statement, future integrations yang secara eksplisit bukan MVP, product philosophy summary, dan traceability tambahan.
 - Menambahkan AC-65–AC-82 serta governance criteria RG-01–RG-06 tanpa mengubah atau menghapus acceptance criteria yang sudah ada.
-- Menetapkan secara definitif spesifikasi Role-Based Output Prompt (FR-12 dan AC-37) berbasis 7 fungsi kanonikal, teks baku Bahasa Indonesia, dan fallback netral selaras dengan ADR-016 dan PDD v1.4 FINAL.
+- Menetapkan spesifikasi awal Role-Based Output Prompt (FR-12 dan AC-37) berbasis fungsi kanonikal, teks baku Bahasa Indonesia, dan fallback netral.
 
-**Status:** v1.5 FINAL — PRD v1.4 dipertahankan dan disempurnakan secara menyeluruh dengan baseline reconciliation addendum serta finalisasi definitif FR-12/AC-37. Seluruh requirement berstatus konsisten, tuntas, dan mengikat.
+### Riwayat Revisi v1.3
+- Memperjelas FR-19 dan menambahkan FR-19a–FR-19c untuk pilihan Owner Needed opsional, resolusi otomatis, validasi manual, fallback, kondisi ambigu/tidak tersedia, dan audit trail.
+- Menambahkan AC-58–AC-61 dan memperbarui traceability terkait penentuan Owner Needed.
+
+### Riwayat Revisi v1.2 — Baseline Final
+- Menyelaraskan FR-11 dengan semantik koleksi draft copy-forward berbasis `Continuation = Continue` tanpa auto-submit.
+- Menetapkan Browser Push sebagai delivery nyata pada MVP untuk trigger yang disebut dalam matriks notifikasi.
+- Menegaskan aturan tetap produk vs configurable policy.
+- Menetapkan Initial Daily Status sebagai agregasi deterministik Initial Risk; nol Commitment diperbolehkan dengan alasan wajib dan status `NOT_APPLICABLE — NO_COMMITMENT`.
+- Menetapkan `Tomorrow Priority` sebagai catatan opsional yang disimpan dan ditampilkan terpisah dari draft FR-11.
+- Memisahkan Morning Correction Request dari EOD Correction Request beserta tata kelola koreksi dan audit trail masing-masing.
+- Menetapkan lifecycle blocker `Resolved` oleh support owner dan `Closed` setelah konfirmasi pelapor, tanpa auto-close berbasis waktu.
+- Menetapkan aktivasi akun melalui undangan sekali pakai yang kedaluwarsa; tidak ada self-registration publik.
+- Menetapkan target availability minimal 99% per bulan kalender selama jam layanan operasional yang diumumkan dan menambahkan prasyarat MVP Launch Configuration Register sebelum implementasi.
+
+**Status:** v1.6 FINAL — Seluruh requirement berstatus mandiri, konsisten, tuntas, dan mengikat sebagai acuan tunggal bagi `03-UI-UX-Spec-Flow.md`, `04-Design-System.md`, `05-SAD.md`, `06-Product-Backlog.md`, dan `07-Test-Plan.md`.
 

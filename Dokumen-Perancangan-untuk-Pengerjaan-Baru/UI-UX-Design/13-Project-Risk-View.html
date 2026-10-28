@@ -1,104 +1,2722 @@
 <!DOCTYPE html>
-
 <html lang="id">
 <head>
-<meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/><meta content="light" name="color-scheme"/>
-<title>Project Risk View (PM) — WorkPulse</title>
-<style>
-:root{--canvas:#F7FAF9;--surface:#fff;--subtle:#EFF5F2;--muted:#F1F5F4;--border:#DCE7E2;--border-strong:#A9C7BC;--ink:#0E211B;--secondary:#5C6E68;--brand:#00674D;--brand-tint:#E6F4EE;--focus:#0B8061;--blue-bg:#E0F2FE;--blue-fg:#075985;--amber-bg:#FFF3D9;--amber-fg:#7A4B00;--green-bg:#E6F4EC;--green-fg:#145A36;--red-bg:#FDE9E7;--red-fg:#9B2923;--neutral-bg:#EFF2F1;--neutral-fg:#46534E;--shadow:0 8px 24px rgba(14,33,27,.05)}
-*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}
-.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px 18px;display:flex;flex-direction:column;gap:0;min-height:100vh;box-sizing:border-box}
-.brand{display:flex;align-items:center;gap:10px;padding:0 8px;flex-shrink:0;margin:0 8px 30px!important}.brand-mark{height:42px;width:42px;border-radius:12px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:850;font-size:23px}.brand-name{font-size:19px;font-weight:850;letter-spacing:-.5px;line-height:1.2}.brand-caption{font-size:12px;color:var(--secondary);margin-top:3px}
-.nav-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:28px!important;margin:0!important;align-content:start}.nav-section{display:grid;gap:0;min-width:0}.nav-label{display:block;margin:0 0 10px!important;padding:0 12px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--secondary);font-weight:800}.nav{display:grid;gap:5px}.nav a{min-height:44px;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#50645D;font-weight:700}.nav a:hover{background:#F4F8F6}.nav a.active{background:var(--brand-tint);color:var(--brand)}.nav-icon{width:18px;text-align:center;font-size:16px;flex:0 0 18px}.side-bottom{margin-top:auto!important;padding:16px 8px 0!important;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0}.avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#D9ECE4;color:var(--brand);font-weight:800;flex:0 0 auto}.user-name{font-weight:800;font-size:13px}.user-role{color:var(--secondary);font-size:12px}.user-scope{color:var(--secondary);font-size:11px;line-height:1.45;margin-top:3px;max-width:190px;overflow-wrap:anywhere}
-main{min-width:0}.topbar{height:68px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.88);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,40px);gap:14px}.topbar-left,.top-actions{display:flex;align-items:center;gap:10px}.breadcrumb{font-size:13px;color:var(--secondary)}.breadcrumb strong{color:var(--ink)}.icon-button{height:40px;width:40px;display:grid;place-items:center;border:1px solid var(--border);background:#fff;border-radius:9px;color:var(--secondary)}.mobile-menu{display:none}
-.content{max-width:1320px;margin:0 auto;padding:32px clamp(18px,3vw,40px) 56px}.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}.eyebrow{font-size:12px;color:var(--secondary);font-weight:800;letter-spacing:.06em;text-transform:uppercase}h1{font-size:28px;line-height:1.25;letter-spacing:-.7px;margin:5px 0 8px;font-weight:850}.subtitle{color:var(--secondary);max-width:760px;margin:0}.heading-actions{display:flex;gap:10px;flex-wrap:wrap}
-.btn{min-height:40px;padding:9px 15px;border:1px solid var(--border-strong);background:#fff;border-radius:10px;font-weight:750;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn:hover{background:#F6FAF8}.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}.btn.primary:hover{background:#00563F}.btn.small{min-height:32px;padding:5px 10px;font-size:12px;border-radius:8px}.btn.link{border-color:transparent;background:transparent;color:var(--brand);padding:5px 7px}
-.notice{border:1px solid #B9DCCF;background:#F0F8F4;border-radius:12px;padding:13px 15px;display:flex;gap:11px;align-items:flex-start;margin-bottom:20px}.notice-icon{height:24px;width:24px;display:grid;place-items:center;border-radius:50%;background:#D6EEE3;color:var(--brand);font-weight:850;flex:0 0 auto}.notice strong{display:block;margin-bottom:2px}.notice p{margin:0;color:#47645A;font-size:13px}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}.stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;min-width:0}.stat-label{font-size:12px;color:var(--secondary);font-weight:700}.stat-value{font-size:26px;line-height:1.2;font-weight:850;margin-top:7px;letter-spacing:-.5px}.stat-foot{font-size:12px;color:var(--secondary);margin-top:4px}
-.panel{background:#fff;border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow);margin-bottom:20px;min-width:0}.panel-head{padding:18px 20px 14px;border-bottom:1px solid #E9F0ED;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.panel-title{font-size:16px;font-weight:850;margin:0}.panel-subtitle{font-size:12px;color:var(--secondary);margin-top:4px}.panel-body{padding:18px 20px}
-.filters{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(2,minmax(150px,1fr));gap:12px;align-items:end}.field{display:grid;gap:6px;min-width:0}.field label{font-size:12px;font-weight:800;color:#40564D}.field input,.field select,.field textarea{width:100%;min-height:42px;border:1px solid #C9D8D1;border-radius:9px;background:#fff;padding:9px 11px;color:var(--ink)}.field textarea{min-height:86px;resize:vertical}.field-help{font-size:11px;color:var(--secondary)}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--focus);outline:3px solid #D8EEE5}
-.table-wrap{overflow:auto;width:100%}table{width:100%;border-collapse:separate;border-spacing:0;min-width:780px}th{background:#F7FAF9;color:#60736B;text-align:left;font-size:11px;letter-spacing:.045em;text-transform:uppercase;font-weight:850;padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:14px 16px;border-bottom:1px solid #EAF0ED;vertical-align:top}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#FBFDFC}.primary-cell{font-weight:800}.secondary-cell{font-size:12px;color:var(--secondary);margin-top:3px}.type-badge,.status-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800;white-space:nowrap}.type-badge.holiday{background:#E0F2FE;color:#075985}.type-badge.exemption{background:#F0EAFE;color:#5B3CA5}.status-badge.active{background:var(--green-bg);color:var(--green-fg)}.status-badge.upcoming{background:var(--blue-bg);color:var(--blue-fg)}.status-badge.ended{background:var(--neutral-bg);color:var(--neutral-fg)}.empty{padding:40px 20px;text-align:center;color:var(--secondary)}.empty strong{display:block;color:var(--ink);margin-bottom:4px}
-.modal-backdrop{position:fixed;inset:0;background:rgba(8,28,21,.38);z-index:40;display:none;align-items:center;justify-content:center;padding:20px}.modal-backdrop.open{display:flex}.modal{width:min(680px,100%);max-height:min(90vh,900px);overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.2)}.modal-head{padding:20px 22px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.modal-head h2{margin:0;font-size:19px}.modal-head p{margin:4px 0 0;color:var(--secondary);font-size:12px}.modal-body{padding:20px 22px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.full{grid-column:1/-1}.modal-foot{padding:15px 22px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--border)}.modal-foot-note{font-size:11px;color:var(--secondary)}.modal-actions{display:flex;gap:8px}.segmented{display:flex;gap:8px;flex-wrap:wrap}.segmented label{border:1px solid var(--border-strong);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:700;flex:1;min-width:160px}.segmented input{accent-color:var(--brand)}.toast{position:fixed;right:22px;bottom:22px;z-index:60;background:#103B2F;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);max-width:min(420px,calc(100vw - 44px));display:none}.toast.show{display:block}.hidden{display:none!important}
-@media(max-width:1100px){.app{grid-template-columns:248px minmax(0,1fr)}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.filters .field:first-child{grid-column:1/-1}}
-@media(max-width:760px){.app{display:block}.sidebar{display:none;position:fixed;inset:0 auto 0 0;width:260px;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,.12);overflow:auto}.sidebar.mobile-open{display:flex}.mobile-menu{display:grid}.topbar{height:60px;padding:0 16px}.content{padding:24px 16px 42px}.page-heading{display:block}h1{font-size:25px}.heading-actions{margin-top:15px}.stats{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.filters .field:first-child{grid-column:auto}.panel-head,.panel-body{padding-left:15px;padding-right:15px}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.modal-backdrop{padding:10px}.modal-head,.modal-body{padding-left:16px;padding-right:16px}.modal-foot{padding:14px 16px;align-items:flex-start;flex-direction:column}.modal-actions{width:100%;justify-content:flex-end}}
-@media(max-height:650px){.sidebar{min-height:100vh}.nav-groups{gap:22px!important}.brand{margin-bottom:22px!important}}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>WorkPulse — Pemantauan Risiko Proyek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;850&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #00674D;
+      --brand-dark: #00523E;
+      --brand-light: #E6F4EE;
+      --brand-border: #A3D9C9;
+      --bg-app: #F8FAFC;
+      --surface: #FFFFFF;
+      --border-subtle: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --text-main: #0F172A;
+      --text-secondary: #475467;
+      --text-muted: #64748B;
+      --subtle: #F1F5F9;
 
-.risk-intro{border:1px solid #C5DCEB;background:#EEF5FA;color:#234D68;border-radius:12px;padding:13px 15px;margin-bottom:20px;display:flex;gap:11px;align-items:flex-start}.risk-intro .notice-icon{background:#DCECF7;color:#234D68}.risk-intro p{margin:0;font-size:12px;line-height:1.55}.risk-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.risk-stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;min-width:0}.risk-stat-label{font-size:12px;color:var(--secondary);font-weight:750}.risk-stat-value{font-size:27px;line-height:1.2;font-weight:850;margin-top:7px;letter-spacing:-.5px}.risk-stat-foot{font-size:11px;color:var(--secondary);margin-top:4px}.risk-stat.amber .risk-stat-value{color:#92400E}.risk-stat.red .risk-stat-value{color:#991B1B}.filter-grid{display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(3,minmax(145px,1fr)) auto;gap:10px;align-items:end}.field-help{font-size:11px;color:var(--secondary);line-height:1.45}.risk-groups{display:grid;gap:16px}.risk-group{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;min-width:0}.risk-group-head{padding:17px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);background:#FBFDFC}.risk-group-title{font-size:15px;font-weight:850;overflow-wrap:anywhere}.risk-group-meta{font-size:11px;color:var(--secondary);margin-top:4px}.risk-group-body{padding:0}.risk-item{padding:16px 20px;border-bottom:1px solid #EAF0ED;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(140px,.7fr) minmax(140px,.8fr);gap:16px;align-items:start}.risk-item:last-child{border-bottom:0}.risk-item-title{font-size:13px;font-weight:800}.risk-item-meta{font-size:11px;color:var(--secondary);margin-top:4px}.risk-item-source{font-size:11px;color:#40564D;margin-top:8px;overflow-wrap:anywhere}.risk-label{font-size:10px;color:var(--secondary);font-weight:850;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:10px;font-weight:850;white-space:nowrap;border:1px solid transparent}.pill.red{background:#FEE2E2;color:#991B1B;border-color:#FCA5A5}.pill.amber{background:#FEF3C7;color:#92400E;border-color:#FCD34D}.pill.green{background:#DCFCE7;color:#166534;border-color:#86EFAC}.pill.neutral{background:#F1F5F9;color:#334155;border-color:#CBD5E1}.risk-flags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.risk-flag{font-size:10px;font-weight:800;border-radius:6px;padding:4px 7px;background:#FFF8E8;color:#70511B;border:1px solid #E8D5A2}.risk-flag.critical{background:#FEE2E2;color:#991B1B;border-color:#FCA5A5}.result-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 18px;border-bottom:1px solid var(--border)}.result-count{font-size:12px;color:var(--secondary)}.empty{padding:38px 18px;text-align:center;color:var(--secondary)}.empty strong{display:block;color:var(--ink);margin-bottom:5px}.read-only-tag{font-size:10px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;color:#46534E;background:#EFF2F1;border:1px solid #C9D2CE;border-radius:6px;padding:5px 8px;white-space:nowrap}.footnote{font-size:11px;color:var(--secondary);line-height:1.55;margin-top:16px}
-@media(max-width:1150px){.risk-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-grid .search-field{grid-column:1/-1}}
-@media(max-width:760px){.risk-stats{grid-template-columns:1fr 1fr;gap:8px}.risk-stat{padding:13px}.risk-stat-value{font-size:23px}.filter-grid{grid-template-columns:1fr}.filter-grid .search-field{grid-column:auto}.risk-group-head{padding:15px}.risk-item{grid-template-columns:1fr;gap:12px;padding:15px}.risk-item > div{min-width:0}.read-only-tag{white-space:normal}}
-</style>
+      /* Semantic Status Palette */
+      --amber-bg: #FEF3C7;
+      --amber-border: #FCD34D;
+      --amber-text: #92400E;
+
+      --blue-bg: #E0F2FE;
+      --blue-border: #BAE6FD;
+      --blue-text: #075985;
+
+      --green-bg: #DCFCE7;
+      --green-border: #86EFAC;
+      --green-text: #166534;
+
+      --purple-bg: #F3E8FF;
+      --purple-border: #D8B4FE;
+      --purple-text: #6B21A8;
+
+      --red-bg: #FEE2E2;
+      --red-border: #FCA5A5;
+      --red-text: #991B1B;
+
+      --neutral-bg: #F1F5F9;
+      --neutral-border: #CBD5E1;
+      --neutral-text: #475467;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+      --radius-pill: 9999px;
+
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 2px 5px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 14px 34px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      font-size: 13.5px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+    }
+
+    /* Layout Structure */
+    .app-layout {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 256px;
+      background: var(--surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 40;
+      transition: left 0.25s ease;
+    }
+
+    .brand-wrap {
+      padding: 20px 20px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: var(--brand);
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 850;
+      font-size: 18px;
+      box-shadow: 0 4px 10px rgba(0, 103, 77, 0.25);
+    }
+    .brand-text h2 {
+      font-size: 15.5px;
+      font-weight: 850;
+      color: var(--text-main);
+      line-height: 1.2;
+      letter-spacing: -0.3px;
+    }
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-group {
+      padding: 16px 12px 6px;
+    }
+    .nav-group-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 0 10px 8px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 650;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .nav-link:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+    }
+    .nav-link.active {
+      background: var(--brand-light);
+      color: var(--brand);
+      font-weight: 750;
+    }
+    .nav-link svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+    }
+    .badge-count {
+      margin-left: auto;
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--amber-border);
+    }
+
+    .user-footer {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--brand-light);
+      color: var(--brand);
+      font-weight: 800;
+      font-size: 13px;
+      display: grid;
+      place-items: center;
+      border: 1.5px solid var(--brand-border);
+      flex-shrink: 0;
+    }
+    .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .user-name {
+      font-size: 12.5px;
+      font-weight: 750;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .user-role {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Sticky Topbar */
+    .topbar {
+      height: 64px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(16px, 3vw, 36px);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      gap: 12px;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .breadcrumb strong {
+      color: var(--text-main);
+      font-weight: 750;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .role-switcher-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--subtle);
+      padding: 4px 10px 4px 6px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+    }
+    .role-tag-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .role-select {
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+    }
+    .role-select optgroup {
+      font-weight: 800;
+      color: var(--text-muted);
+      background: #fff;
+    }
+    .role-select option {
+      font-weight: 600;
+      color: var(--text-main);
+      background: #fff;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: #fff;
+      color: var(--text-secondary);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .icon-btn:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+    }
+    .icon-btn.rotating svg {
+      animation: spin 0.5s ease-in-out;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Content Area */
+    .content {
+      padding: 28px clamp(16px, 3vw, 36px) 60px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Page Heading */
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .page-title-wrap h1 {
+      font-size: 26px;
+      font-weight: 850;
+      color: var(--text-main);
+      letter-spacing: -0.6px;
+      line-height: 1.2;
+    }
+    .page-title-wrap p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      max-width: 820px;
+    }
+    .scope-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-strong);
+      padding: 8px 13px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-xs);
+      white-space: nowrap;
+    }
+    .scope-pill svg {
+      color: var(--brand);
+      flex-shrink: 0;
+    }
+
+    .heading-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn.primary {
+      background: var(--brand);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0, 103, 77, 0.25);
+    }
+    .btn.primary:hover {
+      background: var(--brand-dark);
+    }
+    .btn.secondary {
+      background: #FFFFFF;
+      border-color: var(--border-strong);
+      color: var(--text-main);
+    }
+    .btn.secondary:hover {
+      background: var(--subtle);
+    }
+    .btn.small {
+      padding: 6px 11px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* 5 Summary Metric Cards (Click-to-Filter) */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-xs);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--border-strong);
+    }
+    .metric-card.active-card {
+      border-color: var(--brand);
+      background: #FAFCFB;
+      box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.15);
+    }
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .metric-title {
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-icon-pill {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+    }
+    .metric-value {
+      font-size: 26px;
+      font-weight: 850;
+      color: var(--text-main);
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+    .metric-foot {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Semantic accents on metric cards */
+    .metric-card.card-red .metric-value { color: var(--red-text); }
+    .metric-card.card-red .metric-icon-pill { background: var(--red-bg); color: var(--red-text); }
+    .metric-card.card-amber .metric-value { color: var(--amber-text); }
+    .metric-card.card-amber .metric-icon-pill { background: var(--amber-bg); color: var(--amber-text); }
+    .metric-card.card-purple .metric-value { color: var(--purple-text); }
+    .metric-card.card-purple .metric-icon-pill { background: var(--purple-bg); color: var(--purple-text); }
+    .metric-card.card-blue .metric-value { color: var(--blue-text); }
+    .metric-card.card-blue .metric-icon-pill { background: var(--blue-bg); color: var(--blue-text); }
+    .metric-card.card-slate .metric-icon-pill { background: var(--subtle); color: var(--text-secondary); }
+
+    /* Panel & Filter Bar */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .panel-title-wrap h2 {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+    .panel-title-wrap p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .filter-bar {
+      padding: 14px 20px;
+      background: #FDFEFE;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 160px;
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      color: var(--text-main);
+      outline: none;
+      background: #FFFFFF;
+      transition: border-color 0.15s ease;
+    }
+    .search-input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.12);
+    }
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      color: var(--text-main);
+      background: #FFFFFF;
+      outline: none;
+      cursor: pointer;
+      font-weight: 600;
+      max-width: 210px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #projectFilter { max-width: 180px; }
+    #riskFilter { max-width: 155px; }
+    #workTypeFilter { max-width: 160px; }
+    #signalFilter { max-width: 210px; }
+    .filter-select:focus {
+      border-color: var(--brand);
+    }
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-strong);
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-reset:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+    }
+
+    .result-bar {
+      padding: 10px 20px;
+      background: #FAFCFC;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .result-count {
+      font-weight: 750;
+      color: var(--text-secondary);
+    }
+    .read-only-pill {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--neutral-text);
+      background: var(--neutral-bg);
+      border: 1px solid var(--neutral-border);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Grouped Project Cards Container */
+    .risk-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 20px;
+    }
+    .risk-group-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      transition: border-color 0.15s ease;
+    }
+    .risk-group-card:hover {
+      border-color: var(--border-strong);
+    }
+    .group-header {
+      padding: 14px 18px;
+      background: #FBFDFD;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .group-title-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .group-title {
+      font-size: 15px;
+      font-weight: 850;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .group-ref-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: var(--subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+    .group-count-pill {
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--subtle);
+      color: var(--text-secondary);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .group-signals {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .signal-chip {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .signal-chip.red {
+      background: var(--red-bg);
+      color: var(--red-text);
+      border: 1px solid var(--red-border);
+    }
+    .signal-chip.amber {
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      border: 1px solid var(--amber-border);
+    }
+    .signal-chip.purple {
+      background: var(--purple-bg);
+      color: var(--purple-text);
+      border: 1px solid var(--purple-border);
+    }
+    .signal-chip.blue {
+      background: var(--blue-bg);
+      color: var(--blue-text);
+      border: 1px solid var(--blue-border);
+    }
+    .signal-chip.green {
+      background: var(--green-bg);
+      color: var(--green-text);
+      border: 1px solid var(--green-border);
+    }
+
+    /* Table inside Group Card */
+    .table-container {
+      overflow-x: auto;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #F8FAFC;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12.5px;
+      vertical-align: middle;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background: #FAFCFB;
+    }
+
+    /* Column 1: Task */
+    .task-title {
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.4;
+      max-width: 320px;
+      font-size: 13px;
+    }
+    .task-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .task-meta-dot {
+      color: var(--border-strong);
+    }
+    .task-id-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Column 2: Assignee */
+    .assignee-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 220px;
+    }
+    .assignee-name {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 12.5px;
+    }
+    .assignee-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Column 3: Status & Outcome */
+    .status-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .risk-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .risk-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .risk-indicator.red {
+      color: var(--red-text);
+    }
+    .risk-indicator.red .risk-dot {
+      background: var(--red-text);
+      box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.2);
+    }
+    .risk-indicator.amber {
+      color: var(--amber-text);
+    }
+    .risk-indicator.amber .risk-dot {
+      background: var(--amber-text);
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+    }
+    .risk-indicator.green {
+      color: var(--green-text);
+    }
+    .risk-indicator.green .risk-dot {
+      background: var(--green-text);
+      box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.2);
+    }
+    .outcome-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 550;
+    }
+
+    /* Column 4: Continuation */
+    .continuation-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .cont-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--amber-text);
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .repeat-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--purple-text);
+      background: var(--purple-bg);
+      border: 1px solid var(--purple-border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .text-quiet {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* Column 5: Blocker */
+    .blocker-snippet {
+      max-width: 270px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .blocker-title {
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+    .sev-tag {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 4px;
+      vertical-align: middle;
+      display: inline-block;
+    }
+    .sev-tag.critical { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
+    .sev-tag.high { background: var(--amber-bg); color: var(--amber-text); border: 1px solid var(--amber-border); }
+    .sev-tag.medium { background: var(--blue-bg); color: var(--blue-text); border: 1px solid var(--blue-border); }
+    .sev-tag.low { background: var(--neutral-bg); color: var(--neutral-text); border: 1px solid var(--neutral-border); }
+    .blocker-owner {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Column 6: Action */
+    .btn-detail {
+      padding: 6px 12px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-detail:hover {
+      background: var(--subtle);
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 56px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state svg {
+      width: 44px;
+      height: 44px;
+      color: var(--border-strong);
+      margin-bottom: 12px;
+    }
+    .empty-state h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .empty-state p {
+      font-size: 13px;
+      max-width: 420px;
+      margin: 0 auto 16px;
+    }
+
+    /* Modal Backdrop & Window */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      width: min(720px, 100%);
+      max-height: min(90vh, 880px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.open .modal-card {
+      transform: translateY(0) scale(1);
+    }
+    .modal-head {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      background: #FAFDFD;
+    }
+    .modal-head h2 {
+      font-size: 18px;
+      font-weight: 850;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+    .modal-head p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+    }
+    .modal-close-btn:hover {
+      background: var(--subtle);
+      color: var(--text-main);
+    }
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-foot {
+      padding: 16px 24px;
+      background: #F8FAFC;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Structured Property Table in Modal */
+    .prop-card {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .prop-card-title {
+      padding: 10px 16px;
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .prop-row {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 14px;
+      align-items: baseline;
+      font-size: 12.5px;
+      background: #FFFFFF;
+    }
+    .prop-row:last-child {
+      border-bottom: none;
+    }
+    .prop-label {
+      font-weight: 750;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .prop-value {
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+    .kind-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      line-height: 1.3;
+    }
+    .kind-pill.commitment {
+      background: #EFF6FF;
+      color: #1E40AF;
+      border: 1px solid #BFDBFE;
+    }
+    .kind-pill.additional {
+      background: #F3E8FF;
+      color: #6B21A8;
+      border: 1px solid #E9D5FF;
+    }
+    .outcome-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      line-height: 1.3;
+    }
+    .outcome-tag.completed {
+      background: var(--green-bg);
+      color: var(--green-text);
+      border: 1px solid var(--green-border);
+    }
+    .outcome-tag.partially {
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      border: 1px solid var(--amber-border);
+    }
+    .outcome-tag.not-completed {
+      background: var(--red-bg);
+      color: var(--red-text);
+      border: 1px solid var(--red-border);
+    }
+    .outcome-tag.cancelled {
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+      border: 1px solid var(--neutral-border);
+    }
+    .authority-tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: 6px;
+    }
+
+    /* Export Modal Styles */
+    .export-option-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .export-option-card:hover:not(.disabled) {
+      border-color: var(--border-strong);
+      background: #F8FAFC;
+    }
+    .export-option-card:has(input[type="radio"]:checked) {
+      border-color: var(--brand);
+      background: #F0FDFA;
+    }
+    .export-option-card.disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      background: #F8FAFC;
+      border-color: var(--border-subtle);
+    }
+    .export-meta-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #F8FAFC;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.4;
+    }
+
+    /* 403 Forbidden Screen */
+    .forbidden-wrap {
+      display: none;
+      padding: 60px 20px;
+      text-align: center;
+      max-width: 580px;
+      margin: 40px auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+    }
+    .forbidden-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+    }
+    .forbidden-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+    .forbidden-wrap h2 {
+      font-size: 20px;
+      font-weight: 850;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .forbidden-wrap p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+    .forbidden-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Toast Notification */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 650;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+      transform: translateY(20px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast-box.show {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Mobile Backdrop */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      z-index: 35;
+      display: none;
+    }
+    .sidebar-backdrop.active {
+      display: block;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1200px) {
+      .metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 820px) {
+      .sidebar {
+        position: fixed;
+        left: -260px;
+      }
+      .sidebar.open {
+        left: 0;
+      }
+      .mobile-menu-btn {
+        display: grid;
+      }
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .page-heading {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .heading-actions {
+        width: 100%;
+      }
+      .heading-actions .btn {
+        width: 100%;
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+    }
+    @media (max-width: 540px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .prop-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
 </head>
 <body>
-<a href="#main" onfocus="this.style.left='12px';this.style.top='12px';this.style.zIndex='100';this.style.background='#fff';this.style.padding='10px'" style="position:absolute;left:-9999px;top:auto">Lewati ke konten utama</a>
-<div class="app">
-<aside aria-label="Navigasi utama" class="sidebar" id="sidebar">
-<div class="brand"><div aria-hidden="true" class="brand-mark">W</div><div><div class="brand-name">WorkPulse</div><div class="brand-caption">Daily Accountability</div></div></div>
-<div class="nav-groups">
-<div class="nav-section"><div class="nav-label">Workspace</div><nav aria-label="Workspace" class="nav">
-<a href="#my-today"><span aria-hidden="true" class="nav-icon">◷</span>My Today</a>
-<a href="#my-history"><span aria-hidden="true" class="nav-icon">▤</span>My History</a>
-<a href="#notifications"><span aria-hidden="true" class="nav-icon">♧</span>Notifications</a>
-<a href="#profile"><span aria-hidden="true" class="nav-icon">◉</span>Profile</a>
-</nav></div>
-<div class="nav-section"><div class="nav-label">Management</div><nav aria-label="Management" class="nav">
-<a href="#pulse"><span aria-hidden="true" class="nav-icon">▥</span>Pulse Dashboard</a>
-<a href="#blockers"><span aria-hidden="true" class="nav-icon">⚑</span>Blocker &amp; Escalation Queue</a>
-<a aria-current="page" class="active" href="#project-risk"><span aria-hidden="true" class="nav-icon">⌁</span>Project Risk View</a>
-<a href="#coaching"><span aria-hidden="true" class="nav-icon">▤</span>Coaching Record</a>
-<a href="#reports"><span aria-hidden="true" class="nav-icon">▥</span>Reports</a>
-</nav></div>
-</div>
-<div class="side-bottom"><div aria-hidden="true" class="avatar">PM</div><div><div class="user-name">Ardi Pratama</div><div class="user-role">Project Manager</div><div class="user-scope">Cakupan: project/reference yang menjadi tanggung jawab aktif<br/>Akses: Project Risk View (read-only)</div></div></div>
-</aside>
-<main id="main">
-<header class="topbar"><div class="topbar-left"><button aria-expanded="false" aria-label="Buka navigasi" class="icon-button mobile-menu" id="mobileMenu" type="button">☰</button><div class="breadcrumb">Management <span aria-hidden="true">/</span> <strong>Project Risk View</strong></div></div><div class="top-actions"><button aria-label="Notifications" class="icon-button" id="topBell" type="button">♧</button><button aria-label="Account" class="icon-button" type="button">PM</button></div></header>
-<div class="content">
-<div class="page-heading"><div><div class="eyebrow">Project Manager · Project-scoped visibility</div><h1>Project Risk View</h1><p class="subtitle">Pantau risiko delivery dari Commitment dan Additional Work anggota tim melalui Reference / Task Link yang tercatat. Halaman ini hanya menyajikan agregasi; tidak mengubah submission atau mengelola entitas project.</p></div><div class="heading-actions"></div></div>
 
-<section aria-label="Ringkasan risiko proyek" class="risk-stats">
-<div class="risk-stat"><div class="risk-stat-label">Reference groups shown</div><div class="risk-stat-value" id="metricGroups">3</div><div class="risk-stat-foot">Kelompok reference</div></div>
-<div class="risk-stat red"><div class="risk-stat-label">RED items</div><div class="risk-stat-value" id="metricRed">2</div><div class="risk-stat-foot">Perlu perhatian delivery</div></div>
-<div class="risk-stat amber"><div class="risk-stat-label">AMBER items</div><div class="risk-stat-value" id="metricAmber">3</div><div class="risk-stat-foot">Risiko atau hambatan teridentifikasi</div></div>
-<div class="risk-stat"><div class="risk-stat-label">Repeated Continue pattern</div><div class="risk-stat-value" id="metricContinue">2</div><div class="risk-stat-foot">Reference dengan pola Continue berulang</div></div>
-</section>
-<section aria-labelledby="filtersTitle" class="panel">
-<div class="panel-head"><div><h2 class="panel-title" id="filtersTitle">Filter project risk</h2><div class="panel-subtitle">Filter hanya memengaruhi data yang sedang ditampilkan.</div></div><button class="btn small" id="resetFilters" type="button">Reset filter</button></div>
-<div class="panel-body"><div class="filter-grid">
-<div class="field search-field"><label for="search">Cari reference, task, anggota, atau deskripsi</label><input autocomplete="off" id="search" placeholder="Mis. Melon Hidroponik, API integration…" type="search"/></div>
-<div class="field"><label for="riskFilter">Risk status</label><select id="riskFilter"><option value="all">Semua status</option><option value="RED">RED</option><option value="AMBER">AMBER</option><option value="GREEN">GREEN</option></select></div>
-<div class="field"><label for="workTypeFilter">Jenis item</label><select id="workTypeFilter"><option value="all">Semua jenis</option><option value="Commitment">Commitment</option><option value="Additional Work">Additional Work</option></select></div>
-<div class="field"><label for="signalFilter">Sinyal risiko</label><select id="signalFilter"><option value="all">Semua sinyal</option><option value="risk">AMBER / RED</option><option value="continue">Continue berulang</option></select></div>
-</div><div class="field-help" style="margin-top:10px">Tidak ada aksi edit, assign, resolve, atau perubahan status di halaman ini. Tindak lanjut dilakukan melalui alur lain yang memiliki kewenangan sesuai scope.</div></div>
-</section>
-<section aria-labelledby="groupsTitle" class="panel"><div class="panel-head"><div><h2 class="panel-title" id="groupsTitle">Reference / Task groups</h2><div class="panel-subtitle">Setiap item tetap menunjukkan jenis, pemilik, status, continuation, dan reference sumbernya.</div></div></div><div class="result-bar"><div aria-live="polite" class="result-count" id="resultCount">3 kelompok · 7 item</div><div class="small">Read-only</div></div><div class="panel-body"><div class="risk-groups" id="riskGroups"></div><div class="empty hidden" id="emptyState"><strong>Tidak ada item yang sesuai</strong>Ubah atau reset filter untuk melihat kelompok lainnya.</div></div></section>
+<div class="app-layout">
+  <!-- Mobile Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-wrap">
+      <div class="brand-logo">W</div>
+      <div class="brand-text">
+        <h2>WorkPulse</h2>
+        <p>Daily Accountability</p>
+      </div>
+    </div>
+
+    <!-- Group: Workspace -->
+    <div class="nav-group">
+      <div class="nav-group-title">Workspace</div>
+      <a class="nav-link" href="02-Morning-Commitment.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>My Today</span>
+      </a>
+      <a class="nav-link" href="05-Raise-Instant-Blocker.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        <span>My Blockers</span>
+      </a>
+      <a class="nav-link" href="06-My-History-Weekly-Summary.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>My History</span>
+      </a>
+      <a class="nav-link" href="20-My-Leave-Request.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        <span>My Leave</span>
+      </a>
+      <a class="nav-link" href="07-Notification-Center-Browser-Push.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>Notifications</span>
+        <span class="badge-count">3</span>
+      </a>
+    </div>
+
+    <!-- Group: Management -->
+    <div class="nav-group" id="navGroupManagement">
+      <div class="nav-group-title">Management</div>
+      <a class="nav-link" href="08-Pulse-Dashboard.html" id="navPulse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Pulse Dashboard</span>
+      </a>
+      <a class="nav-link" href="09-Blocker-Escalation-Queue.html" id="navBlocker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        <span>Blocker Queue</span>
+      </a>
+      <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" id="navCoaching">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Coaching Notes</span>
+      </a>
+      <a class="nav-link" href="11-Compliance-Queue-HRGA.html" id="navCompliance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>Compliance Queue</span>
+      </a>
+      <a class="nav-link" href="12-Exemption-Management.html" id="navExemption">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span>Holiday / Exemption</span>
+      </a>
+      <a class="nav-link active" href="13-Project-Risk-View.html" id="navProjectRisk" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>Project Risk View</span>
+      </a>
+      <a class="nav-link" href="22-Correction-and-Leave-Review.html" id="navReviewQueue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <span>Review Queue</span>
+      </a>
+      <a class="nav-link" href="23-Reports.html" id="navReports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Reports</span>
+      </a>
+    </div>
+
+    <!-- Current User Footer -->
+    <div class="user-footer">
+      <div class="user-avatar" id="sideUserAvatar">AP</div>
+      <div class="user-info">
+        <div class="user-name" id="sideUserName">Ardi Pratama</div>
+        <div class="user-role" id="sideUserRole">Project Manager</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Application Wrapper -->
+  <div class="main-wrapper">
+    <!-- Topbar Navigation -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Buka Navigasi">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="breadcrumb">
+          <span>Manajemen</span>
+          <span>/</span>
+          <strong>Pemantauan Risiko Proyek</strong>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- RBAC Role Switcher -->
+        <div class="role-switcher-wrap" title="Simulasi Tampilan Peran Pengguna">
+          <div class="role-tag-icon">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <select class="role-select" id="quickRoleSwitcher" aria-label="Pilih Peran Pengguna">
+            <optgroup label="Pengelola Proyek & Pengiriman (Akses Utama)">
+              <option value="ardi" selected>Ardi Pratama (Project Manager · Scope Proyek)</option>
+            </optgroup>
+            <optgroup label="Pimpinan Fungsi & Eksekutif (Mode Pantau)">
+              <option value="ayu">Ayu Nirmala (Head of Engineering · Pantau Fungsi)</option>
+              <option value="rian">Rian Suryadi (CEO / Direktur · Pantau Korporat)</option>
+            </optgroup>
+            <optgroup label="Peran Non-Wewenang (Simulasi 403)">
+              <option value="budi">Budi Pratama (Staff Developer · 403 Dibatasi)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Refresh Button -->
+        <button class="icon-btn" id="refreshBtn" title="Segarkan Data Portofolio" aria-label="Segarkan Data">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+
+        <!-- Notification Bell -->
+        <button class="icon-btn" id="topBell" title="Notifikasi Sistem" aria-label="Notifikasi">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="content" id="mainContent">
+      <!-- 403 Forbidden Screen (Hidden by default) -->
+      <section class="forbidden-wrap" id="forbiddenScreen" aria-labelledby="forbiddenTitle">
+        <div class="forbidden-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h2 id="forbiddenTitle">403 · Akses Dibatasi (Staff Developer)</h2>
+        <p>
+          Halaman <strong>Pemantauan Risiko Proyek</strong> merupakan instrumen pemantauan risiko pengiriman yang dikhususkan bagi Project Manager, Head of Department, dan Manajemen Eksekutif.<br><br>
+          Sebagai Staff, Anda dapat memantau tugas harian dan pelaporan komitmen pribadi melalui menu <strong>My Today</strong>.
+        </p>
+        <div class="forbidden-actions">
+          <a class="btn primary" href="02-Morning-Commitment.html">Buka My Today ↗</a>
+          <button class="btn secondary" id="btnSwitchToPm">Beralih ke Akun PM (Simulasi)</button>
+        </div>
+      </section>
+
+      <!-- Standard Dashboard View -->
+      <div id="standardDashboardView">
+        <!-- Page Heading -->
+        <div class="page-heading">
+          <div class="page-title-wrap">
+            <h1>Pemantauan Risiko Proyek</h1>
+            <p>Pantau risiko pengiriman, kendala komitmen, dan blocker lintas fungsi pada seluruh proyek aktif.</p>
+          </div>
+          <div class="heading-actions">
+            <div class="scope-pill" id="scopeBadge">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span id="scopeBadgeText">Cakupan: Proyek Tanggung Jawab Aktif</span>
+            </div>
+            <button class="btn primary" id="exportBtn">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Ekspor Ringkasan (PDF / XLSX)
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Summary Metric Cards (Click-to-Filter) -->
+        <section class="metrics-grid" aria-label="Ringkasan Metrik Risiko Portofolio">
+          <!-- Metric 1: Groups -->
+          <div class="metric-card card-slate" id="metricCardGroups" data-filter-type="all" tabindex="0" role="button" aria-label="Tampilkan Semua Kelompok Proyek">
+            <div class="metric-header">
+              <span class="metric-title">Kelompok Proyek</span>
+              <div class="metric-icon-pill">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metricGroups">4</div>
+            <div class="metric-foot">Referensi proyek aktif</div>
+          </div>
+
+          <!-- Metric 2: RED Items -->
+          <div class="metric-card card-red" id="metricCardRed" data-filter-type="red" tabindex="0" role="button" aria-label="Saring Komitmen Kritis RED">
+            <div class="metric-header">
+              <span class="metric-title">Komitmen Kritis</span>
+              <div class="metric-icon-pill">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metricRed">3</div>
+            <div class="metric-foot">Perlu mitigasi rilis segera</div>
+          </div>
+
+          <!-- Metric 3: AMBER Items -->
+          <div class="metric-card card-amber" id="metricCardAmber" data-filter-type="amber" tabindex="0" role="button" aria-label="Saring Risiko Moderat AMBER">
+            <div class="metric-header">
+              <span class="metric-title">Risiko Moderat</span>
+              <div class="metric-icon-pill">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metricAmber">3</div>
+            <div class="metric-foot">Potensi kendala &amp; dependensi</div>
+          </div>
+
+          <!-- Metric 4: Repeated Continue -->
+          <div class="metric-card card-purple" id="metricCardContinue" data-filter-type="continue" tabindex="0" role="button" aria-label="Saring Tugas Tersendat Berulang">
+            <div class="metric-header">
+              <span class="metric-title">Tersendat Berulang</span>
+              <div class="metric-icon-pill">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metricContinue">3</div>
+            <div class="metric-foot">Carry-over &ge; 2 hari berturut-turut</div>
+          </div>
+
+          <!-- Metric 5: Active Blockers -->
+          <div class="metric-card card-blue" id="metricCardBlockers" data-filter-type="blocker" tabindex="0" role="button" aria-label="Saring Proyek Dengan Blocker Aktif">
+            <div class="metric-header">
+              <span class="metric-title">Blocker Aktif</span>
+              <div class="metric-icon-pill">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="metricBlockers">6</div>
+            <div class="metric-foot">Kendala tim butuh bantuan</div>
+          </div>
+        </section>
+
+        <!-- Main Panel: Filters & Grouped Cards -->
+        <section class="panel" aria-labelledby="portfolioTitle">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <h2 id="portfolioTitle">Portofolio Risiko Proyek</h2>
+              <p>Dikelompokkan berdasarkan referensi proyek pada komitmen harian tim.</p>
+            </div>
+          </div>
+
+          <!-- Unified Filter Bar -->
+          <div class="filter-bar">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="search" class="search-input" id="search" placeholder="Cari proyek, tugas, anggota, atau blocker..." autocomplete="off">
+            </div>
+
+            <!-- Specific Project Selector -->
+            <select class="filter-select" id="projectFilter" aria-label="Pilih Proyek Spesifik">
+              <option value="all">Semua Proyek</option>
+              <option value="Melon Hidroponik (IoT Sensor Telemetry)">Melon Hidroponik (IoT Sensor Telemetry)</option>
+              <option value="Client Portal / API Integration">Client Portal / API Integration</option>
+              <option value="Core Payment Engine Modernization">Core Payment Engine Modernization</option>
+              <option value="Internal Reporting Refresh">Internal Reporting Refresh</option>
+            </select>
+
+            <!-- Risk Status Selector -->
+            <select class="filter-select" id="riskFilter" aria-label="Pilih Status Risiko">
+              <option value="all">Semua Status Risiko</option>
+              <option value="RED">RED (Kritis)</option>
+              <option value="AMBER">AMBER (Moderat)</option>
+              <option value="GREEN">GREEN (Lancar)</option>
+            </select>
+
+            <!-- Item Kind Selector -->
+            <select class="filter-select" id="workTypeFilter" aria-label="Pilih Jenis Item">
+              <option value="all">Semua Jenis Item</option>
+              <option value="Commitment">Morning Commitment</option>
+              <option value="Additional Work">Additional Work</option>
+            </select>
+
+            <!-- Risk Signal Selector -->
+            <select class="filter-select" id="signalFilter" aria-label="Pilih Sinyal Bahaya">
+              <option value="all">Semua Sinyal Bahaya</option>
+              <option value="risk">Hanya Berisiko (AMBER / RED)</option>
+              <option value="continue">Hanya Continue Berulang</option>
+              <option value="blocker">Ada Blocker Aktif</option>
+              <option value="blocker-critical">Blocker Kritis (Critical / High)</option>
+              <option value="incomplete">Hasil Belum Tuntas (Partially / Not Completed)</option>
+            </select>
+
+            <!-- Reset Button -->
+            <button class="btn-reset" id="resetFilters" type="button" title="Kembalikan semua saringan ke default">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+              Reset
+            </button>
+          </div>
+
+          <!-- Result Indicator Bar -->
+          <div class="result-bar">
+            <div class="result-count" id="resultCount">Menampilkan 4 kelompok proyek · 10 item komitmen</div>
+            <span class="read-only-pill">Mode Pantau</span>
+          </div>
+
+          <!-- Grouped Project Cards Container -->
+          <div class="risk-groups" id="riskGroupsContainer">
+            <!-- Dynamic project cards injected by JavaScript -->
+          </div>
+
+          <!-- Empty State (Shown when filters return 0 items) -->
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <h3>Tidak Ada Item Proyek yang Sesuai</h3>
+            <p>Tidak ditemukan komitmen atau risiko proyek yang cocok dengan parameter saringan saat ini. Silakan ubah kata kunci atau tekan tombol reset saringan.</p>
+            <button class="btn secondary small" id="btnEmptyReset">Reset Semua Saringan</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
 </div>
-</main>
+
+<!-- Modal Detail Risiko Komitmen (#riskDetailModal) -->
+<div class="modal-backdrop" id="riskDetailModal" role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h2 id="modalDetailTitle">Rincian Komitmen &amp; Risiko Proyek</h2>
+        <p id="modalDetailSubtitle">ID Item: <code id="modalItemId">TSK-101</code> · Referensi: <strong id="modalItemProject">Melon Hidroponik</strong></p>
+      </div>
+      <button class="modal-close-btn" id="btnCloseDetailModal" aria-label="Tutup Dialog">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalDetailBody">
+      <!-- Section 1: Work Item Overview -->
+      <div class="prop-card">
+        <div class="prop-card-title">1. Uraian Pekerjaan &amp; Referensi Proyek</div>
+        <div class="prop-row">
+          <div class="prop-label">Pekerjaan</div>
+          <div class="prop-value" style="font-weight: 750;" id="propTaskTitle">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Jenis Item</div>
+          <div class="prop-value" id="propTaskKind">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Referensi Proyek</div>
+          <div class="prop-value"><code id="propTaskSource" style="font-family: 'JetBrains Mono', monospace; background: var(--subtle); padding: 2px 6px; border-radius: 4px;">-</code></div>
+        </div>
+      </div>
+
+      <!-- Section 2: Assignee & Authority Relationship -->
+      <div class="prop-card">
+        <div class="prop-card-title">2. Pelaksana &amp; Hubungan Wewenang</div>
+        <div class="prop-row">
+          <div class="prop-label">Nama Pelaksana</div>
+          <div class="prop-value" style="font-weight: 750;" id="propAssigneeName">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Peran &amp; Divisi</div>
+          <div class="prop-value" id="propAssigneeRoleDiv">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Atasan Langsung</div>
+          <div class="prop-value" id="propDirectManager">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Wewenang Proyek</div>
+          <div class="prop-value" id="propProjectAuthority" style="color: var(--brand); font-weight: 700;">-</div>
+        </div>
+      </div>
+
+      <!-- Section 3: Daily Accountability Evaluation -->
+      <div class="prop-card">
+        <div class="prop-card-title">3. Evaluasi Akuntabilitas Harian</div>
+        <div class="prop-row">
+          <div class="prop-label">Status Risiko Harian</div>
+          <div class="prop-value" id="propRiskStatus">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Hasil Sore (Outcome)</div>
+          <div class="prop-value" id="propOutcomeStatus">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Rincian &amp; Justifikasi</div>
+          <div class="prop-value" id="propTaskDetail">-</div>
+        </div>
+      </div>
+
+      <!-- Section 4: Blocker Context -->
+      <div class="prop-card">
+        <div class="prop-card-title">4. Konteks Blocker &amp; Eskalasi Lapangan</div>
+        <div class="prop-row">
+          <div class="prop-label">Status Kendala</div>
+          <div class="prop-value" id="propBlockerStatus">-</div>
+        </div>
+        <div class="prop-row" id="rowBlockerDetail">
+          <div class="prop-label">Uraian Blocker</div>
+          <div class="prop-value" id="propBlockerDesc" style="color: var(--red-text); font-weight: 650;">-</div>
+        </div>
+        <div class="prop-row" id="rowBlockerSeverity">
+          <div class="prop-label">Tingkat Keparahan</div>
+          <div class="prop-value" id="propBlockerSev">-</div>
+        </div>
+        <div class="prop-row" id="rowBlockerOwner">
+          <div class="prop-label">Pihak Bantuan</div>
+          <div class="prop-value" id="propBlockerOwner">-</div>
+        </div>
+      </div>
+
+      <!-- Section 5: Continuation & Audit Trail -->
+      <div class="prop-card">
+        <div class="prop-card-title">5. Jejak Waktu &amp; Pola Kelanjutan Tugas</div>
+        <div class="prop-row">
+          <div class="prop-label">Status Kelanjutan</div>
+          <div class="prop-value" id="propContinuation">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Waktu Check-in Pagi</div>
+          <div class="prop-value" id="propCheckinMorning">-</div>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Waktu Check-out Sore</div>
+          <div class="prop-value" id="propCheckoutEvening">-</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" id="btnCloseDetailFooter">Tutup Rincian</button>
+    </div>
+  </div>
 </div>
-<div aria-live="polite" class="toast" id="toast" role="status"></div>
+
+<!-- Modal Ekspor Portofolio (#exportModal) -->
+<div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="modalExportTitle">
+  <div class="modal-card" style="width: min(540px, 100%);">
+    <div class="modal-head">
+      <div>
+        <h2 id="modalExportTitle">Ekspor Ringkasan Portofolio Risiko</h2>
+        <p>Unduh rekapitulasi risiko pengiriman proyek untuk koordinasi mingguan.</p>
+      </div>
+      <button class="modal-close-btn" id="btnCloseExportModal" aria-label="Tutup Dialog">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Pilihan Format -->
+        <div>
+          <label style="font-weight: 750; font-size: 13px; color: var(--text-main); display: block; margin-bottom: 8px;">Pilih Format Berkas</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <label class="export-option-card">
+              <input type="radio" name="exportFormat" value="pdf" checked style="accent-color: var(--brand);">
+              <div>
+                <strong style="font-size: 12.5px; color: var(--text-main); display: block;">Ringkasan PDF</strong>
+                <span style="font-size: 12px; color: var(--text-muted);">Format eksekutif &amp; presentasi rapat</span>
+              </div>
+            </label>
+            <label class="export-option-card">
+              <input type="radio" name="exportFormat" value="xlsx" style="accent-color: var(--brand);">
+              <div>
+                <strong style="font-size: 12.5px; color: var(--text-main); display: block;">Lembar Kerja XLSX</strong>
+                <span style="font-size: 12px; color: var(--text-muted);">Data tabular mentah untuk audit spreadsheet</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Pilihan Cakupan -->
+        <div>
+          <label style="font-weight: 750; font-size: 13px; color: var(--text-main); display: block; margin-bottom: 8px;">Cakupan Ekspor</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label class="export-option-card" id="exportAllCard">
+              <input type="radio" name="exportScope" value="all" id="radioScopeAll" checked style="accent-color: var(--brand);">
+              <div>
+                <strong style="font-size: 12.5px; color: var(--text-main); display: block;">Seluruh Portofolio Proyek Aktif</strong>
+                <span style="font-size: 12px; color: var(--text-muted);" id="exportAllScopeDesc">Mengekspor 4 kelompok proyek (10 item komitmen)</span>
+              </div>
+            </label>
+            <label class="export-option-card" id="exportFilterCard">
+              <input type="radio" name="exportScope" value="filtered" id="radioScopeFiltered" style="accent-color: var(--brand);">
+              <div>
+                <strong style="font-size: 12.5px; color: var(--text-main); display: block;">Hanya Hasil Saringan Aktif</strong>
+                <span style="font-size: 12px; color: var(--text-muted);" id="exportFilterScopeDesc">Sesuai kriteria saringan di layar</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Metadata Cap Waktu -->
+        <div class="export-meta-note">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; color: var(--brand);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <div>Dokumen menyertakan cap waktu resmi: <strong id="exportMetaTimestamp">27 Okt 2026, 10:55 WIB</strong> · Pemohon: <strong id="exportMetaUser">Ardi Pratama (Project Manager)</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" id="btnCancelExport">Batal</button>
+      <button class="btn primary" id="btnConfirmExport">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Unduh Dokumen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast-box" id="toast" role="status" aria-live="polite">
+  <span id="toastMsg">Data berhasil diperbarui.</span>
+</div>
+
 <script>
-const groups = [
- {id:'RG-EX-01', reference:'Melon Hidroponik', sampleRepeatedContinue:true, items:[
-  {id:'EX-101',kind:'Commitment',person:'Budi Santoso',role:'Backend Engineer',task:'Validasi data sensor dan API telemetry',source:'Melon Hidroponik',risk:'RED',continuation:'Continue',outcome:'Partially Completed',detail:'Integrasi telemetry masih tertahan pada validasi payload dari perangkat.',signal:'RED risk'},
-  {id:'EX-102',kind:'Additional Work',person:'Dina Maharani',role:'QA Engineer',task:'Regression test alur sensor',source:'Melon Hidroponik',risk:'AMBER',continuation:'Continue',outcome:'Not Completed',detail:'Pengujian tambahan belum seluruhnya selesai setelah perubahan API.',signal:'AMBER risk'},
-  {id:'EX-103',kind:'Commitment',person:'Rizky Putra',role:'Frontend Engineer',task:'Tampilkan status sensor pada dashboard',source:'Melon Hidroponik',risk:'GREEN',continuation:'Do Not Continue',outcome:'Completed',detail:'Item berstatus GREEN; tidak ada sinyal risiko tambahan pada item ini.',signal:''}
- ]},
- {id:'RG-EX-02', reference:'Client Portal / API Integration', sampleRepeatedContinue:true, items:[
-  {id:'EX-201',kind:'Commitment',person:'Nadia Safitri',role:'Full-stack Engineer',task:'Sinkronisasi endpoint portal klien',source:'Client Portal / API Integration',risk:'AMBER',continuation:'Continue',outcome:'Partially Completed',detail:'Sebagian integrasi masih menunggu konfirmasi kontrak API.',signal:'AMBER risk'},
-  {id:'EX-202',kind:'Additional Work',person:'Fajar Nugroho',role:'QA Engineer',task:'Verifikasi error handling endpoint',source:'Client Portal / API Integration',risk:'RED',continuation:'Continue',outcome:'Not Completed',detail:'Skenario error handling belum selesai diverifikasi.',signal:'RED risk'}
- ]},
- {id:'RG-EX-03', reference:'Internal Reporting Refresh', sampleRepeatedContinue:false, items:[
-  {id:'EX-301',kind:'Commitment',person:'Sinta Maharani',role:'Product Designer',task:'Review hierarki informasi laporan',source:'Internal Reporting Refresh',risk:'AMBER',continuation:'Do Not Continue',outcome:'Completed',detail:'Catatan review menunjukkan satu keputusan desain masih perlu disinkronkan.',signal:'AMBER risk'},
-  {id:'EX-302',kind:'Additional Work',person:'Dimas Putra',role:'Platform Engineer',task:'Periksa query performa laporan',source:'Internal Reporting Refresh',risk:'GREEN',continuation:'Do Not Continue',outcome:'Completed',detail:'Pemeriksaan selesai; tidak ada sinyal risiko tambahan.',signal:''}
- ]}
-];
-const $=id=>document.getElementById(id);
-function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function isRepeatedContinue(g){return g.sampleRepeatedContinue===true}
-function hasRisk(g){return g.items.some(i=>i.risk==='AMBER'||i.risk==='RED')}
-function matchesGroup(g,q,risk,kind,signal){const its=g.items.filter(i=>(!q||[g.reference,i.id,i.person,i.role,i.task,i.source,i.kind,i.detail].join(' ').toLowerCase().includes(q))&&(risk==='all'||i.risk===risk)&&(kind==='all'||i.kind===kind)&&(signal==='all'||(signal==='risk'&&(i.risk==='AMBER'||i.risk==='RED'))||(signal==='continue'&&i.continuation==='Continue'&&isRepeatedContinue(g))));return its}
-function render(){const q=$('search').value.trim().toLowerCase(),risk=$('riskFilter').value,kind=$('workTypeFilter').value,signal=$('signalFilter').value;const visible=groups.map(g=>({...g,visibleItems:matchesGroup(g,q,risk,kind,signal)})).filter(g=>g.visibleItems.length);$('riskGroups').innerHTML=visible.map(g=>`<article class="risk-group"><div class="risk-group-head"><div><div class="risk-group-title">${esc(g.reference)}</div><div class="risk-group-meta">Reference / Task Link sumber · ${g.visibleItems.length} item ditampilkan</div><div class="risk-flags">${g.visibleItems.some(i=>i.risk==='RED')?'<span class="risk-flag critical">RED item</span>':''}${g.visibleItems.some(i=>i.risk==='AMBER')?'<span class="risk-flag">AMBER item</span>':''}${g.sampleRepeatedContinue&&g.visibleItems.some(i=>i.continuation==='Continue')?'<span class="risk-flag">Continue berulang</span>':''}</div></div><span class="read-only-tag">Read-only</span></div><div class="risk-group-body">${g.visibleItems.map(i=>`<div class="risk-item"><div><div class="risk-item-title">${esc(i.task)}</div><div class="risk-item-meta">${esc(i.id)} · ${esc(i.kind)}</div><div class="risk-item-meta">${esc(i.person)} · ${esc(i.role)}</div><div class="risk-item-source"><strong>Reference sumber:</strong> ${esc(i.source)}</div><div class="risk-item-meta" style="margin-top:8px">${esc(i.detail)}</div></div><div><div class="risk-label">Risk status</div><span class="pill ${i.risk.toLowerCase()}">${esc(i.risk)}</span><div class="risk-label" style="margin-top:12px">Outcome</div><span class="pill neutral">${esc(i.outcome)}</span></div><div><div class="risk-label">Continuation</div><span class="pill ${i.continuation==='Continue'?'amber':'neutral'}">${esc(i.continuation)}</span>${i.continuation==='Continue'&&isRepeatedContinue(g)?'<div class="risk-flags"><span class="risk-flag">Sinyal Continue berulang</span></div>':''}</div></div>`).join('')}</div></article>`).join('');$('emptyState').classList.toggle('hidden',visible.length>0);$('resultCount').textContent=`${visible.length} kelompok · ${visible.reduce((n,g)=>n+g.visibleItems.length,0)} item`;const all=visible.flatMap(g=>g.visibleItems);$('metricGroups').textContent=visible.length;$('metricRed').textContent=all.filter(i=>i.risk==='RED').length;$('metricAmber').textContent=all.filter(i=>i.risk==='AMBER').length;$('metricContinue').textContent=visible.filter(g=>g.sampleRepeatedContinue&&g.visibleItems.some(i=>i.continuation==='Continue')).length}
-['search','riskFilter','workTypeFilter','signalFilter'].forEach(id=>$(id).addEventListener('input',render));$('resetFilters').addEventListener('click',()=>{$('search').value='';$('riskFilter').value='all';$('workTypeFilter').value='all';$('signalFilter').value='all';render()});$('mobileMenu').addEventListener('click',()=>{const open=$('sidebar').classList.toggle('mobile-open');$('mobileMenu').setAttribute('aria-expanded',String(open))});$('topBell').addEventListener('click',()=>{$('toast').textContent='Pusat notifikasi mengikuti akses akun yang aktif.';$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)});render();
+  /* --- WORKPULSE DATA STORE: 4 PROJECT REFERENCE GROUPS (10 ITEMS) --- */
+  const projectGroupsData = [
+    {
+      id: 'RG-01',
+      reference: 'Melon Hidroponik (IoT Sensor Telemetry)',
+      summary: 'Integrasi mikrokontroler sensor IoT untuk pemantauan nutrisi dan telemetri otomatis ke cloud.',
+      items: [
+        {
+          id: 'TSK-101',
+          kind: 'Commitment',
+          person: 'Budi Santoso',
+          role: 'Backend Engineer',
+          division: 'Engineering / Squad IoT',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Validasi data sensor dan skema payload API telemetry',
+          risk: 'RED',
+          continuation: 'Continue',
+          repeatedContinue: true,
+          continueCount: 3,
+          outcome: 'Partially Completed',
+          progress: 65,
+          detail: 'Integrasi telemetry tertahan pada validasi enkripsi payload dari gateway perangkat lapangan ESP32.',
+          blocker: {
+            active: true,
+            title: 'Payload enkripsi ESP32 gagal divalidasi API gateway',
+            severity: 'High',
+            ownerNeeded: 'Hardware Vendor / Platform Lead',
+            authorityContext: 'Project Authority (Ardi Pratama)'
+          },
+          timestamps: { morning: '07:55 WIB', evening: '17:15 WIB' },
+          justification: 'Perlu penyesuaian firmware serial gateway bersama vendor sebelum payload dapat diproses normal.'
+        },
+        {
+          id: 'TSK-102',
+          kind: 'Additional Work',
+          person: 'Dina Maharani',
+          role: 'QA Engineer',
+          division: 'Quality Assurance',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Regression test alur data ingestion sensor telemetry',
+          risk: 'AMBER',
+          continuation: 'Continue',
+          repeatedContinue: false,
+          continueCount: 1,
+          outcome: 'Partially Completed',
+          progress: 40,
+          detail: 'Pengujian otomatis tertunda karena menunggu endpoint API stabil dari tim backend.',
+          blocker: {
+            active: true,
+            title: 'Mock data sensor belum sinkron dengan skema telemetry v2',
+            severity: 'Medium',
+            ownerNeeded: 'Backend Team',
+            authorityContext: 'Project Authority (Ardi Pratama)'
+          },
+          timestamps: { morning: '08:10 WIB', evening: '17:25 WIB' },
+          justification: 'Test suite sudah siap 80%, namun eksekusi end-to-end terhambat dependensi backend.'
+        },
+        {
+          id: 'TSK-103',
+          kind: 'Commitment',
+          person: 'Rizky Putra',
+          role: 'Frontend Engineer',
+          division: 'Engineering / Squad IoT',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Tampilkan visual gauge status sensor pada dashboard monitoring',
+          risk: 'GREEN',
+          continuation: 'Do Not Continue',
+          repeatedContinue: false,
+          continueCount: 0,
+          outcome: 'Completed',
+          progress: 100,
+          detail: 'Widget gauge telemetri telah terintegrasi dengan WebSocket mock dan lolos tinjauan UI.',
+          blocker: null,
+          timestamps: { morning: '08:02 WIB', evening: '16:58 WIB' },
+          justification: 'Pekerjaan selesai 100% sesuai target pagi hari tanpa hambatan.'
+        }
+      ]
+    },
+    {
+      id: 'RG-02',
+      reference: 'Client Portal / API Integration',
+      summary: 'Pengembangan portal klien korporat mandiri dan gerbang integrasi OpenAPI mitra B2B.',
+      items: [
+        {
+          id: 'TSK-201',
+          kind: 'Commitment',
+          person: 'Nadia Safitri',
+          role: 'Fullstack Engineer',
+          division: 'Engineering / Squad Core',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Sinkronisasi endpoint autentikasi OAuth2 portal klien',
+          risk: 'AMBER',
+          continuation: 'Continue',
+          repeatedContinue: true,
+          continueCount: 2,
+          outcome: 'Partially Completed',
+          progress: 70,
+          detail: 'Alur OAuth2 internal selesai, namun verifikasi callback sandbox klien masih menunggu respon IT mitra.',
+          blocker: {
+            active: true,
+            title: 'Menunggu penerbitan client secret sandbox dari vendor klien',
+            severity: 'Medium',
+            ownerNeeded: 'Partnership / External IT',
+            authorityContext: 'Project Authority (Ardi Pratama)'
+          },
+          timestamps: { morning: '07:48 WIB', evening: '17:20 WIB' },
+          justification: 'Menunggu SLA respon tim vendor eksternal klien (est. 1x24 jam).'
+        },
+        {
+          id: 'TSK-202',
+          kind: 'Additional Work',
+          person: 'Fajar Nugroho',
+          role: 'QA Engineer',
+          division: 'Quality Assurance',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Verifikasi security headers & error handling API gateway',
+          risk: 'RED',
+          continuation: 'Continue',
+          repeatedContinue: false,
+          continueCount: 1,
+          outcome: 'Not Completed',
+          progress: 0,
+          detail: 'Ditemukan kegagalan parsing header CSP dan CORS saat traffic spike pengujian penetrasi.',
+          blocker: {
+            active: true,
+            title: 'Security policy gateway memblokir valid preflight request',
+            severity: 'Critical',
+            ownerNeeded: 'DevOps / Platform Security',
+            authorityContext: 'Project Authority (Ardi Pratama)'
+          },
+          timestamps: { morning: '08:15 WIB', evening: '17:40 WIB' },
+          justification: 'Memerlukan perbaikan konfigurasi Nginx Ingress sebelum testing dilanjutkan.'
+        },
+        {
+          id: 'TSK-203',
+          kind: 'Commitment',
+          person: 'Hendra Gunawan',
+          role: 'Backend Engineer',
+          division: 'Engineering / Squad Core',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Implementasi webhook dispatcher untuk status transaksi portal',
+          risk: 'GREEN',
+          continuation: 'Do Not Continue',
+          repeatedContinue: false,
+          continueCount: 0,
+          outcome: 'Completed',
+          progress: 100,
+          detail: 'Webhook dispatcher lolos load test 500 req/s dengan mekanisme retry exponential backoff.',
+          blocker: null,
+          timestamps: { morning: '07:50 WIB', evening: '16:45 WIB' },
+          justification: 'Selesai tepat waktu dan sudah di-merge ke branch staging.'
+        }
+      ]
+    },
+    {
+      id: 'RG-03',
+      reference: 'Core Payment Engine Modernization',
+      summary: 'Pembaruan mesin transaksi inti dengan arsitektur event-driven dan kepatuhan audit perbankan.',
+      items: [
+        {
+          id: 'TSK-301',
+          kind: 'Commitment',
+          person: 'Arya Wibowo',
+          role: 'Senior Backend Engineer',
+          division: 'Engineering / FinTech Squad',
+          directManager: 'Ahmad Fauzan (Supervisor Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Migrasi modul idempotency payment callback ke Redis Cluster',
+          risk: 'RED',
+          continuation: 'Continue',
+          repeatedContinue: true,
+          continueCount: 2,
+          outcome: 'Partially Completed',
+          progress: 50,
+          detail: 'Cluster Redis staging mengalami latency spike di atas 250ms saat concurrency test.',
+          blocker: {
+            active: true,
+            title: 'Memory fragmentation & latency spike pada Redis staging',
+            severity: 'Critical',
+            ownerNeeded: 'Platform Infra Lead',
+            authorityContext: 'Project Authority (Ardi Pratama)'
+          },
+          timestamps: { morning: '08:00 WIB', evening: '17:30 WIB' },
+          justification: 'Perlu tuning kernel parameter Linux dan sizing ulang node cluster Redis.'
+        },
+        {
+          id: 'TSK-302',
+          kind: 'Additional Work',
+          person: 'Sinta Maharani',
+          role: 'Data Engineer',
+          division: 'Data Platform',
+          directManager: 'Ayu Nirmala (Head of Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Penyesuaian format audit trail hash transaksi keuangan',
+          risk: 'AMBER',
+          continuation: 'Do Not Continue',
+          repeatedContinue: false,
+          continueCount: 0,
+          outcome: 'Partially Completed',
+          progress: 85,
+          detail: 'Implementasi algoritma SHA-256 selesai, tinggal sinkronisasi verifikasi bersama tim InfoSec.',
+          blocker: {
+            active: true,
+            title: 'Menunggu review standar hash audit trail dari compliance',
+            severity: 'Medium',
+            ownerNeeded: 'Information Security',
+            authorityContext: 'Project Authority (Ardi Pratama)'
+          },
+          timestamps: { morning: '08:20 WIB', evening: '17:10 WIB' },
+          justification: 'Sebagian besar selesai, review akhir dijadwalkan besok pagi.'
+        }
+      ]
+    },
+    {
+      id: 'RG-04',
+      reference: 'Internal Reporting Refresh',
+      summary: 'Peningkatan performa dan modularisasi laporan operasional internal WorkPulse.',
+      items: [
+        {
+          id: 'TSK-401',
+          kind: 'Commitment',
+          person: 'Dimas Putra',
+          role: 'Platform Engineer',
+          division: 'Platform & Infrastructure',
+          directManager: 'Ayu Nirmala (Head of Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Optimasi index dan query agregasi laporan performa mingguan',
+          risk: 'GREEN',
+          continuation: 'Do Not Continue',
+          repeatedContinue: false,
+          continueCount: 0,
+          outcome: 'Completed',
+          progress: 100,
+          detail: 'Query execution time terpangkas dari 4.2 detik menjadi 180ms.',
+          blocker: null,
+          timestamps: { morning: '08:10 WIB', evening: '16:50 WIB' },
+          justification: 'Selesai 100% dan sudah lolos validasi benchmark.'
+        },
+        {
+          id: 'TSK-402',
+          kind: 'Commitment',
+          person: 'Citra Dewi',
+          role: 'UI/UX Designer',
+          division: 'Product Design',
+          directManager: 'Ayu Nirmala (Head of Engineering)',
+          projectAuthority: 'Ardi Pratama (Project Manager)',
+          task: 'Finalisasi desain grid hierarki informasi ringkasan laporan',
+          risk: 'GREEN',
+          continuation: 'Do Not Continue',
+          repeatedContinue: false,
+          continueCount: 0,
+          outcome: 'Completed',
+          progress: 100,
+          detail: 'Handoff komponen Figma ke tim frontend telah diselesaikan.',
+          blocker: null,
+          timestamps: { morning: '08:30 WIB', evening: '17:00 WIB' },
+          justification: 'Selesai tepat waktu sesuai panduan design system.'
+        }
+      ]
+    }
+  ];
+
+  /* DOM Helper */
+  const $ = id => document.getElementById(id);
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+  }
+
+  /* Role Profiles Metadata */
+  const roleProfiles = {
+    ardi: {
+      name: 'Ardi Pratama',
+      role: 'Project Manager',
+      avatar: 'AP',
+      scope: 'Cakupan: Proyek Tanggung Jawab Aktif',
+      allowed: true
+    },
+    ayu: {
+      name: 'Ayu Nirmala',
+      role: 'Head of Engineering',
+      avatar: 'AN',
+      scope: 'Cakupan: Divisi Engineering',
+      allowed: true
+    },
+    rian: {
+      name: 'Rian Suryadi',
+      role: 'CEO / Direktur',
+      avatar: 'RS',
+      scope: 'Cakupan: Seluruh Perusahaan',
+      allowed: true
+    },
+    budi: {
+      name: 'Budi Pratama',
+      role: 'Staff Developer',
+      avatar: 'BP',
+      scope: 'Cakupan: Akses Terbatas',
+      allowed: false
+    }
+  };
+
+  /* Active Metric Filter State */
+  let activeMetricFilter = 'all'; // 'all', 'red', 'amber', 'continue', 'blocker'
+  let currentFilteredGroups = [];
+
+  /* --- RENDER FUNCTION --- */
+  function renderView() {
+    const activeRoleKey = $('quickRoleSwitcher').value;
+    const profile = roleProfiles[activeRoleKey] || roleProfiles.ardi;
+
+    // 1. Update Sidebar Profile
+    $('sideUserName').textContent = profile.name;
+    $('sideUserRole').textContent = profile.role;
+    $('sideUserAvatar').textContent = profile.avatar;
+
+    // 2. Check RBAC Access
+    if (!profile.allowed) {
+      // Forbidden view for staff
+      $('forbiddenScreen').style.display = 'block';
+      $('standardDashboardView').style.display = 'none';
+      $('navProjectRisk').style.display = 'none'; // hide from sidebar
+      return;
+    }
+
+    // Allowed view
+    $('forbiddenScreen').style.display = 'none';
+    $('standardDashboardView').style.display = 'block';
+    $('navProjectRisk').style.display = 'flex';
+
+    // 3. Update Scope Badge by Role
+    const scopeBadgeText = $('scopeBadgeText');
+    if (scopeBadgeText) {
+      scopeBadgeText.textContent = profile.scope;
+    }
+
+    // 4. Extract Filter Values
+    const searchQuery = $('search').value.trim().toLowerCase();
+    const projectFilter = $('projectFilter').value;
+    const riskFilter = $('riskFilter').value;
+    const workTypeFilter = $('workTypeFilter').value;
+    const signalFilter = $('signalFilter').value;
+
+    // 5. Calculate Metrics on Full Dataset
+    let totalGroups = projectGroupsData.length;
+    let allItems = projectGroupsData.flatMap(g => g.items);
+    let totalRed = allItems.filter(i => i.risk === 'RED').length;
+    let totalAmber = allItems.filter(i => i.risk === 'AMBER').length;
+    let totalContinue = allItems.filter(i => i.continuation === 'Continue' && i.repeatedContinue).length;
+    let totalBlockers = allItems.filter(i => i.blocker && i.blocker.active).length;
+
+    $('metricGroups').textContent = totalGroups;
+    $('metricRed').textContent = totalRed;
+    $('metricAmber').textContent = totalAmber;
+    $('metricContinue').textContent = totalContinue;
+    $('metricBlockers').textContent = totalBlockers;
+
+    // 6. Highlight Active Metric Card
+    ['all', 'red', 'amber', 'continue', 'blocker'].forEach(type => {
+      const cardMap = {
+        all: 'metricCardGroups',
+        red: 'metricCardRed',
+        amber: 'metricCardAmber',
+        continue: 'metricCardContinue',
+        blocker: 'metricCardBlockers'
+      };
+      const card = $(cardMap[type]);
+      if (card) {
+        card.classList.toggle('active-card', activeMetricFilter === type);
+      }
+    });
+
+    // 7. Filter Groups & Items
+    const filteredGroups = projectGroupsData.map(group => {
+      // Check project dropdown filter
+      if (projectFilter !== 'all' && group.reference !== projectFilter) {
+        return { ...group, visibleItems: [] };
+      }
+
+      const visibleItems = group.items.filter(item => {
+        // Metric card quick filter
+        if (activeMetricFilter === 'red' && item.risk !== 'RED') return false;
+        if (activeMetricFilter === 'amber' && item.risk !== 'AMBER') return false;
+        if (activeMetricFilter === 'continue' && (!item.repeatedContinue || item.continuation !== 'Continue')) return false;
+        if (activeMetricFilter === 'blocker' && (!item.blocker || !item.blocker.active)) return false;
+
+        // Search text matching
+        if (searchQuery) {
+          const hay = [
+            group.reference,
+            item.id,
+            item.task,
+            item.person,
+            item.role,
+            item.division,
+            item.kind,
+            item.detail,
+            item.blocker ? item.blocker.title : ''
+          ].join(' ').toLowerCase();
+          if (!hay.includes(searchQuery)) return false;
+        }
+
+        // Risk filter
+        if (riskFilter !== 'all' && item.risk !== riskFilter) return false;
+
+        // Work type filter
+        if (workTypeFilter !== 'all' && item.kind !== workTypeFilter) return false;
+
+        // Signal filter
+        if (signalFilter === 'risk' && item.risk !== 'RED' && item.risk !== 'AMBER') return false;
+        if (signalFilter === 'continue' && (!item.repeatedContinue || item.continuation !== 'Continue')) return false;
+        if (signalFilter === 'blocker' && (!item.blocker || !item.blocker.active)) return false;
+        if (signalFilter === 'blocker-critical' && (!item.blocker || !item.blocker.active || (item.blocker.severity !== 'Critical' && item.blocker.severity !== 'High'))) return false;
+        if (signalFilter === 'incomplete' && item.outcome !== 'Partially Completed' && item.outcome !== 'Not Completed') return false;
+
+        return true;
+      });
+
+      return {
+        ...group,
+        visibleItems
+      };
+    }).filter(group => group.visibleItems.length > 0);
+
+    currentFilteredGroups = filteredGroups;
+
+    // 8. Render Project Group Cards
+    const container = $('riskGroupsContainer');
+    const emptyState = $('emptyState');
+
+    if (filteredGroups.length === 0) {
+      container.innerHTML = '';
+      emptyState.style.display = 'block';
+      $('resultCount').textContent = 'Tidak ada hasil yang sesuai dengan filter';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+    const totalVisibleItems = filteredGroups.reduce((acc, g) => acc + g.visibleItems.length, 0);
+    $('resultCount').textContent = `Menampilkan ${filteredGroups.length} kelompok proyek · ${totalVisibleItems} item komitmen`;
+
+    container.innerHTML = filteredGroups.map(group => {
+      const redCount = group.visibleItems.filter(i => i.risk === 'RED').length;
+      const amberCount = group.visibleItems.filter(i => i.risk === 'AMBER').length;
+      const continueCount = group.visibleItems.filter(i => i.repeatedContinue && i.continuation === 'Continue').length;
+      const blockerCount = group.visibleItems.filter(i => i.blocker && i.blocker.active).length;
+      const hasAnomalies = redCount > 0 || amberCount > 0 || continueCount > 0 || blockerCount > 0;
+
+      return `
+        <article class="risk-group-card">
+          <div class="group-header">
+            <div class="group-title-area">
+              <span class="group-title">${escapeHtml(group.reference)}</span>
+              <span class="group-count-pill">${group.visibleItems.length} Item</span>
+            </div>
+
+            <div class="group-signals">
+              ${redCount > 0 ? `<span class="signal-chip red">${redCount} Kritis</span>` : ''}
+              ${amberCount > 0 ? `<span class="signal-chip amber">${amberCount} Moderat</span>` : ''}
+              ${continueCount > 0 ? `<span class="signal-chip purple">${continueCount} Continue Berulang</span>` : ''}
+              ${blockerCount > 0 ? `<span class="signal-chip blue">${blockerCount} Blocker Aktif</span>` : ''}
+              ${!hasAnomalies ? `<span class="signal-chip green">Semua Komitmen Lancar</span>` : ''}
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="min-width: 260px;">Komitmen &amp; Pekerjaan</th>
+                  <th style="min-width: 190px;">Pelaksana &amp; Divisi</th>
+                  <th style="min-width: 140px;">Status Risiko &amp; Hasil</th>
+                  <th style="min-width: 120px;">Kelanjutan</th>
+                  <th style="min-width: 250px;">Blocker &amp; Bantuan</th>
+                  <th style="text-align: right; min-width: 90px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${group.visibleItems.map(item => {
+                  let outcomeLabel = escapeHtml(item.outcome);
+                  if (item.outcome === 'Completed') outcomeLabel = 'Completed (100%)';
+                  else if (item.outcome === 'Partially Completed') outcomeLabel = `Partially Completed (${item.progress || 50}%)`;
+                  else if (item.outcome === 'Not Completed') outcomeLabel = `Not Completed (${item.progress !== undefined ? item.progress : 0}%)`;
+                  else if (item.outcome === 'Cancelled') outcomeLabel = 'Cancelled';
+
+                  return `
+                  <tr>
+                    <td>
+                      <div class="task-title">${escapeHtml(item.task)}</div>
+                      <div class="task-meta">
+                        <span>${item.kind === 'Commitment' ? 'Morning Commitment' : 'Additional Work'}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="assignee-wrap">
+                        <span class="assignee-name">${escapeHtml(item.person)}</span>
+                        <span class="assignee-sub">${escapeHtml(item.role)} · ${escapeHtml(item.division)}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="status-cell">
+                        <div class="risk-indicator ${item.risk.toLowerCase()}">
+                          <span class="risk-dot"></span>
+                          <span>${escapeHtml(item.risk)}</span>
+                        </div>
+                        <div class="outcome-sub">${outcomeLabel}</div>
+                      </div>
+                    </td>
+                    <td>
+                      ${item.continuation === 'Continue' ? (
+                        item.repeatedContinue ? `
+                          <span class="repeat-tag">Continue (${item.continueCount}x)</span>
+                        ` : `
+                          <span class="cont-tag">Continue</span>
+                        `
+                      ) : `
+                        <span class="text-quiet">—</span>
+                      `}
+                    </td>
+                    <td>
+                      ${item.blocker && item.blocker.active ? `
+                        <div class="blocker-snippet">
+                          <div class="blocker-title">
+                            <span class="sev-tag ${item.blocker.severity.toLowerCase()}">${escapeHtml(item.blocker.severity)}</span>
+                            <span>${escapeHtml(item.blocker.title)}</span>
+                          </div>
+                          <div class="blocker-owner">Bantuan: ${escapeHtml(item.blocker.ownerNeeded || 'Perlu Arahan PM')}</div>
+                        </div>
+                      ` : `
+                        <span class="text-quiet">—</span>
+                      `}
+                    </td>
+                    <td style="text-align: right;">
+                      <button class="btn-detail" type="button" onclick="openRiskDetail('${escapeHtml(item.id)}')">
+                        Lihat Detail
+                      </button>
+                    </td>
+                  </tr>
+                `}).join('')}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  /* --- MODAL DETAIL HANDLER --- */
+  window.openRiskDetail = function(itemId) {
+    let targetItem = null;
+    let targetGroup = null;
+
+    for (const group of projectGroupsData) {
+      const found = group.items.find(i => i.id === itemId);
+      if (found) {
+        targetItem = found;
+        targetGroup = group;
+        break;
+      }
+    }
+
+    if (!targetItem) return;
+
+    // Header values
+    $('modalItemId').textContent = targetItem.id;
+    $('modalItemProject').textContent = targetGroup.reference;
+
+    // Section 1: Task
+    $('propTaskTitle').textContent = targetItem.task;
+    $('propTaskKind').innerHTML = targetItem.kind === 'Commitment'
+      ? `<span class="kind-pill commitment">Morning Commitment</span>`
+      : `<span class="kind-pill additional">Additional Work</span>`;
+    $('propTaskSource').textContent = targetGroup.reference;
+
+    // Section 2: Assignee & Authority
+    $('propAssigneeName').textContent = targetItem.person;
+    $('propAssigneeRoleDiv').textContent = `${targetItem.role} · ${targetItem.division}`;
+    $('propDirectManager').innerHTML = `${escapeHtml(targetItem.directManager)} <span class="authority-tag">(Atasan Struktural)</span>`;
+    $('propProjectAuthority').innerHTML = `${escapeHtml(targetItem.projectAuthority)} <span class="authority-tag" style="color: var(--brand);">(Akuntabilitas Rilis)</span>`;
+
+    // Section 3: Accountability
+    $('propRiskStatus').innerHTML = `
+      <div class="risk-indicator ${targetItem.risk.toLowerCase()}">
+        <span class="risk-dot"></span>
+        <span style="font-weight: 750;">${escapeHtml(targetItem.risk)}</span>
+      </div>
+    `;
+
+    let outcomeTagClass = 'completed';
+    let outcomeText = 'Completed (100%)';
+    if (targetItem.outcome === 'Partially Completed') {
+      outcomeTagClass = 'partially';
+      outcomeText = `Partially Completed (${targetItem.progress || 50}%)`;
+    } else if (targetItem.outcome === 'Not Completed') {
+      outcomeTagClass = 'not-completed';
+      outcomeText = `Not Completed (${targetItem.progress !== undefined ? targetItem.progress : 0}%)`;
+    } else if (targetItem.outcome === 'Cancelled') {
+      outcomeTagClass = 'cancelled';
+      outcomeText = 'Cancelled (Dibatalkan)';
+    }
+    $('propOutcomeStatus').innerHTML = `<span class="outcome-tag ${outcomeTagClass}">${outcomeText}</span>`;
+    $('propTaskDetail').textContent = `${targetItem.detail || '-'} Catatan evaluasi: ${targetItem.justification || '-'}`;
+
+    // Section 4: Blocker
+    if (targetItem.blocker && targetItem.blocker.active) {
+      $('propBlockerStatus').innerHTML = `<span class="signal-chip red">Blocker Aktif</span>`;
+      $('rowBlockerDetail').style.display = 'grid';
+      $('rowBlockerSeverity').style.display = 'grid';
+      $('rowBlockerOwner').style.display = 'grid';
+      $('propBlockerDesc').textContent = targetItem.blocker.title;
+
+      const sevClass = targetItem.blocker.severity ? targetItem.blocker.severity.toLowerCase() : 'medium';
+      $('propBlockerSev').innerHTML = `<span class="sev-tag ${sevClass}">[${escapeHtml(targetItem.blocker.severity || 'MEDIUM')}]</span>`;
+
+      const helper = targetItem.blocker.ownerNeeded || 'Perlu Arahan & Koordinasi Project Manager';
+      const authCtx = targetItem.blocker.authorityContext ? ` (${targetItem.blocker.authorityContext})` : '';
+      $('propBlockerOwner').textContent = `${helper}${authCtx}`;
+    } else {
+      $('propBlockerStatus').innerHTML = `<span style="color: var(--green-text); font-weight: 750;">Tidak ada kendala aktif (Lancar)</span>`;
+      $('rowBlockerDetail').style.display = 'none';
+      $('rowBlockerSeverity').style.display = 'none';
+      $('rowBlockerOwner').style.display = 'none';
+    }
+
+    // Section 5: Continuation & Timestamps
+    if (targetItem.continuation === 'Continue') {
+      if (targetItem.repeatedContinue) {
+        $('propContinuation').innerHTML = `
+          <span class="repeat-tag">Continue (${targetItem.continueCount}x)</span>
+          <span class="text-quiet" style="margin-left: 8px;">Pola berulang (${targetItem.continueCount} hari berturut-turut)</span>
+        `;
+      } else {
+        $('propContinuation').innerHTML = `
+          <span class="cont-tag">Continue</span>
+          <span class="text-quiet" style="margin-left: 8px;">Dilanjutkan ke hari kerja berikutnya</span>
+        `;
+      }
+    } else {
+      $('propContinuation').innerHTML = `<span class="text-quiet">Tidak dilanjutkan (Selesai pada hari kerja ini)</span>`;
+    }
+
+    const morningTime = (targetItem.timestamps && targetItem.timestamps.morning) ? targetItem.timestamps.morning : '08:30 WIB';
+    $('propCheckinMorning').textContent = morningTime.includes('WIB') ? morningTime : `${morningTime} WIB`;
+
+    const eveningTime = (targetItem.timestamps && targetItem.timestamps.evening) ? targetItem.timestamps.evening : 'Menunggu Check-out Sore (Dalam Pengerjaan)';
+    $('propCheckoutEvening').textContent = (eveningTime.includes('WIB') || eveningTime.includes('Menunggu')) ? eveningTime : `${eveningTime} WIB`;
+
+    // Open Modal
+    $('riskDetailModal').classList.add('open');
+  };
+
+  function closeRiskDetail() {
+    $('riskDetailModal').classList.remove('open');
+  }
+
+  $('btnCloseDetailModal').addEventListener('click', closeRiskDetail);
+  $('btnCloseDetailFooter').addEventListener('click', closeRiskDetail);
+  $('riskDetailModal').addEventListener('click', e => {
+    if (e.target === $('riskDetailModal')) closeRiskDetail();
+  });
+
+  /* --- EXPORT MODAL HANDLER --- */
+  $('exportBtn').addEventListener('click', () => {
+    const activeRoleKey = $('quickRoleSwitcher').value;
+    const profile = roleProfiles[activeRoleKey] || roleProfiles.ardi;
+
+    // Calculate dynamic counts
+    const totalGroups = projectGroupsData.length;
+    const totalAllItems = projectGroupsData.flatMap(g => g.items).length;
+    $('exportAllScopeDesc').textContent = `Mengekspor ${totalGroups} kelompok proyek (${totalAllItems} item komitmen)`;
+
+    const filteredGroupsCount = currentFilteredGroups.length;
+    const filteredItemsCount = currentFilteredGroups.flatMap(g => g.visibleItems).length;
+
+    const filterRadio = $('radioScopeFiltered');
+    const filterCard = $('exportFilterCard');
+    const allRadio = $('radioScopeAll');
+
+    if (filteredItemsCount > 0) {
+      $('exportFilterScopeDesc').textContent = `Mengekspor ${filteredGroupsCount} proyek (${filteredItemsCount} item sesuai kriteria saringan)`;
+      $('exportFilterScopeDesc').style.color = 'var(--text-muted)';
+      filterRadio.disabled = false;
+      filterCard.classList.remove('disabled');
+    } else {
+      $('exportFilterScopeDesc').textContent = `Tidak ada data yang memenuhi saringan aktif (0 item)`;
+      $('exportFilterScopeDesc').style.color = 'var(--red-text)';
+      filterRadio.disabled = true;
+      filterCard.classList.add('disabled');
+      allRadio.checked = true;
+    }
+
+    // Set metadata timestamp and user
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+    const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    $('exportMetaTimestamp').textContent = `${dateStr}, ${timeStr}`;
+    $('exportMetaUser').textContent = `${profile.name} (${profile.role})`;
+
+    $('exportModal').classList.add('open');
+  });
+
+  function closeExportModal() {
+    $('exportModal').classList.remove('open');
+  }
+
+  $('btnCloseExportModal').addEventListener('click', closeExportModal);
+  $('btnCancelExport').addEventListener('click', closeExportModal);
+  $('exportModal').addEventListener('click', e => {
+    if (e.target === $('exportModal')) closeExportModal();
+  });
+
+  $('btnConfirmExport').addEventListener('click', () => {
+    const format = document.querySelector('input[name="exportFormat"]:checked').value;
+    const scope = document.querySelector('input[name="exportScope"]:checked').value;
+
+    if (scope === 'filtered') {
+      const filteredItemsCount = currentFilteredGroups.flatMap(g => g.visibleItems).length;
+      if (filteredItemsCount === 0) {
+        showToast('Gagal mengekspor: Tidak ada data yang memenuhi kriteria saringan aktif.');
+        return;
+      }
+    }
+
+    closeExportModal();
+
+    const countText = scope === 'all'
+      ? `${projectGroupsData.flatMap(g => g.items).length} Item Portofolio`
+      : `${currentFilteredGroups.flatMap(g => g.visibleItems).length} Item Saringan`;
+
+    const fileName = `WorkPulse-Risk-Report-${scope === 'all' ? 'Portfolio' : 'Filtered'}.${format}`;
+
+    showToast(`Menyiapkan ekspor ${format.toUpperCase()} (${countText})...`);
+    setTimeout(() => {
+      showToast(`Berkas ${fileName} berhasil diunduh.`);
+    }, 1200);
+  });
+
+  /* --- TOAST HELPER --- */
+  let toastTimer = null;
+  function showToast(msg) {
+    const toast = $('toast');
+    $('toastMsg').textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
+
+  /* --- EVENT LISTENERS & FILTER WIRING --- */
+  // Inputs change
+  ['search', 'projectFilter', 'riskFilter', 'workTypeFilter', 'signalFilter'].forEach(id => {
+    $(id).addEventListener('input', () => {
+      if (id === 'riskFilter' || id === 'signalFilter') {
+        activeMetricFilter = 'all';
+      }
+      renderView();
+    });
+  });
+
+  // Reset Filters button
+  $('resetFilters').addEventListener('click', () => {
+    $('search').value = '';
+    $('projectFilter').value = 'all';
+    $('riskFilter').value = 'all';
+    $('workTypeFilter').value = 'all';
+    $('signalFilter').value = 'all';
+    activeMetricFilter = 'all';
+    renderView();
+    showToast('Saringan data berhasil direset ke kondisi awal.');
+  });
+
+  $('btnEmptyReset').addEventListener('click', () => {
+    $('resetFilters').click();
+  });
+
+  // Metric Cards Click-to-Filter
+  const metricCards = [
+    { id: 'metricCardGroups', type: 'all' },
+    { id: 'metricCardRed', type: 'red' },
+    { id: 'metricCardAmber', type: 'amber' },
+    { id: 'metricCardContinue', type: 'continue' },
+    { id: 'metricCardBlockers', type: 'blocker' }
+  ];
+
+  metricCards.forEach(({ id, type }) => {
+    const cardEl = $(id);
+    if (cardEl) {
+      cardEl.addEventListener('click', () => {
+        if (activeMetricFilter === type) {
+          activeMetricFilter = 'all'; // toggle back
+        } else {
+          activeMetricFilter = type;
+        }
+        renderView();
+      });
+      cardEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          cardEl.click();
+        }
+      });
+    }
+  });
+
+  // Role Switcher
+  $('quickRoleSwitcher').addEventListener('change', () => {
+    activeMetricFilter = 'all';
+    renderView();
+    const roleKey = $('quickRoleSwitcher').value;
+    const name = roleProfiles[roleKey].name;
+    showToast(`Beralih simulasi akun: ${name} (${roleProfiles[roleKey].role})`);
+  });
+
+  $('btnSwitchToPm').addEventListener('click', () => {
+    $('quickRoleSwitcher').value = 'ardi';
+    $('quickRoleSwitcher').dispatchEvent(new Event('change'));
+  });
+
+  // Refresh Button Animation
+  $('refreshBtn').addEventListener('click', () => {
+    $('refreshBtn').classList.add('rotating');
+    setTimeout(() => {
+      $('refreshBtn').classList.remove('rotating');
+      renderView();
+      showToast('Data portofolio risiko proyek berhasil diperbarui.');
+    }, 500);
+  });
+
+  // Notification Bell
+  $('topBell').addEventListener('click', () => {
+    showToast('Pusat notifikasi mengikuti hak akses akun yang sedang aktif.');
+  });
+
+  // Mobile Drawer Toggle
+  $('mobileMenuBtn').addEventListener('click', () => {
+    $('sidebar').classList.add('open');
+    $('sidebarBackdrop').classList.add('active');
+  });
+
+  $('sidebarBackdrop').addEventListener('click', () => {
+    $('sidebar').classList.remove('open');
+    $('sidebarBackdrop').classList.remove('active');
+  });
+
+  // Initial Render
+  renderView();
 </script>
-</body></html>
+</body>
+</html>

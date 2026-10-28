@@ -4,883 +4,1612 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>WorkPulse — Pemetaan Organisasi &amp; Proyek</title>
+<title>WorkPulse — Pemetaan Struktur Organisasi &amp; Kewenangan Proyek (/admin/organization)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-:root{
-  --color-canvas:#F7FAF9;
-  --color-surface:#FFFFFF;
-  --color-surface-subtle:#EFF5F2;
-  --color-surface-muted:#F1F5F4;
-  --color-border-subtle:#DCE7E2;
-  --color-border-strong:#A9C7BC;
-  --color-text-primary:#0E211B;
-  --color-text-secondary:#5C6E68;
-  --color-text-disabled:#8C9B95;
-  --color-brand-primary:#00674D;
-  --color-brand-secondary:#12915F;
-  --color-brand-tint:#E6F4EE;
-  --color-brand-focus:#0B8061;
-  --color-status-green-bg:#E6F4EC;
-  --color-status-green-fg:#145A36;
-  --color-status-green-border:#A7D5B8;
-  --color-status-amber-bg:#FFF3D9;
-  --color-status-amber-fg:#7A4B00;
-  --color-status-amber-border:#E8C77A;
-  --color-status-red-bg:#FFF8F8;
-  --color-status-red-fg:#991B1B;
-  --color-status-red-border:#FECDCA;
-  --color-status-blue-bg:#EFF6FF;
-  --color-status-blue-fg:#1E40AF;
-  --color-status-blue-border:#BFDBFE;
-  --color-status-neutral-bg:#EFF2F1;
-  --color-status-neutral-fg:#46534E;
-  --color-status-neutral-border:#C9D2CE;
-  --shadow-subtle:0 4px 16px rgba(14,33,27,.04);
-  --shadow-card:0 8px 24px rgba(14,33,27,.05);
-  --shadow-modal:0 24px 64px rgba(14,33,27,.18);
-  --radius-sm:8px;
-  --radius-card:12px;
-  --radius-modal:16px;
-  --font-sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  background:var(--color-canvas);
-  color:var(--color-text-primary);
-  font-family:var(--font-sans);
-  font-size:14px;
-  line-height:1.5;
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
-}
-button,input,textarea,select{font-family:inherit}
-button,a{cursor:pointer}
-button:disabled{cursor:not-allowed;opacity:.55}
-a{color:var(--color-brand-primary);text-decoration:none;font-weight:600}
-a:hover{text-decoration:underline}
-:focus-visible{outline:3px solid var(--color-brand-focus);outline-offset:2px}
+:root {
+  --color-canvas: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F1F5F9;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-brand-primary: #00674D;
+  --color-brand-hover: #00523D;
+  --color-brand-light: #E6F4F0;
+  --color-border-subtle: #E2E8F0;
+  --color-border-strong: #CBD5E1;
 
-/* APP LAYOUT */
-.app{min-height:100vh;display:grid;grid-template-columns:260px minmax(0,1fr)}
+  /* Badge Semantik Kanonikal DS v1.5.0 */
+  --badge-active-fg: #166534;
+  --badge-active-bg: #DCFCE7;
+  --badge-active-border: #86EFAC;
 
-/* SIDEBAR NAVIGATION */
-.sidebar{
-  background:var(--color-surface);
-  border-right:1px solid var(--color-border-subtle);
-  padding:24px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:24px;
-  position:sticky;
-  top:0;
-  height:100vh;
-  overflow-y:auto;
-}
-.brand{display:flex;align-items:center;gap:12px;padding:0 8px}
-.brand-mark{
-  height:38px;width:38px;border-radius:10px;
-  background:var(--color-brand-primary);
-  display:grid;place-items:center;
-  color:#FFFFFF;font-weight:800;font-size:20px;flex-shrink:0;
-}
-.brand-name{font-size:18px;font-weight:800;letter-spacing:-0.03em;color:var(--color-text-primary)}
-.brand-caption{font-size:11px;color:var(--color-text-secondary);margin-top:1px;font-weight:500}
-.nav-group{display:grid;gap:4px}
-.nav-label{
-  padding:0 12px;margin-bottom:6px;
-  font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--color-text-secondary);font-weight:700;
-}
-.nav{display:grid;gap:3px}
-.nav a{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 12px;border-radius:var(--radius-sm);
-  color:var(--color-text-secondary);font-weight:600;font-size:13.5px;
-  transition:all .15s ease;
-}
-.nav a:hover{background:var(--color-surface-subtle);color:var(--color-text-primary);text-decoration:none}
-.nav a.active{
-  background:var(--color-brand-tint);
-  color:var(--color-brand-primary);
-  font-weight:700;
-}
-.nav-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.sidebar-bottom{margin-top:auto;padding:16px 8px 0;border-top:1px solid var(--color-border-subtle)}
-.identity{display:flex;align-items:center;gap:12px}
-.avatar{
-  width:38px;height:38px;border-radius:50%;
-  background:var(--color-brand-tint);color:var(--color-brand-primary);
-  display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;
-  border:1.5px solid var(--color-border-strong);
-}
-.identity-info{min-width:0;line-height:1.35}
-.identity-name{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.identity-role{font-size:11.5px;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  --badge-warning-fg: #92400E;
+  --badge-warning-bg: #FEF3C7;
+  --badge-warning-border: #FCD34D;
 
-/* MAIN CONTENT AREA */
-.main{min-width:0;display:flex;flex-direction:column}
-.topbar{
-  height:70px;
-  background:var(--color-surface);
-  border-bottom:1px solid var(--color-border-subtle);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 36px;
-  position:sticky;top:0;z-index:10;
-}
-.topbar-left{display:flex;align-items:center;gap:14px}
-.mobile-menu-btn{
-  display:none;
-  background:transparent;border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-sm);width:36px;height:36px;
-  align-items:center;justify-content:center;color:var(--color-text-primary);
-}
-.breadcrumbs{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--color-text-secondary)}
-.breadcrumbs .crumb-current{color:var(--color-text-primary);font-weight:600}
-.topbar-right{display:flex;align-items:center;gap:14px}
-.system-clock{font-size:12px;color:var(--color-text-secondary);font-weight:600;display:flex;align-items:center;gap:6px}
+  --badge-danger-fg: #991B1B;
+  --badge-danger-bg: #FEE2E2;
+  --badge-danger-border: #FCA5A5;
 
-/* CONTENT CONTAINER */
-.content{
-  max-width:1440px;
-  width:100%;
-  margin:0 auto;
-  padding:32px 36px 64px;
+  --badge-info-fg: #075985;
+  --badge-info-bg: #E0F2FE;
+  --badge-info-border: #7DD3FC;
+
+  --badge-neutral-fg: #334155;
+  --badge-neutral-bg: #F1F5F9;
+  --badge-neutral-border: #CBD5E1;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.18);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* BAGIAN 1: HEADER HALAMAN */
-.page-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:24px;
-  margin-bottom:28px;
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-.page-header-info h1{
-  font-size:26px;
-  font-weight:800;
-  letter-spacing:-0.03em;
-  color:var(--color-text-primary);
-  line-height:1.2;
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
 }
-.page-header-info p{
-  margin-top:6px;
-  color:var(--color-text-secondary);
-  font-size:14px;
-  line-height:1.55;
-  max-width:820px;
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
-.header-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-shrink:0;
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+a {
+  color: var(--color-brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* APP SHELL */
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+}
+
+/* SIDEBAR 3 GRUP KANONIKAL */
+.sidebar {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 30;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--color-brand-primary);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.brand-caption {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.nav-label {
+  padding: 0 10px;
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.nav {
+  display: grid;
+  gap: 2px;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav a:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.nav a.active {
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  font-weight: 700;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 14px 8px 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-border-strong);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.identity-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.identity-name {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.identity-role {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* MAIN AREA & TOPBAR (56px) */
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 56px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.breadcrumbs .crumb-current {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.system-clock {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.notif-bell:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.notif-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
+  border: 1px solid var(--badge-warning-border);
+  border-radius: 999px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* SIMULATION BAR */
+.sim-bar {
+  background: #F1F5F9;
+  border-bottom: 1px solid var(--color-border-strong);
+  padding: 10px 28px;
+}
+
+.sim-bar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sim-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sim-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sim-btn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.sim-btn:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.sim-btn.active {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #FFFFFF;
+}
+
+/* CONTENT CONTAINER (max-width: 1200px) */
+.content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 28px 64px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.page-kicker {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-brand-primary);
+  margin-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+
+.page-header p {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  max-width: 760px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* CROSS-LINK BANNER */
+.crosslink-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: var(--badge-info-bg);
+  border: 1px solid var(--badge-info-border);
+  color: var(--badge-info-fg);
+  margin-bottom: 22px;
+}
+
+.crosslink-banner-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.crosslink-banner-left svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 /* BUTTONS */
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:10px 16px;
-  border-radius:var(--radius-sm);
-  font-size:13.5px;
-  font-weight:700;
-  border:1px solid var(--color-border-subtle);
-  background:var(--color-surface);
-  color:var(--color-text-primary);
-  transition:all .15s ease;
-  white-space:nowrap;
-}
-.btn:hover{background:var(--color-surface-subtle);border-color:var(--color-border-strong);text-decoration:none}
-.btn-primary{
-  background:var(--color-brand-primary);
-  border-color:var(--color-brand-primary);
-  color:#FFFFFF;
-}
-.btn-primary:hover{background:#00553F;border-color:#00553F;color:#FFFFFF}
-.btn-secondary{
-  background:var(--color-surface);
-  border-color:var(--color-border-strong);
-  color:var(--color-text-primary);
-}
-.btn-secondary:hover{background:var(--color-surface-subtle)}
-.btn-small{padding:7px 12px;font-size:12px;border-radius:6px}
-
-/* KARTU METRIK RINGKASAN */
-.metrics-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:16px;
-  margin-bottom:28px;
-}
-.metric-card{
-  background:var(--color-surface);
-  border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-card);
-  padding:18px 20px;
-  box-shadow:var(--shadow-subtle);
-  position:relative;
-  overflow:hidden;
-}
-.metric-card::before{
-  content:"";
-  position:absolute;top:0;left:0;right:0;height:3px;
-  background:transparent;
-}
-.metric-card.accent-green::before{background:var(--color-brand-primary)}
-.metric-card.accent-blue::before{background:#2563EB}
-.metric-card.accent-purple::before{background:#7C3AED}
-.metric-card.accent-amber::before{background:#D97706}
-
-.metric-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:8px;
-}
-.metric-label{
-  font-size:12px;
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-  color:var(--color-text-secondary);
-}
-.metric-icon{
-  width:28px;height:28px;border-radius:6px;
-  background:var(--color-surface-subtle);
-  display:grid;place-items:center;
-  color:var(--color-brand-primary);
-}
-.metric-value{
-  font-size:28px;
-  font-weight:800;
-  letter-spacing:-0.03em;
-  color:var(--color-text-primary);
-  line-height:1.15;
-}
-.metric-subtext{
-  font-size:12px;
-  color:var(--color-text-secondary);
-  margin-top:6px;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-/* BAGIAN 2: BILAH TAB NAVIGASI PENGELOLAAN */
-.nav-tabs-wrapper{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  border-bottom:1px solid var(--color-border-subtle);
-  margin-bottom:24px;
-}
-.tabs-list{
-  display:flex;
-  gap:4px;
-}
-.tab-btn{
-  background:transparent;
-  border:none;
-  padding:12px 18px;
-  font-size:14px;
-  font-weight:700;
-  color:var(--color-text-secondary);
-  border-bottom:2px solid transparent;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  transition:all .15s ease;
-  position:relative;
-  top:1px;
-}
-.tab-btn:hover{color:var(--color-text-primary)}
-.tab-btn.active{
-  color:var(--color-brand-primary);
-  border-bottom-color:var(--color-brand-primary);
-}
-.tab-badge{
-  font-size:11px;
-  padding:2px 7px;
-  border-radius:999px;
-  background:var(--color-surface-subtle);
-  color:var(--color-text-secondary);
-  font-weight:700;
-}
-.tab-btn.active .tab-badge{
-  background:var(--color-brand-tint);
-  color:var(--color-brand-primary);
+.btn:hover {
+  background: var(--color-surface-subtle);
+  text-decoration: none;
 }
 
-/* PANELS & CARDS */
-.panel{
-  background:var(--color-surface);
-  border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-card);
-  box-shadow:var(--shadow-card);
-  margin-bottom:24px;
-  overflow:hidden;
+.btn-primary {
+  background: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: #FFFFFF;
 }
-.panel-header{
-  padding:20px 24px;
-  border-bottom:1px solid var(--color-border-subtle);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
+
+.btn-primary:hover {
+  background: var(--color-brand-hover);
+  border-color: var(--color-brand-hover);
+  color: #FFFFFF;
 }
-.panel-title h2{
-  font-size:16px;
-  font-weight:800;
-  letter-spacing:-0.02em;
-  color:var(--color-text-primary);
+
+.btn-danger {
+  background: var(--badge-danger-bg);
+  border-color: var(--badge-danger-border);
+  color: var(--badge-danger-fg);
 }
-.panel-title p{
-  font-size:12.5px;
-  color:var(--color-text-secondary);
-  margin-top:3px;
+
+.btn-danger:hover {
+  background: #FECACA;
 }
-.panel-body{padding:24px}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+
+/* 4 INTERACTIVE METRIC CARDS */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.metric-card {
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-xs);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.metric-card[aria-pressed="true"] {
+  border-color: var(--color-brand-primary);
+  background: var(--color-brand-light);
+}
+
+.metric-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-brand-primary);
+}
+
+.metric-card.accent-blue::before { background: var(--badge-info-fg); }
+.metric-card.accent-amber::before { background: var(--badge-warning-fg); }
+.metric-card.accent-slate::before { background: var(--color-text-secondary); }
+
+.metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.15;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}
+
+/* TABS NAVIGATION (2 TAB MURNI) */
+.nav-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: 22px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tabs-list {
+  display: flex;
+  gap: 6px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  padding: 11px 16px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  position: relative;
+  top: 1px;
+}
+
+.tab-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.tab-btn.active {
+  color: var(--color-brand-primary);
+  border-bottom-color: var(--color-brand-primary);
+}
+
+.tab-badge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+.tab-btn.active .tab-badge {
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+}
+
+/* PANEL & TABLE */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.panel-title h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.panel-title p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.panel-body {
+  padding: 20px 22px;
+}
 
 /* FILTER BAR */
-.filter-bar{
-  display:grid;
-  grid-template-columns:minmax(240px, 1.5fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
-  gap:12px;
-  align-items:end;
-  margin-bottom:20px;
-}
-.filter-group{display:grid;gap:6px}
-.filter-group label{
-  font-size:12px;
-  font-weight:700;
-  color:var(--color-text-primary);
-}
-.filter-input, .filter-select{
-  width:100%;
-  border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-sm);
-  background:var(--color-surface);
-  color:var(--color-text-primary);
-  padding:9px 12px;
-  font-size:13.5px;
-  transition:border-color .15s ease;
-}
-.filter-input:focus, .filter-select:focus{
-  border-color:var(--color-brand-focus);
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.4fr) minmax(165px, 1fr) minmax(165px, 1fr) minmax(150px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
 }
 
-/* TABLE STYLING */
-.table-wrap{
-  overflow-x:auto;
-  width:100%;
-  border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-sm);
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:880px;
-}
-thead th{
-  background:var(--color-surface-subtle);
-  color:var(--color-text-secondary);
-  font-size:11px;
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  padding:12px 16px;
-  border-bottom:1px solid var(--color-border-subtle);
-  text-align:left;
-  white-space:nowrap;
-}
-tbody td{
-  padding:14px 16px;
-  border-bottom:1px solid var(--color-border-subtle);
-  vertical-align:middle;
-  font-size:13.5px;
-}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:rgba(247,250,249,0.7)}
-
-/* TABLE USER CELL */
-.user-cell{display:flex;align-items:center;gap:12px}
-.user-cell-avatar{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--color-brand-tint);color:var(--color-brand-primary);
-  display:grid;place-items:center;font-weight:800;font-size:12px;flex-shrink:0;
-}
-.user-cell-info{line-height:1.35}
-.user-cell-name{font-weight:700;color:var(--color-text-primary)}
-.user-cell-id{font-size:11.5px;color:var(--color-text-secondary)}
-
-/* STATUS PILLS */
-.pill{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  border-radius:999px;
-  padding:3px 9px;
-  font-size:11.5px;
-  font-weight:700;
-  white-space:nowrap;
-}
-.pill.green{
-  background:var(--color-status-green-bg);
-  color:var(--color-status-green-fg);
-  border:1px solid var(--color-status-green-border);
-}
-.pill.blue{
-  background:var(--color-status-blue-bg);
-  color:var(--color-status-blue-fg);
-  border:1px solid var(--color-status-blue-border);
-}
-.pill.amber{
-  background:var(--color-status-amber-bg);
-  color:var(--color-status-amber-fg);
-  border:1px solid var(--color-status-amber-border);
-}
-.pill.neutral{
-  background:var(--color-status-neutral-bg);
-  color:var(--color-status-neutral-fg);
-  border:1px solid var(--color-status-neutral-border);
-}
-.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
-
-/* TABLE ACTIONS */
-.table-actions{display:flex;align-items:center;gap:6px}
-
-/* NOTICE BOX */
-.notice{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  padding:14px 16px;
-  border-radius:var(--radius-sm);
-  font-size:13px;
-  line-height:1.5;
-  margin-top:16px;
-}
-.notice.info{
-  background:var(--color-status-blue-bg);
-  border:1px solid var(--color-status-blue-border);
-  color:var(--color-status-blue-fg);
-}
-.notice.warning{
-  background:var(--color-status-amber-bg);
-  border:1px solid var(--color-status-amber-border);
-  color:var(--color-status-amber-fg);
-}
-.notice-icon{flex-shrink:0;margin-top:2px}
-
-/* MODAL BACKDROP & DIALOG */
-.modal-backdrop{
-  position:fixed;inset:0;
-  background:rgba(14,33,27,0.55);
-  backdrop-filter:blur(3px);
-  display:none;
-  align-items:center;justify-content:center;
-  padding:20px;
-  z-index:100;
-}
-.modal-backdrop.open{display:flex}
-.modal-dialog{
-  background:var(--color-surface);
-  border-radius:var(--radius-modal);
-  box-shadow:var(--shadow-modal);
-  width:min(720px, 100%);
-  max-height:88vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-.modal-header{
-  padding:18px 24px;
-  border-bottom:1px solid var(--color-border-subtle);
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  flex-shrink:0;
-}
-.modal-header h3{
-  font-size:17px;font-weight:800;color:var(--color-text-primary);letter-spacing:-0.02em;
-}
-.modal-close-btn{
-  background:transparent;border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-sm);width:32px;height:32px;
-  display:grid;place-items:center;color:var(--color-text-secondary);
-}
-.modal-close-btn:hover{background:var(--color-surface-subtle);color:var(--color-text-primary)}
-.modal-body{
-  padding:20px 24px;
-  overflow-y:auto;
-  flex:1;
-}
-.modal-footer{
-  padding:14px 24px;
-  border-top:1px solid var(--color-border-subtle);
-  background:var(--color-surface-subtle);
-  display:flex;align-items:center;justify-content:flex-end;gap:10px;
-  flex-shrink:0;
+.filter-group {
+  display: grid;
+  gap: 5px;
 }
 
-/* FORM STYLES */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.form-group{display:grid;gap:6px}
-.form-group.col-span-2{grid-column:span 2}
-.form-group label{font-size:12.5px;font-weight:700;color:var(--color-text-primary)}
-.form-group label .required{color:#991B1B}
-.form-input, .form-select, .form-textarea{
-  width:100%;
-  border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-sm);
-  background:var(--color-surface);
-  color:var(--color-text-primary);
-  padding:10px 12px;
-  font-size:13.5px;
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
-.form-textarea{min-height:84px;resize:vertical}
-.form-hint{font-size:11.5px;color:var(--color-text-secondary)}
 
-/* IMPACT PREVIEW CARDS */
-.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
-.preview-card{
-  padding:14px;border:1px solid var(--color-border-subtle);
-  border-radius:var(--radius-sm);background:var(--color-surface-subtle);
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 8px 11px;
+  font-size: 0.8125rem;
+  transition: border-color 0.15s ease;
 }
-.preview-card-label{font-size:11px;font-weight:700;color:var(--color-text-secondary);text-transform:uppercase}
-.preview-card-value{font-size:14px;font-weight:800;color:var(--color-text-primary);margin-top:4px}
-.preview-card.col-span-2{grid-column:span 2}
 
-/* TOAST NOTIFICATION */
-.toast{
-  position:fixed;bottom:24px;right:24px;
-  background:#0E211B;color:#FFFFFF;
-  padding:12px 18px;border-radius:var(--radius-sm);
-  box-shadow:var(--shadow-modal);
-  font-size:13px;font-weight:600;
-  display:none;align-items:center;gap:10px;z-index:200;
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--color-brand-primary);
 }
-.toast.show{display:flex}
 
-.hidden{display:none!important}
-
-@media(max-width:1024px){
-  .app{grid-template-columns:1fr}
-  .sidebar{display:none}
-  .mobile-menu-btn{display:inline-flex}
-  .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .filter-bar{grid-template-columns:1fr 1fr}
+.form-textarea {
+  min-height: 80px;
+  resize: vertical;
 }
-@media(max-width:640px){
-  .content{padding:20px 16px 48px}
-  .page-header{flex-direction:column;align-items:stretch}
-  .metrics-grid{grid-template-columns:1fr}
-  .filter-bar{grid-template-columns:1fr}
-  .form-grid{grid-template-columns:1fr}
-  .form-group.col-span-2{grid-column:auto}
-  .preview-grid{grid-template-columns:1fr}
-  .preview-card.col-span-2{grid-column:auto}
+
+/* TABLE */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+}
+
+thead th {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-align: left;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: top;
+  font-size: 0.8125rem;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: #F8FAFC;
+}
+
+.user-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-brand-light);
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-border-strong);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.user-id {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* BADGES SEMANTIK */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.badge-active {
+  color: var(--badge-active-fg);
+  background: var(--badge-active-bg);
+  border-color: var(--badge-active-border);
+}
+
+.badge-info {
+  color: var(--badge-info-fg);
+  background: var(--badge-info-bg);
+  border-color: var(--badge-info-border);
+}
+
+.badge-warning {
+  color: var(--badge-warning-fg);
+  background: var(--badge-warning-bg);
+  border-color: var(--badge-warning-border);
+}
+
+.badge-danger {
+  color: var(--badge-danger-fg);
+  background: var(--badge-danger-bg);
+  border-color: var(--badge-danger-border);
+}
+
+.badge-neutral {
+  color: var(--badge-neutral-fg);
+  background: var(--badge-neutral-bg);
+  border-color: var(--badge-neutral-border);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* AUDIT TIMELINE */
+.timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 155px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.timeline-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.timeline-content {
+  display: grid;
+  gap: 4px;
+}
+
+.timeline-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timeline-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* 403 ACCESS RESTRICTED STATE */
+.restricted-panel {
+  max-width: 620px;
+  margin: 48px auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.restricted-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--badge-danger-bg);
+  color: var(--badge-danger-fg);
+  border: 1px solid var(--badge-danger-border);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+}
+
+.restricted-panel h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.restricted-panel p {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+}
+
+/* MODALS */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 100;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  width: min(720px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.modal-dialog.modal-sm {
+  width: min(540px, 100%);
+}
+
+.modal-header {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.modal-header h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.modal-header p {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-group {
+  display: grid;
+  gap: 5px;
+}
+
+.form-group.col-span-2 {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.required {
+  color: var(--badge-danger-fg);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.inline-error {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--badge-danger-bg);
+  border: 1px solid var(--badge-danger-border);
+  color: var(--badge-danger-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* IMPACT PREVIEW DIFF GRID */
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.preview-card {
+  padding: 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+}
+
+.preview-card.col-span-2 {
+  grid-column: span 2;
+}
+
+.preview-card-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.preview-card-value {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-top: 4px;
+}
+
+.subordinates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.subordinate-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.callout-box {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.callout-info {
+  background: var(--badge-info-bg);
+  border: 1px solid var(--badge-info-border);
+  color: var(--badge-info-fg);
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  background: var(--color-text-primary);
+  color: #FFFFFF;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  z-index: 200;
+  max-width: 440px;
+}
+
+.toast.show {
+  display: flex;
+}
+
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 248px;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 18px 14px 48px;
+  }
+  .page-header {
+    flex-direction: column;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+  .form-grid, .preview-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-group.col-span-2, .preview-card.col-span-2 {
+    grid-column: auto;
+  }
+  .timeline-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
 }
 </style>
 </head>
 <body>
 
 <div class="app">
-  <!-- SIDEBAR NAVIGATION (Diselaraskan dengan sistem) -->
-  <aside class="sidebar" id="sidebar">
+  <!-- SIDEBAR 3 GRUP KANONIKAL -->
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi Utama">
     <div class="brand">
       <div class="brand-mark">W</div>
       <div>
         <div class="brand-name">WorkPulse</div>
-        <div class="brand-caption">Daily Accountability System</div>
+        <div class="brand-caption">Daily Accountability</div>
       </div>
     </div>
 
-    <div class="nav-group">
-      <div class="nav-label">Workspace Karyawan</div>
+    <div class="nav-group" id="navGroupWorkspace">
+      <div class="nav-label">Workspace</div>
       <nav class="nav">
-        <a href="02-Morning-Commitment.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>Morning Commitment</a>
-        <a href="03-Additional-Work.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>Additional Work</a>
-        <a href="04-EOD-Outcome.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><polyline points="9 11 12 14 22 4"></polyline></svg></span>EOD Outcome</a>
-        <a href="05-Raise-Instant-Blocker.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>Raise Instant Blocker</a>
-        <a href="06-My-History-Weekly-Summary.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>My History</a>
+        <a href="02-Morning-Commitment.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+          <span>My Today</span>
+        </a>
+        <a href="06-My-History-Weekly-Summary.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+          <span>My History</span>
+        </a>
+        <a href="20-My-Leave-Request.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+          <span>My Leave Request</span>
+        </a>
+        <a href="07-Notification-Center-Browser-Push.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+          <span>Notifications</span>
+        </a>
+        <a href="24-Profile-Settings.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+          <span>Profile</span>
+        </a>
       </nav>
     </div>
 
-    <div class="nav-group">
-      <div class="nav-label">Manajemen &amp; Tata Kelola</div>
+    <div class="nav-group" id="navGroupManagement">
+      <div class="nav-label">Management</div>
       <nav class="nav">
-        <a href="08-Pulse-Dashboard.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>Pulse Dashboard</a>
-        <a href="09-Blocker-Escalation-Queue.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></span>Blocker Queue</a>
-        <a href="14-Escalation-Aging.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline></svg></span>Escalation Aging</a>
-        <a href="15-Admin-Organizational-Mapping.html" class="active"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>Pemetaan Organisasi</a>
+        <a href="08-Pulse-Dashboard.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a href="09-Blocker-Escalation-Queue.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></span>
+          <span>Blocker &amp; Escalation Queue</span>
+        </a>
+        <a href="14-Escalation-Aging.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 10"></polyline></svg></span>
+          <span>Escalation Aging</span>
+        </a>
+        <a href="13-Project-Risk-View.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></span>
+          <span>Project Risk View</span>
+        </a>
+        <a href="10-Manager-Note-Coaching-Record.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></span>
+          <span>Manager Notes</span>
+        </a>
+        <a href="22-Correction-and-Leave-Review.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
+          <span>Correction &amp; Leave Review</span>
+        </a>
+        <a href="11-Compliance-Queue-HRGA.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+          <span>Compliance Queue</span>
+        </a>
+        <a href="21-Leave-Approval-Queue.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
+          <span>Leave Approval Queue</span>
+        </a>
+        <a href="12-Exemption-Management.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+          <span>Holiday &amp; Exemption</span>
+        </a>
+        <a href="23-Reports.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span>
+          <span>Reports</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-group" id="navGroupAdministration">
+      <div class="nav-label">Administration</div>
+      <nav class="nav">
+        <a href="25-Admin-User-Invitation-Management.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></span>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a href="15-Admin-Organizational-Mapping.html" class="active" aria-current="page">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+          <span>Organizational Mapping</span>
+        </a>
+        <a href="17-Admin-Temporary-Reviewer.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg></span>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a href="19-Admin-Notification-Channel-Setup.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></span>
+          <span>Notification Setup</span>
+        </a>
+        <a href="18-Policy-Settings.html">
+          <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span>
+          <span>Policy Settings</span>
+        </a>
       </nav>
     </div>
 
     <div class="sidebar-bottom">
       <div class="identity">
-        <div class="avatar">HW</div>
+        <div class="avatar" id="sidebarAvatar">DL</div>
         <div class="identity-info">
-          <div class="identity-name">Hendra Wijaya</div>
-          <div class="identity-role">Chief Executive Officer</div>
+          <div class="identity-name" id="sidebarUserName">Dewi Lestari</div>
+          <div class="identity-role" id="sidebarUserRole">HRGA &amp; System Admin</div>
         </div>
       </div>
     </div>
   </aside>
 
   <!-- MAIN WRAPPER -->
-  <main class="main" id="main">
-    <!-- TOPBAR -->
+  <div class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Buka navigasi">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Buka menu navigasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <div class="breadcrumbs">
-          <span>Manajemen &amp; Tata Kelola</span>
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <span>Administration</span>
           <span>/</span>
-          <span>Administrasi</span>
-          <span>/</span>
-          <span class="crumb-current">Pemetaan Organisasi &amp; Proyek</span>
-        </div>
+          <span class="crumb-current">Organizational Mapping &amp; Project Authority</span>
+        </nav>
       </div>
       <div class="topbar-right">
         <div class="system-clock">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          <span id="currentTimeDisplay">20 Okt 2026</span>
+          <span id="currentTimeDisplay">28 Okt 2026, 09:20 WIB</span>
         </div>
+        <a class="notif-bell" href="07-Notification-Center-Browser-Push.html" aria-label="Pusat Notifikasi (3 belum dibaca)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span class="notif-count">3</span>
+        </a>
       </div>
     </header>
 
-    <!-- CONTENT BODY -->
-    <div class="content">
+    <!-- BILAH MODE SIMULASI PROTOTIPE -->
+    <section class="sim-bar" aria-label="Mode Simulasi Prototipe">
+      <div class="sim-bar-inner">
+        <div class="sim-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span>[Mode Simulasi Prototipe] Peran &amp; Uji Validasi:</span>
+        </div>
+        <div class="sim-controls">
+          <button class="sim-btn active" id="simRoleAdmin" type="button">HRGA / System Admin (200 OK)</button>
+          <button class="sim-btn" id="simRoleRestricted" type="button">Employee / Supervisor (403 Access Restricted)</button>
+          <button class="sim-btn" id="simTestCycleError" type="button">Uji Validasi Anti-Siklus Rekursif</button>
+          <button class="sim-btn" id="simResetData" type="button">Reset Data Awal</button>
+        </div>
+      </div>
+    </section>
 
-      <!-- BAGIAN 1: HEADER HALAMAN -->
+    <!-- 403 ACCESS RESTRICTED PANEL -->
+    <div id="restrictedStatePanel" class="content hidden">
+      <div class="restricted-panel" role="region" aria-labelledby="restrictedHeading">
+        <div class="restricted-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h2 id="restrictedHeading">403 — Akses Dibatasi (Access Restricted)</h2>
+        <p>
+          Halaman <strong>Pemetaan Struktur Organisasi &amp; Kewenangan Proyek (<code>/admin/organization</code>)</strong> hanya dapat diakses oleh pengguna dengan peran otorisasi <strong>System Admin</strong>, <strong>HRGA</strong>, atau <strong>Management</strong> berwenang.
+        </p>
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-primary" href="02-Morning-Commitment.html">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Kembali ke My Today (<code>/today</code>)</span>
+          </a>
+          <button class="btn" id="btnRestoreAdminFrom403" type="button">Pulihkan Simulasi Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AUTHORIZED WORKSPACE -->
+    <main class="content" id="authorizedWorkspace">
       <section class="page-header">
-        <div class="page-header-info">
-          <h1>Pemetaan Organisasi &amp; Proyek</h1>
+        <div>
+          <div class="page-kicker">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>Administration · Effective-Dated Structure &amp; Project Authority</span>
+          </div>
+          <h1>Pemetaan Struktur Organisasi &amp; Kewenangan Proyek</h1>
           <p>
-            Kelola penugasan struktur organisasi, jalur pelaporan atasan langsung (*Direct Manager*), dan kewenangan proyek secara independen dengan kontrol tanggal efektif (*Effective Date*). Histori penugasan tidak ditimpa demi akuntabilitas data masa lalu.
+            Kelola penugasan struktur organisasi (10 fungsi kanonikal tetap, Jabatan Fungsional, Peran Otorisasi Sistem, dan Direct Manager) serta pemetaan kewenangan proyek berpenanggalan efektif dengan perlindungan penuh terhadap keutuhan snapshot historis.
           </p>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary" id="btnRegisterProject" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
-            <span>Daftarkan Proyek</span>
+          <button class="btn" id="btnHeaderAddAuthority" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span>+ Tetapkan Kewenangan Proyek</span>
           </button>
-          <button class="btn btn-primary" id="btnReassignOrg" type="button">
+          <button class="btn btn-primary" id="btnHeaderReassignOrg" type="button">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
-            <span>Ubah Penugasan Organisasi</span>
+            <span>Ubah Penugasan Struktur</span>
           </button>
         </div>
       </section>
 
-      <!-- BAGIAN 1: KARTU METRIK RINGKASAN ORGANISASI & PROYEK -->
-      <section class="metrics-grid" aria-label="Ringkasan Organisasi">
-        <div class="metric-card accent-green">
-          <div class="metric-header">
-            <span class="metric-label">Total Personil</span>
-            <div class="metric-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-            </div>
+      <!-- BANNER PEMISAHAN TEGAS KE /admin/users (25-Admin-User-Invitation-Management.html) -->
+      <div class="crosslink-banner" role="note">
+        <div class="crosslink-banner-left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <div>
+            <strong>Pemisahan Bersih Pendaftaran Akun &amp; Undangan Pengguna:</strong> Pembuatan akun baru, pengiriman tautan undangan aktivasi sekali pakai, pencabutan undangan, dan penonaktifan akun telah dipisahkan secara tegas ke halaman khusus manajemen identitas pengguna.
           </div>
-          <div class="metric-value" id="metricTotalPeople">10</div>
-          <div class="metric-subtext">Karyawan aktif seluruh divisi</div>
         </div>
+        <a class="btn btn-small" href="25-Admin-User-Invitation-Management.html">
+          <span>Kelola Akun &amp; Undangan di Halaman User &amp; Invitation</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
 
-        <div class="metric-card accent-blue">
-          <div class="metric-header">
-            <span class="metric-label">Penugasan Organisasi</span>
-            <div class="metric-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-            </div>
+      <!-- 4 INTERACTIVE METRIC CARDS -->
+      <section class="metrics-grid" aria-label="Ringkasan Pemetaan Organisasi">
+        <button class="metric-card" id="cardMetricActiveOrg" type="button" aria-pressed="true">
+          <div class="metric-top">
+            <span class="metric-label">Penugasan Struktur Aktif</span>
+            <span class="badge badge-active">Aktif</span>
           </div>
           <div class="metric-value" id="metricActiveOrg">10</div>
-          <div class="metric-subtext">1 penugasan aktif per personil</div>
-        </div>
+          <div class="metric-sub">Personil aktif dalam hierarki</div>
+        </button>
 
-        <div class="metric-card accent-purple">
-          <div class="metric-header">
-            <span class="metric-label">Proyek Terdaftar</span>
-            <div class="metric-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            </div>
+        <button class="metric-card accent-slate" id="cardMetricHistoricalOrg" type="button" aria-pressed="false">
+          <div class="metric-top">
+            <span class="metric-label">Rekaman Snapshot Historis</span>
+            <span class="badge badge-neutral">Append-Only</span>
           </div>
-          <div class="metric-value" id="metricTotalProjects">3</div>
-          <div class="metric-subtext">Inisiatif perusahaan aktif</div>
-        </div>
+          <div class="metric-value" id="metricHistoricalOrg">3</div>
+          <div class="metric-sub">Riwayat penugasan masa lalu</div>
+        </button>
 
-        <div class="metric-card accent-amber">
-          <div class="metric-header">
-            <span class="metric-label">Wewenang Proyek</span>
-            <div class="metric-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-            </div>
+        <button class="metric-card accent-blue" id="cardMetricFunctions" type="button" aria-pressed="false">
+          <div class="metric-top">
+            <span class="metric-label">Fungsi Kanonikal Tetap</span>
+            <span class="badge badge-info">Fixed List</span>
+          </div>
+          <div class="metric-value">10</div>
+          <div class="metric-sub">Daftar tetap fungsi resmi Dutamedia</div>
+        </button>
+
+        <button class="metric-card accent-amber" id="cardMetricAuthority" type="button" aria-pressed="false">
+          <div class="metric-top">
+            <span class="metric-label">Pemetaan Kewenangan Proyek</span>
+            <span class="badge badge-warning">Project Scope</span>
           </div>
           <div class="metric-value" id="metricActiveAuthority">5</div>
-          <div class="metric-subtext">Mapping independen aktif</div>
-        </div>
+          <div class="metric-sub">Klik untuk beralih ke Tab 2</div>
+        </button>
       </section>
 
-      <!-- BAGIAN 2: BILAH TAB NAVIGASI PENGELOLAAN -->
-      <section class="nav-tabs-wrapper" aria-label="Navigasi Pengelolaan">
-        <div class="tabs-list" role="tablist">
+      <!-- 2 TAB MURNI SESUAI §4.15 (TANPA TAB CRUD PROYEK) -->
+      <div class="nav-tabs-wrapper">
+        <div class="tabs-list" role="tablist" aria-label="Tab Pemetaan Struktur dan Kewenangan Proyek">
           <button class="tab-btn active" id="tabBtnOrg" role="tab" aria-selected="true" aria-controls="panelOrg" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-            <span>Struktur Organisasi</span>
+            <span>Penugasan Struktur Organisasi (Organizational Assignment)</span>
             <span class="tab-badge" id="badgeOrgCount">10</span>
-          </button>
-          <button class="tab-btn" id="tabBtnProjects" role="tab" aria-selected="false" aria-controls="panelProjects" type="button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            <span>Direktori Proyek</span>
-            <span class="tab-badge" id="badgeProjectCount">3</span>
           </button>
           <button class="tab-btn" id="tabBtnAuthority" role="tab" aria-selected="false" aria-controls="panelAuthority" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-            <span>Kewenangan Proyek</span>
+            <span>Pemetaan Kewenangan Proyek (Project Authority Mapping)</span>
             <span class="tab-badge" id="badgeAuthCount">5</span>
           </button>
         </div>
-      </section>
+      </div>
 
       <!-- ================================================================= -->
-      <!-- TAB 1: STRUKTUR ORGANISASI (ORGANIZATIONAL ASSIGNMENT)             -->
+      <!-- TAB 1: PENUGASAN STRUKTUR ORGANISASI (ORGANIZATIONAL ASSIGNMENT)  -->
       <!-- ================================================================= -->
       <section id="panelOrg" role="tabpanel" aria-labelledby="tabBtnOrg">
         <div class="panel">
           <div class="panel-header">
             <div class="panel-title">
-              <h2>Struktur Organisasi &amp; Jalur Pelaporan Aktif</h2>
-              <p>Daftar penugasan peran (*Role*), fungsi divisi (*Function*), dan atasan langsung (*Direct Manager*) yang berlaku efektif hari ini.</p>
+              <h2>Penugasan Struktur Organisasi (Organizational Assignment)</h2>
+              <p>Memisahkan Jabatan Fungsional (Job Title) dan Peran Otorisasi Sistem (System RBAC Role) pada 10 fungsi kanonikal tetap Dutamedia.</p>
             </div>
-            <button class="btn btn-primary btn-small" id="btnQuickAddOrg" type="button">
-              <span>＋ Ubah Penugasan</span>
+            <button class="btn btn-primary btn-small" id="btnPanelReassignOrg" type="button">
+              <span>Ubah Penugasan Struktur</span>
             </button>
           </div>
+
           <div class="panel-body">
-            <!-- Filter Bar -->
             <div class="filter-bar">
               <div class="filter-group">
-                <label for="searchOrgPerson">Cari Personil</label>
-                <input class="filter-input" id="searchOrgPerson" type="search" placeholder="Cari nama atau ID karyawan..." autocomplete="off">
+                <label for="searchOrgPerson">Cari Nama / ID Personil</label>
+                <input class="form-input" id="searchOrgPerson" type="search" placeholder="Ketik nama, jabatan, atau USR-..." autocomplete="off">
               </div>
+
               <div class="filter-group">
-                <label for="filterOrgFunction">Divisi / Fungsi</label>
-                <select class="filter-select" id="filterOrgFunction">
-                  <option value="all">Semua Divisi</option>
+                <label for="filterOrgFunction">Fungsi Kanonikal (10 Tetap)</label>
+                <select class="form-select" id="filterOrgFunction">
+                  <option value="all">Semua Fungsi Kanonikal</option>
                   <option value="Engineering">Engineering</option>
-                  <option value="Quality">Quality / QA</option>
+                  <option value="Quality">Quality</option>
                   <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
                   <option value="R&D">R&amp;D</option>
-                  <option value="Delivery">Delivery / Project Mgmt</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Business Development">Business Development</option>
                   <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
                   <option value="Finance">Finance</option>
                   <option value="HRGA">HRGA</option>
-                  <option value="Executive">Executive / Management</option>
+                  <option value="Management">Management</option>
                 </select>
               </div>
+
               <div class="filter-group">
-                <label for="filterOrgRole">Peran / Jabatan</label>
-                <select class="filter-select" id="filterOrgRole">
-                  <option value="all">Semua Jabatan</option>
-                  <option value="Employee">Employee (Staff / Developer)</option>
-                  <option value="Supervisor / TL">Supervisor / Technical Lead</option>
-                  <option value="Head">Head of Department</option>
-                  <option value="PM">Project Manager (PM)</option>
+                <label for="filterOrgRole">System RBAC Role</label>
+                <select class="form-select" id="filterOrgRole">
+                  <option value="all">Semua Peran Sistem</option>
+                  <option value="Employee">Employee</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Head of Function">Head of Function</option>
+                  <option value="Project Manager">Project Manager</option>
                   <option value="HRGA">HRGA</option>
                   <option value="CEO / Management">CEO / Management</option>
+                  <option value="System Admin">System Admin</option>
                 </select>
               </div>
-              <button class="btn btn-secondary" id="btnResetOrgFilter" type="button" style="height:38px">
-                <span>Reset Filter</span>
-              </button>
+
+              <div class="filter-group">
+                <label for="filterOrgStatus">Status Masa Berlaku</label>
+                <select class="form-select" id="filterOrgStatus">
+                  <option value="all">Semua Rekaman</option>
+                  <option value="active" selected>Aktif Berlaku Saat Ini</option>
+                  <option value="ended">Historis / Telah Berakhir</option>
+                </select>
+              </div>
+
+              <div>
+                <button class="btn" id="btnResetOrgFilter" type="button">Reset Filter</button>
+              </div>
             </div>
 
-            <!-- Table Structure -->
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Personil</th>
-                    <th>Divisi &amp; Jabatan</th>
-                    <th>Atasan Langsung (Direct Manager)</th>
-                    <th>Tanggal Efektif</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
+                    <th scope="col">Personil (ID Karyawan)</th>
+                    <th scope="col">Jabatan Fungsional (Job Title)</th>
+                    <th scope="col">Peran Otorisasi Sistem (System RBAC Role)</th>
+                    <th scope="col">Fungsi Kanonikal Tetap</th>
+                    <th scope="col">Direct Manager (Garis Pelaporan)</th>
+                    <th scope="col">Masa Berlaku Efektif</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" style="text-align:right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="tableOrgBody">
-                  <!-- Rendered dynamically by JavaScript -->
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Footnote Prinsip -->
-            <div class="notice info">
-              <span class="notice-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              </span>
-              <div>
-                <strong>Invarian Akuntabilitas Historis:</strong> Setiap kali penugasan baru disimpan, sistem menutup penugasan lama secara otomatis bertanggal satu hari sebelum tanggal efektif baru tanpa menghapus baris riwayat. Laporan kendala dan persetujuan di masa lalu tetap merujuk pada atasan yang menjabat saat kejadian terjadi.
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- ================================================================= -->
-      <!-- TAB 2: DIREKTORI PROYEK (PROJECTS DIRECTORY)                      -->
-      <!-- ================================================================= -->
-      <section id="panelProjects" class="hidden" role="tabpanel" aria-labelledby="tabBtnProjects">
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">
-              <h2>Direktori Master Proyek &amp; Inisiatif</h2>
-              <p>Daftar seluruh proyek dan inisiatif resmi perusahaan yang menjadi wadah rujukan penugasan wewenang dan pelaporan kendala (*Blocker*).</p>
-            </div>
-            <button class="btn btn-primary btn-small" id="btnAddProjectInTab" type="button">
-              <span>＋ Daftarkan Proyek Baru</span>
-            </button>
-          </div>
-          <div class="panel-body">
-            <!-- Filter Bar Proyek -->
-            <div class="filter-bar" style="grid-template-columns:minmax(240px, 2fr) minmax(180px, 1fr) auto;">
-              <div class="filter-group">
-                <label for="searchProject">Cari Proyek</label>
-                <input class="filter-input" id="searchProject" type="search" placeholder="Cari nama proyek, kode, atau inisiatif..." autocomplete="off">
-              </div>
-              <div class="filter-group">
-                <label for="filterProjectStatus">Status Proyek</label>
-                <select class="filter-select" id="filterProjectStatus">
-                  <option value="all">Semua Status</option>
-                  <option value="Aktif">Aktif Berjalan</option>
-                  <option value="Selesai">Selesai / Ditutup</option>
-                </select>
-              </div>
-              <button class="btn btn-secondary" id="btnResetProjectFilter" type="button" style="height:38px">
-                <span>Reset Filter</span>
-              </button>
-            </div>
-
-            <!-- Table Projects -->
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Kode Proyek</th>
-                    <th>Nama Inisiatif / Proyek</th>
-                    <th>Divisi Penanggung Jawab</th>
-                    <th>Total Pemegang Wewenang</th>
-                    <th>Status Proyek</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="tableProjectsBody">
-                  <!-- Rendered dynamically by JavaScript -->
+                  <!-- Diisi melalui JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -889,330 +1618,385 @@ tbody tr:hover{background:rgba(247,250,249,0.7)}
       </section>
 
       <!-- ================================================================= -->
-      <!-- TAB 3: KEWENANGAN PROYEK (PROJECT AUTHORITY MAPPING)              -->
+      <!-- TAB 2: PEMETAAN KEWENANGAN PROYEK (PROJECT AUTHORITY MAPPING)     -->
       <!-- ================================================================= -->
       <section id="panelAuthority" class="hidden" role="tabpanel" aria-labelledby="tabBtnAuthority">
         <div class="panel">
           <div class="panel-header">
             <div class="panel-title">
-              <h2>Pemetaan Kewenangan Proyek (*Project Authority Mapping*)</h2>
-              <p>Personil yang berwenang mengambil keputusan, menerima eskalasi, dan menyelesaikan kendala pada proyek tertentu secara independen dari struktur organisasi.</p>
+              <h2>Pemetaan Kewenangan Proyek (Project Authority Mapping)</h2>
+              <p>Memetakan Assigned Project Manager (PM) dan Authorized Escalation Reviewer untuk scope reference proyek secara independen dari Direct Manager struktural.</p>
             </div>
-            <button class="btn btn-primary btn-small" id="btnAddAuthorityBtn" type="button">
-              <span>＋ Tambah Penugasan Wewenang</span>
+            <button class="btn btn-primary btn-small" id="btnPanelAddAuthority" type="button">
+              <span>+ Tetapkan / Ubah Kewenangan Proyek</span>
             </button>
           </div>
+
           <div class="panel-body">
-            <!-- Filter Bar Authority -->
-            <div class="filter-bar">
+            <div class="filter-bar" style="grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) minmax(160px, 1fr) auto;">
               <div class="filter-group">
-                <label for="searchAuthText">Cari Personil / Proyek</label>
-                <input class="filter-input" id="searchAuthText" type="search" placeholder="Nama personil atau nama proyek..." autocomplete="off">
+                <label for="searchAuthText">Cari Scope Reference / PM / Reviewer</label>
+                <input class="form-input" id="searchAuthText" type="search" placeholder="Ketik kode reference proyek atau nama personil..." autocomplete="off">
               </div>
+
               <div class="filter-group">
-                <label for="filterAuthProject">Pilih Proyek</label>
-                <select class="filter-select" id="filterAuthProject">
-                  <option value="all">Semua Proyek</option>
+                <label for="filterAuthFunction">Fungsi Terlibat</label>
+                <select class="form-select" id="filterAuthFunction">
+                  <option value="all">Semua Fungsi Kanonikal</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Quality">Quality</option>
+                  <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+                  <option value="R&D">R&amp;D</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Business Development">Business Development</option>
+                  <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+                  <option value="Finance">Finance</option>
+                  <option value="HRGA">HRGA</option>
+                  <option value="Management">Management</option>
                 </select>
               </div>
+
               <div class="filter-group">
-                <label for="filterAuthStatus">Status Wewenang</label>
-                <select class="filter-select" id="filterAuthStatus">
+                <label for="filterAuthStatus">Status Kewenangan</label>
+                <select class="form-select" id="filterAuthStatus">
                   <option value="all">Semua Status</option>
-                  <option value="active">Aktif Saat Ini</option>
-                  <option value="historical">Historis / Berakhir</option>
+                  <option value="active" selected>Aktif Berlaku</option>
+                  <option value="ended">Telah Berakhir</option>
                 </select>
               </div>
-              <button class="btn btn-secondary" id="btnResetAuthFilter" type="button" style="height:38px">
-                <span>Reset Filter</span>
-              </button>
+
+              <div>
+                <button class="btn" id="btnResetAuthFilter" type="button">Reset Filter</button>
+              </div>
             </div>
 
-            <!-- Table Authority -->
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Personil Berwenang</th>
-                    <th>Proyek / Scope Reference</th>
-                    <th>Peran Wewenang</th>
-                    <th>Tanggal Mulai Efektif</th>
-                    <th>Tanggal Berakhir (End Date)</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
+                    <th scope="col">Scope / Reference Proyek Aktif</th>
+                    <th scope="col">Assigned Project Manager (PM)</th>
+                    <th scope="col">Authorized Escalation Reviewer</th>
+                    <th scope="col">Fungsi Terlibat</th>
+                    <th scope="col">Effective Date &amp; End Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" style="text-align:right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="tableAuthorityBody">
-                  <!-- Rendered dynamically by JavaScript -->
+                  <!-- Diisi melalui JavaScript -->
                 </tbody>
               </table>
             </div>
-
-            <!-- Footnote Multi-Concurrent Authority -->
-            <div class="notice info">
-              <span class="notice-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              </span>
-              <div>
-                <strong>Aturan Multi-Konkuren:</strong> Seorang personil dapat ditugaskan menjadi pemegang wewenang di beberapa proyek sekaligus tanpa mengubah atasan langsungnya di struktur organisasi. Mengakhiri kewenangan dilakukan dengan mengisi *End Date* (bukan *hard-delete*).
-              </div>
-            </div>
-
           </div>
         </div>
       </section>
 
-    </div>
-  </main>
+      <!-- PANEL AUDIT TRAIL TIMELINE PERUBAHAN STRUKTUR & KEWENANGAN PROYEK -->
+      <section class="panel" aria-labelledby="auditHeading">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h2 id="auditHeading">AuditTrailTimeline — Jejak Mutasi Struktur &amp; Kewenangan Proyek</h2>
+            <p>Seluruh perubahan penugasan dicatat secara append-only berpenanggalan efektif tanpa pernah menimpa snapshot akuntabilitas masa lalu.</p>
+          </div>
+          <span class="badge badge-info mono-num" id="auditCountBadge">0 entri audit</span>
+        </div>
+        <div class="panel-body">
+          <div class="timeline" id="auditTimelineContainer">
+            <!-- Diisi melalui JavaScript -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODAL 1: FORM UBAH PENUGASAN ORGANISASI (REASSIGN ORG)                  -->
+<!-- MODAL 1: TAHAP 1 — FORM UBAH PENUGASAN STRUKTUR ORGANISASI              -->
 <!-- ======================================================================= -->
 <div class="modal-backdrop" id="modalOrgBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalOrgTitle">
   <div class="modal-dialog">
     <div class="modal-header">
-      <h3 id="modalOrgTitle">Ubah Penugasan Organisasi</h3>
-      <button class="modal-close-btn" id="closeOrgModalBtn" type="button" aria-label="Tutup modal">✕</button>
+      <div>
+        <h3 id="modalOrgTitle">Ubah Penugasan Struktur Organisasi (Tahap 1 dari 2)</h3>
+        <p>Perbarui Jabatan Fungsional, Peran Sistem, Fungsi Kanonikal, atau Direct Manager dengan validasi anti-siklus rekursif.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close-modal="modalOrgBackdrop" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
-    <form id="formOrgAssignment">
+    <form id="formOrgAssignment" novalidate>
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group col-span-2">
             <label for="selectOrgPerson">Pilih Personil / Karyawan <span class="required">*</span></label>
             <select class="form-select" id="selectOrgPerson" required>
-              <option value="">-- Pilih Karyawan --</option>
+              <!-- Diisi dinamis -->
             </select>
           </div>
 
           <div class="form-group">
-            <label for="selectOrgRole">Jabatan / Role Baru <span class="required">*</span></label>
+            <label for="inputOrgJobTitle">Jabatan Fungsional Baru (Job Title) <span class="required">*</span></label>
+            <input class="form-input" id="inputOrgJobTitle" type="text" required placeholder="Contoh: Principal Software Architect" autocomplete="off">
+            <span class="form-hint">Posisi fungsional sehari-hari.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="selectOrgRole">Peran Otorisasi Sistem Baru (System RBAC Role) <span class="required">*</span></label>
             <select class="form-select" id="selectOrgRole" required>
-              <option value="Employee">Employee (Staff / Developer)</option>
-              <option value="Supervisor / TL">Supervisor / Technical Lead</option>
-              <option value="Head">Head of Department</option>
-              <option value="PM">Project Manager (PM)</option>
-              <option value="HRGA">HRGA Specialist</option>
+              <option value="Employee">Employee</option>
+              <option value="Supervisor">Supervisor</option>
+              <option value="Head of Function">Head of Function</option>
+              <option value="Project Manager">Project Manager</option>
+              <option value="HRGA">HRGA</option>
               <option value="CEO / Management">CEO / Management</option>
+              <option value="System Admin">System Admin</option>
             </select>
+            <span class="form-hint">Hak akses rute &amp; kewenangan sistem.</span>
           </div>
 
           <div class="form-group">
-            <label for="selectOrgFunction">Divisi / Fungsi Baru <span class="required">*</span></label>
+            <label for="selectOrgFunction">Fungsi Organisasi Kanonikal (10 Fungsi Tetap) <span class="required">*</span></label>
             <select class="form-select" id="selectOrgFunction" required>
               <option value="Engineering">Engineering</option>
-              <option value="Quality">Quality / QA</option>
+              <option value="Quality">Quality</option>
               <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
               <option value="R&D">R&amp;D</option>
-              <option value="Delivery">Delivery / Project Mgmt</option>
+              <option value="Delivery">Delivery</option>
+              <option value="Business Development">Business Development</option>
               <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
               <option value="Finance">Finance</option>
               <option value="HRGA">HRGA</option>
-              <option value="Executive">Executive / Management</option>
+              <option value="Management">Management</option>
             </select>
           </div>
 
-          <div class="form-group col-span-2">
-            <label for="selectOrgManager">Atasan Langsung (Direct Manager)</label>
+          <div class="form-group">
+            <label for="selectOrgManager">Direct Manager (Garis Pelaporan) <span class="required" id="orgMgrRequiredStar">*</span></label>
             <select class="form-select" id="selectOrgManager">
-              <option value="">— Tidak ada / Posisi Puncak (CEO) —</option>
+              <!-- Diisi dinamis -->
             </select>
-            <span class="form-hint">Karyawan tidak dapat menjadi atasan langsung bagi dirinya sendiri.</span>
+            <span class="form-hint">Sistem memvalidasi pencegahan siklus hierarki melingkar secara rekursif.</span>
           </div>
 
           <div class="form-group col-span-2">
-            <label for="inputOrgEffectiveDate">Tanggal Mulai Berlaku (Effective Date) <span class="required">*</span></label>
-            <input class="form-input" id="inputOrgEffectiveDate" type="date" required>
-            <span class="form-hint">Penugasan aktif lama otomatis ditutup pada H-1 sebelum tanggal efektif baru.</span>
+            <label for="inputOrgEffectiveDate">Tanggal Mulai Berlaku Efektif (Effective Date) <span class="required">*</span></label>
+            <input class="form-input mono-num" id="inputOrgEffectiveDate" type="date" required>
+            <span class="form-hint">Wajib hari ini atau tanggal masa depan (<code>effectiveDate &gt;= today</code>). Larangan backdating ditegakkan penuh.</span>
           </div>
 
           <div class="form-group col-span-2">
-            <label for="textareaOrgReason">Alasan Perubahan Penugasan <span class="required">*</span></label>
-            <textarea class="form-textarea" id="textareaOrgReason" required placeholder="Jelaskan alasan promosi, rotasi divisi, atau penyesuaian hierarki pelaporan..."></textarea>
+            <label for="textareaOrgReason">Alasan Perubahan Struktur <span class="required">*</span></label>
+            <textarea class="form-textarea" id="textareaOrgReason" required placeholder="Wajib diisi minimal 10 karakter: jelaskan dasar SK mutasi, promosi, atau penyesuaian garis pelaporan..."></textarea>
           </div>
         </div>
 
-        <div class="notice warning hidden" id="retroWarningOrg">
-          <span class="notice-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          </span>
-          <div>
-            <strong>Perhatian Tanggal Lampau:</strong> Tanggal efektif yang dipilih berada di masa lalu. Sesuai tata kelola sistem, perubahan ini tidak merevisi secara retroaktif tiket blocker atau evaluasi kerja yang sudah diputuskan sebelumnya.
-          </div>
+        <div class="inline-error hidden" id="orgFormError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span id="orgFormErrorText"></span>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelOrgModal" type="button">Batal</button>
-        <button class="btn btn-primary" type="submit">Pratinjau Dampak</button>
+        <button class="btn" type="button" data-close-modal="modalOrgBackdrop">Batal</button>
+        <button class="btn btn-primary" type="submit">Lihat Pratinjau Dampak (Tahap 2)</button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODAL 2: PRATINJAU DAMPAK SEBELUM KONFIRMASI (IMPACT PREVIEW)           -->
+<!-- MODAL 2: TAHAP 2 — IMPACT PREVIEW MODAL (BEFORE VS PROPOSED AFTER)      -->
 <!-- ======================================================================= -->
 <div class="modal-backdrop" id="modalPreviewBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalPreviewTitle">
   <div class="modal-dialog">
     <div class="modal-header">
-      <h3 id="modalPreviewTitle">Pratinjau Dampak Perubahan</h3>
-      <button class="modal-close-btn" id="closePreviewModalBtn" type="button" aria-label="Tutup pratinjau">✕</button>
+      <div>
+        <h3 id="modalPreviewTitle">ImpactPreviewModal — Pratinjau Dampak Perubahan Struktur (Tahap 2 dari 2)</h3>
+        <p>Periksa perbandingan Before vs Proposed After, dampak antrean review, dan daftar bawahan sebelum menyimpan.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close-modal="modalPreviewBackdrop" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13.5px;color:var(--color-text-secondary);margin-bottom:14px">
-        Tinjau perbandingan kondisi sebelum dan sesudah perubahan penugasan organisasi berikut sebelum mengonfirmasi penyimpanan.
-      </p>
-
       <div class="preview-grid" id="previewContentArea">
-        <!-- Rendered dynamically -->
+        <!-- Diisi dinamis -->
       </div>
 
-      <div class="notice info" style="margin-top:16px">
-        <span class="notice-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-        </span>
+      <div class="callout-box callout-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         <div>
-          <strong>Notifikasi &amp; Audit Trail:</strong> Sistem akan mencatat riwayat perubahan ini ke *Audit Log* permanen dan secara otomatis mengirimkan notifikasi resmi kepada karyawan bersangkutan per tanggal efektif.
+          <strong>Jaminan Keutuhan Snapshot Historis:</strong> Perubahan ini hanya berlaku mulai Tanggal Efektif yang ditetapkan ke depan. Seluruh rekaman komitmen harian, hasil EOD, antrean koreksi/cuti, dan eskalasi pada tanggal sebelum Tanggal Efektif tetap menampilkan snapshot fungsi dan Direct Manager yang menjabat pada tanggal kejadian tersebut.
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" id="btnBackToEditOrg" type="button">Kembali ke Form</button>
-      <button class="btn btn-primary" id="btnConfirmOrgChange" type="button">Konfirmasi &amp; Simpan Penugasan</button>
+      <button class="btn" id="btnBackToOrgForm" type="button">Kembali ke Formulir</button>
+      <button class="btn btn-primary" id="btnConfirmOrgChange" type="button">Konfirmasi &amp; Simpan Versi Baru</button>
     </div>
   </div>
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODAL 3: PENDAFTARAN MASTER PROYEK BARU                                 -->
-<!-- ======================================================================= -->
-<div class="modal-backdrop" id="modalProjectBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalProjectTitle">
-  <div class="modal-dialog">
-    <div class="modal-header">
-      <h3 id="modalProjectTitle">Daftarkan Inisiatif / Proyek Baru</h3>
-      <button class="modal-close-btn" id="closeProjectModalBtn" type="button" aria-label="Tutup modal">✕</button>
-    </div>
-    <form id="formNewProject">
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="inputProjectCode">Kode Proyek (Scope Reference) <span class="required">*</span></label>
-            <input class="form-input" id="inputProjectCode" type="text" placeholder="Misal: PRJ-ERP, REF-OPS-20" required uppercase>
-            <span class="form-hint">Digunakan sebagai rujukan unik di seluruh sistem.</span>
-          </div>
-
-          <div class="form-group">
-            <label for="selectProjectDiv">Divisi Penanggung Jawab <span class="required">*</span></label>
-            <select class="form-select" id="selectProjectDiv" required>
-              <option value="Delivery">Delivery / Project Mgmt</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
-              <option value="Finance">Finance</option>
-              <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
-              <option value="HRGA">HRGA</option>
-            </select>
-          </div>
-
-          <div class="form-group col-span-2">
-            <label for="inputProjectName">Nama Proyek / Inisiatif <span class="required">*</span></label>
-            <input class="form-input" id="inputProjectName" type="text" placeholder="Nama inisiatif resmi perusahaan..." required>
-          </div>
-
-          <div class="form-group col-span-2">
-            <label for="textareaProjectDesc">Deskripsi Singkat / Ruang Lingkup</label>
-            <textarea class="form-textarea" id="textareaProjectDesc" placeholder="Jelaskan tujuan dan ruang lingkup proyek ini..."></textarea>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelProjectModal" type="button">Batal</button>
-        <button class="btn btn-primary" type="submit">Simpan Master Proyek</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ======================================================================= -->
-<!-- MODAL 4: PENUGASAN KEWENANGAN PROYEK (PROJECT AUTHORITY)                -->
+<!-- MODAL 3: TETAPKAN / UBAH PEMETAAN KEWENANGAN PROYEK                      -->
 <!-- ======================================================================= -->
 <div class="modal-backdrop" id="modalAuthorityBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalAuthTitle">
   <div class="modal-dialog">
     <div class="modal-header">
-      <h3 id="modalAuthTitle">Tambah Kewenangan Proyek (*Project Authority*)</h3>
-      <button class="modal-close-btn" id="closeAuthModalBtn" type="button" aria-label="Tutup modal">✕</button>
+      <div>
+        <h3 id="modalAuthTitle">Pemetaan Kewenangan Proyek (Project Authority Mapping)</h3>
+        <p>Tetapkan atau perbarui Assigned PM dan Authorized Escalation Reviewer untuk scope reference proyek aktif.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close-modal="modalAuthorityBackdrop" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
-    <form id="formAuthorityAssignment">
+    <form id="formAuthorityAssignment" novalidate>
       <div class="modal-body">
         <div class="form-grid">
-          <div class="form-group col-span-2">
-            <label for="selectAuthProjectTarget">Pilih Proyek Terdaftar <span class="required">*</span></label>
-            <select class="form-select" id="selectAuthProjectTarget" required>
-              <option value="">-- Pilih Proyek Terdaftar --</option>
-            </select>
-          </div>
-
-          <div class="form-group col-span-2">
-            <label for="selectAuthPersonTarget">Personil yang Diberi Kewenangan <span class="required">*</span></label>
-            <select class="form-select" id="selectAuthPersonTarget" required>
-              <option value="">-- Pilih Karyawan --</option>
-            </select>
-          </div>
-
-          <div class="form-group col-span-2">
-            <label for="selectAuthRole">Peran Kewenangan di Proyek <span class="required">*</span></label>
-            <select class="form-select" id="selectAuthRole" required>
-              <option value="Pimpinan Proyek (Project Lead / PM)">Pimpinan Proyek (Project Lead / PM) — Otoritas Utama</option>
-              <option value="Penanggung Jawab Keahlian / Lead Spesialis">Penanggung Jawab Keahlian / Lead Spesialis</option>
-              <option value="Penanggung Jawab Mitra / Klien (PIC Eksternal)">Penanggung Jawab Mitra / Klien (PIC Eksternal)</option>
-              <option value="Pengarah / Penjamin Proyek (Project Sponsor)">Pengarah / Penjamin Proyek (Project Sponsor)</option>
+          <div class="form-group">
+            <label for="selectAuthScopeRef">Kode Reference / Scope Proyek <span class="required">*</span></label>
+            <select class="form-select mono-num" id="selectAuthScopeRef" required>
+              <option value="PRJ-PORTAL">PRJ-PORTAL — Website Customer Portal &amp; Client Billing</option>
+              <option value="PRJ-CORE">PRJ-CORE — Enterprise Core Engine &amp; Identity Sync</option>
+              <option value="PRJ-MOBILE">PRJ-MOBILE — WorkPulse Mobile Apps (iOS &amp; Android)</option>
+              <option value="PRJ-INFRA-26">PRJ-INFRA-26 — Cloud Migration &amp; High Availability</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="inputAuthEffectiveDate">Tanggal Mulai Efektif <span class="required">*</span></label>
-            <input class="form-input" id="inputAuthEffectiveDate" type="date" required>
+            <label for="selectAuthFunction">Fungsi Kanonikal Terlibat <span class="required">*</span></label>
+            <select class="form-select" id="selectAuthFunction" required>
+              <option value="Delivery">Delivery</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Quality">Quality</option>
+              <option value="Operations & Infrastructure">Operations &amp; Infrastructure</option>
+              <option value="R&D">R&amp;D</option>
+              <option value="Business Development">Business Development</option>
+              <option value="Sales Enablement & Presales">Sales Enablement &amp; Presales</option>
+              <option value="Finance">Finance</option>
+              <option value="HRGA">HRGA</option>
+              <option value="Management">Management</option>
+            </select>
           </div>
 
           <div class="form-group">
-            <label for="inputAuthEndDate">Tanggal Berakhir (End Date)</label>
-            <input class="form-input" id="inputAuthEndDate" type="date">
-            <span class="form-hint">Kosongkan jika wewenang berlangsung tanpa batas waktu tetap.</span>
+            <label for="selectAuthPm">Assigned Project Manager (PM) <span class="required">*</span></label>
+            <select class="form-select" id="selectAuthPm" required>
+              <!-- Diisi dinamis -->
+            </select>
           </div>
+
+          <div class="form-group">
+            <label for="selectAuthReviewer">Authorized Escalation Reviewer <span class="required">*</span></label>
+            <select class="form-select" id="selectAuthReviewer" required>
+              <!-- Diisi dinamis -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="inputAuthEffectiveDate">Tanggal Mulai Efektif (Effective Date) <span class="required">*</span></label>
+            <input class="form-input mono-num" id="inputAuthEffectiveDate" type="date" required>
+            <span class="form-hint">Wajib <code>effectiveDate &gt;= today</code> (larangan backdating).</span>
+          </div>
+
+          <div class="form-group">
+            <label for="inputAuthEndDate">Tanggal Berakhir (End Date — Opsional)</label>
+            <input class="form-input mono-num" id="inputAuthEndDate" type="date">
+            <span class="form-hint">Kosongkan bila berlaku berkelanjutan selama proyek aktif.</span>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label for="textareaAuthReason">Alasan Perubahan Kewenangan Proyek <span class="required">*</span></label>
+            <textarea class="form-textarea" id="textareaAuthReason" required placeholder="Wajib diisi minimal 10 karakter: jelaskan dasar penunjukan PM / Escalation Reviewer pada scope proyek ini..."></textarea>
+          </div>
+        </div>
+
+        <div class="inline-error hidden" id="authFormError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span id="authFormErrorText"></span>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelAuthModal" type="button">Batal</button>
-        <button class="btn btn-primary" type="submit">Tetapkan Kewenangan</button>
+        <button class="btn" type="button" data-close-modal="modalAuthorityBackdrop">Batal</button>
+        <button class="btn btn-primary" type="submit">Simpan Pemetaan Kewenangan</button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODAL 5: RIWAYAT PENUGASAN (VIEW HISTORY MODAL)                         -->
+<!-- MODAL 4: KONFIRMASI AKHIRI KEWENANGAN PROYEK                            -->
+<!-- ======================================================================= -->
+<div class="modal-backdrop" id="modalEndAuthBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalEndAuthTitle">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-header">
+      <div>
+        <h3 id="modalEndAuthTitle">Akhiri Pemetaan Kewenangan Proyek</h3>
+        <p>Menutup masa berlaku kewenangan proyek tanpa menghapus rekaman historis.</p>
+      </div>
+      <button class="modal-close-btn" type="button" data-close-modal="modalEndAuthBackdrop" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <form id="formEndAuthority" novalidate>
+      <div class="modal-body">
+        <div class="preview-card" style="margin-bottom:14px">
+          <div class="preview-card-label mono-num" id="endAuthScopeLabel">PRJ-PORTAL</div>
+          <div class="preview-card-value" id="endAuthPeopleLabel">—</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label for="inputEndAuthDate">Tanggal Berakhir Efektif <span class="required">*</span></label>
+          <input class="form-input mono-num" id="inputEndAuthDate" type="date" required>
+          <span class="form-hint">Wajib hari ini atau tanggal masa depan (<code>endDate &gt;= today</code>).</span>
+        </div>
+
+        <div class="form-group">
+          <label for="textareaEndAuthReason">Alasan Pengakhiran Kewenangan <span class="required">*</span></label>
+          <textarea class="form-textarea" id="textareaEndAuthReason" required placeholder="Wajib diisi minimal 10 karakter: jelaskan alasan penutupan kewenangan proyek ini..."></textarea>
+        </div>
+
+        <div class="inline-error hidden" id="endAuthError" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span id="endAuthErrorText"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" data-close-modal="modalEndAuthBackdrop">Batal</button>
+        <button class="btn btn-danger" type="submit">Konfirmasi Akhiri Kewenangan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 5: RIWAYAT PENUGASAN PER PERSONIL                                 -->
 <!-- ======================================================================= -->
 <div class="modal-backdrop" id="modalHistoryBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalHistoryTitle">
   <div class="modal-dialog">
     <div class="modal-header">
       <div>
-        <h3 id="modalHistoryTitle">Riwayat Penugasan Organisasi</h3>
-        <span id="modalHistorySub" style="font-size:12px;color:var(--color-text-secondary);margin-top:2px;display:block"></span>
+        <h3 id="modalHistoryTitle">Riwayat Penugasan Struktur Organisasi</h3>
+        <p id="modalHistorySub">Linimasa efektif penugasan aktif dan masa lalu.</p>
       </div>
-      <button class="modal-close-btn" id="closeHistoryModalBtn" type="button" aria-label="Tutup riwayat">✕</button>
+      <button class="modal-close-btn" type="button" data-close-modal="modalHistoryBackdrop" aria-label="Tutup dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <div class="modal-body" id="modalHistoryBody">
-      <!-- Linimasa riwayat rendered dynamically -->
+      <!-- Diisi dinamis -->
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" id="btnCloseHistoryBtn" type="button">Tutup</button>
+      <button class="btn btn-primary" type="button" data-close-modal="modalHistoryBackdrop">Tutup</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- TOAST NOTIFICATION -->
 <div class="toast" id="systemToast" role="status" aria-live="polite">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-  <span id="toastMessage">Perubahan berhasil disimpan.</span>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="toastMessage">Berhasil disimpan.</span>
 </div>
 
 <script>
@@ -1220,13 +2004,22 @@ tbody tr:hover{background:rgba(247,250,249,0.7)}
   'use strict';
   const $ = id => document.getElementById(id);
 
-  // Helper tanggal
-  const getTodayDateStr = () => {
+  const escapeHtml = (str) => {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const getTodayStr = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  const formatDateDisplay = (dateStr) => {
+  const formatDateId = (dateStr) => {
     if (!dateStr) return '—';
     const parts = dateStr.split('-');
     if (parts.length !== 3) return dateStr;
@@ -1234,482 +2027,578 @@ tbody tr:hover{background:rgba(247,250,249,0.7)}
     return `${parts[2]} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
   };
 
-  const showToast = (msg) => {
-    const toast = $('systemToast');
-    const toastMsg = $('toastMessage');
-    if (!toast || !toastMsg) return;
-    toastMsg.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3500);
+  const getPreviousDayStr = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() - 1);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
   };
 
-  // =========================================================================
-  // DATA MASTER RESMI PT DUTA MEDIA (Baseline Sesuai PDD & PRD)
-  // =========================================================================
+  // Master Personil Terdaftar (dikelola identitasnya di 25-Admin-User-Invitation-Management.html)
   const people = [
-    { id: 'USR-001', name: 'Rina Putri', initial: 'RP' },
-    { id: 'USR-002', name: 'Budi Santoso', initial: 'BS' },
-    { id: 'USR-003', name: 'Dimas Prayoga', initial: 'DP' },
-    { id: 'USR-004', name: 'Dian Permata', initial: 'DP' },
-    { id: 'USR-005', name: 'Andi Wicaksono', initial: 'AW' },
-    { id: 'USR-006', name: 'Siti Rahma', initial: 'SR' },
-    { id: 'USR-007', name: 'Dewi Lestari', initial: 'DL' },
-    { id: 'USR-008', name: 'Farhan Pratama', initial: 'FP' },
-    { id: 'USR-009', name: 'Bima Santoso', initial: 'BS' },
-    { id: 'USR-010', name: 'Hendra Wijaya', initial: 'HW' }
+    { id: 'USR-001', name: 'Rina Putri', initial: 'RP', email: 'rina.putri@dutamedia.com' },
+    { id: 'USR-002', name: 'Budi Santoso', initial: 'BS', email: 'budi.santoso@dutamedia.com' },
+    { id: 'USR-003', name: 'Dimas Prayoga', initial: 'DP', email: 'dimas.prayoga@dutamedia.com' },
+    { id: 'USR-004', name: 'Dian Permata', initial: 'DP', email: 'dian.permata@dutamedia.com' },
+    { id: 'USR-005', name: 'Andi Wicaksono', initial: 'AW', email: 'andi.wicaksono@dutamedia.com' },
+    { id: 'USR-006', name: 'Siti Rahma', initial: 'SR', email: 'siti.rahma@dutamedia.com' },
+    { id: 'USR-007', name: 'Dewi Lestari', initial: 'DL', email: 'dewi.lestari@dutamedia.com' },
+    { id: 'USR-008', name: 'Farhan Pratama', initial: 'FP', email: 'farhan.pratama@dutamedia.com' },
+    { id: 'USR-009', name: 'Bima Santoso', initial: 'BS', email: 'bima.santoso@dutamedia.com' },
+    { id: 'USR-010', name: 'Hendra Wijaya', initial: 'HW', email: 'hendra.wijaya@dutamedia.com' }
   ];
 
-  let orgAssignments = [
-    { id: 'ORG-001', personId: 'USR-001', role: 'Supervisor / TL', func: 'Engineering', managerId: 'USR-002', effectiveDate: '2025-01-01', endDate: null, reason: 'Penugasan Technical Lead Tim Core' },
-    { id: 'ORG-002', personId: 'USR-002', role: 'Head', func: 'Engineering', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan Head of Engineering' },
-    { id: 'ORG-003', personId: 'USR-003', role: 'Head', func: 'Operations & Infrastructure', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan Head of Ops & Infra' },
-    { id: 'ORG-004', personId: 'USR-004', role: 'Supervisor / TL', func: 'Quality', managerId: 'USR-010', effectiveDate: '2024-08-01', endDate: null, reason: 'Penugasan QA / QC Lead Independen' },
-    { id: 'ORG-005', personId: 'USR-005', role: 'Supervisor / TL', func: 'R&D', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan Principal Engineer' },
-    { id: 'ORG-006', personId: 'USR-006', role: 'Supervisor / TL', func: 'Finance', managerId: 'USR-010', effectiveDate: '2024-01-01', endDate: null, reason: 'Penugasan Senior Finance' },
-    { id: 'ORG-007', personId: 'USR-007', role: 'HRGA', func: 'HRGA', managerId: 'USR-010', effectiveDate: '2024-01-01', endDate: null, reason: 'Penugasan HRGA Specialist' },
-    { id: 'ORG-008', personId: 'USR-008', role: 'Head', func: 'Sales Enablement & Presales', managerId: 'USR-010', effectiveDate: '2024-09-01', endDate: null, reason: 'Penugasan Head of Sales & Presales' },
-    { id: 'ORG-009', personId: 'USR-009', role: 'PM', func: 'Delivery', managerId: 'USR-010', effectiveDate: '2024-05-01', endDate: null, reason: 'Penugasan Project Manager Utama' },
-    { id: 'ORG-010', personId: 'USR-010', role: 'CEO / Management', func: 'Executive', managerId: null, effectiveDate: '2023-01-01', endDate: null, reason: 'Direksi / Pimpinan Perusahaan' }
+  // Penugasan Struktur Organisasi (10 Fungsi Kanonikal DEC-009)
+  const initialOrgAssignments = [
+    { id: 'ORG-000A', personId: 'USR-001', jobTitle: 'Software Developer Core', role: 'Employee', func: 'Engineering', managerId: 'USR-002', effectiveDate: '2023-01-15', endDate: '2024-12-31', reason: 'Penugasan awal Software Developer Core pada fungsi Engineering.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-001', personId: 'USR-001', jobTitle: 'Technical Lead Tim Core', role: 'Supervisor', func: 'Engineering', managerId: 'USR-002', effectiveDate: '2025-01-01', endDate: null, reason: 'Promosi menjadi Technical Lead Tim Core berdasarkan evaluasi tahunan.', createdBy: 'Dewi Lestari (HRGA)' },
+
+    { id: 'ORG-000B', personId: 'USR-002', jobTitle: 'Lead Software Architect', role: 'Supervisor', func: 'Engineering', managerId: 'USR-010', effectiveDate: '2022-06-01', endDate: '2024-05-31', reason: 'Penugasan awal Lead Software Architect.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-002', personId: 'USR-002', jobTitle: 'Head of Engineering', role: 'Head of Function', func: 'Engineering', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Pengangkatan resmi sebagai Head of Engineering.', createdBy: 'Dewi Lestari (HRGA)' },
+
+    { id: 'ORG-000C', personId: 'USR-003', jobTitle: 'Infrastructure Supervisor', role: 'Supervisor', func: 'Operations & Infrastructure', managerId: 'USR-010', effectiveDate: '2023-01-01', endDate: '2024-05-31', reason: 'Penugasan Infrastructure Supervisor.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-003', personId: 'USR-003', jobTitle: 'Head of Ops & Infrastructure', role: 'Head of Function', func: 'Operations & Infrastructure', managerId: 'USR-010', effectiveDate: '2024-06-01', endDate: null, reason: 'Promosi menjadi Head of Operations & Infrastructure.', createdBy: 'Dewi Lestari (HRGA)' },
+
+    { id: 'ORG-004', personId: 'USR-004', jobTitle: 'QA / QC Lead Independen', role: 'Supervisor', func: 'Quality', managerId: 'USR-010', effectiveDate: '2024-08-01', endDate: null, reason: 'Penugasan kepemimpinan fungsi Quality independen.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-005', personId: 'USR-005', jobTitle: 'Principal R&D Engineer', role: 'Supervisor', func: 'R&D', managerId: 'USR-002', effectiveDate: '2024-06-01', endDate: null, reason: 'Penugasan riset dan inovasi produk pada fungsi R&D.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-006', personId: 'USR-006', jobTitle: 'Senior Finance & Accounting Lead', role: 'Supervisor', func: 'Finance', managerId: 'USR-010', effectiveDate: '2024-01-01', endDate: null, reason: 'Penugasan kepemimpinan operasional Finance.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-007', personId: 'USR-007', jobTitle: 'HRGA Specialist & People Admin', role: 'HRGA', func: 'HRGA', managerId: 'USR-010', effectiveDate: '2024-01-01', endDate: null, reason: 'Penugasan tata kelola kepatuhan dan sumber daya manusia.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-008', personId: 'USR-008', jobTitle: 'Head of Sales & Presales', role: 'Head of Function', func: 'Sales Enablement & Presales', managerId: 'USR-010', effectiveDate: '2024-09-01', endDate: null, reason: 'Penugasan pimpinan fungsi Sales Enablement & Presales.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-009', personId: 'USR-009', jobTitle: 'Delivery Lead & Project Manager Utama', role: 'Project Manager', func: 'Delivery', managerId: 'USR-010', effectiveDate: '2024-05-01', endDate: null, reason: 'Penugasan koordinator utama fungsi Delivery & manajemen proyek.', createdBy: 'Dewi Lestari (HRGA)' },
+    { id: 'ORG-010', personId: 'USR-010', jobTitle: 'Chief Executive Officer (Direktur Utama)', role: 'CEO / Management', func: 'Management', managerId: null, effectiveDate: '2023-01-01', endDate: null, reason: 'Pucuk pimpinan eksekutif perusahaan (fungsi Management).', createdBy: 'Dewi Lestari (HRGA)' }
   ];
 
-  let projects = [
-    { code: 'PRJ-PORTAL', name: 'Website Customer Portal & Client Billing', division: 'Delivery', desc: 'Portal interaksi pelanggan terintegrasi billing & payment gateway', status: 'Aktif' },
-    { code: 'PRJ-CORE', name: 'Enterprise Core Engine & Identity Sync', division: 'Engineering', desc: 'Sistem sentral sinkronisasi akun & otorisasi enterprise', status: 'Aktif' },
-    { code: 'PRJ-MOBILE', name: 'WorkPulse Mobile Apps (iOS & Android)', division: 'Delivery', desc: 'Aplikasi pendukung mobilitas pelaporan presensi dan komitmen', status: 'Aktif' }
+  // Pemetaan Kewenangan Proyek (ProjectAuthorityMapping)
+  const initialProjectAuthorities = [
+    {
+      id: 'PA-001',
+      projectCode: 'PRJ-PORTAL',
+      projectName: 'Website Customer Portal & Client Billing',
+      pmId: 'USR-009',
+      reviewerId: 'USR-002',
+      involvedFunction: 'Delivery',
+      effectiveDate: '2025-01-01',
+      endDate: null,
+      reason: 'Penunjukan PM utama dan Escalation Reviewer teknis untuk rilis Customer Portal.'
+    },
+    {
+      id: 'PA-002',
+      projectCode: 'PRJ-PORTAL',
+      projectName: 'Website Customer Portal & Client Billing',
+      pmId: 'USR-009',
+      reviewerId: 'USR-004',
+      involvedFunction: 'Quality',
+      effectiveDate: '2025-01-15',
+      endDate: null,
+      reason: 'Pendelegasian kewenangan review blocker kualitas rilis billing kepada QA Lead.'
+    },
+    {
+      id: 'PA-003',
+      projectCode: 'PRJ-CORE',
+      projectName: 'Enterprise Core Engine & Identity Sync',
+      pmId: 'USR-001',
+      reviewerId: 'USR-002',
+      involvedFunction: 'Engineering',
+      effectiveDate: '2025-02-01',
+      endDate: null,
+      reason: 'Penetapan kewenangan proyek arsitektur inti kepada Technical Lead & Head of Engineering.'
+    },
+    {
+      id: 'PA-004',
+      projectCode: 'PRJ-CORE',
+      projectName: 'Enterprise Core Engine & Identity Sync',
+      pmId: 'USR-001',
+      reviewerId: 'USR-005',
+      involvedFunction: 'R&D',
+      effectiveDate: '2025-02-10',
+      endDate: null,
+      reason: 'Penunjukan Principal R&D Engineer sebagai eskalasi teknis sinkronisasi identitas.'
+    },
+    {
+      id: 'PA-005',
+      projectCode: 'PRJ-MOBILE',
+      projectName: 'WorkPulse Mobile Apps (iOS & Android)',
+      pmId: 'USR-009',
+      reviewerId: 'USR-003',
+      involvedFunction: 'Operations & Infrastructure',
+      effectiveDate: '2025-03-01',
+      endDate: null,
+      reason: 'Kewenangan eskalasi deployment mobile dan kesiapan infrastruktur API gateway.'
+    }
   ];
 
-  let projectAuthorities = [
-    { id: 'PA-001', personId: 'USR-009', projectCode: 'PRJ-PORTAL', authRole: 'Pimpinan Proyek (Project Lead / PM)', effectiveDate: '2025-01-01', endDate: null },
-    { id: 'PA-002', personId: 'USR-004', projectCode: 'PRJ-PORTAL', authRole: 'Penanggung Jawab Keahlian / Lead Spesialis', effectiveDate: '2025-01-01', endDate: null },
-    { id: 'PA-003', personId: 'USR-005', projectCode: 'PRJ-CORE', authRole: 'Penanggung Jawab Keahlian / Lead Spesialis', effectiveDate: '2024-06-01', endDate: null },
-    { id: 'PA-004', personId: 'USR-001', projectCode: 'PRJ-CORE', authRole: 'Pimpinan Proyek (Project Lead / PM)', effectiveDate: '2025-02-01', endDate: null },
-    { id: 'PA-005', personId: 'USR-003', projectCode: 'PRJ-MOBILE', authRole: 'Pimpinan Proyek (Project Lead / PM)', effectiveDate: '2025-03-01', endDate: null }
+  const initialAuditLogs = [
+    {
+      time: '01 Mar 2025, 08:30 WIB',
+      actor: 'Dewi Lestari (HRGA)',
+      action: 'Project Authority Mapped',
+      badgeClass: 'badge-info',
+      target: 'PRJ-MOBILE (Operations & Infrastructure)',
+      detail: 'Assigned PM: Bima Santoso (USR-009), Authorized Escalation Reviewer: Dimas Prayoga (USR-003), Mulai Efektif: 01 Mar 2025.'
+    },
+    {
+      time: '01 Jan 2025, 08:00 WIB',
+      actor: 'Dewi Lestari (HRGA)',
+      action: 'Org Assignment Updated',
+      badgeClass: 'badge-active',
+      target: 'Rina Putri (USR-001)',
+      detail: 'Promosi dari Software Developer Core (Employee) menjadi Technical Lead Tim Core (Supervisor) pada fungsi Engineering. Rekaman ORG-000A ditutup pada 31 Des 2024.'
+    }
   ];
 
+  let orgAssignments = JSON.parse(JSON.stringify(initialOrgAssignments));
+  let projectAuthorities = JSON.parse(JSON.stringify(initialProjectAuthorities));
+  let auditLogs = JSON.parse(JSON.stringify(initialAuditLogs));
   let pendingOrgChange = null;
+  let endingAuthId = null;
 
-  // Helpers
-  const getPerson = id => people.find(p => p.id === id);
-  const getPersonName = id => getPerson(id)?.name || '—';
-  const getProject = code => projects.find(pr => pr.code === code);
-  const getCurrentOrg = personId => orgAssignments.find(a => a.personId === personId && a.endDate === null) || null;
-
-  // =========================================================================
-  // RENDER FUNGSI METRIK
-  // =========================================================================
-  const renderMetrics = () => {
-    $('metricTotalPeople').textContent = people.length;
-    $('metricActiveOrg').textContent = orgAssignments.filter(a => a.endDate === null).length;
-    $('metricTotalProjects').textContent = projects.filter(p => p.status === 'Aktif').length;
-    $('metricActiveAuthority').textContent = projectAuthorities.filter(a => a.endDate === null).length;
-
-    $('badgeOrgCount').textContent = orgAssignments.filter(a => a.endDate === null).length;
-    $('badgeProjectCount').textContent = projects.length;
-    $('badgeAuthCount').textContent = projectAuthorities.filter(a => a.endDate === null).length;
+  let toastTimer = null;
+  const showToast = (msg) => {
+    const t = $('systemToast');
+    $('toastMessage').textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
   };
 
-  // =========================================================================
-  // TAB NAVIGATION LOGIC (BAGIAN 2)
-  // =========================================================================
-  const switchTab = (tabName) => {
-    const tabs = [
-      { name: 'org', btn: $('tabBtnOrg'), panel: $('panelOrg') },
-      { name: 'projects', btn: $('tabBtnProjects'), panel: $('panelProjects') },
-      { name: 'authority', btn: $('tabBtnAuthority'), panel: $('panelAuthority') }
-    ];
+  const getPerson = (id) => people.find(p => p.id === id) || null;
+  const getCurrentOrg = (personId) => orgAssignments.find(a => a.personId === personId && a.endDate === null) || null;
 
-    tabs.forEach(t => {
-      const isActive = t.name === tabName;
-      t.btn.classList.toggle('active', isActive);
-      t.btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      t.panel.classList.toggle('hidden', !isActive);
-    });
+  // Recursive Subordinate Finder (mencari seluruh bawahan langsung & tidak langsung beserta jejak rantai)
+  const getAllSubordinateIds = (managerId) => {
+    if (!managerId) return [];
+    const visited = new Set();
+    const queue = [managerId];
+    while (queue.length > 0) {
+      const currMgr = queue.shift();
+      const directSubs = orgAssignments
+        .filter(a => a.managerId === currMgr && a.endDate === null)
+        .map(a => a.personId);
+      directSubs.forEach(subId => {
+        if (!visited.has(subId)) {
+          visited.add(subId);
+          queue.push(subId);
+        }
+      });
+    }
+    return Array.from(visited);
+  };
+
+  // Membangun string rantai siklus melingkar (misal: Budi Santoso -> Rina Putri -> Budi Santoso)
+  const buildCycleChainText = (personId, proposedManagerId) => {
+    if (personId === proposedManagerId) {
+      const p = getPerson(personId);
+      return `${p ? p.name : personId} (${personId}) -> ${p ? p.name : personId} (${personId})`;
+    }
+    // Cari jalur dari proposedManagerId naik ke personId melalui manager aktif saat ini
+    const chain = [proposedManagerId];
+    let cursor = proposedManagerId;
+    let safety = 0;
+    while (cursor && safety < 20) {
+      safety++;
+      const active = getCurrentOrg(cursor);
+      if (!active || !active.managerId) break;
+      chain.unshift(active.managerId);
+      if (active.managerId === personId) break;
+      cursor = active.managerId;
+    }
+    chain.push(personId);
+    return chain.map(id => {
+      const p = getPerson(id);
+      return `${p ? p.name : id} (${id})`;
+    }).join(' -> ');
+  };
+
+  const renderMetrics = () => {
+    const activeOrgs = orgAssignments.filter(a => a.endDate === null).length;
+    const endedOrgs = orgAssignments.filter(a => a.endDate !== null).length;
+    const activeAuths = projectAuthorities.filter(a => a.endDate === null).length;
+
+    $('metricActiveOrg').textContent = activeOrgs;
+    $('metricHistoricalOrg').textContent = endedOrgs;
+    $('metricActiveAuthority').textContent = activeAuths;
+    $('badgeOrgCount').textContent = activeOrgs;
+    $('badgeAuthCount').textContent = activeAuths;
+  };
+
+  const switchTab = (tab) => {
+    const isOrg = tab === 'org';
+    $('tabBtnOrg').classList.toggle('active', isOrg);
+    $('tabBtnOrg').setAttribute('aria-selected', isOrg ? 'true' : 'false');
+    $('panelOrg').classList.toggle('hidden', !isOrg);
+
+    $('tabBtnAuthority').classList.toggle('active', !isOrg);
+    $('tabBtnAuthority').setAttribute('aria-selected', !isOrg ? 'true' : 'false');
+    $('panelAuthority').classList.toggle('hidden', isOrg);
   };
 
   $('tabBtnOrg').addEventListener('click', () => switchTab('org'));
-  $('tabBtnProjects').addEventListener('click', () => switchTab('projects'));
   $('tabBtnAuthority').addEventListener('click', () => switchTab('authority'));
 
-  // =========================================================================
-  // RENDER TAB 1: STRUKTUR ORGANISASI
-  // =========================================================================
+  $('cardMetricActiveOrg').addEventListener('click', () => {
+    switchTab('org');
+    $('filterOrgStatus').value = 'active';
+    renderOrgTable();
+  });
+
+  $('cardMetricHistoricalOrg').addEventListener('click', () => {
+    switchTab('org');
+    $('filterOrgStatus').value = 'ended';
+    renderOrgTable();
+  });
+
+  $('cardMetricFunctions').addEventListener('click', () => {
+    switchTab('org');
+    $('filterOrgStatus').value = 'active';
+    renderOrgTable();
+  });
+
+  $('cardMetricAuthority').addEventListener('click', () => {
+    switchTab('authority');
+    renderAuthorityTable();
+  });
+
+  // Render Tab 1: Penugasan Struktur Organisasi
   const renderOrgTable = () => {
-    const search = $('searchOrgPerson').value.trim().toLowerCase();
-    const funcFilter = $('filterOrgFunction').value;
-    const roleFilter = $('filterOrgRole').value;
+    const q = $('searchOrgPerson').value.trim().toLowerCase();
+    const fn = $('filterOrgFunction').value;
+    const rl = $('filterOrgRole').value;
+    const st = $('filterOrgStatus').value;
 
-    const tbody = $('tableOrgBody');
-    tbody.replaceChildren();
-
-    const activeAssignments = orgAssignments.filter(a => a.endDate === null);
-    const filtered = activeAssignments.filter(a => {
-      const person = getPerson(a.personId);
-      const personName = (person?.name || '').toLowerCase();
-      const personId = a.personId.toLowerCase();
-
-      const matchSearch = personName.includes(search) || personId.includes(search);
-      const matchFunc = funcFilter === 'all' || a.func === funcFilter;
-      const matchRole = roleFilter === 'all' || a.role === roleFilter;
-
-      return matchSearch && matchFunc && matchRole;
+    const filtered = orgAssignments.filter(a => {
+      const p = getPerson(a.personId);
+      const matchQ = !q || [p?.name || '', a.personId, a.jobTitle, a.func].join(' ').toLowerCase().includes(q);
+      const matchFn = fn === 'all' || a.func === fn;
+      const matchRl = rl === 'all' || a.role === rl;
+      const isAct = a.endDate === null;
+      const matchSt = st === 'all' || (st === 'active' ? isAct : !isAct);
+      return matchQ && matchFn && matchRl && matchSt;
     });
 
-    if (filtered.length === 0) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-secondary)">Tidak ada personil yang sesuai dengan kriteria filter pencarian.</td>`;
-      tbody.appendChild(tr);
+    const tbody = $('tableOrgBody');
+    if (!filtered.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align:center;padding:32px;color:var(--color-text-secondary)">
+            <strong>Tidak ada data penugasan struktur yang cocok dengan filter.</strong>
+          </td>
+        </tr>
+      `;
       return;
     }
 
-    filtered.forEach(a => {
-      const person = getPerson(a.personId);
-      const manager = a.managerId ? getPerson(a.managerId) : null;
-      const tr = document.createElement('tr');
+    tbody.innerHTML = filtered.map(a => {
+      const p = getPerson(a.personId);
+      const mgr = a.managerId ? getPerson(a.managerId) : null;
+      const isAct = a.endDate === null;
 
-      tr.innerHTML = `
-        <td>
-          <div class="user-cell">
-            <div class="user-cell-avatar">${person?.initial || 'KP'}</div>
-            <div class="user-cell-info">
-              <div class="user-cell-name">${person?.name || a.personId}</div>
-              <div class="user-cell-id">${a.personId}</div>
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar">${escapeHtml(p?.initial || 'US')}</div>
+              <div>
+                <div class="user-name">${escapeHtml(p?.name || a.personId)}</div>
+                <div class="user-id">${escapeHtml(a.personId)}</div>
+              </div>
             </div>
-          </div>
-        </td>
-        <td>
-          <div style="font-weight:700;color:var(--color-text-primary)">${a.func}</div>
-          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${a.role}</div>
-        </td>
-        <td>
-          ${manager ? `
-            <div style="font-weight:700;color:var(--color-text-primary)">${manager.name}</div>
-            <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${manager.id}</div>
-          ` : `
-            <span class="pill amber"><span class="pill-dot"></span> Posisi Puncak (CEO)</span>
-          `}
-        </td>
-        <td>
-          <div style="font-weight:700">${formatDateDisplay(a.effectiveDate)}</div>
-          <div style="font-size:11.5px;color:var(--color-text-secondary);margin-top:2px">Aktif saat ini</div>
-        </td>
-        <td>
-          <span class="pill green"><span class="pill-dot"></span> Aktif</span>
-        </td>
-        <td>
-          <div class="table-actions">
-            <button class="btn btn-secondary btn-small btn-view-history" data-person-id="${a.personId}" type="button">
-              Riwayat
-            </button>
-            <button class="btn btn-primary btn-small btn-edit-org" data-person-id="${a.personId}" type="button">
-              Ubah
-            </button>
-          </div>
-        </td>
+          </td>
+          <td>
+            <div style="font-weight:700;color:var(--color-text-primary)">${escapeHtml(a.jobTitle)}</div>
+            <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:2px">Jabatan Fungsional</div>
+          </td>
+          <td>
+            <span class="badge ${a.role === 'CEO / Management' ? 'badge-warning' : a.role === 'Head of Function' || a.role === 'Project Manager' ? 'badge-info' : a.role === 'HRGA' || a.role === 'System Admin' ? 'badge-active' : 'badge-neutral'}">
+              ${escapeHtml(a.role)}
+            </span>
+          </td>
+          <td>
+            <span class="badge badge-neutral">${escapeHtml(a.func)}</span>
+          </td>
+          <td>
+            ${mgr ? `
+              <div style="font-weight:700;color:var(--color-text-primary)">${escapeHtml(mgr.name)}</div>
+              <div class="mono-num" style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(mgr.id)}</div>
+            ` : `
+              <span class="badge badge-warning">Pucuk Pimpinan Tertinggi (Tanpa Atasan)</span>
+            `}
+          </td>
+          <td>
+            <div class="mono-num" style="font-weight:700;color:var(--color-text-primary)">${escapeHtml(formatDateId(a.effectiveDate))}</div>
+            <div class="mono-num" style="font-size:0.75rem;color:var(--color-text-muted);margin-top:2px">
+              ${isAct ? 's.d. Sekarang' : `s.d. ${escapeHtml(formatDateId(a.endDate))}`}
+            </div>
+          </td>
+          <td>
+            <span class="badge ${isAct ? 'badge-active' : 'badge-neutral'}">${isAct ? 'Active (Berlaku)' : 'Ended (Historis)'}</span>
+          </td>
+          <td style="text-align:right">
+            <div class="row-actions">
+              <button class="btn btn-small" type="button" data-org-history="${escapeHtml(a.personId)}">Lihat Riwayat</button>
+              ${isAct ? `<button class="btn btn-primary btn-small" type="button" data-org-edit="${escapeHtml(a.personId)}">Ubah Struktur</button>` : ''}
+            </div>
+          </td>
+        </tr>
       `;
-      tbody.appendChild(tr);
-    });
-
-    // Pasang Event Listeners
-    tbody.querySelectorAll('.btn-view-history').forEach(btn => {
-      btn.addEventListener('click', () => openHistoryModal(btn.dataset.personId));
-    });
-    tbody.querySelectorAll('.btn-edit-org').forEach(btn => {
-      btn.addEventListener('click', () => openOrgModal(btn.dataset.personId));
-    });
+    }).join('');
   };
 
-  $('searchOrgPerson').addEventListener('input', renderOrgTable);
-  $('filterOrgFunction').addEventListener('change', renderOrgTable);
-  $('filterOrgRole').addEventListener('change', renderOrgTable);
+  ['searchOrgPerson', 'filterOrgFunction', 'filterOrgRole', 'filterOrgStatus'].forEach(id => {
+    $(id).addEventListener(id === 'searchOrgPerson' ? 'input' : 'change', renderOrgTable);
+  });
+
   $('btnResetOrgFilter').addEventListener('click', () => {
     $('searchOrgPerson').value = '';
     $('filterOrgFunction').value = 'all';
     $('filterOrgRole').value = 'all';
+    $('filterOrgStatus').value = 'active';
     renderOrgTable();
   });
 
-  // =========================================================================
-  // RENDER TAB 2: MASTER PROYEK
-  // =========================================================================
-  const renderProjectsTable = () => {
-    const search = $('searchProject').value.trim().toLowerCase();
-    const statusFilter = $('filterProjectStatus').value;
-
-    const tbody = $('tableProjectsBody');
-    tbody.replaceChildren();
-
-    const filtered = projects.filter(p => {
-      const matchSearch = p.code.toLowerCase().includes(search) || p.name.toLowerCase().includes(search);
-      const matchStatus = statusFilter === 'all' || p.status === statusFilter;
-      return matchSearch && matchStatus;
-    });
-
-    if (filtered.length === 0) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-secondary)">Tidak ada proyek yang cocok dengan filter.</td>`;
-      tbody.appendChild(tr);
-      return;
-    }
-
-    filtered.forEach(p => {
-      const authCount = projectAuthorities.filter(pa => pa.projectCode === p.code && pa.endDate === null).length;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong style="color:var(--color-brand-primary)">${p.code}</strong></td>
-        <td>
-          <div style="font-weight:700;color:var(--color-text-primary)">${p.name}</div>
-          <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">${p.desc}</div>
-        </td>
-        <td><span class="pill blue">${p.division}</span></td>
-        <td>
-          <span style="font-weight:800;color:var(--color-brand-primary)">${authCount} Personil</span>
-        </td>
-        <td>
-          <span class="pill ${p.status === 'Aktif' ? 'green' : 'neutral'}">
-            <span class="pill-dot"></span> ${p.status}
-          </span>
-        </td>
-        <td>
-          <button class="btn btn-secondary btn-small btn-view-project-auth" data-code="${p.code}" type="button">
-            Kelola Wewenang
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    tbody.querySelectorAll('.btn-view-project-auth').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const code = btn.dataset.code;
-        switchTab('authority');
-        $('filterAuthProject').value = code;
-        renderAuthorityTable();
-      });
-    });
-  };
-
-  $('searchProject').addEventListener('input', renderProjectsTable);
-  $('filterProjectStatus').addEventListener('change', renderProjectsTable);
-  $('btnResetProjectFilter').addEventListener('click', () => {
-    $('searchProject').value = '';
-    $('filterProjectStatus').value = 'all';
-    renderProjectsTable();
-  });
-
-  // =========================================================================
-  // RENDER TAB 3: KEWENANGAN PROYEK
-  // =========================================================================
-  const populateAuthProjectFilter = () => {
-    const sel = $('filterAuthProject');
-    sel.replaceChildren();
-    sel.add(new Option('Semua Proyek', 'all'));
-    projects.forEach(p => {
-      sel.add(new Option(`${p.name} (${p.code})`, p.code));
-    });
-  };
-
+  // Render Tab 2: Pemetaan Kewenangan Proyek
   const renderAuthorityTable = () => {
-    const search = $('searchAuthText').value.trim().toLowerCase();
-    const projFilter = $('filterAuthProject').value;
-    const statusFilter = $('filterAuthStatus').value;
-
-    const tbody = $('tableAuthorityBody');
-    tbody.replaceChildren();
+    const q = $('searchAuthText').value.trim().toLowerCase();
+    const fn = $('filterAuthFunction').value;
+    const st = $('filterAuthStatus').value;
 
     const filtered = projectAuthorities.filter(pa => {
-      const person = getPerson(pa.personId);
-      const proj = getProject(pa.projectCode);
-      const personName = (person?.name || '').toLowerCase();
-      const projName = (proj?.name || '').toLowerCase();
-
-      const matchSearch = personName.includes(search) || projName.includes(search) || pa.projectCode.toLowerCase().includes(search);
-      const matchProj = projFilter === 'all' || pa.projectCode === projFilter;
+      const pm = getPerson(pa.pmId);
+      const rev = getPerson(pa.reviewerId);
+      const matchQ = !q || [pa.projectCode, pa.projectName, pm?.name || '', rev?.name || '', pa.involvedFunction].join(' ').toLowerCase().includes(q);
+      const matchFn = fn === 'all' || pa.involvedFunction === fn;
       const isAct = pa.endDate === null;
-      const matchStatus = statusFilter === 'all' || (statusFilter === 'active' ? isAct : !isAct);
-
-      return matchSearch && matchProj && matchStatus;
+      const matchSt = st === 'all' || (st === 'active' ? isAct : !isAct);
+      return matchQ && matchFn && matchSt;
     });
 
-    if (filtered.length === 0) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="7" style="text-align:center;padding:32px;color:var(--color-text-secondary)">Tidak ada data kewenangan proyek yang cocok.</td>`;
-      tbody.appendChild(tr);
+    const tbody = $('tableAuthorityBody');
+    if (!filtered.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center;padding:32px;color:var(--color-text-secondary)">
+            <strong>Tidak ada pemetaan kewenangan proyek yang cocok dengan filter.</strong>
+          </td>
+        </tr>
+      `;
       return;
     }
 
-    filtered.forEach(pa => {
-      const person = getPerson(pa.personId);
-      const proj = getProject(pa.projectCode);
+    tbody.innerHTML = filtered.map(pa => {
+      const pm = getPerson(pa.pmId);
+      const rev = getPerson(pa.reviewerId);
       const isAct = pa.endDate === null;
-      const tr = document.createElement('tr');
 
-      tr.innerHTML = `
-        <td>
-          <div class="user-cell">
-            <div class="user-cell-avatar">${person?.initial || 'KP'}</div>
-            <div class="user-cell-info">
-              <div class="user-cell-name">${person?.name || pa.personId}</div>
-              <div class="user-cell-id">${pa.personId}</div>
+      return `
+        <tr>
+          <td>
+            <div class="mono-num" style="font-weight:800;color:var(--color-brand-primary)">${escapeHtml(pa.projectCode)}</div>
+            <div style="font-weight:700;color:var(--color-text-primary);margin-top:2px">${escapeHtml(pa.projectName)}</div>
+          </td>
+          <td>
+            <div style="font-weight:700;color:var(--color-text-primary)">${escapeHtml(pm?.name || pa.pmId)}</div>
+            <div class="mono-num" style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(pa.pmId)} · Assigned PM</div>
+          </td>
+          <td>
+            <div style="font-weight:700;color:var(--color-text-primary)">${escapeHtml(rev?.name || pa.reviewerId)}</div>
+            <div class="mono-num" style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(pa.reviewerId)} · Escalation Reviewer</div>
+          </td>
+          <td>
+            <span class="badge badge-info">${escapeHtml(pa.involvedFunction)}</span>
+          </td>
+          <td>
+            <div class="mono-num" style="font-weight:700;color:var(--color-text-primary)">${escapeHtml(formatDateId(pa.effectiveDate))}</div>
+            <div class="mono-num" style="font-size:0.75rem;color:var(--color-text-muted);margin-top:2px">
+              ${pa.endDate ? `Berakhir: ${escapeHtml(formatDateId(pa.endDate))}` : 'Berlaku Berkelanjutan'}
             </div>
-          </div>
-        </td>
-        <td>
-          <div style="font-weight:700;color:var(--color-text-primary)">${proj?.name || pa.projectCode}</div>
-          <div style="font-size:11.5px;color:var(--color-brand-primary);font-weight:700">${pa.projectCode}</div>
-        </td>
-        <td>
-          <span class="pill blue">${pa.authRole}</span>
-        </td>
-        <td>${formatDateDisplay(pa.effectiveDate)}</td>
-        <td>${pa.endDate ? formatDateDisplay(pa.endDate) : '—'}</td>
-        <td>
-          <span class="pill ${isAct ? 'green' : 'neutral'}">
-            <span class="pill-dot"></span> ${isAct ? 'Aktif' : 'Berakhir'}
-          </span>
-        </td>
-        <td>
-          <div class="table-actions">
-            ${isAct ? `
-              <button class="btn btn-secondary btn-small btn-end-auth" data-id="${pa.id}" type="button">
-                Akhiri Wewenang
-              </button>
-            ` : `
-              <span style="font-size:12px;color:var(--color-text-disabled)">Telah diakhiri</span>
-            `}
-          </div>
-        </td>
+          </td>
+          <td>
+            <span class="badge ${isAct ? 'badge-active' : 'badge-neutral'}">${isAct ? 'Active (Berlaku)' : 'Ended (Berakhir)'}</span>
+          </td>
+          <td style="text-align:right">
+            <div class="row-actions">
+              ${isAct ? `
+                <button class="btn btn-small" type="button" data-auth-edit="${escapeHtml(pa.id)}">Ubah</button>
+                <button class="btn btn-danger btn-small" type="button" data-auth-end="${escapeHtml(pa.id)}">Akhiri</button>
+              ` : `<span style="font-size:0.75rem;color:var(--color-text-muted)">Historis</span>`}
+            </div>
+          </td>
+        </tr>
       `;
-      tbody.appendChild(tr);
-    });
-
-    tbody.querySelectorAll('.btn-end-auth').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        const item = projectAuthorities.find(x => x.id === id);
-        if (!item) return;
-        const person = getPerson(item.personId);
-        const proj = getProject(item.projectCode);
-
-        if (confirm(`Akhiri kewenangan proyek untuk ${person?.name} pada ${proj?.name}?`)) {
-          item.endDate = getTodayDateStr();
-          renderAuthorityTable();
-          renderProjectsTable();
-          renderMetrics();
-          showToast(`Kewenangan proyek untuk ${person?.name} telah diakhiri per hari ini.`);
-        }
-      });
-    });
+    }).join('');
   };
 
-  $('searchAuthText').addEventListener('input', renderAuthorityTable);
-  $('filterAuthProject').addEventListener('change', renderAuthorityTable);
-  $('filterAuthStatus').addEventListener('change', renderAuthorityTable);
+  ['searchAuthText', 'filterAuthFunction', 'filterAuthStatus'].forEach(id => {
+    $(id).addEventListener(id === 'searchAuthText' ? 'input' : 'change', renderAuthorityTable);
+  });
+
   $('btnResetAuthFilter').addEventListener('click', () => {
     $('searchAuthText').value = '';
-    $('filterAuthProject').value = 'all';
-    $('filterAuthStatus').value = 'all';
+    $('filterAuthFunction').value = 'all';
+    $('filterAuthStatus').value = 'active';
     renderAuthorityTable();
   });
 
-  // =========================================================================
-  // MODAL FORM 1: UBAH PENUGASAN ORGANISASI
-  // =========================================================================
-  const populateOrgSelects = (selectedPersonId = '') => {
-    const personSel = $('selectOrgPerson');
-    personSel.replaceChildren();
-    personSel.add(new Option('-- Pilih Karyawan --', ''));
-    people.forEach(p => {
-      personSel.add(new Option(`${p.name} (${p.id})`, p.id));
-    });
-    if (selectedPersonId) personSel.value = selectedPersonId;
-
-    updateManagerOptions(selectedPersonId);
+  // Render Audit Trail Timeline
+  const renderAuditTimeline = () => {
+    $('auditCountBadge').textContent = `${auditLogs.length} entri audit`;
+    $('auditTimelineContainer').innerHTML = auditLogs.map(log => `
+      <div class="timeline-item">
+        <div class="timeline-time">${escapeHtml(log.time)}</div>
+        <div class="timeline-content">
+          <div class="timeline-title">
+            <span class="badge ${escapeHtml(log.badgeClass)}">${escapeHtml(log.action)}</span>
+            <span>${escapeHtml(log.target)}</span>
+            <span style="font-size:0.75rem;color:var(--color-text-muted);font-weight:600">oleh ${escapeHtml(log.actor)}</span>
+          </div>
+          <div class="timeline-desc">${escapeHtml(log.detail)}</div>
+        </div>
+      </div>
+    `).join('');
   };
 
-  const updateManagerOptions = (excludePersonId = '') => {
-    const mgrSel = $('selectOrgManager');
-    const prev = mgrSel.value;
-    mgrSel.replaceChildren();
-    mgrSel.add(new Option('— Tidak ada / Posisi Puncak (CEO) —', ''));
+  // Modal Open/Close
+  const openModal = (id) => $(id)?.classList.add('open');
+  const closeModal = (id) => $(id)?.classList.remove('open');
+
+  document.querySelectorAll('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
+  });
+
+  document.querySelectorAll('.modal-backdrop').forEach(bg => {
+    bg.addEventListener('click', (e) => {
+      if (e.target === bg) closeModal(bg.id);
+    });
+  });
+
+  // Populate Org Assignment Modal Selects
+  const populateOrgManagerSelect = (personId, selectedMgrId = '') => {
+    const sel = $('selectOrgManager');
+    sel.innerHTML = `<option value="">— Tanpa Atasan Langsung (Khusus CEO / Management) —</option>`;
+    const subIds = new Set(getAllSubordinateIds(personId));
 
     people.forEach(p => {
-      if (p.id !== excludePersonId) {
-        mgrSel.add(new Option(`${p.name} (${p.id})`, p.id));
+      const curr = getCurrentOrg(p.id);
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      let suffix = '';
+      if (p.id === personId) {
+        suffix = ' [Diri Sendiri — Tidak Diizinkan]';
+      } else if (subIds.has(p.id)) {
+        suffix = ' [Bawahan Rekursif — Akan Menciptakan Siklus Melingkar]';
       }
+      opt.textContent = `${p.name} (${p.id}) — ${curr ? `${curr.jobTitle} [${curr.func}]` : ''}${suffix}`;
+      sel.appendChild(opt);
     });
+    sel.value = selectedMgrId || '';
+  };
 
-    if (excludePersonId && prev !== excludePersonId) {
-      mgrSel.value = prev;
-    }
+  const openOrgModal = (personId = 'USR-002', prefill = null) => {
+    $('orgFormError').classList.add('hidden');
+    const personSel = $('selectOrgPerson');
+    personSel.innerHTML = people.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.id)})</option>`).join('');
+
+    const targetId = prefill?.personId || personId || 'USR-002';
+    personSel.value = targetId;
+
+    const curr = getCurrentOrg(targetId);
+    const mgrId = prefill !== null ? prefill.managerId : (curr?.managerId || '');
+    populateOrgManagerSelect(targetId, mgrId);
+
+    $('inputOrgJobTitle').value = prefill ? prefill.jobTitle : (curr?.jobTitle || '');
+    $('selectOrgRole').value = prefill ? prefill.role : (curr?.role || 'Employee');
+    $('selectOrgFunction').value = prefill ? prefill.func : (curr?.func || 'Engineering');
+    $('inputOrgEffectiveDate').value = prefill ? prefill.effectiveDate : getTodayStr();
+    $('textareaOrgReason').value = prefill ? prefill.reason : '';
+
+    openModal('modalOrgBackdrop');
   };
 
   $('selectOrgPerson').addEventListener('change', (e) => {
     const pid = e.target.value;
-    updateManagerOptions(pid);
     const curr = getCurrentOrg(pid);
+    populateOrgManagerSelect(pid, curr?.managerId || '');
     if (curr) {
+      $('inputOrgJobTitle').value = curr.jobTitle;
       $('selectOrgRole').value = curr.role;
       $('selectOrgFunction').value = curr.func;
-      $('selectOrgManager').value = curr.managerId || '';
     }
+    $('orgFormError').classList.add('hidden');
   });
 
-  const openOrgModal = (personId = '') => {
-    $('formOrgAssignment').reset();
-    populateOrgSelects(personId);
-    $('inputOrgEffectiveDate').value = getTodayDateStr();
-    $('retroWarningOrg').classList.add('hidden');
+  $('btnHeaderReassignOrg').addEventListener('click', () => openOrgModal('USR-001'));
+  $('btnPanelReassignOrg').addEventListener('click', () => openOrgModal('USR-001'));
 
-    if (personId) {
-      const curr = getCurrentOrg(personId);
-      if (curr) {
-        $('selectOrgRole').value = curr.role;
-        $('selectOrgFunction').value = curr.func;
-        $('selectOrgManager').value = curr.managerId || '';
-      }
-    }
-
-    $('modalOrgBackdrop').classList.add('open');
-  };
-
-  const closeOrgModal = () => {
-    $('modalOrgBackdrop').classList.remove('open');
-  };
-
-  $('btnReassignOrg').addEventListener('click', () => openOrgModal());
-  $('btnQuickAddOrg').addEventListener('click', () => openOrgModal());
-  $('closeOrgModalBtn').addEventListener('click', closeOrgModal);
-  $('btnCancelOrgModal').addEventListener('click', closeOrgModal);
-
-  $('inputOrgEffectiveDate').addEventListener('change', (e) => {
-    const val = e.target.value;
-    const isPast = val && val < getTodayDateStr();
-    $('retroWarningOrg').classList.toggle('hidden', !isPast);
+  // Tombol Simulasi Uji Siklus Rekursif
+  $('simTestCycleError').addEventListener('click', () => {
+    setRoleState('admin');
+    openOrgModal('USR-002');
+    $('selectOrgManager').value = 'USR-001'; // Rina Putri adalah bawahan Budi Santoso -> menciptakan siklus USR-002 -> USR-001 -> USR-002
+    $('textareaOrgReason').value = 'Pengujian deteksi siklus pelaporan melingkar rekursif.';
+    $('formOrgAssignment').requestSubmit();
   });
 
-  // SUBMIT ORG FORM -> BUKA PRATINJAU DAMPAK (BAGIAN 5)
+  // Validate Org Assignment Form -> Open ImpactPreviewModal
   $('formOrgAssignment').addEventListener('submit', (e) => {
     e.preventDefault();
-    const pid = $('selectOrgPerson').value;
+    const errBox = $('orgFormError');
+    const errTxt = $('orgFormErrorText');
+    errBox.classList.add('hidden');
+
+    const personId = $('selectOrgPerson').value;
+    const jobTitle = $('inputOrgJobTitle').value.trim();
     const role = $('selectOrgRole').value;
     const func = $('selectOrgFunction').value;
     const managerId = $('selectOrgManager').value || null;
     const effectiveDate = $('inputOrgEffectiveDate').value;
     const reason = $('textareaOrgReason').value.trim();
+    const today = getTodayStr();
 
-    if (!pid || !role || !func || !effectiveDate || !reason) {
-      alert('Harap lengkapi semua bidang isian wajib.');
+    if (!personId || !jobTitle || !role || !func || !effectiveDate) {
+      errTxt.textContent = 'Seluruh field bertanda bintang (*) wajib diisi.';
+      errBox.classList.remove('hidden');
       return;
     }
 
-    if (pid === managerId) {
-      alert('Karyawan tidak dapat menjadi atasan langsung bagi dirinya sendiri.');
+    // 1. Validasi Anti-Self-Reporting & Anti-Siklus Hierarki Rekursif (A -> B -> A)
+    if (managerId === personId) {
+      const chain = buildCycleChainText(personId, managerId);
+      errTxt.textContent = `Validasi Anti-Siklus Hierarki Ditolak: Personil tidak dapat memilih dirinya sendiri sebagai Direct Manager (${chain}).`;
+      errBox.classList.remove('hidden');
       return;
     }
 
-    const curr = getCurrentOrg(pid);
+    const allSubordinates = getAllSubordinateIds(personId);
+    if (managerId && allSubordinates.includes(managerId)) {
+      const chain = buildCycleChainText(personId, managerId);
+      errTxt.textContent = `Validasi Anti-Siklus Hierarki Rekursif Ditolak: Memilih bawahan langsung/tidak langsung sebagai Direct Manager akan menciptakan rantai pelaporan melingkar (${chain}).`;
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    if (role !== 'CEO / Management' && !managerId) {
+      errTxt.textContent = 'Personil dengan peran selain CEO / Management wajib memiliki Direct Manager aktif.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    // 2. Validasi Larangan Backdating (DEC-008: effectiveDate >= today)
+    if (effectiveDate < today) {
+      errTxt.textContent = `Larangan Backdating: Tanggal Mulai Berlaku Efektif (${formatDateId(effectiveDate)}) tidak boleh di masa lalu. Wajib hari ini (${formatDateId(today)}) atau masa depan.`;
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    // 3. Validasi Alasan Perubahan Struktur (min. 10 karakter)
+    if (reason.length < 10) {
+      errTxt.textContent = 'Alasan Perubahan Struktur wajib diisi minimal 10 karakter.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    const curr = getCurrentOrg(personId);
     pendingOrgChange = {
-      personId: pid,
+      personId,
+      jobTitle,
       role,
       func,
       managerId,
@@ -1718,317 +2607,396 @@ tbody tr:hover{background:rgba(247,250,249,0.7)}
       currentAssignment: curr
     };
 
-    closeOrgModal();
-    openPreviewModal(pendingOrgChange);
+    closeModal('modalOrgBackdrop');
+    openImpactPreviewModal(pendingOrgChange);
   });
 
-  // =========================================================================
-  // MODAL 2: PRATINJAU DAMPAK SEBELUM KONFIRMASI (IMPACT PREVIEW)
-  // =========================================================================
-  const openPreviewModal = (data) => {
+  const openImpactPreviewModal = (data) => {
     const person = getPerson(data.personId);
     const curr = data.currentAssignment;
-    const oldManager = curr && curr.managerId ? getPerson(curr.managerId) : null;
-    const newManager = data.managerId ? getPerson(data.managerId) : null;
+    const oldMgr = curr?.managerId ? getPerson(curr.managerId) : null;
+    const newMgr = data.managerId ? getPerson(data.managerId) : null;
+    const directSubs = orgAssignments.filter(a => a.managerId === data.personId && a.endDate === null);
 
-    // Cari bawahan yang terdampak jika person ini adalah manager
-    const subordinates = orgAssignments.filter(a => a.managerId === data.personId && a.endDate === null);
-
-    const container = $('previewContentArea');
-    container.innerHTML = `
+    $('previewContentArea').innerHTML = `
       <div class="preview-card col-span-2">
-        <div class="preview-card-label">Karyawan yang Diperbarui</div>
-        <div class="preview-card-value">${person?.name} (${person?.id})</div>
-        <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Tanggal Mulai Efektif: <strong>${formatDateDisplay(data.effectiveDate)}</strong></div>
+        <div class="preview-card-label">Personil &amp; Tanggal Mulai Berlaku Efektif</div>
+        <div class="preview-card-value">${escapeHtml(person?.name || data.personId)} (<span class="mono-num">${escapeHtml(data.personId)}</span>) — Efektif Mulai <span class="mono-num">${escapeHtml(formatDateId(data.effectiveDate))}</span></div>
       </div>
 
       <div class="preview-card">
-        <div class="preview-card-label">Kondisi Penugasan Saat Ini</div>
-        <div class="preview-card-value" style="color:var(--color-text-secondary)">
-          ${curr ? `${curr.role} · ${curr.func}` : 'Belum ada penugasan'}
-        </div>
-        <div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px">
-          Atasan: <strong>${oldManager ? oldManager.name : 'Posisi Puncak / CEO'}</strong>
-        </div>
-      </div>
-
-      <div class="preview-card" style="border-color:var(--color-brand-primary);background:var(--color-brand-tint)">
-        <div class="preview-card-label" style="color:var(--color-brand-primary)">Penugasan Baru yang Ditetapkan</div>
-        <div class="preview-card-value" style="color:var(--color-brand-primary)">
-          ${data.role} · ${data.func}
-        </div>
-        <div style="font-size:12px;color:var(--color-brand-primary);margin-top:4px">
-          Atasan Baru: <strong>${newManager ? newManager.name : 'Posisi Puncak / CEO'}</strong>
+        <div class="preview-card-label">Kondisi Sebelumnya (Before)</div>
+        <div class="preview-card-value">${escapeHtml(curr ? curr.jobTitle : '—')}</div>
+        <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:4px">
+          System Role: <strong>${escapeHtml(curr ? curr.role : '—')}</strong><br>
+          Fungsi Kanonikal: <strong>${escapeHtml(curr ? curr.func : '—')}</strong><br>
+          Direct Manager: <strong>${oldMgr ? `${escapeHtml(oldMgr.name)} (${escapeHtml(oldMgr.id)})` : 'Pucuk Pimpinan'}</strong>
         </div>
       </div>
 
-      <div class="preview-card col-span-2">
-        <div class="preview-card-label">Alasan Perubahan</div>
-        <div style="font-size:13px;color:var(--color-text-primary);margin-top:4px">${data.reason}</div>
+      <div class="preview-card" style="border-color:var(--color-brand-primary);background:var(--color-brand-light)">
+        <div class="preview-card-label" style="color:var(--color-brand-primary)">Usulan Penugasan Baru (Proposed After)</div>
+        <div class="preview-card-value" style="color:var(--color-brand-primary)">${escapeHtml(data.jobTitle)}</div>
+        <div style="font-size:0.75rem;color:var(--color-text-primary);margin-top:4px">
+          System Role: <strong>${escapeHtml(data.role)}</strong><br>
+          Fungsi Kanonikal: <strong>${escapeHtml(data.func)}</strong><br>
+          Direct Manager Baru: <strong>${newMgr ? `${escapeHtml(newMgr.name)} (${escapeHtml(newMgr.id)})` : 'Pucuk Pimpinan'}</strong>
+        </div>
       </div>
 
       <div class="preview-card col-span-2">
-        <div class="preview-card-label">Dampak Hierarki &amp; Anggota Tim Bawahan</div>
-        <div style="font-size:13px;margin-top:4px">
-          ${subordinates.length > 0 ? `
-            <span style="color:#991B1B;font-weight:700">Terdapat ${subordinates.length} karyawan bawahan langsung:</span>
-            <ul style="margin:6px 0 0 18px;font-size:12.5px;color:var(--color-text-secondary)">
-              ${subordinates.map(s => `<li>${getPersonName(s.personId)} (${s.personId}) — ${s.role}</li>`).join('')}
-            </ul>
-            <div style="margin-top:6px;font-size:11.5px;color:var(--color-text-secondary)">Jalur pelaporan bawahan tetap mengarah ke personil ini, kecuali jika dilakukan penyesuaian terpisah.</div>
-          ` : `
-            <span style="color:var(--color-text-secondary)">Personil ini saat ini tidak memiliki bawahan langsung yang melapor kepadanya.</span>
-          `}
+        <div class="preview-card-label">Dampak Alur Kerja, Antrean Koreksi/Cuti, &amp; Bawahan Langsung (${directSubs.length} Anggota)</div>
+        <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-top:4px">
+          Mulai <strong class="mono-num">${escapeHtml(formatDateId(data.effectiveDate))}</strong>, permohonan koreksi material, persetujuan cuti, dan eskalasi Organizational Authority Level 1 dari personil ini akan diarahkan ke <strong>${newMgr ? escapeHtml(newMgr.name) : 'Pucuk Pimpinan'}</strong>.
         </div>
+        ${directSubs.length ? `
+          <div class="subordinates-grid">
+            ${directSubs.map(s => {
+              const sp = getPerson(s.personId);
+              return `
+                <div class="subordinate-chip">
+                  <div class="user-avatar" style="width:28px;height:28px;font-size:0.75rem">${escapeHtml(sp?.initial || 'US')}</div>
+                  <div>
+                    <div style="font-weight:700;font-size:0.75rem">${escapeHtml(sp?.name || s.personId)}</div>
+                    <div style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(s.jobTitle)}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `<div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:6px">Tidak ada bawahan langsung yang melapor ke personil ini.</div>`}
+      </div>
+
+      <div class="preview-card col-span-2">
+        <div class="preview-card-label">Alasan Resmi Perubahan Struktur</div>
+        <div style="font-size:0.8125rem;color:var(--color-text-primary);margin-top:4px">${escapeHtml(data.reason)}</div>
       </div>
     `;
-
-    $('modalPreviewBackdrop').classList.add('open');
+    openModal('modalPreviewBackdrop');
   };
 
-  const closePreviewModal = () => {
-    $('modalPreviewBackdrop').classList.remove('open');
-  };
-
-  $('closePreviewModalBtn').addEventListener('click', closePreviewModal);
-  $('btnBackToEditOrg').addEventListener('click', () => {
-    closePreviewModal();
+  $('btnBackToOrgForm').addEventListener('click', () => {
+    closeModal('modalPreviewBackdrop');
     if (pendingOrgChange) {
-      openOrgModal(pendingOrgChange.personId);
+      openOrgModal(pendingOrgChange.personId, pendingOrgChange);
     }
   });
 
-  // KONFIRMASI SIMPAN PENUGASAN (BAGIAN 5)
   $('btnConfirmOrgChange').addEventListener('click', () => {
     if (!pendingOrgChange) return;
     const d = pendingOrgChange;
-
-    // 1. Tutup penugasan aktif lama
     const curr = getCurrentOrg(d.personId);
     if (curr) {
-      const closingDate = new Date(d.effectiveDate);
-      closingDate.setDate(closingDate.getDate() - 1);
-      const closeDateStr = closingDate.toISOString().slice(0, 10);
-      curr.endDate = closeDateStr < curr.effectiveDate ? curr.effectiveDate : closeDateStr;
+      const prevDay = getPreviousDayStr(d.effectiveDate);
+      curr.endDate = prevDay < curr.effectiveDate ? curr.effectiveDate : prevDay;
     }
 
-    // 2. Tambah penugasan baru
     const newId = `ORG-${String(orgAssignments.length + 1).padStart(3, '0')}`;
-    orgAssignments.push({
+    orgAssignments.unshift({
       id: newId,
       personId: d.personId,
+      jobTitle: d.jobTitle,
       role: d.role,
       func: d.func,
       managerId: d.managerId,
       effectiveDate: d.effectiveDate,
       endDate: null,
-      reason: d.reason
+      reason: d.reason,
+      createdBy: 'Dewi Lestari (HRGA)'
+    });
+
+    const p = getPerson(d.personId);
+    auditLogs.unshift({
+      time: 'Baru saja',
+      actor: 'Dewi Lestari (HRGA)',
+      action: 'Org Assignment Updated',
+      badgeClass: 'badge-active',
+      target: `${p ? p.name : d.personId} (${d.personId})`,
+      detail: `Penugasan baru (${newId}): Job Title "${d.jobTitle}", System Role "${d.role}", Fungsi "${d.func}", Efektif ${formatDateId(d.effectiveDate)}. Alasan: ${d.reason}`
     });
 
     pendingOrgChange = null;
-    closePreviewModal();
+    closeModal('modalPreviewBackdrop');
+    renderMetrics();
     renderOrgTable();
-    renderMetrics();
-    showToast(`Penugasan organisasi untuk ${getPersonName(d.personId)} berhasil diperbarui.`);
+    renderAuditTimeline();
+    showToast(`Penugasan struktur ${p ? p.name : d.personId} berhasil disimpan efektif mulai ${formatDateId(d.effectiveDate)}.`);
   });
 
-  // =========================================================================
-  // MODAL 3: PENDAFTARAN PROYEK BARU
-  // =========================================================================
-  const openProjectModal = () => {
-    $('formNewProject').reset();
-    $('modalProjectBackdrop').classList.add('open');
-  };
-  const closeProjectModal = () => {
-    $('modalProjectBackdrop').classList.remove('open');
-  };
-
-  $('btnRegisterProject').addEventListener('click', openProjectModal);
-  $('btnAddProjectInTab').addEventListener('click', openProjectModal);
-  $('closeProjectModalBtn').addEventListener('click', closeProjectModal);
-  $('btnCancelProjectModal').addEventListener('click', closeProjectModal);
-
-  $('formNewProject').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = $('inputProjectCode').value.trim().toUpperCase();
-    const name = $('inputProjectName').value.trim();
-    const div = $('selectProjectDiv').value;
-    const desc = $('textareaProjectDesc').value.trim() || 'Inisiatif proyek perusahaan';
-
-    if (!code || !name) {
-      alert('Kode dan nama proyek wajib diisi.');
+  // Table Row Actions on Tab 1
+  $('tableOrgBody').addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-org-edit]');
+    if (editBtn) {
+      openOrgModal(editBtn.dataset.orgEdit);
       return;
     }
-
-    if (projects.some(p => p.code === code)) {
-      alert(`Kode proyek '${code}' sudah digunakan. Gunakan kode yang unik.`);
-      return;
+    const histBtn = e.target.closest('[data-org-history]');
+    if (histBtn) {
+      openPersonHistoryModal(histBtn.dataset.orgHistory);
     }
-
-    projects.push({
-      code,
-      name,
-      division: div,
-      desc,
-      status: 'Aktif'
-    });
-
-    closeProjectModal();
-    populateAuthProjectFilter();
-    renderProjectsTable();
-    renderMetrics();
-    showToast(`Proyek baru '${name}' (${code}) berhasil didaftarkan.`);
   });
 
-  // =========================================================================
-  // MODAL 4: PENUGASAN KEWENANGAN PROYEK
-  // =========================================================================
-  const openAuthorityModal = () => {
-    $('formAuthorityAssignment').reset();
-    const projSel = $('selectAuthProjectTarget');
-    projSel.replaceChildren();
-    projSel.add(new Option('-- Pilih Proyek Terdaftar --', ''));
-    projects.filter(p => p.status === 'Aktif').forEach(p => {
-      projSel.add(new Option(`${p.name} (${p.code})`, p.code));
-    });
-
-    const personSel = $('selectAuthPersonTarget');
-    personSel.replaceChildren();
-    personSel.add(new Option('-- Pilih Karyawan --', ''));
-    people.forEach(p => {
-      personSel.add(new Option(`${p.name} (${p.id})`, p.id));
-    });
-
-    $('inputAuthEffectiveDate').value = getTodayDateStr();
-    $('modalAuthorityBackdrop').classList.add('open');
-  };
-
-  const closeAuthorityModal = () => {
-    $('modalAuthorityBackdrop').classList.remove('open');
-  };
-
-  $('btnAddAuthorityBtn').addEventListener('click', openAuthorityModal);
-  $('closeAuthModalBtn').addEventListener('click', closeAuthorityModal);
-  $('btnCancelAuthModal').addEventListener('click', closeAuthorityModal);
-
-  $('formAuthorityAssignment').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const pCode = $('selectAuthProjectTarget').value;
-    const pid = $('selectAuthPersonTarget').value;
-    const role = $('selectAuthRole').value;
-    const eff = $('inputAuthEffectiveDate').value;
-    const end = $('inputAuthEndDate').value || null;
-
-    if (!pCode || !pid || !eff) {
-      alert('Harap lengkapi isian proyek, personil, dan tanggal efektif.');
-      return;
-    }
-
-    if (end && end < eff) {
-      alert('Tanggal berakhir tidak boleh mendahului tanggal efektif.');
-      return;
-    }
-
-    const newId = `PA-${String(projectAuthorities.length + 1).padStart(3, '0')}`;
-    projectAuthorities.push({
-      id: newId,
-      personId: pid,
-      projectCode: pCode,
-      authRole: role,
-      effectiveDate: eff,
-      endDate: end
-    });
-
-    closeAuthorityModal();
-    renderAuthorityTable();
-    renderProjectsTable();
-    renderMetrics();
-    showToast(`Kewenangan proyek untuk ${getPersonName(pid)} pada ${pCode} berhasil ditetapkan.`);
-  });
-
-  // =========================================================================
-  // MODAL 5: RIWAYAT PENUGASAN (VIEW HISTORY)
-  // =========================================================================
-  const openHistoryModal = (personId) => {
-    const person = getPerson(personId);
-    $('modalHistoryTitle').textContent = `Riwayat Penugasan: ${person?.name || personId}`;
-    $('modalHistorySub').textContent = `ID Karyawan: ${personId} · Audit Trail Linimasa Organisasi`;
-
-    const history = orgAssignments
+  const openPersonHistoryModal = (personId) => {
+    const p = getPerson(personId);
+    $('modalHistoryTitle').textContent = `Riwayat Penugasan Struktur: ${p ? p.name : personId} (${personId})`;
+    const list = orgAssignments
       .filter(a => a.personId === personId)
-      .slice()
       .sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
 
-    const body = $('modalHistoryBody');
-    body.innerHTML = `
-      <div style="display:grid;gap:14px">
-        ${history.map((h, idx) => {
-          const isCurrent = h.endDate === null;
-          const mgr = h.managerId ? getPerson(h.managerId) : null;
+    $('modalHistoryBody').innerHTML = `
+      <div class="timeline">
+        ${list.map(item => {
+          const mgr = item.managerId ? getPerson(item.managerId) : null;
+          const isAct = item.endDate === null;
           return `
-            <div style="padding:14px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:${isCurrent ? 'var(--color-brand-tint)' : 'var(--color-surface)'}">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span class="pill ${isCurrent ? 'green' : 'neutral'}">
-                  <span class="pill-dot"></span> ${isCurrent ? 'Aktif Saat Ini' : 'Historis'}
-                </span>
-                <span style="font-size:12px;font-weight:700;color:var(--color-text-secondary)">
-                  ${formatDateDisplay(h.effectiveDate)} ${h.endDate ? `s.d. ${formatDateDisplay(h.endDate)}` : '(Sekarang)'}
-                </span>
+            <div class="timeline-item">
+              <div class="timeline-time">
+                <div>${escapeHtml(formatDateId(item.effectiveDate))}</div>
+                <div style="margin-top:2px">${isAct ? 's.d. Sekarang' : `s.d. ${escapeHtml(formatDateId(item.endDate))}`}</div>
               </div>
-              <div style="font-size:14px;font-weight:800;color:var(--color-text-primary)">
-                ${h.role} · ${h.func}
-              </div>
-              <div style="font-size:12.5px;color:var(--color-text-secondary);margin-top:4px">
-                Atasan Langsung: <strong>${mgr ? mgr.name : 'Posisi Puncak (CEO)'}</strong>
-              </div>
-              <div style="font-size:12px;color:var(--color-text-primary);margin-top:6px;background:rgba(255,255,255,0.6);padding:6px 10px;border-radius:4px">
-                Alasan: <em>"${h.reason}"</em>
+              <div class="timeline-content">
+                <div class="timeline-title">
+                  <span class="badge ${isAct ? 'badge-active' : 'badge-neutral'}">${isAct ? 'Aktif Saat Ini' : 'Historis'}</span>
+                  <span>${escapeHtml(item.jobTitle)}</span>
+                  <span class="badge badge-info">${escapeHtml(item.role)}</span>
+                  <span class="badge badge-neutral">${escapeHtml(item.func)}</span>
+                </div>
+                <div class="timeline-desc">
+                  Direct Manager: <strong>${mgr ? `${escapeHtml(mgr.name)} (${escapeHtml(mgr.id)})` : 'Pucuk Pimpinan'}</strong> · Alasan: ${escapeHtml(item.reason)}
+                </div>
               </div>
             </div>
           `;
         }).join('')}
       </div>
     `;
-
-    $('modalHistoryBackdrop').classList.add('open');
+    openModal('modalHistoryBackdrop');
   };
 
-  const closeHistoryModal = () => {
-    $('modalHistoryBackdrop').classList.remove('open');
+  // Tab 2: Project Authority Modal
+  const openAuthorityModal = (editId = null) => {
+    $('formAuthorityAssignment').reset();
+    $('authFormError').classList.add('hidden');
+
+    const opts = people.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.id)})</option>`).join('');
+    $('selectAuthPm').innerHTML = opts;
+    $('selectAuthReviewer').innerHTML = opts;
+    $('inputAuthEffectiveDate').value = getTodayStr();
+
+    if (editId) {
+      const existing = projectAuthorities.find(x => x.id === editId);
+      if (existing) {
+        $('selectAuthScopeRef').value = existing.projectCode;
+        $('selectAuthFunction').value = existing.involvedFunction;
+        $('selectAuthPm').value = existing.pmId;
+        $('selectAuthReviewer').value = existing.reviewerId;
+        $('inputAuthEffectiveDate').value = getTodayStr();
+      }
+    } else {
+      $('selectAuthPm').value = 'USR-009';
+      $('selectAuthReviewer').value = 'USR-002';
+    }
+
+    openModal('modalAuthorityBackdrop');
   };
 
-  $('closeHistoryModalBtn').addEventListener('click', closeHistoryModal);
-  $('btnCloseHistoryBtn').addEventListener('click', closeHistoryModal);
+  $('btnHeaderAddAuthority').addEventListener('click', () => {
+    switchTab('authority');
+    openAuthorityModal();
+  });
+  $('btnPanelAddAuthority').addEventListener('click', () => openAuthorityModal());
 
-  // Close modals on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      ['modalOrgBackdrop', 'modalPreviewBackdrop', 'modalProjectBackdrop', 'modalAuthorityBackdrop', 'modalHistoryBackdrop'].forEach(id => {
-        $(id)?.classList.remove('open');
-      });
+  $('formAuthorityAssignment').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const errBox = $('authFormError');
+    const errTxt = $('authFormErrorText');
+    errBox.classList.add('hidden');
+
+    const scopeSelect = $('selectAuthScopeRef');
+    const projectCode = scopeSelect.value;
+    const projectName = scopeSelect.selectedOptions[0].textContent.split(' — ')[1] || projectCode;
+    const involvedFunction = $('selectAuthFunction').value;
+    const pmId = $('selectAuthPm').value;
+    const reviewerId = $('selectAuthReviewer').value;
+    const effectiveDate = $('inputAuthEffectiveDate').value;
+    const endDate = $('inputAuthEndDate').value || null;
+    const reason = $('textareaAuthReason').value.trim();
+    const today = getTodayStr();
+
+    if (!projectCode || !involvedFunction || !pmId || !reviewerId || !effectiveDate) {
+      errTxt.textContent = 'Seluruh field wajib bertanda bintang (*) harus diisi.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    if (effectiveDate < today) {
+      errTxt.textContent = `Larangan Backdating: Tanggal Mulai Efektif (${formatDateId(effectiveDate)}) tidak boleh di masa lalu. Wajib hari ini (${formatDateId(today)}) atau masa depan.`;
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    if (endDate && endDate < effectiveDate) {
+      errTxt.textContent = 'Tanggal Berakhir tidak boleh lebih awal dari Tanggal Mulai Efektif.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    if (reason.length < 10) {
+      errTxt.textContent = 'Alasan Perubahan Kewenangan Proyek wajib diisi minimal 10 karakter.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    const newId = `PA-${String(projectAuthorities.length + 1).padStart(3, '0')}`;
+    projectAuthorities.unshift({
+      id: newId,
+      projectCode,
+      projectName,
+      pmId,
+      reviewerId,
+      involvedFunction,
+      effectiveDate,
+      endDate,
+      reason
+    });
+
+    const pm = getPerson(pmId);
+    const rev = getPerson(reviewerId);
+    auditLogs.unshift({
+      time: 'Baru saja',
+      actor: 'Dewi Lestari (HRGA)',
+      action: 'Project Authority Mapped',
+      badgeClass: 'badge-info',
+      target: `${projectCode} (${involvedFunction})`,
+      detail: `Assigned PM: ${pm ? pm.name : pmId}, Escalation Reviewer: ${rev ? rev.name : reviewerId}, Efektif: ${formatDateId(effectiveDate)}. Alasan: ${reason}`
+    });
+
+    closeModal('modalAuthorityBackdrop');
+    renderMetrics();
+    renderAuthorityTable();
+    renderAuditTimeline();
+    showToast(`Pemetaan kewenangan proyek ${projectCode} berhasil disimpan.`);
+  });
+
+  // Tab 2 Table Row Actions
+  $('tableAuthorityBody').addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-auth-edit]');
+    if (editBtn) {
+      openAuthorityModal(editBtn.dataset.authEdit);
+      return;
+    }
+    const endBtn = e.target.closest('[data-auth-end]');
+    if (endBtn) {
+      const item = projectAuthorities.find(x => x.id === endBtn.dataset.authEnd);
+      if (!item) return;
+      endingAuthId = item.id;
+      const pm = getPerson(item.pmId);
+      const rev = getPerson(item.reviewerId);
+      $('endAuthScopeLabel').textContent = `${item.projectCode} — ${item.projectName} [${item.involvedFunction}]`;
+      $('endAuthPeopleLabel').textContent = `PM: ${pm ? pm.name : item.pmId} · Reviewer: ${rev ? rev.name : item.reviewerId}`;
+      $('inputEndAuthDate').value = getTodayStr();
+      $('textareaEndAuthReason').value = '';
+      $('endAuthError').classList.add('hidden');
+      openModal('modalEndAuthBackdrop');
     }
   });
 
-  // Mobile Menu Toggle
-  const mobileBtn = $('mobileMenuBtn');
-  const sidebar = $('sidebar');
-  if (mobileBtn && sidebar) {
-    mobileBtn.addEventListener('click', () => {
-      sidebar.style.display = sidebar.style.display === 'flex' ? 'none' : 'flex';
-      sidebar.style.position = 'fixed';
-      sidebar.style.zIndex = '50';
-    });
-  }
+  $('formEndAuthority').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!endingAuthId) return;
+    const item = projectAuthorities.find(x => x.id === endingAuthId);
+    if (!item) return;
 
-  // =========================================================================
-  // INISIALISASI AWAL
-  // =========================================================================
-  populateAuthProjectFilter();
+    const endDate = $('inputEndAuthDate').value;
+    const reason = $('textareaEndAuthReason').value.trim();
+    const today = getTodayStr();
+    const errBox = $('endAuthError');
+    const errTxt = $('endAuthErrorText');
+    errBox.classList.add('hidden');
+
+    if (!endDate || endDate < today) {
+      errTxt.textContent = `Tanggal Berakhir Efektif wajib hari ini (${formatDateId(today)}) atau masa depan.`;
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    if (reason.length < 10) {
+      errTxt.textContent = 'Alasan pengakhiran kewenangan proyek wajib diisi minimal 10 karakter.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    item.endDate = endDate;
+    auditLogs.unshift({
+      time: 'Baru saja',
+      actor: 'Dewi Lestari (HRGA)',
+      action: 'Project Authority Ended',
+      badgeClass: 'badge-neutral',
+      target: `${item.projectCode} (${item.involvedFunction})`,
+      detail: `Kewenangan proyek diakhiri efektif ${formatDateId(endDate)}. Alasan: ${reason}`
+    });
+
+    endingAuthId = null;
+    closeModal('modalEndAuthBackdrop');
+    renderMetrics();
+    renderAuthorityTable();
+    renderAuditTimeline();
+    showToast(`Kewenangan proyek ${item.projectCode} telah diakhiri per ${formatDateId(endDate)}.`);
+  });
+
+  // Simulation Role Toggle
+  const setRoleState = (mode) => {
+    const isAdmin = mode === 'admin';
+    $('simRoleAdmin').classList.toggle('active', isAdmin);
+    $('simRoleRestricted').classList.toggle('active', !isAdmin);
+    $('authorizedWorkspace').classList.toggle('hidden', !isAdmin);
+    $('restrictedStatePanel').classList.toggle('hidden', isAdmin);
+    $('navGroupAdministration').classList.toggle('hidden', !isAdmin);
+
+    if (isAdmin) {
+      $('sidebarAvatar').textContent = 'DL';
+      $('sidebarUserName').textContent = 'Dewi Lestari';
+      $('sidebarUserRole').textContent = 'HRGA & System Admin';
+    } else {
+      $('sidebarAvatar').textContent = 'RP';
+      $('sidebarUserName').textContent = 'Rina Putri';
+      $('sidebarUserRole').textContent = 'Supervisor · Engineering';
+    }
+  };
+
+  $('simRoleAdmin').addEventListener('click', () => setRoleState('admin'));
+  $('simRoleRestricted').addEventListener('click', () => setRoleState('restricted'));
+  $('btnRestoreAdminFrom403').addEventListener('click', () => setRoleState('admin'));
+
+  $('simResetData').addEventListener('click', () => {
+    orgAssignments = JSON.parse(JSON.stringify(initialOrgAssignments));
+    projectAuthorities = JSON.parse(JSON.stringify(initialProjectAuthorities));
+    auditLogs = JSON.parse(JSON.stringify(initialAuditLogs));
+    $('btnResetOrgFilter').click();
+    $('btnResetAuthFilter').click();
+    renderMetrics();
+    renderAuditTimeline();
+    setRoleState('admin');
+    switchTab('org');
+    showToast('Data simulasi pemetaan organisasi dikembalikan ke kondisi awal.');
+  });
+
+  $('mobileMenuBtn').addEventListener('click', () => {
+    $('sidebar').classList.toggle('open');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      ['modalOrgBackdrop', 'modalPreviewBackdrop', 'modalAuthorityBackdrop', 'modalEndAuthBackdrop', 'modalHistoryBackdrop'].forEach(closeModal);
+      $('sidebar').classList.remove('open');
+    }
+  });
+
+  // Init
   renderMetrics();
   renderOrgTable();
-  renderProjectsTable();
   renderAuthorityTable();
-
+  renderAuditTimeline();
 })();
 </script>
 </body>
