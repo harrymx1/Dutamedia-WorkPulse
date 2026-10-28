@@ -32,3 +32,4 @@ export class CoachingController {
     return this.coachingService.getNotesForSubject(req.user.id, id);
   }
 }
+

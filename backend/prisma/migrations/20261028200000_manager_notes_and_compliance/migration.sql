@@ -31,3 +31,4 @@ CREATE TABLE "compliance_events" (
 );
 
 CREATE INDEX "idx_compliance_user_date" ON "compliance_events"("user_id", "event_date", "stage");
+

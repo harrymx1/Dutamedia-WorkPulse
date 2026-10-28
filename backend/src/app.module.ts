@@ -11,6 +11,9 @@ import { DailyModule } from './daily/daily.module';
 import { CoachingModule } from './coaching/coaching.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { CorrectionModule } from './correction/correction.module';
+import { LeaveModule } from './leave/leave.module';
+import { NotificationModule } from './notification/notification.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -28,6 +31,9 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     CoachingModule,
     ComplianceModule,
     CorrectionModule,
+    LeaveModule,
+    NotificationModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

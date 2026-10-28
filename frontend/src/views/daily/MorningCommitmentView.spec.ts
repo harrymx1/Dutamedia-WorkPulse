@@ -87,3 +87,4 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02)', () => {
     expect(wrapper.text()).toContain('Daftar Komitmen Hari Ini (2/3)');
   });
 });
+

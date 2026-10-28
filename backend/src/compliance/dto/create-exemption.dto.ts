@@ -28,3 +28,4 @@ export class CreateBoundedExemptionDto {
   @IsNotEmpty({ message: 'Alasan dispensasi tidak boleh kosong' })
   reason!: string;
 }
+

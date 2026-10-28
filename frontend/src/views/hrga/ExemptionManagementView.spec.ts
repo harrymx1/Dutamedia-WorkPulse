@@ -70,3 +70,4 @@ describe('ExemptionManagementView.vue (WP-EP08 / Prototipe 12 - Kelola Pengecual
     expect(wrapper.text()).toContain('ST-042');
   });
 });
+

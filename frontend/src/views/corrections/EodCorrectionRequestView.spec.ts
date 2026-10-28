@@ -69,3 +69,4 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
     expect(wrapper.text()).toContain('BLOCKED');
   });
 });
+

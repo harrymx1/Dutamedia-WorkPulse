@@ -78,3 +78,4 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(wrapper.text()).toContain('AUTO_APPLIED');
   });
 });
+

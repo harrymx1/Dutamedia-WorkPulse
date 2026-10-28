@@ -61,3 +61,4 @@ describe('ExemptionService (WP-EP08 / Exemption Management - Prototipe 12)', () 
     expect(mockPrisma.boundedExemption.create).toHaveBeenCalled();
   });
 });
+

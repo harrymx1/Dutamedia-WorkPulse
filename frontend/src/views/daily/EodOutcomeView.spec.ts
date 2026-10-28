@@ -74,3 +74,4 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04)', () => {
     expect(greenRadio.attributes('disabled')).toBeUndefined();
   });
 });
+

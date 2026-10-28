@@ -29,3 +29,4 @@ export class CreateManagerNoteDto {
   @IsUUID('4')
   relatedEntityId?: string;
 }
+

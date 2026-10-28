@@ -86,3 +86,4 @@ describe('ComplianceQueueView.vue (WP-EP08 / Prototipe 11 - Antrean Kepatuhan HR
     expect(wrapper.text()).toContain('Tindak Lanjut Peristiwa Kepatuhan');
   });
 });
+

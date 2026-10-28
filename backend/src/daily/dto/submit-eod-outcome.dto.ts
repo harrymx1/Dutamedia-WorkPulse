@@ -105,3 +105,4 @@ export class SubmitEodOutcomeDto {
   @Type(() => InstantBlockerDto)
   instantBlocker?: InstantBlockerDto;
 }
+

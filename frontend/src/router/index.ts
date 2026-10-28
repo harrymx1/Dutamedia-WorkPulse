@@ -20,6 +20,12 @@ import ExemptionManagementView from '../views/hrga/ExemptionManagementView.vue';
 import MorningCorrectionRequestView from '../views/corrections/MorningCorrectionRequestView.vue';
 import EodCorrectionRequestView from '../views/corrections/EodCorrectionRequestView.vue';
 import CorrectionReviewView from '../views/corrections/CorrectionReviewView.vue';
+import MyLeaveRequestView from '../views/leave/MyLeaveRequestView.vue';
+import LeaveApprovalQueueView from '../views/leave/LeaveApprovalQueueView.vue';
+import NotificationCenterView from '../views/notifications/NotificationCenterView.vue';
+import NotificationChannelSetupView from '../views/admin/NotificationChannelSetupView.vue';
+import PulseDashboardView from '../views/dashboard/PulseDashboardView.vue';
+import ProjectRiskView from '../views/projects/ProjectRiskView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -145,6 +151,42 @@ const routes: RouteRecordRaw[] = [
     name: 'corrections-review',
     component: CorrectionReviewView,
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/leave/my',
+    name: 'leave-my',
+    component: MyLeaveRequestView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/leave/queue',
+    name: 'leave-queue',
+    component: LeaveApprovalQueueView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
+  },
+  {
+    path: '/notifications',
+    name: 'notifications',
+    component: NotificationCenterView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/notifications',
+    name: 'admin-notifications',
+    component: NotificationChannelSetupView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA'] },
+  },
+  {
+    path: '/dashboard',
+    name: 'pulse-dashboard',
+    component: PulseDashboardView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/projects/risk',
+    name: 'project-risk',
+    component: ProjectRiskView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR', 'PROJECT_MANAGER', 'PM'] },
   },
 ];
 

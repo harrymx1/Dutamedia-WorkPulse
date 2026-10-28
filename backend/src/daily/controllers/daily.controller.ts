@@ -54,3 +54,4 @@ export class DailyController {
     return this.dailyService.getWeeklyHistory(req.user.id, startDate, endDate);
   }
 }
+

@@ -13,3 +13,4 @@ export class SubmitAdditionalWorkDto {
   @IsUUID('4', { message: 'ID atasan penugasan tidak valid' })
   assignedByUserId?: string;
 }
+

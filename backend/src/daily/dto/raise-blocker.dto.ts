@@ -52,3 +52,4 @@ export class ResolveBlockerDto {
   @MinLength(10, { message: 'Catatan resolusi minimal 10 karakter' })
   resolutionNote!: string;
 }
+

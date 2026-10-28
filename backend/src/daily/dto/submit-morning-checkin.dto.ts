@@ -49,3 +49,4 @@ export class SubmitMorningCheckinDto {
   @IsString()
   zeroCommitmentReason?: string;
 }
+

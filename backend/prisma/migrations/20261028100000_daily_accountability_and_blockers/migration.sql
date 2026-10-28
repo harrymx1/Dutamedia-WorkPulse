@@ -211,3 +211,4 @@ BEGIN
 END; $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_no_backdating_leave_requests BEFORE INSERT ON "leave_requests" FOR EACH ROW EXECUTE FUNCTION enforce_no_backdating_leave();
+
