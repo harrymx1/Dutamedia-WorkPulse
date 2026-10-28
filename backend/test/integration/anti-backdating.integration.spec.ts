@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import pg from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
 import { TestDatabaseSafetyGuard } from '../../src/common/safety/test-db-guard';
 
 describe('Database Integration: Anti-Backdating Triggers (TC-BKD-01, TC-BKD-02, TC-BKD-03)', () => {
@@ -15,6 +17,20 @@ describe('Database Integration: Anti-Backdating Triggers (TC-BKD-01, TC-BKD-02, 
       TestDatabaseSafetyGuard.validate(dbUrl);
       client = new pg.Client({ connectionString: dbUrl, connectionTimeoutMillis: 1000 });
       await client.connect();
+
+      // Memastikan skema baseline diterapkan jika tabel belum ada di DB test
+      const check = await client.query("SELECT to_regclass('public.users') as tbl");
+      if (!check.rows[0].tbl) {
+        const migrationPath = path.resolve(
+          __dirname,
+          '../../prisma/migrations/20261028000000_baseline_schema_and_triggers/migration.sql',
+        );
+        if (fs.existsSync(migrationPath)) {
+          const sql = fs.readFileSync(migrationPath, 'utf8');
+          await client.query(sql);
+        }
+      }
+
       isConnected = true;
     } catch {
       // Database not reachable in this offline/isolated local environment
@@ -36,11 +52,13 @@ describe('Database Integration: Anti-Backdating Triggers (TC-BKD-01, TC-BKD-02, 
 
     await client.query("SET app.org_timezone = 'Asia/Jakarta'");
 
+    const uniqueEmail1 = `test-backdate-${Date.now()}-${Math.random().toString(36).substring(2, 7)}@dutamedia.test`;
     // Buat dummy user untuk FK
     const userRes = await client.query(
       `INSERT INTO users (full_name, email, status)
-       VALUES ('Integration Test User', 'test-backdate@dutamedia.test', 'ACTIVE')
+       VALUES ('Integration Test User', $1, 'ACTIVE')
        RETURNING id`,
+      [uniqueEmail1],
     );
     const userId = userRes.rows[0].id;
 
@@ -70,10 +88,12 @@ describe('Database Integration: Anti-Backdating Triggers (TC-BKD-01, TC-BKD-02, 
 
     await client.query("SET app.org_timezone = 'Asia/Jakarta'");
 
+    const uniqueEmail2 = `test-today-${Date.now()}-${Math.random().toString(36).substring(2, 7)}@dutamedia.test`;
     const userRes = await client.query(
       `INSERT INTO users (full_name, email, status)
-       VALUES ('Integration Test User Today', 'test-today@dutamedia.test', 'ACTIVE')
+       VALUES ('Integration Test User Today', $1, 'ACTIVE')
        RETURNING id`,
+      [uniqueEmail2],
     );
     const userId = userRes.rows[0].id;
 
@@ -99,10 +119,12 @@ describe('Database Integration: Anti-Backdating Triggers (TC-BKD-01, TC-BKD-02, 
 
     await client.query("SET app.org_timezone = 'Asia/Jakarta'");
 
+    const uniqueEmail3 = `test-update-${Date.now()}-${Math.random().toString(36).substring(2, 7)}@dutamedia.test`;
     const userRes = await client.query(
       `INSERT INTO users (full_name, email, status)
-       VALUES ('Integration Test User Update', 'test-update@dutamedia.test', 'ACTIVE')
+       VALUES ('Integration Test User Update', $1, 'ACTIVE')
        RETURNING id`,
+      [uniqueEmail3],
     );
     const userId = userRes.rows[0].id;
     const todayStr = new Date().toISOString().split('T')[0];
