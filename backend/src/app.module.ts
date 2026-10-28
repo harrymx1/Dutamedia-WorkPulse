@@ -14,6 +14,7 @@ import { CorrectionModule } from './correction/correction.module';
 import { LeaveModule } from './leave/leave.module';
 import { NotificationModule } from './notification/notification.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ReportsModule } from './reports/reports.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -34,6 +35,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     LeaveModule,
     NotificationModule,
     DashboardModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

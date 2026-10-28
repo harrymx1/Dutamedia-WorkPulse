@@ -26,6 +26,8 @@ import NotificationCenterView from '../views/notifications/NotificationCenterVie
 import NotificationChannelSetupView from '../views/admin/NotificationChannelSetupView.vue';
 import PulseDashboardView from '../views/dashboard/PulseDashboardView.vue';
 import ProjectRiskView from '../views/projects/ProjectRiskView.vue';
+import ExecutiveReportsView from '../views/reports/ExecutiveReportsView.vue';
+import AdminUserInvitationView from '../views/admin/AdminUserInvitationView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -187,6 +189,18 @@ const routes: RouteRecordRaw[] = [
     name: 'project-risk',
     component: ProjectRiskView,
     meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR', 'PROJECT_MANAGER', 'PM'] },
+  },
+  {
+    path: '/reports',
+    name: 'executive-reports',
+    component: ExecutiveReportsView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
+  },
+  {
+    path: '/admin/invitations',
+    name: 'admin-invitations',
+    component: AdminUserInvitationView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA', 'CEO_MANAGEMENT'] },
   },
 ];
 

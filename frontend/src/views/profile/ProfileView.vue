@@ -133,6 +133,31 @@ async function handleLogout() {
               <span class="meta-value">Role-Based & Scope Resolver</span>
             </div>
           </div>
+
+          <!-- Role-Based Prompt Hint Preview Box (Prototipe 24) -->
+          <div class="prompt-hint-box">
+            <div class="prompt-hint-title">
+              <Shield :size="15" />
+              <span>Role-Based Reflection Prompt</span>
+            </div>
+            <p class="prompt-hint-text">
+              <template v-if="authStore.user?.role === 'SUPERVISOR'">
+                "Pantau kesehatan ritme kerja tim harian, respon awal tiket kendala, dan berikan coaching terarah."
+              </template>
+              <template v-else-if="authStore.user?.role === 'HEAD' || authStore.user?.role === 'HEAD_OF_DEPARTMENT'">
+                "Fasilitasi resolusi kendala lintas unit kerja dan eliminasi hambatan struktural departemen."
+              </template>
+              <template v-else-if="authStore.user?.role === 'CEO_MANAGEMENT' || authStore.user?.role === 'CEO'">
+                "Tinjau tren operasional organisasi menyeluruh, kepatuhan harian, dan kesehatan portofolio proyek."
+              </template>
+              <template v-else-if="authStore.user?.role === 'HRGA'">
+                "Kelola kepatuhan organisasi, verifikasi cuti mandiri, rekonsiliasi otomatis, dan catatan pembinaan."
+              </template>
+              <template v-else>
+                "Tentukan 0–3 komitmen paling bernilai hari ini dan segera laporkan kendala bila ada hambatan eksternal."
+              </template>
+            </p>
+          </div>
         </section>
 
         <!-- Kolom Kanan: Pengaturan Keamanan & Ubah Password -->
@@ -429,6 +454,35 @@ async function handleLogout() {
 .meta-value {
   color: var(--color-text-primary);
   font-weight: 600;
+}
+
+.prompt-hint-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--color-brand-tint, #E6F4EE);
+  border: 1px solid #B7DCCB;
+  border-left: 4px solid var(--color-brand-primary, #00674D);
+}
+
+.prompt-hint-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--color-brand-primary, #00674D);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.prompt-hint-text {
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--color-text-primary, #0E211B);
+  line-height: 1.45;
+  margin: 0;
 }
 
 .card-header {
