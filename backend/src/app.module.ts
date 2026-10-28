@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { OrganizationModule } from './organization/organization.module';
+import { PolicyModule } from './policy/policy.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -18,6 +19,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     AuthModule,
     AdminModule,
     OrganizationModule,
+    PolicyModule,
   ],
   controllers: [AppController],
   providers: [

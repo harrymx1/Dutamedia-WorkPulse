@@ -6,6 +6,7 @@ import ProfileView from '../views/profile/ProfileView.vue';
 import AdminUsersView from '../views/admin/AdminUsersView.vue';
 import OrgMappingView from '../views/admin/OrgMappingView.vue';
 import TempReviewerView from '../views/admin/TempReviewerView.vue';
+import PolicySettingsView from '../views/admin/PolicySettingsView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -47,6 +48,12 @@ const routes: RouteRecordRaw[] = [
     name: 'admin-temporary-reviewers',
     component: TempReviewerView,
     meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA'] },
+  },
+  {
+    path: '/admin/policies',
+    name: 'admin-policies',
+    component: PolicySettingsView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
   },
 ];
 
