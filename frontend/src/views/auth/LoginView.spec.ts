@@ -12,6 +12,7 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
     router = createRouter({
       history: createWebHistory(),
       routes: [
+        { path: '/', component: { template: '<div>Home</div>' } },
         { path: '/login', component: LoginView },
         { path: '/activate', component: { template: '<div>Activate</div>' } },
         { path: '/profile', component: { template: '<div>Profile</div>' } },

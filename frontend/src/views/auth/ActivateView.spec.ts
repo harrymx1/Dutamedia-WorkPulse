@@ -12,6 +12,7 @@ describe('ActivateView.vue (WP-EP02-TK005 / Prototipe 01 Tab Aktivasi)', () => {
     router = createRouter({
       history: createWebHistory(),
       routes: [
+        { path: '/', component: { template: '<div>Home</div>' } },
         { path: '/activate', component: ActivateView },
         { path: '/login', component: { template: '<div>Login</div>' } },
       ],

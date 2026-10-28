@@ -5,13 +5,20 @@ import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { OrganizationModule } from './organization/organization.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, AdminModule],
+  imports: [
+    PrismaModule,
+    HealthModule,
+    AuthModule,
+    AdminModule,
+    OrganizationModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
