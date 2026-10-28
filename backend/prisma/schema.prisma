@@ -112,6 +112,9 @@ model User {
   createdHolidays            CompanyHoliday[]
   leaveRequests              LeaveRequest[]               @relation("UserLeaveRequests")
   reviewedLeaveRequests      LeaveRequest[]               @relation("ReviewedLeaveRequests")
+  subjectManagerNotes        ManagerNote[]                @relation("SubjectManagerNotes")
+  authoredManagerNotes       ManagerNote[]                @relation("AuthoredManagerNotes")
+  complianceEvents           ComplianceEvent[]
 
   @@map("users")
 }
@@ -412,9 +415,10 @@ model DailyAccountabilityRecord {
   createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
-  commitments     Commitment[]
-  additionalWorks AdditionalWork[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  commitments      Commitment[]
+  additionalWorks  AdditionalWork[]
+  complianceEvents ComplianceEvent[]
 
   @@unique([userId, workDate], map: "uq_user_work_date")
   @@index([userId, workDate], map: "idx_dar_user_date")
@@ -553,4 +557,68 @@ model LeaveRequest {
 
   @@index([userId, startDate, endDate, status], map: "idx_leave_user_range")
   @@map("leave_requests")
+}
+
+enum ManagerNoteType {
+  COACHING
+  RECOGNITION
+  CORRECTIVE
+
+  @@map("manager_note_type_enum")
+}
+
+enum NoteVisibility {
+  CONFIDENTIAL_MANAGER_ONLY
+  SHARED_WITH_EMPLOYEE
+  HRGA_ESCALATION
+
+  @@map("note_visibility_enum")
+}
+
+enum ComplianceEventStage {
+  NO_SUBMISSION
+  PATTERN_FLAG_3X
+  COACHING_LOGGED
+  RECORDED_WARNING
+  FORMAL_HR_ESCALATION
+
+  @@map("compliance_event_stage_enum")
+}
+
+model ManagerNote {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectUserId     String          @map("subject_user_id") @db.Uuid
+  authorUserId      String          @map("author_user_id") @db.Uuid
+  noteType          ManagerNoteType @map("note_type")
+  visibility        NoteVisibility
+  content           String          @db.Text
+  relatedEntityType String?         @map("related_entity_type") @db.VarChar(64)
+  relatedEntityId   String?         @map("related_entity_id") @db.Uuid
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+
+  subjectUser       User            @relation("SubjectManagerNotes", fields: [subjectUserId], references: [id], onDelete: Restrict)
+  authorUser        User            @relation("AuthoredManagerNotes", fields: [authorUserId], references: [id], onDelete: Restrict)
+  complianceEvents  ComplianceEvent[]
+
+  @@map("manager_notes")
+}
+
+model ComplianceEvent {
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String               @map("user_id") @db.Uuid
+  eventDate             DateTime             @map("event_date") @db.Date
+  stage                 ComplianceEventStage
+  relatedDailyRecordId  String?              @map("related_daily_record_id") @db.Uuid
+  policySnapshot        Json                 @map("policy_snapshot") @db.JsonB
+  followUpStatus        String               @default("OPEN") @map("follow_up_status") @db.VarChar(50)
+  followUpManagerNoteId String?              @map("follow_up_manager_note_id") @db.Uuid
+  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  dailyRecord           DailyAccountabilityRecord? @relation(fields: [relatedDailyRecordId], references: [id], onDelete: SetNull)
+  followUpManagerNote   ManagerNote?         @relation(fields: [followUpManagerNoteId], references: [id], onDelete: SetNull)
+
+  @@index([userId, eventDate, stage], map: "idx_compliance_user_date")
+  @@map("compliance_events")
 }

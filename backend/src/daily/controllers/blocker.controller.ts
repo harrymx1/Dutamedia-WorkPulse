@@ -24,6 +24,11 @@ export class BlockerController {
     return this.blockerService.raiseBlocker(req.user.id, dto);
   }
 
+  @Get('aging')
+  async getEscalationAgingMetrics() {
+    return this.blockerService.getEscalationAgingMetrics();
+  }
+
   @Get()
   async getBlockerQueue(
     @Req() req: any,
@@ -50,5 +55,19 @@ export class BlockerController {
     @Body() dto: ResolveBlockerDto,
   ) {
     return this.blockerService.resolveBlocker(req.user.id, id, dto);
+  }
+
+  @Post(':id/support')
+  async addSupportContribution(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: { actionTaken: string; resultNote: string },
+  ) {
+    return this.blockerService.addSupportContribution(
+      req.user.id,
+      id,
+      body.actionTaken,
+      body.resultNote,
+    );
   }
 }

@@ -164,11 +164,110 @@ export class BlockerService {
         raisedBy: { select: { id: true, fullName: true, email: true } },
         assignedOwner: { select: { id: true, fullName: true, email: true } },
         linkedCommitment: true,
+        supportContributions: {
+          include: { supporter: { select: { id: true, fullName: true, email: true } } },
+        },
       },
       orderBy: [
         { severity: 'desc' },
         { raisedAt: 'desc' },
       ],
     });
+  }
+
+  /**
+   * Menambahkan kontribusi bantuan (Support Contribution) lintas fungsi (Prototipe 09).
+   */
+  async addSupportContribution(
+    supporterUserId: string,
+    blockerId: string,
+    actionTaken: string,
+    resultNote: string,
+  ) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+    });
+
+    if (!ticket) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Tiket kendala tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    return this.prisma.supportContribution.create({
+      data: {
+        blockerId,
+        supporterUserId,
+        actionTaken: actionTaken.trim(),
+        resultNote: resultNote.trim(),
+      },
+      include: {
+        supporter: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+  }
+
+  /**
+   * Mengambil metrik aging eskalasi kendala (Prototipe 14).
+   */
+  async getEscalationAgingMetrics() {
+    const now = this.clockService.now();
+    const openBlockers = await this.prisma.blockerTicket.findMany({
+      where: {
+        status: { in: [BlockerStatus.OPEN, BlockerStatus.ACKNOWLEDGED, BlockerStatus.IN_PROGRESS] },
+      },
+      include: {
+        raisedBy: { select: { id: true, fullName: true } },
+        assignedOwner: { select: { id: true, fullName: true } },
+      },
+      orderBy: { raisedAt: 'asc' },
+    });
+
+    const items = openBlockers.map((b) => {
+      const elapsedHours = Math.max(
+        0,
+        Math.round((now.getTime() - b.raisedAt.getTime()) / (1000 * 3600)),
+      );
+      const isBreached = b.targetResolutionAt ? now > b.targetResolutionAt : false;
+      const hoursRemaining = b.targetResolutionAt
+        ? Math.round((b.targetResolutionAt.getTime() - now.getTime()) / (1000 * 3600))
+        : null;
+
+      return {
+        id: b.id,
+        description: b.description,
+        type: b.type,
+        severity: b.severity,
+        impact: b.impact,
+        status: b.status,
+        raisedAt: b.raisedAt,
+        targetResolutionAt: b.targetResolutionAt,
+        elapsedHours,
+        hoursRemaining,
+        isBreached,
+        raisedBy: b.raisedBy,
+        assignedOwner: b.assignedOwner,
+        projectCodeReference: b.projectCodeReference,
+      };
+    });
+
+    const totalOpen = items.length;
+    const breachedCount = items.filter((i) => i.isBreached).length;
+    const criticalCount = items.filter((i) => i.severity === 'CRITICAL').length;
+    const highCount = items.filter((i) => i.severity === 'HIGH').length;
+
+    return {
+      evaluatedAt: now.toISOString(),
+      summary: {
+        totalOpen,
+        breachedCount,
+        criticalCount,
+        highCount,
+        slaComplianceRate: totalOpen > 0 ? Math.round(((totalOpen - breachedCount) / totalOpen) * 100) : 100,
+      },
+      blockers: items,
+    };
   }
 }

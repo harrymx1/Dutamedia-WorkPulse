@@ -57,10 +57,14 @@ export async function apiClient<T = any>(
   });
 
   let responseBody: any;
-  const contentType = response.headers.get('content-type');
+  const contentType = response.headers?.get?.('content-type') || '';
   if (contentType && contentType.includes('application/json')) {
     responseBody = await response.json();
-  } else {
+  } else if (typeof response.json === 'function') {
+    responseBody = await response.json().catch(async () => {
+      return typeof response.text === 'function' ? await response.text() : null;
+    });
+  } else if (typeof response.text === 'function') {
     responseBody = await response.text();
   }
 

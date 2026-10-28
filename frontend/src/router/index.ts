@@ -11,6 +11,10 @@ import MorningCommitmentView from '../views/daily/MorningCommitmentView.vue';
 import AdditionalWorkView from '../views/daily/AdditionalWorkView.vue';
 import EodOutcomeView from '../views/daily/EodOutcomeView.vue';
 import MyHistoryView from '../views/daily/MyHistoryView.vue';
+import RaiseBlockerView from '../views/blockers/RaiseBlockerView.vue';
+import BlockerQueueView from '../views/blockers/BlockerQueueView.vue';
+import EscalationAgingView from '../views/blockers/EscalationAgingView.vue';
+import ManagerNoteCoachingView from '../views/coaching/ManagerNoteCoachingView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -81,6 +85,30 @@ const routes: RouteRecordRaw[] = [
     path: '/daily/history',
     name: 'daily-history',
     component: MyHistoryView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/blockers/raise',
+    name: 'blockers-raise',
+    component: RaiseBlockerView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/blockers',
+    name: 'blockers-queue',
+    component: BlockerQueueView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/blockers/aging',
+    name: 'blockers-aging',
+    component: EscalationAgingView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
+  },
+  {
+    path: '/coaching',
+    name: 'coaching-notes',
+    component: ManagerNoteCoachingView,
     meta: { requiresAuth: true },
   },
 ];
