@@ -62,3 +62,4 @@ export class HierarchyCycleDetector {
     return { hasCycle: false, cyclePath: [] };
   }
 }
+

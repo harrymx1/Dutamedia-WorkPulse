@@ -7,6 +7,10 @@ import AdminUsersView from '../views/admin/AdminUsersView.vue';
 import OrgMappingView from '../views/admin/OrgMappingView.vue';
 import TempReviewerView from '../views/admin/TempReviewerView.vue';
 import PolicySettingsView from '../views/admin/PolicySettingsView.vue';
+import MorningCommitmentView from '../views/daily/MorningCommitmentView.vue';
+import AdditionalWorkView from '../views/daily/AdditionalWorkView.vue';
+import EodOutcomeView from '../views/daily/EodOutcomeView.vue';
+import MyHistoryView from '../views/daily/MyHistoryView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -54,6 +58,30 @@ const routes: RouteRecordRaw[] = [
     name: 'admin-policies',
     component: PolicySettingsView,
     meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
+  },
+  {
+    path: '/daily/morning',
+    name: 'daily-morning',
+    component: MorningCommitmentView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/daily/additional-work',
+    name: 'daily-additional-work',
+    component: AdditionalWorkView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/daily/eod',
+    name: 'daily-eod',
+    component: EodOutcomeView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/daily/history',
+    name: 'daily-history',
+    component: MyHistoryView,
+    meta: { requiresAuth: true },
   },
 ];
 

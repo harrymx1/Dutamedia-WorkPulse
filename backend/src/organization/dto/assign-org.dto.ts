@@ -36,3 +36,4 @@ export class AssignOrgDto {
   @IsNotEmpty({ message: 'Alasan penugasan wajib diisi untuk rekam audit' })
   assignmentReason!: string;
 }
+

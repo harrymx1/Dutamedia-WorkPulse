@@ -60,3 +60,4 @@ export class ProjectAuthorityController {
     return await this.projectAuthService.endProjectAuthority(id, adminUserId);
   }
 }
+

@@ -104,6 +104,14 @@ model User {
   createdPolicyOwners        PolicyOwnerAssignment[]      @relation("CreatedPolicyOwners")
   notifications              Notification[]
   auditLogs                  AuditLog[]
+  dailyRecords               DailyAccountabilityRecord[]
+  assignedAdditionalWorks    AdditionalWork[]             @relation("AssignedAdditionalWorks")
+  raisedBlockers             BlockerTicket[]              @relation("RaisedBlockers")
+  assignedBlockers           BlockerTicket[]              @relation("AssignedBlockers")
+  supportContributions       SupportContribution[]
+  createdHolidays            CompanyHoliday[]
+  leaveRequests              LeaveRequest[]               @relation("UserLeaveRequests")
+  reviewedLeaveRequests      LeaveRequest[]               @relation("ReviewedLeaveRequests")
 
   @@map("users")
 }
@@ -267,4 +275,282 @@ model AuditLog {
   actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
 
   @@map("audit_logs")
+}
+
+enum TimingStatus {
+  ON_TIME
+  LATE
+  NO_SUBMISSION
+  EXEMPTED
+  APPROVED_LEAVE
+
+  @@map("timing_status_enum")
+}
+
+enum DailyRiskStatus {
+  GREEN
+  AMBER
+  RED
+  NOT_APPLICABLE_NO_COMMITMENT
+
+  @@map("daily_risk_status_enum")
+}
+
+enum CommitmentRisk {
+  GREEN
+  AMBER
+  RED
+
+  @@map("commitment_risk_enum")
+}
+
+enum CommitmentOutcome {
+  COMPLETED
+  PARTIALLY_COMPLETED
+  NOT_COMPLETED
+  CANCELLED
+
+  @@map("commitment_outcome_enum")
+}
+
+enum ContinuationStatus {
+  CONTINUE
+  DO_NOT_CONTINUE
+
+  @@map("continuation_status_enum")
+}
+
+enum AdditionalWorkReason {
+  NEWLY_ASSIGNED
+  MISSED_IN_PLANNING
+  PRIORITY_CHANGE
+  OPERATIONAL_INCIDENT
+  OTHER
+
+  @@map("additional_work_reason_enum")
+}
+
+enum BlockerType {
+  TECHNICAL
+  REQUIREMENT
+  CLIENT
+  VENDOR
+  RESOURCE
+  APPROVAL
+  INFRA
+  FINANCE
+  LEGAL
+  OTHER
+
+  @@map("blocker_type_enum")
+}
+
+enum BlockerSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("blocker_severity_enum")
+}
+
+enum BlockerImpact {
+  TASK
+  MILESTONE
+  PROJECT
+  PRODUCTION
+  CLIENT
+  FINANCIAL
+  COMPLIANCE
+
+  @@map("blocker_impact_enum")
+}
+
+enum AuthorityContext {
+  ORGANIZATIONAL_AUTHORITY
+  PROJECT_AUTHORITY
+
+  @@map("authority_context_enum")
+}
+
+enum BlockerStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  ACCEPTED_RISK
+
+  @@map("blocker_status_enum")
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+
+  @@map("leave_status_enum")
+}
+
+model DailyAccountabilityRecord {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String          @map("user_id") @db.Uuid
+  workDate              DateTime        @map("work_date") @db.Date
+  orgContextSnapshot    Json            @map("org_context_snapshot") @db.JsonB
+  policySnapshot        Json            @map("policy_snapshot") @db.JsonB
+  morningSubmittedAt    DateTime?       @map("morning_submitted_at") @db.Timestamptz()
+  eodSubmittedAt        DateTime?       @map("eod_submitted_at") @db.Timestamptz()
+  morningTiming         TimingStatus    @default(NO_SUBMISSION) @map("morning_timing")
+  eodTiming             TimingStatus    @default(NO_SUBMISSION) @map("eod_timing")
+  initialDailyStatus    DailyRiskStatus @default(NOT_APPLICABLE_NO_COMMITMENT) @map("initial_daily_status")
+  finalDailyStatus      DailyRiskStatus? @map("final_daily_status")
+  zeroCommitmentReason  String?         @map("zero_commitment_reason") @db.Text
+  morningCutoffLockedAt DateTime?       @map("morning_cutoff_locked_at") @db.Timestamptz()
+  eodCutoffLockedAt     DateTime?       @map("eod_cutoff_locked_at") @db.Timestamptz()
+  overrideReason        String?         @map("override_reason") @db.Text
+  createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  commitments     Commitment[]
+  additionalWorks AdditionalWork[]
+
+  @@unique([userId, workDate], map: "uq_user_work_date")
+  @@index([userId, workDate], map: "idx_dar_user_date")
+  @@map("daily_accountability_records")
+}
+
+model Commitment {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dailyRecordId      String              @map("daily_record_id") @db.Uuid
+  sequenceNo         Int                 @map("sequence_no") @db.SmallInt
+  taskText           String              @map("task_text") @db.Text
+  referenceLink      String?             @map("reference_link") @db.VarChar(500)
+  initialRisk        CommitmentRisk      @map("initial_risk")
+  knownBlockerNote   String?             @map("known_blocker_note") @db.Text
+  supportNeeded      String?             @map("support_needed") @db.Text
+  isCarryOver        Boolean             @default(false) @map("is_carry_over")
+  carryOverDaysCount Int                 @default(0) @map("carry_over_days_count")
+  originCommitmentId String?             @map("origin_commitment_id") @db.Uuid
+  outcome            CommitmentOutcome?
+  outcomeReason      String?             @map("outcome_reason") @db.Text
+  continuation       ContinuationStatus?
+  continuationReason String?             @map("continuation_reason") @db.Text
+  isMorningLocked    Boolean             @default(false) @map("is_morning_locked")
+  isEodLocked        Boolean             @default(false) @map("is_eod_locked")
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  dailyRecord      DailyAccountabilityRecord @relation(fields: [dailyRecordId], references: [id], onDelete: Cascade)
+  originCommitment Commitment?               @relation("CommitmentCarryOver", fields: [originCommitmentId], references: [id], onDelete: Restrict)
+  childCommitments Commitment[]              @relation("CommitmentCarryOver")
+  blockers         BlockerTicket[]
+
+  @@unique([dailyRecordId, sequenceNo], map: "uq_record_sequence")
+  @@index([originCommitmentId], map: "idx_commitments_origin")
+  @@map("commitments")
+}
+
+model AdditionalWork {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dailyRecordId      String               @map("daily_record_id") @db.Uuid
+  taskText           String               @map("task_text") @db.Text
+  reason             AdditionalWorkReason
+  assignedByUserId   String?              @map("assigned_by_user_id") @db.Uuid
+  outcome            CommitmentOutcome?
+  outcomeReason      String?              @map("outcome_reason") @db.Text
+  continuation       ContinuationStatus?
+  continuationReason String?              @map("continuation_reason") @db.Text
+  isEodLocked        Boolean              @default(false) @map("is_eod_locked")
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  dailyRecord    DailyAccountabilityRecord @relation(fields: [dailyRecordId], references: [id], onDelete: Cascade)
+  assignedByUser User?                     @relation("AssignedAdditionalWorks", fields: [assignedByUserId], references: [id], onDelete: Restrict)
+
+  @@map("additional_works")
+}
+
+model BlockerTicket {
+  id                            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  raisedByUserId                String           @map("raised_by_user_id") @db.Uuid
+  linkedCommitmentId            String?          @map("linked_commitment_id") @db.Uuid
+  type                          BlockerType
+  severity                      BlockerSeverity
+  impact                        BlockerImpact
+  description                   String           @db.Text
+  ownerNeededType               AuthorityContext @map("owner_needed_type")
+  assignedOwnerId               String           @map("assigned_owner_id") @db.Uuid
+  projectCodeReference          String?          @map("project_code_reference") @db.VarChar(50)
+  status                        BlockerStatus    @default(OPEN)
+  raisedAt                      DateTime         @default(now()) @map("raised_at") @db.Timestamptz()
+  targetResolutionAt            DateTime?        @map("target_resolution_at") @db.Timestamptz()
+  acknowledgedAt                DateTime?        @map("acknowledged_at") @db.Timestamptz()
+  resolvedAt                    DateTime?        @map("resolved_at") @db.Timestamptz()
+  closedAt                      DateTime?        @map("closed_at") @db.Timestamptz()
+  resolutionNote                String?          @map("resolution_note") @db.Text
+  riskAcceptanceJustification   String?          @map("risk_acceptance_justification") @db.Text
+  riskMitigationPlan            String?          @map("risk_mitigation_plan") @db.Text
+  autoEscalationLevel           Int              @default(0) @map("auto_escalation_level") @db.SmallInt
+  lastEscalatedAt               DateTime?        @map("last_escalated_at") @db.Timestamptz()
+  createdAt                     DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                     DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  raisedBy             User                  @relation("RaisedBlockers", fields: [raisedByUserId], references: [id], onDelete: Restrict)
+  assignedOwner        User                  @relation("AssignedBlockers", fields: [assignedOwnerId], references: [id], onDelete: Restrict)
+  linkedCommitment     Commitment?           @relation(fields: [linkedCommitmentId], references: [id], onDelete: SetNull)
+  supportContributions SupportContribution[]
+
+  @@index([status, severity, targetResolutionAt], map: "idx_blockers_status_severity")
+  @@index([assignedOwnerId, status], map: "idx_blockers_assigned_owner")
+  @@map("blocker_tickets")
+}
+
+model SupportContribution {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockerId       String   @map("blocker_id") @db.Uuid
+  supporterUserId String   @map("supporter_user_id") @db.Uuid
+  actionTaken     String   @map("action_taken") @db.Text
+  resultNote      String   @map("result_note") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  blocker   BlockerTicket @relation(fields: [blockerId], references: [id], onDelete: Cascade)
+  supporter User          @relation(fields: [supporterUserId], references: [id], onDelete: Restrict)
+
+  @@map("support_contributions")
+}
+
+model CompanyHoliday {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  holidayDate     DateTime @unique @map("holiday_date") @db.Date
+  holidayName     String   @map("holiday_name") @db.VarChar(150)
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  createdBy User @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([holidayDate], map: "idx_holidays_date")
+  @@map("company_holidays")
+}
+
+model LeaveRequest {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String      @map("user_id") @db.Uuid
+  startDate          DateTime    @map("start_date") @db.Date
+  endDate            DateTime    @map("end_date") @db.Date
+  leaveType          String      @map("leave_type") @db.VarChar(50)
+  reason             String      @db.Text
+  status             LeaveStatus @default(PENDING)
+  reviewedByUserId   String?     @map("reviewed_by_user_id") @db.Uuid
+  reviewNote         String?     @map("review_note") @db.Text
+  reviewedAt         DateTime?   @map("reviewed_at") @db.Timestamptz()
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user       User  @relation("UserLeaveRequests", fields: [userId], references: [id], onDelete: Restrict)
+  reviewedBy User? @relation("ReviewedLeaveRequests", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, startDate, endDate, status], map: "idx_leave_user_range")
+  @@map("leave_requests")
 }

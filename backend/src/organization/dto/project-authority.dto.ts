@@ -35,3 +35,4 @@ export class CreateProjectAuthorityDto {
   @IsNotEmpty({ message: 'Alasan penunjukan wewenang proyek wajib diisi' })
   assignmentReason!: string;
 }
+

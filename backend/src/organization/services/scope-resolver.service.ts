@@ -193,3 +193,4 @@ export class ScopeResolverService {
     return false;
   }
 }
+

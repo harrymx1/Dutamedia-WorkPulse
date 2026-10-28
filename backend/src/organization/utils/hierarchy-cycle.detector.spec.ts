@@ -68,3 +68,4 @@ describe('HierarchyCycleDetector (WP-EP03-TK003 / SAD III.1 & B.5)', () => {
     expect(result.cyclePath).toEqual([]);
   });
 });
+

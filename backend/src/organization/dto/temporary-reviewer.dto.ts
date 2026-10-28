@@ -26,3 +26,4 @@ export class CreateTemporaryReviewerDto {
   @IsNotEmpty({ message: 'Batas tanggal kedaluwarsa delegasi wajib diisi' })
   expiryDate!: string;
 }
+

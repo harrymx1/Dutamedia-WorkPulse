@@ -103,3 +103,4 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     expect(wrapper.find('.modal-backdrop').exists()).toBe(false);
   });
 });
+

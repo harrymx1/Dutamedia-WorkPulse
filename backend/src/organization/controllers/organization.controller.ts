@@ -57,3 +57,4 @@ export class OrganizationController {
     return await this.orgService.assignUser(dto, adminUserId);
   }
 }
+

@@ -113,3 +113,4 @@ describe('ScopeResolverService (WP-EP03-TK006 / SAD IV.4 3-Layer Authorization)'
     expect(isAllowed).toBe(true);
   });
 });
+
