@@ -15,6 +15,11 @@ import RaiseBlockerView from '../views/blockers/RaiseBlockerView.vue';
 import BlockerQueueView from '../views/blockers/BlockerQueueView.vue';
 import EscalationAgingView from '../views/blockers/EscalationAgingView.vue';
 import ManagerNoteCoachingView from '../views/coaching/ManagerNoteCoachingView.vue';
+import ComplianceQueueView from '../views/hrga/ComplianceQueueView.vue';
+import ExemptionManagementView from '../views/hrga/ExemptionManagementView.vue';
+import MorningCorrectionRequestView from '../views/corrections/MorningCorrectionRequestView.vue';
+import EodCorrectionRequestView from '../views/corrections/EodCorrectionRequestView.vue';
+import CorrectionReviewView from '../views/corrections/CorrectionReviewView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -109,6 +114,36 @@ const routes: RouteRecordRaw[] = [
     path: '/coaching',
     name: 'coaching-notes',
     component: ManagerNoteCoachingView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/compliance',
+    name: 'compliance-queue',
+    component: ComplianceQueueView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HRGA'] },
+  },
+  {
+    path: '/exemptions',
+    name: 'exemption-management',
+    component: ExemptionManagementView,
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HRGA'] },
+  },
+  {
+    path: '/corrections/morning',
+    name: 'corrections-morning',
+    component: MorningCorrectionRequestView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/corrections/eod',
+    name: 'corrections-eod',
+    component: EodCorrectionRequestView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/corrections/review',
+    name: 'corrections-review',
+    component: CorrectionReviewView,
     meta: { requiresAuth: true },
   },
 ];

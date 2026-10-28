@@ -9,6 +9,8 @@ import { OrganizationModule } from './organization/organization.module';
 import { PolicyModule } from './policy/policy.module';
 import { DailyModule } from './daily/daily.module';
 import { CoachingModule } from './coaching/coaching.module';
+import { ComplianceModule } from './compliance/compliance.module';
+import { CorrectionModule } from './correction/correction.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -24,6 +26,8 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     PolicyModule,
     DailyModule,
     CoachingModule,
+    ComplianceModule,
+    CorrectionModule,
   ],
   controllers: [AppController],
   providers: [

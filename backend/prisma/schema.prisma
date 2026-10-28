@@ -115,6 +115,10 @@ model User {
   subjectManagerNotes        ManagerNote[]                @relation("SubjectManagerNotes")
   authoredManagerNotes       ManagerNote[]                @relation("AuthoredManagerNotes")
   complianceEvents           ComplianceEvent[]
+  requestedCorrections       CorrectionRequest[]          @relation("RequestedCorrections")
+  reviewedCorrections        CorrectionRequest[]          @relation("ReviewedCorrections")
+  userExemptions             BoundedExemption[]           @relation("UserExemptions")
+  createdExemptions          BoundedExemption[]           @relation("CreatedExemptions")
 
   @@map("users")
 }
@@ -450,6 +454,7 @@ model Commitment {
   originCommitment Commitment?               @relation("CommitmentCarryOver", fields: [originCommitmentId], references: [id], onDelete: Restrict)
   childCommitments Commitment[]              @relation("CommitmentCarryOver")
   blockers         BlockerTicket[]
+  correctionRequests CorrectionRequest[]
 
   @@unique([dailyRecordId, sequenceNo], map: "uq_record_sequence")
   @@index([originCommitmentId], map: "idx_commitments_origin")
@@ -621,4 +626,69 @@ model ComplianceEvent {
 
   @@index([userId, eventDate, stage], map: "idx_compliance_user_date")
   @@map("compliance_events")
+}
+
+enum CorrectionScopeType {
+  MORNING_COMMITMENT
+  EOD_OUTCOME
+}
+
+enum CorrectionClassification {
+  MINOR
+  MATERIAL
+}
+
+enum CorrectionStatus {
+  PENDING
+  AUTO_APPLIED
+  APPROVED
+  REJECTED
+}
+
+model CorrectionRequest {
+  id                    String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  targetCommitmentId    String                   @map("target_commitment_id") @db.Uuid
+  requestedByUserId     String                   @map("requested_by_user_id") @db.Uuid
+  scopeType             CorrectionScopeType      @map("scope_type")
+  classification        CorrectionClassification
+  reason                String                   @db.Text
+  valueBefore           Json                     @map("value_before") @db.JsonB
+  valueRequested        Json                     @map("value_requested") @db.JsonB
+  policySnapshot        Json                     @map("policy_snapshot") @db.JsonB
+  status                CorrectionStatus         @default(PENDING)
+  objectionWindowEndsAt DateTime?                @map("objection_window_ends_at") @db.Timestamptz()
+  reviewedByUserId      String?                  @map("reviewed_by_user_id") @db.Uuid
+  reviewNote            String?                  @map("review_note") @db.Text
+  reviewedAt            DateTime?                @map("reviewed_at") @db.Timestamptz()
+  appliedAt             DateTime?                @map("applied_at") @db.Timestamptz()
+  createdAt             DateTime                 @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime                 @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  targetCommitment      Commitment               @relation(fields: [targetCommitmentId], references: [id], onDelete: Restrict)
+  requestedByUser       User                     @relation("RequestedCorrections", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedByUser        User?                    @relation("ReviewedCorrections", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([targetCommitmentId], map: "idx_correction_commitment")
+  @@index([requestedByUserId], map: "idx_correction_user")
+  @@index([status], map: "idx_correction_status")
+  @@map("correction_requests")
+}
+
+model BoundedExemption {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                  String    @map("user_id") @db.Uuid
+  startDate               DateTime  @map("start_date") @db.Date
+  endDate                 DateTime  @map("end_date") @db.Date
+  exemptionCategory       String    @map("exemption_category") @db.VarChar(100)
+  officialReferenceNumber String?   @map("official_reference_number") @db.VarChar(100)
+  reason                  String    @db.Text
+  createdByUserId         String    @map("created_by_user_id") @db.Uuid
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user                    User      @relation("UserExemptions", fields: [userId], references: [id], onDelete: Restrict)
+  createdByUser           User      @relation("CreatedExemptions", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, startDate, endDate], map: "idx_bounded_exemptions_date")
+  @@map("bounded_exemptions")
 }
