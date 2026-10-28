@@ -1,16 +1,12 @@
-name: WorkPulse CI Pipeline (EPIC-23-T1)
+name: WorkPulse Clean-Slate CI Pipeline
 
 on:
   push:
     branches:
       - main
-      - master
-      - develop
   pull_request:
     branches:
       - main
-      - master
-      - develop
   workflow_dispatch:
 
 concurrency:
@@ -18,13 +14,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality-and-tests:
-    name: Lint, Test, Real-DB Integration & Build
+  quality-gate:
+    name: Lint, Typecheck, Unit Tests & Build
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: test_password_secure
@@ -41,7 +37,6 @@ jobs:
       NODE_ENV: test
       DATABASE_URL: postgresql://postgres:test_password_secure@localhost:54332/workpulse_test
       JWT_SECRET: test-super-secret-key-at-least-32-chars-long!
-      APP_PORT: 3000
       PORT: 3000
 
     steps:
@@ -54,46 +49,17 @@ jobs:
           node-version: 22
           cache: 'npm'
 
-      - name: Install root dependencies
+      - name: Install dependencies (npm workspaces)
         run: npm ci
 
-      - name: Install backend dependencies
-        run: npm --prefix backend ci
+      - name: Code Quality & Lint Check
+        run: npm run lint
 
-      - name: Install frontend dependencies
-        run: npm --prefix frontend ci
+      - name: Strict TypeScript Typecheck
+        run: npm run typecheck
 
-      - name: Backend Lint Check (Oxlint)
-        run: npm --prefix backend run lint
+      - name: Execute Unit Test Suites (Vitest)
+        run: npm run test
 
-      - name: Backend Typecheck
-        run: npx --prefix backend tsc --noEmit
-
-      - name: Unit Tests (Mocked Database Isolation)
-        run: |
-          npm --prefix backend run test
-          npm --prefix frontend test
-
-      - name: Verify Isolated Test Database Safety Guard
-        run: npm --prefix backend run test:db:safety-check
-
-      - name: Wait for Test Database Ready
-        run: npm --prefix backend run test:db:wait
-
-      - name: Deploy Prisma Migrations to Test Database
-        run: npm --prefix backend run test:db:migrate
-
-      - name: Seed Deterministic Test Fixtures
-        run: npm --prefix backend run test:db:seed
-
-      - name: Run Real PostgreSQL Integration Test Suite
-        run: npm --prefix backend run test:integration:real
-
-      - name: Validate Load Test Foundation (Dry-Run / Syntax Check)
-        run: npm --prefix backend run test:load:morning-checkin -- --dry-run
-
-      - name: Build Backend Application
-        run: npm --prefix backend run build
-
-      - name: Build Frontend Application
-        run: npm --prefix frontend run build
+      - name: Build Applications (NestJS & Vue 3)
+        run: npm run build

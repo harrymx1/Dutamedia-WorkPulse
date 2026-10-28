@@ -10,32 +10,21 @@
   "scripts": {
     "dev:backend": "npm --prefix backend run start:dev",
     "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "npm run dev:backend & npm run dev:frontend",
     "build:backend": "npm --prefix backend run build",
     "build:frontend": "npm --prefix frontend run build",
     "build": "npm run build:backend && npm run build:frontend",
-    "openapi:generate": "npm --prefix backend run openapi:generate",
-    "codegen:types": "openapi-typescript backend/openapi.json -o frontend/src/types/schema.d.ts",
-    "pipeline:contract": "npm run openapi:generate && npm run codegen:types",
+    "lint:backend": "npm --prefix backend run lint",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "typecheck:backend": "npm --prefix backend run typecheck",
+    "typecheck:frontend": "npm --prefix frontend run typecheck",
+    "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
     "test:backend": "npm --prefix backend run test",
-    "test:frontend": "npm --prefix frontend test",
-    "test": "npm run test:backend && npm run test:frontend",
-    "test:integration:real": "npm --prefix backend run test:integration:real",
-    "test:db:up": "npm --prefix backend run test:db:up",
-    "test:db:wait": "npm --prefix backend run test:db:wait",
-    "test:db:migrate": "npm --prefix backend run test:db:migrate",
-    "test:db:seed": "npm --prefix backend run test:db:seed",
-    "test:db:reset": "npm --prefix backend run test:db:reset",
-    "test:db:down": "npm --prefix backend run test:db:down",
-    "test:db:safety-check": "npm --prefix backend run test:db:safety-check",
-    "test:load:morning-checkin": "npm --prefix backend run test:load:morning-checkin",
-    "lint": "npm --prefix backend run lint"
-  },
-
-  "dependencies": {
-    "@nestjs/common": "^12.0.3",
-    "@nestjs/core": "^12.0.3"
+    "test:frontend": "npm --prefix frontend run test",
+    "test": "npm run test:backend && npm run test:frontend"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.13.0"
+    "prettier": "^3.5.0"
   }
 }

@@ -103,7 +103,7 @@ Sebelum tim berpindah dari satu fase increment ke fase berikutnya (misal P1 ke P
 1. Seluruh task dalam fase tersebut wajib berstatus `DONE` dan memenuhi DoD.
 2. Jalankan rangkaian *milestone regression suite*:
    ```bash
-   pnpm test:unit && pnpm test:integration:real
+   npm run test:unit && npm run test:integration:real
    ```
 3. Pastikan tidak ada defect Sev 1 atau Sev 2 yang masih berstatus terbuka (*zero critical open defects*).
 4. Catat kelulusan Gate 4 pada Laporan Kontinuitas Proyek.

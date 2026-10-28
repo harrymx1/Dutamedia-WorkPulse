@@ -1,12 +1,12 @@
 # =============================================================================
-# WorkPulse — Isolated PostgreSQL Test Database for Stage S3 Testing
-# Reference: SAD §19.5, §21.3, Product Backlog EPIC-22 & EPIC-23
-# STRICT REQUIREMENT: Isolated on port 54332. Zero Supabase dependencies.
+# WorkPulse — Isolated PostgreSQL 16 Test Database for Automated Testing
+# Reference: SAD v2.1.0 Bab I & Lampiran A, Playbook-02 § 7.2
+# ISOLATION REQUIREMENT: Runs on port 54332 with tmpfs for rapid, ephemeral test runs.
 # =============================================================================
 
 services:
   test-db:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     container_name: workpulse-test-db
     restart: unless-stopped
     environment:
