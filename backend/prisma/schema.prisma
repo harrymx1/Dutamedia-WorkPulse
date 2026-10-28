@@ -1,0 +1,270 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  INACTIVE
+
+  @@map("user_status_enum")
+}
+
+enum InvitationStatus {
+  PENDING
+  USED
+  REVOKED
+  EXPIRED
+
+  @@map("invitation_status_enum")
+}
+
+enum CanonicalRole {
+  EMPLOYEE
+  SUPERVISOR
+  HEAD
+  PROJECT_MANAGER
+  HRGA
+  CEO_MANAGEMENT
+  SYSTEM_ADMIN
+
+  @@map("canonical_role_enum")
+}
+
+enum CanonicalFunction {
+  Engineering
+  Quality
+  OperationsInfrastructure @map("Operations & Infrastructure")
+  RnD                      @map("R&D")
+  Delivery
+  BusinessDevelopment      @map("Business Development")
+  SalesEnablementPresales  @map("Sales Enablement & Presales")
+  Finance
+  HRGA
+  Management
+
+  @@map("canonical_function_enum")
+}
+
+enum PolicyCategory {
+  CHECKIN_TIMING
+  BLOCKER_SLA
+  COMPLIANCE_THRESHOLD
+  CORRECTION_WINDOW
+  NOTIFICATION_REMINDER_THRESHOLD
+
+  @@map("policy_category_enum")
+}
+
+enum NotificationChannel {
+  IN_APP_CENTER
+  BROWSER_PUSH
+  EMAIL
+
+  @@map("notification_channel_enum")
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  READ
+  FAILED
+
+  @@map("notification_status_enum")
+}
+
+model User {
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName          String     @map("full_name") @db.VarChar(150)
+  email             String     @unique @db.VarChar(255)
+  passwordHash      String?    @map("password_hash") @db.VarChar(255)
+  status            UserStatus @default(INVITED)
+  mustResetPassword Boolean    @default(false) @map("must_reset_password")
+  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  sessions                   Session[]
+  sentInvitations            UserInvitation[]             @relation("CreatedInvitations")
+  invitation                 UserInvitation[]             @relation("UserInvitations")
+  orgAssignments             OrganizationalAssignment[]   @relation("UserOrgAssignments")
+  managedOrgAssignments      OrganizationalAssignment[]   @relation("ManagerOrgAssignments")
+  createdOrgAssignments      OrganizationalAssignment[]   @relation("CreatedOrgAssignments")
+  managedProjects            ProjectAuthorityMapping[]    @relation("ProjectManagerAuthority")
+  reviewedProjects           ProjectAuthorityMapping[]    @relation("EscalationReviewerAuthority")
+  createdProjectAuthorities  ProjectAuthorityMapping[]    @relation("CreatedProjectAuthorities")
+  delegatedReviewAssignments TemporaryReviewerAssignment[] @relation("DelegateReviewAssignments")
+  createdReviewAssignments   TemporaryReviewerAssignment[] @relation("CreatedReviewAssignments")
+  createdPolicies            Policy[]                     @relation("CreatedPolicies")
+  policyOwnerAssignments     PolicyOwnerAssignment[]      @relation("PolicyOwnerAssignments")
+  createdPolicyOwners        PolicyOwnerAssignment[]      @relation("CreatedPolicyOwners")
+  notifications              Notification[]
+  auditLogs                  AuditLog[]
+
+  @@map("users")
+}
+
+model UserInvitation {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String           @map("user_id") @db.Uuid
+  tokenHash        String           @unique @map("token_hash") @db.VarChar(255)
+  status           InvitationStatus @default(PENDING)
+  expiresAt        DateTime         @map("expires_at") @db.Timestamptz()
+  usedAt           DateTime?        @map("used_at") @db.Timestamptz()
+  revokedAt        DateTime?        @map("revoked_at") @db.Timestamptz()
+  revocationReason String?          @map("revocation_reason") @db.Text
+  createdByUserId  String           @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+
+  user      User @relation("UserInvitations", fields: [userId], references: [id], onDelete: Restrict)
+  createdBy User @relation("CreatedInvitations", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@map("user_invitations")
+}
+
+model Session {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  sessionTokenHash String    @unique @map("session_token_hash") @db.VarChar(255)
+  issuedAt         DateTime  @default(now()) @map("issued_at") @db.Timestamptz()
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz()
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz()
+  ipAddress        String?   @map("ip_address") @db.VarChar(45)
+  userAgent        String?   @map("user_agent") @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model OrganizationalAssignment {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String            @map("user_id") @db.Uuid
+  jobTitle         String            @map("job_title") @db.VarChar(150)
+  role             CanonicalRole
+  function         CanonicalFunction
+  directManagerId  String?           @map("direct_manager_id") @db.Uuid
+  effectiveDate    DateTime          @map("effective_date") @db.Date
+  endDate          DateTime?         @map("end_date") @db.Date
+  assignmentReason String            @map("assignment_reason") @db.Text
+  createdByUserId  String            @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user          User  @relation("UserOrgAssignments", fields: [userId], references: [id], onDelete: Restrict)
+  directManager User? @relation("ManagerOrgAssignments", fields: [directManagerId], references: [id], onDelete: Restrict)
+  createdBy     User  @relation("CreatedOrgAssignments", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, effectiveDate, endDate], map: "idx_org_active_lookup")
+  @@map("organizational_assignments")
+}
+
+model ProjectAuthorityMapping {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectCode          String            @map("project_code") @db.VarChar(50)
+  projectName          String            @map("project_name") @db.VarChar(150)
+  projectManagerId     String            @map("project_manager_id") @db.Uuid
+  escalationReviewerId String            @map("escalation_reviewer_id") @db.Uuid
+  involvedFunction     CanonicalFunction @map("involved_function")
+  effectiveDate        DateTime          @map("effective_date") @db.Date
+  endDate              DateTime?         @map("end_date") @db.Date
+  assignmentReason     String            @map("assignment_reason") @db.Text
+  createdByUserId      String            @map("created_by_user_id") @db.Uuid
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  projectManager     User @relation("ProjectManagerAuthority", fields: [projectManagerId], references: [id], onDelete: Restrict)
+  escalationReviewer User @relation("EscalationReviewerAuthority", fields: [escalationReviewerId], references: [id], onDelete: Restrict)
+  createdBy          User @relation("CreatedProjectAuthorities", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([projectCode, effectiveDate, endDate], map: "idx_pa_active_lookup")
+  @@map("project_authority_mappings")
+}
+
+model TemporaryReviewerAssignment {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  delegateUserId   String            @map("delegate_user_id") @db.Uuid
+  targetFunction   CanonicalFunction @map("target_function")
+  delegationReason String            @map("delegation_reason") @db.Text
+  effectiveDate    DateTime          @map("effective_date") @db.Date
+  expiryDate       DateTime          @map("expiry_date") @db.Date
+  createdByUserId  String            @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+
+  delegateUser User @relation("DelegateReviewAssignments", fields: [delegateUserId], references: [id], onDelete: Restrict)
+  createdBy    User @relation("CreatedReviewAssignments", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@map("temporary_reviewer_assignments")
+}
+
+model Policy {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category            PolicyCategory
+  configurationValues Json           @map("configuration_values") @db.JsonB
+  isIllustrative      Boolean        @default(false) @map("is_illustrative")
+  effectiveDate       DateTime       @map("effective_date") @db.Date
+  endDate             DateTime?      @map("end_date") @db.Date
+  createdByUserId     String         @map("created_by_user_id") @db.Uuid
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+
+  createdBy User @relation("CreatedPolicies", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@map("policies")
+}
+
+model PolicyOwnerAssignment {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
+  policyCategory  PolicyCategory @map("policy_category")
+  effectiveDate   DateTime       @map("effective_date") @db.Date
+  endDate         DateTime?      @map("end_date") @db.Date
+  createdByUserId String         @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+
+  user      User @relation("PolicyOwnerAssignments", fields: [userId], references: [id], onDelete: Restrict)
+  createdBy User @relation("CreatedPolicyOwners", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@map("policy_owner_assignments")
+}
+
+model Notification {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientUserId   String              @map("recipient_user_id") @db.Uuid
+  triggerType       String              @map("trigger_type") @db.VarChar(100)
+  channel           NotificationChannel
+  title             String              @db.VarChar(200)
+  message           String              @db.Text
+  actionUrl         String?             @map("action_url") @db.VarChar(500)
+  relatedEntityType String?             @map("related_entity_type") @db.VarChar(64)
+  relatedEntityId   String?             @map("related_entity_id") @db.Uuid
+  status            NotificationStatus  @default(QUEUED)
+  sentAt            DateTime?           @map("sent_at") @db.Timestamptz()
+  readAt            DateTime?           @map("read_at") @db.Timestamptz()
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+
+  recipient User @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorUserId       String?  @map("actor_user_id") @db.Uuid
+  actionCode        String   @map("action_code") @db.VarChar(100)
+  relatedEntityType String   @map("related_entity_type") @db.VarChar(64)
+  relatedEntityId   String   @map("related_entity_id") @db.Uuid
+  valueBefore       Json?    @map("value_before") @db.JsonB
+  valueAfter        Json?    @map("value_after") @db.JsonB
+  ipAddress         String?  @map("ip_address") @db.VarChar(45)
+  userAgent         String?  @map("user_agent") @db.Text
+  timestamp         DateTime @default(now()) @db.Timestamptz()
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@map("audit_logs")
+}

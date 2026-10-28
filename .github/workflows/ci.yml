@@ -58,7 +58,10 @@ jobs:
       - name: Strict TypeScript Typecheck
         run: npm run typecheck
 
-      - name: Execute Unit Test Suites (Vitest)
+      - name: Deploy Prisma Baseline Migration
+        run: npx --prefix backend prisma migrate deploy --schema prisma/schema.prisma
+
+      - name: Execute Test Suites (Vitest Unit & Integration)
         run: npm run test
 
       - name: Build Applications (NestJS & Vue 3)

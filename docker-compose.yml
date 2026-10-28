@@ -39,3 +39,4 @@ services:
 volumes:
   pgdata_dev:
   miniodata_dev:
+

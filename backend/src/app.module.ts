@@ -1,10 +1,29 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { HealthModule } from './health/health.module';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
-  imports: [],
+  imports: [HealthModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseEnvelopeInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

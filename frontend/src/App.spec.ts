@@ -10,3 +10,4 @@ describe('App.vue', () => {
     expect(wrapper.find('.system-status').text()).toContain('Sistem Siap (Clean-Slate P0)');
   });
 });
+

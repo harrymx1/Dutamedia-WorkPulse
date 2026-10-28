@@ -43,3 +43,4 @@ Dokumen-Perancangan-untuk-Pengerjaan-Baru/_Archive/Legacy-Codebase/
 > 1. **Dilarang Melakukan Impor Langsung:** Kode sumber di dalam folder ini **TIDAK BOLEH** diimpor (`import ... from '../_Archive/...'`) oleh aplikasi baru.
 > 2. **Bukan Sumber Kebenaran (*Not SSOT*):** Segala aturan bisnis, skema basis data, tipe enum, atau logika otentikasi di folder ini telah digantikan oleh `05-SAD.md` v2.1.0.
 > 3. **Tujuan Referensi Pasif:** Folder ini hanya dipertahankan sebagai artefak jejak audit historis dan pembanding jika diperlukan penelusuran regresi.
+
