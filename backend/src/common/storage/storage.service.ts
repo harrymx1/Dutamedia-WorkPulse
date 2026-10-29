@@ -8,7 +8,7 @@ export interface StorageFileValidation {
 @Injectable()
 export class StorageService {
   private readonly defaultBucket = process.env.STORAGE_BUCKET || 'workpulse-evidence';
-  private readonly projectRef = process.env.SUPABASE_PROJECT_REF || 'yzsischopwnhztjguoxs';
+  private readonly projectRef = process.env.SUPABASE_PROJECT_REF || 'workpulse-storage';
   private readonly maxFileSize = 10 * 1024 * 1024; // 10 MB limit
   private readonly allowedMimeTypes = [
     'image/jpeg',
