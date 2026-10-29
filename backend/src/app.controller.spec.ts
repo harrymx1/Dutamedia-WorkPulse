@@ -12,6 +12,14 @@ describe('AppController', () => {
     appController = new AppController(appService);
   });
 
+  describe('root endpoint', () => {
+    it('should return service info', () => {
+      const result = appController.getRoot();
+      expect(result.status).toBe('online');
+      expect(result.service).toBe('WorkPulse Backend API');
+    });
+  });
+
   describe('health check endpoint', () => {
     it('should return service health status ok', () => {
       const result = appController.getHealth();

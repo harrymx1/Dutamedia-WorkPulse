@@ -39,8 +39,9 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const ipAddress =
-      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress;
+    const rawIp =
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
+    const ipAddress = rawIp.split(',')[0].trim().slice(0, 45) || undefined;
     const userAgent = req.headers['user-agent'];
 
     const result = await this.authService.login(loginDto, {
