@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -20,10 +21,12 @@ describe('App.vue', () => {
 
     const wrapper = mount(App, {
       global: {
-        plugins: [router],
+        plugins: [router, createPinia()],
       },
     });
 
     expect(wrapper.find('.test-home').exists()).toBe(true);
+    // Belum login -> menu global tidak tampil
+    expect(wrapper.find('[data-testid="nav-shell"]').exists()).toBe(false);
   });
 });

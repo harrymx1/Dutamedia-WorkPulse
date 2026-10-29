@@ -28,11 +28,14 @@ import PulseDashboardView from '../views/dashboard/PulseDashboardView.vue';
 import ProjectRiskView from '../views/projects/ProjectRiskView.vue';
 import ExecutiveReportsView from '../views/reports/ExecutiveReportsView.vue';
 import AdminUserInvitationView from '../views/admin/AdminUserInvitationView.vue';
+import ErrorPageView from '../views/system/ErrorPageView.vue';
 
 const routes: RouteRecordRaw[] = [
   {
+    // Diputuskan oleh router.beforeEach (login -> /dashboard, belum login -> /login)
     path: '/',
-    redirect: '/login',
+    name: 'root',
+    component: LoginView,
   },
   {
     path: '/login',
@@ -202,6 +205,18 @@ const routes: RouteRecordRaw[] = [
     component: AdminUserInvitationView,
     meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA', 'CEO_MANAGEMENT'] },
   },
+  {
+    path: '/forbidden',
+    name: 'forbidden',
+    component: ErrorPageView,
+    meta: { requiresAuth: true, errorKind: 'forbidden' },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: ErrorPageView,
+    meta: { errorKind: 'not-found' },
+  },
 ];
 
 export const router = createRouter({
@@ -211,6 +226,21 @@ export const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
+
+  // Pulihkan sesi (cookie) sekali bila belum diketahui, untuk rute akar & guest-only
+  if (!authStore.isAuthenticated && (to.path === '/' || to.meta.guestOnly)) {
+    await authStore.fetchMe();
+  }
+
+  // Rute akar: sudah login -> dashboard, belum -> login
+  if (to.path === '/') {
+    return next(authStore.isAuthenticated ? { name: 'pulse-dashboard' } : { name: 'login' });
+  }
+
+  // Pengguna yang sudah login tidak perlu melihat halaman login/aktivasi
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return next({ name: 'pulse-dashboard' });
+  }
 
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
@@ -223,7 +253,7 @@ router.beforeEach(async (to, _from, next) => {
     if (to.meta.roles && Array.isArray(to.meta.roles)) {
       const allowedRoles = to.meta.roles as string[];
       if (!authStore.user?.role || !allowedRoles.includes(authStore.user.role)) {
-        return next({ name: 'profile' });
+        return next({ name: 'forbidden', query: { from: to.fullPath }, replace: true });
       }
     }
   }

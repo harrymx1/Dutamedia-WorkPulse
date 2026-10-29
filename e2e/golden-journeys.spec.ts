@@ -44,9 +44,9 @@ test.describe('WorkPulse 5 Golden User Journeys (E2E Production Simulation)', ()
     await page.fill('#login-password', 'Password123!');
     await page.click('button[type="submit"]');
 
-    // 4. Verifikasi pengalihan sukses ke halaman profil
-    await page.waitForURL((url) => url.pathname.includes('/profile'), { timeout: 15000 });
-    await expect(page.locator('body')).toContainText('Aditya Nugroho');
+    // 4. Verifikasi pengalihan sukses ke Dashboard (bukan /profile)
+    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 15000 });
+    await expect(page.locator('[data-testid="nav-toggle"]')).toBeVisible();
 
     // 5. Verifikasi bahwa cookie keamanan access_token dan csrf_token terpasang
     const cookies = await context.cookies();

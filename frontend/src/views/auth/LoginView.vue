@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-vue-next';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const email = ref('');
@@ -44,12 +45,12 @@ async function handleLogin() {
   if (!validate()) return;
 
   try {
-    const user = await authStore.login(email.value, password.value);
-    if (user.role === 'SYSTEM_ADMIN' || user.role === 'HRGA') {
-      router.push('/admin/users');
-    } else {
-      router.push('/profile');
-    }
+    await authStore.login(email.value, password.value);
+    // Kembali ke halaman yang semula dituju (bila ada & aman), jika tidak ke /dashboard
+    const redirect = route.query.redirect;
+    const safeRedirect =
+      typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : null;
+    router.push(safeRedirect || '/dashboard');
   } catch (err: any) {
     errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
   }
