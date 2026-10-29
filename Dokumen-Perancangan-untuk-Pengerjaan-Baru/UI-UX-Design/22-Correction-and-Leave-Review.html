@@ -10,6 +10,16 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
+    --color-brand-primary: #00674D;
+    --color-brand-hover: #00523D;
+    --color-brand-tint: #E8F5E9;
+    --color-canvas: #F7FAF9;
+    --color-surface: #FFFFFF;
+    --color-border-subtle: #E4E7EC;
+    --color-border-strong: #A9C7BC;
+    --color-text-primary: #0E211B;
+    --color-text-secondary: #5C6E68;
+    --color-text-muted: #667085;
   --canvas: #F7FAF9;
   --surface: #FFFFFF;
   --subtle: #EFF5F2;
@@ -86,7 +96,7 @@ a { color: inherit; text-decoration: none; }
 .app {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -1024,9 +1034,62 @@ tbody tr:hover {
     animation: none !important;
   }
 }
-</style>
+
+    /* Standar Bilah Simulasi Prototipe (Playbook-01 §4.3) */
+    .proto-sim-bar {
+      background: var(--color-surface-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding: 8px clamp(1.25rem, 3vw, 2.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 600;
+    }
+    .proto-sim-title {
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .proto-sim-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .proto-sim-select {
+      padding: 3px 8px;
+      font-size: 12px;
+      border: 1px solid var(--color-border-strong);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+  </style>
 </head>
 <body>
+  <!-- Bilah Simulasi Prototipe (Playbook-01 §4.3) -->
+  <div class="proto-sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+    <div class="proto-sim-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      <span>[Mode Simulasi Prototipe]</span>
+    </div>
+    <div class="proto-sim-controls">
+      <span style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);">Correction & Leave Review</span>
+      <select class="proto-sim-select" aria-label="Simulasi Status">
+        <option value="DEFAULT">Kondisi: Standar / Aktif</option>
+        <option value="FILTERED">Kondisi: Filter Terapan</option>
+        <option value="EMPTY">Kondisi: Data Kosong</option>
+      </select>
+    </div>
+  </div>
+
 <a class="skip" href="#mainContent">Lewati ke konten utama</a>
 
 <div class="app">
@@ -1114,7 +1177,71 @@ tbody tr:hover {
         <div class="user-role">Reviewer &amp; Approver</div>
       </div>
     </div>
-  </aside>
+  
+      <!-- Grup 2: Management (Kondisional sesuai Role) -->
+      <div class="nav-group" id="mgmt-nav-group">
+        <div class="nav-label">Management</div>
+        <a class="nav-link" href="08-Pulse-Dashboard.html" data-roles="SUPERVISOR,HEAD_OF_DEPARTMENT,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>Pulse Dashboard</span>
+        </a>
+        <a class="nav-link" href="09-Blocker-Escalation-Queue.html" data-roles="SUPERVISOR,HEAD_OF_DEPARTMENT">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span>Blocker &amp; Escalation Queue</span>
+        </a>
+        <a class="nav-link" href="14-Escalation-Aging.html" data-roles="CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Escalation Aging</span>
+        </a>
+        <a class="nav-link" href="13-Project-Risk-View.html" data-roles="PROJECT_MANAGER">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <span>Project Risk View</span>
+        </a>
+        <a class="nav-link" href="10-Manager-Note-Coaching-Record.html" data-roles="SUPERVISOR,HEAD_OF_DEPARTMENT,HRGA">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <span>Manager Notes</span>
+        </a>
+        <a class="nav-link" href="21-Leave-Approval-Queue.html" data-roles="SUPERVISOR,HEAD_OF_DEPARTMENT,HRGA">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          <span>Leave Approval</span>
+        </a>
+        <a class="nav-link active" href="22-Correction-and-Leave-Review.html" data-roles="SUPERVISOR,HEAD_OF_DEPARTMENT,HRGA">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>Correction &amp; Leave Review</span>
+        </a>
+        <a class="nav-link" href="23-Reports.html" data-roles="SUPERVISOR,HEAD_OF_DEPARTMENT,HRGA,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>Executive Reports</span>
+        </a>
+      </div>
+
+
+      <!-- Grup 3: Administration (Kondisional sesuai Role) -->
+      <div class="nav-group" id="admin-nav-group">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="25-Admin-User-Invitation-Management.html" data-roles="SYSTEM_ADMIN,HRGA,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a class="nav-link" href="15-Admin-Organizational-Mapping.html" data-roles="SYSTEM_ADMIN,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Organizational Mapping</span>
+        </a>
+        <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" data-roles="SYSTEM_ADMIN,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" data-roles="SYSTEM_ADMIN">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+          <span>Notification Setup</span>
+        </a>
+        <a class="nav-link" href="18-Policy-Settings.html" data-roles="SYSTEM_ADMIN,HRGA,HEAD_OF_DEPARTMENT,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Policy Settings</span>
+        </a>
+      </div>
+
+    </aside>
 
   <main>
     <header class="topbar">
