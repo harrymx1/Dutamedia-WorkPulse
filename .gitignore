@@ -70,8 +70,13 @@ Thumbs.db
 scratch/
 tmp/
 temp/
+scratch_*.txt
+extracted_*.txt
 
 # Test output & Playwright
 test-results/
 playwright-report/
 blob-report/
+
+# Legacy Archive Codebase (Clean Slate Migration)
+Dokumen-Perancangan-untuk-Pengerjaan-Baru/_Archive/Legacy-Codebase/
