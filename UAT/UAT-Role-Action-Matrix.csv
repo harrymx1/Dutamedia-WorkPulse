@@ -1,0 +1,31 @@
+Role,Module,Action,ExpectedPermission,ExpectedBehavior,TestCaseID,CoverageStatus
+EMPLOYEE,/daily/morning,Akses halaman & submit komitmen pagi,ALLOW,Akses form diberikan dan data tersimpan,TC-DLYM-001,Covered
+EMPLOYEE,/daily/additional-work,Catat tugas ad-hoc siang hari,ALLOW,Akses form diberikan dan tugas bertambah,TC-DLYA-001,Covered
+EMPLOYEE,/daily/eod,Submit hasil evaluasi kerja sore,ALLOW,Akses evaluasi diberikan dengan fitur Anti-Lock Green,TC-DLYE-001,Covered
+EMPLOYEE,/blockers/raise,Lapor hambatan baru,ALLOW,Form laporan blocker terbuka dan dapat disubmit,TC-BLKR-001,Covered
+EMPLOYEE,/corrections/morning,Ajukan permohonan koreksi pagi,ALLOW,Form permohonan koreksi terbuka,TC-CORR-001,Covered
+EMPLOYEE,/leave/my,Ajukan permohonan cuti pribadi,ALLOW,Form cuti mandiri terbuka dan kuota tampil,TC-LEAV-001,Covered
+EMPLOYEE,/admin/organization,Akses struktur organisasi perusahaan,DENY,Pengalihan otomatis ke halaman Error 403 Forbidden,TC-AUTH-005,Covered
+EMPLOYEE,/compliance,Akses antrean kepatuhan seluruh karyawan,DENY,Pengalihan otomatis ke halaman Error 403 Forbidden,TC-AUTH-005,Covered
+EMPLOYEE,/admin/policies,Ubah konfigurasi kebijakan operasional,DENY,Pengalihan otomatis ke halaman Error 403 Forbidden,TC-AUTH-005,Covered
+SUPERVISOR,/dashboard,Lihat Team Pulse dasbor operasional tim,ALLOW,Menampilkan kartu metrik bawahan langsung & blocker aktif,TC-DASH-001,Covered
+SUPERVISOR,/blockers,Akses antrean blocker & berikan respons awal,ALLOW,Daftar blocker tim tampil dan tombol Respons aktif,TC-BLKR-002,Covered
+SUPERVISOR,/corrections/review,Tinjau & putuskan koreksi bawahan,ALLOW,Daftar koreksi pending tampil dengan opsi Setuju/Tolak,TC-CORR-002,Covered
+SUPERVISOR,/leave/queue,Tinjau & putuskan permohonan cuti tim,ALLOW,Daftar cuti pending tampil dengan opsi Approve/Reject,TC-LEAV-002,Covered
+SUPERVISOR,/coaching,Beri catatan pembinaan pada bawahan,ALLOW,Formulir coaching note terbuka dan riwayat tampil,TC-COAC-001,Covered
+SUPERVISOR,/admin/organization,Ubah struktur hirarki level perusahaan,DENY,Pengalihan otomatis ke halaman Error 403 Forbidden,TC-AUTH-005,Covered
+HEAD,/dashboard,Lihat Function Pulse ringkasan departemen,ALLOW,Menampilkan metrik agregat seluruh tim di departemen,TC-DASH-001,Covered
+HEAD,/blockers/aging,Pantau blocker yang melewati batas SLA,ALLOW,Menampilkan daftar blocker breached SLA departemen,TC-BLKR-004,Covered
+PROJECT_MANAGER,/projects/risk,Pantau Project Risk Radar inisiatif,ALLOW,Menampilkan metrik risiko proyek & komitmen terkait,TC-DASH-002,Covered
+PROJECT_MANAGER,/blockers,Tinjau & selesaikan blocker terkait proyek,ALLOW,Wewenang penyelesaian blocker dalam konteks proyek (DEC-006),TC-BLKR-005,Covered
+HRGA,/compliance,Pantau Compliance Queue seluruh karyawan,ALLOW,Menampilkan metrik pelanggaran 1x s.d. 3x seluruh divisi,TC-CORR-004,Covered
+HRGA,/exemptions,Terbitkan dispensasi resmi (Exemption),ALLOW,Form penerbitan dispensasi aktif dan dapat disubmit,TC-CORR-005,Covered
+HRGA,/reports,Akses & unduh laporan eksekutif berkala,ALLOW,Filter laporan aktif dan tombol unduh data berfungsi,TC-DASH-003,Covered
+HRGA,/admin/users,Kelola status aktivasi & data karyawan,ALLOW,Daftar pengguna dan status aktif/invited tampil,TC-ADMN-001,Covered
+CEO_MANAGEMENT,/dashboard,Lihat Management Pulse kondisi makro,ALLOW,Menampilkan statistik makro seluruh organisasi,TC-DASH-001,Covered
+CEO_MANAGEMENT,/reports,Lihat analisis tren akuntabilitas perusahaan,ALLOW,Menampilkan grafik dan laporan kepatuhan komprehensif,TC-DASH-003,Covered
+SYSTEM_ADMIN,/admin/organization,Kelola pemetaan struktur organisasi & atasan,ALLOW,Pohon hirarki organisasi dapat dikonfigurasi,TC-ADMN-001,Covered
+SYSTEM_ADMIN,/admin/temporary-reviewers,Tugaskan delegasi reviewer sementara,ALLOW,Form penugasan reviewer sementara dapat disimpan,TC-ADMN-001,Covered
+SYSTEM_ADMIN,/admin/policies,Ubah konfigurasi cut-off & SLA blocker,ALLOW,Konfigurasi kebijakan tersimpan dan berlaku sistemik,TC-ADMN-002,Covered
+INVITED,/activate,Aktivasi akun via token 72 jam,ALLOW,Form pembuatan password baru terbuka dan dapat disubmit,TC-AUTH-003,Covered
+INVITED,/dashboard,Akses dasbor sebelum akun diaktifkan,DENY,Sistem mengarahkan ke layar aktivasi atau login,TC-AUTH-004,Covered

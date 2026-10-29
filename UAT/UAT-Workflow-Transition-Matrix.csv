@@ -1,0 +1,25 @@
+WorkflowName,InitialState,Action,Role,Precondition,FinalState,IsAllowed,ExpectedBehaviorIfDenied,TestCaseID
+Account Lifecycle,INVITED,Aktivasi akun via token 72 jam valid,INVITED,Token valid & belum pernah dipakai,ACTIVE,YES,N/A,TC-AUTH-003
+Account Lifecycle,INVITED,Aktivasi ulang dengan token yang sama,INVITED,Token sudah berstatus used,INVITED,NO,Muncul pesan error token sudah tidak berlaku atau kedaluwarsa,TC-AUTH-004
+Account Lifecycle,ACTIVE,Deaktivasi pengguna oleh admin,SYSTEM_ADMIN,Bukan akun superadmin utama,SUSPENDED,YES,N/A,TC-ADMN-001
+Commitment Lifecycle,UNCOMMITTED,Submit 1-3 komitmen sebelum cut-off pagi,EMPLOYEE,Waktu < 09:00 WIB,COMMITTED_ON_TIME,YES,N/A,TC-DLYM-001
+Commitment Lifecycle,UNCOMMITTED,Submit komitmen di masa grace period pagi,EMPLOYEE,Waktu 09:01 - 09:30 WIB,COMMITTED_LATE,YES,N/A,TC-DLYM-001
+Commitment Lifecycle,UNCOMMITTED,Direct edit form komitmen pasca cut-off,EMPLOYEE,Waktu > 09:30 WIB,NO_SUBMISSION,NO,Form terkunci tombol edit dinonaktifkan wajib lewat koreksi,TC-DLYM-005
+Commitment Lifecycle,COMMITTED_ON_TIME,Submit evaluasi EOD sebelum cut-off sore,EMPLOYEE,Waktu < 17:30 WIB,EOD_REPORTED_ON_TIME,YES,N/A,TC-DLYE-001
+Commitment Lifecycle,COMMITTED_ON_TIME,Submit evaluasi EOD di masa grace period sore,EMPLOYEE,Waktu 17:31 - 18:00 WIB,EOD_REPORTED_LATE,YES,N/A,TC-DLYE-001
+Commitment Lifecycle,NO_SUBMISSION,Rekonsiliasi otomatis dengan cuti yang disetujui,Sistem,Pengajuan cuti approved pada tanggal yang sama,SUPERSEDED_BY_LEAVE,YES,N/A,TC-LEAV-003
+Blocker Lifecycle,NONE,Pelaporan hambatan baru (Raise Blocker),EMPLOYEE,Form terisi lengkap (Judul deskripsi severity),OPEN,YES,N/A,TC-BLKR-001
+Blocker Lifecycle,OPEN,Konfirmasi penerimaan blocker oleh atasan,SUPERVISOR,Atasan langsung atau PM terkait,ACKNOWLEDGED,YES,N/A,TC-BLKR-002
+Blocker Lifecycle,ACKNOWLEDGED,Mulai pengerjaan solusi teknis,SUPERVISOR,Catatan tindakan awal terisi,IN_PROGRESS,YES,N/A,TC-BLKR-002
+Blocker Lifecycle,IN_PROGRESS,Resolusi blocker dengan solusi >= 10 karakter,SUPERVISOR,Catatan solusi memadai,RESOLVED,YES,N/A,TC-BLKR-003
+Blocker Lifecycle,IN_PROGRESS,Resolusi blocker tanpa mengisi solusi,SUPERVISOR,Catatan solusi kosong atau < 10 karakter,IN_PROGRESS,NO,Validasi form menolak penutupan blocker wajib isi solusi,TC-BLKR-003
+Blocker Lifecycle,OPEN,Langsung loncat ke RESOLVED tanpa respon,SUPERVISOR,Status belum pernah di-acknowledge,OPEN,NO,Sistem mewajibkan pencatatan respons awal sebelum penutupan,TC-BLKR-003
+Correction Lifecycle,DRAFT,Kirim permohonan koreksi dengan alasan >= 10 karakter,EMPLOYEE,Data perubahan terisi valid,PENDING,YES,N/A,TC-CORR-001
+Correction Lifecycle,DRAFT,Kirim permohonan koreksi tanpa alasan,EMPLOYEE,Alasan kosong atau < 10 karakter,DRAFT,NO,Validasi form menolak submit alasan minimal 10 karakter,TC-CORR-001
+Correction Lifecycle,PENDING,Persetujuan koreksi oleh atasan langsung / PM,SUPERVISOR,Atasan yang berwenang,APPROVED,YES,N/A,TC-CORR-002
+Correction Lifecycle,PENDING,Penolakan koreksi dengan alasan >= 10 karakter,SUPERVISOR,Atasan yang berwenang,REJECTED,YES,N/A,TC-CORR-003
+Correction Lifecycle,PENDING,Penolakan koreksi tanpa mengisi alasan,SUPERVISOR,Alasan tolak kosong,PENDING,NO,Sistem mewajibkan pengisian alasan penolakan tertulis,TC-CORR-003
+Leave Lifecycle,DRAFT,Kirim pengajuan cuti dengan tanggal & kuota cukup,EMPLOYEE,Sisa kuota mencukupi,PENDING,YES,N/A,TC-LEAV-001
+Leave Lifecycle,PENDING,Persetujuan cuti oleh atasan langsung,SUPERVISOR,Atasan langsung pemohon,APPROVED,YES,N/A,TC-LEAV-002
+Leave Lifecycle,PENDING,Penolakan cuti oleh atasan langsung,SUPERVISOR,Atasan langsung pemohon,REJECTED,YES,N/A,TC-LEAV-002
+Leave Lifecycle,APPROVED,Pembatalan cuti pasca persetujuan,EMPLOYEE,Tanggal cuti belum terlewati,PENDING_CANCELLATION,YES,N/A,TC-LEAV-001
