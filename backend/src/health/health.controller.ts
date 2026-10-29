@@ -1,5 +1,6 @@
 import { Controller, Get, HttpStatus, Optional, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { SkipThrottle } from '@nestjs/throttler';
 import { BypassEnvelope } from '../common/decorators/bypass-envelope.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -15,6 +16,7 @@ export interface HealthCheckResult {
 }
 
 @Controller('health')
+@SkipThrottle()
 export class HealthController {
   constructor(@Optional() private readonly prisma?: PrismaService) {}
 

@@ -98,3 +98,4 @@ describe('ExecutiveReportsView.vue (Prototipe 23 / EP13 - Laporan Eksekutif & An
     expect(weekBtn.classes()).toContain('active');
   });
 });
+

@@ -65,3 +65,4 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
     expect(testRes.latencyMs).toBeDefined();
   });
 });
+

@@ -95,3 +95,4 @@ describe('NotificationChannelSetupView.vue (Prototipe 19 / EP11 - Pengaturan Kan
     expect(wrapper.text()).toContain('Hasil Pengujian: BERHASIL');
   });
 });
+

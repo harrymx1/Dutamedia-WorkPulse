@@ -95,3 +95,4 @@ describe('MyLeaveRequestView.vue (Prototipe 20 / EP10 - Pengajuan Cuti Mandiri)'
     expect(wrapper.text()).toContain('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
   });
 });
+

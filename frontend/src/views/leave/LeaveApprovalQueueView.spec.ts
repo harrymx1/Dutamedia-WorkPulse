@@ -96,3 +96,4 @@ describe('LeaveApprovalQueueView.vue (Prototipe 21 / EP10 - Antrean Approval Cut
     expect(wrapper.text()).toContain('Kebijakan Rekonsiliasi DEC-007');
   });
 });
+

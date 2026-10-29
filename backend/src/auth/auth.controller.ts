@@ -18,10 +18,10 @@ import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from './guards/auth.guard';
 import { CsrfGuard } from './guards/csrf.guard';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('api/v1/auth')
-@UseGuards(ThrottlerGuard, AuthGuard, CsrfGuard)
+@UseGuards(AuthGuard, CsrfGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

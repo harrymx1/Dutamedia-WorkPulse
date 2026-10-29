@@ -5,3 +5,4 @@ import ProfileView from './ProfileView.vue';
 <template>
   <ProfileView />
 </template>
+

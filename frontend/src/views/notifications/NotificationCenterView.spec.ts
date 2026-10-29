@@ -102,3 +102,4 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('0 belum dibaca');
   });
 });
+

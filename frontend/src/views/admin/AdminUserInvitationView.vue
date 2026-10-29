@@ -5,3 +5,4 @@ import AdminUsersView from './AdminUsersView.vue';
 <template>
   <AdminUsersView />
 </template>
+

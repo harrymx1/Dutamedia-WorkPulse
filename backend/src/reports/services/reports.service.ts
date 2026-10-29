@@ -34,14 +34,14 @@ export class ReportsService {
       where: { status: 'ACTIVE' },
     });
 
-    const activeWorkday = await this.prisma.workDayRecord.findFirst({
+    const activeWorkday = await this.prisma.dailyAccountabilityRecord.findFirst({
       orderBy: { workDate: 'desc' },
       include: {
         commitments: true,
       },
     });
 
-    const submittedCount = await this.prisma.workDayRecord.count({
+    const submittedCount = await this.prisma.dailyAccountabilityRecord.count({
       where: { morningSubmittedAt: { not: null } },
     });
 
@@ -127,3 +127,4 @@ export class ReportsService {
     };
   }
 }
+

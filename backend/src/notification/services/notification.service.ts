@@ -67,7 +67,7 @@ export class NotificationService {
       where: { id: notificationId },
       data: {
         readAt: now,
-        status: NotificationStatus.DELIVERED,
+        status: NotificationStatus.READ,
       },
     });
   }
@@ -84,7 +84,7 @@ export class NotificationService {
       },
       data: {
         readAt: now,
-        status: NotificationStatus.DELIVERED,
+        status: NotificationStatus.READ,
       },
     });
   }
@@ -140,3 +140,4 @@ export class NotificationService {
     };
   }
 }
+

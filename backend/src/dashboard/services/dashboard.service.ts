@@ -36,8 +36,12 @@ export class DashboardService {
       },
     });
 
-    const checkedInCount = todayRecords.filter((r) => r.isMorningSubmitted).length;
-    const eodSubmittedCount = todayRecords.filter((r) => r.isEodSubmitted).length;
+    const checkedInCount = todayRecords.filter(
+      (r: any) => r.isMorningSubmitted || Boolean(r.morningSubmittedAt),
+    ).length;
+    const eodSubmittedCount = todayRecords.filter(
+      (r: any) => r.isEodSubmitted || Boolean(r.eodSubmittedAt),
+    ).length;
 
     // Breakdown Komitmen
     const allCommitments = todayRecords.flatMap((r) => r.commitments);

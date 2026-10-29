@@ -108,3 +108,4 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     expect(wrapper.find('h1').text()).toBe('Function Pulse');
   });
 });
+

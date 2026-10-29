@@ -46,3 +46,4 @@ export class LeaveController {
     return this.leaveService.reviewLeaveRequest(req.user.id, id, dto);
   }
 }
+

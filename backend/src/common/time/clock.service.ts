@@ -34,6 +34,13 @@ export class ClockService {
   }
 
   /**
+   * Mengembalikan objek Date yang di-truncate ke awal hari (00:00:00 WIB).
+   */
+  currentDate(timeZone = 'Asia/Jakarta'): Date {
+    return new Date(this.todayString(timeZone));
+  }
+
+  /**
    * Khusus Pengujian: Injeksi waktu server secara deterministik (DEC-002, SAD III.3).
    */
   setMockTime(date: Date | string): void {

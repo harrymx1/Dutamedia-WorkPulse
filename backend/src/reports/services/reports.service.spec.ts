@@ -10,7 +10,7 @@ describe('ReportsService (WP-EP13 - Laporan Eksekutif & Analitik Organisasi)', (
       user: {
         count: vi.fn().mockResolvedValue(32),
       },
-      workDayRecord: {
+      dailyAccountabilityRecord: {
         findFirst: vi.fn().mockResolvedValue(null),
         count: vi.fn().mockResolvedValue(30),
       },
@@ -41,3 +41,4 @@ describe('ReportsService (WP-EP13 - Laporan Eksekutif & Analitik Organisasi)', (
     expect(exportResult.data).toContain('"Engineering & Tech"');
   });
 });
+
