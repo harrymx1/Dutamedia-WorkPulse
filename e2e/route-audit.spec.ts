@@ -66,6 +66,24 @@ const ACCOUNTS: Array<{ email: string; role: string }> = [
 const allowed = (r: RouteDef, role: string) => !r.roles || r.roles.includes(role);
 const findRoute = (p: string) => ROUTES.find((r) => r.path === p);
 
+function expectedLanding(role: string): string {
+  switch (role) {
+    case 'EMPLOYEE':
+      return '/daily/morning';
+    case 'SUPERVISOR':
+    case 'HEAD':
+    case 'CEO_MANAGEMENT':
+    case 'PROJECT_MANAGER':
+      return '/dashboard';
+    case 'HRGA':
+      return '/compliance';
+    case 'SYSTEM_ADMIN':
+      return '/admin/organization';
+    default:
+      return '/daily/morning';
+  }
+}
+
 const issues: string[] = [];
 const report: any = { routesTested: PROTECTED.map((r) => r.path), accounts: {} };
 
@@ -116,8 +134,9 @@ test.describe('Audit Routing, Navigasi & RBAC (semua peran × semua rute)', () =
       // 1. Login & pendaratan
       await login(page, acc.email);
       await settle(page);
-      if (new URL(page.url()).pathname !== '/dashboard') {
-        issues.push(`[${acc.role}] login mendarat di ${new URL(page.url()).pathname}, seharusnya /dashboard`);
+      const expected = expectedLanding(acc.role);
+      if (new URL(page.url()).pathname !== expected) {
+        issues.push(`[${acc.role}] login mendarat di ${new URL(page.url()).pathname}, seharusnya ${expected}`);
       }
 
       // 2 & 3. Kunjungi setiap rute + kumpulkan tautan
@@ -137,9 +156,9 @@ test.describe('Audit Routing, Navigasi & RBAC (semua peran × semua rute)', () =
           const textLen = await page.evaluate(() => (document.querySelector('#app') as HTMLElement | null)?.innerText.trim().length ?? 0);
           if (textLen < 30) issues.push(`[${acc.role}] ${r.path} tampil kosong (teks ${textLen} karakter)`);
 
-          // Buka menu global agar tautannya ikut terkumpul
+          // Buka menu global jika pada mobile agar tautannya ikut terkumpul
           const toggle = page.locator('[data-testid="nav-toggle"]');
-          if (await toggle.count()) await toggle.click();
+          if (await toggle.count() && (await toggle.isVisible())) await toggle.click();
           const hrefs = await page.$$eval('a[href^="/"]', (as) =>
             Array.from(new Set(as.map((a) => (a as HTMLAnchorElement).getAttribute('href') as string))),
           );
@@ -175,12 +194,12 @@ test.describe('Audit Routing, Navigasi & RBAC (semua peran × semua rute)', () =
         }
       }
 
-      // 5. Sudah login: /login & /activate & / harus mengarah ke dashboard; URL ngawur -> 404
+      // 5. Sudah login: /login & /activate & / harus mengarah ke rute pendaratan resmi peran; URL ngawur -> 404
       for (const p of ['/login', '/activate', '/']) {
         await page.goto(p);
         await settle(page);
-        if (new URL(page.url()).pathname !== '/dashboard') {
-          issues.push(`[${acc.role}] membuka ${p} saat login berakhir di ${new URL(page.url()).pathname}, seharusnya /dashboard`);
+        if (new URL(page.url()).pathname !== expected) {
+          issues.push(`[${acc.role}] membuka ${p} saat login berakhir di ${new URL(page.url()).pathname}, seharusnya ${expected}`);
         }
       }
       await page.goto('/halaman/tidak-ada');
@@ -192,7 +211,10 @@ test.describe('Audit Routing, Navigasi & RBAC (semua peran × semua rute)', () =
       // 6. Logout via menu mengakhiri sesi
       await page.goto('/dashboard');
       await settle(page);
-      await page.click('[data-testid="nav-toggle"]');
+      const toggle = page.locator('[data-testid="nav-toggle"]');
+      if (await toggle.count() && (await toggle.isVisible())) {
+        await toggle.click();
+      }
       await page.click('[data-testid="nav-logout"]');
       await page.waitForURL((u) => u.pathname === '/login', { timeout: 8000 }).catch(() => {});
       if (new URL(page.url()).pathname !== '/login') issues.push(`[${acc.role}] logout via menu tidak kembali ke /login`);

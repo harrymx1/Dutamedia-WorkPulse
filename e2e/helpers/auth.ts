@@ -15,18 +15,15 @@ export async function performLogin(page: Page, email: string, password = 'Passwo
 }
 
 export async function logoutViaNav(page: Page) {
-  // Buka menu shell jika belum terbuka
-  const toggle = page.locator('[data-testid="nav-toggle"]');
-  if (await toggle.isVisible()) {
-    await toggle.click();
-    await page.locator('[data-testid="nav-logout"]').click();
+  const logoutBtn = page.locator('[data-testid="nav-logout"]');
+  if (await logoutBtn.isVisible()) {
+    await logoutBtn.click();
   } else {
-    // Logout alternatif via endpoint auth
-    await page.goto('/profile');
-    const exitBtn = page.getByRole('button', { name: /Keluar/i }).first();
-    if (await exitBtn.isVisible()) {
-      await exitBtn.click();
+    const toggle = page.locator('[data-testid="nav-toggle"]');
+    if (await toggle.count() && (await toggle.isVisible())) {
+      await toggle.click();
     }
+    await logoutBtn.click();
   }
   await page.waitForURL((url) => url.pathname.includes('/login'), { timeout: 15000 });
 }

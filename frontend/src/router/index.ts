@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { getLandingRouteForRole } from './navigation';
 import LoginView from '../views/auth/LoginView.vue';
 import ActivateView from '../views/auth/ActivateView.vue';
 import ProfileView from '../views/profile/ProfileView.vue';
@@ -232,14 +233,17 @@ router.beforeEach(async (to, _from, next) => {
     await authStore.fetchMe();
   }
 
-  // Rute akar: sudah login -> dashboard, belum -> login
+  // Rute akar: sudah login -> rute pendaratan sesuai peran, belum -> login
   if (to.path === '/') {
-    return next(authStore.isAuthenticated ? { name: 'pulse-dashboard' } : { name: 'login' });
+    if (authStore.isAuthenticated) {
+      return next(getLandingRouteForRole(authStore.user?.role));
+    }
+    return next({ name: 'login' });
   }
 
   // Pengguna yang sudah login tidak perlu melihat halaman login/aktivasi
   if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return next({ name: 'pulse-dashboard' });
+    return next(getLandingRouteForRole(authStore.user?.role));
   }
 
   if (to.meta.requiresAuth) {

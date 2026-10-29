@@ -1,9 +1,11 @@
 /**
- * Peta navigasi tunggal (single source of truth) WorkPulse.
- * Dipakai oleh AppNavShell untuk membangun menu berbasis peran (RBAC).
+ * Peta navigasi tunggal (Single Source of Truth) WorkPulse.
+ * Memuat 3 grup navigasi baku WorkPulse Enterprise:
+ * 1. Workspace
+ * 2. Management
+ * 3. Administration
  *
- * Aturan: setiap item `to` HARUS merujuk rute yang ada di router/index.ts.
- * Jika `roles` dihilangkan, item tampil untuk semua pengguna terautentikasi.
+ * Sesuai Design System v1.5.0 dan PDD / PRD / UI/UX Spec.
  */
 
 export type RoleName =
@@ -18,89 +20,77 @@ export type RoleName =
 export interface NavItem {
   label: string;
   to: string;
+  iconName: string;
   roles?: RoleName[];
+  badge?: string;
+  badgeType?: 'amber' | 'red' | 'neutral' | 'green';
 }
 
 export interface NavGroup {
-  title: string;
+  title: 'Workspace' | 'Management' | 'Administration';
   items: NavItem[];
 }
 
-const MANAGERIAL: RoleName[] = ['SUPERVISOR', 'HEAD', 'PROJECT_MANAGER', 'HRGA', 'CEO_MANAGEMENT', 'SYSTEM_ADMIN'];
-const ADMIN_LEVEL: RoleName[] = ['SYSTEM_ADMIN', 'HRGA', 'CEO_MANAGEMENT'];
+const ALL_MANAGERIAL: RoleName[] = [
+  'SUPERVISOR',
+  'HEAD',
+  'PROJECT_MANAGER',
+  'HRGA',
+  'CEO_MANAGEMENT',
+  'SYSTEM_ADMIN',
+];
+
+const ADMIN_LEVEL: RoleName[] = [
+  'SYSTEM_ADMIN',
+  'HRGA',
+  'CEO_MANAGEMENT',
+];
 
 export const navGroups: NavGroup[] = [
   {
-    title: 'Utama',
-    items: [{ label: 'Dashboard', to: '/dashboard' }],
-  },
-  {
-    title: 'Rutinitas Harian',
+    title: 'Workspace',
     items: [
-      { label: 'Komitmen Pagi', to: '/daily/morning' },
-      { label: 'Pekerjaan Tambahan', to: '/daily/additional-work' },
-      { label: 'Evaluasi Sore (EOD)', to: '/daily/eod' },
-      { label: 'Riwayat Saya', to: '/daily/history' },
-      { label: 'Koreksi Komitmen Pagi', to: '/corrections/morning' },
-      { label: 'Koreksi Evaluasi Sore', to: '/corrections/eod' },
+      { label: 'Morning Commitment', to: '/daily/morning', iconName: 'Sunrise' },
+      { label: 'Additional Work', to: '/daily/additional-work', iconName: 'PlusCircle' },
+      { label: 'EOD Outcome', to: '/daily/eod', iconName: 'Sunset' },
+      { label: 'Lapor Blocker', to: '/blockers/raise', iconName: 'AlertTriangle' },
+      { label: 'Riwayat Saya', to: '/daily/history', iconName: 'CalendarDays' },
+      { label: 'Cuti Saya', to: '/leave/my', iconName: 'Plane' },
+      { label: 'Koreksi Komitmen Pagi', to: '/corrections/morning', iconName: 'FileEdit' },
+      { label: 'Koreksi Evaluasi Sore', to: '/corrections/eod', iconName: 'FilePenLine' },
+      { label: 'Notifikasi', to: '/notifications', iconName: 'Bell' },
     ],
   },
   {
-    title: 'Kendala (Blocker)',
+    title: 'Management',
     items: [
-      { label: 'Lapor Kendala', to: '/blockers/raise' },
-      { label: 'Antrean Blocker', to: '/blockers', roles: MANAGERIAL },
-      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
+      // Dashboard terbuka untuk semua pengguna terotentikasi (tampilan disesuaikan peran)
+      { label: 'Pulse Dashboard', to: '/dashboard', iconName: 'Activity' },
+      { label: 'Antrean Blocker', to: '/blockers', roles: ALL_MANAGERIAL, iconName: 'ShieldAlert' },
+      { label: 'Catatan Coaching', to: '/coaching', roles: ALL_MANAGERIAL, iconName: 'MessagesSquare' },
+      { label: 'Radar Risiko Proyek', to: '/projects/risk', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR', 'PROJECT_MANAGER'], iconName: 'FolderGit2' },
+      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'], iconName: 'Clock' },
+      { label: 'Persetujuan Cuti', to: '/leave/queue', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'], iconName: 'CheckSquare' },
+      { label: 'Review Koreksi & Cuti', to: '/corrections/review', roles: ALL_MANAGERIAL, iconName: 'FileCheck' },
+      { label: 'Laporan Eksekutif', to: '/reports', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'], iconName: 'BarChart3' },
     ],
   },
   {
-    title: 'Cuti & Koreksi',
+    title: 'Administration',
     items: [
-      { label: 'Cuti Saya', to: '/leave/my' },
-      { label: 'Persetujuan Cuti', to: '/leave/queue', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
-      { label: 'Review Koreksi', to: '/corrections/review', roles: MANAGERIAL },
-    ],
-  },
-  {
-    title: 'Tim & Pembinaan',
-    items: [
-      { label: 'Catatan Coaching', to: '/coaching' },
-      {
-        label: 'Radar Risiko Proyek',
-        to: '/projects/risk',
-        roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR', 'PROJECT_MANAGER'],
-      },
-    ],
-  },
-  {
-    title: 'HRGA & Manajemen',
-    items: [
-      { label: 'Laporan Eksekutif', to: '/reports', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
-      { label: 'Antrean Kepatuhan', to: '/compliance', roles: ADMIN_LEVEL },
-      { label: 'Manajemen Dispensasi', to: '/exemptions', roles: ADMIN_LEVEL },
-      { label: 'Kebijakan & Cut-off', to: '/admin/policies', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
-    ],
-  },
-  {
-    title: 'Administrasi Sistem',
-    items: [
-      { label: 'Kelola Pengguna', to: '/admin/users', roles: ['SYSTEM_ADMIN', 'HRGA'] },
-      { label: 'Undangan Karyawan', to: '/admin/invitations', roles: ADMIN_LEVEL },
-      { label: 'Struktur Organisasi', to: '/admin/organization', roles: ['SYSTEM_ADMIN', 'HRGA'] },
-      { label: 'Reviewer Sementara', to: '/admin/temporary-reviewers', roles: ['SYSTEM_ADMIN', 'HRGA'] },
-      { label: 'Saluran Notifikasi', to: '/admin/notifications', roles: ['SYSTEM_ADMIN', 'HRGA'] },
-    ],
-  },
-  {
-    title: 'Akun',
-    items: [
-      { label: 'Notifikasi', to: '/notifications' },
-      { label: 'Profil & Kata Sandi', to: '/profile' },
+      { label: 'Antrean Kepatuhan', to: '/compliance', roles: ADMIN_LEVEL, iconName: 'ClipboardCheck' },
+      { label: 'Manajemen Dispensasi', to: '/exemptions', roles: ADMIN_LEVEL, iconName: 'CalendarRange' },
+      { label: 'Kelola Pengguna', to: '/admin/users', roles: ['SYSTEM_ADMIN', 'HRGA'], iconName: 'Users' },
+      { label: 'Undangan Karyawan', to: '/admin/invitations', roles: ADMIN_LEVEL, iconName: 'UserPlus' },
+      { label: 'Struktur Organisasi', to: '/admin/organization', roles: ['SYSTEM_ADMIN', 'HRGA'], iconName: 'Network' },
+      { label: 'Reviewer Sementara', to: '/admin/temporary-reviewers', roles: ['SYSTEM_ADMIN', 'HRGA'], iconName: 'UserCheck' },
+      { label: 'Kebijakan & Cut-off', to: '/admin/policies', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'], iconName: 'Sliders' },
+      { label: 'Saluran Notifikasi', to: '/admin/notifications', roles: ['SYSTEM_ADMIN', 'HRGA'], iconName: 'Megaphone' },
     ],
   },
 ];
 
-/** Menyaring grup menu sesuai peran; grup kosong dibuang. */
+/** Menyaring grup menu sesuai peran; grup kosong dibuang secara otomatis. */
 export function navForRole(role: string | undefined | null): NavGroup[] {
   if (!role) return [];
   return navGroups
@@ -111,3 +101,27 @@ export function navForRole(role: string | undefined | null): NavGroup[] {
     .filter((g) => g.items.length > 0);
 }
 
+/**
+ * Resolver rute pendaratan resmi berdasarkan peran (SSOT Penjelasan-Halaman-01).
+ * - EMPLOYEE -> /daily/morning (Morning Commitment)
+ * - SUPERVISOR / HEAD / CEO_MANAGEMENT / PROJECT_MANAGER -> /dashboard (Pulse Dashboard)
+ * - HRGA -> /compliance (Antrean Kepatuhan)
+ * - SYSTEM_ADMIN -> /admin/organization (Struktur Organisasi)
+ */
+export function getLandingRouteForRole(role: string | undefined | null): string {
+  switch (role) {
+    case 'EMPLOYEE':
+      return '/daily/morning';
+    case 'SUPERVISOR':
+    case 'HEAD':
+    case 'CEO_MANAGEMENT':
+    case 'PROJECT_MANAGER':
+      return '/dashboard';
+    case 'HRGA':
+      return '/compliance';
+    case 'SYSTEM_ADMIN':
+      return '/admin/organization';
+    default:
+      return '/daily/morning';
+  }
+}

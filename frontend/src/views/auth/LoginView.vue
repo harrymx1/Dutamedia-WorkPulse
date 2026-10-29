@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
+import { getLandingRouteForRole } from '../../router/navigation';
 import { Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -50,7 +51,8 @@ async function handleLogin() {
     const redirect = route.query.redirect;
     const safeRedirect =
       typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : null;
-    router.push(safeRedirect || '/dashboard');
+    const landing = getLandingRouteForRole(authStore.user?.role);
+    router.push(safeRedirect || landing);
   } catch (err: any) {
     errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
   }

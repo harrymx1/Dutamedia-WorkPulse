@@ -36,9 +36,9 @@ test.describe('E2E 01: Auth, Activation, Profile & Security Lifecycle', () => {
     await page.fill('#login-password', 'NewHirePass123!');
     await page.click('button[type="submit"]');
 
-    // 6. Verifikasi sukses login dan mendarat di Dashboard
-    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 15000 });
-    await expect(page.locator('[data-testid="nav-toggle"]')).toBeVisible();
+    // 6. Verifikasi sukses login dan mendarat di ruang kerja (Morning Commitment untuk Employee atau Dashboard)
+    await page.waitForURL((url) => url.pathname.includes('/daily/morning') || url.pathname.includes('/dashboard'), { timeout: 15000 });
+    await expect(page.locator('[data-testid="enterprise-sidebar"]')).toBeVisible();
   });
 
   test('Validasi Form Login & Keamanan Cookie HttpOnly Strict', async ({ page, context }) => {
@@ -66,8 +66,8 @@ test.describe('E2E 01: Auth, Activation, Profile & Security Lifecycle', () => {
     await page.fill('#login-password', 'Password123!');
     await page.click('button[type="submit"]');
 
-    // 5. Mendarat di /dashboard (Bukan /profile)
-    await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 15000 });
+    // 5. Mendarat di ruang kerja resmi (Morning Commitment untuk Employee atau Dashboard)
+    await page.waitForURL((url) => url.pathname.includes('/daily/morning') || url.pathname.includes('/dashboard'), { timeout: 15000 });
 
     // 6. Verifikasi atribut keamanan cookie HttpOnly SameSite=Strict
     const cookies = await context.cookies();
@@ -85,7 +85,10 @@ test.describe('E2E 01: Auth, Activation, Profile & Security Lifecycle', () => {
     await performLogin(page, 'dev.frontend@dutamedia.com');
 
     // 1. Akses halaman profil via menu global
-    await page.click('[data-testid="nav-toggle"]');
+    const toggle = page.locator('[data-testid="nav-toggle"]');
+    if (await toggle.count() && (await toggle.isVisible())) {
+      await toggle.click();
+    }
     await expect(page.locator('[data-testid="nav-drawer"]')).toBeVisible();
     await page.click('a[href="/profile"]');
     await page.waitForURL((url) => url.pathname.includes('/profile'));
@@ -118,7 +121,7 @@ test.describe('E2E 01: Auth, Activation, Profile & Security Lifecycle', () => {
     // 7. Login dengan password baru berhasil
     await page.fill('#login-password', 'BaruPass123!');
     await page.click('button[type="submit"]');
-    await page.waitForURL((url) => url.pathname.includes('/dashboard'));
+    await page.waitForURL((url) => url.pathname.includes('/daily/morning') || url.pathname.includes('/dashboard'));
 
     // 8. Kembalikan kata sandi ke Password123! agar pengujian lain tetap konsisten
     await page.goto('/profile');
