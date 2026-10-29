@@ -9,8 +9,8 @@ export function resetTestDatabase(databaseUrl?: string): void {
   const targetUrl = databaseUrl || process.env.DATABASE_URL;
   TestDatabaseSafetyGuard.validate(targetUrl);
 
-  // Jalankan reset migrasi secara deterministik
-  execSync('npx prisma migrate reset --force --skip-seed', {
+  // Jalankan reset migrasi secara deterministik (Prisma 7 standard)
+  execSync('npx prisma migrate reset --force', {
     stdio: 'pipe',
     env: { ...process.env, DATABASE_URL: targetUrl },
   });

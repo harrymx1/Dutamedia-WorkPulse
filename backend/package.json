@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "db:reset:test": "ts-node scripts/reset-test-db.ts",
+    "db:seed": "prisma db seed",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma"
   },
   "dependencies": {
@@ -55,5 +56,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.8"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }
