@@ -1374,9 +1374,62 @@
         grid-template-columns: 1fr;
       }
     }
+  
+    /* Standar Bilah Simulasi Prototipe (Playbook-01 §4.3) */
+    .proto-sim-bar {
+      background: var(--color-surface-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding: 8px clamp(1.25rem, 3vw, 2.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 600;
+    }
+    .proto-sim-title {
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .proto-sim-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .proto-sim-select {
+      padding: 3px 8px;
+      font-size: 12px;
+      border: 1px solid var(--color-border-strong);
+      border-radius: 6px;
+      background: #fff;
+    }
+
   </style>
 </head>
 <body>
+  <!-- Bilah Simulasi Prototipe (Playbook-01 §4.3) -->
+  <div class="proto-sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+    <div class="proto-sim-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      <span>[Mode Simulasi Prototipe]</span>
+    </div>
+    <div class="proto-sim-controls">
+      <span style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);">Blocker Escalation Queue</span>
+      <select class="proto-sim-select" aria-label="Simulasi Status">
+        <option value="DEFAULT">Kondisi: Standar / Aktif</option>
+        <option value="FILTERED">Kondisi: Filter Terapan</option>
+        <option value="EMPTY">Kondisi: Data Kosong</option>
+      </select>
+    </div>
+  </div>
+
 <div class="app">
   <!-- Sidebar Navigation Shell (3 Grup Kanonikal: Workspace, Management, Administration) -->
   <aside class="sidebar" id="sidebar">

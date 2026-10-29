@@ -11,11 +11,11 @@
   <style>
     :root {
       /* Palette Tokens Standar Baku WorkPulse (Design System v1.5.0) */
-      --color-brand-primary: #0F766E;
-      --color-brand-hover: #0D9488;
-      --color-brand-tint: #CCFBF1;
-      --color-brand-focus: #115E59;
-      --color-brand-border: #99F6E4;
+      --color-brand-primary: #00674D;
+      --color-brand-hover: #00523D;
+      --color-brand-tint: #E8F5E9;
+      --color-brand-focus: #0B8061;
+      --color-brand-border: #A7D5B8;
       --color-canvas: #F8FAFC;
       --color-surface: #FFFFFF;
       --color-surface-subtle: #F1F5F9;
@@ -106,7 +106,7 @@
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 232px minmax(0, 1fr);
     }
 
     /* ==============================================================
@@ -1304,7 +1304,7 @@
         top: 0;
         left: 0;
         bottom: 0;
-        width: 260px;
+        width: 232px;
         z-index: 100;
         transform: translateX(-100%);
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1332,9 +1332,62 @@
       .filter-tools { width: 100%; }
       .filter-select { flex: 1; min-width: 0; font-size: 12px; }
     }
+  
+    /* Standar Bilah Simulasi Prototipe (Playbook-01 §4.3) */
+    .proto-sim-bar {
+      background: var(--color-surface-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding: 8px clamp(1.25rem, 3vw, 2.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 600;
+    }
+    .proto-sim-title {
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .proto-sim-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .proto-sim-select {
+      padding: 3px 8px;
+      font-size: 12px;
+      border: 1px solid var(--color-border-strong);
+      border-radius: 6px;
+      background: #fff;
+    }
+
   </style>
 </head>
 <body>
+  <!-- Bilah Simulasi Prototipe (Playbook-01 §4.3) -->
+  <div class="proto-sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+    <div class="proto-sim-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      <span>[Mode Simulasi Prototipe]</span>
+    </div>
+    <div class="proto-sim-controls">
+      <span style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);">Pulse Dashboard</span>
+      <select class="proto-sim-select" aria-label="Simulasi Status">
+        <option value="DEFAULT">Kondisi: Standar / Aktif</option>
+        <option value="FILTERED">Kondisi: Filter Terapan</option>
+        <option value="EMPTY">Kondisi: Data Kosong</option>
+      </select>
+    </div>
+  </div>
+
 
 <div class="app">
   <!-- Backdrop Drawer Mobile (Identik Halaman 02-07) -->

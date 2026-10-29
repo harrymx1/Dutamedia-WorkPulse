@@ -120,7 +120,7 @@
     }
 
     /* App Shell Layout: Sidebar 232px, Topbar 56px, Content 1200px */
-    .app-layout {
+    .app {
       display: grid;
       grid-template-columns: 232px minmax(0, 1fr);
       min-height: 100vh;
@@ -1221,7 +1221,7 @@
       .metrics-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 820px) {
-      .app-layout { grid-template-columns: 1fr; }
+      .app { grid-template-columns: 1fr; }
       .sidebar {
         position: fixed;
         left: -240px;
@@ -1244,7 +1244,7 @@
 </head>
 <body>
 
-<div class="app-layout">
+<div class="app">
   <!-- Mobile Backdrop Overlay -->
   <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
@@ -1367,7 +1367,22 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       </a>
     </div>
-  </aside>
+  
+      <!-- Account Bottom Area (Identik Halaman 02-11) -->
+      <div class="side-bottom">
+        <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
+          <div class="avatar" id="side-avatar">BP</div>
+          <div class="user-meta">
+            <div class="user-name" id="side-user-name">Budi Pratama</div>
+            <div class="user-role" id="side-user-role">Software Engineer &bull; Engineering</div>
+          </div>
+        </a>
+        <a href="01-Login-Activation.html" class="logout-btn" title="Keluar / Ganti Akun" aria-label="Keluar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </a>
+      </div>
+
+    </aside>
 
   <!-- Main Content Wrapper -->
   <div class="main-wrapper">

@@ -10,6 +10,16 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
+    --color-brand-primary: #00674D;
+    --color-brand-hover: #00523D;
+    --color-brand-tint: #E8F5E9;
+    --color-canvas: #F7FAF9;
+    --color-surface: #FFFFFF;
+    --color-border-subtle: #E4E7EC;
+    --color-border-strong: #A9C7BC;
+    --color-text-primary: #0E211B;
+    --color-text-secondary: #5C6E68;
+    --color-text-muted: #667085;
       --brand: #00674D;
       --brand-hover: #00523D;
       --brand-tint: #E8F5E9;
@@ -1392,9 +1402,62 @@
       .workbench-layout.tab-feed .creation-panel-container { display: none; }
       .workbench-layout.tab-form .feed-panel-container { display: none; }
     }
+  
+    /* Standar Bilah Simulasi Prototipe (Playbook-01 §4.3) */
+    .proto-sim-bar {
+      background: var(--color-surface-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding: 8px clamp(1.25rem, 3vw, 2.5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 600;
+    }
+    .proto-sim-title {
+      font-weight: 800;
+      color: var(--color-brand-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .proto-sim-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .proto-sim-select {
+      padding: 3px 8px;
+      font-size: 12px;
+      border: 1px solid var(--color-border-strong);
+      border-radius: 6px;
+      background: #fff;
+    }
+
   </style>
 </head>
 <body>
+  <!-- Bilah Simulasi Prototipe (Playbook-01 §4.3) -->
+  <div class="proto-sim-bar" role="region" aria-label="Mode Simulasi Prototipe">
+    <div class="proto-sim-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      <span>[Mode Simulasi Prototipe]</span>
+    </div>
+    <div class="proto-sim-controls">
+      <span style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);">Manager Notes & Coaching</span>
+      <select class="proto-sim-select" aria-label="Simulasi Status">
+        <option value="DEFAULT">Kondisi: Standar / Aktif</option>
+        <option value="FILTERED">Kondisi: Filter Terapan</option>
+        <option value="EMPTY">Kondisi: Data Kosong</option>
+      </select>
+    </div>
+  </div>
+
 <div class="app">
   <!-- Sidebar Navigation Shell Baku WorkPulse -->
   <aside class="sidebar" id="sidebar">
@@ -1466,7 +1529,33 @@
       </div>
     </div>
 
-    <!-- Account Bottom Area -->
+    
+      <!-- Grup 3: Administration (Kondisional sesuai Role) -->
+      <div class="nav-group" id="admin-nav-group">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="25-Admin-User-Invitation-Management.html" data-roles="SYSTEM_ADMIN,HRGA,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>User &amp; Invitation</span>
+        </a>
+        <a class="nav-link" href="15-Admin-Organizational-Mapping.html" data-roles="SYSTEM_ADMIN,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Organizational Mapping</span>
+        </a>
+        <a class="nav-link" href="17-Admin-Temporary-Reviewer.html" data-roles="SYSTEM_ADMIN,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+          <span>Temporary Reviewer</span>
+        </a>
+        <a class="nav-link" href="19-Admin-Notification-Channel-Setup.html" data-roles="SYSTEM_ADMIN">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+          <span>Notification Setup</span>
+        </a>
+        <a class="nav-link" href="18-Policy-Settings.html" data-roles="SYSTEM_ADMIN,HRGA,HEAD_OF_DEPARTMENT,CEO">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Policy Settings</span>
+        </a>
+      </div>
+
+      <!-- Account Bottom Area -->
     <div class="side-bottom">
       <a href="24-Profile-Settings.html" class="user-profile-link" title="Buka Profil Saya">
         <div class="avatar" id="side-avatar">AF</div>
