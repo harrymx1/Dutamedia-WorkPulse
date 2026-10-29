@@ -33,7 +33,14 @@ const connectionString =
   process.env.DATABASE_URL ||
   'postgresql://postgres:test_password_secure@localhost:54332/workpulse_test';
 
-const pool = new Pool({ connectionString });
+const isSslRequired =
+  connectionString.includes('supabase.co') ||
+  connectionString.includes('sslmode=require');
+
+const pool = new Pool({
+  connectionString,
+  ssl: isSslRequired ? { rejectUnauthorized: false } : undefined,
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 

@@ -8,7 +8,10 @@ export default defineConfig({
     seed: 'ts-node ./prisma/seed.ts',
   },
   datasource: {
-    url: process.env.DATABASE_URL || 'postgresql://workpulse_app:workpulse_dev_password@localhost:5432/workpulse_dev',
+    url:
+      process.env.DIRECT_URL ||
+      process.env.DATABASE_URL ||
+      'postgresql://workpulse_app:workpulse_dev_password@localhost:5432/workpulse_dev',
   },
 });
 

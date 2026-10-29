@@ -15,7 +15,14 @@ export class PrismaService
       process.env.DATABASE_URL ||
       'postgresql://workpulse_app:workpulse_dev_password@localhost:5432/workpulse_dev';
 
-    const pool = new Pool({ connectionString });
+    const isSslRequired =
+      connectionString.includes('supabase.co') ||
+      connectionString.includes('sslmode=require');
+
+    const pool = new Pool({
+      connectionString,
+      ssl: isSslRequired ? { rejectUnauthorized: false } : undefined,
+    });
     const adapter = new PrismaPg(pool);
 
     super({ adapter });
