@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -78,7 +79,7 @@ async function loadInitialData() {
     }
 
     // Ambil daftar pengguna untuk routing penugasan
-    const usersRes = await apiClient<Array<{ id: string; fullName: string; email: string }>>('/organization/users');
+    const usersRes = await apiClient<Array<{ id: string; fullName: string; email: string }>>('/v1/organization/users');
     if (usersRes.data) {
       availableUsers.value = usersRes.data;
       if (availableUsers.value.length > 0) {
@@ -158,15 +159,15 @@ onMounted(() => {
         <span class="breadcrumb">Blocker / <strong>Laporkan Kendala Cepat (Prototipe 05)</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/blockers" class="btn-topbar">
+        <AccessLink to="/blockers" class="btn-topbar">
           <ListFilter :size="16" />
           <span>Antrean Tiket</span>
-        </router-link>
-        <router-link to="/blockers/aging" class="btn-topbar">
+        </AccessLink>
+        <AccessLink to="/blockers/aging" class="btn-topbar">
           <Clock :size="16" />
           <span>Aging Radar</span>
-        </router-link>
-        <router-link to="/daily/morning" class="btn-topbar">My Today</router-link>
+        </AccessLink>
+        <AccessLink to="/daily/morning" class="btn-topbar">My Today</AccessLink>
       </div>
     </header>
 
@@ -191,10 +192,10 @@ onMounted(() => {
           </p>
         </div>
         <div class="heading-side">
-          <router-link to="/blockers" class="btn-blocker-secondary">
+          <AccessLink to="/blockers" class="btn-blocker-secondary">
             <ListFilter :size="16" />
             <span>Lihat Antrean Blocker Aktif</span>
-          </router-link>
+          </AccessLink>
         </div>
       </div>
 
@@ -208,10 +209,10 @@ onMounted(() => {
           Tiket ID: <code>{{ submittedTicket.id }}</code> telah dicatat pada sistem dengan status <strong>{{ submittedTicket.status }}</strong>. Notifikasi segera dikirimkan kepada penanggung jawab terkait.
         </p>
         <div class="submitted-actions">
-          <router-link to="/blockers" class="btn-primary">
+          <AccessLink to="/blockers" class="btn-primary">
             <span>Buka Antrean Blocker</span>
             <ArrowRight :size="16" />
-          </router-link>
+          </AccessLink>
           <button type="button" class="btn-secondary" @click="submittedTicket = null; title = ''; description = ''">
             Laporkan Kendala Lain
           </button>
@@ -476,7 +477,7 @@ onMounted(() => {
               Pastikan fakta kendala akurat. Tiket yang diterbitkan tidak dapat dihapus (Audit Trail DEC-008).
             </span>
             <div class="footer-actions">
-              <router-link to="/blockers" class="btn-secondary">Batal</router-link>
+              <AccessLink to="/blockers" class="btn-secondary">Batal</AccessLink>
               <button
                 type="submit"
                 class="btn-primary"

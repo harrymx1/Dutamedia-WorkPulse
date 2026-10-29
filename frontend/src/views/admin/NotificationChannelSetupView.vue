@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -107,10 +108,10 @@ onMounted(() => {
         <span class="breadcrumb">Admin / <strong>Notification Setup</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/notifications" class="btn-topbar">
+        <AccessLink to="/notifications" class="btn-topbar">
           <Bell :size="16" />
           <span>Notification Center</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 

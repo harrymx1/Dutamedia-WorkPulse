@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
@@ -91,13 +92,13 @@ async function handleLogout() {
         <span class="system-tag">Profil Akun</span>
       </div>
       <div class="nav-right">
-        <router-link
+        <AccessLink
           v-if="authStore.isSuperAdmin || authStore.isHRGA"
           to="/admin/users"
           class="nav-link"
         >
           Kelola Pengguna
-        </router-link>
+        </AccessLink>
         <button class="logout-btn" @click="handleLogout">
           <LogOut :size="16" />
           <span>Keluar</span>

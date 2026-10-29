@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -91,10 +92,10 @@ onMounted(() => {
           <RefreshCw :size="15" :class="{ spinning: loading }" />
           <span>Segarkan Data</span>
         </button>
-        <router-link to="/blockers" class="btn-topbar">
+        <AccessLink to="/blockers" class="btn-topbar">
           <ListFilter :size="16" />
           <span>Antrean Tiket</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 
@@ -250,10 +251,10 @@ onMounted(() => {
 
                 <!-- Kolom 7: Action -->
                 <td class="col-action">
-                  <router-link to="/blockers" class="btn-inspect" title="Buka Tiket di Antrean">
+                  <AccessLink to="/blockers" class="btn-inspect" title="Buka Tiket di Antrean">
                     <span>Buka</span>
                     <ArrowUpRight :size="14" />
-                  </router-link>
+                  </AccessLink>
                 </td>
               </tr>
             </tbody>

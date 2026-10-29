@@ -35,6 +35,7 @@ async function handleLogout() {
     <div v-if="open" class="nav-backdrop" @click="open = false"></div>
 
     <nav v-if="open" class="nav-drawer" aria-label="Navigasi utama" data-testid="nav-drawer">
+      <button class="nav-close" type="button" aria-label="Tutup menu" data-testid="nav-close" @click="open = false">✕ Tutup</button>
       <div class="nav-user">
         <strong>{{ auth.user?.fullName }}</strong>
         <small>{{ auth.user?.email }}</small>
@@ -95,6 +96,15 @@ async function handleLogout() {
   background: #fff;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
 }
+.nav-close {
+  float: right;
+  padding: 4px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
 .nav-user {
   display: flex;
   flex-direction: column;
@@ -153,3 +163,4 @@ async function handleLogout() {
   cursor: pointer;
 }
 </style>
+

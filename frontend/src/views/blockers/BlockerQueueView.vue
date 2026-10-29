@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -224,14 +225,14 @@ onMounted(() => {
         <span class="breadcrumb">Blocker / <strong>Antrean &amp; Resolusi Kendala (Prototipe 09)</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/blockers/aging" class="btn-topbar">
+        <AccessLink to="/blockers/aging" class="btn-topbar">
           <Clock :size="16" />
           <span>Aging Radar</span>
-        </router-link>
-        <router-link to="/blockers/raise" class="btn-topbar-primary">
+        </AccessLink>
+        <AccessLink to="/blockers/raise" class="btn-topbar-primary">
           <Plus :size="16" />
           <span>Laporkan Blocker</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 
@@ -324,10 +325,10 @@ onMounted(() => {
 
         <div class="toolbar-spacer"></div>
 
-        <router-link to="/blockers/raise" class="btn-create">
+        <AccessLink to="/blockers/raise" class="btn-create">
           <Plus :size="16" />
           <span>Laporkan Blocker Baru</span>
-        </router-link>
+        </AccessLink>
       </div>
 
       <!-- Main Queue 2-Column Split -->

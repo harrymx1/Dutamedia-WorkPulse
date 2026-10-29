@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -112,14 +113,14 @@ onMounted(() => {
         <span class="breadcrumb">Projects / <strong>Project Risk Radar</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/dashboard" class="btn-topbar">
+        <AccessLink to="/dashboard" class="btn-topbar">
           <Layers :size="16" />
           <span>Pulse Dashboard</span>
-        </router-link>
-        <router-link to="/blockers" class="btn-topbar">
+        </AccessLink>
+        <AccessLink to="/blockers" class="btn-topbar">
           <AlertTriangle :size="16" />
           <span>Antrean Blocker</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 
@@ -350,10 +351,10 @@ onMounted(() => {
             </div>
 
             <div class="modal-actions">
-              <router-link to="/blockers" class="btn btn-primary">
+              <AccessLink to="/blockers" class="btn btn-primary">
                 <span>Buka Antrean Blocker Terkait</span>
                 <ArrowRight :size="14" />
-              </router-link>
+              </AccessLink>
             </div>
           </div>
         </div>

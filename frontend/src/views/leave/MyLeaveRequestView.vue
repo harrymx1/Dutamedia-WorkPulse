@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -165,10 +166,10 @@ onMounted(() => {
         <span class="breadcrumb">Workspace / <strong>My Leave Request</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/leave/queue" class="btn-topbar">
+        <AccessLink to="/leave/queue" class="btn-topbar">
           <CalendarDays :size="16" />
           <span>Antrean Approval</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 

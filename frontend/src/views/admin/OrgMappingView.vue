@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
 import {
@@ -47,7 +47,6 @@ interface SimpleUser {
   email: string;
 }
 
-const router = useRouter();
 const authStore = useAuthStore();
 
 // Tab state: 'org' | 'project'
@@ -114,10 +113,7 @@ onMounted(async () => {
   if (!authStore.user) {
     await authStore.fetchMe();
   }
-  if (!authStore.isSuperAdmin && !authStore.isHRGA) {
-    router.push('/profile');
-    return;
-  }
+  // Pembatasan peran ditegakkan oleh router guard (meta.roles) sebelum halaman dimuat.
   window.addEventListener('keydown', handleKeydown);
   await loadData();
 });
@@ -251,9 +247,9 @@ function showToast(msg: string, isError = false) {
         <span class="system-tag">Struktur Organisasi</span>
       </div>
       <div class="nav-right">
-        <router-link to="/admin/users" class="nav-link">Kelola Pengguna</router-link>
-        <router-link to="/admin/temporary-reviewers" class="nav-link">Reviewer Sementara</router-link>
-        <router-link to="/profile" class="nav-link">Profil Saya</router-link>
+        <AccessLink to="/admin/users" class="nav-link">Kelola Pengguna</AccessLink>
+        <AccessLink to="/admin/temporary-reviewers" class="nav-link">Reviewer Sementara</AccessLink>
+        <AccessLink to="/profile" class="nav-link">Profil Saya</AccessLink>
       </div>
     </header>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -158,8 +159,8 @@ onMounted(() => {
         <span class="breadcrumb">Akuntabilitas / <strong>Koreksi Evaluasi Sore EOD (Prototipe 16b)</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/corrections/morning" class="btn-topbar">Koreksi Morning</router-link>
-        <router-link to="/daily/eod" class="btn-topbar">EOD Outcome</router-link>
+        <AccessLink to="/corrections/morning" class="btn-topbar">Koreksi Morning</AccessLink>
+        <AccessLink to="/daily/eod" class="btn-topbar">EOD Outcome</AccessLink>
       </div>
     </header>
 

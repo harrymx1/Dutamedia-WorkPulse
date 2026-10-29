@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -54,7 +55,7 @@ async function loadData() {
   try {
     const [exemptionsRes, usersRes] = await Promise.all([
       apiClient<ExemptionItem[]>('/compliance/exemptions'),
-      apiClient<Array<{ id: string; fullName: string; email: string }>>('/organization/users'),
+      apiClient<Array<{ id: string; fullName: string; email: string }>>('/v1/organization/users'),
     ]);
 
     if (exemptionsRes.data) exemptions.value = exemptionsRes.data;
@@ -131,8 +132,8 @@ onMounted(() => {
         <span class="breadcrumb">HRGA / <strong>Kelola Hari Libur &amp; Pengecualian (Prototipe 12)</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/compliance" class="btn-topbar">Antrean Kepatuhan</router-link>
-        <router-link to="/corrections/review" class="btn-topbar">Antrean Koreksi</router-link>
+        <AccessLink to="/compliance" class="btn-topbar">Antrean Kepatuhan</AccessLink>
+        <AccessLink to="/corrections/review" class="btn-topbar">Antrean Koreksi</AccessLink>
       </div>
     </header>
 

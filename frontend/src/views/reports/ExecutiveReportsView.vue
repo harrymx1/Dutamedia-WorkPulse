@@ -73,7 +73,7 @@ function showToast(msg: string, isError = false) {
 async function loadReport() {
   loading.value = true;
   try {
-    const res = await apiClient<ReportResponse>(`/reports/executive?period=${activePeriod.value}`);
+    const res = await apiClient<ReportResponse>(`/v1/reports/executive?period=${activePeriod.value}`);
     const data = res?.data || res;
     if (data && data.summary) {
       report.value = data;

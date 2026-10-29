@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -67,11 +68,20 @@ async function loadNotifications() {
   loading.value = true;
   try {
     const [listRes, countRes] = await Promise.all([
-      apiClient<NotificationItem[]>('/notifications'),
-      apiClient<{ unreadCount: number }>('/notifications/unread-count'),
+      apiClient<any>('/notifications'),
+      apiClient<{ unreadCount: number }>('/notifications/unread-count').catch(() => null),
     ]);
-    notifications.value = Array.isArray(listRes?.data) ? listRes.data : (Array.isArray(listRes) ? listRes : []);
-    unreadCount.value = countRes?.data?.unreadCount ?? (countRes as any)?.unreadCount ?? 0;
+    const payload: any = listRes?.data ?? listRes;
+    const rows: any[] = Array.isArray(payload) ? payload : Array.isArray(payload?.notifications) ? payload.notifications : [];
+    notifications.value = rows.map((n) => ({
+      ...n,
+      type: n.type ?? n.triggerType ?? '',
+      read: typeof n.read === 'boolean' ? n.read : !!n.readAt,
+    }));
+    unreadCount.value =
+      countRes?.data?.unreadCount ??
+      payload?.unreadCount ??
+      notifications.value.filter((n) => !n.read).length;
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat notifikasi.', true);
   } finally {
@@ -81,7 +91,7 @@ async function loadNotifications() {
 
 async function handleMarkAllAsRead() {
   try {
-    await apiClient('/notifications/mark-all-read', { method: 'POST' });
+    await apiClient('/notifications/read-all', { method: 'POST' });
     notifications.value.forEach((n) => {
       n.read = true;
     });
@@ -95,7 +105,7 @@ async function handleMarkAllAsRead() {
 async function handleMarkAsRead(notif: NotificationItem) {
   if (notif.read) return;
   try {
-    await apiClient(`/notifications/${notif.id}/read`, { method: 'PATCH' });
+    await apiClient(`/notifications/${notif.id}/read`, { method: 'POST' });
     notif.read = true;
     if (unreadCount.value > 0) unreadCount.value--;
   } catch (err: any) {
@@ -179,10 +189,10 @@ onMounted(() => {
         <span class="breadcrumb">Workspace / <strong>Notifications</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/admin/notifications" class="btn-topbar">
+        <AccessLink to="/admin/notifications" class="btn-topbar">
           <Settings :size="16" />
           <span>Pengaturan Kanal</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 
@@ -434,10 +444,10 @@ onMounted(() => {
             </div>
 
             <div v-if="selectedNotification.actionUrl" class="action-link-wrap">
-              <router-link :to="selectedNotification.actionUrl" class="btn btn-primary">
+              <AccessLink :to="selectedNotification.actionUrl" class="btn btn-primary">
                 <ExternalLink :size="15" />
                 <span>Buka Halaman Terkait</span>
-              </router-link>
+              </AccessLink>
             </div>
           </div>
         </div>

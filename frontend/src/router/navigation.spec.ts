@@ -47,3 +47,4 @@ describe('Navigasi & RBAC frontend', () => {
     expect(navForRole(undefined)).toEqual([]);
   });
 });
+

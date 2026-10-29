@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -161,8 +162,8 @@ onMounted(() => {
         <span class="breadcrumb">Akuntabilitas / <strong>Koreksi Komitmen Pagi (Prototipe 16a)</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/corrections/eod" class="btn-topbar">Koreksi EOD</router-link>
-        <router-link to="/daily/morning" class="btn-topbar">My Today</router-link>
+        <AccessLink to="/corrections/eod" class="btn-topbar">Koreksi EOD</AccessLink>
+        <AccessLink to="/daily/morning" class="btn-topbar">My Today</AccessLink>
       </div>
     </header>
 
@@ -193,9 +194,9 @@ onMounted(() => {
         <AlertCircle :size="32" class="empty-icon" />
         <h2>Tidak Ada Komitmen Hari Ini</h2>
         <p>Anda belum mengisi komitmen pagi hari ini, atau komitmen belum terkunci.</p>
-        <router-link to="/daily/morning" class="btn-primary" style="margin-top: 14px;">
+        <AccessLink to="/daily/morning" class="btn-primary" style="margin-top: 14px;">
           Buka Morning Commitment
-        </router-link>
+        </AccessLink>
       </div>
 
       <div v-else class="split-layout">

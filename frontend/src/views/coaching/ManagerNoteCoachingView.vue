@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
@@ -183,8 +184,8 @@ onMounted(() => {
         <span class="breadcrumb">Manajerial / <strong>Catatan Evaluasi Kerja &amp; Pembinaan Tim (Prototipe 10)</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/blockers" class="btn-topbar">Antrean Blocker</router-link>
-        <router-link to="/daily/morning" class="btn-topbar">My Today</router-link>
+        <AccessLink to="/blockers" class="btn-topbar">Antrean Blocker</AccessLink>
+        <AccessLink to="/daily/morning" class="btn-topbar">My Today</AccessLink>
       </div>
     </header>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -116,7 +117,7 @@ async function loadTodayState() {
     }
 
     // Load users for blocker modal
-    const usersRes = await apiClient<Array<{ id: string; fullName: string }>>('/organization/users');
+    const usersRes = await apiClient<Array<{ id: string; fullName: string }>>('/v1/organization/users');
     availableUsers.value = usersRes.data || [];
     if (availableUsers.value.length > 0) {
       blockerOwnerId.value = availableUsers.value[0].id;
@@ -250,25 +251,25 @@ onMounted(() => {
         <span class="breadcrumb">My Today / <strong>EOD Outcome</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/daily/history" class="nav-btn">Riwayat Saya</router-link>
-        <router-link to="/profile" class="nav-btn">Profil</router-link>
+        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
+        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
       </div>
     </header>
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
-      <router-link to="/daily/morning" class="step-item">
+      <AccessLink to="/daily/morning" class="step-item">
         <span class="step-num">1</span>
         <span>Morning Commitment</span>
-      </router-link>
-      <router-link to="/daily/additional-work" class="step-item">
+      </AccessLink>
+      <AccessLink to="/daily/additional-work" class="step-item">
         <span class="step-num">2</span>
         <span>Additional Work</span>
-      </router-link>
-      <router-link to="/daily/eod" class="step-item active">
+      </AccessLink>
+      <AccessLink to="/daily/eod" class="step-item active">
         <span class="step-num">3</span>
         <span>EOD Outcome</span>
-      </router-link>
+      </AccessLink>
     </nav>
 
     <!-- Toasts -->
@@ -552,9 +553,9 @@ onMounted(() => {
             <p>Hari kerja Anda telah ditutup secara resmi. Terima kasih atas dedikasi dan akuntabilitas Anda hari ini!</p>
           </div>
         </div>
-        <router-link to="/daily/history" class="btn btn-secondary history-btn">
+        <AccessLink to="/daily/history" class="btn btn-secondary history-btn">
           <span>Lihat Ringkasan Riwayat Akuntabilitas &rarr;</span>
-        </router-link>
+        </AccessLink>
       </div>
     </main>
 

@@ -184,5 +184,13 @@ export class OrganizationService {
       },
     };
   }
+
+  async listActiveUsers(): Promise<Array<{ id: string; fullName: string; email: string }>> {
+    return await this.prisma.user.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, fullName: true, email: true },
+      orderBy: { fullName: 'asc' },
+    });
+  }
 }
 

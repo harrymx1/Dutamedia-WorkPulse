@@ -27,6 +27,11 @@ export class OrganizationController {
     return await this.orgService.getUserActiveAssignment(userId);
   }
 
+  @Get('organization/users')
+  async listActiveUsers() {
+    return await this.orgService.listActiveUsers();
+  }
+
   @Get('admin/organization/assignments')
   @UseGuards(RolesGuard)
   @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)

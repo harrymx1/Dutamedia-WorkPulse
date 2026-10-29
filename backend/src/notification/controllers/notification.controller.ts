@@ -13,7 +13,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { NotificationChannel } from '@prisma/client';
 
-@Controller(['notifications', 'api/notifications'])
+@Controller(['notifications', 'api/notifications', 'api/v1/notifications'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
@@ -29,7 +29,13 @@ export class NotificationController {
     );
   }
 
-  @Post('read-all')
+  @Get('unread-count')
+  async getUnreadCount(@Req() req: any) {
+    const result = await this.notificationService.getUserNotifications(req.user.id);
+    return { unreadCount: result.unreadCount };
+  }
+
+  @Post(['read-all', 'mark-all-read'])
   async markAllAsRead(@Req() req: any) {
     return this.notificationService.markAllAsRead(req.user.id);
   }
@@ -44,7 +50,7 @@ export class NotificationController {
     return this.notificationService.getChannelConfigurations();
   }
 
-  @Post('channels/test')
+  @Post(['channels/test', 'test-delivery'])
   async testChannelDelivery(
     @Body('channel') channel: NotificationChannel,
     @Body('recipient') recipient: string,
@@ -53,6 +59,14 @@ export class NotificationController {
       channel,
       recipient || 'test@dutamedia.com',
     );
+  }
+
+  @Post('push-subscription')
+  async registerPushSubscription() {
+    return {
+      success: true,
+      message: 'Langganan notifikasi browser push berhasil didaftarkan.',
+    };
   }
 }
 

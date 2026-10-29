@@ -48,3 +48,4 @@ const blockedPath = computed(() => (route.query.from as string) || '');
   font-weight: 600;
 }
 </style>
+

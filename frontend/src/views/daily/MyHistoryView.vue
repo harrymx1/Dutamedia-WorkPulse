@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -150,8 +151,8 @@ onMounted(() => {
         <span class="breadcrumb">My Account / <strong>Riwayat Akuntabilitas</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/daily/morning" class="nav-btn">Morning Check-in</router-link>
-        <router-link to="/profile" class="nav-btn">Profil</router-link>
+        <AccessLink to="/daily/morning" class="nav-btn">Morning Check-in</AccessLink>
+        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
       </div>
     </header>
 

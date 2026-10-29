@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -257,25 +258,25 @@ onMounted(() => {
         <span class="breadcrumb">My Today / <strong>Morning Commitment</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/daily/history" class="nav-btn">Riwayat Saya</router-link>
-        <router-link to="/profile" class="nav-btn">Profil</router-link>
+        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
+        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
       </div>
     </header>
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
-      <router-link to="/daily/morning" class="step-item active">
+      <AccessLink to="/daily/morning" class="step-item active">
         <span class="step-num">1</span>
         <span>Morning Commitment</span>
-      </router-link>
-      <router-link to="/daily/additional-work" class="step-item">
+      </AccessLink>
+      <AccessLink to="/daily/additional-work" class="step-item">
         <span class="step-num">2</span>
         <span>Additional Work</span>
-      </router-link>
-      <router-link to="/daily/eod" class="step-item">
+      </AccessLink>
+      <AccessLink to="/daily/eod" class="step-item">
         <span class="step-num">3</span>
         <span>EOD Outcome</span>
-      </router-link>
+      </AccessLink>
     </nav>
 
     <!-- Toasts -->
@@ -616,14 +617,14 @@ onMounted(() => {
           </div>
         </div>
         <div class="next-grid">
-          <router-link to="/daily/additional-work" class="next-card">
+          <AccessLink to="/daily/additional-work" class="next-card">
             <h4>Pekerjaan Tambahan (Additional Work)</h4>
             <p>Catat pekerjaan tak terduga yang muncul di siang hari tanpa mengubah baseline pagi.</p>
-          </router-link>
-          <router-link to="/daily/eod" class="next-card">
+          </AccessLink>
+          <AccessLink to="/daily/eod" class="next-card">
             <h4>Evaluasi Sore (EOD Outcome)</h4>
             <p>Isi evaluasi capaian komitmen dan konfirmasi refleksi mandiri di akhir hari kerja.</p>
-          </router-link>
+          </AccessLink>
         </div>
       </div>
     </main>

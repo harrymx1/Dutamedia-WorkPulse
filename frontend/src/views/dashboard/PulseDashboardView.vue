@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -127,14 +128,14 @@ onMounted(() => {
         <span class="breadcrumb">Management / <strong>{{ scopeTitle }}</strong></span>
       </div>
       <div class="topbar-right">
-        <router-link to="/projects/risk" class="btn-topbar">
+        <AccessLink to="/projects/risk" class="btn-topbar">
           <FolderGit2 :size="16" />
           <span>Project Risk View</span>
-        </router-link>
-        <router-link to="/blockers" class="btn-topbar">
+        </AccessLink>
+        <AccessLink to="/blockers" class="btn-topbar">
           <AlertTriangle :size="16" />
           <span>Antrean Blocker</span>
-        </router-link>
+        </AccessLink>
       </div>
     </header>
 
@@ -272,10 +273,10 @@ onMounted(() => {
             <span class="metric-unit">Blocker</span>
           </div>
           <div class="metric-footer">
-            <router-link to="/blockers" class="link-footer">
+            <AccessLink to="/blockers" class="link-footer">
               <span>Buka Antrean Blocker</span>
               <ArrowRight :size="13" />
-            </router-link>
+            </AccessLink>
           </div>
         </div>
       </div>
@@ -304,7 +305,7 @@ onMounted(() => {
                     <span>Menunggu respon Lead Infra</span>
                   </div>
                 </div>
-                <router-link to="/blockers" class="btn btn-secondary btn-sm">Bantu</router-link>
+                <AccessLink to="/blockers" class="btn btn-secondary btn-sm">Bantu</AccessLink>
               </div>
 
               <div class="action-item warn">
@@ -319,7 +320,7 @@ onMounted(() => {
                     <span>Target selesai 16:00 WIB</span>
                   </div>
                 </div>
-                <router-link to="/coaching" class="btn btn-secondary btn-sm">Catat</router-link>
+                <AccessLink to="/coaching" class="btn btn-secondary btn-sm">Catat</AccessLink>
               </div>
             </div>
           </div>

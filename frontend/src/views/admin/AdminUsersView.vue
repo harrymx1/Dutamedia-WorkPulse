@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
 import {
@@ -33,7 +33,6 @@ interface AdminUserRow {
   } | null;
 }
 
-const router = useRouter();
 const authStore = useAuthStore();
 
 const users = ref<AdminUserRow[]>([]);
@@ -78,10 +77,7 @@ onMounted(async () => {
   if (!authStore.user) {
     await authStore.fetchMe();
   }
-  if (!authStore.isSuperAdmin && !authStore.isHRGA) {
-    router.push('/profile');
-    return;
-  }
+  // Pembatasan peran ditegakkan oleh router guard (meta.roles) sebelum halaman dimuat.
   window.addEventListener('keydown', handleKeydown);
   await loadUsers();
 });
@@ -216,7 +212,7 @@ function copyToClipboard(text: string) {
         <span class="system-tag">Admin Panel</span>
       </div>
       <div class="nav-right">
-        <router-link to="/profile" class="nav-link">Profil Saya</router-link>
+        <AccessLink to="/profile" class="nav-link">Profil Saya</AccessLink>
       </div>
     </header>
 
