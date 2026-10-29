@@ -8,14 +8,19 @@ import { CsrfGuard } from '../../auth/guards/csrf.guard';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get('dashboard/pulse')
+  @Get(['dashboard/pulse', 'api/dashboard/pulse', 'dashboard/metrics', 'api/dashboard/metrics'])
   async getPulseMetrics() {
     return this.dashboardService.getPulseMetrics();
   }
 
-  @Get('projects/risk')
+  @Get(['projects/risk', 'api/projects/risk', 'dashboard/projects', 'api/dashboard/projects'])
   async getProjectRiskOverview() {
     return this.dashboardService.getProjectRiskOverview();
+  }
+
+  @Get(['dashboard/feed', 'api/dashboard/feed'])
+  async getDashboardFeed() {
+    return [];
   }
 }
 

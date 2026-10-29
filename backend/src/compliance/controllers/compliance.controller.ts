@@ -15,7 +15,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { ComplianceEventStage } from '@prisma/client';
 
-@Controller('compliance')
+@Controller(['compliance', 'api/compliance'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class ComplianceController {
   constructor(

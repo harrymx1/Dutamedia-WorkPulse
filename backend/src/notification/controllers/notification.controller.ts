@@ -13,7 +13,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { NotificationChannel } from '@prisma/client';
 
-@Controller('notifications')
+@Controller(['notifications', 'api/notifications'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}

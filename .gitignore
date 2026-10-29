@@ -70,3 +70,8 @@ Thumbs.db
 scratch/
 tmp/
 temp/
+
+# Test output & Playwright
+test-results/
+playwright-report/
+blob-report/

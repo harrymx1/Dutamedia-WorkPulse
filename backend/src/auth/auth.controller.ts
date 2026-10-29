@@ -28,7 +28,12 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.AUTH_RATE_LIMIT ? Number(process.env.AUTH_RATE_LIMIT) : 5,
+      ttl: 60000,
+    },
+  })
   async login(
     @Body() loginDto: LoginDto,
     @Req() req: Request,

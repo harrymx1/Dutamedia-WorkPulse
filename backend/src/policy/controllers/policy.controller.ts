@@ -16,7 +16,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CanonicalRole, PolicyCategory } from '@prisma/client';
 
-@Controller('policies')
+@Controller(['policies', 'api/policies'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}

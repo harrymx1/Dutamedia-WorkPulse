@@ -15,7 +15,7 @@ import { SubmitEodOutcomeDto } from '../dto/submit-eod-outcome.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 
-@Controller('daily')
+@Controller(['daily', 'api/daily'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class DailyController {
   constructor(private readonly dailyService: DailyService) {}

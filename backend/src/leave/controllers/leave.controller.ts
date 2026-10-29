@@ -17,12 +17,12 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { LeaveStatus } from '@prisma/client';
 
-@Controller('leave-requests')
+@Controller(['leave', 'leave-requests', 'api/leave', 'api/leave-requests'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
 
-  @Post()
+  @Post(['', 'requests'])
   async createLeaveRequest(@Req() req: any, @Body() dto: CreateLeaveRequestDto) {
     return this.leaveService.createLeaveRequest(req.user.id, dto);
   }
@@ -37,7 +37,7 @@ export class LeaveController {
     return this.leaveService.getApprovalQueue(status);
   }
 
-  @Post(':id/review')
+  @Post([':id/review', 'requests/:id/review'])
   async reviewLeaveRequest(
     @Req() req: any,
     @Param('id') id: string,

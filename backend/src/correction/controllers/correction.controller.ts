@@ -17,7 +17,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { CorrectionStatus } from '@prisma/client';
 
-@Controller('correction-requests')
+@Controller(['correction-requests', 'api/correction-requests'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class CorrectionController {
   constructor(private readonly correctionService: CorrectionService) {}

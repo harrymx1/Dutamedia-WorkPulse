@@ -12,7 +12,7 @@ import { CreateManagerNoteDto } from '../dto/create-manager-note.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 
-@Controller('coaching')
+@Controller(['coaching', 'api/coaching'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class CoachingController {
   constructor(private readonly coachingService: CoachingService) {}

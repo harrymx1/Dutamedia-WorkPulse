@@ -14,7 +14,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { BlockerStatus } from '@prisma/client';
 
-@Controller('blockers')
+@Controller(['blockers', 'api/blockers'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class BlockerController {
   constructor(private readonly blockerService: BlockerService) {}
