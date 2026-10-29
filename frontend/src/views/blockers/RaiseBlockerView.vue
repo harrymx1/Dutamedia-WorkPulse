@@ -21,7 +21,7 @@ const blockerImpact = ref<string>('');
 const blockerSeverity = ref<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
 const description = ref('');
 const expectedHelp = ref('');
-const authorityContext = ref<'ORGANIZATIONAL_HIERARCHY' | 'PROJECT_AUTHORITY'>('ORGANIZATIONAL_HIERARCHY');
+const authorityContext = ref<'ORGANIZATIONAL_AUTHORITY' | 'PROJECT_AUTHORITY'>('ORGANIZATIONAL_AUTHORITY');
 const projectCode = ref('');
 const assignedOwnerId = ref('');
 
@@ -401,12 +401,12 @@ onMounted(() => {
             <div class="authority-grid">
               <label
                 class="authority-card"
-                :class="{ selected: authorityContext === 'ORGANIZATIONAL_HIERARCHY' }"
+                :class="{ selected: authorityContext === 'ORGANIZATIONAL_AUTHORITY' }"
               >
                 <input
                   type="radio"
                   v-model="authorityContext"
-                  value="ORGANIZATIONAL_HIERARCHY"
+                  value="ORGANIZATIONAL_AUTHORITY"
                 />
                 <div class="auth-icon"><Shield :size="20" /></div>
                 <div>
@@ -459,7 +459,7 @@ onMounted(() => {
               <Clock :size="20" class="route-icon" />
               <div>
                 <strong>Jalur Penanganan Otomatis:</strong>
-                <p v-if="authorityContext === 'ORGANIZATIONAL_HIERARCHY'">
+                <p v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
                   Tiket diteruskan ke Atasan Langsung struktural. Timer SLA dimulai seketika saat tiket terbit.
                 </p>
                 <p v-else>

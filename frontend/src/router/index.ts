@@ -119,7 +119,7 @@ const routes: RouteRecordRaw[] = [
     path: '/blockers/aging',
     name: 'blockers-aging',
     component: EscalationAgingView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
   },
   {
     path: '/coaching',

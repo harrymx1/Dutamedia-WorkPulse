@@ -34,6 +34,7 @@ const leaveRequests = ref<LeaveRequestItem[]>([]);
 // Form inputs
 const startDate = ref('');
 const endDate = ref('');
+const leaveType = ref('ANNUAL');
 const reason = ref('');
 const formError = ref('');
 
@@ -110,6 +111,10 @@ async function handleSubmit() {
     formError.value = 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.';
     return;
   }
+  if (reason.value.trim().length < 5) {
+    formError.value = 'Alasan permohonan cuti minimal 5 karakter.';
+    return;
+  }
 
   submitting.value = true;
   try {
@@ -118,7 +123,8 @@ async function handleSubmit() {
       body: JSON.stringify({
         startDate: startDate.value,
         endDate: endDate.value,
-        reason: reason.value.trim() || undefined,
+        leaveType: leaveType.value || 'ANNUAL',
+        reason: reason.value.trim(),
       }),
     });
     showToast('Permohonan cuti berhasil diajukan.');

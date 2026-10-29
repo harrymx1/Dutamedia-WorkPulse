@@ -24,7 +24,7 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
             status: 'OPEN',
             raisedAt: '2026-10-28T09:00:00.000Z',
             targetResolutionAt: '2026-10-28T13:00:00.000Z',
-            ownerNeededType: 'ORGANIZATIONAL_HIERARCHY',
+            ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
             raisedBy: { id: 'u1', fullName: 'Alice Dev', email: 'alice@dutamedia.com' },
             assignedOwner: { id: 'u2', fullName: 'Bob Lead', email: 'bob@dutamedia.com' },
             supportContributions: [

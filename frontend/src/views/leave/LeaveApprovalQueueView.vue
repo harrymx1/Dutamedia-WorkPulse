@@ -142,11 +142,12 @@ async function submitReview() {
 
   submittingReview.value = true;
   try {
+    const decision = reviewDecision.value === 'APPROVED' ? 'APPROVE' : 'REJECT';
     await apiClient(`/leave/${selectedRequest.value.id}/review`, {
       method: 'POST',
       body: JSON.stringify({
-        status: reviewDecision.value,
-        notes: reviewNotes.value.trim() || undefined,
+        decision,
+        reviewNote: reviewNotes.value.trim() || undefined,
       }),
     });
     showToast(`Permohonan cuti berhasil di-${reviewDecision.value === 'APPROVED' ? 'setujui' : 'tolak'}.`);

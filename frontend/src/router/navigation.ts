@@ -50,7 +50,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'Lapor Kendala', to: '/blockers/raise' },
       { label: 'Antrean Blocker', to: '/blockers', roles: MANAGERIAL },
-      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
+      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
     ],
   },
   {
