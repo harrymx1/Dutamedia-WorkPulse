@@ -31,20 +31,30 @@ async function bootstrap() {
   app.use(urlencoded({ limit: '100kb', extended: true }));
 
   // 3. Strict CORS Configuration
+  const configuredFrontendUrls = (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((u) => u.trim())
+    .filter(Boolean);
+
   const allowedOrigins = [
-    process.env.FRONTEND_URL,
+    ...configuredFrontendUrls,
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:3000',
-  ].filter(Boolean) as string[];
+  ];
 
   app.enableCors({
     origin: (
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      // Izinkan request tanpa origin (seperti curl, mobile app, internal healthcheck) atau domain terdaftar
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Izinkan request tanpa origin (seperti curl, mobile app, internal healthcheck)
+      // atau domain terdaftar / domain deployment vercel.app
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app')
+      ) {
         callback(null, true);
       } else {
         callback(new Error(`Origin ${origin} is not allowed by CORS`));
