@@ -27,7 +27,8 @@
 | **Governance Deliverable Commit SHA** | `5af797c25bf98b54e8c8459018603d93b9ceabba` (Short: `5af797c`) |
 | **Master Governance Framework Commit SHA** | `fbccbf0c5f27fa2691debfe19db1e982be424ba5` (Short: `fbccbf0`) |
 | **Governance Corrections Commit SHA** | `cb1d02dcca51e6976c9ec796575111297c35da79` (Short: `cb1d02d`) |
-| **Current Remote HEAD SHA** | `cb1d02dcca51e6976c9ec796575111297c35da79` |
+| **Governance Alignment (CHG-004) Commit SHA** | `bd795ed3cf9938c7653e7807024f9cbfc40aea89` (Short: `bd795ed`) |
+| **Current Remote HEAD SHA** | `bd795ed3cf9938c7653e7807024f9cbfc40aea89` |
 
 ---
 
@@ -84,8 +85,8 @@ Berikut adalah file yang sengaja tidak dimasukkan ke dalam commit baseline karen
 Pemeriksaan sinkronisasi jarak jauh (*remote verification*) membuktikan:
 
 - **Perintah Verifikasi:** `git ls-remote origin main`
-- **Hasil Remote Hash Terkini:** `cb1d02dcca51e6976c9ec796575111297c35da79`
-- **Status Sinkronisasi:** `Your branch is up to date with 'origin/main'`. (Commit remote terakhir `cb1d02d` tersinkronisasi; working tree lokal berstatus Modified / Dirty karena memegang file tata kelola CHG-004 uncommitted).
+- **Hasil Remote Hash Terkini:** `bd795ed3cf9938c7653e7807024f9cbfc40aea89`
+- **Status Sinkronisasi:** `Your branch is up to date with 'origin/main'`. (Commit remote CHG-004 `bd795ed` tersinkronisasi 100% di remote).
 - **Integritas Remote:** Seluruh 18 artefak baseline dan dokumen tata kelola tersimpan utuh di repositori GitHub PT Dutamedia Mandiri Pratama.
 
 ---
@@ -94,9 +95,9 @@ Pemeriksaan sinkronisasi jarak jauh (*remote verification*) membuktikan:
 
 | Dimensi Penilaian | Kriteria Evaluasi | Status Evaluasi | Catatan Validasi |
 | :--- | :--- | :---: | :--- |
-| **Git Baseline Integrity** | Commit baseline `c9fb597` tersimpan, linear, dan sinkron di remote. | **MET (100%)** | Silsilah linear terverifikasi utuh (`3bf9a7a` $\rightarrow$ `c9fb597` $\rightarrow$ `5af797c` $\rightarrow$ `fbccbf0` $\rightarrow$ `cb1d02d`). |
+| **Git Baseline Integrity** | Commit baseline `c9fb597` tersimpan, linear, dan sinkron di remote. | **MET (100%)** | Silsilah linear terverifikasi utuh (`3bf9a7a` $\rightarrow$ `c9fb597` $\rightarrow$ `5af797c` $\rightarrow$ `fbccbf0` $\rightarrow$ `cb1d02d` $\rightarrow$ `bd795ed`). |
 | **Documentation Completeness** | 18 file artefak UAT pra-lifecycle terinventarisasi utuh. | **MET (100%)** | Seluruh file tercatat di Change Register `CHG-000` s.d. `CHG-004`. |
-| **Technical Validation** | Validasi integritas kode sumber aplikasi dan status working tree. | **MET (100%)** | **Application Source Code:** Clean / Zero Diff pada `frontend/`, `backend/`, `e2e/`, dan `supabase/`.<br>**Governance Files:** 6 file Modified (Uncommitted) pada `UAT-Lifecycle/00-Governance/`.<br>**Overall Git Working Tree:** Modified / Dirty semata-mata karena perubahan tata kelola CHG-004 belum di-commit. |
+| **Technical Validation** | Validasi integritas kode sumber aplikasi dan status working tree. | **MET (100%)** | **Application Source Code:** Clean / Zero Diff pada `frontend/`, `backend/`, `e2e/`, dan `supabase/`.<br>**Overall Git Working Tree:** Clean. |
 | **Security Compliance** | Resolusi celah paparan kredensial demo pada repositori publik (`VERIF-FIND-001`). | **NOT MET (Pending Owner Action)** | Menunggu penyelesaian perubahan visibilitas repo menjadi Private & rotasi kredensial oleh Harry. |
 | **Formal Owner Approval** | Pengesahan formal oleh Harry selaku Acceptance Owner. | **PENDING PHASE -1 CLOSURE GATE** | Otorisasi `DEC-003-UAT` mengesahkan koreksi tata kelola, bukan penutupan Phase -1. Penutupan fase resmi menunggu penyelesaian Subphase -1.7. |
 
