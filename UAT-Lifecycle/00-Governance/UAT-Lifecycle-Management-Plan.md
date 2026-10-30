@@ -126,7 +126,7 @@ Setiap cacat (*defect*) atau usulan perbaikan (*improvement*) harus dapat dilaca
 
 | ID Fase | Nama Fase | Subfase Utama | Output Utama (Deliverables) | Approval Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase -1** | Baseline Preservation & GitHub Checkpoint | -1.1 Identifikasi Repo<br>-1.2 Inventaris Working Tree<br>-1.3 Security Inspection<br>-1.4 Verifikasi Integritas<br>-1.5 Commit & Push Baseline<br>-1.6 Verifikasi Remote | `Repository-Baseline-Record.md` | Formal Review Harry atas Commit `c9fb597`, `5af797c`, & `fbccbf0` *(Disetujui Bersyarat pending mitigasi keamanan)* |
+| **Phase -1** | Baseline Preservation & GitHub Checkpoint | -1.1 Identifikasi Repo<br>-1.2 Inventaris Working Tree<br>-1.3 Security Inspection<br>-1.4 Verifikasi Integritas<br>-1.5 Commit & Push Baseline<br>-1.6 Verifikasi Remote<br>-1.7 Security Mitigation Closure Verification | `Repository-Baseline-Record.md`<br>`Post-Baseline-Verification-Report.md` | Pending Phase -1 Closure Gate (Technical Baseline Recorded, Security Mitigation Pending) |
 | **Phase 0** | UAT Suspension & Execution Preservation | 0.1 Deklarasi Penangguhan Resmi<br>0.2 Capture Kondisi Eksekusi<br>0.3 Penilaian Partial Execution<br>0.4 Preservasi Bukti Uji<br>0.5 Inventarisasi Artefak<br>0.6 Validasi Penangguhan | 1. `UAT-Suspension-Record.md`<br>2. `UAT-Execution-Checkpoint.md`<br>3. `UAT-Partial-Execution-Register.csv`<br>4. `UAT-Evidence-Inventory.md`<br>5. `UAT-Artifact-Inventory.csv`<br>6. `UAT-Suspension-Validation-Report.md` | Harry Approval to enter Phase 1 |
 | **Phase 1** | UAT State Reconciliation & Finding Consolidation | 1.1 Rekonsiliasi Log Eksekusi<br>1.2 Rekonsiliasi Defect<br>1.3 Rekonsiliasi Improvement<br>1.4 Rekonsiliasi Keterlacakan<br>1.5 Audit Konsistensi Artefak<br>1.6 Konsolidasi & Klasifikasi Temuan | 1. `UAT-State-Reconciliation-Report.md`<br>2. `UAT-Finding-Consolidation-Register.csv`<br>3. `UAT-Traceability-Gap-Register.csv`<br>4. `UAT-Cross-Artifact-Audit-Report.md` | Harry Sign-Off on Consolidated Findings |
 | **Phase 2** | Finding Assessment & Remediation Planning | 2.1 Investigasi Teknis Root Cause<br>2.2 Analisis Dampak Perubahan<br>2.3 Prioritisasi Temuan (P1-P4)<br>2.4 Keputusan Remediasi (DEC)<br>2.5 Penyusunan Remediation Plan | 1. `UAT-Remediation-Assessment.md`<br>2. `UAT-Change-Impact-Matrix.csv`<br>3. `UAT-Remediation-Plan.md`<br>4. `UAT-Remediation-Approval-Register.csv` | Harry Approval of Remediation Plan & Scope |
@@ -141,15 +141,23 @@ Setiap cacat (*defect*) atau usulan perbaikan (*improvement*) harus dapat dilaca
 
 ## 5. SPESIFIKASI OPERASIONAL PER FASE
 
-### PHASE -1 — Baseline Preservation & GitHub Checkpoint (STATUS: COMPLETED & VERIFIED)
+### PHASE -1 — Baseline Preservation & GitHub Checkpoint (STATUS: IN PROGRESS / PARTIALLY MET)
 - **Tujuan:** Menyelamatkan seluruh status pekerjaan, modifikasi file UAT, defect log, dan improvement backlog ke GitHub remote repository secara aman dan terverifikasi sebelum lifecycle dimulai.
-- **Hasil Terverifikasi:**
-  - Remote: `https://github.com/harrymx1/Dutamedia-WorkPulse.git`
-  - Branch: `main`
-  - Baseline Commit: `c9fb597135d7f7e951f9daa9eb33e33b7ef4df7b` (`c9fb597`)
-  - Governance Deliverable Commit: `5af797c25bf98b54e8c8459018603d93b9ceabba` (`5af797c`)
-  - Master Governance Commit: `fbccbf0c5f27fa2691debfe19db1e982be424ba5` (`fbccbf0`)
-  - Dokumen Bukti: `UAT-Lifecycle/00-Governance/Repository-Baseline-Record.md`.
+- **Subfase Phase -1:**
+  - *Subphase -1.1:* Repository Identification (`Repository-Baseline-Record.md`).
+  - *Subphase -1.2:* Working Tree Inventory (Inventarisasi Eksplisit 18 File UAT).
+  - *Subphase -1.3:* Sensitive Data & Security Inspection (Pemindaian Rahasia & Kredensial).
+  - *Subphase -1.4:* Baseline Integrity Verification (Verifikasi Integritas Source Code & Paket UAT).
+  - *Subphase -1.5:* GitHub Baseline Commit & Push (`c9fb597`).
+  - *Subphase -1.6:* Remote Verification (`git ls-remote` Commit `c9fb597`, `5af797c`, `fbccbf0`, `cb1d02d`).
+  - *Subphase -1.7:* Security Mitigation Closure Verification (`VERIF-FIND-001` Closure & Phase -1 Closure Gate).
+- **Status Komponen & Exit Criteria Phase -1:**
+  - *Git Baseline Integrity:* **MET (100%)** — Commit baseline `c9fb597`, deliverable `5af797c`, master plan `fbccbf0`, dan koreksi governance `cb1d02d` tersimpan linear dan sinkron di remote `origin/main`.
+  - *Security Compliance:* **NOT MET (Pending Owner Action)** — Repositori GitHub saat ini masih berstatus public dan mitigasi kredensial demo dalam penanganan Harry (`VERIF-FIND-001`).
+  - *Documentation Completeness:* **MET (100%)** — Seluruh 18 file artefak UAT pra-lifecycle dan 7 dokumen tata kelola terinventarisasi utuh.
+  - *Technical Validation:* **MET (100%)** — Application Source Code (*Clean / Zero Diff* pada `frontend/`, `backend/`, `e2e/`, `supabase/`). Overall Git working tree berstatus *Modified / Dirty* semata-mata karena 6 file tata kelola CHG-004 belum di-commit.
+  - *Formal Owner Approval:* **PENDING PHASE -1 CLOSURE GATE** — Otorisasi `DEC-003-UAT` menyetujui koreksi tata kelola, bukan penutupan Phase -1. Penutupan fase resmi menunggu verifikasi penyelesaian mitigasi keamanan pada Subphase -1.7.
+- **Dokumen Bukti:** `UAT-Lifecycle/00-Governance/Repository-Baseline-Record.md` & `Post-Baseline-Verification-Report.md`.
 
 ### PHASE 0 — UAT Suspension & Execution Preservation (STATUS: PLANNED)
 - **Tujuan:** Mendokumentasikan status penangguhan UAT secara formal, mencatat posisi checkpoint pengujian manual secara presisi pada `TC-BLKR-001` (Langkah 16), memetakan seluruh eksekusi parsial, dan mengamankan bukti pengujian tanpa mengubah status eksekusi secara sepihak.
@@ -295,7 +303,7 @@ Setiap cacat (*defect*) atau usulan perbaikan (*improvement*) harus dapat dilaca
 ## 7. RENCANA KERJA TAHAP SEGERA (IMMEDIATE ACTION PLAN)
 
 Status saat ini:
-1. **Preservasi Baseline (Phase -1):** Telah selesai secara teknis pada commit `c9fb597`, `5af797c`, dan `fbccbf0`.
+1. **Preservasi Baseline (Phase -1):** Selesai secara teknis pada commit `c9fb597`, deliverable `5af797c`, dan governance `cb1d02d`; status penutupan fase berstatus In Progress menunggu penyelesaian mitigasi keamanan.
 2. **Audit & Penyelarasan Tata Kelola:** Seluruh temuan tata kelola `VERIF-FIND-002` sampai `VERIF-FIND-008` telah dikoreksi dan disinkronkan ke dalam seluruh dokumen master governance.
 3. **Mitigasi Keamanan (`VERIF-FIND-001`):** Dalam penanganan langsung oleh Harry (perubahan visibilitas repositori menjadi Private dan rotasi kredensial live demo).
 4. **Gerbang Masuk Phase 0:** Menunggu konfirmasi penyelesaian mitigasi keamanan dan instruksi eksplisit Harry sebelum Phase 0 dimulai.

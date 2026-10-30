@@ -29,7 +29,9 @@
 ### [DEC-002-UAT] Rekomendasi Teknis Baseline Checkpoint `c9fb597` & Dokumen Governance (`5af797c`, `fbccbf0`)
 - **Decision ID:** `DEC-002-UAT`
 - **Tanggal:** 30/10/2026 — 15:27 WIB
-- **Pengambil Keputusan:** Harry (Acceptance Owner) [Mandat Pelaksanaan Phase -1] & Co-Pilot [Pelaksana Teknis Checkpoint & Governance]
+- **Pemberi Mandat:** Harry (Acceptance Owner)
+- **Pelaksana Teknis:** Co-Pilot
+- **Status Persetujuan Hasil:** Menunggu peninjauan Acceptance Owner
 - **Konteks:** Pelaksanaan mandat Phase -1 untuk mengamankan 18 file artefak UAT pra-lifecycle ke repository GitHub serta menyusun kerangka kerja tata kelola Master Plan.
 - **Opsi yang Dipertimbangkan:**
   1. Commit massal seluruh folder termasuk scratch files lokal.
