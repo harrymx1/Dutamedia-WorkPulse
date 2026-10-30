@@ -4,13 +4,14 @@
 > **Proyek:** WorkPulse — Daily Accountability & Blocker Log System  
 > **Organisasi:** PT Dutamedia Mandiri Pratama  
 > **Acceptance Owner:** Harry  
-> **Tanggal Eksekusi:** 30 Oktober 2026 — 15:25 WIB  
+> **Tanggal Eksekusi:** 30 Oktober 2026 — 15:25 WIB (Diperbarui 15:50 WIB per Otorisasi DEC-003-UAT)  
 > **Fase:** Phase -1 — Baseline Preservation & GitHub Checkpoint  
-> **Status:** COMPLETED & VERIFIED ON GITHUB  
+> **Status Teknis:** COMPLETED & VERIFIED ON GITHUB  
+> **Status Persetujuan Owner:** CONDITIONAL APPROVAL (Pending Owner Security Mitigation on VERIF-FIND-001)  
 
 ---
 
-## 1. IDENTIFIKASI REPOSITORY (SUBPHASE -1.1)
+## 1. IDENTIFIKASI REPOSITORY & SIKLUS COMMIT (SUBPHASE -1.1 & VERIF-FIND-005)
 
 | Parameter | Nilai Terverifikasi |
 | :--- | :--- |
@@ -19,10 +20,12 @@
 | **Remote Origin URL** | `https://github.com/harrymx1/Dutamedia-WorkPulse.git` |
 | **Active Branch** | `main` |
 | **Tracking Remote** | `origin/main` |
-| **Active Release Tag** | `v1.0.0-rc1` |
-| **Pre-Lifecycle Baseline Commit SHA** | `c9fb597135d7f7e951f9daa9eb33e33b7ef4df7b` (Short SHA: `c9fb597`) |
-| **Parent Commit SHA** | `3bf9a7a67cbdbf279f061f22c836e4fba6ef9e95` (Short SHA: `3bf9a7a`) |
-| **Commit Message** | `chore: preserve WorkPulse pre-lifecycle UAT baseline` |
+| **Active Release Tag** | `v1.0.0-rc1` (Application) / `v1.0.1-uat-pkg` (UAT Baseline) |
+| **Parent Commit SHA (Pre-UAT)** | `3bf9a7a67cbdbf279f061f22c836e4fba6ef9e95` (Short: `3bf9a7a`) |
+| **Pre-Lifecycle Baseline Commit SHA** | `c9fb597135d7f7e951f9daa9eb33e33b7ef4df7b` (Short: `c9fb597`) |
+| **Governance Deliverable Commit SHA** | `5af797c25bf98b54e8c8459018603d93b9ceabba` (Short: `5af797c`) |
+| **Master Governance Framework Commit SHA** | `fbccbf0c5f27fa2691debfe19db1e982be424ba5` (Short: `fbccbf0`) |
+| **Current Remote HEAD SHA** | `fbccbf0c5f27fa2691debfe19db1e982be424ba5` |
 
 ---
 
@@ -53,13 +56,13 @@ Sebanyak **18 file artefak UAT** telah di-stage secara eksplisit (*Explicit Stag
 
 ---
 
-## 3. PEMERIKSAAN KEAMANAN & PENGECUALIAN DATA SENSITIF (SUBPHASE -1.3)
+## 3. PEMERIKSAAN KEAMANAN & PENGECUALIAN DATA SENSITIF (SUBPHASE -1.3 & VERIF-FIND-001)
 
-| Kategori Pemeriksaan | Status | Hasil Verifikasi |
+| Kategori Pemeriksaan | Status | Hasil Verifikasi & Tindak Lanjut |
 | :--- | :---: | :--- |
-| **Pemindaian Kredensial Nyata** | **CLEAN** | Tidak ditemukan private keys, service role keys, API token rahasia, atau kredensial produksi pada file yang di-commit. Seluruh akun yang tercantum adalah akun demo sintetis (`dev.frontend@dutamedia.com`, dsb.). |
+| **Pemindaian Rahasia Produksi** | **CLEAN** | Tidak ditemukan private keys, service role keys, API token rahasia, atau kredensial produksi pada file yang di-commit. |
 | **Proteksi File `.env`** | **EXCLUDED** | File lokal `.env.production` terbukti ada secara lokal dan berstatus **ignored** oleh aturan `.gitignore:18:.env.*`. File tersebut aman dan tidak pernah masuk ke Git. |
-| **Secret Tracking Audit** | **CLEAN** | File env yang dilacak oleh Git hanya template contoh: `.env.example` dan `.env.production.example`. |
+| **Kredensial Akun Live Demo (`VERIF-FIND-001`)** | **MITIGATION IN PROGRESS** | Ditemukan kredensial akun demo aktif pada repositori publik di `UAT-Test-Data-Matrix.csv` dan `UAT-Manual-Test-Cases.md`. Sesuai otorisasi `DEC-003-UAT`, mitigasi perubahan visibilitas repo menjadi **Private** dan rotasi akun live demo ditangani langsung oleh Harry. |
 
 ---
 
@@ -76,24 +79,24 @@ Berikut adalah file yang sengaja tidak dimasukkan ke dalam commit baseline karen
 
 ## 5. VERIFIKASI REMOTE GITHUB (SUBPHASE -1.6)
 
-Pemeriksaan sinkronisasi jarak jauh (*remote verification*) dilakukan segera setelah perintah `git push origin main`:
+Pemeriksaan sinkronisasi jarak jauh (*remote verification*) membuktikan:
 
 - **Perintah Verifikasi:** `git ls-remote origin main`
-- **Hasil Remote Hash:** `c9fb597135d7f7e951f9daa9eb33e33b7ef4df7b`
+- **Hasil Remote Hash Terkini:** `fbccbf0c5f27fa2691debfe19db1e982be424ba5`
 - **Status Sinkronisasi:** `Your branch is up to date with 'origin/main'.` (100% Tersinkronisasi).
-- **Integritas Remote:** Seluruh 18 artefak UAT kini telah tersimpan dengan aman dan dapat diakses pada repository GitHub PT Dutamedia Mandiri Pratama.
+- **Integritas Remote:** Seluruh 18 artefak baseline dan 6 file dokumen tata kelola tersimpan utuh di repositori GitHub PT Dutamedia Mandiri Pratama.
 
 ---
 
-## 6. STATUS APPROVAL FASE -1
+## 6. PENILAIAN EXIT CRITERIA PHASE -1 (SUBPHASE -1.6 & DEC-003-UAT)
 
-- **Exit Criteria Phase -1:** **TERPENUHI LENGKAP (ALL CRITERIA MET)**
-  - [x] Seluruh perubahan UAT teridentifikasi dan di-stage secara selektif.
-  - [x] Baseline commit berhasil dibuat (`c9fb597`).
-  - [x] Push ke remote `origin main` sukses tanpa konflik atau force push.
-  - [x] Remote commit terverifikasi sinkron pada GitHub.
-  - [x] Tidak ada data sensitif / kredensial rahasia yang terpublikasi.
-  - [x] Dokumen rekam jejak baseline selesai disusun.
+| Dimensi Penilaian | Kriteria Evaluasi | Status Evaluasi | Catatan Validasi |
+| :--- | :--- | :---: | :--- |
+| **Git Baseline Integrity** | Commit baseline `c9fb597` tersimpan, linear, dan sinkron di remote. | **MET (100%)** | Diverifikasi via `git ls-remote` dan `git diff origin/main` (Clean). |
+| **Documentation Completeness** | 18 file artefak UAT pra-lifecycle terinventarisasi utuh. | **MET (100%)** | Seluruh file tercatat di Change Register `CHG-000`. |
+| **Technical Validation** | Working tree bersih, source code aplikasi tidak mengalami mutasi tak sah. | **MET (100%)** | Zero diff pada `frontend/`, `backend/`, `e2e/`, dan `supabase/`. |
+| **Security Compliance** | Resolusi celah paparan kredensial demo pada repositori publik (`VERIF-FIND-001`). | **PENDING OWNER ACTION** | Menunggu penyelesaian perubahan visibilitas repo menjadi Private & rotasi kredensial oleh Harry. |
+| **Formal Owner Approval** | Pengesahan formal oleh Harry selaku Acceptance Owner. | **CONDITIONAL APPROVAL** | Disetujui bersyarat via arahan 30/10/2026 pending verifikasi keamanan. |
 
 ---
-*Dokumen ini diterbitkan secara formal oleh UAT Co-Pilot untuk ditinjau oleh Harry (Acceptance Owner).*
+*Dokumen ini diperbarui secara formal oleh UAT Co-Pilot berdasarkan arahan resmi Acceptance Owner pada keputusan DEC-003-UAT.*

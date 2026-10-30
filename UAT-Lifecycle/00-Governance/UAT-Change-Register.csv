@@ -1,2 +1,5 @@
 ChangeID,RelatedFinding,Description,Scope,Version,CommitSHA,AffectedArtifacts,AffectedTestCases,VerificationStatus,Approval
-CHG-000,BASELINE,"Preserve WorkPulse pre-lifecycle UAT baseline",Governance & UAT Package,v1.0.0-rc1,c9fb597,"UAT/* (18 files)",All Executed Cases,Verified,Harry (Master Directive)
+CHG-000,BASELINE,"Preserve WorkPulse pre-lifecycle UAT baseline (18 files)",Baseline Preservation,v1.0.1-uat-pkg,c9fb597,"UAT/* (18 files)",All Executed Cases,Verified,Harry (Master Directive Mandate)
+CHG-001,VERIF-FIND-005,"Phase -1 Deliverable: Repository Baseline Record and GitHub Verification",Governance Documentation,v1.0.1-uat-pkg,5af797c,UAT-Lifecycle/00-Governance/Repository-Baseline-Record.md,N/A (Governance),Verified,Harry (Master Directive Mandate)
+CHG-002,VERIF-FIND-005,"Establish Master Governance Framework and Lifecycle Management Plan (5 files)",Governance Documentation,v1.0.1-uat-pkg,fbccbf0,"UAT-Lifecycle/00-Governance/* (5 files)",N/A (Governance),Verified,Harry (Master Directive Mandate)
+CHG-003,VERIF-FIND-002..008,"Governance corrections per Owner Authorization (Candidate scope, version separation, waiver protocol, Phase 0 criteria, complete deliverables)",Governance Documentation,v1.0.1-uat-pkg (Rev 1.1),Local Staged,"UAT-Lifecycle/00-Governance/* (6 files)",N/A (Governance),Verified,Harry (Formal Authorization 30/10/2026)
