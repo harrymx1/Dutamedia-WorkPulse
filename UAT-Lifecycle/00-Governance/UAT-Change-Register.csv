@@ -1,0 +1,2 @@
+ChangeID,RelatedFinding,Description,Scope,Version,CommitSHA,AffectedArtifacts,AffectedTestCases,VerificationStatus,Approval
+CHG-000,BASELINE,"Preserve WorkPulse pre-lifecycle UAT baseline",Governance & UAT Package,v1.0.0-rc1,c9fb597,"UAT/* (18 files)",All Executed Cases,Verified,Harry (Master Directive)

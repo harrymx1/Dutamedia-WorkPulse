@@ -1,0 +1,2 @@
+CycleID,CycleName,ScopeFocus,TargetRelease,StartDate,EndDate,Status,FindingsIncluded,RemediationApprovalRef,RetestRegressionRef,CycleClosureApproval,Notes
+CYCLE-01,Cycle 1 - Pre-Resumption Defect & UX Alignment,"Remediasi DEF-001, DEF-002, IMP-001 s.d. IMP-044 (My Today harmonization, Additional Work overflow bug, Prototype 05 alignment, & Blocker raise flow)",v1.0.0-rc2,2026-10-30,,Planned,"DEF-001, DEF-002, IMP-001 s.d. IMP-044",Pending Phase 2 Approval,Pending Phase 5,Pending Phase 6,"Siklus perbaikan utama pertama sebelum pengujian manual TC-BLKR-001 dilanjutkan"
