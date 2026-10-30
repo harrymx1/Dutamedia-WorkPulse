@@ -23,3 +23,4 @@ Leave Lifecycle,DRAFT,Kirim pengajuan cuti dengan tanggal & kuota cukup,EMPLOYEE
 Leave Lifecycle,PENDING,Persetujuan cuti oleh atasan langsung,SUPERVISOR,Atasan langsung pemohon,APPROVED,YES,N/A,TC-LEAV-002
 Leave Lifecycle,PENDING,Penolakan cuti oleh atasan langsung,SUPERVISOR,Atasan langsung pemohon,REJECTED,YES,N/A,TC-LEAV-002
 Leave Lifecycle,APPROVED,Pembatalan cuti pasca persetujuan,EMPLOYEE,Tanggal cuti belum terlewati,PENDING_CANCELLATION,YES,N/A,TC-LEAV-001
+

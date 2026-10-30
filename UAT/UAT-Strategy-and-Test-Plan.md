@@ -124,3 +124,4 @@ Sistem WorkPulse dinyatakan **DITERIMA (ACCEPTED)** apabila:
 | **Senior QA & UAT Architect** | Agen Antigravity (AI) | Menyusun seluruh dokumen skenario, test case terperinci, matriks data uji, lembar pencatatan, dan audit cakupan tanpa mengeksekusi aplikasi atas nama penguji. |
 | **Tech Lead & Engineering Team** | Tim Pengembang Dutamedia | Menerima laporan defect dari Harry, melakukan perbaikan kode sumber (*bug fixing*), dan merilis build perbaikan untuk diuji ulang (*retest*). |
 | **Business Owner / Stakeholder** | Manajemen PT Dutamedia Mandiri Pratama | Memberikan klarifikasi atas kebijakan bisnis yang ambigu dan memberikan otorisasi akhir peluncuran sistem. |
+

@@ -118,3 +118,4 @@ Paket pengujian ini secara khusus memverifikasi 5 aturan bisnis arsitektural ter
 4. **DEC-004 (0 Komitmen Rule):** Opsi 0 komitmen mewajibkan alasan minimal 10 karakter (`NOT_APPLICABLE — NO_COMMITMENT`).
 5. **DEC-008 (Leave Reconciliation):** Karyawan yang cutinya telah disetujui resmi otomatis direkonsiliasi menjadi `Superseded by Approved Leave` pasca cut-off tanpa dikenakan catatan penalti ketidakpatuhan.
 6. **DEC-012 (Enterprise Sidebar):** Tombol darurat melayang `☰ Menu` telah dimusnahkan secara tuntas; seluruh navigasi menggunakan sidebar permanen 232px yang responsif.
+

@@ -4,6 +4,8 @@ EMPLOYEE,/daily/additional-work,Catat tugas ad-hoc siang hari,ALLOW,Akses form d
 EMPLOYEE,/daily/eod,Submit hasil evaluasi kerja sore,ALLOW,Akses evaluasi diberikan dengan fitur Anti-Lock Green,TC-DLYE-001,Covered
 EMPLOYEE,/blockers/raise,Lapor hambatan baru,ALLOW,Form laporan blocker terbuka dan dapat disubmit,TC-BLKR-001,Covered
 EMPLOYEE,/corrections/morning,Ajukan permohonan koreksi pagi,ALLOW,Form permohonan koreksi terbuka,TC-CORR-001,Covered
+EMPLOYEE,/corrections/eod,Ajukan permohonan koreksi evaluasi sore EOD,ALLOW,Form permohonan koreksi EOD terbuka dan tersimpan,TC-CORR-006,Covered
+EMPLOYEE,/profile,Akses profil akun & ubah kata sandi mandiri,ALLOW,Profil tampil dan perubahan kata sandi diproses,TC-AUTH-007;TC-AUTH-008,Covered
 EMPLOYEE,/leave/my,Ajukan permohonan cuti pribadi,ALLOW,Form cuti mandiri terbuka dan kuota tampil,TC-LEAV-001,Covered
 EMPLOYEE,/admin/organization,Akses struktur organisasi perusahaan,DENY,Pengalihan otomatis ke halaman Error 403 Forbidden,TC-AUTH-005,Covered
 EMPLOYEE,/compliance,Akses antrean kepatuhan seluruh karyawan,DENY,Pengalihan otomatis ke halaman Error 403 Forbidden,TC-AUTH-005,Covered
@@ -29,3 +31,4 @@ SYSTEM_ADMIN,/admin/temporary-reviewers,Tugaskan delegasi reviewer sementara,ALL
 SYSTEM_ADMIN,/admin/policies,Ubah konfigurasi cut-off & SLA blocker,ALLOW,Konfigurasi kebijakan tersimpan dan berlaku sistemik,TC-ADMN-002,Covered
 INVITED,/activate,Aktivasi akun via token 72 jam,ALLOW,Form pembuatan password baru terbuka dan dapat disubmit,TC-AUTH-003,Covered
 INVITED,/dashboard,Akses dasbor sebelum akun diaktifkan,DENY,Sistem mengarahkan ke layar aktivasi atau login,TC-AUTH-004,Covered
+

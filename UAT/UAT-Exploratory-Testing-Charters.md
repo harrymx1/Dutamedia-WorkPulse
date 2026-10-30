@@ -168,3 +168,4 @@ Setiap piagam pengujian (*charter*) dibatasi oleh kotak waktu (*timeboxed*) anta
 - **Hal yang Perlu Diamati:**
   - Pemfilteran bekerja instan tanpa lag yang mengganggu.
   - Transisi status langsung mencerminkan data aktual di UI.
+

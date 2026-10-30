@@ -1,22 +1,24 @@
 TestCaseID,ScenarioID,RequirementID,Title,Role,Priority,ExecutionStatus,ActualResult,Tester,ExecutionDate,EvidenceReference,DefectID,RetestResult,Notes
-TC-AUTH-001,SCN-AUTH-01,FR-01,Login Kredensial Valid & Pendaratan Otomatis Peran,Seluruh Peran,Critical,Not Run,,,,,,,
-TC-AUTH-002,SCN-AUTH-02,FR-01,Penolakan Login Kredensial Tidak Sah / Password Salah,Tamu,High,Not Run,,,,,,,
-TC-AUTH-003,SCN-AUTH-03,FR-02,Aktivasi Akun Karyawan Baru via Token Seeder 72 Jam,INVITED,Critical,Not Run,,,,,,,
-TC-AUTH-004,SCN-AUTH-04,FR-03,Penolakan Token Aktivasi Kedaluwarsa / Bekas Pakai,INVITED,High,Not Run,,,,,,,
-TC-AUTH-005,SCN-AUTH-05,FR-08,Proteksi Akses URL Ilegal Antarmuka & Layar Error 403,EMPLOYEE,Critical,Not Run,,,,,,,
-TC-AUTH-006,SCN-AUTH-06,FR-07,Pengakhiran Sesi Aman (Logout) & Pencegahan Back Cache,Seluruh Peran,High,Not Run,,,,,,,
-TC-DLYM-001,SCN-DLYM-01,FR-09,Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time),EMPLOYEE,Critical,Not Run,,,,,,,
+TC-AUTH-001,SCN-AUTH-01,FR-01,Login Kredensial Valid & Pendaratan Otomatis Peran,Seluruh Peran,Critical,Pass,"Login sukses, redirect otomatis ke /daily/morning, sidebar 232px aktif dengan user Aditya Nugroho (EMPLOYEE), sudut kiri bawah bersih tanpa tombol melayang",Harry,2026-10-30,UI Morning Landing Page,,,Terkonfirmasi pendaratan kanonikal dan kebersihan antarmuka dari tombol darurat melayang
+TC-AUTH-002,SCN-AUTH-02,FR-01,Penolakan Login Kredensial Tidak Sah / Password Salah,Tamu,High,Pass,"Sistem menolak autentikasi, pesan error muncul, URL tetap di /login",Harry,2026-10-30,UI Login Error Message,,,"Cold-start latency ~7s pada request pertama saat instance backend wake-up, selanjutnya stabil ~2s"
+TC-AUTH-003,SCN-AUTH-03,FR-02,Aktivasi Akun Karyawan Baru via Token Seeder 72 Jam,INVITED,Critical,Pass,"Token seeder tervalidasi, form aktivasi sukses memproses password baru, akun bertransisi ke ACTIVE",Harry,2026-10-30,UI Activation Page,,,Token bertransisi ke status USED
+TC-AUTH-004,SCN-AUTH-04,FR-03,Penolakan Token Aktivasi Kedaluwarsa / Bekas Pakai,INVITED,High,Pass,"Sistem menolak aktivasi token tidak sah/bekas pakai dengan pesan error penolakan yang tepat",Harry,2026-10-30,UI Activation Page,,,Proteksi single-use token 72 jam terkonfirmasi
+TC-AUTH-005,SCN-AUTH-05,FR-08,Proteksi Akses URL Ilegal Antarmuka & Layar Error 403,EMPLOYEE,Critical,Pass,"Router guard menghadang akses rute admin, redirect ke 403 Akses Dibatasi, tombol pemulihan berfungsi",Harry,2026-10-30,UI Error 403 Page,,,Penegakan RBAC router-guard terkonfirmasi
+TC-AUTH-006,SCN-AUTH-06,FR-07,Pengakhiran Sesi Aman (Logout) & Pencegahan Back Cache,Seluruh Peran,High,Pass,"Sesi dihancurkan, redirect ke /login, penekanan tombol Back dicegat router guard tanpa bocor data",Harry,2026-10-30,UI Login & Router Guard,,,Terkonfirmasi proteksi sesi residual
+TC-AUTH-007,SCN-AUTH-07,UAT-REQ-PROFILE-001,Inspeksi & Verifikasi Manajemen Profil Pribadi Pengguna,EMPLOYEE,Medium,Pass,"Halaman /profile terbuka, data identitas terverifikasi. Ketiadaan visualisasi atribut organisasi & penyelarasan layout prototipe 24 tercatat di Improvement Backlog",Harry,2026-10-30,UI Profile Page,,,Tercatat IMP-018 s.d. IMP-022 terkait navbar dan layout prototipe 24
+TC-AUTH-008,SCN-AUTH-08,FR-06,Pembaruan Kata Sandi Mandiri & Validasi Keamanan Form,EMPLOYEE,High,Pass,"Terverifikasi 8 langkah validasi form mandiri, penolakan password lama salah oleh backend, update sukses, pembuktian login baru, dan teardown ke Password123!",Harry,2026-10-30,UI Profile & Login,,,Password akun dikembalikan ke default Password123!
+TC-DLYM-001,SCN-DLYM-01,FR-09,Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time),EMPLOYEE,Critical,Fail,"3 komitmen tersimpan di DB, toast muncul, panel sukses tampil, namun form tidak terkunci dan tombol submit tetap aktif",Harry,2026-10-30,media_1793337891857_208a42f5.png,DEF-001,,Melanggar penguncian baseline DEC-001
 TC-DLYM-002,SCN-DLYM-02,FR-10,Opsi 0 Komitmen dengan Justifikasi Wajib >= 10 Karakter,EMPLOYEE,High,Not Run,,,,,,,
-TC-DLYM-003,SCN-DLYM-03,FR-11,Penandaan Indikasi Hambatan Dini pada Komitmen Pagi,EMPLOYEE,High,Not Run,,,,,,,
+TC-DLYM-003,SCN-DLYM-03,FR-11,Penandaan Indikasi Hambatan Dini pada Komitmen Pagi,EMPLOYEE,High,Pass,"Pemilihan AMBER memunculkan field known blocker & support needed, initial status berubah reaktif menjadi AMBER — Berisiko",Harry,2026-10-30,media_1793337891857_208a42f5.png,,,Early Blocker Flag terverifikasi
 TC-DLYM-004,SCN-DLYM-04,FR-12,Fitur Salin Komitmen Hari Sebelumnya (Copy-Forward),EMPLOYEE,Medium,Not Run,,,,,,,
-TC-DLYM-005,SCN-DLYM-05,FR-14,Penguncian Form Komitmen Pagi Pasca Cut-Off (Anti-Direct Edit),EMPLOYEE,Critical,Not Run,,,,,,,
-TC-DLYM-006,SCN-DLYM-06,FR-15,Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter),EMPLOYEE,Medium,Not Run,,,,,,,
-TC-DLYA-001,SCN-DLYA-01,FR-17,Pencatatan Tugas Tambahan Ad-Hoc di Tengah Jam Kerja,EMPLOYEE,High,Not Run,,,,,,,
-TC-DLYA-002,SCN-DLYA-02,FR-18,Validasi Field Wajib Pemberi Instruksi & Proyek Tugas Ad-Hoc,EMPLOYEE,Medium,Not Run,,,,,,,
+TC-DLYM-005,SCN-DLYM-05,FR-14,Penguncian Form Komitmen Pagi Pasca Cut-Off (Anti-Direct Edit),EMPLOYEE,Critical,Pass,"Terverifikasi empiris pada jam 10:36 WIB: form terkunci LOCKED pasca cut-off 09:30, banner DEC-002 muncul, input disabled",Harry,2026-10-30,UI Morning Locked Banner,,,Aturan anti-direct edit DEC-002 terbukti aktif
+TC-DLYM-006,SCN-DLYM-06,FR-15,Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter),EMPLOYEE,Medium,Pass,"Pengiriman teks 2 karakter ditolak sistem, muncul alert pesan error Slot #1 minimal 3 karakter, form tetap terbuka",Harry,2026-10-30,UI Morning Commitment Form,,,Tervalidasi proteksi batas minimal input teks komitmen
+TC-DLYA-001,SCN-DLYA-01,FR-17,Pencatatan Tugas Tambahan Ad-Hoc di Tengah Jam Kerja,EMPLOYEE,High,Pass,"Tugas tambahan tersimpan di DB dengan atasan Bambang Pratama, dan terintegrasi otomatis ke evaluasi EOD (Total 4 tugas)",Harry,2026-10-30,media_1793340550967_1819bf97.png,,,Integrasi lintas modul Additional Work ke EOD terkonfirmasi
+TC-DLYA-002,SCN-DLYA-02,FR-18,Validasi Field Wajib Pemberi Instruksi & Proyek Tugas Ad-Hoc,EMPLOYEE,Medium,Pass,"Pengosongan atasan penugas ditolak form dengan pesan tooltip wajib isi, setelah dipilih Bambang Pratama tugas tersimpan",Harry,2026-10-30,media_1793340174212_9725b1d4.jpg,,,Pencegahan tugas ad-hoc tanpa atasan terverifikasi
 TC-DLYA-003,SCN-DLYA-03,FR-20,Batas Maksimum 5 Tugas Tambahan Ad-Hoc Per Hari,EMPLOYEE,Medium,Not Run,,,,,,,
-TC-DLYE-001,SCN-DLYE-01,FR-21,Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome),EMPLOYEE,Critical,Not Run,,,,,,,
-TC-DLYE-002,SCN-DLYE-02,FR-22,Heuristic Status Suggestion & Hak Prerogatif Anti-Lock Green,EMPLOYEE,Critical,Not Run,,,,,,,
-TC-DLYE-003,SCN-DLYE-03,FR-24,Wajib Alasan Penjelasan pada Status Komitmen Blocked/Cancelled,EMPLOYEE,High,Not Run,,,,,,,
+TC-DLYE-001,SCN-DLYE-01,FR-21,Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome),EMPLOYEE,Critical,Fail,"Evaluasi 4 tugas dan status akhir AMBER tersimpan di DB, toast muncul, panel sukses tampil, namun form tidak terkunci dan tombol kirim tetap aktif",Harry,2026-10-30,media_1793342477791_64b18d0a.png,DEF-002,,Melanggar penguncian penutupan hari kerja (FR-26 & DEC-001)
+TC-DLYE-002,SCN-DLYE-02,FR-22,Heuristic Status Suggestion & Hak Prerogatif Anti-Lock Green,EMPLOYEE,Critical,Pass,"Opsi GREEN tetap aktif dan dapat dipilih bebas saat terdapat tugas yang belum selesai / carry-over",Harry,2026-10-30,media_1793342477791_64b18d0a.png,,,Regulasi Anti-Lock Green (DEC-003) terkonfirmasi
+TC-DLYE-003,SCN-DLYE-03,FR-24,Wajib Alasan Penjelasan pada Status Komitmen Blocked/Cancelled,EMPLOYEE,High,Pass,"Pengiriman form EOD ditolak sistem saat komitmen CANCELLED tidak memiliki alasan tertulis",Harry,2026-10-30,media_1793340550967_1819bf97.png,,,Anti-Silent Drop rule (FR-24 & DEC-010) terkonfirmasi
 TC-DLYE-004,SCN-DLYE-04,FR-27,Penguncian Form Hasil Sore Pasca Cut-Off EOD,EMPLOYEE,Critical,Not Run,,,,,,,
 TC-BLKR-001,SCN-BLKR-01,FR-29,Pelaporan Hambatan Baru Tingkat Kritis dengan SLA 2 Jam,EMPLOYEE,Critical,Not Run,,,,,,,
 TC-BLKR-002,SCN-BLKR-02,FR-31,Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge),SUPERVISOR,Critical,Not Run,,,,,,,
@@ -28,6 +30,7 @@ TC-CORR-002,SCN-CORR-02,FR-39,Persetujuan Permohonan Koreksi oleh Direct Manager
 TC-CORR-003,SCN-CORR-03,FR-40,Penolakan Permohonan Koreksi dengan Alasan Wajib >= 10 Karakter,SUPERVISOR,High,Not Run,,,,,,,
 TC-CORR-004,SCN-CORR-04,FR-41,Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA,HRGA,High,Not Run,,,,,,,
 TC-CORR-005,SCN-CORR-05,FR-43,Penerbitan Dispensasi Kepatuhan Resmi (Exemption) & Audit Log,HRGA,High,Not Run,,,,,,,
+TC-CORR-006,SCN-CORR-06,UAT-REQ-EODCORR-001,Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off,EMPLOYEE,High,Not Run,,,,,,,
 TC-LEAV-001,SCN-LEAV-01,FR-45,Pengajuan Cuti Tahunan Mandiri oleh Karyawan,EMPLOYEE,High,Not Run,,,,,,,
 TC-LEAV-002,SCN-LEAV-02,FR-46,Persetujuan Permohonan Cuti oleh Atasan Langsung,SUPERVISOR,High,Not Run,,,,,,,
 TC-LEAV-003,SCN-LEAV-03,FR-47,Rekonsiliasi Cuti Otomatis Pasca Cut-Off (Superseded by Leave),HRGA,Critical,Not Run,,,,,,,
@@ -36,8 +39,9 @@ TC-DASH-001,SCN-DASH-01,FR-50,Pemantauan Dasbor Operasional Tim (Team Pulse) ole
 TC-DASH-002,SCN-DASH-02,FR-51,Pemantauan Radar Risiko Proyek & Inisiatif Strategis,PROJECT_MANAGER,High,Not Run,,,,,,,
 TC-DASH-003,SCN-DASH-03,FR-53,Tinjauan Laporan Eksekutif & Pengujian Fitur Unduh Data,CEO_MANAGEMENT,Medium,Not Run,,,,,,,
 TC-ADMN-001,SCN-ADMN-01,FR-54,Penugasan Reviewer Sementara (Temporary Reviewer Delegation),SYSTEM_ADMIN,High,Not Run,,,,,,,
-TC-ADMN-002,SCN-ADMN-02,FR-55,Konfigurasi Kebijakan Operasional Sistem (Cut-off & SLA),SYSTEM_ADMIN,Critical,Not Run,,,,,,,
+TC-ADMN-002,SCN-ADMN-02,FR-55,Konfigurasi Kebijakan Operasional Sistem (Cut-off & SLA),SYSTEM_ADMIN,Critical,Pass,"Parameter Morning Cut-Off berhasil diubah dari 09:30 ke 23:59 WIB, audit trail tercatat dan persisten setelah refresh F5",Harry,2026-10-30,UI Policy Settings View,,,Pengaturan kebijakan berhasil membuka jendela komitmen pagi secara sistemik
 TC-E2E-001,SCN-E2E-01,FR-09,Perjalanan Pengguna Siklus Harian Karyawan: Pagi -> Ad-Hoc -> Sore,EMPLOYEE,Critical,Not Run,,,,,,,
 TC-E2E-002,SCN-E2E-02,FR-29,Perjalanan Pengguna Siklus Blocker: Pelaporan -> Eskalasi -> Resolusi,EMPLOYEE,Critical,Not Run,,,,,,,
 TC-E2E-003,SCN-E2E-03,FR-37,Perjalanan Pengguna Siklus Koreksi: Terlambat -> Pengajuan -> Approval,EMPLOYEE,High,Not Run,,,,,,,
 TC-E2E-004,SCN-E2E-04,FR-47,Perjalanan Pengguna Rekonsiliasi Otomatis Cuti & Bebas Pelanggaran,EMPLOYEE,Critical,Not Run,,,,,,,
+

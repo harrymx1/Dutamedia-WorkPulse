@@ -48,26 +48,30 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-AUTH-001 (Langkah 1)` | Akses URL Root dan Redirect ke Login | | |
+| [P] | `TC-AUTH-001 (Langkah 1)` | Akses URL Root dan Redirect ke Login | PASS | Terverifikasi redirect otomatis ke /login |
 
 ---
 
 ### Kelompok 2: Authentication & Session Management
-- **Tujuan:** Menguji login sukses seluruh peran, penolakan password salah, dan keamanan pengakhiran sesi (logout).
+- **Tujuan:** Menguji login sukses seluruh peran, penolakan password salah, keamanan pengakhiran sesi (logout), verifikasi profil pribadi, dan pembaruan kata sandi mandiri.
 - **Peran yang Dibutuhkan:** Seluruh Peran (`EMPLOYEE`, `SUPERVISOR`, `HRGA`, `SYSTEM_ADMIN`, Tamu).
 - **Prasyarat:** Akun seeder aktif di database.
-- **Test Data:** `TD-AUTH-01` s.d. `TD-AUTH-07`.
+- **Test Data:** `TD-AUTH-01` s.d. `TD-AUTH-07`, dan `TD-AUTH-10`.
 - **Urutan Eksekusi:**
   1. Uji login gagal dengan password salah (`TC-AUTH-002`).
   2. Uji login sukses Employee dan amati landing route `/daily/morning` (`TC-AUTH-001`).
-  3. Uji logout aman dan proteksi tombol back browser (`TC-AUTH-006`).
+  3. Buka halaman `/profile`, verifikasi identitas (Nama, Email, Jabatan, Status Akun, User ID), hak otoritas, dan prompt hint refleksi (`TC-AUTH-007`).
+  4. Uji validasi pembaruan kata sandi mandiri (termasuk penolakan kata sandi saat ini yang salah), ubah password, dan verifikasi login baru (`TC-AUTH-008`).
+  5. Uji logout aman dan proteksi tombol back browser (`TC-AUTH-006`).
 - **Pembersihan Kondisi:** Bersihkan session storage jika beralih peran.
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-AUTH-002` | Penolakan Login Kredensial Tidak Sah / Password Salah | | |
-| [ ] | `TC-AUTH-001` | Login Kredensial Valid & Pendaratan Otomatis Employee | | |
-| [ ] | `TC-AUTH-006` | Pengakhiran Sesi Aman (Logout) & Pencegahan Back Cache | | |
+| [P] | `TC-AUTH-002` | Penolakan Login Kredensial Tidak Sah / Password Salah | PASS | Terverifikasi penolakan kredensial salah, pesan error muncul, URL tetap di /login. (Catatan: cold-start latency ~7s pada request pertama, selanjutnya normal ~2s) |
+| [P] | `TC-AUTH-001` | Login Kredensial Valid & Pendaratan Otomatis Employee | PASS | Terverifikasi login sukses, pendaratan kanonikal di /daily/morning, sidebar 232px aktif dengan user 'Aditya Nugroho' (EMPLOYEE), tanpa floating menu |
+| [P] | `TC-AUTH-007` | Inspeksi & Verifikasi Manajemen Profil Pribadi Pengguna | PASS | Terverifikasi data profil dasar dapat diakses; gap atribut organisasi (Jabatan/Departemen/Atasan) & layout prototipe 24 tercatat di Improvement Backlog (IMP-018 s.d. IMP-022) |
+| [P] | `TC-AUTH-008` | Pembaruan Kata Sandi Mandiri & Validasi Keamanan Form | PASS | Terverifikasi seluruh 8 langkah: validasi field kosong, min 8 char, mismatch konfirmasi, penolakan password lama salah, update sukses, pembuktian login baru, dan teardown pemulihan ke Password123! |
+| [P] | `TC-AUTH-006` | Pengakhiran Sesi Aman (Logout) & Pencegahan Back Cache | PASS | Terverifikasi logout menghancurkan sesi, redirect ke /login, dan tombol Back browser dicegat router guard tanpa kebocoran cache |
 
 ---
 
@@ -83,8 +87,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-AUTH-003` | Aktivasi Akun Karyawan Baru via Token Seeder 72 Jam | | |
-| [ ] | `TC-AUTH-004` | Penolakan Token Aktivasi Kedaluwarsa / Bekas Pakai | | |
+| [P] | `TC-AUTH-003` | Aktivasi Akun Karyawan Baru via Token Seeder 72 Jam | PASS | Terverifikasi token 72 jam tervalidasi, password baru berhasil dibuat, akun aktif, muncul tombol beralih ke Masuk Sistem |
+| [P] | `TC-AUTH-004` | Penolakan Token Aktivasi Kedaluwarsa / Bekas Pakai | PASS | Terverifikasi penolakan aktivasi dengan token tidak valid / bekas pakai, pesan error muncul, proteksi single-use DEC-005 bekerja |
 
 ---
 
@@ -100,7 +104,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | | |
+| [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
 
 ---
 
@@ -119,12 +123,12 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-DLYM-006` | Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter) | | |
+| [P] | `TC-DLYM-006` | Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter) | PASS | Teks 2 karakter ("Te") ditolak sistem dengan pesan error: "Slot #1: Deskripsi komitmen wajib diisi minimal 3 karakter." Form tidak terkirim. |
 | [ ] | `TC-DLYM-002` | Opsi 0 Komitmen dengan Justifikasi Wajib >= 10 Karakter | | |
-| [ ] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time) | | |
-| [ ] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini pada Komitmen Pagi | | |
+| [X] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time) | DEFECT | 3 Komitmen tersimpan sukses di DB, namun form tidak terkunci (inputs tetap editable & tombol submit aktif) [DEF-001] |
+| [P] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini pada Komitmen Pagi | PASS | Pemilihan AMBER pada Komitmen #2 berhasil memunculkan input kendala & bantuan, initial daily status reaktif berubah menjadi AMBER — Berisiko, dan tersimpan sukses |
 | [ ] | `TC-DLYM-004` | Fitur Salin Komitmen Hari Sebelumnya (Copy-Forward) | | |
-| [ ] | `TC-DLYM-005` | Penguncian Form Komitmen Pagi Pasca Cut-Off (DEC-002) | | |
+| [P] | `TC-DLYM-005` | Penguncian Form Komitmen Pagi Pasca Cut-Off (DEC-002) | PASS | Terverifikasi empiris pada jam 10:36 WIB (> 09:30): status LOCKED, banner DEC-002 tampil, form disabled/read-only |
 
 ---
 
@@ -140,8 +144,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-DLYA-002` | Validasi Field Wajib Pemberi Instruksi & Proyek Ad-Hoc | | |
-| [ ] | `TC-DLYA-001` | Pencatatan Tugas Tambahan Ad-Hoc & Integrasi ke EOD | | |
+| [P] | `TC-DLYA-002` | Validasi Field Wajib Pemberi Instruksi & Proyek Ad-Hoc | PASS | Pengosongan dropdown penugas ditolak validasi sistem (terpicu tooltip wajib isi), setelah Bambang Pratama dipilih tugas berhasil tersimpan |
+| [P] | `TC-DLYA-001` | Pencatatan Tugas Tambahan Ad-Hoc & Integrasi ke EOD | PASS | Tugas ad-hoc #1 (Investigasi performa rendering Vue) tersimpan dengan penugas Bambang Pratama dan otomatis muncul di form evaluasi EOD bersama 3 komitmen pagi (Total 4 tugas) |
 | [ ] | `TC-DLYA-003` | Batas Maksimum 5 Tugas Tambahan Ad-Hoc Per Hari | | |
 
 ---
@@ -159,9 +163,9 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-DLYE-003` | Wajib Alasan Penjelasan pada Status Blocked/Cancelled | | |
-| [ ] | `TC-DLYE-002` | Heuristic Suggestion & Hak Prerogatif Anti-Lock Green | | |
-| [ ] | `TC-DLYE-001` | Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome) | | |
+| [P] | `TC-DLYE-003` | Wajib Alasan Penjelasan pada Status Blocked/Cancelled | PASS | Pemilihan status Dibatalkan (CANCELLED) tanpa mengisi textarea alasan berhasil ditolak sistem saat form disubmit (Anti-Silent Drop terverifikasi) |
+| [P] | `TC-DLYE-002` | Heuristic Suggestion & Hak Prerogatif Anti-Lock Green | PASS | Terverifikasi empiris opsi GREEN tidak pernah dikunci atau dinonaktifkan secara punitif saat komitmen berstatus belum selesai (DEC-003 dipatuhi) |
+| [X] | `TC-DLYE-001` | Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome) | DEFECT | Evaluasi 4 tugas dan status AMBER tersimpan sukses di DB, namun form EOD tidak terkunci (inputs tetap editable & tombol submit aktif) [DEF-002] |
 | [ ] | `TC-DLYE-004` | Penguncian Form Hasil Sore Pasca Cut-Off EOD | | |
 
 ---
@@ -189,20 +193,22 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 ---
 
 ### Kelompok 9: Tata Kelola Kepatuhan & Permohonan Koreksi
-- **Tujuan:** Menguji pengajuan koreksi pasca cut-off, persetujuan/penolakan oleh direct manager, pemantauan kepatuhan oleh HRGA, dan penerbitan dispensasi resmi.
+- **Tujuan:** Menguji pengajuan koreksi pagi dan evaluasi sore EOD pasca cut-off, persetujuan/penolakan oleh direct manager, pemantauan kepatuhan oleh HRGA, dan penerbitan dispensasi resmi.
 - **Peran yang Dibutuhkan:** `EMPLOYEE`, `SUPERVISOR`, `HRGA`.
 - **Prasyarat:** Terdapat tanggal terkunci yang perlu dikoreksi.
-- **Test Data:** `TD-CORR-01` dan `TD-CORR-02`.
+- **Test Data:** `TD-CORR-01` s.d. `TD-CORR-04`.
 - **Urutan Eksekusi:**
   1. Karyawan mengajukan koreksi pagi dengan alasan >= 10 char (`TC-CORR-001`).
-  2. Atasan menolak koreksi tanpa alasan (gagal) lalu dengan alasan valid (`TC-CORR-003`).
-  3. Atasan menyetujui koreksi dan data komitmen terbarui (`TC-CORR-002`).
-  4. HRGA memantau compliance queue dan mendeteksi pola 3x pelanggaran (`TC-CORR-004`).
-  5. HRGA menerbitkan dispensasi resmi (Exemption) dengan audit trail abadi (`TC-CORR-005`).
+  2. Karyawan mengajukan koreksi evaluasi sore EOD pasca cut-off dengan outcome baru dan alasan valid (`TC-CORR-006`).
+  3. Atasan menolak koreksi tanpa alasan (gagal) lalu dengan alasan valid (`TC-CORR-003`).
+  4. Atasan menyetujui koreksi dan data komitmen terbarui (`TC-CORR-002`).
+  5. HRGA memantau compliance queue dan mendeteksi pola 3x pelanggaran (`TC-CORR-004`).
+  6. HRGA menerbitkan dispensasi resmi (Exemption) dengan audit trail abadi (`TC-CORR-005`).
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [ ] | `TC-CORR-001` | Pengajuan Permohonan Koreksi Komitmen Pagi Pasca Cut-Off | | |
+| [ ] | `TC-CORR-006` | Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off | | |
 | [ ] | `TC-CORR-003` | Penolakan Permohonan Koreksi dengan Alasan Wajib >= 10 Char | | |
 | [ ] | `TC-CORR-002` | Persetujuan Permohonan Koreksi oleh Direct Manager | | |
 | [ ] | `TC-CORR-004` | Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA | | |
@@ -258,7 +264,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [ ] | `TC-ADMN-001` | Penugasan Reviewer Sementara (Temporary Reviewer) | | |
-| [ ] | `TC-ADMN-002` | Konfigurasi Kebijakan Operasional Sistem (Policy Settings) | | |
+| [P] | `TC-ADMN-002` | Konfigurasi Kebijakan Operasional Sistem (Policy Settings) | PASS | Parameter Jam Cut-off Pagi berhasil diperbarui ke 23:59 WIB, tersimpan dengan audit trail baru, dan terverifikasi persisten pasca-F5 |
 
 ---
 
@@ -308,3 +314,4 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [ ] | Eksekusi Piagam Uji Eksplorasi CH-EXP-01 s.d. CH-EXP-07 | | Sesuai piagam eksplorasi |
 | [ ] | Pemeriksaan Seluruh Defect di `UAT-Execution-Log.csv` | | Pastikan 0 Critical Defect |
 | [ ] | Penandatanganan Lembar Penerimaan Sistem Final | | `UAT-Final-Acceptance-Checklist.md` |
+
