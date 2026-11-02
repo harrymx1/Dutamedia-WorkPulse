@@ -105,10 +105,14 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/blockers/raise',
-    name: 'blockers-raise',
+    path: '/raise-blockers',
+    name: 'raise-blockers',
     component: RaiseBlockerView,
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/blockers/raise',
+    redirect: '/raise-blockers',
   },
   {
     path: '/blockers',

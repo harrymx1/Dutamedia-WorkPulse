@@ -53,7 +53,7 @@ export const navGroups: NavGroup[] = [
       { label: 'Morning Commitment', to: '/daily/morning', iconName: 'Sunrise' },
       { label: 'Additional Work', to: '/daily/additional-work', iconName: 'PlusCircle' },
       { label: 'EOD Outcome', to: '/daily/eod', iconName: 'Sunset' },
-      { label: 'Lapor Blocker', to: '/blockers/raise', iconName: 'AlertTriangle' },
+      { label: 'Lapor Blocker', to: '/raise-blockers', iconName: 'AlertTriangle' },
       { label: 'Riwayat Saya', to: '/daily/history', iconName: 'CalendarDays' },
       { label: 'Cuti Saya', to: '/leave/my', iconName: 'Plane' },
       { label: 'Koreksi Komitmen Pagi', to: '/corrections/morning', iconName: 'FileEdit' },

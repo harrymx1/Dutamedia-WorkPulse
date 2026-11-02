@@ -47,7 +47,8 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
         { path: '/', component: { template: '<div>Home</div>' } },
         { path: '/blockers', component: BlockerQueueView },
         { path: '/blockers/aging', component: { template: '<div>Aging</div>' } },
-        { path: '/blockers/raise', component: { template: '<div>Raise</div>' } },
+        { path: '/raise-blockers', component: { template: '<div>Raise</div>' } },
+        { path: '/blockers/raise', redirect: '/raise-blockers' },
       ],
     });
   });
@@ -60,6 +61,7 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     await flushPromises();
 
     expect(wrapper.text()).toContain('Antrean Eskalasi Blocker');
+    expect(wrapper.text()).toContain('Management');
     expect(wrapper.text()).toContain('Kritis Belum Selesai');
     expect(wrapper.text()).toContain('Menunggu Acknowledge');
     expect(wrapper.text()).toContain('Database query timeout');

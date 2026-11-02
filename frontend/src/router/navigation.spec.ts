@@ -46,5 +46,20 @@ describe('Navigasi & RBAC frontend', () => {
   it('peran tidak dikenal tidak mendapat menu', () => {
     expect(navForRole(undefined)).toEqual([]);
   });
-});
 
+  it('rute /raise-blockers terdaftar dan /blockers/raise dialihkan (redirect) ke /raise-blockers', () => {
+    const raiseRoute = router.getRoutes().find((r) => r.path === '/raise-blockers');
+    expect(raiseRoute).toBeDefined();
+    expect(raiseRoute?.name).toBe('raise-blockers');
+
+    const redirectRoute = router.getRoutes().find((r) => r.path === '/blockers/raise');
+    expect(redirectRoute).toBeDefined();
+    expect(redirectRoute?.redirect).toBe('/raise-blockers');
+  });
+
+  it('rute /blockers tetap terdaftar untuk antrean blocker manajerial', () => {
+    const queueRoute = router.getRoutes().find((r) => r.path === '/blockers');
+    expect(queueRoute).toBeDefined();
+    expect(queueRoute?.name).toBe('blockers-queue');
+  });
+});

@@ -40,7 +40,8 @@ describe('RaiseBlockerView.vue (WP-EP06 / Prototipe 05 - Laporkan Kendala Cepat)
       history: createWebHistory(),
       routes: [
         { path: '/', component: { template: '<div>Home</div>' } },
-        { path: '/blockers/raise', component: RaiseBlockerView },
+        { path: '/raise-blockers', component: RaiseBlockerView },
+        { path: '/blockers/raise', redirect: '/raise-blockers' },
         { path: '/blockers', component: { template: '<div>Queue</div>' } },
         { path: '/blockers/aging', component: { template: '<div>Aging</div>' } },
         { path: '/daily/morning', component: { template: '<div>Morning</div>' } },
@@ -54,6 +55,8 @@ describe('RaiseBlockerView.vue (WP-EP06 / Prototipe 05 - Laporkan Kendala Cepat)
     });
 
     expect(wrapper.text()).toContain('Laporkan & Pantau Blocker');
+    expect(wrapper.text()).toContain('Workspace');
+    expect(wrapper.text()).toContain('Blocker');
     expect(wrapper.text()).toContain('Detail Kendala, Taksonomi & Dampak');
     expect(wrapper.text()).toContain('Technical');
     expect(wrapper.text()).toContain('Infra');

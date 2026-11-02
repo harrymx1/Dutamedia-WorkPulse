@@ -219,7 +219,7 @@ onMounted(() => {
 <template>
   <div class="queue-layout">
     <!-- Topbar Navigation -->
-    <TopBar breadcrumb="Workspace / Blocker" />
+    <TopBar breadcrumb="Management / Antrean Eskalasi Blocker" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">
@@ -310,7 +310,7 @@ onMounted(() => {
 
         <div class="toolbar-spacer"></div>
 
-        <AccessLink to="/blockers/raise" class="btn-create">
+        <AccessLink to="/raise-blockers" class="btn-create">
           <Plus :size="16" />
           <span>Laporkan Blocker Baru</span>
         </AccessLink>
