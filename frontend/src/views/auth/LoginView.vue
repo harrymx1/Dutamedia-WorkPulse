@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getLandingRouteForRole } from '../../router/navigation';
-import { Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-vue-next';
+import { Eye, EyeOff, ShieldCheck, AlertCircle, Target, Flag, Users } from 'lucide-vue-next';
 
 const router = useRouter();
 const route = useRoute();
@@ -78,29 +78,35 @@ async function handleLogin() {
         </div>
         <h1>Fokus pada Hasil, Tuntaskan Kendala.</h1>
         <p>
-          Platform transparansi kerja harian, penyelarasan komitmen pagi, dan eskalasi hambatan operasional tim secara objektif & terukur.
+          Platform transparansi kerja harian untuk mengenali risiko sejak dini dan memastikan hambatan operasional ditangani secara objektif dan terukur
         </p>
 
         <div class="feature-pillars">
           <div class="pillar-item">
-            <div class="pillar-icon">✓</div>
+            <div class="pillar-icon">
+              <Target :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Komitmen Pagi Tuntas</strong>
-              <span>Sinkronisasi 1-3 target kerja utama sebelum batas jam cutoff kantor.</span>
+              <strong>Komitmen Harian</strong>
+              <span>Tetapkan 1–3 komitmen kerja utama yang realistis untuk diselesaikan hari ini.</span>
             </div>
           </div>
           <div class="pillar-item">
-            <div class="pillar-icon">⚡</div>
+            <div class="pillar-icon">
+              <Flag :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Eskalasi Kendala Terukur</strong>
-              <span>Tiket hambatan langsung dipetakan ke Project Authority atau Squad Lead.</span>
+              <strong>Pelaporan Hambatan Kerja</strong>
+              <span>Sampaikan hal yang menghambat pekerjaan atau koordinasi agar dapat segera ditindaklanjuti.</span>
             </div>
           </div>
           <div class="pillar-item">
-            <div class="pillar-icon">📊</div>
+            <div class="pillar-icon">
+              <Users :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Evaluasi Objektif Bebas Bias</strong>
-              <span>Tinjauan berbasis bukti nyata transaksi harian tanpa manipulasi manual.</span>
+              <strong>Kemitraan & Dukungan Tim</strong>
+              <span>Bangun keselarasan kerja dan saling dukung untuk mencapai tujuan bersama.</span>
             </div>
           </div>
         </div>
