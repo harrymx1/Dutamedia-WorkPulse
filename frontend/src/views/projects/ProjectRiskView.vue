@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -10,7 +11,6 @@ import {
   AlertCircle,
   Search,
   X,
-  Layers,
   ArrowRight,
 } from 'lucide-vue-next';
 
@@ -106,23 +106,7 @@ onMounted(() => {
 <template>
   <div class="risk-layout">
     <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Projects / <strong>Project Risk Radar</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/dashboard" class="btn-topbar">
-          <Layers :size="16" />
-          <span>Pulse Dashboard</span>
-        </AccessLink>
-        <AccessLink to="/blockers" class="btn-topbar">
-          <AlertTriangle :size="16" />
-          <span>Antrean Blocker</span>
-        </AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Management / Radar Risiko Proyek" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

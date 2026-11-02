@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -119,17 +120,7 @@ onMounted(() => {
 <template>
   <div class="daily-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">My Today / <strong>Additional Work</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
-        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My Today / Additional Work" />
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">

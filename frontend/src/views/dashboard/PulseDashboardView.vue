@@ -1,15 +1,14 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
-  AlertTriangle,
   Clock,
   CheckCircle2,
   AlertCircle,
   Users,
   ArrowRight,
-  FolderGit2,
   HeartHandshake,
 } from 'lucide-vue-next';
 
@@ -121,23 +120,7 @@ onMounted(() => {
 <template>
   <div class="dashboard-layout">
     <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Management / <strong>{{ scopeTitle }}</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/projects/risk" class="btn-topbar">
-          <FolderGit2 :size="16" />
-          <span>Project Risk View</span>
-        </AccessLink>
-        <AccessLink to="/blockers" class="btn-topbar">
-          <AlertTriangle :size="16" />
-          <span>Antrean Blocker</span>
-        </AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Management / Pulse Dashboard" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

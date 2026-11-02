@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
+import { getUserInitials } from '../../utils/initials';
 import {
   Shield,
   KeyRound,
-  LogOut,
   CheckCircle2,
   AlertCircle,
   Laptop,
@@ -14,6 +14,10 @@ import {
 
 const router = useRouter();
 const authStore = useAuthStore();
+
+const userInitials = computed(() => {
+  return getUserInitials(authStore.user?.fullName, authStore.user?.email);
+});
 
 const currentPassword = ref('');
 const newPassword = ref('');
@@ -84,27 +88,8 @@ async function handleLogout() {
 
 <template>
   <div class="profile-layout">
-    <!-- Navbar Atas -->
-    <header class="top-nav">
-      <div class="nav-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-name">WorkPulse</span>
-        <span class="system-tag">Profil Akun</span>
-      </div>
-      <div class="nav-right">
-        <AccessLink
-          v-if="authStore.isSuperAdmin || authStore.isHRGA"
-          to="/admin/users"
-          class="nav-link"
-        >
-          Kelola Pengguna
-        </AccessLink>
-        <button class="logout-btn" @click="handleLogout">
-          <LogOut :size="16" />
-          <span>Keluar</span>
-        </button>
-      </div>
-    </header>
+    <!-- Global Topbar (IMP-018, IMP-019) -->
+    <TopBar breadcrumb="Profil Akun" />
 
     <!-- Konten Utama -->
     <main class="main-content">
@@ -112,7 +97,7 @@ async function handleLogout() {
         <!-- Kolom Kiri: Kartu Identitas Pengguna -->
         <section class="card identity-card">
           <div class="avatar-large">
-            {{ authStore.user?.fullName?.charAt(0) || 'U' }}
+            {{ userInitials }}
           </div>
           <h2 class="user-fullname">{{ authStore.user?.fullName || 'Pengguna' }}</h2>
           <p class="user-email mono-num">{{ authStore.user?.email || '-' }}</p>

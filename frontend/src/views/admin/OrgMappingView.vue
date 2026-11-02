@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
@@ -240,18 +240,7 @@ function showToast(msg: string, isError = false) {
 
 <template>
   <div class="admin-layout">
-    <header class="top-nav">
-      <div class="nav-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-name">WorkPulse</span>
-        <span class="system-tag">Struktur Organisasi</span>
-      </div>
-      <div class="nav-right">
-        <AccessLink to="/admin/users" class="nav-link">Kelola Pengguna</AccessLink>
-        <AccessLink to="/admin/temporary-reviewers" class="nav-link">Reviewer Sementara</AccessLink>
-        <AccessLink to="/profile" class="nav-link">Profil Saya</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Administration / Pemetaan Organisasi" />
 
     <!-- Toast Notification -->
     <div v-if="toastMessage" class="toast-popup success">

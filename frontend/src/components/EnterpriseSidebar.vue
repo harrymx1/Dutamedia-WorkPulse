@@ -33,6 +33,7 @@ import {
   LogOut,
   X,
 } from 'lucide-vue-next';
+import { getUserInitials } from '../utils/initials';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -41,14 +42,7 @@ const { isMobileSidebarOpen, closeSidebar } = useLayout();
 
 const groups = computed(() => navForRole(auth.user?.role));
 
-const userInitials = computed(() => {
-  const name = auth.user?.fullName || auth.user?.email || 'WP';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-});
+const userInitials = computed(() => getUserInitials(auth.user?.fullName, auth.user?.email));
 
 const userRoleFormatted = computed(() => {
   const r = auth.user?.role;

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -152,24 +153,7 @@ onMounted(() => {
 <template>
   <div class="blocker-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Blocker / <strong>Laporkan Kendala Cepat (Prototipe 05)</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/blockers" class="btn-topbar">
-          <ListFilter :size="16" />
-          <span>Antrean Tiket</span>
-        </AccessLink>
-        <AccessLink to="/blockers/aging" class="btn-topbar">
-          <Clock :size="16" />
-          <span>Aging Radar</span>
-        </AccessLink>
-        <AccessLink to="/daily/morning" class="btn-topbar">My Today</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / Blocker" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

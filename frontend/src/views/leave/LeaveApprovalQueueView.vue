@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -12,7 +12,6 @@ import {
   X,
   FileText,
   Info,
-  Calendar,
 } from 'lucide-vue-next';
 
 interface LeaveQueueItem {
@@ -168,19 +167,7 @@ onMounted(() => {
 <template>
   <div class="approval-layout">
     <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">HRGA / <strong>Antrean Approval Cuti</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/leave/my" class="btn-topbar">
-          <Calendar :size="16" />
-          <span>Pengajuan Saya</span>
-        </AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Management / Persetujuan Cuti" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

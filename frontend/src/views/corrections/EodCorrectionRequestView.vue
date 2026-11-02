@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -152,17 +152,7 @@ onMounted(() => {
 <template>
   <div class="correction-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Akuntabilitas / <strong>Koreksi Evaluasi Sore EOD (Prototipe 16b)</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/corrections/morning" class="btn-topbar">Koreksi Morning</AccessLink>
-        <AccessLink to="/daily/eod" class="btn-topbar">EOD Outcome</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / Koreksi Evaluasi Sore" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

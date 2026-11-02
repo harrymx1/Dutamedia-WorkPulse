@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
   CheckCircle2,
@@ -41,6 +42,18 @@ const isEodLocked = ref(false);
 const isLate = ref(false);
 const eodOnTimeCutoff = ref('17:00');
 const eodLockCutoff = ref('21:00');
+const eodSubmittedAt = ref<string | null>(null);
+
+const hasSubmittedEod = computed(() => {
+  return eodSubmittedAt.value !== null && eodSubmittedAt.value !== '';
+});
+const isFormLocked = computed(() => isEodLocked.value || hasSubmittedEod.value);
+
+function formatTime(isoStr: string | null) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
 
 const commitments = ref<CommitmentOutcomeItem[]>([]);
 const additionalWorks = ref<AdditionalWorkOutcomeItem[]>([]);
@@ -83,7 +96,11 @@ async function loadTodayState() {
     isEodLocked.value = data.cutoffTimings.isEodLocked;
     isLate.value = data.currentTime > data.cutoffTimings.eodOnTimeCutoff && !data.cutoffTimings.isEodLocked;
 
-    if (data.record) {
+        if (data.record) {
+      eodSubmittedAt.value = data.record.eodSubmittedAt
+        ? new Date(data.record.eodSubmittedAt).toISOString()
+        : null;
+
       if (data.record.commitments) {
         commitments.value = data.record.commitments.map((c: any) => ({
           id: c.id,
@@ -112,8 +129,11 @@ async function loadTodayState() {
 
       if (data.record.finalDailyStatus && data.record.finalDailyStatus !== 'NOT_APPLICABLE_NO_COMMITMENT') {
         finalDailyStatus.value = data.record.finalDailyStatus;
-        isSubmittedSuccess.value = true;
       }
+      isSubmittedSuccess.value = !!eodSubmittedAt.value;
+    } else {
+      eodSubmittedAt.value = null;
+      isSubmittedSuccess.value = false;
     }
 
     // Load users for blocker modal
@@ -177,12 +197,15 @@ async function submitEod() {
       finalDailyStatus: finalDailyStatus.value, // DEC-003: Hak konfirmasi status GREEN dijamin bebas
     };
 
-    await apiClient('/daily/eod', {
+    const res = await apiClient<{ eodSubmittedAt?: string }>('/daily/eod', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
 
     showToast('Evaluasi EOD Outcome berhasil dikirim dan dicatat.');
+    eodSubmittedAt.value = res.data?.eodSubmittedAt
+      ? new Date(res.data.eodSubmittedAt).toISOString()
+      : new Date().toISOString();
     isSubmittedSuccess.value = true;
     await loadTodayState();
   } catch (err: any) {
@@ -244,17 +267,7 @@ onMounted(() => {
 <template>
   <div class="daily-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">My Today / <strong>EOD Outcome</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
-        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My Today / EOD Outcome" />
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
@@ -322,7 +335,8 @@ onMounted(() => {
             <div class="context-item">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
-                <span v-if="isEodLocked" class="badge badge-danger">LOCKED (Pasca {{ eodLockCutoff }} WIB)</span>
+                <span v-if="hasSubmittedEod" class="badge badge-active">SUBMITTED (Terkunci)</span>
+                <span v-else-if="isEodLocked" class="badge badge-danger">LOCKED (Pasca {{ eodLockCutoff }} WIB)</span>
                 <span v-else-if="isLate" class="badge badge-late">LATE (Lembur Fleksibel)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
@@ -335,8 +349,27 @@ onMounted(() => {
         </div>
       </section>
 
+      <!-- Alert Banner jika EOD sudah disubmit (EOD Closed / Locked) -->
+      <div v-if="hasSubmittedEod" class="alert-banner submitted" role="status">
+        <CheckCircle2 :size="20" class="text-green" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Evaluasi EOD Telah Terkunci (EOD Closed):</strong>
+            <span> Disubmit pada {{ formatTime(eodSubmittedAt) }} WIB.</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Evaluasi capaian akhir hari telah dicatat secara resmi. Form evaluasi ini dikunci untuk menjaga integritas data akuntabilitas. Perubahan data EOD hanya dapat diajukan melalui mekanisme koreksi resmi.
+          </p>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/corrections/eod" class="btn btn-secondary btn-sm">
+              Ajukan Koreksi EOD
+            </AccessLink>
+          </div>
+        </div>
+      </div>
+
       <!-- Alert jika terkunci -->
-      <div v-if="isEodLocked" class="alert-banner locked" role="alert">
+      <div v-else-if="isEodLocked" class="alert-banner locked" role="alert">
         <Lock :size="20" />
         <div>
           <strong>Hari Kerja Telah Berakhir & Terkunci Permanen (DEC-002):</strong>
@@ -378,19 +411,19 @@ onMounted(() => {
                 <label class="form-label">Hasil Pencapaian Komitmen *</label>
                 <div class="outcome-options">
                   <label class="outcome-label" :class="{ selected: c.outcome === 'COMPLETED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="COMPLETED" v-model="c.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`outcome-${c.id}`" value="COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
                     <span>Selesai (COMPLETED)</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'PARTIALLY_COMPLETED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="PARTIALLY_COMPLETED" v-model="c.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`outcome-${c.id}`" value="PARTIALLY_COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
                     <span>Sebagian (PARTIALLY)</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'NOT_COMPLETED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="NOT_COMPLETED" v-model="c.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`outcome-${c.id}`" value="NOT_COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
                     <span>Belum Selesai (NOT_COMPLETED)</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'CANCELLED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="CANCELLED" v-model="c.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`outcome-${c.id}`" value="CANCELLED" v-model="c.outcome" :disabled="isFormLocked" />
                     <span>Dibatalkan (CANCELLED)</span>
                   </label>
                 </div>
@@ -404,7 +437,7 @@ onMounted(() => {
                   class="input-control"
                   rows="2"
                   placeholder="Jelaskan alasan mengapa komitmen ini dibatalkan hari ini..."
-                  :disabled="isEodLocked"
+                  :disabled="isFormLocked"
                   required
                 ></textarea>
               </div>
@@ -414,11 +447,11 @@ onMounted(() => {
                 <label class="form-label">Keputusan Kelanjutan Tugas Besok (Continuation Decision) *</label>
                 <div class="continuation-options">
                   <label class="cont-label" :class="{ selected: c.continuation === 'CONTINUE' }">
-                    <input type="radio" :name="`cont-${c.id}`" value="CONTINUE" v-model="c.continuation" :disabled="isEodLocked" />
+                    <input type="radio" :name="`cont-${c.id}`" value="CONTINUE" v-model="c.continuation" :disabled="isFormLocked" />
                     <span>Lanjutkan Besok (CONTINUE &rarr; Carry-Over)</span>
                   </label>
                   <label class="cont-label" :class="{ selected: c.continuation === 'DO_NOT_CONTINUE' }">
-                    <input type="radio" :name="`cont-${c.id}`" value="DO_NOT_CONTINUE" v-model="c.continuation" :disabled="isEodLocked" />
+                    <input type="radio" :name="`cont-${c.id}`" value="DO_NOT_CONTINUE" v-model="c.continuation" :disabled="isFormLocked" />
                     <span>Jangan Lanjutkan (DO_NOT_CONTINUE)</span>
                   </label>
                 </div>
@@ -430,7 +463,7 @@ onMounted(() => {
                     class="input-control"
                     rows="2"
                     placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."
-                    :disabled="isEodLocked"
+                    :disabled="isFormLocked"
                     required
                   ></textarea>
                 </div>
@@ -460,15 +493,15 @@ onMounted(() => {
                 <label class="form-label">Hasil Pencapaian *</label>
                 <div class="outcome-options">
                   <label class="outcome-label" :class="{ selected: w.outcome === 'COMPLETED' }">
-                    <input type="radio" :name="`w-outcome-${w.id}`" value="COMPLETED" v-model="w.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
                     <span>Selesai (COMPLETED)</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: w.outcome === 'PARTIALLY_COMPLETED' }">
-                    <input type="radio" :name="`w-outcome-${w.id}`" value="PARTIALLY_COMPLETED" v-model="w.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="PARTIALLY_COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
                     <span>Sebagian</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: w.outcome === 'NOT_COMPLETED' }">
-                    <input type="radio" :name="`w-outcome-${w.id}`" value="NOT_COMPLETED" v-model="w.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="NOT_COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
                     <span>Belum Selesai</span>
                   </label>
                 </div>
@@ -494,7 +527,7 @@ onMounted(() => {
 
           <div class="status-selection-grid">
             <label class="status-select-card green" :class="{ selected: finalDailyStatus === 'GREEN' }">
-              <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isEodLocked" />
+              <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isFormLocked" />
               <div class="status-card-header">
                 <CheckCircle2 :size="20" class="text-green" />
                 <span class="status-name">GREEN</span>
@@ -505,7 +538,7 @@ onMounted(() => {
             </label>
 
             <label class="status-select-card amber" :class="{ selected: finalDailyStatus === 'AMBER' }">
-              <input type="radio" value="AMBER" v-model="finalDailyStatus" :disabled="isEodLocked" />
+              <input type="radio" value="AMBER" v-model="finalDailyStatus" :disabled="isFormLocked" />
               <div class="status-card-header">
                 <AlertCircle :size="20" class="text-amber" />
                 <span class="status-name">AMBER</span>
@@ -516,7 +549,7 @@ onMounted(() => {
             </label>
 
             <label class="status-select-card red" :class="{ selected: finalDailyStatus === 'RED' }">
-              <input type="radio" value="RED" v-model="finalDailyStatus" :disabled="isEodLocked" />
+              <input type="radio" value="RED" v-model="finalDailyStatus" :disabled="isFormLocked" />
               <div class="status-card-header">
                 <AlertTriangle :size="20" class="text-red" />
                 <span class="status-name">RED</span>
@@ -530,7 +563,7 @@ onMounted(() => {
       </section>
 
       <!-- Action Footer -->
-      <div v-if="!isEodLocked" class="action-footer">
+      <div v-if="!isFormLocked" class="action-footer">
         <div class="footer-info">
           Pastikan hasil evaluasi telah diverifikasi sebelum jam penguncian {{ eodLockCutoff }} WIB.
         </div>
@@ -865,6 +898,47 @@ onMounted(() => {
   align-items: flex-start;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.alert-banner.submitted {
+  background: var(--color-status-green-bg);
+  border: 1px solid var(--color-status-green-border);
+  color: var(--color-status-green-fg);
+}
+
+.submitted-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.submitted-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.submitted-banner-desc {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.submitted-banner-actions {
+  margin-top: 4px;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  width: fit-content;
 }
 
 .alert-banner.locked {
