@@ -54,9 +54,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-006** | Standardisasi Ikon Vektor SVG pada 3 Poin Fitur Panel Kiri | Visual Design & Styling | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-007** | Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
 | **IMP-008** | Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form | Visual Design & Styling | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
-| **IMP-009** | Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment" | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Candidate |
+| **IMP-009** | Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment" | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Closed (Descoped) |
 | **IMP-012** | Keselarasan Visual Panel Hero Kiri antara Tab Login dan Aktivasi | Layout & Spacing | `/activate` & `/login` | `TC-AUTH-003` | Medium | Implemented (Pending UAT) |
 | **IMP-013** | Penambahan Skenario Uji Khusus State Akun Nonaktif & Rate Limit | User Experience (UX) | `/login` & Error Guard | `TC-AUTH-002` | Medium | Candidate |
 | **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
@@ -222,14 +222,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-009
 - **Title:** Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment"
 - **Category:** Copywriting & Microcopy
-- **Page / Module:** Halaman Login (`/login`, Form Kanan)
+- **Page / Module:** Halaman Login & Aktivasi (`/login`, `/activate`, Footer Panel Hero)
 - **Related Test Case:** `TC-AUTH-001`
-- **Current Condition:** Header form login menampilkan nama badan usaha *"PT Dutamedia Mandiri Pratama"*.
+- **Current Condition:** Baris kedua footer panel hero menampilkan nama badan usaha *"PT Dutamedia Mandiri Pratama"*.
 - **Proposed Improvement:** Ubah label penanda konteks menjadi *"Internal Workspace Environment"*.
 - **Rationale / Expected Benefit:** Memberikan penegasan batas ruang kerja internal tanpa redundansi nama perusahaan yang sudah terwakili di logo dan branding.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 3 (IMP-009) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit b611ad9 (Change Register: CHG-016)
+- **Implementation Note:** Memperbarui baris kedua footer panel hero di `LoginView.vue` dan `ActivateView.vue` dari `PT Dutamedia Mandiri Pratama` menjadi `Internal Workspace Environment` selaras dengan Prototipe 01 baris 935 sebagai indikator batas lingkungan kerja internal. Seluruh pengujian otomatis (86 unit test) lulus 100%.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 3 (IMP-009) telah resmi ditutup.
 
 ---
 
@@ -240,11 +244,15 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Page / Module:** Halaman Login (`/login`, Footer Kanan)
 - **Related Test Case:** `TC-AUTH-001`
 - **Current Condition:** Footer menampilkan detail teknis implementasi keamanan: *"Perlindungan sesi via HttpOnly & CSRF Double-Submit"*.
-- **Proposed Improvement:** Ganti microcopy menjadi teks panduan praktis: *"Kendala akses akun? Hubungi Tim IT Support atau Tim HRGA."*
+- **Proposed Improvement:** Ganti microcopy menjadi teks panduan praktis: *"Kendala akses akun? Hubungi Admin System atau Tim HRGA."*
 - **Rationale / Expected Benefit:** Memberikan nilai bantu nyata kepada karyawan awam saat menghadapi kesulitan autentikasi, dibanding menampilkan jargon teknis backend/security.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 4 (IMP-010) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 2c5bbe8, 871eaba (Change Register: CHG-017)
+- **Implementation Note:** Memperbarui microcopy pada area `.help-hint` di bawah tombol login `LoginView.vue` dari teks teknis backend `Perlindungan sesi via HttpOnly & CSRF Double-Submit` menjadi teks panduan bantuan akses pengguna `Kendala akses akun? Hubungi Admin System atau Tim HRGA.` selaras dengan keputusan Acceptance Owner. Seluruh pengujian otomatis (87 unit test) lulus 100%.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 4 (IMP-010) telah resmi ditutup.
 
 ---
 
@@ -259,8 +267,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Alur penanganan lupa kata sandi merupakan standar esensial bagi pengguna aplikasi web untuk mencegah kebuntuan akses.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
-- **Product Decision:** DEC-008-UAT (Alternatif A — Administrative Password Recovery Guidance; Keputusan Acceptance Owner 02/11/2026: Tautan panduan pemulihan via HRGA/IT Support; Ditolak: Self-service SMTP reset)
+- **Status:** Closed (Descoped)
+- **Product Decision:** DEC-008-UAT Amandemen — Keputusan Definitif Acceptance Owner (03/11/2026): Tombol / tautan mandiri "Lupa kata sandi?" ditiadakan dari form login. Pemulihan akun dan reset kata sandi merupakan prosedur administratif terpusat yang ditangani oleh Admin System dan Tim HRGA, bukan fitur mandiri antarmuka. Kebutuhan bantuan bagi pengguna yang lupa sandi telah sepenuhnya terwadahi secara terpadu melalui microcopy panduan akses akun (*"Kendala akses akun? Hubungi Admin System atau Tim HRGA."* pada IMP-010).
+- **Closure Note:** Temuan resmi DITUTUP (CLOSED) dengan status Descoped / Not Required atas penetapan resmi Acceptance Owner. Standalone 5 resmi ditutup.
 
 ---
 
