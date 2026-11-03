@@ -29,7 +29,9 @@ const userInitials = computed(() => {
 });
 
 const userTitle = computed(() => {
-  return user.value?.fullName ? `Profil: ${user.value.fullName}` : 'Profil Pengguna';
+  if (!user.value?.fullName) return 'Profil Pengguna';
+  const clean = user.value.fullName.replace(/\s*\([^)]*\)/g, '').trim();
+  return `Profil: ${clean || user.value.fullName}`;
 });
 
 const breadcrumbSegments = computed<string[]>(() => {

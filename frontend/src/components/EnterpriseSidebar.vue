@@ -42,7 +42,13 @@ const { isMobileSidebarOpen, closeSidebar } = useLayout();
 
 const groups = computed(() => navForRole(auth.user?.role));
 
-const userInitials = computed(() => getUserInitials(auth.user?.fullName, auth.user?.email));
+const userDisplayName = computed(() => {
+  const raw = auth.user?.fullName;
+  if (!raw) return 'Pengguna';
+  return raw.replace(/\s*\([^)]*\)/g, '').trim() || raw;
+});
+
+const userInitials = computed(() => getUserInitials(userDisplayName.value, auth.user?.email));
 
 const userRoleFormatted = computed(() => {
   const r = auth.user?.role;
@@ -176,7 +182,7 @@ function getIconComponent(name: string) {
         >
           <div class="avatar">{{ userInitials }}</div>
           <div class="user-meta">
-            <div class="user-name" :title="auth.user?.fullName">{{ auth.user?.fullName || 'Pengguna' }}</div>
+            <div class="user-name" :title="userDisplayName">{{ userDisplayName }}</div>
             <div class="user-role" data-testid="nav-role">{{ userRoleFormatted }}</div>
           </div>
         </router-link>
