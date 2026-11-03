@@ -45,5 +45,19 @@ describe('ActivateView.vue (WP-EP02-TK005 / Prototipe 01 Tab Aktivasi)', () => {
     await passwordInput.setValue('ValidSecurePass123!');
     expect(wrapper.text()).toContain('Sangat Kuat');
   });
+
+  it('renders synchronized headline "Komitmen Jelas. Hambatan Tuntas." (IMP-007, IMP-012)', () => {
+    const wrapper = mount(ActivateView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    const headline = wrapper.find('h1');
+    expect(headline.exists()).toBe(true);
+    expect(headline.text()).toContain('Komitmen Jelas.');
+    expect(headline.text()).toContain('Hambatan Tuntas.');
+    expect(wrapper.text()).not.toContain('Fokus pada Hasil, Tuntaskan Kendala.');
+  });
 });
 

@@ -44,4 +44,18 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
     expect(wrapper.find('.field-error-msg').exists()).toBe(true);
     expect(wrapper.text()).toContain('Alamat email wajib diisi');
   });
+
+  it('renders inclusive rhythm headline "Komitmen Jelas. Hambatan Tuntas." without narrow text (IMP-007)', () => {
+    const wrapper = mount(LoginView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    const headline = wrapper.find('h1');
+    expect(headline.exists()).toBe(true);
+    expect(headline.text()).toContain('Komitmen Jelas.');
+    expect(headline.text()).toContain('Hambatan Tuntas.');
+    expect(wrapper.text()).not.toContain('Fokus pada Hasil, Tuntaskan Kendala.');
+  });
 });
