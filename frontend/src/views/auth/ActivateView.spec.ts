@@ -59,5 +59,19 @@ describe('ActivateView.vue (WP-EP02-TK005 / Prototipe 01 Tab Aktivasi)', () => {
     expect(headline.text()).toContain('hambatan tuntas');
     expect(wrapper.text()).not.toContain('Fokus pada Hasil, Tuntaskan Kendala.');
   });
+
+  it('renders dynamic brand version label "WorkPulse v1.5 · Dutamedia" without technical jargon (IMP-008)', () => {
+    const wrapper = mount(ActivateView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    const footer = wrapper.find('.brand-footer');
+    expect(footer.exists()).toBe(true);
+    expect(footer.text()).toContain('WorkPulse v1.5 · Dutamedia');
+    expect(wrapper.text()).not.toContain('Clean-Slate Architecture');
+    expect(wrapper.text()).not.toContain('WorkPulse v2.0');
+  });
 });
 

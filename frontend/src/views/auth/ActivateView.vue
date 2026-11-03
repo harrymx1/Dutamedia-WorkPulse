@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, KeyRound, Target, Flag, Users } from 'lucide-vue-next';
+import { APP_CONFIG } from '../../config/app';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -144,7 +145,7 @@ async function handleActivate() {
       </div>
 
       <div class="brand-footer">
-        <span>WorkPulse v2.0 • Clean-Slate Architecture</span>
+        <span>{{ APP_CONFIG.brandVersionLabel }}</span>
         <span>PT Dutamedia Mandiri Pratama</span>
       </div>
     </aside>

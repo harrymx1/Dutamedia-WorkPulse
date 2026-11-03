@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getLandingRouteForRole } from '../../router/navigation';
 import { Eye, EyeOff, ShieldCheck, AlertCircle, Target, Flag, Users } from 'lucide-vue-next';
+import { APP_CONFIG } from '../../config/app';
 
 const router = useRouter();
 const route = useRoute();
@@ -113,7 +114,7 @@ async function handleLogin() {
       </div>
 
       <div class="brand-footer">
-        <span>WorkPulse v2.0 • Clean-Slate Architecture</span>
+        <span>{{ APP_CONFIG.brandVersionLabel }}</span>
         <span>PT Dutamedia Mandiri Pratama</span>
       </div>
     </aside>
