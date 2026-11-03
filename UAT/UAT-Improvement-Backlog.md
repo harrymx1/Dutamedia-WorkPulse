@@ -46,26 +46,26 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 | Finding ID | Title | Category | Page / Module | Related TC | Priority | Status |
 | :---: | :--- | :--- | :--- | :---: | :---: | :---: |
-| **IMP-001** | Penyempurnaan Tagline Value Proposition Hero Login | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-002** | Penyesuaian Judul Poin Fitur 1 Komitmen Harian Menyeluruh | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-003** | Penyesuaian Deskripsi Subtitle Poin Fitur 1 Komitmen Harian | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-004** | Penyelarasan Judul & Subtitle Poin Fitur 2 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-005** | Penyelarasan Judul & Subtitle Poin Fitur 3 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-006** | Standardisasi Ikon Vektor SVG pada 3 Poin Fitur Panel Kiri | Visual Design & Styling | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Candidate |
+| **IMP-001** | Penyempurnaan Tagline Value Proposition Hero Login | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-002** | Penyesuaian Judul Poin Fitur 1 Komitmen Harian Menyeluruh | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-003** | Penyesuaian Deskripsi Subtitle Poin Fitur 1 Komitmen Harian | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-004** | Penyelarasan Judul & Subtitle Poin Fitur 2 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-005** | Penyelarasan Judul & Subtitle Poin Fitur 3 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-006** | Standardisasi Ikon Vektor SVG pada 3 Poin Fitur Panel Kiri | Visual Design & Styling | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-007** | Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
 | **IMP-008** | Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form | Visual Design & Styling | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
 | **IMP-009** | Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment" | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
 | **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Candidate |
 | **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Candidate |
-| **IMP-012** | Keselarasan Visual Panel Hero Kiri antara Tab Login dan Aktivasi | Layout & Spacing | `/activate` & `/login` | `TC-AUTH-003` | Medium | Candidate |
+| **IMP-012** | Keselarasan Visual Panel Hero Kiri antara Tab Login dan Aktivasi | Layout & Spacing | `/activate` & `/login` | `TC-AUTH-003` | Medium | Implemented (Pending UAT) |
 | **IMP-013** | Penambahan Skenario Uji Khusus State Akun Nonaktif & Rate Limit | User Experience (UX) | `/login` & Error Guard | `TC-AUTH-002` | Medium | Candidate |
-| **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-015** | Penggantian Tombol Riwayat Menjadi Ikon Notifikasi Ber-badge Merah | Navigation & Architecture | Header Bar / Shell | `TC-DLYM-001` | High | Candidate |
+| **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-015** | Penggantian Tombol Riwayat Menjadi Ikon Notifikasi Ber-badge Merah | Navigation & Architecture | Header Bar / Shell | `TC-DLYM-001` | High | Implemented (Pending UAT) |
 | **IMP-016** | Penempatan Tombol "Lapor Blocker" Konsisten pada 3 Tab My Today | User Experience (UX) | `/daily/*` (My Today) | `TC-DLYM-001` | High | Candidate |
 | **IMP-017** | Konsolidasi Menu Sidebar Induk "My Today" & Label 'Dutamedia' | Navigation & Architecture | Enterprise Sidebar | `TC-AUTH-001` | High | Candidate |
-| **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Candidate |
-| **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Candidate |
-| **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Candidate |
+| **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
+| **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Implemented (Pending UAT) |
+| **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
 | **IMP-021** | Pemisahan Nama Lengkap dan Jabatan pada Tampilan User | Copywriting & Microcopy | `/profile` & Header | `TC-AUTH-007` | Medium | Candidate |
 | **IMP-022** | Penyelarasan Layout Body Profil Sesuai 3 Seksi Prototipe 24 | Layout & Spacing | `/profile` | `TC-AUTH-007` | High | Candidate |
 | **IMP-023** | Pengalihan Tombol Pemulihan Layar 403 Mengikuti Rute Kanonikal Peran | Navigation & Architecture | `ErrorPageView.vue` | `TC-AUTH-005` | High | Candidate |
@@ -85,7 +85,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan penekanan yang lebih tajam pada aspek deteksi risiko dini bagi tim dan manajemen sejak awal hari.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -100,7 +102,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghindari bias persepsi bahwa sistem WorkPulse hanya digunakan pada pagi hari; mencerminkan siklus akuntabilitas kerja harian yang menyeluruh.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -115,7 +119,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Bahasa terasa lebih memotivasi, menekankan dampak dan realisme komitmen dibanding sekadar keterikatan administratif pada jam cut-off.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -132,7 +138,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Konsistensi 100% antara spesifikasi desain produk resmi dengan implementasi antarmuka.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Dokumen Desain UI/UX & Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -149,7 +157,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menegaskan filosofi WorkPulse sebagai platform pemberdayaan dan pendampingan, bukan sekadar alat monitoring (*micromanagement*).
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Dokumen Desain UI/UX & Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -164,7 +174,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Meningkatkan visual maturity, konsistensi render di lintas platform OS/browser, dan estetika enterprise grade.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Komponen `LoginView.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -240,6 +252,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
 - **Status:** Candidate
+- **Product Decision:** DEC-008-UAT (Alternatif A — Administrative Password Recovery Guidance; Keputusan Acceptance Owner 02/11/2026: Tautan panduan pemulihan via HRGA/IT Support; Ditolak: Self-service SMTP reset)
 
 ---
 
@@ -254,7 +267,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan pengalaman visual yang konsisten dan mulus bagi pengguna saat berpindah antara tab login dan aktivasi.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (`ActivateView.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -284,7 +299,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Tampilan header menjadi lebih bersih, elegan, dan hemat ruang horizontal (*clean visual hierarchy*).
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Header Bar)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tombol teks profil pada header bar navigasi telah digantikan secara global oleh komponen Circular User Avatar berbasis inisial nama dinamis pengguna aktif melalui komponen terpusat `TopBar.vue`, mengarahkan langsung ke rute `/profile` tanpa dropdown.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -299,7 +318,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan pusat kesadaran notifikasi instan bagi pengguna tanpa harus menavigasi menu tersembunyi.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Prototipe UI/UX Header)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Product Decision:** DEC-008-UAT (Alternatif A — Static Notification Navigation; Keputusan Acceptance Owner 02/11/2026: Ikon Bell statis navigasi ke /notifications; Ditolak: Dynamic unread counter & real-time engine)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Sesuai keputusan produk definitif DEC-008-UAT, tombol teks 'Riwayat Saya' pada header bar telah digantikan dengan tombol Ikon Notifikasi (SVG Lucide Bell) pada `TopBar.vue` yang berfungsi sebagai shortcut akses navigasi langsung ke `/notifications` tanpa unread counter/badge/red dot.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -348,7 +372,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Mengurangi redundansi identitas brand pada satu layar dan menciptakan hierarki visual yang lebih rapi.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (`ProfileView.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Badge redundan 'WP' dan teks jenama 'WorkPulse' pada topbar halaman `/profile` (`ProfileView.vue`) telah dieliminasi sepenuhnya. Digantikan dengan standar global `TopBar.vue` dengan breadcrumb tunggal kanonikal 'Profil Akun'.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -363,7 +391,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan konsistensi pengalaman navigasi global (*unified layout pattern*) di seluruh halaman WorkPulse.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Rancangan Header Global)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** **SOLUSI GLOBAL UTAMA:** Mengimplementasikan standardisasi topbar global di seluruh 26 halaman aplikasi menggunakan komponen terpusat `TopBar.vue` (`[Breadcrumb] ... [Bell] [Avatar]`). Mengeliminasi inkonsistensi layout, tautan teks profil, tombol logout mengambang, dan menu navigasi horizontal duplikat di seluruh header aplikasi.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -378,7 +410,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Konsistensi visual dan identitas personal pengguna yang lebih akurat dan profesional.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (`ProfileView.vue` & `EnterpriseSidebar.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Mengimplementasikan utilitas penjanaan inisial avatar tunggal dan deterministik (`getUserInitials` di `frontend/src/utils/initials.ts`). Menegakkan aturan seragam: 2 karakter huruf kapital (1 kata: 2 karakter pertama; 2-4+ kata: huruf pertama kata pertama dan terakhir; fallback email/'U'). Diterapkan seragam pada `EnterpriseSidebar.vue`, `TopBar.vue`, dan avatar besar kartu identitas `ProfileView.vue` (Aditya Nugroho konsisten menghasilkan 'AN').
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -436,7 +472,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan redundansi elemen visual identitas jenama di layar, memberikan hierarki navigasi yang jelas bagi pengguna, dan menyeragamkan pola antarmuka di seluruh portal.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`/admin/organization`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tercakup penuh oleh Solusi Global IMP-019. Seluruh modul administrasi (`/admin/organization`, `/admin/policies`, `/admin/users`, `/admin/temporary-reviewers`, `/admin/notifications`, `/admin/invitations`) kini menerapkan breadcrumb hirarkis bersih (contoh: 'Administration / Pemetaan Organisasi', 'Administration / Pengaturan Kebijakan') menggantikan badge logo duplikat WP.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -451,7 +491,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kebersihan antarmuka (declutter), menegakkan prinsip *Single Source of Navigation*, dan memastikan konsistensi visual identitas pengguna di seluruh sudut aplikasi.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`/admin/organization`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tercakup penuh oleh Solusi Global IMP-019. Seluruh tautan navigasi horizontal pada header administrasi yang menduplikasi menu sidebar telah dibersihkan (decluttering). Sisi kanan header diseragamkan dengan avatar inisial bulat 'SA' dan ikon lonceng notifikasi.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -742,7 +786,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menegakkan keseragaman sistem navigasi global WorkPulse dan memberikan tampilan yang proporsional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343601793_ab991d08.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tercakup penuh oleh Solusi Global IMP-019. Breadcrumb halaman blocker telah diselaraskan mengikuti hierarki sidebar yang sebenarnya: 'Workspace / Blocker' untuk Laporkan & Pantau Blocker (dengan migrasi rute kanonikal ke '/raise-blockers' dan redirect backward compatibility dari '/blockers/raise'), serta 'Management / Antrean Eskalasi Blocker' untuk rute '/blockers'. Tombol teks mengambang kanan atas digantikan dengan avatar inisial bulat dan ikon lonceng notifikasi, serta padding/margin diselaraskan mengikuti batas kontainer grid konten.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review navigasi & breadcrumb blocker telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
