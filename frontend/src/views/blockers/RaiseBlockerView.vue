@@ -834,9 +834,9 @@ onMounted(() => {
 }
 
 .main-content {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 20px 100px;
+  padding: 24px clamp(1.5rem, 4vw, 3.5rem) 120px;
 }
 
 /* Back Navigation Link */
@@ -1300,25 +1300,65 @@ textarea:focus {
   margin: 2px 0 0;
 }
 
-/* Form Sticky Footer (IMP-044) */
+/* Form Fixed Footer (Full-width from sidebar edge to screen edge - Prototipe 05) */
 .sticky-footer {
-  position: sticky;
+  position: fixed;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
+  left: 232px;
+  right: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
   border-top: 1px solid #DCE7E2;
-  padding: 14px 20px;
-  margin: 0 -20px;
-  z-index: 25;
+  box-shadow: 0 -4px 16px -2px rgba(0, 0, 0, 0.06);
+  padding: 14px clamp(1.5rem, 4vw, 3.5rem);
+  transition: left 0.2s ease;
 }
 
 .footer-content {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+@media (max-width: 992px) {
+  .sticky-footer {
+    left: 0;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 680px) {
+  .sticky-footer {
+    left: 0;
+    padding: 12px 16px max(14px, env(safe-area-inset-bottom));
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .footer-actions .btn-secondary,
+  .footer-actions .btn-primary {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 14px;
+    justify-content: center;
+  }
 }
 
 .footer-hint {
