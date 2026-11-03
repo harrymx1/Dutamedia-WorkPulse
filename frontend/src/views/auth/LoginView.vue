@@ -210,7 +210,7 @@ async function handleLogin() {
           <div class="divider-rule"></div>
 
           <div class="help-hint">
-            <span>Perlindungan sesi via HttpOnly & CSRF Double-Submit</span>
+            <span>Kendala akses akun? Hubungi Tim IT Support atau Tim HRGA.</span>
           </div>
         </div>
       </div>

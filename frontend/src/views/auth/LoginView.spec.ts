@@ -85,4 +85,17 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
     expect(footer.text()).toContain('Internal Workspace Environment');
     expect(footer.text()).not.toContain('PT Dutamedia Mandiri Pratama');
   });
+
+  it('renders user-friendly access help hint instead of technical security jargon (IMP-010)', () => {
+    const wrapper = mount(LoginView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    const helpHint = wrapper.find('.help-hint');
+    expect(helpHint.exists()).toBe(true);
+    expect(helpHint.text()).toContain('Kendala akses akun? Hubungi Tim IT Support atau Tim HRGA.');
+    expect(wrapper.text()).not.toContain('HttpOnly & CSRF Double-Submit');
+  });
 });
