@@ -76,7 +76,7 @@ async function handleLogin() {
           <span class="pulse-dot"></span>
           Sistem Akuntabilitas Harian
         </div>
-        <h1>Komitmen Jelas.<br>Hambatan Tuntas.</h1>
+        <h1>Komitmen jelas,<br>hambatan tuntas</h1>
         <p>
           Platform transparansi kerja harian untuk mengenali risiko sejak dini dan memastikan hambatan operasional ditangani secara objektif dan terukur
         </p>

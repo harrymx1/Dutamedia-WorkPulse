@@ -46,7 +46,7 @@ describe('ActivateView.vue (WP-EP02-TK005 / Prototipe 01 Tab Aktivasi)', () => {
     expect(wrapper.text()).toContain('Sangat Kuat');
   });
 
-  it('renders synchronized headline "Komitmen Jelas. Hambatan Tuntas." (IMP-007, IMP-012)', () => {
+  it('renders synchronized headline "Komitmen jelas, hambatan tuntas" (IMP-007, IMP-012)', () => {
     const wrapper = mount(ActivateView, {
       global: {
         plugins: [router],
@@ -55,8 +55,8 @@ describe('ActivateView.vue (WP-EP02-TK005 / Prototipe 01 Tab Aktivasi)', () => {
 
     const headline = wrapper.find('h1');
     expect(headline.exists()).toBe(true);
-    expect(headline.text()).toContain('Komitmen Jelas.');
-    expect(headline.text()).toContain('Hambatan Tuntas.');
+    expect(headline.text()).toContain('Komitmen jelas,');
+    expect(headline.text()).toContain('hambatan tuntas');
     expect(wrapper.text()).not.toContain('Fokus pada Hasil, Tuntaskan Kendala.');
   });
 });
