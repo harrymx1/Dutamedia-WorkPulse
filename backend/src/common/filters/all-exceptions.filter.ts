@@ -74,8 +74,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
 
       // Default status-to-code mapping jika belum terdefinisi
-      if (code === ErrorCode.INTERNAL_SERVER_ERROR) {
+      if (statusCode === HttpStatus.TOO_MANY_REQUESTS || (typeof message === 'string' && message.includes('ThrottlerException'))) {
+        code = ErrorCode.AUTH_RATE_LIMIT_EXCEEDED;
+        message = 'Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu 1 menit sebelum mencoba kembali.';
+      } else if (code === ErrorCode.INTERNAL_SERVER_ERROR) {
         switch (statusCode) {
+          case HttpStatus.TOO_MANY_REQUESTS:
+            code = ErrorCode.AUTH_RATE_LIMIT_EXCEEDED;
+            message = 'Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu 1 menit sebelum mencoba kembali.';
+            break;
           case HttpStatus.UNAUTHORIZED:
             code = ErrorCode.AUTH_UNAUTHENTICATED;
             break;

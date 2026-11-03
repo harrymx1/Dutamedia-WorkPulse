@@ -55,7 +55,16 @@ async function handleLogin() {
     const landing = getLandingRouteForRole(authStore.user?.role);
     router.push(safeRedirect || landing);
   } catch (err: any) {
-    errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
+    if (
+      err?.statusCode === 429 ||
+      err?.code === 'AUTH_RATE_LIMIT_EXCEEDED' ||
+      (typeof err?.message === 'string' && err.message.includes('ThrottlerException'))
+    ) {
+      errorMessage.value =
+        'Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu 1 menit sebelum mencoba kembali.';
+    } else {
+      errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
+    }
   }
 }
 </script>
