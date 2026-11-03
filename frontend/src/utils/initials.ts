@@ -13,7 +13,9 @@
  * 8. Jika nama dan email tidak tersedia, gunakan 'U'.
  */
 export function getUserInitials(fullName?: string | null, email?: string | null): string {
-  const cleanName = (fullName || '').trim().replace(/\s+/g, ' ');
+  // Bersihkan teks tanda kurung (misal: "Aditya Nugroho (Frontend Engineer)" -> "Aditya Nugroho")
+  const strippedName = (fullName || '').replace(/\s*\([^)]*\)/g, '').trim();
+  const cleanName = strippedName.replace(/\s+/g, ' ');
   if (cleanName) {
     const words = cleanName.split(' ').filter(Boolean);
     if (words.length === 1) {

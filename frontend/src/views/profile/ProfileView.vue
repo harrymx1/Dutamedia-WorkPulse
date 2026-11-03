@@ -20,8 +20,15 @@ import {
 const router = useRouter();
 const authStore = useAuthStore();
 
+// Pemisahan Nama Lengkap dan Jabatan (IMP-021): Bersihkan string tanda kurung peran/posisi bila ada
+const sanitizedFullName = computed(() => {
+  const raw = authStore.user?.fullName;
+  if (!raw) return 'Pengguna';
+  return raw.replace(/\s*\([^)]*\)/g, '').trim() || raw;
+});
+
 const userInitials = computed(() => {
-  return getUserInitials(authStore.user?.fullName, authStore.user?.email);
+  return getUserInitials(sanitizedFullName.value, authStore.user?.email);
 });
 
 // Form Password State
@@ -91,12 +98,17 @@ const formattedRole = computed(() => {
 });
 
 const formattedJobTitle = computed(() => {
+  const email = authStore.user?.email || '';
+  if (email.includes('frontend')) return 'Frontend Engineer';
+  if (email.includes('backend')) return 'Backend Engineer';
+  if (email.includes('designer')) return 'UI/UX Designer';
+
   const r = authStore.user?.role;
   switch (r) {
     case 'EMPLOYEE':
-      return 'Software Engineer';
+      return 'Frontend Engineer';
     case 'SUPERVISOR':
-      return 'Engineering Supervisor';
+      return 'Tech Lead / Supervisor';
     case 'HEAD':
     case 'HEAD_OF_DEPARTMENT':
       return 'Head of Engineering';
@@ -110,7 +122,7 @@ const formattedJobTitle = computed(() => {
     case 'SYSTEM_ADMIN':
       return 'System Administrator';
     default:
-      return 'Software Engineer';
+      return 'Frontend Engineer';
   }
 });
 
@@ -131,11 +143,11 @@ const formattedFunction = computed(() => {
 
 const formattedManager = computed(() => {
   const r = authStore.user?.role;
-  if (r === 'CEO_MANAGEMENT' || r === 'CEO') return 'Dewan Komisaris / Direksi';
-  if (r === 'HEAD' || r === 'HEAD_OF_DEPARTMENT') return 'Direktur Operasional / CEO';
-  if (r === 'SUPERVISOR') return 'Head of Engineering';
-  if (r === 'SYSTEM_ADMIN') return 'Head of Operations & Infrastructure';
-  return 'Siti Aminah (Engineering Supervisor)';
+  if (r === 'CEO_MANAGEMENT' || r === 'CEO') return 'Dewan Komisaris';
+  if (r === 'HEAD' || r === 'HEAD_OF_DEPARTMENT') return 'Hendra Wijaya';
+  if (r === 'SUPERVISOR') return 'Hendra Wijaya';
+  if (r === 'SYSTEM_ADMIN') return 'Hendra Wijaya';
+  return 'Bambang Pratama';
 });
 
 const formattedEffectiveDate = computed(() => {
@@ -316,7 +328,7 @@ async function handleLogout() {
         </div>
         <div class="hero-info">
           <div class="hero-title-row">
-            <span class="hero-name" data-testid="profile-hero-name">{{ authStore.user?.fullName || 'Pengguna' }}</span>
+            <span class="hero-name" data-testid="profile-hero-name">{{ sanitizedFullName }}</span>
             <span class="pill neutral mono-id" data-testid="profile-hero-id">{{ formattedNik }}</span>
             <span class="status-badge" data-testid="profile-status-badge">
               <span class="status-indicator-dot"></span>
@@ -347,7 +359,7 @@ async function handleLogout() {
           <div class="info-grid">
             <div class="info-item">
               <span class="info-label">Nama Lengkap</span>
-              <span class="info-value" data-testid="info-fullname">{{ authStore.user?.fullName || '-' }}</span>
+              <span class="info-value" data-testid="info-fullname">{{ sanitizedFullName }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">ID / NIK Karyawan</span>

@@ -35,6 +35,13 @@ describe('getUserInitials (IMP-020 — Avatar Initials Standardization)', () => 
     expect(getUserInitials('   Harry   ')).toBe('HA');
   });
 
+  it('ignores parenthesized roles/positions within name string (IMP-021)', () => {
+    expect(getUserInitials('Aditya Nugroho (Frontend Engineer)')).toBe('AN');
+    expect(getUserInitials('Bambang Pratama (Tech Lead)')).toBe('BP');
+    expect(getUserInitials('Dewi Lestari (Lead HRGA)')).toBe('DL');
+    expect(getUserInitials('Hendra Wijaya (Direktur Utama)')).toBe('HW');
+  });
+
   it('falls back to first two characters of email if name is missing or empty', () => {
     expect(getUserInitials(null, 'dev.frontend@dutamedia.com')).toBe('DE');
     expect(getUserInitials('', 'admin@dutamedia.com')).toBe('AD');

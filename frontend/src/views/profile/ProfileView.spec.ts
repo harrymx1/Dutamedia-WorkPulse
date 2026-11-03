@@ -88,21 +88,49 @@ describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 &
     // Job title and function in meta strip are separate elements
     const heroMeta = wrapper.find('[data-testid="profile-hero-meta"]');
     expect(heroMeta.exists()).toBe(true);
-    expect(heroMeta.find('.hero-job-title').text()).toBe('Software Engineer');
+    expect(heroMeta.find('.hero-job-title').text()).toBe('Frontend Engineer');
     expect(heroMeta.find('.hero-department').text()).toBe('Engineering');
 
-    // Negative assertion: NO parentheses concatenation like "Aditya Nugroho (Software Engineer)" or "Aditya Nugroho (EMPLOYEE)"
+    // Negative assertion: NO parentheses concatenation like "Aditya Nugroho (Frontend Engineer)" or "Aditya Nugroho (EMPLOYEE)"
     const heroCardText = wrapper.find('[data-testid="profile-hero-card"]').text();
-    expect(heroCardText).not.toContain('Aditya Nugroho (Software Engineer)');
-    expect(heroCardText).not.toContain('Aditya Nugroho (EMPLOYEE)');
     expect(heroCardText).not.toContain('Aditya Nugroho (Frontend Engineer)');
+    expect(heroCardText).not.toContain('Aditya Nugroho (EMPLOYEE)');
 
     // In Section 1, Nama Lengkap and Jabatan Fungsional are distinct grid items
     const infoName = wrapper.find('[data-testid="info-fullname"]');
     const infoJob = wrapper.find('[data-testid="info-jobtitle"]');
+    const infoManager = wrapper.find('[data-testid="info-manager"]');
     expect(infoName.text()).toBe('Aditya Nugroho');
-    expect(infoJob.text()).toBe('Software Engineer');
+    expect(infoJob.text()).toBe('Frontend Engineer');
+    expect(infoManager.text()).toBe('Bambang Pratama');
     expect(infoName.text()).not.toContain('(');
+    expect(infoManager.text()).not.toContain('(');
+  });
+
+  it('sanitizes legacy parenthesized role strings from backend fullName (IMP-021)', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      id: 'usr-dev-1',
+      fullName: 'Aditya Nugroho (Frontend Engineer)',
+      email: 'dev.frontend@dutamedia.com',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    };
+
+    const wrapper = mount(ProfileView, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    // Sanitized full name: "Aditya Nugroho"
+    expect(wrapper.find('[data-testid="profile-hero-name"]').text()).toBe('Aditya Nugroho');
+    expect(wrapper.find('[data-testid="info-fullname"]').text()).toBe('Aditya Nugroho');
+
+    // Avatar initials: "AN" (not "AE")
+    expect(wrapper.find('[data-testid="profile-hero-avatar"]').text()).toBe('AN');
   });
 
   it('renders the 3 canonical sections of Prototype 24 and eliminates prototype simulation bar (IMP-022)', async () => {
