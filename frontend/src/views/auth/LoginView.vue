@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getLandingRouteForRole } from '../../router/navigation';
@@ -17,6 +17,35 @@ const showPassword = ref(false);
 const errorMessage = ref<string | null>(null);
 const emailError = ref<string | null>(null);
 const passwordError = ref<string | null>(null);
+
+// Client-side rate-limit lockout guard (Defense-in-depth: max 5 failed attempts per 60s)
+const failedAttempts = ref(0);
+const lockoutSecondsRemaining = ref(0);
+let lockoutTimer: any = null;
+
+function triggerLockout(durationSeconds = 60) {
+  lockoutSecondsRemaining.value = durationSeconds;
+  errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+
+  if (lockoutTimer) clearInterval(lockoutTimer);
+  lockoutTimer = setInterval(() => {
+    lockoutSecondsRemaining.value--;
+    if (lockoutSecondsRemaining.value > 0) {
+      errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+    } else {
+      clearInterval(lockoutTimer);
+      lockoutTimer = null;
+      failedAttempts.value = 0;
+      errorMessage.value = null;
+    }
+  }, 1000);
+}
+
+onUnmounted(() => {
+  if (lockoutTimer) {
+    clearInterval(lockoutTimer);
+  }
+});
 
 function validate(): boolean {
   let valid = true;
@@ -44,10 +73,15 @@ function validate(): boolean {
 }
 
 async function handleLogin() {
+  if (lockoutSecondsRemaining.value > 0) {
+    errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+    return;
+  }
   if (!validate()) return;
 
   try {
     await authStore.login(email.value, password.value);
+    failedAttempts.value = 0;
     // Kembali ke halaman yang semula dituju (bila ada & aman), jika tidak ke /dashboard
     const redirect = route.query.redirect;
     const safeRedirect =
@@ -60,10 +94,14 @@ async function handleLogin() {
       err?.code === 'AUTH_RATE_LIMIT_EXCEEDED' ||
       (typeof err?.message === 'string' && err.message.includes('ThrottlerException'))
     ) {
-      errorMessage.value =
-        'Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu 1 menit sebelum mencoba kembali.';
+      triggerLockout(60);
     } else {
-      errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
+      failedAttempts.value++;
+      if (failedAttempts.value >= 5) {
+        triggerLockout(60);
+      } else {
+        errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
+      }
     }
   }
 }
@@ -209,10 +247,10 @@ async function handleLogin() {
             <button
               type="submit"
               class="btn btn-primary"
-              :disabled="authStore.isLoading"
+              :disabled="authStore.isLoading || lockoutSecondsRemaining > 0"
             >
-              <ShieldCheck v-if="!authStore.isLoading" :size="18" />
-              <span>{{ authStore.isLoading ? 'Memverifikasi Kredensial...' : 'Masuk ke Sistem' }}</span>
+              <ShieldCheck v-if="!authStore.isLoading && lockoutSecondsRemaining === 0" :size="18" />
+              <span>{{ authStore.isLoading ? 'Memverifikasi Kredensial...' : (lockoutSecondsRemaining > 0 ? `Terkunci (${lockoutSecondsRemaining}s)` : 'Masuk ke Sistem') }}</span>
             </button>
           </form>
 

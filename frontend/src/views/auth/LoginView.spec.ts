@@ -143,9 +143,38 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
     await wrapper.find('form').trigger('submit.prevent');
 
     expect(wrapper.find('.alert-banner.error').exists()).toBe(true);
-    expect(wrapper.find('.alert-banner.error').text()).toContain(
-      'Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu 1 menit sebelum mencoba kembali.',
-    );
+    expect(wrapper.find('.alert-banner.error').text()).toContain('Terlalu banyak percobaan masuk');
     expect(wrapper.text()).not.toContain('ThrottlerException');
+  });
+
+  it('triggers client-side rate limit lockout after 5 consecutive failed login attempts (IMP-013)', async () => {
+    const wrapper = mount(LoginView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    const authStore = useAuthStore();
+    vi.spyOn(authStore, 'login').mockRejectedValue({
+      statusCode: 401,
+      message: 'Alamat email atau kata sandi tidak valid.',
+    });
+
+    await wrapper.find('#login-email').setValue('user@dutamedia.com');
+    await wrapper.find('#login-password').setValue('WrongPass123!');
+
+    // 4 failed attempts: not locked out yet
+    for (let i = 0; i < 4; i++) {
+      await wrapper.find('form').trigger('submit.prevent');
+      expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined();
+    }
+
+    // 5th failed attempt: triggers lockout
+    await wrapper.find('form').trigger('submit.prevent');
+
+    expect(wrapper.find('.alert-banner.error').exists()).toBe(true);
+    expect(wrapper.find('.alert-banner.error').text()).toContain('Terlalu banyak percobaan masuk');
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('button[type="submit"]').text()).toContain('Terkunci');
   });
 });
