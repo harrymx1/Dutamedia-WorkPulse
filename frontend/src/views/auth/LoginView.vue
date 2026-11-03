@@ -210,7 +210,7 @@ async function handleLogin() {
           <div class="divider-rule"></div>
 
           <div class="help-hint">
-            <span>Kendala akses akun? Hubungi Tim IT Support atau Tim HRGA.</span>
+            <span>Kendala akses akun? Hubungi Admin System atau Tim HRGA.</span>
           </div>
         </div>
       </div>

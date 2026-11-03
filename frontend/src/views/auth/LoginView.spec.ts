@@ -95,7 +95,8 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
 
     const helpHint = wrapper.find('.help-hint');
     expect(helpHint.exists()).toBe(true);
-    expect(helpHint.text()).toContain('Kendala akses akun? Hubungi Tim IT Support atau Tim HRGA.');
+    expect(helpHint.text()).toContain('Kendala akses akun? Hubungi Admin System atau Tim HRGA.');
+    expect(wrapper.text()).not.toContain('Tim IT Support');
     expect(wrapper.text()).not.toContain('HttpOnly & CSRF Double-Submit');
   });
 });
