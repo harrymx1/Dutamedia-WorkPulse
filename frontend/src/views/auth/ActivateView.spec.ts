@@ -73,5 +73,18 @@ describe('ActivateView.vue (WP-EP02-TK005 / Prototipe 01 Tab Aktivasi)', () => {
     expect(wrapper.text()).not.toContain('Clean-Slate Architecture');
     expect(wrapper.text()).not.toContain('WorkPulse v2.0');
   });
+
+  it('renders workspace environment indicator "Internal Workspace Environment" in hero footer (IMP-009)', () => {
+    const wrapper = mount(ActivateView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    const footer = wrapper.find('.brand-footer');
+    expect(footer.exists()).toBe(true);
+    expect(footer.text()).toContain('Internal Workspace Environment');
+    expect(footer.text()).not.toContain('PT Dutamedia Mandiri Pratama');
+  });
 });
 

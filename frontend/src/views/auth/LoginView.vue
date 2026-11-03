@@ -115,7 +115,7 @@ async function handleLogin() {
 
       <div class="brand-footer">
         <span>{{ APP_CONFIG.brandVersionLabel }}</span>
-        <span>PT Dutamedia Mandiri Pratama</span>
+        <span>Internal Workspace Environment</span>
       </div>
     </aside>
 
