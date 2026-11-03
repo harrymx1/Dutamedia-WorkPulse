@@ -52,8 +52,8 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-004** | Penyelarasan Judul & Subtitle Poin Fitur 2 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-005** | Penyelarasan Judul & Subtitle Poin Fitur 3 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-006** | Standardisasi Ikon Vektor SVG pada 3 Poin Fitur Panel Kiri | Visual Design & Styling | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
-| **IMP-007** | Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-008** | Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form | Visual Design & Styling | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
+| **IMP-007** | Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-008** | Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form | Visual Design & Styling | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
 | **IMP-009** | Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment" | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
 | **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Candidate |
 | **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Candidate |
@@ -184,14 +184,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-007
 - **Title:** Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur
 - **Category:** Copywriting & Microcopy
-- **Page / Module:** Halaman Login (`/login`, Form Kanan)
+- **Page / Module:** Halaman Login (`/login`, Hero Panel Kiri & Header Form)
 - **Related Test Case:** `TC-AUTH-001`
 - **Current Condition:** Headline form berbunyi *"Fokus pada Hasil, Tuntaskan Kendala."*
 - **Proposed Improvement:** Rumuskan kembali headline agar mencakup transparansi komitmen dan kolaborasi, tidak terkesan sempit pada pelaporan hasil akhir semata.
 - **Rationale / Expected Benefit:** Selaras dengan esensi WorkPulse yang mencakup penetapan komitmen, transparansi blocker harian, dan evaluasi hasil secara proporsional.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 1 (IMP-007) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit d7ab91d, 229c93b (Change Register: CHG-014)
+- **Implementation Note:** Menyesuaikan headline utama pada panel hero halaman login (`LoginView.vue`) dan halaman aktivasi (`ActivateView.vue`) menjadi rumusan kalimat mengalir dua baris: `Komitmen jelas,<br>hambatan tuntas` tanpa tanda titik akhir sesuai kaidah tipografi headline digital modern. Frasa ini mencerminkan ritme akuntabilitas kerja harian yang seimbang antara penetapan komitmen pagi hari dan penuntasan hambatan kerja, tanpa persepsi sempit sekadar pelaporan hasil akhir.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 1 (IMP-007) telah resmi ditutup.
 
 ---
 
@@ -199,14 +203,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-008
 - **Title:** Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form
 - **Category:** Visual Design & Styling
-- **Page / Module:** Halaman Login (`/login`, Form Kanan)
+- **Page / Module:** Halaman Login (`/login`, Form Kanan / Hero Footer)
 - **Related Test Case:** `TC-AUTH-001`
 - **Current Condition:** Label versi tertulis statis: *"WorkPulse v2.0 • Clean-Slate Architecture"*.
 - **Proposed Improvement:** Ganti teks tersebut menjadi *"WorkPulse v1.5 · Dutamedia"* dan pastikan penomoran versi dapat terbaca secara fleksibel/dinamis dari konfigurasi rilis aplikasi.
 - **Rationale / Expected Benefit:** Penomoran versi selaras dengan dokumen acuan rilis internal dan menghapus istilah teknis arsitektur dari hadapan pengguna umum.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 2 (IMP-008) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit e86742b (Change Register: CHG-015)
+- **Implementation Note:** Membuat modul konfigurasi aplikasi terpusat `frontend/src/config/app.ts` (`APP_CONFIG`) dengan properti versi yang fleksibel (default `'v1.5'` dengan dukungan override environment variable `VITE_APP_VERSION`) dan format merek `"WorkPulse v1.5 · Dutamedia"`. Memperbarui footer panel hero di `LoginView.vue` dan `ActivateView.vue` agar membaca nilai dinamis ini serta menghapus istilah teknis arsitektur rekayasa internal (*"Clean-Slate Architecture"*) dan penomoran statis `v2.0`. Seluruh pengujian otomatis (84 unit test) lulus 100%.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 2 (IMP-008) telah resmi ditutup.
 
 ---
 
