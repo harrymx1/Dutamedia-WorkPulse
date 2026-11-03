@@ -66,8 +66,8 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
 | **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Implemented (Pending UAT) |
 | **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
-| **IMP-021** | Pemisahan Nama Lengkap dan Jabatan pada Tampilan User | Copywriting & Microcopy | `/profile` & Header | `TC-AUTH-007` | Medium | Candidate |
-| **IMP-022** | Penyelarasan Layout Body Profil Sesuai 3 Seksi Prototipe 24 | Layout & Spacing | `/profile` | `TC-AUTH-007` | High | Candidate |
+| **IMP-021** | Pemisahan Nama Lengkap dan Jabatan pada Tampilan User | Copywriting & Microcopy | `/profile` & Header | `TC-AUTH-007` | Medium | Implemented (Pending UAT) |
+| **IMP-022** | Penyelarasan Layout Body Profil Sesuai 3 Seksi Prototipe 24 | Layout & Spacing | `/profile` | `TC-AUTH-007` | High | Implemented (Pending UAT) |
 | **IMP-023** | Pengalihan Tombol Pemulihan Layar 403 Mengikuti Rute Kanonikal Peran | Navigation & Architecture | `ErrorPageView.vue` | `TC-AUTH-005` | High | Candidate |
 
 ---
@@ -761,7 +761,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberdayakan karyawan untuk tidak hanya melaporkan kendala, tetapi juga memantau eskalasi SLA blocker pribadinya secara transparan dalam satu pusat kendali yang terpadu.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Dokumen Desain Prototipe 05 (`05-Raise-Instant-Blocker.html`) dan Temuan UAT Sesi 30 Okt 2026 (`media_1793343601793_ab991d08.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 4 (SOL-BLKR-FORM) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
+- **Implementation Note:** Menyelaraskan seluruh struktur dan tata letak halaman pelaporan blocker karyawan dengan Prototipe 05 (`05-Raise-Instant-Blocker.html`): menambahkan tombol kembali `← Kembali ke Ruang Kerja My Today` (ke `/daily/morning`), menyelaraskan judul `Laporkan & Pantau Blocker` dengan subtitle panduan ramah bisnis, mengeliminasi kicker teknis `MANAJEMEN KENDALA & ESKALASI OTOMATIS`, serta menyediakan 2 tab navigasi: (1) Buat Laporan Blocker dan (2) Blocker Saya (daftar kendala yang dilaporkan dari GET /blockers?mine=raised, badge hitungan aktif, filter status, SLA aging, dan detail kartu kendala). Mengeliminasi toolbar dummy simulasi prototipe (`[Mode Simulasi Prototipe]`).
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi visual review pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
 
 ---
 
@@ -776,7 +780,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menegakkan kepatuhan hak akses berbasis peran (RBAC) dan mencegah kebingungan navigasi karyawan operasional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343601793_ab991d08.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 4 (SOL-BLKR-FORM) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
+- **Implementation Note:** Mengeliminasi tombol link `Lihat Antrean Blocker Aktif` (link ke antrean eskalasi manajemen `/blockers`) dari header formulir pelaporan blocker karyawan (`RaiseBlockerView.vue`). Hak akses antrean manajerial ditegakkan murni melalui navigasi *Management*, sedangkan karyawan biasa memantau kendala pribadinya secara terisolasi melalui Tab 2 "Blocker Saya".
+- **Closure & Verification Note:** Implementasi telah selesai, ketiadaan tombol link manajerial telah diverifikasi pada Vercel Preview dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
 
 ---
 
@@ -813,7 +821,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Antarmuka form menjadi bersih (*clean*), ramah pengguna, dan fungsional.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343639591_9cbf93a7.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 4 (SOL-BLKR-FORM) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
+- **Implementation Note:** Membersihkan dan menyelaraskan bar aksi bawah formulir pelaporan blocker: mengeliminasi teks kode internal `(Audit Trail DEC-008)`, memperbarui teks petunjuk menjadi ramah bisnis (*"Pastikan fakta kendala akurat dan objektif untuk mempercepat penanganan oleh atasan."*), mengganti tombol Batal menjadi tombol sekunder *"Bersihkan Formulir"* (mereset seluruh isian form, error, dan notifikasi), serta mengubah label submit menjadi *"Kirim Laporan Blocker"*. Bar aksi diformat secara `fixed` menempel di dasar layar (`bottom: 0`) dan membentang penuh 100% selebar main body dari sisi kanan sidebar (`left: 232px`) hingga tepi kanan layar (`right: 0`) selaras dengan Prototipe 05.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi visual fixed full-width footer pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
 
 ---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*
