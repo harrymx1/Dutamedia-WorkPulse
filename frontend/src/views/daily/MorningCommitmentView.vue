@@ -10,6 +10,7 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Link as LinkIcon,
   Copy,
   ChevronDown,
@@ -278,18 +279,32 @@ onMounted(() => {
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
-      <AccessLink to="/daily/morning" class="step-item active">
-        <span class="step-num">1</span>
-        <span>Morning Commitment</span>
-      </AccessLink>
-      <AccessLink to="/daily/additional-work" class="step-item">
-        <span class="step-num">2</span>
-        <span>Additional Work</span>
-      </AccessLink>
-      <AccessLink to="/daily/eod" class="step-item">
-        <span class="step-num">3</span>
-        <span>EOD Outcome</span>
-      </AccessLink>
+      <div class="step-items">
+        <AccessLink to="/daily/morning" class="step-item active">
+          <span class="step-num">1</span>
+          <span>Morning Commitment</span>
+        </AccessLink>
+        <AccessLink to="/daily/additional-work" class="step-item">
+          <span class="step-num">2</span>
+          <span>Additional Work</span>
+        </AccessLink>
+        <AccessLink to="/daily/eod" class="step-item">
+          <span class="step-num">3</span>
+          <span>EOD Outcome</span>
+        </AccessLink>
+      </div>
+
+      <div class="workflow-actions">
+        <AccessLink
+          to="/blockers/raise"
+          class="btn-report-blocker"
+          title="Laporkan kendala kritis atau dependensi"
+          data-testid="report-blocker-btn"
+        >
+          <AlertTriangle :size="15" />
+          <span>Laporkan Blocker</span>
+        </AccessLink>
+      </div>
     </nav>
 
     <!-- Toasts -->
@@ -736,8 +751,43 @@ onMounted(() => {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
+}
+
+.step-items {
+  display: flex;
   gap: 32px;
+}
+
+.workflow-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-report-blocker {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-report-blocker:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  text-decoration: none;
 }
 
 .step-item {
