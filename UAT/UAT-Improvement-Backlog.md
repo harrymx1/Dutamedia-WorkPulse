@@ -428,8 +428,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** Pisahkan field nama lengkap pengguna ("Aditya Nugroho") dengan field jabatan ("Frontend Engineer") secara visual atau struktural, tanpa menggabungkan nama dan jabatan dalam tanda kurung pada satu string teks.
 - **Rationale / Expected Benefit:** Membedakan entitas nama individu dari penugasan organisasi secara profesional dan sesuai prinsip desain basis data.
 - **Priority:** Medium
-- **Evidence / Screenshot Reference:** TBD (`ProfileView.vue`)
-- **Status:** Candidate
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`ProfileView.vue` & `EnterpriseSidebar.vue`)
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 3 (SOL-PROF-LAYO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 512bbd1, 05876bb, 6bafd19 (Change Register: CHG-012)
+- **Implementation Note:** Memisahkan field nama lengkap pengguna ("Aditya Nugroho") dan jabatan fungsional ("Frontend Engineer") sebagai elemen visual mandiri tanpa konkatenasi tanda kurung. Mengimplementasikan sanitasi nama otomatis pada level store (`auth.ts`), sidebar (`EnterpriseSidebar.vue`), dan profil (`ProfileView.vue`) serta utilitas inisial avatar (`initials.ts`), sehingga string lama berformat "Nama (Jabatan)" otomatis dibersihkan menjadi murni nama individu dan inisial avatar konsisten 'AN'. Data seeder backend (`seed.ts`) juga dibersihkan dari atribut jabatan dalam tanda kurung.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 3 (SOL-PROF-LAYO) telah resmi ditutup.
 
 ---
 
@@ -444,7 +448,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan tampilan pengaturan akun enterprise yang lengkap, profesional, dan 100% selaras dengan acuan desain resmi perusahaan.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/24-Profile-Settings.html`
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 3 (SOL-PROF-LAYO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 512bbd1, 05876bb, 6bafd19 (Change Register: CHG-012)
+- **Implementation Note:** Menyelaraskan seluruh struktur body halaman `/profile` (`ProfileView.vue`) dengan Prototipe 24 (`24-Profile-Settings.html`): Page Heading kanonikal ("Identitas & Konteks Akun" / "Profil Pengguna & Keamanan Akun"), Hero Identity Strip horizontal dengan avatar 68px berlatar mint soft, Seksi 1 Kartu Identitas & Penugasan Efektif (Read-Only 9 atribut master data organisasi + RoleBasedPromptHint kanonikal), Seksi 2 Keamanan & Pembaruan Kata Sandi Mandiri (meter kekuatan 4 segmen + checklist real-time + show/hide eye toggle + logout sesi aktif), dan Seksi 3 Ringkasan Kanal Notifikasi Perangkat Ini (Browser Push status, aturan tetap pengingat 60m sebelum cut-off, dan kanal sistem tetap). Toolbar simulasi khusus prototipe (`.sim-bar`) diabaikan/dieliminasi dari kode produksi.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 3 (SOL-PROF-LAYO) telah resmi ditutup.
 
 ---
 
