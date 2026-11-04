@@ -77,6 +77,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-029** | Eliminasi Kode Keputusan Arsitektur Internal 'DEC-004' dari Label Checkbox | Copywriting & Polish | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
 | **IMP-030** | Transformasi Microcopy Penjelasan Komitmen Nol dari Enum Database Teknis Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
 | **IMP-031** | Eliminasi Kebocoran Kode Desain '(Prototipe 03)' pada Subtitle Halaman Additional Work | Copywriting & Polish | `/daily/additional-work` | `TC-DLYA-001` | Medium | Implemented (Pending UAT) |
+| **IMP-032** | Perbaikan Overflow Horizontal Kolom Input Atasan Penugas pada Grid Dua Kolom Additional Work | Layout & Responsive Styling | `/daily/additional-work` | `TC-DLYA-002` | High | Implemented (Pending UAT) |
 
 ---
 
@@ -675,7 +676,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793339328832_32e00c67.png`, `media_1793339337197_a3ca7431.jpg`, dan `media_1793339635779_f0f5e534.png`)
 - **Catatan Tambahan Perilaku:** Saat validasi browser terpicu pada dropdown ini, browser secara otomatis melakukan fokus ke elemen yang meluap ke kanan tersebut sehingga seluruh viewport mengalami pergeseran horizontal (*horizontal scroll jump*), menyebabkan sisi kiri form terpotong.
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 16 (IMP-032) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 2d9477d (Change Register: CHG-029)
+- **Implementation Note:** Menambahkan penegakan box containment dan truncation CSS pada formulir Additional Work (AdditionalWorkView.vue) dengan min-width: 0, width: 100%, max-width: 100% pada .form-row dan .form-group untuk mencegah kebocoran grid horizontal, membatasi elemen input/select dengan text-overflow: ellipsis, menerapkan transisi dinamis single-column saat alasan bukan NEWLY_ASSIGNED, menambahkan media query responsif mobile/tablet (max-width: 768px), serta melengkapi automated unit test pada AdditionalWorkView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (110 frontend, 112 backend) lulus 100%, verifikasi visual dan responsivitas pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 16 (IMP-032) resmi ditutup.
 
 ### [IMP-033] Restrukturisasi & Pembersihan Kartu Metrik Konteks Waktu EOD di Halaman EOD Outcome
 - **Finding ID:** IMP-033
