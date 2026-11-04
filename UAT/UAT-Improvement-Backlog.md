@@ -78,6 +78,8 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-030** | Transformasi Microcopy Penjelasan Komitmen Nol dari Enum Database Teknis Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
 | **IMP-031** | Eliminasi Kebocoran Kode Desain '(Prototipe 03)' pada Subtitle Halaman Additional Work | Copywriting & Polish | `/daily/additional-work` | `TC-DLYA-001` | Medium | Implemented (Pending UAT) |
 | **IMP-032** | Perbaikan Overflow Horizontal Kolom Input Atasan Penugas pada Grid Dua Kolom Additional Work | Layout & Responsive Styling | `/daily/additional-work` | `TC-DLYA-002` | High | Implemented (Pending UAT) |
+| **IMP-033** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Waktu EOD di Halaman EOD Outcome | Layout & Visual Cleanliness | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-034** | Eliminasi Kebocoran Kode Desain '(Prototipe 04)' pada Subtitle Halaman EOD Outcome | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -698,7 +700,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menciptakan konsistensi visual 100% antara formulir pagi dan sore, membuat informasi waktu kerja mudah dicerna, dan menghilangkan redundansi teks.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793340699307_aae27820.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 17 (IMP-033) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit c7d316f (Change Register: CHG-030)
+- **Implementation Note:** Menyelaraskan dan merestrukturisasi kartu metrik Konteks Waktu EOD di EodOutcomeView.vue secara 100% konsisten dengan IMP-027, memindahkan penanggalan ke badge dinamis bahasa Indonesia (formattedWorkDate) di panel head, memfokuskan 4 kartu metrik pada Batas On-Time (17:00 WIB), Batas Cut-Off (21:00 WIB), Status Waktu, dan Total Item Evaluasi, mengeliminasi teks redundan Tanggal Kerja dan string ISO mentah, serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (111 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 17 (IMP-033) resmi ditutup.
 
 ---
 
@@ -713,7 +719,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kebersihan antarmuka dari istilah teknis pengembang dan menghadirkan pengalaman pengguna enterprise yang profesional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793340550967_1819bf97.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 18 (IMP-034) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 78b32ef (Change Register: CHG-031)
+- **Implementation Note:** Mengeliminasi kode artefak desain internal developer '(Prototipe 04)' dari subtitle halaman EOD Outcome (EodOutcomeView.vue), menyelaraskan copywriting menjadi kalimat akuntabel enterprise yang elegan: 'Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan tindak lanjut tugas secara akuntabel.', serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (112 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 18 (IMP-034) resmi ditutup.
 
 ---
 
