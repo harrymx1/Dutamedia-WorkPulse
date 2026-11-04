@@ -72,6 +72,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [P] | `TC-AUTH-007` | Inspeksi & Verifikasi Manajemen Profil Pribadi Pengguna | PASS | Terverifikasi data profil dasar dapat diakses; gap atribut organisasi (Jabatan/Departemen/Atasan) & layout prototipe 24 tercatat di Improvement Backlog (IMP-018 s.d. IMP-022) |
 | [P] | `TC-AUTH-008` | Pembaruan Kata Sandi Mandiri & Validasi Keamanan Form | PASS | Terverifikasi seluruh 8 langkah: validasi field kosong, min 8 char, mismatch konfirmasi, penolakan password lama salah, update sukses, pembuktian login baru, dan teardown pemulihan ke Password123! |
 | [P] | `TC-AUTH-006` | Pengakhiran Sesi Aman (Logout) & Pencegahan Back Cache | PASS | Terverifikasi logout menghancurkan sesi, redirect ke /login, dan tombol Back browser dicegat router guard tanpa kebocoran cache |
+| [ ] | `TC-AUTH-009` | Penolakan Login Akun Pengguna Dinonaktifkan (Status INACTIVE) | Not Run | Pesan penonaktifan HRGA terverifikasi |
+| [ ] | `TC-AUTH-010` | Penolakan Login Akun Pengguna Belum Diaktivasi (Status INVITED) | Not Run | Pesan aktivasi via email terverifikasi |
 
 ---
 
@@ -105,6 +107,9 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
+| [ ] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | Not Run | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
+| [ ] | `TC-SUPV-001` | Penegakan Batasan Scope Hierarki Supervisor & Penolakan Lintas Divisi | Not Run | Akses review bawahan tim lain ditolak HTTP 403 AUTH_FORBIDDEN_SCOPE |
+| [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head & Penegakan Batasan Lintas Fungsi | Not Run | Dashboard memuat seluruh squad fungsi; lintas divisi ditolak 403 |
 
 ---
 
@@ -129,6 +134,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [P] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini pada Komitmen Pagi | PASS | Pemilihan AMBER pada Komitmen #2 berhasil memunculkan input kendala & bantuan, initial daily status reaktif berubah menjadi AMBER — Berisiko, dan tersimpan sukses |
 | [ ] | `TC-DLYM-004` | Fitur Salin Komitmen Hari Sebelumnya (Copy-Forward) | | |
 | [P] | `TC-DLYM-005` | Penguncian Form Komitmen Pagi Pasca Cut-Off (DEC-002) | PASS | Terverifikasi empiris pada jam 10:36 WIB (> 09:30): status LOCKED, banner DEC-002 tampil, form disabled/read-only |
+| [ ] | `TC-DLYM-007` | Pencegahan Duplikasi Komitmen Pagi & Penguncian Atomik Multi-Tab (DEF-001) | Not Run | Tab 1 sukses; Tab 2 ditolak atomik HTTP 422 BUSINESS_RULE_ALREADY_SUBMITTED |
 
 ---
 
@@ -167,6 +173,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [P] | `TC-DLYE-002` | Heuristic Suggestion & Hak Prerogatif Anti-Lock Green | PASS | Terverifikasi empiris opsi GREEN tidak pernah dikunci atau dinonaktifkan secara punitif saat komitmen berstatus belum selesai (DEC-003 dipatuhi) |
 | [X] | `TC-DLYE-001` | Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome) | DEFECT | Evaluasi 4 tugas dan status AMBER tersimpan sukses di DB, namun form EOD tidak terkunci (inputs tetap editable & tombol submit aktif) [DEF-002] |
 | [ ] | `TC-DLYE-004` | Penguncian Form Hasil Sore Pasca Cut-Off EOD | | |
+| [ ] | `TC-DLYE-005` | Penguncian Atomik Hasil Evaluasi Sore EOD & Pencegahan Timpa Ulang (DEF-002) | Not Run | EOD terkunci permanen; submit ulang ditolak HTTP 422 atomik |
 
 ---
 
@@ -189,6 +196,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [ ] | `TC-BLKR-003` | Resolusi Blocker dengan Catatan Solusi Tuntas >= 10 Karakter | | |
 | [ ] | `TC-BLKR-004` | Pemantauan Radar Eskalasi Blocker Melewati Batas SLA | | |
 | [ ] | `TC-BLKR-005` | Penanganan Blocker Berdasarkan Kewenangan Proyek (PM) | | |
+| [ ] | `TC-BLKR-006` | Pemantauan Status & Kontribusi Bantuan pada Tab Blocker Saya | Not Run | Tab 2 menampilkan tiket mandiri, filter status, SLA, dan bantuan rekan |
+| [ ] | `TC-PM-001` | Pengelolaan Kendala Otoritas Proyek & Pemantauan Radar Risiko PM | Not Run | Skor kesehatan proyek tampil di radar; blocker proyek sukses di-resolve |
 
 ---
 
@@ -213,6 +222,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [ ] | `TC-CORR-002` | Persetujuan Permohonan Koreksi oleh Direct Manager | | |
 | [ ] | `TC-CORR-004` | Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA | | |
 | [ ] | `TC-CORR-005` | Penerbitan Dispensasi Kepatuhan Resmi & Audit Log (DEC-013) | | |
+| [ ] | `TC-HRGA-001` | Pengawasan Antrean Kepatuhan & Penindakan via Catatan Pembinaan HRGA | Not Run | Filter tahap kepatuhan aktif dan status beralih ke ADDRESSED |
+| [ ] | `TC-HRGA-002` | Pemberian Dispensasi Resmi Terikat Waktu & Validasi Formulir HRGA | Not Run | Tanggal salah ditolak; dispensasi dinas luar resmi berhasil diterbitkan |
 
 ---
 
@@ -231,6 +242,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [ ] | `TC-LEAV-001` | Pengajuan Cuti Tahunan Mandiri oleh Karyawan | | |
 | [ ] | `TC-LEAV-002` | Persetujuan Permohonan Cuti oleh Atasan Langsung | | |
 | [ ] | `TC-LEAV-003` | Rekonsiliasi Cuti Otomatis Pasca Cut-Off (DEC-008) | | |
+| [ ] | `TC-LEAV-004` | Validasi Tumpang Tindih Tanggal Cuti & Pembatalan Mandiri Pending | Not Run | Cuti bertabrakan ditolak HTTP 409 Conflict; pembatalan cuti pending sukses |
 
 ---
 
@@ -249,6 +261,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [ ] | `TC-COAC-001` | Pemberian Catatan Bimbingan Manajer (Coaching Note) | | |
 | [ ] | `TC-DASH-001` | Pemantauan Dasbor Operasional Tim (Team Pulse) | | |
 | [ ] | `TC-DASH-002` | Pemantauan Radar Risiko Proyek & Inisiatif Strategis | | |
+| [ ] | `TC-COAC-002` | Validasi Kerahasiaan Catatan Bimbingan & Larangan Catatan Diri Sendiri | Not Run | Catatan diri ditolak HTTP 400; catatan rahasia terisolasi dari staf |
+| [ ] | `TC-NOTF-001` | Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca | Not Run | Lencana TopBar sinkron reaktif; tandai terbaca mereset counter lencana |
 
 ---
 
@@ -265,6 +279,9 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [ ] | `TC-ADMN-001` | Penugasan Reviewer Sementara (Temporary Reviewer) | | |
 | [P] | `TC-ADMN-002` | Konfigurasi Kebijakan Operasional Sistem (Policy Settings) | PASS | Parameter Jam Cut-off Pagi berhasil diperbarui ke 23:59 WIB, tersimpan dengan audit trail baru, dan terverifikasi persisten pasca-F5 |
+| [ ] | `TC-HRGA-003` | Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) HRGA | Not Run | Penugasan reviewer sementara aktif dan wewenang fungsi sasaran sah |
+| [ ] | `TC-ADMN-004` | Konfigurasi Parameter Cut-Off & Jam SLA Blocker dengan Jejak Audit | Not Run | Parameter cut-off dinamis terbarui dan baris jejak audit tersimpan |
+| [ ] | `TC-ADMN-005` | Konfigurasi & Pengujian Pengiriman Saluran Notifikasi Integrasi | Not Run | Uji pengiriman email/webhook berhasil disimulasikan tanpa galat |
 
 ---
 
@@ -280,6 +297,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [ ] | `TC-DASH-003` | Tinjauan Laporan Eksekutif & Pengujian Fitur Unduh Data | | |
+| [ ] | `TC-CEO-001` | Pengawasan Eksekutif Universal, Ekspor Berkas Audit, & Kebijakan CEO | Not Run | Dasbor universal transparan; unduh berkas audit streaming berhasil |
 
 ---
 

@@ -32,3 +32,21 @@ SYSTEM_ADMIN,/admin/policies,Ubah konfigurasi cut-off & SLA blocker,ALLOW,Konfig
 INVITED,/activate,Aktivasi akun via token 72 jam,ALLOW,Form pembuatan password baru terbuka dan dapat disubmit,TC-AUTH-003,Covered
 INVITED,/dashboard,Akses dasbor sebelum akun diaktifkan,DENY,Sistem mengarahkan ke layar aktivasi atau login,TC-AUTH-004,Covered
 
+INACTIVE,/login,Percobaan masuk akun dinonaktifkan,DENY,Penolakan login dengan pesan penonaktifan HRGA (HTTP 401),TC-AUTH-009,Covered
+INVITED,/login,Percobaan masuk akun belum aktivasi,DENY,Penolakan login dengan instruksi aktivasi email (HTTP 401),TC-AUTH-010,Covered
+EMPLOYEE,/daily/morning,Simulasi race condition multi-tab submit (DEF-001),ALLOW,Tab 1 tersimpan; Tab 2 ditolak atomik HTTP 422,TC-DLYM-007,Covered
+EMPLOYEE,/daily/eod,Percobaan timpa langsung evaluasi sore (DEF-002),DENY,Penolakan pembaruan langsung HTTP 422 terkunci atomik,TC-DLYE-005,Covered
+EMPLOYEE,/raise-blockers,Pantau progres & bantuan pada tab Blocker Saya,ALLOW,Daftar tiket kendala dan riwayat kontribusi bantuan tampil,TC-BLKR-006,Covered
+EMPLOYEE,/leave/my,Pengajuan cuti tumpang tindih & pembatalan mandiri,ALLOW,Tumpang tindih ditolak 409; pembatalan pending berhasil,TC-LEAV-004,Covered
+EMPLOYEE,/notifications,Pusat notifikasi & penandaan terbaca,ALLOW,Lencana TopBar terbarui reaktif dan daftar pesan tersinkron,TC-NOTF-001,Covered
+SUPERVISOR,/leave/queue,Review cuti bawahan tim lain di luar fungsi,DENY,Penolakan mutlak HTTP 403 AUTH_FORBIDDEN_SCOPE,TC-SUPV-001,Covered
+SUPERVISOR,/coaching,Buat catatan manajerial untuk diri sendiri,DENY,Penolakan sistem atasan dilarang membina diri sendiri (HTTP 400),TC-COAC-002,Covered
+HEAD,/dashboard,Pengawasan terpadu seluruh squad satu fungsi,ALLOW,Metrik agregat divisi tampil lengkap tanpa galat scope,TC-HEAD-001,Covered
+PROJECT_MANAGER,/projects/risk,Pemantauan radar risiko & skor kesehatan proyek,ALLOW,Portofolio proyek pengawasan tampil dengan indikator risiko,TC-PM-001,Covered
+HRGA,/compliance,Pengawasan antrean kepatuhan & tindak lanjut coaching,ALLOW,Tabel pelanggaran terbuka dan penautan ID catatan coaching sukses,TC-HRGA-001,Covered
+HRGA,/exemptions,Penerbitan dispensasi resmi kedinasan terikat waktu,ALLOW,Dispensasi tersimpan dan pengecualian logging aktif,TC-HRGA-002,Covered
+HRGA,/admin/temporary-reviewers,Pendelegasian peninjau sementara lintas divisi,ALLOW,Penugasan reviewer sementara aktif dan wewenang diperluas,TC-HRGA-003,Covered
+CEO_MANAGEMENT,/reports,Ekspor berkas audit resmi kepatuhan perusahaan,ALLOW,Unduh berkas CSV/JSON audit terproses via streaming API,TC-CEO-001,Covered
+SYSTEM_ADMIN,/daily/morning,Akses operasional workspace (IMP-026),DENY,Route Guard mencegat akses dan mengarahkan ke /forbidden (403),TC-ADMN-003,Covered
+SYSTEM_ADMIN,/admin/policies,Konfigurasi parameter cut-off & SLA dengan audit trail,ALLOW,Versi kebijakan tersimpan dan baris audit trail tercatat,TC-ADMN-004,Covered
+SYSTEM_ADMIN,/admin/notifications,Uji pengiriman saluran notifikasi integrasi,ALLOW,Pengiriman pesan uji terkirim sukses dan stempel waktu aktif,TC-ADMN-005,Covered

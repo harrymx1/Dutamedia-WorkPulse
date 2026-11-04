@@ -31,7 +31,7 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-const ALL_MANAGERIAL: RoleName[] = [
+export const ALL_MANAGERIAL: RoleName[] = [
   'SUPERVISOR',
   'HEAD',
   'PROJECT_MANAGER',
@@ -73,7 +73,7 @@ export const navGroups: NavGroup[] = [
     title: 'Management',
     items: [
       // Dashboard terbuka untuk semua pengguna terotentikasi (tampilan disesuaikan peran)
-      { label: 'Pulse Dashboard', to: '/dashboard', iconName: 'Activity' },
+      { label: 'Pulse Dashboard', to: '/dashboard', roles: ALL_MANAGERIAL, iconName: 'Activity' },
       { label: 'Antrean Blocker', to: '/blockers', roles: ALL_MANAGERIAL, iconName: 'ShieldAlert' },
       { label: 'Catatan Coaching', to: '/coaching', roles: ALL_MANAGERIAL, iconName: 'MessagesSquare' },
       { label: 'Radar Risiko Proyek', to: '/projects/risk', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR', 'PROJECT_MANAGER'], iconName: 'FolderGit2' },

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { getLandingRouteForRole, OPERATIONAL_ROLES } from './navigation';
+import { getLandingRouteForRole, OPERATIONAL_ROLES, ALL_MANAGERIAL } from './navigation';
 import LoginView from '../views/auth/LoginView.vue';
 import ActivateView from '../views/auth/ActivateView.vue';
 import ProfileView from '../views/profile/ProfileView.vue';
@@ -122,7 +122,7 @@ const routes: RouteRecordRaw[] = [
     path: '/blockers',
     name: 'blockers-queue',
     component: BlockerQueueView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
   },
   {
     path: '/blockers/aging',
@@ -134,7 +134,7 @@ const routes: RouteRecordRaw[] = [
     path: '/coaching',
     name: 'coaching-notes',
     component: ManagerNoteCoachingView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
   },
   {
     path: '/compliance',
@@ -164,7 +164,7 @@ const routes: RouteRecordRaw[] = [
     path: '/corrections/review',
     name: 'corrections-review',
     component: CorrectionReviewView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
   },
   {
     path: '/leave/my',
@@ -194,7 +194,7 @@ const routes: RouteRecordRaw[] = [
     path: '/dashboard',
     name: 'pulse-dashboard',
     component: PulseDashboardView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
   },
   {
     path: '/projects/risk',

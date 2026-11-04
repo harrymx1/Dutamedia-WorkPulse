@@ -118,5 +118,29 @@ describe('EnterpriseSidebar.vue (IMP-020, IMP-021)', () => {
     expect(navTextList).toContain('Kelola Pengguna');
     expect(navTextList).toContain('Kebijakan & Cut-off');
   });
+
+  it('hides Management group completely when logged in as EMPLOYEE', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      id: 'emp-1',
+      email: 'dev.frontend@dutamedia.com',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    };
+
+    const wrapper = mount(EnterpriseSidebar, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    const groupTitles = wrapper.findAll('.nav-label').map((l) => l.text());
+    expect(groupTitles).toContain('Workspace');
+    expect(groupTitles).not.toContain('Management');
+    expect(wrapper.find('[data-testid="nav-group-management"]').exists()).toBe(false);
+  });
 });
 

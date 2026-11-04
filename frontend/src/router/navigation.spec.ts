@@ -16,7 +16,7 @@ describe('Navigasi & RBAC frontend', () => {
 
   it('EMPLOYEE tidak melihat menu admin/manajerial', () => {
     const links = flatten('EMPLOYEE');
-    expect(links).toContain('/dashboard');
+    expect(links).not.toContain('/dashboard');
     expect(links).toContain('/daily/morning');
     expect(links).not.toContain('/admin/users');
     expect(links).not.toContain('/reports');
@@ -114,5 +114,12 @@ describe('Navigasi & RBAC frontend', () => {
     const dailyRoute = router.getRoutes().find((r) => r.path === '/daily');
     expect(dailyRoute).toBeDefined();
     expect(dailyRoute?.redirect).toBe('/daily/morning');
+  });
+
+  it('EMPLOYEE hanya memiliki grup menu Workspace dan tidak melihat grup Management atau Administration', () => {
+    const groups = navForRole('EMPLOYEE').map((g) => g.title);
+    expect(groups).toEqual(['Workspace']);
+    expect(groups).not.toContain('Management');
+    expect(groups).not.toContain('Administration');
   });
 });

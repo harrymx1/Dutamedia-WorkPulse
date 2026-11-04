@@ -436,6 +436,90 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
+### TC-AUTH-009: Penolakan Login Akun Pengguna Dinonaktifkan (Status INACTIVE)
+- **Test Case ID:** `TC-AUTH-009`
+- **Scenario ID:** `SCN-AUTH-09`
+- **Requirement ID:** `FR-01`, `DEC-012`
+- **Judul:** Penolakan Login Akun Pengguna Dinonaktifkan (Status INACTIVE)
+- **Tujuan:** Memastikan pengguna dengan status akun INACTIVE (dinonaktifkan oleh administrator/HRGA) ditolak masuk ke dalam sistem dengan pesan penolakan yang ramah, informatif, dan tanpa kebocoran sesi JWT.
+- **Modul / Halaman:** Halaman Login (`/login`)
+- **Kategori Pengujian:** Negative Testing / Security / User Lifecycle
+- **Teknik Desain Test Case:** Equivalence Partitioning & State Transition Testing
+- **Role:** Pengguna Dinonaktifkan (`INACTIVE`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Kegagalan memblokir akun nonaktif membuka risiko akses ilegal oleh mantan karyawan atau akun yang disuspend.
+- **Preconditions:** Server backend dan frontend aktif. Terdapat akun pengguna yang statusnya diubah menjadi `INACTIVE` di database atau via Admin Users (`inactive.user@dutamedia.com`).
+- **Test Data ID:** `TD-AUTH-12` (`inactive.user@dutamedia.com` / `Password123!`)
+- **Persiapan Sebelum Tes:** Buka halaman `/login` pada peramban private/incognito.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Masukkan alamat email akun berstatus INACTIVE dan kata sandi valid pada formulir login.
+   - **Lokasi:** Halaman `/login` pada field Email dan Password.
+   - **Data:** Email: `inactive.user@dutamedia.com`, Password: `Password123!`
+   - **Hasil yang diharapkan:** Form login menerima input dengan aman.
+   - **Verifikasi:** Karakter kata sandi tersamarkan (type="password").
+2. **Langkah 2**
+   - **Aksi:** Klik tombol "Masuk ke Sistem".
+   - **Lokasi:** Tombol submit login (`#login-submit-btn`).
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Sistem menolak autentikasi dengan status HTTP 401 Unauthorized. Muncul alert peringatan berwarna merah/amber dengan pesan spesifik: *"Akun Anda dinonaktifkan oleh administrator. Hubungi HRGA untuk informasi lebih lanjut."* Aplikasi tetap bertahan di halaman `/login` dan tidak ada sesi atau cookie JWT yang diterbitkan.
+   - **Verifikasi:** URL peramban tetap `/login`. Local storage dan application cookies tidak memuat access token aktif.
+
+- **Expected Final Result:** Pengguna dinonaktifkan secara mutlak diblokir dari akses sistem dan diberikan pesan instruksi kontak HRGA yang jelas.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir login dengan pesan penolakan status akun dinonaktifkan.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-AUTH-010: Penolakan Login Akun Pengguna Belum Diaktivasi (Status INVITED)
+- **Test Case ID:** `TC-AUTH-010`
+- **Scenario ID:** `SCN-AUTH-10`
+- **Requirement ID:** `FR-01`, `FR-02`, `DEC-012`
+- **Judul:** Penolakan Login Akun Pengguna Belum Diaktivasi (Status INVITED)
+- **Tujuan:** Memvalidasi bahwa pengguna yang baru diundang dan belum menyelesaikan aktivasi kata sandi tidak dapat langsung masuk melalui form login standar.
+- **Modul / Halaman:** Halaman Login (`/login`)
+- **Kategori Pengujian:** Negative Testing / Lifecycle State Verification
+- **Teknik Desain Test Case:** Equivalence Partitioning & State Transition
+- **Role:** Pengguna Diundang (`INVITED` / `calon.karyawan@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Akses akun sebelum pembuatan kredensial pribadi merusak rantai akuntabilitas identitas pengguna.
+- **Preconditions:** Akun `calon.karyawan@dutamedia.com` berstatus `INVITED` di database seeder.
+- **Test Data ID:** `TD-AUTH-13` (`calon.karyawan@dutamedia.com` / `Password123!`)
+- **Persiapan Sebelum Tes:** Pastikan akun belum pernah diaktivasi melalui rute `/activate`.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Buka halaman `/login` dan masukkan email `calon.karyawan@dutamedia.com` beserta kata sandi sembarang.
+   - **Lokasi:** Formulir login `/login`.
+   - **Data:** Email: `calon.karyawan@dutamedia.com`, Password: `Password123!`
+   - **Hasil yang diharapkan:** Nilai email dan sandi terisi pada input field.
+   - **Verifikasi:** Tidak ada error validasi format email sebelum tombol submit ditekan.
+2. **Langkah 2**
+   - **Aksi:** Klik tombol "Masuk ke Sistem".
+   - **Lokasi:** Tombol submit login.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Backend mengembalikan status HTTP 401 dengan error code `AUTH_UNAUTHENTICATED`. Muncul pesan informatif pada antarmuka: *"Akun Anda belum diaktifkan. Silakan periksa tautan aktivasi pada email Anda atau hubungi administrator."* Tidak ada sesi yang terbentuk.
+   - **Verifikasi:** URL tetap `/login`, input password dikosongkan demi keamanan, dan pengguna tidak dialihkan ke rute internal apapun.
+
+- **Expected Final Result:** Pengguna berstatus INVITED dipandu untuk melakukan aktivasi melalui email dan dicegah masuk ke sistem secara prematur.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir login dengan pesan peringatan akun belum diaktifkan.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
 ## MODUL 2: DAILY ACCOUNTABILITY — MORNING COMMITMENT (TC-DLYM)
 
 ---
@@ -737,6 +821,60 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Defect ID:** 
 - **Retest Result:** 
 - **Catatan:** Batas minimal karakter yang ditegakkan kode produksi adalah 3 karakter untuk deskripsi tugas komitmen.
+
+---
+
+### TC-DLYM-007: Pencegahan Duplikasi Komitmen Pagi & Penguncian Atomik Multi-Tab (Resolusi DEF-001)
+- **Test Case ID:** `TC-DLYM-007`
+- **Scenario ID:** `SCN-DLYM-07`
+- **Requirement ID:** `FR-09`, `FR-14`, `DEC-001`, `DEC-008`
+- **Judul:** Pencegahan Duplikasi Komitmen Pagi & Penguncian Atomik Multi-Tab (Resolusi DEF-001)
+- **Tujuan:** Menguji dan memvalidasi secara tuntas bahwa perbaikan cacat fungsional DEF-001 (penguncian atomik basis data dan penyelesaian konflik two-path) berhasil mencegah duplikasi komitmen pagi ketika form disubmit bersamaan dari 2 tab peramban atau ditekan ganda secara cepat.
+- **Modul / Halaman:** Morning Commitment (`/daily/morning`)
+- **Kategori Pengujian:** Concurrency / Atomic Lock / Defect Re-Validation (DEF-001)
+- **Teknik Desain Test Case:** Race Condition Simulation & Boundary Value Testing
+- **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
+- **Priority:** **Critical (P0)**
+- **Risk Rationale:** Duplikasi komitmen harian merusak integritas pelaporan, memicu ketidakakuratan metrik kepatuhan tim, dan membingungkan evaluasi sore EOD.
+- **Preconditions:** Jam sebelum cut-off pagi (sebelum 09:30). Form komitmen pagi pengguna belum disubmit hari ini (`morningSubmittedAt: null`). Buka 2 tab peramban berdampingan yang sama-sama membuka halaman `/daily/morning`.
+- **Test Data ID:** `TD-DLYM-08` (Tab 1: Komitmen "Integrasi Push Notification VAPID", Tab 2: Komitmen "Refactor Vue Router")
+- **Persiapan Sebelum Tes:** Pastikan kedua tab telah memuat formulir komitmen pagi yang masih bersih dan aktif.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Pada Tab 1, masukkan teks komitmen: `Selesaikan integrasi Push Notification VAPID pada Service Worker`. Tentukan risiko `GREEN`.
+   - **Lokasi:** Tab 1 peramban pada rute `/daily/morning`.
+   - **Data:** Teks: `Selesaikan integrasi Push Notification VAPID pada Service Worker`
+   - **Hasil yang diharapkan:** Slot 1 terisi valid.
+   - **Verifikasi:** Indikator tombol "Kirim Komitmen Pagi" aktif dan dapat diklik.
+2. **Langkah 2**
+   - **Aksi:** Pindah ke Tab 2, masukkan teks komitmen berbeda: `Refactoring konfigurasi Vue Router dan Navigation Guards`. Tentukan risiko `GREEN`.
+   - **Lokasi:** Tab 2 peramban pada rute `/daily/morning`.
+   - **Data:** Teks: `Refactoring konfigurasi Vue Router dan Navigation Guards`
+   - **Hasil yang diharapkan:** Slot 1 pada Tab 2 terisi valid.
+   - **Verifikasi:** Tombol "Kirim Komitmen Pagi" pada Tab 2 juga aktif.
+3. **Langkah 3 (Eksekusi Penyerahan Pertama)**
+   - **Aksi:** Klik tombol "Kirim Komitmen Pagi" pada Tab 1.
+   - **Lokasi:** Tab 1 formulir komitmen pagi.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Sistem memproses penyerahan komitmen. Backend mencatat `morningSubmittedAt` dengan timestamp saat ini dan mengunci record komitmen secara atomik. Muncul toast sukses: "Komitmen pagi berhasil disimpan.", dan antarmuka Tab 1 beralih ke state terkunci dengan banner informasi stempel waktu penyerahan.
+   - **Verifikasi:** Pada Tab 1, field input menjadi disabled, tombol submit hilang/tersembunyi, dan muncul tautan "Ajukan Koreksi Komitmen Pagi" jika perubahan diperlukan.
+4. **Langkah 4 (Simulasi Pengiriman Bersamaan / Race Condition pada Tab 2)**
+   - **Aksi:** Segera pindah ke Tab 2 (tanpa refresh) dan klik tombol "Kirim Komitmen Pagi".
+   - **Lokasi:** Tab 2 formulir komitmen pagi.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Backend mengevaluasi transaksi atomik dan mendeteksi bahwa `morningSubmittedAt` telah terisi (`morningSubmittedAt !== null`). Permintaan kedua ditolak secara mutlak dengan status HTTP 422 Unprocessable Entity dan kode galat `BUSINESS_RULE_ALREADY_SUBMITTED`. Pesan kesalahan ramah muncul: *"Komitmen pagi untuk tanggal kerja ini sudah diserahkan sebelumnya dan tidak dapat ditimpa langsung."* Antarmuka Tab 2 langsung menyinkronkan state ke status terkunci.
+   - **Verifikasi:** Periksa database melalui API `/daily/today`: hanya terdapat 1 record komitmen (dari Tab 1). Tidak ada duplikasi baris atau data korup.
+
+- **Expected Final Result:** Mekanisme atomic locking DEF-001 terbukti 100% kokoh mencegah duplikasi komitmen pagi dari multi-tab maupun klik ganda.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar banner sukses terkunci pada Tab 1 dan tangkapan layar penolakan 422 pada Tab 2.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Verifikasi tuntas resolusi DEF-001 pasca-remediasi Cycle 1.
 
 ---
 
@@ -1102,6 +1240,48 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
+### TC-DLYE-005: Penguncian Atomik Hasil Evaluasi Sore EOD & Pencegahan Timpa Ulang (Resolusi DEF-002)
+- **Test Case ID:** `TC-DLYE-005`
+- **Scenario ID:** `SCN-DLYE-05`
+- **Requirement ID:** `FR-22`, `FR-27`, `DEC-002`, `DEC-008`
+- **Judul:** Penguncian Atomik Hasil Evaluasi Sore EOD & Pencegahan Timpa Ulang (Resolusi DEF-002)
+- **Tujuan:** Memvalidasi penegakan penguncian atomik evaluasi sore (DEF-002). Setelah evaluasi sore berhasil dikirim (`eodSubmittedAt` terisi), seluruh kontrol evaluasi terkunci permanen, tombol submit hilang, dan setiap request ulang langsung ditolak dengan status HTTP 422 `BUSINESS_RULE_ALREADY_SUBMITTED`.
+- **Modul / Halaman:** EOD Outcome (`/daily/eod`)
+- **Kategori Pengujian:** Concurrency / Atomic Lock / Defect Re-Validation (DEF-002)
+- **Teknik Desain Test Case:** Race Condition Simulation & State Immutability Testing
+- **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
+- **Priority:** **Critical (P0)**
+- **Risk Rationale:** Pengubahan langsung hasil evaluasi sore tanpa prosedur koreksi resmi merusak audit trail kepatuhan harian dan membuka celah manipulasi capaian kerja.
+- **Preconditions:** Komitmen pagi telah diserahkan hari ini. Berada di halaman `/daily/eod`. Evaluasi sore telah disubmit satu kali sebelumnya (`eodSubmittedAt !== null`).
+- **Test Data ID:** `TD-DLYE-06` (Evaluasi sore kedua dengan percobaan mengubah status outcome secara langsung)
+- **Persiapan Sebelum Tes:** Pastikan pengguna telah menyelesaikan evaluasi sore pertama dan form menampilkan status terkunci.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Buka halaman Evaluasi Sore pada rute `/daily/eod`.
+   - **Lokasi:** Rute `/daily/eod`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Halaman mendeteksi bahwa evaluasi sore telah diserahkan (`hasSubmittedEod = true`). Banner sukses berwarna hijau/kuning tampil dengan pesan: *"Evaluasi sore Anda telah tercatat pada pukul [XX:XX WIB]."* Seluruh tombol pilihan capaian tugas (`Selesai`, `Sebagian`, `Belum Selesai`, `Dibatalkan`), pilihan keputusan kelanjutan, dan indikator refleksi harian berada dalam status nonaktif (*disabled*). Tombol "Kirim Evaluasi Sore" tidak ditampilkan (*hidden*).
+   - **Verifikasi:** Tidak ada elemen formulir yang dapat dimanipulasi secara interaktif. Terdapat tautan teks `Ajukan Koreksi Evaluasi Sore` menuju `/corrections/eod`.
+2. **Langkah 2 (Pengujian Bypass API Langsung)**
+   - **Aksi:** Buka Developer Tools (F12) Console atau gunakan cURL/Fetch untuk mengirimkan payload POST ulang ke endpoint `/daily/eod` dengan payload perubahan status capaian.
+   - **Lokasi:** Developer Console atau API client.
+   - **Data:** Payload: `{"workDate": "hari-ini", "outcomes": [...], "finalDailyStatus": "GREEN"}`
+   - **Hasil yang diharapkan:** Backend menolak mutlak pembaruan langsung dengan status HTTP 422 Unprocessable Entity dan error code `BUSINESS_RULE_ALREADY_SUBMITTED`. Pesan galat berbunyi: *"Evaluasi sore untuk tanggal kerja ini sudah diserahkan dan terkunci secara atomik. Gunakan prosedur koreksi resmi."*
+   - **Verifikasi:** Nilai database tidak berubah. Stempel waktu `eodSubmittedAt` asli tetap utuh dan data capaian tidak tertimpa.
+
+- **Expected Final Result:** Evaluasi sore yang telah diserahkan terkunci secara mutlak baik di UI maupun di backend API (DEF-002 terverifikasi tuntas).
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir terkunci di UI dan tangkapan layar respons API 422 pada tab Network console.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Verifikasi tuntas resolusi DEF-002 pasca-remediasi Cycle 1.
+
+---
+
 ## MODUL 5: MANAJEMEN HAMBATAN (BLOCKER) & ESKALASI SLA (TC-BLKR)
 
 ---
@@ -1343,6 +1523,54 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Defect ID:** 
 - **Retest Result:** 
 - **Catatan:** 
+
+---
+
+### TC-BLKR-006: Pemantauan Status & Kontribusi Bantuan pada Tab "Blocker Saya" oleh Karyawan
+- **Test Case ID:** `TC-BLKR-006`
+- **Scenario ID:** `SCN-BLKR-06`
+- **Requirement ID:** `FR-29`, `FR-32`, `FR-33`, `DEC-007`
+- **Judul:** Pemantauan Status & Kontribusi Bantuan pada Tab "Blocker Saya" oleh Karyawan
+- **Tujuan:** Memvalidasi alur pemantauan mandiri kendala karyawan pada Tab 2 ("Blocker Saya") di rute `/raise-blockers`, termasuk filter status, hitung mundur SLA, serta verifikasi bahwa karyawan dapat membaca kontribusi bantuan (*Support Contribution*) dan catatan resolusi tanpa perlu akses ke menu manajerial `/blockers`.
+- **Modul / Halaman:** Laporkan & Pantau Blocker (`/raise-blockers`)
+- **Kategori Pengujian:** Happy Path / UI Inspection / Workspace Role Isolation
+- **Teknik Desain Test Case:** Equivalence Partitioning & State Inspection
+- **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Karyawan membutuhkan visibilitas terhadap tindak lanjut kendala yang dilaporkannya tanpa melanggar batasan akses menu manajerial tim.
+- **Preconditions:** Login sebagai `dev.frontend@dutamedia.com`. Pengguna telah melaporkan minimal 1 tiket kendala sebelumnya (`TC-BLKR-001`). Atasan telah memberikan respons (*Acknowledge*) dan rekan kerja telah menambahkan kontribusi bantuan.
+- **Test Data ID:** `TD-BLKR-06` (Tiket kendala aktif yang memiliki riwayat bantuan)
+- **Persiapan Sebelum Tes:** Akses menu "Lapor Blocker" via sidebar atau navigasi ke `/raise-blockers`.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Buka halaman `/raise-blockers` dan klik tab "Blocker Saya".
+   - **Lokasi:** Header tab di bagian atas formulir blocker.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Tampilan beralih ke Tab 2 ("Blocker Saya"). Muncul kartu ringkasan jumlah tiket (Semua, Aktif, Selesai, Ditutup). Daftar tiket kendala yang dilaporkan oleh pengguna ditampilkan secara kronologis.
+   - **Verifikasi:** Tiket `Database Staging Timeout` yang dilaporkan sebelumnya tampil dengan badge severity merah (`CRITICAL`), badge status kuning/biru (`ACKNOWLEDGED` / `IN_PROGRESS`), dan indikator target SLA.
+2. **Langkah 2**
+   - **Aksi:** Periksa rincian kartu kendala dan riwayat kontribusi bantuan.
+   - **Lokasi:** Kartu tiket kendala pada Tab "Blocker Saya".
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Kartu menampilkan rincian: deskripsi masalah, konteks wewenang, nama atasan yang mengonfirmasi (*acknowledged by*), serta blok riwayat kontribusi bantuan (*Support Contributions*) yang memuat nama rekan pembantu, tindakan yang diambil, dan hasil bantuan.
+   - **Verifikasi:** Kontribusi bantuan dari rekan kerja terbaca dengan jelas dan terformat rapi.
+3. **Langkah 3**
+   - **Aksi:** Gunakan tombol filter status: klik filter "Selesai" dan "Aktif".
+   - **Lokasi:** Tombol filter di atas daftar kartu kendala.
+   - **Data:** Filter: `Aktif`, kemudian `Selesai`.
+   - **Hasil yang diharapkan:** Daftar tiket menyaring secara instan (*reactive client-side filter*) sesuai status yang dipilih tanpa memuat ulang halaman.
+   - **Verifikasi:** Filter "Aktif" hanya menampilkan tiket dengan status OPEN, ACKNOWLEDGED, atau IN_PROGRESS.
+
+- **Expected Final Result:** Karyawan dapat memonitor seluruh status, progres penanganan SLA, dan kontribusi bantuan atas kendala yang dilaporkannya secara mandiri melalui Tab "Blocker Saya".
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Tab 2 "Blocker Saya" memperlihatkan kartu tiket berstatus aktif beserta riwayat bantuan.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
 
 ---
 
@@ -1801,6 +2029,48 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
+### TC-LEAV-004: Validasi Tumpang Tindih Tanggal Cuti & Pembatalan Mandiri Permohonan Cuti Pending
+- **Test Case ID:** `TC-LEAV-004`
+- **Scenario ID:** `SCN-LEAV-04`
+- **Requirement ID:** `FR-40`, `FR-41`, `DEC-007`
+- **Judul:** Validasi Tumpang Tindih Tanggal Cuti & Pembatalan Mandiri Permohonan Cuti Pending
+- **Tujuan:** Memastikan sistem menolak pengajuan cuti yang bertabrakan (*overlapping*) dengan permohonan cuti aktif lain milik karyawan yang sama (HTTP 409 Conflict), serta memvalidasi bahwa karyawan berhak membatalkan permohonan cuti mandirinya selama statusnya masih `PENDING`.
+- **Modul / Halaman:** Cuti Saya (`/leave/my`)
+- **Kategori Pengujian:** Negative Testing & Alternative Lifecycle Workflow
+- **Teknik Desain Test Case:** Boundary Value Analysis & State Transition
+- **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Pengajuan cuti tumpang tindih menyebabkan kekacauan kuota cuti dan anomali perhitungan kehadiran harian.
+- **Preconditions:** Login sebagai `dev.frontend@dutamedia.com`. Karyawan telah memiliki 1 permohonan cuti berstatus `PENDING` pada rentang tanggal 10 s.d. 12 November 2026.
+- **Test Data ID:** `TD-LEAV-04` (Pengajuan cuti tumpang tindih: tanggal 11 s.d. 13 November 2026)
+- **Persiapan Sebelum Tes:** Masuk ke halaman `/leave/my`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Pengujian Validasi Tumpang Tindih)**
+   - **Aksi:** Pada formulir pengajuan cuti baru, pilih tanggal mulai `2026-11-11` dan tanggal selesai `2026-11-13`. Masukkan alasan: `Keperluan keluarga mendesak`. Klik tombol "Ajukan Permohonan Cuti".
+   - **Lokasi:** Formulir pengajuan cuti `/leave/my`.
+   - **Data:** Mulai: `2026-11-11`, Selesai: `2026-11-13`, Alasan: `Keperluan keluarga mendesak`
+   - **Hasil yang diharapkan:** Backend mendeteksi irisan tanggal dengan cuti yang sudah ada. Pengajuan ditolak dengan status HTTP 409 Conflict. Muncul pesan galat berwarna merah: *"Terdapat permohonan cuti aktif yang tumpang tindih pada rentang tanggal tersebut."*
+   - **Verifikasi:** Permohonan tidak ditambahkan ke daftar riwayat cuti.
+2. **Langkah 2 (Pengujian Pembatalan Mandiri Permohonan Cuti Pending)**
+   - **Aksi:** Temukan baris permohonan cuti tanggal 10-12 November 2026 yang berstatus `PENDING` pada tabel riwayat cuti. Klik tombol aksi "Batalkan Permohonan".
+   - **Lokasi:** Tabel riwayat cuti saya (`/leave/my`).
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Muncul dialog konfirmasi pembatalan: "Apakah Anda yakin ingin membatalkan permohonan cuti ini?". Klik "Ya, Batalkan".
+   - **Verifikasi:** Sistem memproses pembatalan. Status permohonan berubah menjadi `CANCELLED` (atau terhapus dari antrean aktif), dan muncul toast sukses: "Permohonan cuti berhasil dibatalkan."
+
+- **Expected Final Result:** Sistem secara kokoh mencegah pengajuan cuti bertanggal tumpang tindih dan mendukung siklus pembatalan mandiri cuti pending.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar pesan penolakan tumpang tindih 409 dan status cuti berubah menjadi CANCELLED.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
 ## MODUL 8: SUPERVISI, BIMBINGAN, DASBOR, & ADMINISTRASI (TC-COAC, TC-DASH, TC-ADMN)
 
 ---
@@ -2115,6 +2385,568 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
+### TC-NOTF-001: Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca
+- **Test Case ID:** `TC-NOTF-001`
+- **Scenario ID:** `SCN-NOTF-01`
+- **Requirement ID:** `FR-38`, `DEC-013`
+- **Judul:** Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca
+- **Tujuan:** Memvalidasi fungsi Pusat Notifikasi (`/notifications`): penampilan lencana belum terbaca (*unread badge counter*) di TopBar, daftar notifikasi in-app tersusun kronologis, serta fungsionalitas tombol "Tandai Terbaca" dan "Tandai Semua Terbaca" yang mereset hitungan lencana secara presisi.
+- **Modul / Halaman:** Pusat Notifikasi (`/notifications`) & TopBar Komponen
+- **Kategori Pengujian:** Happy Path / In-App Notification Workflow
+- **Teknik Desain Test Case:** State Synchronization Testing
+- **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`) / Seluruh Peran
+- **Priority:** **Medium (P2)**
+- **Risk Rationale:** Keterlambatan atau kegagalan penyampaian notifikasi membuat karyawan tidak mengetahui adanya respons blocker, persetujuan cuti, atau catatan coaching dari atasan.
+- **Preconditions:** Login sebagai pengguna yang memiliki minimal 2 notifikasi belum terbaca di sistem (misal notifikasi respons kendala dan notifikasi koreksi disetujui).
+- **Test Data ID:** `TD-NOTF-01` (Notifikasi aktif di database)
+- **Persiapan Sebelum Tes:** Perhatikan ikon lonceng pada TopBar bagian kanan atas sebelum memulai pengujian.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Periksa tampilan TopBar pada sudut kanan atas layar.
+   - **Lokasi:** Komponen `TopBar.vue` pada header aplikasi.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Ikon lonceng notifikasi menampilkan lencana angka merah (*badge counter*) yang menunjukkan jumlah pesan belum terbaca (misal: badge `2`).
+   - **Verifikasi:** Lencana merah terlihat jelas di atas ikon lonceng.
+2. **Langkah 2**
+   - **Aksi:** Klik ikon lonceng notifikasi atau pilih menu "Notifikasi" pada sidebar.
+   - **Lokasi:** Ikon lonceng TopBar atau link sidebar `/notifications`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Aplikasi mengarahkan ke halaman Pusat Notifikasi (`/notifications`). Daftar pesan notifikasi ditampilkan secara kronologis dengan ikon jenis notifikasi, judul pesan, isi ringkasan, dan stempel waktu relatif (misal: "10 menit yang lalu"). Pesan belum terbaca memiliki latar belakang visual pembeda (highlight biru/hijau muda) dan titik indikator belum dibaca.
+   - **Verifikasi:** URL aktif adalah `/notifications`.
+3. **Langkah 3**
+   - **Aksi:** Klik tombol centang satu notifikasi untuk menandai sebagai terbaca ("Tandai Terbaca").
+   - **Lokasi:** Tombol aksi pada kartu notifikasi baris pertama.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Status notifikasi berubah menjadi terbaca. Lencana angka pada TopBar berkurang 1 secara reaktif.
+   - **Verifikasi:** Highlight kartu notifikasi memudar dan angka lencana TopBar terbarui.
+4. **Langkah 4**
+   - **Aksi:** Klik tombol "Tandai Semua Terbaca" di sudut kanan atas halaman notifikasi.
+   - **Lokasi:** Tombol utama di header halaman `/notifications`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Seluruh notifikasi dalam daftar beralih ke status terbaca. Lencana merah pada ikon lonceng TopBar hilang/menjadi nol.
+   - **Verifikasi:** Lencana merah pada TopBar lenyap dan daftar menampilkan status "Semua notifikasi telah dibaca".
+
+- **Expected Final Result:** Siklus notifikasi in-app sinkron sempurna antara halaman notifikasi dan indikator lencana TopBar.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar TopBar dengan lencana angka sebelum dan sesudah aksi "Tandai Semua Terbaca".
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-SUPV-001: Penegakan Batasan Scope Hierarki Bawahan Supervisor & Penolakan Lintas Divisi (403)
+- **Test Case ID:** `TC-SUPV-001`
+- **Scenario ID:** `SCN-SUPV-01`
+- **Requirement ID:** `FR-08`, `FR-35`, `FR-41`, `DEC-010`
+- **Judul:** Penegakan Batasan Scope Hierarki Bawahan Supervisor & Penolakan Lintas Divisi (403)
+- **Tujuan:** Memvalidasi penegakan Scope Resolver 3-Lapis pada level Supervisor: memastikan Team Lead hanya dapat melihat dan meninjau data anggota tim bawahan langsungnya, serta memverifikasi bahwa upaya meninjau cuti atau koreksi karyawan di luar divisinya ditolak dengan HTTP 403 Forbidden `AUTH_FORBIDDEN_SCOPE`.
+- **Modul / Halaman:** Persetujuan Cuti (`/leave/queue`) & Review Koreksi (`/corrections/review`)
+- **Kategori Pengujian:** RBAC / Scope Enforcement / Security Boundary Testing
+- **Teknik Desain Test Case:** Decision Table & Boundary Value Testing
+- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com` - Bambang Pratama)
+- **Priority:** **Critical (P0)**
+- **Risk Rationale:** Pelanggaran batasan scope hierarki merusak prinsip tata kelola manajerial dan membuka kebocoran data personal antar departemen.
+- **Preconditions:** Bambang Pratama login sebagai Supervisor Engineering. Bawahan langsung Bambang adalah Aditya Nugroho (`dev.frontend`) dan Siti Rahma (`dev.backend`). Maya Putri (`designer@dutamedia.com`) adalah bawahan Rian Kurniawan di divisi Creative/RnD. Terdapat permohonan cuti dari Maya Putri di database.
+- **Test Data ID:** `TD-SUPV-01` (ID Permohonan Cuti milik Maya Putri)
+- **Persiapan Sebelum Tes:** Pastikan Bambang login aktif di peramban.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Buka menu "Persetujuan Cuti" pada rute `/leave/queue`.
+   - **Lokasi:** Rute `/leave/queue`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Antrean permohonan cuti menampilkan data pengajuan anggota tim Engineering (Aditya Nugroho dan Siti Rahma). Permohonan cuti milik Maya Putri (divisi Creative) tidak muncul dalam daftar tampilan default Supervisor Engineering.
+   - **Verifikasi:** Tidak ada kebocoran data cuti staf Creative di antrean tampilan Bambang.
+2. **Langkah 2 (Simulasi Percobaan Akses Langsung API / Review Lintas Divisi)**
+   - **Aksi:** Melalui Developer Console atau Postman/cURL, kirimkan permintaan POST untuk me-review permohonan cuti milik Maya Putri (`/leave/requests/{id-cuti-maya}/review`) dengan keputusan APPROVE.
+   - **Lokasi:** Endpoint `/leave/requests/:id/review` atau `/leave/:id/review`.
+   - **Data:** ID: ID Permohonan Cuti Maya Putri, Decision: `APPROVE`, ReviewNotes: `Disetujui oleh Tech Lead`
+   - **Hasil yang diharapkan:** Backend mengevaluasi wewenang melalui `ScopeResolverService.canAccessUser`. Karena Bambang bukan atasan langsung Maya dan tidak memiliki delegasi reviewer sementara di fungsi Creative, backend menolak akses dengan status HTTP 403 Forbidden dan kode galat `AUTH_FORBIDDEN_SCOPE`. Pesan galat berbunyi: *"Pengguna tidak memiliki wewenang hierarki atau scope yang sah untuk mengakses sumber daya ini."*
+   - **Verifikasi:** Permohonan cuti Maya Putri tetap dalam status aslinya dan tidak berubah.
+
+- **Expected Final Result:** Sistem secara mutlak menegakkan isolasi hierarki bawahan langsung untuk peran Supervisor dan menggagalkan intervensi lintas departemen dengan status HTTP 403.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar penolakan 403 AUTH_FORBIDDEN_SCOPE pada Network console saat mencoba mereview cuti staf divisi lain.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-COAC-002: Validasi Kerahasiaan Catatan Bimbingan & Larangan Pembuatan Catatan untuk Diri Sendiri
+- **Test Case ID:** `TC-COAC-002`
+- **Scenario ID:** `SCN-COAC-02`
+- **Requirement ID:** `FR-35`, `FR-36`, `DEC-004`
+- **Judul:** Validasi Kerahasiaan Catatan Bimbingan & Larangan Pembuatan Catatan untuk Diri Sendiri
+- **Tujuan:** Memvalidasi aturan bisnis pencatatan manajerial: sistem menolak pembuatan catatan pembinaan/manajerial untuk diri sendiri, serta memverifikasi bahwa catatan bertipe `CONFIDENTIAL_MANAGER_ONLY` tidak dapat dilihat oleh karyawan saat login, sedangkan catatan `SHARED_WITH_EMPLOYEE` dapat dibaca secara transparan.
+- **Modul / Halaman:** Catatan Coaching (`/coaching`)
+- **Kategori Pengujian:** Negative Testing & Confidentiality Access Control
+- **Teknik Desain Test Case:** Equivalence Partitioning & Decision Table Testing
+- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`) dilanjutkan `EMPLOYEE` (`dev.frontend@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Kebocoran catatan rahasia manajerial (*Confidential*) ke staf dapat memicu friksi internal tim; pembiaran pembuatan catatan diri sendiri merusak integritas evaluasi atasan.
+- **Preconditions:** Bambang Pratama login sebagai Supervisor. Aditya Nugroho login di peramban terpisah sebagai Employee.
+- **Test Data ID:** `TD-COAC-02` (Payload catatan rahasia dan catatan bersama)
+- **Persiapan Sebelum Tes:** Buka halaman `/coaching` sebagai Bambang Pratama.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Uji Larangan Catatan untuk Diri Sendiri)**
+   - **Aksi:** Coba buat catatan manajerial dengan memilih nama diri sendiri (Bambang Pratama) atau kirimkan request API dengan `subjectUserId` sama dengan ID pembuat.
+   - **Lokasi:** Formulir `/coaching` atau endpoint `/coaching/notes`.
+   - **Data:** `subjectUserId`: ID Bambang Pratama, Content: `Evaluasi performa diri sendiri triwulan ini.`
+   - **Hasil yang diharapkan:** Dropdown subjek di UI menyaring nama atasan sendiri sehingga tidak dapat dipilih. Jika dikirim melalui API, backend menolak dengan HTTP 400 Bad Request dan pesan: *"Atasan tidak dapat membuat catatan pembinaan/manajerial untuk dirinya sendiri."*
+   - **Verifikasi:** Tidak ada catatan yang terbentuk untuk diri sendiri.
+2. **Langkah 2 (Pembuatan Catatan Rahasia Manajerial)**
+   - **Aksi:** Pilih subjek Aditya Nugroho, tipe catatan `CORRECTIVE`, pilih visibilitas `CONFIDENTIAL_MANAGER_ONLY`. Masukkan konten: `Perlu peningkatan ketelitian saat merge pull request ke branch staging.` Klik "Simpan Catatan Manajerial".
+   - **Lokasi:** Formulir pembuatan catatan di `/coaching`.
+   - **Data:** Subjek: Aditya Nugroho, Visibilitas: `CONFIDENTIAL_MANAGER_ONLY`
+   - **Hasil yang diharapkan:** Catatan berhasil disimpan. Catatan muncul pada feed coaching Bambang dengan label badge gembok merah *"Rahasia Manajerial (Internal Atasan)"*.
+   - **Verifikasi:** Catatan tersimpan dengan visibilitas konfidensial.
+3. **Langkah 3 (Verifikasi Isolasi pada Sisi Karyawan)**
+   - **Aksi:** Beralih ke sesi login Aditya Nugroho (`dev.frontend@dutamedia.com`). Buka halaman `/coaching` (atau riwayat pembinaan di profil).
+   - **Lokasi:** Halaman `/coaching` pada akun Aditya Nugroho.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Aditya **TIDAK DAPAT MELIHAT** catatan yang berstatus `CONFIDENTIAL_MANAGER_ONLY` tersebut. Daftar catatan pribadi Aditya tetap bersih atau hanya memuat catatan yang bertipe `SHARED_WITH_EMPLOYEE`.
+   - **Verifikasi:** Catatan rahasia manajerial tidak bocor ke sisi staf bersangkutan.
+
+- **Expected Final Result:** Sistem secara sempurna menegakkan larangan pembuatan catatan diri sendiri dan menjaga kerahasiaan catatan manajerial konfidensial dari penglihatan staf.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar feed catatan pada akun Supervisor (memperlihatkan badge rahasia) dan tangkapan layar feed pada akun Employee (memperlihatkan catatan rahasia tersembunyi).
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-HEAD-001: Pengawasan Lintas Tim dalam Satu Divisi & Penegakan Batasan Lintas Fungsi oleh Head
+- **Test Case ID:** `TC-HEAD-001`
+- **Scenario ID:** `SCN-HEAD-01`
+- **Requirement ID:** `FR-08`, `FR-48`, `FR-51`, `DEC-010`
+- **Judul:** Pengawasan Lintas Tim dalam Satu Divisi & Penegakan Batasan Lintas Fungsi oleh Head
+- **Tujuan:** Memvalidasi wewenang Kepala Divisi (HEAD Scope per SAD IV.4): memastikan Head dapat melihat komitmen, risiko, dan kendala seluruh tim di bawah divisinya (*Function-wide Scope*), namun secara tegas dicegah dan ditolak dengan HTTP 403 jika mencoba mengakses data atau menyetujui kebijakan divisi lain tanpa pendelegasian resmi.
+- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Laporan Eksekutif (`/reports`), & Kebijakan (`/admin/policies`)
+- **Kategori Pengujian:** RBAC / Function-Wide Scope Enforcement
+- **Teknik Desain Test Case:** Equivalence Partitioning & Scope Boundary Testing
+- **Role:** `HEAD` (Kepala Divisi Engineering)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Head memerlukan visibilitas makro atas seluruh squad di fungsinya tanpa melanggar yurisdiksi divisi otonom lain.
+- **Preconditions:** Login sebagai pengguna berpenugasan `HEAD` pada fungsi Engineering. Di bawah Engineering terdapat squad Frontend dan Backend. Fungsi Creative/RnD berada di bawah Kepala Divisi terpisah.
+- **Test Data ID:** `TD-HEAD-01` (Data tim Engineering dan data tim Creative)
+- **Persiapan Sebelum Tes:** Buka halaman `/dashboard` sebagai Head of Engineering.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Pengawasan Lintas Tim dalam Satu Fungsi)**
+   - **Aksi:** Buka Pulse Dashboard (`/dashboard`) dan pilih scope tampilan "Divisi / Fungsi".
+   - **Lokasi:** Kontrol scope tampilan pada `/dashboard`.
+   - **Data:** Scope: `Fungsi (Engineering)`
+   - **Hasil yang diharapkan:** Dasbor menampilkan metrik konsolidasi seluruh squad rekayasa perangkat lunak: total staf tim Frontend dan Backend, persentase penyerahan komitmen pagi divisi, serta daftar kendala aktif lintas squad Engineering.
+   - **Verifikasi:** Data staf Frontend (Aditya) dan Backend (Siti) tampil terpadu dalam cakupan fungsi Engineering.
+2. **Langkah 2 (Pengujian Hak Akses Menu Kebijakan Operasional)**
+   - **Aksi:** Buka menu "Kebijakan & Cut-off" pada rute `/admin/policies`.
+   - **Lokasi:** Menu sidebar Administration -> Kebijakan & Cut-off (`/admin/policies`).
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Halaman terbuka dengan hak akses sah (Head memiliki izin `@Roles(CanonicalRole.HEAD)` untuk membuka dan mengajukan versi kebijakan). Tombol "Buat Versi Kebijakan Baru" aktif.
+   - **Verifikasi:** Head dapat mengusulkan perubahan jam cut-off atau SLA blocker dengan mengisi form justifikasi resmi.
+3. **Langkah 3 (Penolakan Akses Lintas Batas Fungsi)**
+   - **Aksi:** Coba akses data riwayat komitmen staf divisi Creative (`designer@dutamedia.com`) secara langsung melalui API atau URL detail.
+   - **Lokasi:** API `/daily/history?userId={id-designer}`.
+   - **Data:** ID Pengguna Maya Putri (divisi RnD/Creative).
+   - **Hasil yang diharapkan:** Backend ScopeResolver memeriksa fungsi target (`RnD`) terhadap fungsi pemanggil (`Engineering`). Karena fungsi tidak cocok dan pemanggil bukan Universal Admin/CEO, permintaan ditolak dengan HTTP 403 Forbidden `AUTH_FORBIDDEN_SCOPE`.
+   - **Verifikasi:** Tidak ada kebocoran data komitmen divisi Creative kepada Head of Engineering.
+
+- **Expected Final Result:** Head berhasil menjalankan pengawasan terpadu seluruh squad di bawah divisinya dan dibatasi secara presisi dari intrusi data divisi lain.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Pulse Dashboard fungsi Engineering dan tangkapan layar penolakan 403 saat memanggil data lintas divisi.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-PM-001: Pengelolaan Kendala Berkonteks Otoritas Proyek & Pemantauan Radar Risiko oleh Project Manager
+- **Test Case ID:** `TC-PM-001`
+- **Scenario ID:** `SCN-PM-01`
+- **Requirement ID:** `FR-30`, `FR-31`, `FR-49`, `DEC-002`, `DEC-010`
+- **Judul:** Pengelolaan Kendala Berkonteks Otoritas Proyek & Pemantauan Radar Risiko oleh Project Manager
+- **Tujuan:** Memvalidasi kapabilitas spesifik Project Manager (Project Authority Scope per SAD IV.4 & Prototipe 05): memantau Radar Risiko Proyek (`/projects/risk`) untuk proyek yang diampunya, memeriksa indikator Health Score dan Top Blocker, serta memiliki wewenang sah untuk mengonfirmasi (*Acknowledge*) dan menyelesaikan (*Resolve*) kendala yang diajukan dengan konteks `PROJECT_AUTHORITY` dan kode proyek penugasan.
+- **Modul / Halaman:** Radar Risiko Proyek (`/projects/risk`) & Antrean Blocker (`/blockers`)
+- **Kategori Pengujian:** Happy Path / Project Authority Governance
+- **Teknik Desain Test Case:** Decision Table & Functional Workflow
+- **Role:** `PROJECT_MANAGER` / Project Authority Lead (penugasan otoritas proyek `WP-CORE`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Hambatan berkonteks proyek yang tidak dapat diintervensi oleh PM akan menghambat milestone rilis klien dan memicu keterlambatan deliverables.
+- **Preconditions:** Login sebagai pengguna yang memiliki penugasan Project Authority aktif pada proyek `WP-CORE`. Terdapat 1 tiket kendala yang dilaporkan oleh karyawan dengan memilih konteks wewenang `PROJECT_AUTHORITY` dan kode proyek `WP-CORE`.
+- **Test Data ID:** `TD-PM-01` (Tiket kendala proyek `WP-CORE` dan proyek penugasan)
+- **Persiapan Sebelum Tes:** Masuk ke halaman `/projects/risk`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Pemantauan Radar Risiko Proyek)**
+   - **Aksi:** Buka menu "Radar Risiko Proyek" pada rute `/projects/risk`.
+   - **Lokasi:** Rute `/projects/risk`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Halaman menampilkan kartu portofolio proyek. Proyek `WP-CORE` (WorkPulse Core Engine) tampil dengan indikator Health Score numerik, badge tingkat risiko (`HIGH` atau `CRITICAL`), jumlah komitmen aktif anggota proyek, dan teks kendala utama (*Top Blocker Title*).
+   - **Verifikasi:** Kartu proyek menampilkan data yang relevan dengan kendala proyek yang sedang aktif.
+2. **Langkah 2 (Pemeriksaan Detail Risiko Proyek)**
+   - **Aksi:** Klik pada kartu proyek `WP-CORE` untuk membuka modal dialog rincian risiko.
+   - **Lokasi:** Modal rincian proyek pada `/projects/risk`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Modal dialog terbuka menampilkan daftar anggota tim proyek yang sedang terhambat, rincian kendala kritis, serta tombol navigasi cepat `Tangani Blocker di Antrean`.
+   - **Verifikasi:** Modal menampilkan data terpadu dan tautan menuju antrean blocker berfungsi.
+3. **Langkah 3 (Penyelesaian Kendala Berkonteks Otoritas Proyek)**
+   - **Aksi:** Buka halaman `/blockers`, temukan tiket kendala berlabel tag `[WP-CORE]`, dan klik tombol "Tandai Selesai (Resolve)". Masukkan deskripsi resolusi proyek: `Mitigasi dependensi API telah disepakati bersama pihak ketiga; credential staging baru telah aktif.` Klik "Konfirmasi Selesai".
+   - **Lokasi:** Halaman `/blockers` pada tiket bertanda `PROJECT_AUTHORITY`.
+   - **Data:** Resolusi: `Mitigasi dependensi API telah disepakati bersama pihak ketiga; credential staging baru telah aktif.` (>= 10 karakter).
+   - **Hasil yang diharapkan:** PM berwenang penuh menyelesaikan kendala proyek tersebut. Status tiket berubah menjadi `RESOLVED`, stempel waktu `resolvedAt` terisi, dan catatan solusi tersimpan permanen di database.
+   - **Verifikasi:** Status tiket terbarui menjadi hijau `RESOLVED` dan kartu risiko proyek pada `/projects/risk` menghitung penurunan risiko (Health Score meningkat).
+
+- **Expected Final Result:** Project Manager berhasil mengawasi kesehatan proyek dan menyelesaikan hambatan operasional berbasis otoritas proyek secara independen.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar kartu radar risiko proyek dan tangkapan layar modal penyelesaian blocker proyek berstatus RESOLVED.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-HRGA-001: Pengawasan Antrean Peristiwa Kepatuhan & Penindakan via Catatan Pembinaan oleh HRGA
+- **Test Case ID:** `TC-HRGA-001`
+- **Scenario ID:** `SCN-HRGA-01`
+- **Requirement ID:** `FR-35`, `FR-44`, `FR-45`, `DEC-007`
+- **Judul:** Pengawasan Antrean Peristiwa Kepatuhan & Penindakan via Catatan Pembinaan oleh HRGA
+- **Tujuan:** Memvalidasi fungsi utama Antrean Kepatuhan HRGA (`/compliance`): memverifikasi pendaratan kanonikal HRGA di `/compliance`, memfilter peristiwa pelanggaran berdasarkan tahap (*stage*) dan status tindak lanjut, memeriksa ringkasan metrik kepatuhan (*Compliance Summary*), serta menindaklanjuti (*address*) peristiwa kepatuhan dengan menautkan ID catatan pembinaan manajerial.
+- **Modul / Halaman:** Antrean Kepatuhan (`/compliance`)
+- **Kategori Pengujian:** Happy Path / Compliance Governance
+- **Teknik Desain Test Case:** Equivalence Partitioning & Workflow Testing
+- **Role:** `HRGA` (`hrga@dutamedia.com` - Dewi Lestari)
+- **Priority:** **Critical (P0)**
+- **Risk Rationale:** Kegagalan fungsi antrean kepatuhan membuat pelanggaran harian (tidak submit pagi/EOD) tidak terpantau dan tidak tertindaklanjuti secara resmi oleh HRGA.
+- **Preconditions:** Dewi Lestari login sebagai HRGA dan mendarat di `/compliance`. Di database terdapat minimal 1 peristiwa kepatuhan `NO_SUBMISSION` dan 1 peristiwa berulang `PATTERN_FLAG_3X`. Telah ada ID catatan pembinaan manajerial yang valid.
+- **Test Data ID:** `TD-HRGA-01` (Peristiwa kepatuhan aktif dan ID Manager Note tindak lanjut)
+- **Persiapan Sebelum Tes:** Pastikan akun login adalah `hrga@dutamedia.com`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Verifikasi Pendaratan Kanonikal & Kartu Ringkasan Kepatuhan)**
+   - **Aksi:** Login sebagai `hrga@dutamedia.com` dan amati halaman yang pertama kali terbuka.
+   - **Lokasi:** Pendaratan login pertama kali.
+   - **Data:** Email: `hrga@dutamedia.com`, Password: `Password123!`
+   - **Hasil yang diharapkan:** Sistem secara otomatis mengarahkan peramban ke rute kanonikal HRGA: `/compliance`. Di bagian atas halaman, tampil kartu ringkasan kepatuhan (*Compliance Summary Cards*): Total Peristiwa, Pelanggaran Terbuka (*Open*), Pola Berulang >= 3x (*Pattern Flag*), Peringatan Tercatat (*Warning*), dan Eskalasi Formal (*Escalation*).
+   - **Verifikasi:** URL browser adalah `/compliance` dan seluruh kartu metrik menampilkan data numerik valid.
+2. **Langkah 2 (Pengujian Filter Tahap Pelanggaran / Stage Filter)**
+   - **Aksi:** Gunakan dropdown filter "Tahap Pelanggaran", pilih opsi `PATTERN_FLAG_3X` (Pola Berulang 3 Hari).
+   - **Lokasi:** Dropdown filter tahap di atas tabel antrean kepatuhan.
+   - **Data:** Filter: `PATTERN_FLAG_3X`
+   - **Hasil yang diharapkan:** Tabel antrean kepatuhan menyaring baris secara instan dan hanya menampilkan peristiwa yang berada pada tahap pola berulang 3 hari dengan badge peringatan merah tua.
+   - **Verifikasi:** Seluruh baris yang tampil memiliki badge tahap `PATTERN_FLAG_3X`.
+3. **Langkah 3 (Tindak Lanjut Peristiwa via Penautan Catatan Pembinaan)**
+   - **Aksi:** Klik tombol "Tindak Lanjuti (Address)" pada salah satu baris peristiwa pelanggaran terbuka. Pada modal yang muncul, masukkan ID Catatan Pembinaan Manajerial yang sah dan klik "Konfirmasi Tindak Lanjut".
+   - **Lokasi:** Modal tindak lanjut peristiwa kepatuhan.
+   - **Data:** `managerNoteId`: ID catatan coaching yang telah dibuat atasan.
+   - **Hasil yang diharapkan:** Sistem memproses penautan. Status tindak lanjut (*followUpStatus*) berubah menjadi `ADDRESSED`, stempel waktu diperbarui, dan nama atasan pembina tertera pada kolom tindak lanjut. Muncul toast sukses: "Peristiwa kepatuhan berhasil ditindaklanjuti."
+   - **Verifikasi:** Peristiwa tersebut beralih status dari *OPEN* menjadi *ADDRESSED* dan kartu metrik pelanggaran terbuka berkurang 1.
+
+- **Expected Final Result:** HRGA dapat memantau seluruh dinamika kepatuhan perusahaan dan menyelesaikan siklus penindakan pelanggaran secara akuntabel.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar halaman `/compliance` dengan kartu ringkasan dan tangkapan layar status peristiwa kepatuhan yang berhasil diubah menjadi ADDRESSED.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-HRGA-002: Pemberian Dispensasi Resmi Terikat Waktu & Validasi Formulir oleh HRGA
+- **Test Case ID:** `TC-HRGA-002`
+- **Scenario ID:** `SCN-HRGA-02`
+- **Requirement ID:** `FR-46`, `FR-47`, `DEC-007`
+- **Judul:** Pemberian Dispensasi Resmi Terikat Waktu & Validasi Formulir oleh HRGA
+- **Tujuan:** Memvalidasi pengelolaan dispensasi terikat waktu oleh HRGA (`/exemptions`): memastikan HRGA dapat menerbitkan dispensasi resmi (Dinas Luar, Tugas Khusus, dsb.) dengan nomor referensi kedinasan yang sah agar karyawan tidak terkena pencatatan pelanggaran kepatuhan otomatis, serta memvalidasi penolakan sistem saat formulir diisi dengan tanggal tidak valid atau data wajib yang kosong.
+- **Modul / Halaman:** Manajemen Dispensasi (`/exemptions`)
+- **Kategori Pengujian:** Happy Path & Negative Validation Testing
+- **Teknik Desain Test Case:** Equivalence Partitioning & Boundary Value Analysis
+- **Role:** `HRGA` (`hrga@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Kesalahan pencatatan dispensasi menyebabkan karyawan yang bertugas dinas luar secara sah tetap tercatat sebagai pelanggar disiplin kerja harian.
+- **Preconditions:** Login sebagai `hrga@dutamedia.com`. Masuk ke menu "Manajemen Dispensasi" (`/exemptions`).
+- **Test Data ID:** `TD-HRGA-02` (Karyawan penerima, tanggal mulai 5 hari ke depan, tanggal selesai 8 hari ke depan, Kategori: 'Dinas Luar', No Ref: 'ST/2026/XI/088', Alasan: 'Pelaksanaan instalasi server on-site di kantor klien Surabaya')
+- **Persiapan Sebelum Tes:** Berada di halaman `/exemptions`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Uji Validasi Tanggal Terbalik / Negative Validation)**
+   - **Aksi:** Pada formulir pembuatan dispensasi, pilih karyawan (Aditya Nugroho), masukkan tanggal mulai `2026-11-20` dan tanggal selesai `2026-11-15` (tanggal selesai lebih awal). Klik tombol "Terbitkan Dispensasi".
+   - **Lokasi:** Formulir pembuatan dispensasi `/exemptions`.
+   - **Data:** Mulai: `2026-11-20`, Selesai: `2026-11-15`
+   - **Hasil yang diharapkan:** Sistem menolak pengiriman formulir. Muncul pesan galat validasi: *"Tanggal selesai dispensasi tidak boleh lebih awal dari tanggal mulai."*
+   - **Verifikasi:** Tidak ada data dispensasi baru yang tersimpan di tabel.
+2. **Langkah 2 (Penerbitan Dispensasi Resmi yang Sah / Happy Path)**
+   - **Aksi:** Perbaiki tanggal formulir: tanggal mulai `2026-11-15`, tanggal selesai `2026-11-20`. Pilih kategori `Dinas Luar`, masukkan Nomor Surat Tugas: `ST/2026/XI/088`, dan masukkan alasan: `Pelaksanaan instalasi server on-site di kantor klien Surabaya`. Klik "Terbitkan Dispensasi".
+   - **Lokasi:** Formulir `/exemptions`.
+   - **Data:** Karyawan: Aditya Nugroho, Mulai: `2026-11-15`, Selesai: `2026-11-20`, Kategori: `Dinas Luar`, No Ref: `ST/2026/XI/088`, Alasan: `Pelaksanaan instalasi server on-site di kantor klien Surabaya`.
+   - **Hasil yang diharapkan:** Dispensasi berhasil diterbitkan. Muncul toast sukses: "Dispensasi resmi terikat waktu berhasil diterbitkan." Baris dispensasi baru muncul pada tabel riwayat dispensasi lengkap dengan nama karyawan, kategori, rentang tanggal, nomor referensi, dan identitas pembuat (Dewi Lestari).
+   - **Verifikasi:** Baris dispensasi aktif terdaftar dan tersimpan di database. Selama rentang tanggal tersebut, sistem background tidak akan menerbitkan event NO_SUBMISSION untuk karyawan bersangkutan.
+
+- **Expected Final Result:** HRGA dapat menerbitkan dispensasi resmi terikat waktu secara tertib administrasi dan sistem menolak input tanggal yang tidak logis.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar pesan validasi tanggal salah dan tangkapan layar tabel riwayat dispensasi memuat baris baru yang berhasil diterbitkan.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-HRGA-003: Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) oleh HRGA
+- **Test Case ID:** `TC-HRGA-003`
+- **Scenario ID:** `SCN-HRGA-03`
+- **Requirement ID:** `FR-08`, `FR-52`, `DEC-010`
+- **Judul:** Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) oleh HRGA
+- **Tujuan:** Memvalidasi pengelolaan peninjau sementara (*Temporal Reviewer Assignment* per SAD IV.4): memastikan HRGA dapat menugaskan seorang pejabat peninjau sementara lintas divisi untuk rentang tanggal tertentu (misal menggantikan Team Lead yang cuti), dan memverifikasi bahwa pejabat yang ditunjuk memperoleh hak akses sah untuk meninjau data divisi sasaran selama jendela waktu aktif.
+- **Modul / Halaman:** Reviewer Sementara (`/admin/temporary-reviewers`)
+- **Kategori Pengujian:** Happy Path / Delegation Governance
+- **Teknik Desain Test Case:** Role Transition & Time-Window Access Testing
+- **Role:** `HRGA` (`hrga@dutamedia.com`) dilanjutkan `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Kegagalan pendelegasian reviewer sementara membuat antrean persetujuan cuti dan review koreksi macet saat atasan definitif berhalangan/cuti panjang.
+- **Preconditions:** Login sebagai `hrga@dutamedia.com`. Rian Kurniawan (Creative Lead) sedang cuti. Bambang Pratama (Tech Lead) akan ditugaskan sebagai reviewer sementara untuk divisi Creative/RnD.
+- **Test Data ID:** `TD-HRGA-03` (Delegasi: Bambang Pratama, Fungsi Target: `RnD / Creative`, Rentang: Hari ini s.d. 7 hari ke depan, Alasan: `Pelimpahan wewenang peninjauan sementara selama Creative Lead cuti tahunan`)
+- **Persiapan Sebelum Tes:** Masuk ke halaman `/admin/temporary-reviewers`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Penerbitan Delegasi Reviewer Sementara oleh HRGA)**
+   - **Aksi:** Buka halaman `/admin/temporary-reviewers`. Pada formulir delegasi baru, pilih pengguna peninjau: Bambang Pratama, pilih fungsi target peninjauan: `RnD` (atau `Engineering`), tentukan tanggal mulai: hari ini, tanggal selesai: 7 hari ke depan, dan masukkan catatan justifikasi kedinasan. Klik "Tetapkan Peninjau Sementara".
+   - **Lokasi:** Formulir `/admin/temporary-reviewers`.
+   - **Data:** Peninjau: Bambang Pratama, Target: `RnD`, Rentang: 7 hari aktif, Catatan: `Pelimpahan wewenang peninjauan sementara selama Creative Lead cuti tahunan`.
+   - **Hasil yang diharapkan:** Backend mencatat penugasan ke tabel `TemporaryReviewerAssignment`. Muncul toast sukses: "Peninjau sementara berhasil ditetapkan." Daftar riwayat peninjau sementara menampilkan baris penugasan aktif Bambang Pratama untuk fungsi RnD.
+   - **Verifikasi:** Penugasan tercatat aktif (`isActive = true` dan tanggal berada dalam rentang berlaku).
+2. **Langkah 2 (Verifikasi Wewenang Akses Sah oleh Pejabat Terdelegasi)**
+   - **Aksi:** Logout dari HRGA dan login kembali sebagai Bambang Pratama (`lead.tech@dutamedia.com`). Buka antrean persetujuan cuti atau koreksi yang memuat data staf Creative (Maya Putri).
+   - **Lokasi:** Halaman `/leave/queue` atau `/corrections/review` pada akun Bambang Pratama.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Berkat evaluasi lapisan ke-5 pada `ScopeResolverService.canAccessUser` (*activeDelegations*), Bambang Pratama kini **DIIZINKAN** mengakses dan meninjau data permohonan staf Creative tanpa menghasilkan galat 403.
+   - **Verifikasi:** Permohonan staf fungsi RnD/Creative terbuka dengan status aksi aktif (dapat di-Approve/Reject).
+
+- **Expected Final Result:** Mekanisme peninjau sementara terbukti berjalan mulus dari penetapan oleh HRGA hingga perluasan wewenang akses sah pada sisi pejabat terdelegasi.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar tabel pendelegasian reviewer sementara di HRGA dan tangkapan layar akun Bambang berhasil mengakses data fungsi Creative.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-CEO-001: Pengawasan Eksekutif Universal, Ekspor Berkas Audit, & Tata Kelola Kebijakan oleh Direksi
+- **Test Case ID:** `TC-CEO-001`
+- **Scenario ID:** `SCN-CEO-01`
+- **Requirement ID:** `FR-08`, `FR-48`, `FR-50`, `DEC-010`
+- **Judul:** Pengawasan Eksekutif Universal, Ekspor Berkas Audit, & Tata Kelola Kebijakan oleh Direksi
+- **Tujuan:** Memvalidasi hak akses dan wewenang tingkat tertinggi Direksi / CEO (`CEO_MANAGEMENT`): memastikan Direktur memiliki visibilitas universal ke seluruh dasbor dan divisi tanpa restriksi scope, dapat mengunduh berkas ekspor audit data resmi perusahaan (`/api/v1/reports/export`), serta memiliki wewenang menetapkan penugasan pemilik kebijakan (*Policy Owner Assignment*) di `/admin/policies`.
+- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Laporan Eksekutif (`/reports`), & Kebijakan (`/admin/policies`)
+- **Kategori Pengujian:** Happy Path / Executive Governance & Universal Scope Testing
+- **Teknik Desain Test Case:** Universal Boundary & Data Export Verification
+- **Role:** `CEO_MANAGEMENT` (`direktur@dutamedia.com` - Hendra Wijaya)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Pimpinan tertinggi membutuhkan jaminan kelancaran akses audit menyeluruh tanpa terhalang sekat fungsional operasional.
+- **Preconditions:** Login sebagai `direktur@dutamedia.com` (Hendra Wijaya) dan mendarat di `/dashboard`.
+- **Test Data ID:** `TD-CEO-01` (Kredensial Direktur dan parameter ekspor periode '2026-11')
+- **Persiapan Sebelum Tes:** Pastikan akun login adalah `direktur@dutamedia.com`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Verifikasi Visibilitas Universal Pulse Dashboard)**
+   - **Aksi:** Buka halaman Pulse Dashboard (`/dashboard`). Periksa metrik seluruh perusahaan dan lakukan pergantian filter scope antara 'Seluruh Tim', 'Engineering', dan 'Creative/RnD'.
+   - **Lokasi:** Rute `/dashboard`.
+   - **Data:** Scope: `Universal / Seluruh Perusahaan`.
+   - **Hasil yang diharapkan:** Seluruh metrik agregat perusahaan tampil transparan: tingkat penyelesaian komitmen total, jumlah karyawan yang tidak hadir/tidak submit, serta radar risiko proyek lintas departemen. Tidak ada galat scope boundary (403).
+   - **Verifikasi:** Direktur dapat melihat detail data staf divisi manapun secara langsung.
+2. **Langkah 2 (Pengujian Unduh Ekspor Berkas Audit Resmi / Export Report)**
+   - **Aksi:** Buka menu "Laporan Eksekutif" pada rute `/reports`. Pilih periode laporan (misal: Bulan Berjalan) dan klik tombol "Ekspor Berkas Audit (CSV/JSON)".
+   - **Lokasi:** Halaman `/reports` pada tombol aksi ekspor.
+   - **Data:** Periode: `2026-11` (Bulan berjalan).
+   - **Hasil yang diharapkan:** Backend memproses endpoint `/api/v1/reports/export?period=2026-11`. Peramban secara otomatis memulai pengunduhan berkas lampiran dengan header `Content-Disposition: attachment; filename="audit-report-2026-11.csv"`. Berkas terunduh secara utuh dan memuat rekapitulasi komitmen, kendala, dan kepatuhan karyawan.
+   - **Verifikasi:** Berkas terunduh di folder Downloads peramban dengan ukuran $> 0$ bytes dan format kolom valid.
+3. **Langkah 3 (Penetapan Pemilik Kebijakan / Policy Owner Assignment)**
+   - **Aksi:** Buka menu "Kebijakan & Cut-off" pada rute `/admin/policies`. Gulir ke bagian "Penugasan Pemilik Kebijakan (Policy Owners)". Klik tombol "Tetapkan Pemilik", pilih kategori `CHECKIN_TIMING`, dan pilih nama Dewi Lestari (HRGA) sebagai penanggung jawab kebijakan. Klik "Simpan Penugasan".
+   - **Lokasi:** Bagian Policy Owners di `/admin/policies`.
+   - **Data:** Kategori: `CHECKIN_TIMING`, Pemilik: Dewi Lestari.
+   - **Hasil yang diharapkan:** Permintaan POST ke `/policies/owners` berhasil diproses berkat peran `@Roles(CanonicalRole.CEO_MANAGEMENT)`. Pemilik kebijakan terbarui di antarmuka dan tercatat pada log audit sistem.
+   - **Verifikasi:** Nama Dewi Lestari tertera sebagai pemilik resmi kategori kebijakan waktu komitmen.
+
+- **Expected Final Result:** Direksi memiliki kendali pengawasan eksekutif universal tanpa batas, dapat mengekspor data audit kepatuhan resmi, dan menetapkan pemilik kebijakan operasional.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar ringkasan Laporan Eksekutif, tangkapan layar berkas ekspor audit yang berhasil diunduh, dan kartu penetapan pemilik kebijakan.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-ADMN-003: Penegakan Pemisahan Tugas (Separation of Duties - IMP-026) & Pemblokiran Total Akses Workspace Admin
+- **Test Case ID:** `TC-ADMN-003`
+- **Scenario ID:** `SCN-ADMN-03`
+- **Requirement ID:** `FR-08`, `FR-50`, `DEC-010`
+- **Judul:** Penegakan Pemisahan Tugas (Separation of Duties - IMP-026) & Pemblokiran Total Akses Workspace Admin
+- **Tujuan:** Menguji dan memvalidasi secara ketat penegakan Prinsip Pemisahan Tugas (Separation of Duties - IMP-026) untuk peran SYSTEM_ADMIN: memastikan sidebar navigasi admin tidak memuat grup menu 'Workspace' sama sekali, serta memverifikasi bahwa upaya mengakses URL operasional harian (`/daily/morning`, `/daily/eod`, `/daily/history`, `/raise-blockers`, `/leave/my`, `/corrections/*`) secara sengaja via address bar peramban diblokir total oleh Route Guard dan dialihkan ke halaman Error 403 `/forbidden`.
+- **Modul / Halaman:** Navigasi Sidebar, Route Guard, & Halaman Error (`/forbidden`)
+- **Kategori Pengujian:** Security / RBAC / Separation of Duties (IMP-026)
+- **Teknik Desain Test Case:** Negative Testing & Route Access Boundary Testing
+- **Role:** `SYSTEM_ADMIN` (`admin@dutamedia.com` - Sistem Administrator)
+- **Priority:** **Critical (P0)**
+- **Risk Rationale:** Memberikan akses operasional harian (input komitmen tugas) kepada persona System Administrator merusak prinsip tata kelola pemisahan wewenang antara pengatur sistem dan pekerja operasional yang diawasi.
+- **Preconditions:** Server backend dan frontend aktif. Login sebagai `admin@dutamedia.com`.
+- **Test Data ID:** `TD-ADMN-03` (URL Workspace Operasional: `/daily/morning`, `/daily/additional-work`, `/daily/eod`, `/daily/history`, `/raise-blockers`, `/leave/my`, `/corrections/morning`, `/corrections/eod`)
+- **Persiapan Sebelum Tes:** Masuk ke sistem sebagai `admin@dutamedia.com` dan pastikan mendarat di `/admin/organization`.
+
+**Langkah Pengujian:**
+1. **Langkah 1 (Verifikasi Ketiadaan Grup Menu Workspace di Sidebar)**
+   - **Aksi:** Login sebagai System Admin dan amati seluruh item menu yang ada pada sidebar navigasi enterprise di sisi kiri.
+   - **Lokasi:** Sidebar navigasi kiri (`EnterpriseSidebar.vue`).
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Berkat fungsi `navForRole` (IMP-026), grup menu "Workspace" (yang berisi *My Today*, *Lapor Blocker*, *Riwayat Saya*, *Cuti Saya*, *Koreksi*) disaring dan dibuang sepenuhnya. Sidebar hanya memuat grup menu **Management** dan **Administration**.
+   - **Verifikasi:** Tidak ada satu pun tautan rute `/daily/*`, `/leave/my`, atau `/raise-blockers` pada sidebar admin.
+2. **Langkah 2 (Pengujian Pembatasan Rute /daily/morning via URL Langsung)**
+   - **Aksi:** Pada address bar peramban, ketik URL secara manual: `http://localhost:5173/daily/morning` dan tekan Enter.
+   - **Lokasi:** Address bar peramban.
+   - **Data:** URL: `/daily/morning`
+   - **Hasil yang diharapkan:** Navigation guard di `router/index.ts` memeriksa `meta.roles` pada rute `/daily/morning` yang didefinisikan sebagai `OPERATIONAL_ROLES`. Karena peran `SYSTEM_ADMIN` tidak termasuk dalam `OPERATIONAL_ROLES`, akses dicegat seketika (*interception*). Peramban dialihkan (*redirect*) ke rute `/forbidden?from=%2Fdaily%2Fmorning`.
+   - **Verifikasi:** URL peramban adalah `/forbidden`. Halaman menampilkan antarmuka *ErrorPageView* berjenis Akses Ditolak (403 Forbidden) dengan judul "Akses Ditolak / Wewenang Tidak Mencukupi" dan tombol "Kembali ke Beranda Administrasi".
+3. **Langkah 3 (Pengujian Pembatasan Rute Operasional Lainnya)**
+   - **Aksi:** Uji URL operasional lainnya secara berturut-turut pada address bar:
+     a. `/daily/eod`
+     b. `/raise-blockers`
+     c. `/leave/my`
+     d. `/corrections/morning`
+   - **Lokasi:** Address bar peramban.
+   - **Data:** Daftar URL di atas.
+   - **Hasil yang diharapkan:** Seluruh rute tersebut secara konsisten dicegat oleh guard dan dialihkan ke `/forbidden`. Tidak ada celah bagi System Admin untuk mengisi komitmen kerja harian atau mengajukan cuti mandiri.
+   - **Verifikasi:** Seluruh 4 rute di atas menghasilkan pengalihan presisi ke `/forbidden`.
+
+- **Expected Final Result:** Prinsip Pemisahan Tugas (IMP-026) terbukti ditegakkan 100% sempurna baik pada elemen antarmuka sidebar maupun pada penjaga rute peramban (*Router Guards*).
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar sidebar admin (tanpa menu Workspace) dan tangkapan layar halaman `/forbidden` saat mencoba mengakses `/daily/morning`.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-ADMN-004: Konfigurasi Ambang Batas Cut-Off & Jam SLA Blocker dengan Jejak Audit oleh Admin
+- **Test Case ID:** `TC-ADMN-004`
+- **Scenario ID:** `SCN-ADMN-04`
+- **Requirement ID:** `FR-50`, `DEC-008`, `DEC-010`
+- **Judul:** Konfigurasi Ambang Batas Cut-Off & Jam SLA Blocker dengan Jejak Audit oleh Admin
+- **Tujuan:** Memvalidasi pengelolaan master kebijakan operasional sistem (`/admin/policies`): memastikan System Admin dapat membuat versi kebijakan baru untuk mengubah jam cut-off komitmen pagi/sore dan jam ambang batas SLA eskalasi kendala, serta memverifikasi bahwa perubahan tersebut tercatat lengkap dalam tabel jejak audit (*Audit Trail*) dan langsung aktif mempengaruhi pengguna lain.
+- **Modul / Halaman:** Kebijakan & Cut-off (`/admin/policies`)
+- **Kategori Pengujian:** Happy Path / System Configuration & Audit Trail
+- **Teknik Desain Test Case:** Configuration Change & Audit Verification
+- **Role:** `SYSTEM_ADMIN` (`admin@dutamedia.com`)
+- **Priority:** **High (P1)**
+- **Risk Rationale:** Parameter kebijakan cut-off dan SLA yang tidak dapat diperbarui secara dinamis melumpuhkan fleksibilitas operasional perusahaan saat jam kerja khusus berlaku.
+- **Preconditions:** Login sebagai `admin@dutamedia.com`. Masuk ke menu "Kebijakan & Cut-off" (`/admin/policies`).
+- **Test Data ID:** `TD-ADMN-04` (Perubahan jam cut-off pagi dari `09:30` menjadi `10:00`, jam on-time dari `09:00` menjadi `09:30`, Justifikasi: 'Penyesuaian jam kerja bulan Ramadhan 2026')
+- **Persiapan Sebelum Tes:** Berada di halaman `/admin/policies`.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Pada halaman `/admin/policies`, klik tombol "+ Buat Versi Kebijakan Baru".
+   - **Lokasi:** Tombol utama di header halaman `/admin/policies`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Modal dialog "Buat Versi Kebijakan Operasional Baru" terbuka.
+   - **Verifikasi:** Modal memuat pilihan kategori kebijakan, tanggal mulai berlaku, kolom konfigurasi parameter dinamis, dan textarea alasan perubahan (*Change Justification*).
+2. **Langkah 2**
+   - **Aksi:** Pilih kategori `CHECKIN_TIMING` (Waktu Komitmen & Evaluasi). Tentukan tanggal mulai berlaku hari ini. Ubah batas tepat waktu pagi menjadi `09:30` dan batas cut-off pagi menjadi `10:00`. Masukkan justifikasi: `Penyesuaian jam kerja bulan Ramadhan 2026`. Klik tombol "Simpan & Terapkan Kebijakan".
+   - **Lokasi:** Modal formulir kebijakan baru.
+   - **Data:** Kategori: `CHECKIN_TIMING`, Jam Ontime: `09:30`, Jam Cutoff: `10:00`, Justifikasi: `Penyesuaian jam kerja bulan Ramadhan 2026`.
+   - **Hasil yang diharapkan:** Kebijakan baru berhasil disimpan ke database. Muncul toast sukses: "Versi kebijakan baru berhasil disimpan dan diterapkan." Daftar kebijakan aktif memperbarui parameter cut-off pagi menjadi 10:00 WIB.
+   - **Verifikasi:** Versi kebijakan baru berstatus aktif dan ditandai sebagai kebijakan terkini.
+3. **Langkah 3 (Verifikasi Jejak Audit / Audit Trail Log)**
+   - **Aksi:** Gulir ke tabel "Jejak Audit Perubahan Kebijakan (Audit Trail)" di bagian bawah halaman.
+   - **Lokasi:** Tabel jejak audit pada `/admin/policies`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Baris audit baru tercatat pada posisi paling atas, memuat: stempel waktu presisi, nama pembuat (Sistem Administrator), kategori `CHECKIN_TIMING`, teks alasan perubahan (*Justification*), serta rekaman snapshot nilai sebelum dan nilai sesudah (*Value Before & Value After*).
+   - **Verifikasi:** Jejak audit mencerminkan perubahan secara transparan dan tidak dapat dihapus/diubah.
+
+- **Expected Final Result:** Kebijakan cut-off sistem berhasil diperbarui secara dinamis dan seluruh jejak riwayat perubahannya terekam akuntabel di audit trail.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir pembuatan kebijakan baru dan tangkapan layar baris tabel audit trail yang merekam perubahan tersebut.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
+### TC-ADMN-005: Konfigurasi & Pengujian Pengiriman Saluran Notifikasi Integrasi oleh Admin
+- **Test Case ID:** `TC-ADMN-005`
+- **Scenario ID:** `SCN-ADMN-05`
+- **Requirement ID:** `FR-38`, `FR-50`, `DEC-013`
+- **Judul:** Konfigurasi & Pengujian Pengiriman Saluran Notifikasi Integrasi oleh Admin
+- **Tujuan:** Memvalidasi pengelolaan saluran pengiriman notifikasi sistem (`/admin/notifications`): memastikan System Admin dapat memantau status konfigurasi saluran notifikasi (In-App, Email SMTP, Webhook) serta menjalankan fungsi uji pengiriman pesan (*Test Channel Delivery*) untuk menjamin integrasi pengiriman berjalan tanpa galat.
+- **Modul / Halaman:** Saluran Notifikasi (`/admin/notifications`)
+- **Kategori Pengujian:** Happy Path / Infrastructure & Notification Integration
+- **Teknik Desain Test Case:** Integration Health Check & Action Verification
+- **Role:** `SYSTEM_ADMIN` (`admin@dutamedia.com`)
+- **Priority:** **Medium (P2)**
+- **Risk Rationale:** Saluran notifikasi yang tidak teruji dapat menyebabkan pesan eskalasi blocker darurat gagal terkirim ke email/webhook penerima.
+- **Preconditions:** Login sebagai `admin@dutamedia.com`. Masuk ke menu "Saluran Notifikasi" (`/admin/notifications`).
+- **Test Data ID:** `TD-ADMN-05` (Saluran: `EMAIL`, Penerima: `admin@dutamedia.com` / Uji Webhook)
+- **Persiapan Sebelum Tes:** Berada di halaman `/admin/notifications`.
+
+**Langkah Pengujian:**
+1. **Langkah 1**
+   - **Aksi:** Buka halaman Saluran Notifikasi pada rute `/admin/notifications`.
+   - **Lokasi:** Menu sidebar Administration -> Saluran Notifikasi (`/admin/notifications`).
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Halaman menampilkan kartu-kartu status saluran komunikasi: In-App Notification (Aktif/Default), Email Delivery SMTP (Aktif/Simulasi), dan Slack/Webhook Integration.
+   - **Verifikasi:** Kartu memuat status koneksi, konfigurasi endpoint, dan tombol "Uji Pengiriman".
+2. **Langkah 2**
+   - **Aksi:** Pada kartu saluran Email, klik tombol "Uji Pengiriman (Test Delivery)". Masukkan alamat email tujuan: `admin@dutamedia.com` pada modal yang muncul dan klik "Kirim Pesan Uji".
+   - **Lokasi:** Tombol uji pengiriman pada kartu notifikasi email.
+   - **Data:** Email tujuan: `admin@dutamedia.com`
+   - **Hasil yang diharapkan:** Backend memproses endpoint `/notifications/channels/test` (atau `/notifications/test-delivery`). Pengiriman disimulasikan sukses. Muncul toast/banner hijau: *"Pesan uji coba berhasil dikirim ke saluran EMAIL (Penerima: admin@dutamedia.com)."* Stempel waktu pengujian terakhir terbarui pada kartu.
+   - **Verifikasi:** Muncul respons sukses tanpa galat koneksi atau kegagalan transport.
+
+- **Expected Final Result:** System Administrator berhasil menguji keandalan infrastruktur pengiriman notifikasi sistem secara terpadu.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar status saluran notifikasi dan tangkapan layar modal hasil sukses uji pengiriman pesan.
+- **Actual Result:** 
+- **Execution Status:** Not Run
+- **Tester:** Harry
+- **Execution Date:** 
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** -
+
+---
+
 ## MODUL 9: SKENARIO PENGUJIAN END-TO-END (TC-E2E)
 
 ---
@@ -2179,7 +3011,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Requirement ID:** `FR-29`, `FR-31`, `FR-32`, `FR-33`, `FR-34`, `DEC-007`
 - **Judul:** Perjalanan Hambatan Kritis: Pelaporan oleh Karyawan -> Tinjauan Atasan -> Resolusi Tuntas
 - **Tujuan:** Memvalidasi siklus hidup blocker dari pelaporan awal, masuknya ke antrean atasan dengan penghitung waktu SLA mundur, intervensi atasan, hingga penutupan resmi dengan catatan solusi teknis.
-- **Modul / Halaman:** Lintas Modul (`/blockers/raise` -> `/blockers` -> `/blockers/aging`)
+- **Modul / Halaman:** Lintas Modul (`/raise-blockers` -> `/blockers` -> `/blockers/aging`)
 - **Kategori Pengujian:** End-to-End User Journey / State Transition
 - **Teknik Desain Test Case:** Use Case Testing & State Transition
 - **Role:** Multi-Aktor (`EMPLOYEE` dilanjutkan `SUPERVISOR`)
@@ -2191,7 +3023,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 **Langkah Pengujian:**
 1. **Langkah 1 (Pelaporan)**
-   - **Aksi:** Login sebagai Employee, buka `/blockers/raise`. Buat laporan kendala kritis terkait akses jaringan API server.
+   - **Aksi:** Login sebagai Employee, buka `/raise-blockers`. Buat laporan kendala kritis terkait akses jaringan API server.
    - **Lokasi:** `/raise-blockers`.
    - **Data:** Judul: `API Server Gateway Network Unreachable`, Severity: `KRITIS`, Dampak: `TEAM_BLOCKED`.
    - **Hasil yang diharapkan:** Blocker tersimpan berstatus `OPEN` dengan target SLA respons 2 jam.
