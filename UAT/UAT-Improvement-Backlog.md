@@ -83,6 +83,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-035** | Eliminasi Kode Arsitektur 'DEC-003' & Penyempurnaan Narasi Humanis pada Seksi Refleksi Mandiri EOD | Microcopy & UX Communication | `/daily/eod` | `TC-DLYE-002` | High | Implemented (Pending UAT) |
 | **IMP-036** | Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-037** | Perbaikan Tata Letak Kolom Textarea Catatan Kelanjutan Tugas EOD (Pelebaran 100% & Penyelarasan Label Vertikal) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | High | Implemented (Pending UAT) |
+| **IMP-038** | Penyelarasan Kelengkapan Opsi Evaluasi Pekerjaan Tambahan (Opsi Dibatalkan & Alur Kelanjutan / Alasan) | Functional Consistency & Business Logic | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -803,7 +804,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kesetaraan perlakuan akuntabilitas antara tugas komitmen pagi dan tugas tambahan ad-hoc, serta mencegah adanya tugas menggantung tanpa status kelanjutan yang jelas.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342477791_64b18d0a.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 22 (IMP-038) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 5e4cd3a (Change Register: CHG-035)
+- **Implementation Note:** Menyelaraskan kelengkapan kapabilitas evaluasi pekerjaan tambahan pada EodOutcomeView.vue dengan komitmen pagi: menambahkan opsi radio Dibatalkan (CANCELLED) beserta kondisional textarea alasan pembatalan tugas (Alasan Pembatalan Pekerjaan Tambahan *), serta menyediakan alur keputusan kelanjutan tugas (Lanjutkan Besok vs Tidak Dilanjutkan) beserta textarea Catatan Kelanjutan * saat tugas berstatus Sebagian atau Belum Selesai, dan memverifikasi kelengkapan fungsional via automated unit test di EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (116 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 22 (IMP-038) resmi ditutup.
 
 ---
 
