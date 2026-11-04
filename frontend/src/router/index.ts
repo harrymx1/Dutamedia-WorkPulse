@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { getLandingRouteForRole } from './navigation';
+import { getLandingRouteForRole, OPERATIONAL_ROLES } from './navigation';
 import LoginView from '../views/auth/LoginView.vue';
 import ActivateView from '../views/auth/ActivateView.vue';
 import ProfileView from '../views/profile/ProfileView.vue';
@@ -88,31 +88,31 @@ const routes: RouteRecordRaw[] = [
     path: '/daily/morning',
     name: 'daily-morning',
     component: MorningCommitmentView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/daily/additional-work',
     name: 'daily-additional-work',
     component: AdditionalWorkView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/daily/eod',
     name: 'daily-eod',
     component: EodOutcomeView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/daily/history',
     name: 'daily-history',
     component: MyHistoryView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/raise-blockers',
     name: 'raise-blockers',
     component: RaiseBlockerView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/blockers/raise',
@@ -152,13 +152,13 @@ const routes: RouteRecordRaw[] = [
     path: '/corrections/morning',
     name: 'corrections-morning',
     component: MorningCorrectionRequestView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/corrections/eod',
     name: 'corrections-eod',
     component: EodCorrectionRequestView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/corrections/review',
@@ -170,7 +170,7 @@ const routes: RouteRecordRaw[] = [
     path: '/leave/my',
     name: 'leave-my',
     component: MyLeaveRequestView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
   },
   {
     path: '/leave/queue',

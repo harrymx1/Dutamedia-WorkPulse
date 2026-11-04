@@ -75,5 +75,48 @@ describe('EnterpriseSidebar.vue (IMP-020, IMP-021)', () => {
     expect(navTextList).not.toContain('Additional Work');
     expect(navTextList).not.toContain('EOD Outcome');
   });
+
+  it('hides Workspace group completely when logged in as SYSTEM_ADMIN (IMP-026)', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      id: 'usr-admin',
+      fullName: 'Sistem Administrator',
+      email: 'admin@dutamedia.com',
+      role: 'SYSTEM_ADMIN',
+      status: 'ACTIVE',
+    };
+
+    const wrapper = mount(EnterpriseSidebar, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    // 1. Group headers must NOT contain 'Workspace', but MUST contain 'Administration' and 'Management'
+    const sectionTitles = wrapper.findAll('.nav-label').map((s) => s.text());
+    expect(sectionTitles).not.toContain('Workspace');
+    expect(sectionTitles).toContain('Management');
+    expect(sectionTitles).toContain('Administration');
+
+    expect(wrapper.find('[data-testid="nav-group-workspace"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="nav-group-management"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="nav-group-administration"]').exists()).toBe(true);
+
+    // 2. Nav text list must NOT contain any operational workspace items
+    const navTextList = wrapper.findAll('.nav-text').map((n) => n.text());
+    expect(navTextList).not.toContain('My Today');
+    expect(navTextList).not.toContain('Lapor Blocker');
+    expect(navTextList).not.toContain('Riwayat Saya');
+    expect(navTextList).not.toContain('Cuti Saya');
+    expect(navTextList).not.toContain('Koreksi Komitmen Pagi');
+    expect(navTextList).not.toContain('Koreksi Evaluasi Sore');
+
+    // 3. Nav text list must contain administrative items
+    expect(navTextList).toContain('Struktur Organisasi');
+    expect(navTextList).toContain('Kelola Pengguna');
+    expect(navTextList).toContain('Kebijakan & Cut-off');
+  });
 });
 

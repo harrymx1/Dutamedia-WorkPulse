@@ -46,6 +46,16 @@ const ADMIN_LEVEL: RoleName[] = [
   'CEO_MANAGEMENT',
 ];
 
+/** Peran staf operasional yang memiliki kewajiban komitmen harian (IMP-026). */
+export const OPERATIONAL_ROLES: RoleName[] = [
+  'EMPLOYEE',
+  'SUPERVISOR',
+  'HEAD',
+  'PROJECT_MANAGER',
+  'HRGA',
+  'CEO_MANAGEMENT',
+];
+
 export const navGroups: NavGroup[] = [
   {
     title: 'Workspace',
@@ -92,6 +102,14 @@ export const navGroups: NavGroup[] = [
 export function navForRole(role: string | undefined | null): NavGroup[] {
   if (!role) return [];
   return navGroups
+    .filter((g) => {
+      // IMP-026: Persona SYSTEM_ADMIN murni untuk konfigurasi sistem & pengawasan manajerial,
+      // grup 'Workspace' dinonaktifkan sepenuhnya guna menegakkan Separation of Duties.
+      if (role === 'SYSTEM_ADMIN' && g.title === 'Workspace') {
+        return false;
+      }
+      return true;
+    })
     .map((g) => ({
       title: g.title,
       items: g.items.filter((i) => !i.roles || i.roles.includes(role as RoleName)),
