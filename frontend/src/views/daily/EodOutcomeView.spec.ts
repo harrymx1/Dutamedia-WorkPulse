@@ -346,6 +346,77 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect((textarea.element as HTMLTextAreaElement).value).toBe('Rencana tindak lanjut besok pagi');
   });
 
+  it('provides complete evaluation capabilities for additional work including cancellation and continuation (IMP-038)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-28',
+          currentTime: '17:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-1',
+            commitments: [],
+            additionalWorks: [
+              {
+                id: 'w-1',
+                taskText: 'Perbaikan bug login',
+                reason: 'OPERATIONAL_INCIDENT',
+                outcome: 'PARTIALLY_COMPLETED',
+                outcomeReason: '',
+                continuation: 'CONTINUE',
+                continuationReason: 'Lanjut selesaikan hotfix besok',
+              },
+              {
+                id: 'w-2',
+                taskText: 'Riset library PDF',
+                reason: 'NEWLY_ASSIGNED',
+                outcome: 'CANCELLED',
+                outcomeReason: 'Dibatalkan karena prioritas berubah',
+                continuation: 'DO_NOT_CONTINUE',
+                continuationReason: '',
+              },
+            ],
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Check additional works eval list exists
+    const evalList = wrapper.find('.eval-list');
+    expect(evalList.exists()).toBe(true);
+
+    // w-1 checks (PARTIALLY_COMPLETED with CONTINUE)
+    expect(evalList.text()).toContain('Perbaikan bug login');
+    expect(evalList.text()).toContain('Lanjutkan Besok (Tugas Berlanjut)');
+    expect(evalList.text()).toContain('Catatan Kelanjutan *');
+    const contTextarea = evalList.find('textarea[placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."]');
+    expect(contTextarea.exists()).toBe(true);
+    expect((contTextarea.element as HTMLTextAreaElement).value).toBe('Lanjut selesaikan hotfix besok');
+
+    // w-2 checks (CANCELLED)
+    expect(evalList.text()).toContain('Riset library PDF');
+    expect(evalList.text()).toContain('Alasan Pembatalan Pekerjaan Tambahan *');
+    const cancelTextarea = evalList.find('textarea[placeholder="Jelaskan alasan mengapa pekerjaan tambahan ini dibatalkan hari ini..."]');
+    expect(cancelTextarea.exists()).toBe(true);
+    expect((cancelTextarea.element as HTMLTextAreaElement).value).toBe('Dibatalkan karena prioritas berubah');
+
+    // Radio inputs exist
+    const cancelledRadio = wrapper.find('input[name="w-outcome-w-2"][value="CANCELLED"]');
+    expect(cancelledRadio.exists()).toBe(true);
+  });
+
   // =========================================================================
   // PENGUJIAN TIGA KONDISI DEF-002 (Kondisi A, B, C)
   // =========================================================================

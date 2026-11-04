@@ -529,6 +529,50 @@ onMounted(() => {
                     <input type="radio" :name="`w-outcome-${w.id}`" value="NOT_COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
                     <span>Belum Selesai</span>
                   </label>
+                  <label class="outcome-label" :class="{ selected: w.outcome === 'CANCELLED' }">
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="CANCELLED" v-model="w.outcome" :disabled="isFormLocked" />
+                    <span>Dibatalkan</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- If CANCELLED: Reason -->
+              <div v-if="w.outcome === 'CANCELLED'" class="conditional-box">
+                <label class="form-label">Alasan Pembatalan Pekerjaan Tambahan *</label>
+                <textarea
+                  v-model="w.outcomeReason"
+                  class="input-control"
+                  rows="2"
+                  placeholder="Jelaskan alasan mengapa pekerjaan tambahan ini dibatalkan hari ini..."
+                  :disabled="isFormLocked"
+                  required
+                ></textarea>
+              </div>
+
+              <!-- If NOT COMPLETED or PARTIALLY: Continuation Decision -->
+              <div v-if="w.outcome === 'PARTIALLY_COMPLETED' || w.outcome === 'NOT_COMPLETED'" class="conditional-box">
+                <label class="form-label">Keputusan Kelanjutan Tugas Besok *</label>
+                <div class="continuation-options">
+                  <label class="cont-label" :class="{ selected: w.continuation === 'CONTINUE' }">
+                    <input type="radio" :name="`w-cont-${w.id}`" value="CONTINUE" v-model="w.continuation" :disabled="isFormLocked" />
+                    <span>Lanjutkan Besok (Tugas Berlanjut)</span>
+                  </label>
+                  <label class="cont-label" :class="{ selected: w.continuation === 'DO_NOT_CONTINUE' }">
+                    <input type="radio" :name="`w-cont-${w.id}`" value="DO_NOT_CONTINUE" v-model="w.continuation" :disabled="isFormLocked" />
+                    <span>Tidak Dilanjutkan</span>
+                  </label>
+                </div>
+
+                <div v-if="w.continuation === 'CONTINUE'" class="mt-2 continuation-reason-group">
+                  <label class="form-label">Catatan Kelanjutan *</label>
+                  <textarea
+                    v-model="w.continuationReason"
+                    class="input-control"
+                    rows="2"
+                    placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."
+                    :disabled="isFormLocked"
+                    required
+                  ></textarea>
                 </div>
               </div>
             </div>
