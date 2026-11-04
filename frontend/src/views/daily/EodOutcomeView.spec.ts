@@ -242,6 +242,67 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(wrapper.text()).not.toContain('Proteksi Hak Opsi GREEN');
   });
 
+  it('eliminates raw database enum codes from evaluation options and labels (IMP-036)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-28',
+          currentTime: '17:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-1',
+            commitments: [
+              { id: 'c-1', taskText: 'Task 1', outcome: 'NOT_COMPLETED', outcomeReason: '', continuation: 'CONTINUE', continuationReason: '' },
+            ],
+            additionalWorks: [
+              { id: 'w-1', taskText: 'Add Work 1', reason: 'NEWLY_ASSIGNED', outcome: 'COMPLETED' },
+            ],
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Outcome options for commitment
+    const outcomeOptions = wrapper.find('.outcome-options');
+    expect(outcomeOptions.text()).toContain('Selesai');
+    expect(outcomeOptions.text()).toContain('Sebagian');
+    expect(outcomeOptions.text()).toContain('Belum Selesai');
+    expect(outcomeOptions.text()).toContain('Dibatalkan');
+
+    // No raw enum text in outcome options
+    expect(outcomeOptions.text()).not.toContain('(COMPLETED)');
+    expect(outcomeOptions.text()).not.toContain('(PARTIALLY)');
+    expect(outcomeOptions.text()).not.toContain('(NOT_COMPLETED)');
+    expect(outcomeOptions.text()).not.toContain('(CANCELLED)');
+
+    // Continuation options for not completed commitment
+    const continuationOptions = wrapper.find('.continuation-options');
+    expect(continuationOptions.exists()).toBe(true);
+    expect(continuationOptions.text()).toContain('Lanjutkan Besok (Tugas Berlanjut)');
+    expect(continuationOptions.text()).toContain('Tidak Dilanjutkan');
+
+    // No raw enum text in continuation options
+    expect(continuationOptions.text()).not.toContain('CONTINUE');
+    expect(continuationOptions.text()).not.toContain('Carry-Over');
+    expect(continuationOptions.text()).not.toContain('DO_NOT_CONTINUE');
+
+    // Clean headings without english parenthesized descriptions
+    expect(wrapper.text()).not.toContain('(Continuation Decision)');
+    expect(wrapper.text()).not.toContain('(Continuation Reason)');
+  });
+
   // =========================================================================
   // PENGUJIAN TIGA KONDISI DEF-002 (Kondisi A, B, C)
   // =========================================================================

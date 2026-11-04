@@ -437,19 +437,19 @@ onMounted(() => {
                 <div class="outcome-options">
                   <label class="outcome-label" :class="{ selected: c.outcome === 'COMPLETED' }">
                     <input type="radio" :name="`outcome-${c.id}`" value="COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
-                    <span>Selesai (COMPLETED)</span>
+                    <span>Selesai</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'PARTIALLY_COMPLETED' }">
                     <input type="radio" :name="`outcome-${c.id}`" value="PARTIALLY_COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
-                    <span>Sebagian (PARTIALLY)</span>
+                    <span>Sebagian</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'NOT_COMPLETED' }">
                     <input type="radio" :name="`outcome-${c.id}`" value="NOT_COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
-                    <span>Belum Selesai (NOT_COMPLETED)</span>
+                    <span>Belum Selesai</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'CANCELLED' }">
                     <input type="radio" :name="`outcome-${c.id}`" value="CANCELLED" v-model="c.outcome" :disabled="isFormLocked" />
-                    <span>Dibatalkan (CANCELLED)</span>
+                    <span>Dibatalkan</span>
                   </label>
                 </div>
               </div>
@@ -469,20 +469,20 @@ onMounted(() => {
 
               <!-- If NOT COMPLETED or PARTIALLY: Continuation Decision (DEC-013) -->
               <div v-if="c.outcome === 'PARTIALLY_COMPLETED' || c.outcome === 'NOT_COMPLETED'" class="conditional-box">
-                <label class="form-label">Keputusan Kelanjutan Tugas Besok (Continuation Decision) *</label>
+                <label class="form-label">Keputusan Kelanjutan Tugas Besok *</label>
                 <div class="continuation-options">
                   <label class="cont-label" :class="{ selected: c.continuation === 'CONTINUE' }">
                     <input type="radio" :name="`cont-${c.id}`" value="CONTINUE" v-model="c.continuation" :disabled="isFormLocked" />
-                    <span>Lanjutkan Besok (CONTINUE &rarr; Carry-Over)</span>
+                    <span>Lanjutkan Besok (Tugas Berlanjut)</span>
                   </label>
                   <label class="cont-label" :class="{ selected: c.continuation === 'DO_NOT_CONTINUE' }">
                     <input type="radio" :name="`cont-${c.id}`" value="DO_NOT_CONTINUE" v-model="c.continuation" :disabled="isFormLocked" />
-                    <span>Jangan Lanjutkan (DO_NOT_CONTINUE)</span>
+                    <span>Tidak Dilanjutkan</span>
                   </label>
                 </div>
 
                 <div v-if="c.continuation === 'CONTINUE'" class="mt-2">
-                  <label class="form-label">Catatan Kelanjutan (Continuation Reason) *</label>
+                  <label class="form-label">Catatan Kelanjutan *</label>
                   <textarea
                     v-model="c.continuationReason"
                     class="input-control"
@@ -519,7 +519,7 @@ onMounted(() => {
                 <div class="outcome-options">
                   <label class="outcome-label" :class="{ selected: w.outcome === 'COMPLETED' }">
                     <input type="radio" :name="`w-outcome-${w.id}`" value="COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
-                    <span>Selesai (COMPLETED)</span>
+                    <span>Selesai</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: w.outcome === 'PARTIALLY_COMPLETED' }">
                     <input type="radio" :name="`w-outcome-${w.id}`" value="PARTIALLY_COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
