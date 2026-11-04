@@ -332,8 +332,8 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <h1>EOD Outcome & Daily Reflection</h1>
-          <p class="subtitle">
-            Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan kelanjutan tugas (Prototipe 04).
+          <p class="subtitle" data-testid="eod-subtitle">
+            Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan tindak lanjut tugas secara akuntabel.
           </p>
         </div>
       </div>

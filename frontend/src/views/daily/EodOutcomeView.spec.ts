@@ -160,6 +160,43 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(contextGrid.text()).not.toContain('Tanggal Kerja');
   });
 
+  it('eliminates internal design code (Prototipe 04) from page subtitle (IMP-034)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-28',
+          currentTime: '17:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-1',
+            commitments: [],
+            additionalWorks: [],
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const subtitle = wrapper.find('[data-testid="eod-subtitle"]');
+    expect(subtitle.exists()).toBe(true);
+    expect(subtitle.text()).toBe(
+      'Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan tindak lanjut tugas secara akuntabel.',
+    );
+    expect(subtitle.text()).not.toContain('Prototipe 04');
+    expect(wrapper.text()).not.toContain('Prototipe 04');
+  });
+
   // =========================================================================
   // PENGUJIAN TIGA KONDISI DEF-002 (Kondisi A, B, C)
   // =========================================================================
