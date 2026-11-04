@@ -62,7 +62,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-015** | Penggantian Tombol Riwayat Menjadi Ikon Notifikasi Ber-badge Merah | Navigation & Architecture | Header Bar / Shell | `TC-DLYM-001` | High | Implemented (Pending UAT) |
 | **IMP-016** | Penempatan Tombol "Lapor Blocker" Konsisten pada 3 Tab My Today | User Experience (UX) | `/daily/*` (My Today) | `TC-DLYM-001` | High | Implemented (Pending UAT) |
-| **IMP-017** | Konsolidasi Menu Sidebar Induk "My Today" & Label 'Dutamedia' | Navigation & Architecture | Enterprise Sidebar | `TC-AUTH-001` | High | Candidate |
+| **IMP-017** | Konsolidasi Menu Sidebar Induk "My Today" & Label 'Dutamedia' | Navigation & Architecture | Enterprise Sidebar | `TC-AUTH-001` | High | Implemented (Pending UAT) |
 | **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
 | **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Implemented (Pending UAT) |
 | **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
@@ -382,7 +382,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Mencegah redundansi navigasi antara sidebar dan tab dalam halaman, merapikan struktur menu sidebar, dan menyelaraskan fungsi bar navigasi atas.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (`EnterpriseSidebar.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 8 (IMP-017) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 9f8a65f (Change Register: CHG-021)
+- **Implementation Note:** Teks brand caption di bawah logo WorkPulse pada sidebar telah diringkas menjadi 'Dutamedia'. Tiga tautan alur harian terpisah di grup Workspace telah disatukan menjadi satu menu induk 'My Today' (ikon Clock, target `/daily/morning`), didukung fungsi `isItemActive()` yang menjaga status highlight aktif saat pengguna berada di sub-halaman `/daily/*`, serta penyediaan rute alias `/daily` redirect ke `/daily/morning`.
+- **Closure & Verification Note:** Implementasi telah selesai, automated tests 100% pass (32 test suite frontend pass, 96 tests), peninjauan Vercel Preview diterima Acceptance Owner, seluruh Acceptance Criteria terpenuhi, dan Standalone 8 telah resmi ditutup.
 
 ---
 
