@@ -84,6 +84,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-036** | Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-037** | Perbaikan Tata Letak Kolom Textarea Catatan Kelanjutan Tugas EOD (Pelebaran 100% & Penyelarasan Label Vertikal) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | High | Implemented (Pending UAT) |
 | **IMP-038** | Penyelarasan Kelengkapan Opsi Evaluasi Pekerjaan Tambahan (Opsi Dibatalkan & Alur Kelanjutan / Alasan) | Functional Consistency & Business Logic | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-039** | Transformasi Format Badge Alasan Pekerjaan Tambahan dari Enum Raw Database Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/eod` & `/daily/additional-work` | `TC-DLYA-001` | Low | Implemented (Pending UAT) |
 
 ---
 
@@ -827,7 +828,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan tampilan yang bersih, mudah dipahami oleh seluruh staf dan pimpinan non-teknis, serta konsisten dengan prinsip desain enterprise WorkPulse.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342477791_64b18d0a.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 23 (IMP-039) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit c8a1af2 (Change Register: CHG-036)
+- **Implementation Note:** Mentransformasi format badge alasan pekerjaan tambahan pada AdditionalWorkView.vue dan EodOutcomeView.vue dari enum raw database menjadi bahasa bisnis baku ('Penugasan Baru Atasan', 'Perbaikan Error / Bug Kritis', 'Terlewat Catat Pagi', 'Pengalihan Prioritas', dan 'Lainnya'), membersihkan kode enum dari dropdown pilihan form, memberlakukan input dinamis wajib Keterangan Alasan Lainnya * saat memilih alasan 'Lainnya' (OTHER), dan memverifikasi kelengkapan validasi serta tampilan via automated unit tests di AdditionalWorkView.spec.ts dan EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (117 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 23 (IMP-039) resmi ditutup.
 
 ### [IMP-040] Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /blockers/raise (Eliminasi Modal Pop-Up Redundan)
 - **Finding ID:** IMP-040
