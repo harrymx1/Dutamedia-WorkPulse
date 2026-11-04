@@ -30,7 +30,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.AUTH_RATE_LIMIT ? Number(process.env.AUTH_RATE_LIMIT) : 5,
+      limit: process.env.AUTH_RATE_LIMIT
+        ? Math.min(Number(process.env.AUTH_RATE_LIMIT), 5)
+        : 5,
       ttl: 60000,
     },
   })

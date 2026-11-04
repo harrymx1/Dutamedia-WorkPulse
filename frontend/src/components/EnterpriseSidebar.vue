@@ -33,6 +33,7 @@ import {
   LogOut,
   X,
 } from 'lucide-vue-next';
+import { getUserInitials } from '../utils/initials';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -41,14 +42,13 @@ const { isMobileSidebarOpen, closeSidebar } = useLayout();
 
 const groups = computed(() => navForRole(auth.user?.role));
 
-const userInitials = computed(() => {
-  const name = auth.user?.fullName || auth.user?.email || 'WP';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
+const userDisplayName = computed(() => {
+  const raw = auth.user?.fullName;
+  if (!raw) return 'Pengguna';
+  return raw.replace(/\s*\([^)]*\)/g, '').trim() || raw;
 });
+
+const userInitials = computed(() => getUserInitials(userDisplayName.value, auth.user?.email));
 
 const userRoleFormatted = computed(() => {
   const r = auth.user?.role;
@@ -117,6 +117,16 @@ const iconMap: Record<string, any> = {
 function getIconComponent(name: string) {
   return iconMap[name] || Activity;
 }
+
+function isItemActive(to: string): boolean {
+  if (to === '/daily/morning') {
+    return route.path === '/daily/morning' ||
+           route.path === '/daily/additional-work' ||
+           route.path === '/daily/eod' ||
+           route.path === '/daily';
+  }
+  return route.path === to;
+}
 </script>
 
 <template>
@@ -132,7 +142,7 @@ function getIconComponent(name: string) {
         <div class="brand-mark">WP</div>
         <div class="brand-info">
           <div class="brand-name">WorkPulse</div>
-          <div class="brand-caption">Dutamedia Intranet</div>
+          <div class="brand-caption">Dutamedia</div>
         </div>
         <!-- Mobile close button (hanya muncul pada viewport mobile saat drawer terbuka) -->
         <button
@@ -159,6 +169,7 @@ function getIconComponent(name: string) {
             :key="item.to"
             :to="item.to"
             class="nav-link"
+            :class="{ active: isItemActive(item.to) }"
             active-class="active"
             :title="item.label"
             @click="closeSidebar"
@@ -182,7 +193,7 @@ function getIconComponent(name: string) {
         >
           <div class="avatar">{{ userInitials }}</div>
           <div class="user-meta">
-            <div class="user-name" :title="auth.user?.fullName">{{ auth.user?.fullName || 'Pengguna' }}</div>
+            <div class="user-name" :title="userDisplayName">{{ userDisplayName }}</div>
             <div class="user-role" data-testid="nav-role">{{ userRoleFormatted }}</div>
           </div>
         </router-link>

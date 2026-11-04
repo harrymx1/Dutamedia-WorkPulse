@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -6,6 +7,7 @@ import {
   Plus,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Briefcase,
 } from 'lucide-vue-next';
 
@@ -34,6 +36,18 @@ const availableManagers = ref<SimpleUser[]>([]);
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
 const formAssignedBy = ref('');
+const formOtherReason = ref('');
+
+function formatReason(reason: string): string {
+  const map: Record<string, string> = {
+    NEWLY_ASSIGNED: 'Penugasan Baru Atasan',
+    OPERATIONAL_INCIDENT: 'Perbaikan Error / Bug Kritis',
+    MISSED_IN_PLANNING: 'Terlewat Catat Pagi',
+    PRIORITY_CHANGE: 'Pengalihan Prioritas',
+    OTHER: 'Lainnya',
+  };
+  return map[reason] || reason;
+}
 
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
@@ -78,12 +92,21 @@ async function addAdditionalWork() {
     return;
   }
 
+  if (formReason.value === 'OTHER' && formOtherReason.value.trim().length < 3) {
+    showToast('Keterangan alasan lainnya wajib diisi minimal 3 karakter untuk menjelaskan konteks pekerjaan.', true);
+    return;
+  }
+
+  const finalTaskText = formReason.value === 'OTHER'
+    ? `${formTaskText.value.trim()} (Alasan: ${formOtherReason.value.trim()})`
+    : formTaskText.value.trim();
+
   submitting.value = true;
   try {
     await apiClient(`/daily/records/${recordId.value}/additional-work`, {
       method: 'POST',
       body: JSON.stringify({
-        taskText: formTaskText.value.trim(),
+        taskText: finalTaskText,
         reason: formReason.value,
         assignedByUserId: formReason.value === 'NEWLY_ASSIGNED' ? formAssignedBy.value : undefined,
       }),
@@ -93,6 +116,7 @@ async function addAdditionalWork() {
     formTaskText.value = '';
     formReason.value = 'NEWLY_ASSIGNED';
     formAssignedBy.value = '';
+    formOtherReason.value = '';
     await loadTodayState();
   } catch (err: any) {
     showToast(err.message || 'Gagal menambahkan pekerjaan tambahan.', true);
@@ -119,32 +143,36 @@ onMounted(() => {
 <template>
   <div class="daily-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">My Today / <strong>Additional Work</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
-        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My Today / Additional Work" />
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
-      <AccessLink to="/daily/morning" class="step-item">
-        <span class="step-num">1</span>
-        <span>Morning Commitment</span>
-      </AccessLink>
-      <AccessLink to="/daily/additional-work" class="step-item active">
-        <span class="step-num">2</span>
-        <span>Additional Work</span>
-      </AccessLink>
-      <AccessLink to="/daily/eod" class="step-item">
-        <span class="step-num">3</span>
-        <span>EOD Outcome</span>
-      </AccessLink>
+      <div class="step-items">
+        <AccessLink to="/daily/morning" class="step-item">
+          <span class="step-num">1</span>
+          <span>Morning Commitment</span>
+        </AccessLink>
+        <AccessLink to="/daily/additional-work" class="step-item active">
+          <span class="step-num">2</span>
+          <span>Additional Work</span>
+        </AccessLink>
+        <AccessLink to="/daily/eod" class="step-item">
+          <span class="step-num">3</span>
+          <span>EOD Outcome</span>
+        </AccessLink>
+      </div>
+
+      <div class="workflow-actions">
+        <AccessLink
+          to="/raise-blockers"
+          class="btn-report-blocker"
+          title="Laporkan kendala kritis atau dependensi"
+          data-testid="report-blocker-btn"
+        >
+          <AlertTriangle :size="15" />
+          <span>Laporkan Blocker</span>
+        </AccessLink>
+      </div>
     </nav>
 
     <!-- Toasts -->
@@ -161,8 +189,8 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <h1>Additional Work (Pekerjaan Tambahan)</h1>
-          <p class="subtitle">
-            Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari tanpa mengubah baseline komitmen pagi (Prototipe 03).
+          <p class="subtitle" data-testid="additional-work-subtitle">
+            Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari secara transparan tanpa mengubah baseline komitmen pagi.
           </p>
         </div>
       </div>
@@ -199,26 +227,39 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" :class="{ 'single-col': formReason !== 'NEWLY_ASSIGNED' && formReason !== 'OTHER' }" data-testid="form-row-reason">
               <div class="form-group">
                 <label for="select-reason" class="form-label">Alasan Pekerjaan Tambahan *</label>
-                <select id="select-reason" v-model="formReason" class="input-control" required>
-                  <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan (NEWLY_ASSIGNED)</option>
-                  <option value="MISSED_IN_PLANNING">Terlewat saat Perencanaan Pagi (MISSED_IN_PLANNING)</option>
-                  <option value="PRIORITY_CHANGE">Perubahan Prioritas Proyek (PRIORITY_CHANGE)</option>
-                  <option value="OPERATIONAL_INCIDENT">Insiden Operasional / Bug Mendesak (OPERATIONAL_INCIDENT)</option>
-                  <option value="OTHER">Lainnya (OTHER)</option>
+                <select id="select-reason" v-model="formReason" class="input-control" required data-testid="select-reason">
+                  <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan</option>
+                  <option value="OPERATIONAL_INCIDENT">Perbaikan Error / Bug Kritis</option>
+                  <option value="MISSED_IN_PLANNING">Tugas Terlewat Dicatat Pagi</option>
+                  <option value="PRIORITY_CHANGE">Pengalihan Prioritas Kerja</option>
+                  <option value="OTHER">Lainnya</option>
                 </select>
               </div>
 
-              <div v-if="formReason === 'NEWLY_ASSIGNED'" class="form-group">
+              <div v-if="formReason === 'NEWLY_ASSIGNED'" class="form-group" data-testid="assigned-by-group">
                 <label for="select-assigned-by" class="form-label">Ditugaskan Oleh (Atasan Langsung/Lead) *</label>
-                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" required>
+                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" required data-testid="select-assigned-by">
                   <option value="" disabled>-- Pilih Atasan Penugas --</option>
                   <option v-for="user in availableManagers" :key="user.id" :value="user.id">
                     {{ user.fullName }} ({{ user.email }})
                   </option>
                 </select>
+              </div>
+
+              <div v-if="formReason === 'OTHER'" class="form-group" data-testid="other-reason-group">
+                <label for="input-other-reason" class="form-label">Keterangan Alasan Lainnya *</label>
+                <input
+                  id="input-other-reason"
+                  v-model="formOtherReason"
+                  type="text"
+                  class="input-control"
+                  placeholder="Jelaskan alasan khusus pekerjaan ini..."
+                  required
+                  data-testid="input-other-reason"
+                />
               </div>
             </div>
 
@@ -250,7 +291,7 @@ onMounted(() => {
               <div class="work-main">
                 <div class="work-header">
                   <span class="work-idx">#{{ idx + 1 }}</span>
-                  <span class="badge badge-info">{{ item.reason }}</span>
+                  <span class="badge badge-info">{{ formatReason(item.reason) }}</span>
                   <span v-if="item.assignedByUser" class="assigned-by">
                     Ditugaskan oleh: <strong>{{ item.assignedByUser.fullName }}</strong>
                   </span>
@@ -336,8 +377,43 @@ onMounted(() => {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
+}
+
+.step-items {
+  display: flex;
   gap: 32px;
+}
+
+.workflow-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-report-blocker {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-report-blocker:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  text-decoration: none;
 }
 
 .step-item {
@@ -450,33 +526,66 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.form-row.single-col {
+  grid-template-columns: 1fr;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .form-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .input-control {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 9px 12px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   font-size: 13px;
   background: #fff;
   color: var(--color-text-primary);
+  text-overflow: ellipsis;
+}
+
+select.input-control {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .input-control:focus {

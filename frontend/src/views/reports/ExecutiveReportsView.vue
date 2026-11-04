@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -109,19 +110,14 @@ onMounted(() => {
 <template>
   <div class="reports-layout">
     <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Laporan / <strong>Reports</strong></span>
-      </div>
-      <div class="topbar-right">
+    <TopBar breadcrumb="Management / Laporan Eksekutif">
+      <template #actions>
         <button type="button" class="btn btn-secondary" @click="handleExport">
           <Download :size="15" />
           <span>Export Data (CSV)</span>
         </button>
-      </div>
-    </header>
+      </template>
+    </TopBar>
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

@@ -2,12 +2,23 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
+import { getLandingRouteForRole } from '../../router/navigation';
 
 const route = useRoute();
 const auth = useAuthStore();
 
 const kind = computed(() => (route.meta.errorKind as 'forbidden' | 'not-found') || 'not-found');
 const blockedPath = computed(() => (route.query.from as string) || '');
+
+const homeRoute = computed(() => {
+  if (!auth.isAuthenticated) return '/login';
+  return getLandingRouteForRole(auth.user?.role);
+});
+
+const homeLabel = computed(() => {
+  if (!auth.isAuthenticated) return 'Ke Halaman Login';
+  return 'Kembali ke Beranda';
+});
 </script>
 
 <template>
@@ -22,8 +33,8 @@ const blockedPath = computed(() => (route.query.from as string) || '');
     </p>
     <p v-else>Alamat yang Anda tuju tidak tersedia.</p>
 
-    <router-link :to="auth.isAuthenticated ? '/dashboard' : '/login'" class="back-link">
-      {{ auth.isAuthenticated ? 'Kembali ke Dashboard' : 'Ke Halaman Login' }}
+    <router-link :to="homeRoute" class="back-link" data-testid="error-home-btn">
+      {{ homeLabel }}
     </router-link>
   </main>
 </template>
@@ -48,4 +59,3 @@ const blockedPath = computed(() => (route.query.from as string) || '');
   font-weight: 600;
 }
 </style>
-

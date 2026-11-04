@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -182,19 +183,7 @@ onMounted(() => {
 <template>
   <div class="notif-layout">
     <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Workspace / <strong>Notifications</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/admin/notifications" class="btn-topbar">
-          <Settings :size="16" />
-          <span>Pengaturan Kanal</span>
-        </AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / Notifications" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -10,8 +10,14 @@ import {
   FolderGit2,
   Clock,
   ArrowRight,
-  ListFilter,
+  ArrowLeft,
+  Plus,
+  Layers,
+  RotateCcw,
 } from 'lucide-vue-next';
+
+// Tab State
+const activeTab = ref<'create' | 'mine'>('create');
 
 // Form Data
 const title = ref('');
@@ -41,6 +47,11 @@ const submittedTicket = ref<any>(null);
 const errorMessage = ref<string | null>(null);
 const toastMessage = ref<string | null>(null);
 
+// My Blockers State
+const myBlockers = ref<any[]>([]);
+const loadingBlockers = ref(false);
+const blockerFilter = ref<'all' | 'active' | 'resolved' | 'closed'>('all');
+
 const charCount = computed(() => title.value.length);
 
 const isFormValid = computed(() => {
@@ -51,6 +62,36 @@ const isFormValid = computed(() => {
   if (description.value.trim().length < 20) return false;
   if (authorityContext.value === 'PROJECT_AUTHORITY' && !projectCode.value.trim()) return false;
   return true;
+});
+
+const activeBlockersCount = computed(() => {
+  return myBlockers.value.filter((b) =>
+    ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED'].includes(b.status)
+  ).length;
+});
+
+const countAll = computed(() => myBlockers.value.length);
+const countActive = computed(
+  () => myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status)).length
+);
+const countResolved = computed(
+  () => myBlockers.value.filter((b) => b.status === 'RESOLVED').length
+);
+const countClosed = computed(
+  () => myBlockers.value.filter((b) => ['CLOSED', 'ACCEPTED_RISK'].includes(b.status)).length
+);
+
+const filteredBlockers = computed(() => {
+  if (blockerFilter.value === 'active') {
+    return myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status));
+  }
+  if (blockerFilter.value === 'resolved') {
+    return myBlockers.value.filter((b) => b.status === 'RESOLVED');
+  }
+  if (blockerFilter.value === 'closed') {
+    return myBlockers.value.filter((b) => ['CLOSED', 'ACCEPTED_RISK'].includes(b.status));
+  }
+  return myBlockers.value;
 });
 
 function insertStructuredTemplate() {
@@ -67,6 +108,39 @@ function appendExpectedHelp(chipText: string) {
   } else {
     expectedHelp.value += ` | ${chipText}`;
   }
+}
+
+function resetForm() {
+  title.value = '';
+  linkedCommitmentId.value = '';
+  blockerType.value = '';
+  blockerImpact.value = '';
+  blockerSeverity.value = 'HIGH';
+  description.value = '';
+  expectedHelp.value = '';
+  authorityContext.value = 'ORGANIZATIONAL_AUTHORITY';
+  projectCode.value = '';
+  if (availableUsers.value.length > 0) {
+    assignedOwnerId.value = availableUsers.value[0].id;
+  } else {
+    assignedOwnerId.value = '';
+  }
+  errorMessage.value = null;
+  submittedTicket.value = null;
+  toastMessage.value = 'Formulir berhasil dibersihkan.';
+  setTimeout(() => {
+    toastMessage.value = null;
+  }, 3000);
+}
+
+function resetFormForAnother() {
+  submittedTicket.value = null;
+  resetForm();
+}
+
+function switchToMyBlockers() {
+  activeTab.value = 'mine';
+  loadMyBlockers();
 }
 
 async function loadInitialData() {
@@ -90,6 +164,20 @@ async function loadInitialData() {
     console.error('Failed to load initial data:', err);
   } finally {
     loading.value = false;
+  }
+}
+
+async function loadMyBlockers() {
+  loadingBlockers.value = true;
+  try {
+    const res = await apiClient<any[]>('/blockers?mine=raised');
+    if (res.data) {
+      myBlockers.value = res.data;
+    }
+  } catch (err: any) {
+    console.error('Failed to load my blockers:', err);
+  } finally {
+    loadingBlockers.value = false;
   }
 }
 
@@ -137,6 +225,7 @@ async function submitBlocker() {
 
     submittedTicket.value = res.data;
     toastMessage.value = 'Tiket kendala berhasil diterbitkan dan dinotifikasi ke penanggung jawab.';
+    loadMyBlockers();
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal menerbitkan tiket kendala.';
   } finally {
@@ -144,32 +233,96 @@ async function submitBlocker() {
   }
 }
 
+function getStatusBadgeClass(status: string): string {
+  switch (status) {
+    case 'RESOLVED':
+      return 'green';
+    case 'IN_PROGRESS':
+    case 'ACKNOWLEDGED':
+      return 'blue';
+    case 'OPEN':
+      return 'amber';
+    case 'ACCEPTED_RISK':
+      return 'orange';
+    case 'CLOSED':
+    default:
+      return 'neutral';
+  }
+}
+
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case 'RESOLVED':
+      return 'Solusi Diberikan · Menunggu Konfirmasi';
+    case 'IN_PROGRESS':
+      return 'Sedang Ditangani';
+    case 'ACKNOWLEDGED':
+      return 'Telah Diterima';
+    case 'OPEN':
+      return 'Menunggu Respons Atasan';
+    case 'ACCEPTED_RISK':
+      return 'Risiko Diterima';
+    case 'CLOSED':
+      return 'Selesai Ditutup';
+    default:
+      return status;
+  }
+}
+
+function getSeverityClass(severity: string): string {
+  switch (severity) {
+    case 'CRITICAL':
+      return 'red';
+    case 'HIGH':
+      return 'amber';
+    case 'MEDIUM':
+      return 'blue';
+    case 'LOW':
+    default:
+      return 'neutral';
+  }
+}
+
+function formatDate(isoDate?: string): string {
+  if (!isoDate) return 'Hari ini';
+  try {
+    const d = new Date(isoDate);
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return 'Hari ini';
+  }
+}
+
+function getTicketTitle(ticket: any): string {
+  if (ticket.title) return ticket.title;
+  if (!ticket.description) return 'Laporan Kendala';
+  const match = ticket.description.match(/^\[(.*?)\]/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return ticket.description.slice(0, 50);
+}
+
+function getTicketDescription(ticket: any): string {
+  if (!ticket.description) return '';
+  return ticket.description.replace(/^\[.*?\]\s*/, '');
+}
+
 onMounted(() => {
   loadInitialData();
+  loadMyBlockers();
 });
 </script>
 
 <template>
   <div class="blocker-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Blocker / <strong>Laporkan Kendala Cepat (Prototipe 05)</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/blockers" class="btn-topbar">
-          <ListFilter :size="16" />
-          <span>Antrean Tiket</span>
-        </AccessLink>
-        <AccessLink to="/blockers/aging" class="btn-topbar">
-          <Clock :size="16" />
-          <span>Aging Radar</span>
-        </AccessLink>
-        <AccessLink to="/daily/morning" class="btn-topbar">My Today</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / Blocker" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">
@@ -182,314 +335,492 @@ onMounted(() => {
     </div>
 
     <main class="main-content">
-      <!-- Page Heading -->
+      <!-- Back Navigation Link (IMP-041) -->
+      <router-link
+        to="/daily/morning"
+        class="back-nav-link"
+        data-testid="back-nav-link"
+        title="Kembali ke Ruang Kerja My Today"
+      >
+        <ArrowLeft :size="15" />
+        <span>Kembali ke Ruang Kerja My Today</span>
+      </router-link>
+
+      <!-- Page Heading (IMP-041: No kicker, IMP-042: No antrean blocker aktif link) -->
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Manajemen Kendala &amp; Eskalasi Otomatis</span>
           <h1>Laporkan &amp; Pantau Blocker</h1>
           <p class="subtitle">
-            Laporkan hambatan pekerjaan seketika tanpa menunggu pergantian hari. Sistem menetapkan penanggung jawab awal dan timer SLA eskalasi otomatis.
+            Laporkan hambatan atau dependensi kerja beserta dampak dan tingkat keparahannya agar penanggung jawab berwenang dapat segera menindaklanjuti.
           </p>
         </div>
-        <div class="heading-side">
-          <AccessLink to="/blockers" class="btn-blocker-secondary">
-            <ListFilter :size="16" />
-            <span>Lihat Antrean Blocker Aktif</span>
-          </AccessLink>
-        </div>
       </div>
 
-      <!-- Success Screen If Submitted -->
-      <div v-if="submittedTicket" class="submitted-card">
-        <div class="submitted-icon">
-          <CheckCircle2 :size="36" />
-        </div>
-        <h2>Tiket Kendala Berhasil Diterbitkan</h2>
-        <p class="submitted-msg">
-          Tiket ID: <code>{{ submittedTicket.id }}</code> telah dicatat pada sistem dengan status <strong>{{ submittedTicket.status }}</strong>. Notifikasi segera dikirimkan kepada penanggung jawab terkait.
-        </p>
-        <div class="submitted-actions">
-          <AccessLink to="/blockers" class="btn-primary">
-            <span>Buka Antrean Blocker</span>
-            <ArrowRight :size="16" />
-          </AccessLink>
-          <button type="button" class="btn-secondary" @click="submittedTicket = null; title = ''; description = ''">
-            Laporkan Kendala Lain
-          </button>
-        </div>
+      <!-- View Mode Tabs (IMP-041: Buat Laporan Blocker vs Blocker Saya) -->
+      <div class="view-tabs" role="tablist" aria-label="Mode Tampilan Halaman Blocker">
+        <button
+          type="button"
+          class="view-tab"
+          :class="{ active: activeTab === 'create' }"
+          role="tab"
+          :aria-selected="activeTab === 'create'"
+          data-testid="tab-create-blocker"
+          @click="activeTab = 'create'"
+        >
+          <Plus :size="16" />
+          <span>Buat Laporan Blocker</span>
+        </button>
+        <button
+          type="button"
+          class="view-tab"
+          :class="{ active: activeTab === 'mine' }"
+          role="tab"
+          :aria-selected="activeTab === 'mine'"
+          data-testid="tab-my-blockers"
+          @click="switchToMyBlockers"
+        >
+          <Layers :size="16" />
+          <span>Blocker Saya</span>
+          <span
+            class="tab-badge"
+            :class="{ alert: activeBlockersCount > 0 }"
+            data-testid="active-blockers-count"
+          >
+            {{ activeBlockersCount }}
+          </span>
+        </button>
       </div>
 
-      <!-- Form Utama -->
-      <form v-else class="blocker-form" @submit.prevent="submitBlocker" novalidate>
-        <!-- Panel 1: Detail Kendala -->
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <h2>Detail Kendala, Taksonomi &amp; Dampak</h2>
-              <p class="panel-desc">Tuliskan fakta kendala, kategori, dampak, dan tingkat keparahan (Severity).</p>
-            </div>
-            <span class="pill pill-brand">Bagian 1 dari 2</span>
+      <!-- VIEW A: FORMULIR PELAPORAN CEPAT -->
+      <div v-if="activeTab === 'create'" class="create-blocker-view">
+        <!-- Success Screen If Submitted -->
+        <div v-if="submittedTicket" class="submitted-card" data-testid="submitted-ticket-card">
+          <div class="submitted-icon">
+            <CheckCircle2 :size="36" />
           </div>
+          <h2>Tiket Kendala Berhasil Diterbitkan</h2>
+          <p class="submitted-msg">
+            Tiket ID: <code>{{ submittedTicket.id }}</code> telah dicatat pada sistem dengan status <strong>{{ submittedTicket.status }}</strong>. Notifikasi segera dikirimkan kepada penanggung jawab terkait.
+          </p>
+          <div class="submitted-actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              data-testid="btn-view-my-blockers"
+              @click="switchToMyBlockers"
+            >
+              Lihat di Blocker Saya
+            </button>
+            <button
+              type="button"
+              class="btn-secondary"
+              data-testid="btn-create-another"
+              @click="resetFormForAnother"
+            >
+              Laporkan Kendala Lain
+            </button>
+            <router-link
+              to="/daily/morning"
+              class="btn-primary"
+              data-testid="btn-back-to-workspace"
+            >
+              <span>Kembali ke Ruang Kerja</span>
+              <ArrowRight :size="16" />
+            </router-link>
+          </div>
+        </div>
 
-          <div class="panel-body">
-            <!-- Judul -->
-            <div class="form-group">
-              <div class="label-row">
-                <label for="blockerTitle">Judul Kendala <span class="req">*</span></label>
-                <span class="char-counter" :class="{ 'char-valid': charCount >= 10 }">{{ charCount }} / 140</span>
+        <!-- Form Utama -->
+        <form v-else class="blocker-form" @submit.prevent="submitBlocker" novalidate>
+          <!-- Panel 1: Detail Kendala -->
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Detail Kendala, Taksonomi &amp; Dampak</h2>
+                <p class="panel-desc">Tuliskan fakta kendala, kategori, dampak, dan tingkat keparahan (Severity).</p>
               </div>
-              <input
-                id="blockerTitle"
-                v-model="title"
-                type="text"
-                maxlength="140"
-                placeholder="Contoh: [Payment Gateway] Kredensial Sandbox Kadaluarsa (min. 10 karakter)"
-                required
-              />
+              <span class="pill pill-brand">Bagian 1 dari 2</span>
             </div>
 
-            <!-- Tautan Komitmen -->
-            <div class="form-group">
-              <label for="linkedCommitment">Tautkan ke Komitmen / Tugas Hari Ini <span class="opt">(opsional)</span></label>
-              <select id="linkedCommitment" v-model="linkedCommitmentId">
-                <option value="">— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —</option>
-                <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
-                  [Komitmen #{{ c.sequenceNumber }}] {{ c.taskText }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Kategori & Dampak -->
-            <div class="form-grid-2">
+            <div class="panel-body">
+              <!-- Judul -->
               <div class="form-group">
-                <label for="blockerType">Kategori Kendala (Type) <span class="req">*</span></label>
-                <select id="blockerType" v-model="blockerType" required>
-                  <option value="" disabled>-- Pilih Kategori (10 Enum Resmi) --</option>
-                  <option value="TECHNICAL">Technical — Bug, kendala kode, query database</option>
-                  <option value="REQUIREMENT">Requirement — Spesifikasi belum jelas / berubah</option>
-                  <option value="CLIENT">Client — Menunggu respon, data, UAT dari klien</option>
-                  <option value="VENDOR">Vendor — API eksternal, SaaS, lisensi pihak ketiga</option>
-                  <option value="RESOURCE">Resource — Kapasitas tim, cuti, dependensi personil</option>
-                  <option value="APPROVAL">Approval — Menunggu persetujuan pimpinan / stakeholder</option>
-                  <option value="INFRA">Infra — Server, staging, CI/CD, VPN, jaringan</option>
-                  <option value="FINANCE">Finance — Pembayaran server/domain/anggaran tertahan</option>
-                  <option value="LEGAL">Legal — Kontrak, NDA, kepatuhan data</option>
-                  <option value="OTHER">Other — Kendala operasional lainnya</option>
+                <div class="label-row">
+                  <label for="blockerTitle">Judul Kendala <span class="req">*</span></label>
+                  <span class="char-counter" :class="{ 'char-valid': charCount >= 10 }">{{ charCount }} / 140</span>
+                </div>
+                <input
+                  id="blockerTitle"
+                  v-model="title"
+                  type="text"
+                  maxlength="140"
+                  placeholder="Contoh: [Payment Gateway] Kredensial Sandbox Kadaluarsa (min. 10 karakter)"
+                  required
+                />
+              </div>
+
+              <!-- Tautan Komitmen -->
+              <div class="form-group">
+                <label for="linkedCommitment">Tautkan ke Komitmen / Tugas Hari Ini <span class="opt">(opsional)</span></label>
+                <select id="linkedCommitment" v-model="linkedCommitmentId">
+                  <option value="">— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —</option>
+                  <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
+                    [Komitmen #{{ c.sequenceNumber }}] {{ c.taskText }}
+                  </option>
                 </select>
               </div>
 
+              <!-- Kategori & Dampak -->
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="blockerType">Kategori Kendala (Type) <span class="req">*</span></label>
+                  <select id="blockerType" v-model="blockerType" required>
+                    <option value="" disabled>-- Pilih Kategori (10 Enum Resmi) --</option>
+                    <option value="TECHNICAL">Technical — Bug, kendala kode, query database</option>
+                    <option value="REQUIREMENT">Requirement — Spesifikasi belum jelas / berubah</option>
+                    <option value="CLIENT">Client — Menunggu respon, data, UAT dari klien</option>
+                    <option value="VENDOR">Vendor — API eksternal, SaaS, lisensi pihak ketiga</option>
+                    <option value="RESOURCE">Resource — Kapasitas tim, cuti, dependensi personil</option>
+                    <option value="APPROVAL">Approval — Menunggu persetujuan pimpinan / stakeholder</option>
+                    <option value="INFRA">Infra — Server, staging, CI/CD, VPN, jaringan</option>
+                    <option value="FINANCE">Finance — Pembayaran server/domain/anggaran tertahan</option>
+                    <option value="LEGAL">Legal — Kontrak, NDA, kepatuhan data</option>
+                    <option value="OTHER">Other — Kendala operasional lainnya</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="blockerImpact">Dampak Kendala (Impact) <span class="req">*</span></label>
+                  <select id="blockerImpact" v-model="blockerImpact" required>
+                    <option value="" disabled>-- Pilih Cakupan Dampak (7 Enum Resmi) --</option>
+                    <option value="TASK">Task — Menghambat 1 tugas individu</option>
+                    <option value="MILESTONE">Milestone — Mengancam target fase / sprint</option>
+                    <option value="PROJECT">Project — Menghambat jadwal proyek lintas tim</option>
+                    <option value="PRODUCTION">Production — Mengganggu layanan live / klien aktif</option>
+                    <option value="CLIENT">Client — Berdampak langsung pada kepuasan klien</option>
+                    <option value="FINANCIAL">Financial — Potensi kerugian / pinalti finansial</option>
+                    <option value="COMPLIANCE">Compliance — Risiko kepatuhan hukum / kontrak SLA</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Severity Cards -->
               <div class="form-group">
-                <label for="blockerImpact">Dampak Kendala (Impact) <span class="req">*</span></label>
-                <select id="blockerImpact" v-model="blockerImpact" required>
-                  <option value="" disabled>-- Pilih Cakupan Dampak (7 Enum Resmi) --</option>
-                  <option value="TASK">Task — Menghambat 1 tugas individu</option>
-                  <option value="MILESTONE">Milestone — Mengancam target fase / sprint</option>
-                  <option value="PROJECT">Project — Menghambat jadwal proyek lintas tim</option>
-                  <option value="PRODUCTION">Production — Mengganggu layanan live / klien aktif</option>
-                  <option value="CLIENT">Client — Berdampak langsung pada kepuasan klien</option>
-                  <option value="FINANCIAL">Financial — Potensi kerugian / pinalti finansial</option>
-                  <option value="COMPLIANCE">Compliance — Risiko kepatuhan hukum / kontrak SLA</option>
+                <div class="label-row">
+                  <label>Tingkat Keparahan (Severity) <span class="req">*</span></label>
+                  <span class="pill pill-sla">SLA Otomatis Sesuai Kebijakan Aktif</span>
+                </div>
+                <div class="severity-grid">
+                  <label class="severity-card critical" :class="{ selected: blockerSeverity === 'CRITICAL' }">
+                    <input type="radio" v-model="blockerSeverity" value="CRITICAL" />
+                    <div class="card-head">
+                      <span class="sev-badge critical">Critical</span>
+                      <span class="sev-sla">SLA: 60m</span>
+                    </div>
+                    <p class="sev-desc">Pekerjaan terhenti total, memicu notifikasi darurat instan &amp; auto-escalate.</p>
+                  </label>
+
+                  <label class="severity-card high" :class="{ selected: blockerSeverity === 'HIGH' }">
+                    <input type="radio" v-model="blockerSeverity" value="HIGH" />
+                    <div class="card-head">
+                      <span class="sev-badge high">High</span>
+                      <span class="sev-sla">SLA: 120m</span>
+                    </div>
+                    <p class="sev-desc">Hambatan berat pada jadwal atau milestone utama harian.</p>
+                  </label>
+
+                  <label class="severity-card medium" :class="{ selected: blockerSeverity === 'MEDIUM' }">
+                    <input type="radio" v-model="blockerSeverity" value="MEDIUM" />
+                    <div class="card-head">
+                      <span class="sev-badge medium">Medium</span>
+                      <span class="sev-sla">SLA: 240m</span>
+                    </div>
+                    <p class="sev-desc">Hambatan parsial, namun masih dapat mengerjakan komitmen lain.</p>
+                  </label>
+
+                  <label class="severity-card low" :class="{ selected: blockerSeverity === 'LOW' }">
+                    <input type="radio" v-model="blockerSeverity" value="LOW" />
+                    <div class="card-head">
+                      <span class="sev-badge low">Low</span>
+                      <span class="sev-sla">SLA: 480m</span>
+                    </div>
+                    <p class="sev-desc">Kendala minor atau ketidaknyamanan operasional berisiko rendah.</p>
+                  </label>
+                </div>
+
+                <!-- Critical Alert Box -->
+                <div v-if="blockerSeverity === 'CRITICAL'" class="critical-notice">
+                  <AlertTriangle :size="18" />
+                  <span>
+                    <strong>Perhatian Skala Critical:</strong> Opsi ini mengaktifkan timer darurat (SLA 60m) dan memicu eskalasi prioritas ke pimpinan divisi.
+                  </span>
+                </div>
+              </div>
+
+              <!-- Deskripsi & Upaya Mandiri -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="blockerDesc">Deskripsi Kendala &amp; Upaya Mandiri <span class="req">*</span></label>
+                  <button type="button" class="btn-text-action" @click="insertStructuredTemplate">
+                    + Gunakan Format Terstruktur
+                  </button>
+                </div>
+                <textarea
+                  id="blockerDesc"
+                  v-model="description"
+                  rows="5"
+                  minlength="20"
+                  placeholder="Jelaskan fakta kendala, pesan error, serta langkah mandiri yang sudah dicoba... (min. 20 karakter)"
+                  required
+                ></textarea>
+              </div>
+
+              <!-- Ekspektasi Bantuan -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="expectedHelpInput">Bantuan Konkret yang Diharapkan <span class="opt">(opsional)</span></label>
+                </div>
+                <div class="chip-container">
+                  <button type="button" class="quick-chip" @click="appendExpectedHelp('Approval PR/Tiket')">+ Approval</button>
+                  <button type="button" class="quick-chip" @click="appendExpectedHelp('Konfirmasi Requirement')">+ Requirement</button>
+                  <button type="button" class="quick-chip" @click="appendExpectedHelp('Akses Kredensial / Token')">+ Akses</button>
+                  <button type="button" class="quick-chip" @click="appendExpectedHelp('Bantuan Tim Infra / Server')">+ Infra</button>
+                  <button type="button" class="quick-chip" @click="appendExpectedHelp('Review Solusi / Arsitektur')">+ Code Review</button>
+                </div>
+                <input
+                  id="expectedHelpInput"
+                  v-model="expectedHelp"
+                  type="text"
+                  maxlength="200"
+                  placeholder="Aksi konkret yang Anda harapkan (Contoh: Butuh approval token staging oleh PM)..."
+                />
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 2: Penanggung Jawab & Jalur Kewenangan -->
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Penanggung Jawab Awal &amp; Jalur Kewenangan</h2>
+                <p class="panel-desc">Tentukan konteks kewenangan penanganan kendala (DEC-002).</p>
+              </div>
+              <span class="pill pill-brand">Bagian 2 dari 2</span>
+            </div>
+
+            <div class="panel-body">
+              <div class="authority-grid">
+                <label
+                  class="authority-card"
+                  :class="{ selected: authorityContext === 'ORGANIZATIONAL_AUTHORITY' }"
+                >
+                  <input
+                    type="radio"
+                    v-model="authorityContext"
+                    value="ORGANIZATIONAL_AUTHORITY"
+                  />
+                  <div class="auth-icon"><Shield :size="20" /></div>
+                  <div>
+                    <strong>Organizational Authority (Struktural)</strong>
+                    <p>Ditangani oleh Atasan Langsung atau Lead Divisi dalam bagan organisasi (Level 1).</p>
+                  </div>
+                </label>
+
+                <label
+                  class="authority-card"
+                  :class="{ selected: authorityContext === 'PROJECT_AUTHORITY' }"
+                >
+                  <input
+                    type="radio"
+                    v-model="authorityContext"
+                    value="PROJECT_AUTHORITY"
+                  />
+                  <div class="auth-icon"><FolderGit2 :size="20" /></div>
+                  <div>
+                    <strong>Project Authority (Kewenangan Proyek)</strong>
+                    <p>Ditangani oleh personil berwenang di proyek terkait (DEC-002: Wajib mencantumkan kode proyek).</p>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Proyek Terkait (Kondisional jika Project Authority dipilih) -->
+              <div v-if="authorityContext === 'PROJECT_AUTHORITY'" class="form-group" style="margin-top: 16px;">
+                <label for="projectCodeSelect">Pilih Proyek Terdaftar <span class="req">*</span></label>
+                <select id="projectCodeSelect" v-model="projectCode" required>
+                  <option value="">-- Pilih Proyek Terdaftar --</option>
+                  <option v-for="p in availableProjects" :key="p.code" :value="p.code">
+                    {{ p.code }} — {{ p.name }}
+                  </option>
                 </select>
               </div>
-            </div>
 
-            <!-- Severity Cards -->
-            <div class="form-group">
-              <div class="label-row">
-                <label>Tingkat Keparahan (Severity) <span class="req">*</span></label>
-                <span class="pill pill-sla">SLA Otomatis Sesuai Kebijakan Aktif</span>
-              </div>
-              <div class="severity-grid">
-                <label class="severity-card critical" :class="{ selected: blockerSeverity === 'CRITICAL' }">
-                  <input type="radio" v-model="blockerSeverity" value="CRITICAL" />
-                  <div class="card-head">
-                    <span class="sev-badge critical">Critical</span>
-                    <span class="sev-sla">SLA: 60m</span>
-                  </div>
-                  <p class="sev-desc">Pekerjaan terhenti total, memicu notifikasi darurat instan &amp; auto-escalate.</p>
-                </label>
-
-                <label class="severity-card high" :class="{ selected: blockerSeverity === 'HIGH' }">
-                  <input type="radio" v-model="blockerSeverity" value="HIGH" />
-                  <div class="card-head">
-                    <span class="sev-badge high">High</span>
-                    <span class="sev-sla">SLA: 120m</span>
-                  </div>
-                  <p class="sev-desc">Hambatan berat pada jadwal atau milestone utama harian.</p>
-                </label>
-
-                <label class="severity-card medium" :class="{ selected: blockerSeverity === 'MEDIUM' }">
-                  <input type="radio" v-model="blockerSeverity" value="MEDIUM" />
-                  <div class="card-head">
-                    <span class="sev-badge medium">Medium</span>
-                    <span class="sev-sla">SLA: 240m</span>
-                  </div>
-                  <p class="sev-desc">Hambatan parsial, namun masih dapat mengerjakan komitmen lain.</p>
-                </label>
-
-                <label class="severity-card low" :class="{ selected: blockerSeverity === 'LOW' }">
-                  <input type="radio" v-model="blockerSeverity" value="LOW" />
-                  <div class="card-head">
-                    <span class="sev-badge low">Low</span>
-                    <span class="sev-sla">SLA: 480m</span>
-                  </div>
-                  <p class="sev-desc">Kendala minor atau ketidaknyamanan operasional berisiko rendah.</p>
-                </label>
+              <!-- Pemilihan Orang Tertentu -->
+              <div class="form-group" style="margin-top: 16px;">
+                <label for="assignedOwner">Penanggung Jawab Khusus <span class="opt">(opsional)</span></label>
+                <select id="assignedOwner" v-model="assignedOwnerId">
+                  <option value="">— Tugaskan Otomatis ke Lead / Manager Terkait —</option>
+                  <option v-for="u in availableUsers" :key="u.id" :value="u.id">
+                    {{ u.fullName }} ({{ u.email }})
+                  </option>
+                </select>
               </div>
 
-              <!-- Critical Alert Box -->
-              <div v-if="blockerSeverity === 'CRITICAL'" class="critical-notice">
-                <AlertTriangle :size="18" />
-                <span>
-                  <strong>Perhatian Skala Critical:</strong> Opsi ini mengaktifkan timer darurat (SLA 60m) dan memicu eskalasi prioritas ke pimpinan divisi.
-                </span>
+              <!-- Route Preview Box -->
+              <div class="route-preview">
+                <Clock :size="20" class="route-icon" />
+                <div>
+                  <strong>Jalur Penanganan Otomatis:</strong>
+                  <p v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
+                    Tiket diteruskan ke Atasan Langsung struktural. Timer SLA dimulai seketika saat tiket terbit.
+                  </p>
+                  <p v-else>
+                    Tiket diteruskan ke Lead Proyek <strong>{{ projectCode || '(Pilih Proyek)' }}</strong> sesuai Project Authority Mapping aktif.
+                  </p>
+                </div>
               </div>
             </div>
+          </section>
 
-            <!-- Deskripsi & Upaya Mandiri -->
-            <div class="form-group">
-              <div class="label-row">
-                <label for="blockerDesc">Deskripsi Kendala &amp; Upaya Mandiri <span class="req">*</span></label>
-                <button type="button" class="btn-text-action" @click="insertStructuredTemplate">
-                  + Gunakan Format Terstruktur
+          <!-- Form Sticky Footer (IMP-044) -->
+          <div class="sticky-footer">
+            <div class="footer-content">
+              <span class="footer-hint" data-testid="footer-hint">
+                Pastikan fakta kendala akurat dan objektif untuk mempercepat penanganan oleh atasan.
+              </span>
+              <div class="footer-actions">
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  data-testid="btn-reset-form"
+                  @click="resetForm"
+                >
+                  <RotateCcw :size="15" />
+                  <span>Bersihkan Formulir</span>
+                </button>
+                <button
+                  type="submit"
+                  class="btn-primary"
+                  data-testid="btn-submit-blocker"
+                  :disabled="submitting || !isFormValid"
+                >
+                  <span v-if="submitting">Mengirim Laporan...</span>
+                  <span v-else>Kirim Laporan Blocker</span>
                 </button>
               </div>
-              <textarea
-                id="blockerDesc"
-                v-model="description"
-                rows="5"
-                minlength="20"
-                placeholder="Jelaskan fakta kendala, pesan error, serta langkah mandiri yang sudah dicoba... (min. 20 karakter)"
-                required
-              ></textarea>
-            </div>
-
-            <!-- Ekspektasi Bantuan -->
-            <div class="form-group">
-              <div class="label-row">
-                <label for="expectedHelpInput">Bantuan Konkret yang Diharapkan <span class="opt">(opsional)</span></label>
-              </div>
-              <div class="chip-container">
-                <button type="button" class="quick-chip" @click="appendExpectedHelp('Approval PR/Tiket')">+ Approval</button>
-                <button type="button" class="quick-chip" @click="appendExpectedHelp('Konfirmasi Requirement')">+ Requirement</button>
-                <button type="button" class="quick-chip" @click="appendExpectedHelp('Akses Kredensial / Token')">+ Akses</button>
-                <button type="button" class="quick-chip" @click="appendExpectedHelp('Bantuan Tim Infra / Server')">+ Infra</button>
-                <button type="button" class="quick-chip" @click="appendExpectedHelp('Review Solusi / Arsitektur')">+ Code Review</button>
-              </div>
-              <input
-                id="expectedHelpInput"
-                v-model="expectedHelp"
-                type="text"
-                maxlength="200"
-                placeholder="Aksi konkret yang Anda harapkan (Contoh: Butuh approval token staging oleh PM)..."
-              />
             </div>
           </div>
-        </section>
+        </form>
+      </div>
 
-        <!-- Panel 2: Penanggung Jawab & Jalur Kewenangan -->
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <h2>Penanggung Jawab Awal &amp; Jalur Kewenangan</h2>
-              <p class="panel-desc">Tentukan konteks kewenangan penanganan kendala (DEC-002).</p>
-            </div>
-            <span class="pill pill-brand">Bagian 2 dari 2</span>
+      <!-- VIEW B: DAFTAR BLOCKER SAYA (IMP-041) -->
+      <section v-else class="my-blockers-view" data-testid="my-blockers-view">
+        <div class="blockers-filter-bar">
+          <div>
+            <h2>Daftar Blocker yang Saya Laporkan</h2>
+            <p class="subtitle">Pantau siklus hidup tiket kendala, sisa waktu SLA, dan tindak lanjut penanganan.</p>
           </div>
+          <div class="filter-pills" role="radiogroup" aria-label="Filter status blocker">
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: blockerFilter === 'all' }"
+              data-testid="filter-all"
+              @click="blockerFilter = 'all'"
+            >
+              Semua ({{ countAll }})
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: blockerFilter === 'active' }"
+              data-testid="filter-active"
+              @click="blockerFilter = 'active'"
+            >
+              Aktif ({{ countActive }})
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: blockerFilter === 'resolved' }"
+              data-testid="filter-resolved"
+              @click="blockerFilter = 'resolved'"
+            >
+              Menunggu Konfirmasi ({{ countResolved }})
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: blockerFilter === 'closed' }"
+              data-testid="filter-closed"
+              @click="blockerFilter = 'closed'"
+            >
+              Selesai / Ditutup ({{ countClosed }})
+            </button>
+          </div>
+        </div>
 
-          <div class="panel-body">
-            <div class="authority-grid">
-              <label
-                class="authority-card"
-                :class="{ selected: authorityContext === 'ORGANIZATIONAL_AUTHORITY' }"
-              >
-                <input
-                  type="radio"
-                  v-model="authorityContext"
-                  value="ORGANIZATIONAL_AUTHORITY"
-                />
-                <div class="auth-icon"><Shield :size="20" /></div>
-                <div>
-                  <strong>Organizational Authority (Struktural)</strong>
-                  <p>Ditangani oleh Atasan Langsung atau Lead Divisi dalam bagan organisasi (Level 1).</p>
-                </div>
-              </label>
+        <!-- Loading State -->
+        <div v-if="loadingBlockers" class="loading-state" data-testid="loading-blockers">
+          Memuat daftar blocker saya...
+        </div>
 
-              <label
-                class="authority-card"
-                :class="{ selected: authorityContext === 'PROJECT_AUTHORITY' }"
-              >
-                <input
-                  type="radio"
-                  v-model="authorityContext"
-                  value="PROJECT_AUTHORITY"
-                />
-                <div class="auth-icon"><FolderGit2 :size="20" /></div>
-                <div>
-                  <strong>Project Authority (Kewenangan Proyek)</strong>
-                  <p>Ditangani oleh personil berwenang di proyek terkait (DEC-002: Wajib mencantumkan kode proyek).</p>
-                </div>
-              </label>
-            </div>
+        <!-- Empty State -->
+        <div v-else-if="filteredBlockers.length === 0" class="empty-blockers" data-testid="empty-blockers">
+          <div class="empty-blockers-icon">
+            <Layers :size="24" />
+          </div>
+          <h3>Tidak Ada Blocker pada Filter Ini</h3>
+          <p class="empty-desc">Semua kendala terkendali atau belum ada laporan pada kategori ini.</p>
+        </div>
 
-            <!-- Proyek Terkait (Kondisional jika Project Authority dipilih) -->
-            <div v-if="authorityContext === 'PROJECT_AUTHORITY'" class="form-group" style="margin-top: 16px;">
-              <label for="projectCodeSelect">Pilih Proyek Terdaftar <span class="req">*</span></label>
-              <select id="projectCodeSelect" v-model="projectCode" required>
-                <option value="">-- Pilih Proyek Terdaftar --</option>
-                <option v-for="p in availableProjects" :key="p.code" :value="p.code">
-                  {{ p.code }} — {{ p.name }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Pemilihan Orang Tertentu -->
-            <div class="form-group" style="margin-top: 16px;">
-              <label for="assignedOwner">Penanggung Jawab Khusus <span class="opt">(opsional)</span></label>
-              <select id="assignedOwner" v-model="assignedOwnerId">
-                <option value="">— Tugaskan Otomatis ke Lead / Manager Terkait —</option>
-                <option v-for="u in availableUsers" :key="u.id" :value="u.id">
-                  {{ u.fullName }} ({{ u.email }})
-                </option>
-              </select>
-            </div>
-
-            <!-- Route Preview Box -->
-            <div class="route-preview">
-              <Clock :size="20" class="route-icon" />
-              <div>
-                <strong>Jalur Penanganan Otomatis:</strong>
-                <p v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                  Tiket diteruskan ke Atasan Langsung struktural. Timer SLA dimulai seketika saat tiket terbit.
-                </p>
-                <p v-else>
-                  Tiket diteruskan ke Lead Proyek <strong>{{ projectCode || '(Pilih Proyek)' }}</strong> sesuai Project Authority Mapping aktif.
-                </p>
+        <!-- Blocker Cards List -->
+        <div v-else class="blockers-list" data-testid="blockers-list">
+          <div
+            v-for="b in filteredBlockers"
+            :key="b.id"
+            class="blocker-item-card"
+            :class="{ resolved: b.status === 'RESOLVED' }"
+            :data-ticket-id="b.id"
+          >
+            <div class="blocker-item-head">
+              <div class="head-left">
+                <span class="blocker-item-id">#{{ b.id.slice(0, 8) }}</span>
+                <span class="pill" :class="getStatusBadgeClass(b.status)">
+                  <span class="dot-sm"></span> {{ getStatusLabel(b.status) }}
+                </span>
+                <span class="pill pill-neutral">{{ b.type }}</span>
+              </div>
+              <div class="head-right">
+                <span class="pill" :class="getSeverityClass(b.severity)">Tingkat {{ b.severity }}</span>
+                <span class="date-sep"></span>
+                <span class="blocker-date">{{ formatDate(b.raisedAt) }}</span>
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- Form Sticky Footer -->
-        <div class="sticky-footer">
-          <div class="footer-content">
-            <span class="footer-hint">
-              Pastikan fakta kendala akurat. Tiket yang diterbitkan tidak dapat dihapus (Audit Trail DEC-008).
-            </span>
-            <div class="footer-actions">
-              <AccessLink to="/blockers" class="btn-secondary">Batal</AccessLink>
-              <button
-                type="submit"
-                class="btn-primary"
-                :disabled="submitting || !isFormValid"
-              >
-                <span v-if="submitting">Menerbitkan Tiket...</span>
-                <span v-else>Kirim Tiket Kendala</span>
-              </button>
+            <div class="blocker-item-title">{{ getTicketTitle(b) }}</div>
+            <p class="blocker-item-desc">{{ getTicketDescription(b) }}</p>
+
+            <div class="blocker-item-meta">
+              <span class="blocker-meta-item">Dampak: <strong>{{ b.impact }}</strong></span>
+              <span class="blocker-meta-item">
+                Penanggung Jawab: <strong>{{ b.assignedOwner?.fullName || 'Belum Ditugaskan' }}</strong>
+              </span>
+              <span v-if="b.linkedCommitment" class="blocker-meta-item">
+                Terkait: <strong>Komitmen #{{ b.linkedCommitment.sequenceNumber }}</strong>
+              </span>
+            </div>
+
+            <!-- Resolution Note (if available) -->
+            <div v-if="b.resolutionNote" class="resolution-box">
+              <div class="resolution-title">
+                <CheckCircle2 :size="14" />
+                <span>Catatan Penyelesaian:</span>
+              </div>
+              <p class="resolution-text">{{ b.resolutionNote }}</p>
             </div>
           </div>
         </div>
-      </form>
+      </section>
     </main>
   </div>
 </template>
@@ -502,117 +833,115 @@ onMounted(() => {
   font-family: var(--font-sans, "Plus Jakarta Sans", system-ui, sans-serif);
 }
 
-.topbar {
-  height: 56px;
-  background: #fff;
-  border-bottom: 1px solid #DCE7E2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 30;
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px clamp(1.5rem, 4vw, 3.5rem) 120px;
 }
 
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-badge {
-  background: #00674D;
-  color: #fff;
-  font-weight: 800;
-  font-size: 13px;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.brand-title {
-  font-weight: 800;
-  font-size: 15px;
-}
-
-.breadcrumb {
-  font-size: 13px;
-  color: #5C6E68;
-  border-left: 1px solid #DCE7E2;
-  padding-left: 12px;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-topbar {
+/* Back Navigation Link */
+.back-nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #DCE7E2;
-  background: #fff;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #5C6E68;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-brand-primary, #00674D);
+  text-decoration: none;
+  margin-bottom: 12px;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+}
+
+.back-nav-link:hover {
+  color: #0B8061;
   text-decoration: none;
 }
 
-.btn-topbar:hover {
-  background: #EFF5F2;
-  color: #0E211B;
+.back-nav-link svg {
+  transition: transform 0.15s ease;
 }
 
-.main-content {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 20px 100px;
+.back-nav-link:hover svg {
+  transform: translateX(-3px);
 }
 
 .page-heading {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   gap: 16px;
-}
-
-.eyebrow {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #5C6E68;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 h1 {
   font-size: 24px;
   font-weight: 800;
-  margin: 4px 0 6px;
+  margin: 0 0 6px;
 }
 
 .subtitle {
   font-size: 13.5px;
   color: #5C6E68;
-  max-width: 620px;
+  max-width: 720px;
+  line-height: 1.5;
 }
 
-.btn-blocker-secondary {
+/* View Tabs */
+.view-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: #EDF2F0;
+  padding: 4px;
+  border-radius: 10px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.view-tab {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
   border-radius: 8px;
-  border: 1px solid #00674D;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #5C6E68;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-tab:hover {
+  color: #0E211B;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.view-tab.active {
+  background: #fff;
+  color: #00674D;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
   background: #E6F4EE;
   color: #00674D;
-  font-weight: 700;
-  font-size: 13px;
-  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.tab-badge.alert {
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
 .panel {
@@ -649,6 +978,9 @@ h1 {
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .pill-brand {
@@ -659,6 +991,51 @@ h1 {
 .pill-sla {
   background: #EFF5F2;
   color: #5C6E68;
+}
+
+.pill-neutral,
+.pill.neutral {
+  background: #F1F5F9;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+}
+
+.pill.green {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.pill.blue {
+  background: #E0F2FE;
+  color: #075985;
+  border: 1px solid #7DD3FC;
+}
+
+.pill.amber {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+
+.pill.orange {
+  background: #FFEDD5;
+  color: #9A3412;
+  border: 1px solid #FDBA74;
+}
+
+.pill.red {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
+.dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
 }
 
 .panel-body {
@@ -923,28 +1300,69 @@ textarea:focus {
   margin: 2px 0 0;
 }
 
+/* Form Fixed Footer (Full-width from sidebar edge to screen edge - Prototipe 05) */
 .sticky-footer {
-  position: sticky;
+  position: fixed;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
+  left: 232px;
+  right: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
   border-top: 1px solid #DCE7E2;
-  padding: 14px 20px;
-  margin: 0 -20px;
-  z-index: 25;
+  box-shadow: 0 -4px 16px -2px rgba(0, 0, 0, 0.06);
+  padding: 14px clamp(1.5rem, 4vw, 3.5rem);
+  transition: left 0.2s ease;
 }
 
 .footer-content {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
 
+@media (max-width: 992px) {
+  .sticky-footer {
+    left: 0;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 680px) {
+  .sticky-footer {
+    left: 0;
+    padding: 12px 16px max(14px, env(safe-area-inset-bottom));
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .footer-actions .btn-secondary,
+  .footer-actions .btn-primary {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 14px;
+    justify-content: center;
+  }
+}
+
 .footer-hint {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #5C6E68;
 }
 
@@ -963,6 +1381,15 @@ textarea:focus {
   font-size: 13px;
   cursor: pointer;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: #EFF5F2;
+  border-color: #A9C7BC;
 }
 
 .btn-primary {
@@ -977,6 +1404,12 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #00523D;
 }
 
 .btn-primary:disabled {
@@ -990,8 +1423,8 @@ textarea:focus {
   border-radius: 12px;
   padding: 36px 24px;
   text-align: center;
-  max-width: 580px;
-  margin: 40px auto;
+  max-width: 600px;
+  margin: 30px auto;
 }
 
 .submitted-icon {
@@ -1015,7 +1448,221 @@ textarea:focus {
 .submitted-actions {
   display: flex;
   justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* My Blockers View Styling (IMP-041) */
+.blockers-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.blockers-filter-bar h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 6px 14px;
+  border: 1px solid #DCE7E2;
+  background: #fff;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #5C6E68;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-pill:hover {
+  border-color: #A9C7BC;
+  color: #0E211B;
+}
+
+.filter-pill.active {
+  background: #00674D;
+  color: #fff;
+  border-color: #00674D;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #5C6E68;
+  font-size: 14px;
+}
+
+.empty-blockers {
+  text-align: center;
+  padding: 48px 24px;
+  background: #fff;
+  border: 1px dashed #DCE7E2;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+
+.empty-blockers-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #E6F4EE;
+  color: #00674D;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+}
+
+.empty-blockers h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0E211B;
+  margin-bottom: 6px;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #5C6E68;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.blocker-item-card {
+  background: #fff;
+  border: 1px solid #DCE7E2;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  transition: border-color 0.15s ease;
+}
+
+.blocker-item-card:hover {
+  border-color: #A9C7BC;
+}
+
+.blocker-item-card.resolved {
+  border-color: #86EFAC;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
+}
+
+.blocker-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.blocker-item-id {
+  font-size: 13px;
+  font-weight: 800;
+  color: #00674D;
+  letter-spacing: 0.02em;
+  font-family: monospace;
+}
+
+.date-sep {
+  display: inline-block;
+  width: 1px;
+  height: 14px;
+  background: #CBD5E1;
+}
+
+.blocker-date {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #5C6E68;
+  white-space: nowrap;
+}
+
+.blocker-item-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0E211B;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.blocker-item-desc {
+  font-size: 13.5px;
+  color: #5C6E68;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.blocker-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #5C6E68;
+  flex-wrap: wrap;
+}
+
+.blocker-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #F8FAFC;
+  border: 1px solid #DCE7E2;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.blocker-meta-item strong {
+  color: #0E211B;
+  font-weight: 700;
+}
+
+.resolution-box {
+  background: #DCFCE7;
+  border: 1px solid #86EFAC;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.resolution-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #166534;
+  margin-bottom: 4px;
+}
+
+.resolution-text {
+  font-size: 13px;
+  color: #166534;
+  line-height: 1.45;
+  margin: 0;
 }
 
 .toast-popup {

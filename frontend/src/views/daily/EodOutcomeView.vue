@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
   CheckCircle2,
   AlertCircle,
   Lock,
   AlertTriangle,
-  X,
 } from 'lucide-vue-next';
 
 interface CommitmentOutcomeItem {
@@ -41,21 +41,52 @@ const isEodLocked = ref(false);
 const isLate = ref(false);
 const eodOnTimeCutoff = ref('17:00');
 const eodLockCutoff = ref('21:00');
+const eodSubmittedAt = ref<string | null>(null);
+
+const hasSubmittedEod = computed(() => {
+  return eodSubmittedAt.value !== null && eodSubmittedAt.value !== '';
+});
+const isFormLocked = computed(() => isEodLocked.value || hasSubmittedEod.value);
+
+function formatTime(isoStr: string | null) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatReason(reason: string): string {
+  const map: Record<string, string> = {
+    NEWLY_ASSIGNED: 'Penugasan Baru Atasan',
+    OPERATIONAL_INCIDENT: 'Perbaikan Error / Bug Kritis',
+    MISSED_IN_PLANNING: 'Terlewat Catat Pagi',
+    PRIORITY_CHANGE: 'Pengalihan Prioritas',
+    OTHER: 'Lainnya',
+  };
+  return map[reason] || reason;
+}
+
+// Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-033)
+const formattedWorkDate = computed(() => {
+  if (!workDate.value) return '';
+  const parts = workDate.value.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const dateObj = new Date(year, month, day);
+    return dateObj.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  return workDate.value;
+});
 
 const commitments = ref<CommitmentOutcomeItem[]>([]);
 const additionalWorks = ref<AdditionalWorkOutcomeItem[]>([]);
 const finalDailyStatus = ref<'GREEN' | 'AMBER' | 'RED'>('GREEN');
-
-// Instant blocker modal state
-const isBlockerModalOpen = ref(false);
-const blockerType = ref('TECHNICAL');
-const blockerSeverity = ref('HIGH');
-const blockerImpact = ref('TASK');
-const blockerDesc = ref('');
-const blockerOwnerType = ref('ORGANIZATIONAL_AUTHORITY');
-const blockerOwnerId = ref('');
-const blockerProjectCode = ref('');
-const availableUsers = ref<Array<{ id: string; fullName: string }>>([]);
 
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
@@ -83,7 +114,11 @@ async function loadTodayState() {
     isEodLocked.value = data.cutoffTimings.isEodLocked;
     isLate.value = data.currentTime > data.cutoffTimings.eodOnTimeCutoff && !data.cutoffTimings.isEodLocked;
 
-    if (data.record) {
+        if (data.record) {
+      eodSubmittedAt.value = data.record.eodSubmittedAt
+        ? new Date(data.record.eodSubmittedAt).toISOString()
+        : null;
+
       if (data.record.commitments) {
         commitments.value = data.record.commitments.map((c: any) => ({
           id: c.id,
@@ -112,15 +147,11 @@ async function loadTodayState() {
 
       if (data.record.finalDailyStatus && data.record.finalDailyStatus !== 'NOT_APPLICABLE_NO_COMMITMENT') {
         finalDailyStatus.value = data.record.finalDailyStatus;
-        isSubmittedSuccess.value = true;
       }
-    }
-
-    // Load users for blocker modal
-    const usersRes = await apiClient<Array<{ id: string; fullName: string }>>('/v1/organization/users');
-    availableUsers.value = usersRes.data || [];
-    if (availableUsers.value.length > 0) {
-      blockerOwnerId.value = availableUsers.value[0].id;
+      isSubmittedSuccess.value = !!eodSubmittedAt.value;
+    } else {
+      eodSubmittedAt.value = null;
+      isSubmittedSuccess.value = false;
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat evaluasi EOD.', true);
@@ -177,52 +208,21 @@ async function submitEod() {
       finalDailyStatus: finalDailyStatus.value, // DEC-003: Hak konfirmasi status GREEN dijamin bebas
     };
 
-    await apiClient('/daily/eod', {
+    const res = await apiClient<{ eodSubmittedAt?: string }>('/daily/eod', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
 
     showToast('Evaluasi EOD Outcome berhasil dikirim dan dicatat.');
+    eodSubmittedAt.value = res.data?.eodSubmittedAt
+      ? new Date(res.data.eodSubmittedAt).toISOString()
+      : new Date().toISOString();
     isSubmittedSuccess.value = true;
     await loadTodayState();
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal mengirim evaluasi EOD.';
   } finally {
     submitting.value = false;
-  }
-}
-
-async function submitInstantBlocker() {
-  if (blockerDesc.value.trim().length < 10) {
-    showToast('Deskripsi kendala minimal 10 karakter.', true);
-    return;
-  }
-
-  if (blockerOwnerType.value === 'PROJECT_AUTHORITY' && blockerProjectCode.value.trim().length === 0) {
-    showToast('Kode proyek referensi wajib diisi bila memilih Kewenangan Proyek.', true);
-    return;
-  }
-
-  try {
-    await apiClient('/blockers', {
-      method: 'POST',
-      body: JSON.stringify({
-        type: blockerType.value,
-        severity: blockerSeverity.value,
-        impact: blockerImpact.value,
-        description: blockerDesc.value.trim(),
-        ownerNeededType: blockerOwnerType.value,
-        assignedOwnerId: blockerOwnerId.value,
-        projectCodeReference: blockerOwnerType.value === 'PROJECT_AUTHORITY' ? blockerProjectCode.value.trim() : undefined,
-      }),
-    });
-
-    showToast('Kendala mendesak (Instant Blocker) berhasil dilaporkan ke antrean eskalasi.');
-    isBlockerModalOpen.value = false;
-    blockerDesc.value = '';
-    blockerProjectCode.value = '';
-  } catch (err: any) {
-    showToast(err.message || 'Gagal melaporkan kendala.', true);
   }
 }
 
@@ -244,32 +244,36 @@ onMounted(() => {
 <template>
   <div class="daily-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">My Today / <strong>EOD Outcome</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
-        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My Today / EOD Outcome" />
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
-      <AccessLink to="/daily/morning" class="step-item">
-        <span class="step-num">1</span>
-        <span>Morning Commitment</span>
-      </AccessLink>
-      <AccessLink to="/daily/additional-work" class="step-item">
-        <span class="step-num">2</span>
-        <span>Additional Work</span>
-      </AccessLink>
-      <AccessLink to="/daily/eod" class="step-item active">
-        <span class="step-num">3</span>
-        <span>EOD Outcome</span>
-      </AccessLink>
+      <div class="step-items">
+        <AccessLink to="/daily/morning" class="step-item">
+          <span class="step-num">1</span>
+          <span>Morning Commitment</span>
+        </AccessLink>
+        <AccessLink to="/daily/additional-work" class="step-item">
+          <span class="step-num">2</span>
+          <span>Additional Work</span>
+        </AccessLink>
+        <AccessLink to="/daily/eod" class="step-item active">
+          <span class="step-num">3</span>
+          <span>EOD Outcome</span>
+        </AccessLink>
+      </div>
+
+      <div class="workflow-actions">
+        <AccessLink
+          to="/raise-blockers"
+          class="btn-report-blocker"
+          title="Laporkan kendala kritis atau dependensi"
+          data-testid="report-blocker-btn"
+        >
+          <AlertTriangle :size="15" />
+          <span>Laporkan Blocker</span>
+        </AccessLink>
+      </div>
     </nav>
 
     <!-- Toasts -->
@@ -286,48 +290,41 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <h1>EOD Outcome & Daily Reflection</h1>
-          <p class="subtitle">
-            Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan kelanjutan tugas (Prototipe 04).
+          <p class="subtitle" data-testid="eod-subtitle">
+            Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan tindak lanjut tugas secara akuntabel.
           </p>
         </div>
-        <button
-          type="button"
-          class="btn btn-secondary blocker-cta"
-          @click="isBlockerModalOpen = true"
-        >
-          <AlertTriangle :size="16" />
-          <span>+ Laporkan Blocker Mendesak</span>
-        </button>
       </div>
 
-      <!-- Konteks Waktu EOD Panel -->
+      <!-- Konteks Waktu EOD Panel (IMP-033 Restrukturisasi & Pembersihan Metrik) -->
       <section class="panel context-panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Konteks Waktu EOD</div>
             <h2>Batas Evaluasi Akhir Hari</h2>
           </div>
-          <span class="badge badge-info">On-Time {{ eodOnTimeCutoff }} · Cut-Off {{ eodLockCutoff }} WIB</span>
+          <span class="badge badge-info" data-testid="context-date-badge">{{ formattedWorkDate || 'Hari Kerja Aktif' }}</span>
         </div>
         <div class="panel-body">
           <div class="context-grid">
-            <div class="context-item">
-              <span class="context-label">Tanggal Kerja</span>
-              <span class="context-value mono">{{ workDate || '...' }}</span>
-            </div>
-            <div class="context-item">
-              <span class="context-label">Batas On-Time EOD</span>
+            <div class="context-item" data-testid="context-item-ontime">
+              <span class="context-label">Batas On-Time</span>
               <span class="context-value mono">{{ eodOnTimeCutoff }} WIB</span>
             </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-cutoff">
+              <span class="context-label">Batas Cut-Off</span>
+              <span class="context-value mono">{{ eodLockCutoff }} WIB</span>
+            </div>
+            <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
-                <span v-if="isEodLocked" class="badge badge-danger">LOCKED (Pasca {{ eodLockCutoff }} WIB)</span>
+                <span v-if="hasSubmittedEod" class="badge badge-active">SUBMITTED (Terkunci)</span>
+                <span v-else-if="isEodLocked" class="badge badge-danger">LOCKED (Pasca {{ eodLockCutoff }} WIB)</span>
                 <span v-else-if="isLate" class="badge badge-late">LATE (Lembur Fleksibel)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
             </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-eval-count">
               <span class="context-label">Total Item Evaluasi</span>
               <span class="context-value mono">{{ commitments.length + additionalWorks.length }} Tugas</span>
             </div>
@@ -335,8 +332,27 @@ onMounted(() => {
         </div>
       </section>
 
+      <!-- Alert Banner jika EOD sudah disubmit (EOD Closed / Locked) -->
+      <div v-if="hasSubmittedEod" class="alert-banner submitted" role="status">
+        <CheckCircle2 :size="20" class="text-green" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Evaluasi EOD Telah Terkunci (EOD Closed):</strong>
+            <span> Disubmit pada {{ formatTime(eodSubmittedAt) }} WIB.</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Evaluasi capaian akhir hari telah dicatat secara resmi. Form evaluasi ini dikunci untuk menjaga integritas data akuntabilitas. Perubahan data EOD hanya dapat diajukan melalui mekanisme koreksi resmi.
+          </p>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/corrections/eod" class="btn btn-secondary btn-sm">
+              Ajukan Koreksi EOD
+            </AccessLink>
+          </div>
+        </div>
+      </div>
+
       <!-- Alert jika terkunci -->
-      <div v-if="isEodLocked" class="alert-banner locked" role="alert">
+      <div v-else-if="isEodLocked" class="alert-banner locked" role="alert">
         <Lock :size="20" />
         <div>
           <strong>Hari Kerja Telah Berakhir & Terkunci Permanen (DEC-002):</strong>
@@ -378,20 +394,20 @@ onMounted(() => {
                 <label class="form-label">Hasil Pencapaian Komitmen *</label>
                 <div class="outcome-options">
                   <label class="outcome-label" :class="{ selected: c.outcome === 'COMPLETED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="COMPLETED" v-model="c.outcome" :disabled="isEodLocked" />
-                    <span>Selesai (COMPLETED)</span>
+                    <input type="radio" :name="`outcome-${c.id}`" value="COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
+                    <span>Selesai</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'PARTIALLY_COMPLETED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="PARTIALLY_COMPLETED" v-model="c.outcome" :disabled="isEodLocked" />
-                    <span>Sebagian (PARTIALLY)</span>
+                    <input type="radio" :name="`outcome-${c.id}`" value="PARTIALLY_COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
+                    <span>Sebagian</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'NOT_COMPLETED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="NOT_COMPLETED" v-model="c.outcome" :disabled="isEodLocked" />
-                    <span>Belum Selesai (NOT_COMPLETED)</span>
+                    <input type="radio" :name="`outcome-${c.id}`" value="NOT_COMPLETED" v-model="c.outcome" :disabled="isFormLocked" />
+                    <span>Belum Selesai</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: c.outcome === 'CANCELLED' }">
-                    <input type="radio" :name="`outcome-${c.id}`" value="CANCELLED" v-model="c.outcome" :disabled="isEodLocked" />
-                    <span>Dibatalkan (CANCELLED)</span>
+                    <input type="radio" :name="`outcome-${c.id}`" value="CANCELLED" v-model="c.outcome" :disabled="isFormLocked" />
+                    <span>Dibatalkan</span>
                   </label>
                 </div>
               </div>
@@ -404,33 +420,33 @@ onMounted(() => {
                   class="input-control"
                   rows="2"
                   placeholder="Jelaskan alasan mengapa komitmen ini dibatalkan hari ini..."
-                  :disabled="isEodLocked"
+                  :disabled="isFormLocked"
                   required
                 ></textarea>
               </div>
 
               <!-- If NOT COMPLETED or PARTIALLY: Continuation Decision (DEC-013) -->
               <div v-if="c.outcome === 'PARTIALLY_COMPLETED' || c.outcome === 'NOT_COMPLETED'" class="conditional-box">
-                <label class="form-label">Keputusan Kelanjutan Tugas Besok (Continuation Decision) *</label>
+                <label class="form-label">Keputusan Kelanjutan Tugas Besok *</label>
                 <div class="continuation-options">
                   <label class="cont-label" :class="{ selected: c.continuation === 'CONTINUE' }">
-                    <input type="radio" :name="`cont-${c.id}`" value="CONTINUE" v-model="c.continuation" :disabled="isEodLocked" />
-                    <span>Lanjutkan Besok (CONTINUE &rarr; Carry-Over)</span>
+                    <input type="radio" :name="`cont-${c.id}`" value="CONTINUE" v-model="c.continuation" :disabled="isFormLocked" />
+                    <span>Lanjutkan Besok (Tugas Berlanjut)</span>
                   </label>
                   <label class="cont-label" :class="{ selected: c.continuation === 'DO_NOT_CONTINUE' }">
-                    <input type="radio" :name="`cont-${c.id}`" value="DO_NOT_CONTINUE" v-model="c.continuation" :disabled="isEodLocked" />
-                    <span>Jangan Lanjutkan (DO_NOT_CONTINUE)</span>
+                    <input type="radio" :name="`cont-${c.id}`" value="DO_NOT_CONTINUE" v-model="c.continuation" :disabled="isFormLocked" />
+                    <span>Tidak Dilanjutkan</span>
                   </label>
                 </div>
 
-                <div v-if="c.continuation === 'CONTINUE'" class="mt-2">
-                  <label class="form-label">Catatan Kelanjutan (Continuation Reason) *</label>
+                <div v-if="c.continuation === 'CONTINUE'" class="mt-2 continuation-reason-group">
+                  <label class="form-label">Catatan Kelanjutan *</label>
                   <textarea
                     v-model="c.continuationReason"
                     class="input-control"
                     rows="2"
                     placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."
-                    :disabled="isEodLocked"
+                    :disabled="isFormLocked"
                     required
                   ></textarea>
                 </div>
@@ -453,24 +469,68 @@ onMounted(() => {
             <div v-for="w in additionalWorks" :key="w.id" class="eval-card">
               <div class="eval-header">
                 <span class="eval-task">{{ w.taskText }}</span>
-                <span class="badge badge-info">{{ w.reason }}</span>
+                <span class="badge badge-info">{{ formatReason(w.reason) }}</span>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Hasil Pencapaian *</label>
                 <div class="outcome-options">
                   <label class="outcome-label" :class="{ selected: w.outcome === 'COMPLETED' }">
-                    <input type="radio" :name="`w-outcome-${w.id}`" value="COMPLETED" v-model="w.outcome" :disabled="isEodLocked" />
-                    <span>Selesai (COMPLETED)</span>
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
+                    <span>Selesai</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: w.outcome === 'PARTIALLY_COMPLETED' }">
-                    <input type="radio" :name="`w-outcome-${w.id}`" value="PARTIALLY_COMPLETED" v-model="w.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="PARTIALLY_COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
                     <span>Sebagian</span>
                   </label>
                   <label class="outcome-label" :class="{ selected: w.outcome === 'NOT_COMPLETED' }">
-                    <input type="radio" :name="`w-outcome-${w.id}`" value="NOT_COMPLETED" v-model="w.outcome" :disabled="isEodLocked" />
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="NOT_COMPLETED" v-model="w.outcome" :disabled="isFormLocked" />
                     <span>Belum Selesai</span>
                   </label>
+                  <label class="outcome-label" :class="{ selected: w.outcome === 'CANCELLED' }">
+                    <input type="radio" :name="`w-outcome-${w.id}`" value="CANCELLED" v-model="w.outcome" :disabled="isFormLocked" />
+                    <span>Dibatalkan</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- If CANCELLED: Reason -->
+              <div v-if="w.outcome === 'CANCELLED'" class="conditional-box">
+                <label class="form-label">Alasan Pembatalan Pekerjaan Tambahan *</label>
+                <textarea
+                  v-model="w.outcomeReason"
+                  class="input-control"
+                  rows="2"
+                  placeholder="Jelaskan alasan mengapa pekerjaan tambahan ini dibatalkan hari ini..."
+                  :disabled="isFormLocked"
+                  required
+                ></textarea>
+              </div>
+
+              <!-- If NOT COMPLETED or PARTIALLY: Continuation Decision -->
+              <div v-if="w.outcome === 'PARTIALLY_COMPLETED' || w.outcome === 'NOT_COMPLETED'" class="conditional-box">
+                <label class="form-label">Keputusan Kelanjutan Tugas Besok *</label>
+                <div class="continuation-options">
+                  <label class="cont-label" :class="{ selected: w.continuation === 'CONTINUE' }">
+                    <input type="radio" :name="`w-cont-${w.id}`" value="CONTINUE" v-model="w.continuation" :disabled="isFormLocked" />
+                    <span>Lanjutkan Besok (Tugas Berlanjut)</span>
+                  </label>
+                  <label class="cont-label" :class="{ selected: w.continuation === 'DO_NOT_CONTINUE' }">
+                    <input type="radio" :name="`w-cont-${w.id}`" value="DO_NOT_CONTINUE" v-model="w.continuation" :disabled="isFormLocked" />
+                    <span>Tidak Dilanjutkan</span>
+                  </label>
+                </div>
+
+                <div v-if="w.continuation === 'CONTINUE'" class="mt-2 continuation-reason-group">
+                  <label class="form-label">Catatan Kelanjutan *</label>
+                  <textarea
+                    v-model="w.continuationReason"
+                    class="input-control"
+                    rows="2"
+                    placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."
+                    :disabled="isFormLocked"
+                    required
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -478,23 +538,23 @@ onMounted(() => {
         </div>
       </section>
 
-      <!-- Final Daily Self-Reflection Status (DEC-003: Hak Opsi GREEN Tidak Boleh Dikunci) -->
+      <!-- Final Daily Self-Reflection Status (Hak Opsi GREEN Bebas & Humanis) -->
       <section class="panel">
         <div class="panel-head">
           <div>
-            <div class="kicker">Refleksi Mandiri Karyawan (DEC-003)</div>
+            <div class="kicker">Refleksi Mandiri Akhir Hari</div>
             <h2>Status Refleksi Akhir Hari Ini (Final Daily Status)</h2>
           </div>
-          <span class="badge badge-active">Proteksi Hak Opsi GREEN</span>
+          <span class="badge badge-active">Penilaian Otonom Karyawan</span>
         </div>
         <div class="panel-body">
           <p class="reflection-desc">
-            Bagaimana penilaian mandiri Anda terhadap pencapaian keseluruhan hari ini? Sesuai <strong>DEC-003</strong>, sistem tidak pernah mengunci opsi GREEN secara punitif.
+            Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.
           </p>
 
           <div class="status-selection-grid">
             <label class="status-select-card green" :class="{ selected: finalDailyStatus === 'GREEN' }">
-              <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isEodLocked" />
+              <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isFormLocked" />
               <div class="status-card-header">
                 <CheckCircle2 :size="20" class="text-green" />
                 <span class="status-name">GREEN</span>
@@ -505,7 +565,7 @@ onMounted(() => {
             </label>
 
             <label class="status-select-card amber" :class="{ selected: finalDailyStatus === 'AMBER' }">
-              <input type="radio" value="AMBER" v-model="finalDailyStatus" :disabled="isEodLocked" />
+              <input type="radio" value="AMBER" v-model="finalDailyStatus" :disabled="isFormLocked" />
               <div class="status-card-header">
                 <AlertCircle :size="20" class="text-amber" />
                 <span class="status-name">AMBER</span>
@@ -516,7 +576,7 @@ onMounted(() => {
             </label>
 
             <label class="status-select-card red" :class="{ selected: finalDailyStatus === 'RED' }">
-              <input type="radio" value="RED" v-model="finalDailyStatus" :disabled="isEodLocked" />
+              <input type="radio" value="RED" v-model="finalDailyStatus" :disabled="isFormLocked" />
               <div class="status-card-header">
                 <AlertTriangle :size="20" class="text-red" />
                 <span class="status-name">RED</span>
@@ -530,7 +590,7 @@ onMounted(() => {
       </section>
 
       <!-- Action Footer -->
-      <div v-if="!isEodLocked" class="action-footer">
+      <div v-if="!isFormLocked" class="action-footer">
         <div class="footer-info">
           Pastikan hasil evaluasi telah diverifikasi sebelum jam penguncian {{ eodLockCutoff }} WIB.
         </div>
@@ -558,94 +618,6 @@ onMounted(() => {
         </AccessLink>
       </div>
     </main>
-
-    <!-- Modal Instant Blocker -->
-    <div v-if="isBlockerModalOpen" class="modal-backdrop" role="dialog" aria-modal="true">
-      <div class="modal-box">
-        <div class="modal-header">
-          <div>
-            <h3>Laporkan Kendala Mendesak (Instant Blocker)</h3>
-            <p>Eskalasi kendala ke antrean reviewer dengan target respon SLA (Prototipe 05).</p>
-          </div>
-          <button type="button" class="icon-btn" @click="isBlockerModalOpen = false">
-            <X :size="20" />
-          </button>
-        </div>
-
-        <form @submit.prevent="submitInstantBlocker" class="modal-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Jenis Kendala *</label>
-              <select v-model="blockerType" class="input-control" required>
-                <option value="TECHNICAL">Teknis / Arsitektur (TECHNICAL)</option>
-                <option value="REQUIREMENT">Kebutuhan / Spesifikasi (REQUIREMENT)</option>
-                <option value="APPROVAL">Persetujuan / Approval (APPROVAL)</option>
-                <option value="VENDOR">Vendor / Pihak Ketiga (VENDOR)</option>
-                <option value="INFRA">Infrastruktur / Cloud (INFRA)</option>
-                <option value="OTHER">Lainnya (OTHER)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Tingkat Keparahan *</label>
-              <select v-model="blockerSeverity" class="input-control" required>
-                <option value="LOW">Low (Rendah)</option>
-                <option value="MEDIUM">Medium (Sedang)</option>
-                <option value="HIGH">High (Tinggi)</option>
-                <option value="CRITICAL">Critical (Kritis)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Deskripsi Kendala *</label>
-            <textarea
-              v-model="blockerDesc"
-              class="input-control"
-              rows="3"
-              placeholder="Jelaskan kendala, dampak terhadap timeline, dan tindakan mitigasi yang telah dicoba..."
-              minlength="10"
-              required
-            ></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Konteks Kewenangan *</label>
-              <select v-model="blockerOwnerType" class="input-control" required>
-                <option value="ORGANIZATIONAL_AUTHORITY">Kewenangan Hierarki (Supervisor/Head)</option>
-                <option value="PROJECT_AUTHORITY">Kewenangan Proyek (Project Manager)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Penerima Eskalasi (Owner) *</label>
-              <select v-model="blockerOwnerId" class="input-control" required>
-                <option v-for="u in availableUsers" :key="u.id" :value="u.id">
-                  {{ u.fullName }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div v-if="blockerOwnerType === 'PROJECT_AUTHORITY'" class="form-group">
-            <label class="form-label">Kode Proyek Referensi *</label>
-            <input
-              v-model="blockerProjectCode"
-              type="text"
-              class="input-control"
-              placeholder="Contoh: PRJ-WORKPULSE-01"
-              required
-            />
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="isBlockerModalOpen = false">Batal</button>
-            <button type="submit" class="btn btn-primary">Laporkan Blocker</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -720,8 +692,43 @@ onMounted(() => {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
+}
+
+.step-items {
+  display: flex;
   gap: 32px;
+}
+
+.workflow-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-report-blocker {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-report-blocker:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  text-decoration: none;
 }
 
 .step-item {
@@ -867,6 +874,47 @@ onMounted(() => {
   line-height: 1.5;
 }
 
+.alert-banner.submitted {
+  background: var(--color-status-green-bg);
+  border: 1px solid var(--color-status-green-border);
+  color: var(--color-status-green-fg);
+}
+
+.submitted-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.submitted-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.submitted-banner-desc {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.submitted-banner-actions {
+  margin-top: 4px;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  width: fit-content;
+}
+
 .alert-banner.locked {
   background: var(--color-status-neutral-bg);
   border: 1px solid var(--color-status-neutral-border);
@@ -984,6 +1032,14 @@ onMounted(() => {
 
 .mt-2 {
   margin-top: 8px;
+}
+
+.continuation-reason-group {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
 }
 
 /* Status Reflection Cards */
@@ -1111,18 +1167,28 @@ onMounted(() => {
 }
 
 .form-label {
+  display: block;
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .input-control {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
   padding: 9px 12px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   font-size: 13px;
   background: #fff;
   color: var(--color-text-primary);
+}
+
+textarea.input-control {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
 }
 
 .input-control:focus {
@@ -1205,73 +1271,6 @@ onMounted(() => {
 .post-submit-header p {
   font-size: 13px;
   color: var(--color-text-secondary);
-}
-
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-}
-
-.modal-box {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 580px;
-  width: 100%;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.modal-header h3 {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.modal-header p {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-
-.modal-form {
-  padding: 20px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
 }
 
 .toast-popup {

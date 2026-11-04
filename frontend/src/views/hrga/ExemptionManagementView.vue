@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -125,17 +125,7 @@ onMounted(() => {
 <template>
   <div class="exemption-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">HRGA / <strong>Kelola Hari Libur &amp; Pengecualian (Prototipe 12)</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/compliance" class="btn-topbar">Antrean Kepatuhan</AccessLink>
-        <AccessLink to="/corrections/review" class="btn-topbar">Antrean Koreksi</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Administration / Manajemen Dispensasi" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

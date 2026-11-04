@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -9,6 +10,7 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Link as LinkIcon,
   Copy,
   ChevronDown,
@@ -43,6 +45,7 @@ const isMorningLocked = ref(false);
 const isLate = ref(false);
 const morningOnTimeCutoff = ref('09:00');
 const morningLockCutoff = ref('09:30');
+const morningSubmittedAt = ref<string | null>(null);
 
 const isZeroCommitment = ref(false);
 const zeroCommitmentReason = ref('');
@@ -64,6 +67,43 @@ const commitmentSlots = ref<CommitmentSlot[]>([
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 const isSubmittedSuccess = ref(false);
+
+const hasSubmittedMorning = computed(() => {
+  return morningSubmittedAt.value !== null && morningSubmittedAt.value !== '';
+});
+const isFormLocked = computed(() => isMorningLocked.value || hasSubmittedMorning.value);
+
+function formatTime(isoStr: string | null) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-027)
+const formattedWorkDate = computed(() => {
+  if (!workDate.value) return '';
+  const parts = workDate.value.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month, day);
+    return d.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  const d = new Date(workDate.value);
+  if (isNaN(d.getTime())) return workDate.value;
+  return d.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+});
 
 // Computed initial daily status
 const initialDailyStatus = computed(() => {
@@ -101,6 +141,10 @@ async function loadTodayState() {
 
     // Jika record sudah ada di DB
     if (data.record) {
+      morningSubmittedAt.value = data.record.morningSubmittedAt
+        ? new Date(data.record.morningSubmittedAt).toISOString()
+        : null;
+
       if (data.record.initialDailyStatus === 'NOT_APPLICABLE_NO_COMMITMENT') {
         isZeroCommitment.value = true;
         zeroCommitmentReason.value = data.record.zeroCommitmentReason || '';
@@ -115,7 +159,10 @@ async function loadTodayState() {
           carryOverDaysCount: c.carryOverDaysCount || 0,
         }));
       }
-      isSubmittedSuccess.value = true;
+      isSubmittedSuccess.value = !!morningSubmittedAt.value;
+    } else {
+      morningSubmittedAt.value = null;
+      isSubmittedSuccess.value = false;
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat status komitmen hari ini.', true);
@@ -218,12 +265,15 @@ async function submitMorningCheckin() {
       zeroCommitmentReason: isZeroCommitment.value ? zeroCommitmentReason.value.trim() : undefined,
     };
 
-    await apiClient('/daily/morning', {
+    const res = await apiClient<{ morningSubmittedAt?: string }>('/daily/morning', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
 
     showToast('Morning Commitment berhasil dikirim dan dicatat.');
+    morningSubmittedAt.value = res.data?.morningSubmittedAt
+      ? new Date(res.data.morningSubmittedAt).toISOString()
+      : new Date().toISOString();
     isSubmittedSuccess.value = true;
     await loadTodayState();
   } catch (err: any) {
@@ -251,32 +301,36 @@ onMounted(() => {
 <template>
   <div class="daily-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">My Today / <strong>Morning Commitment</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/daily/history" class="nav-btn">Riwayat Saya</AccessLink>
-        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My Today / Morning Commitment" />
 
     <!-- Daily Workflow Step Bar -->
     <nav class="workflow-bar" aria-label="Alur Akuntabilitas Harian">
-      <AccessLink to="/daily/morning" class="step-item active">
-        <span class="step-num">1</span>
-        <span>Morning Commitment</span>
-      </AccessLink>
-      <AccessLink to="/daily/additional-work" class="step-item">
-        <span class="step-num">2</span>
-        <span>Additional Work</span>
-      </AccessLink>
-      <AccessLink to="/daily/eod" class="step-item">
-        <span class="step-num">3</span>
-        <span>EOD Outcome</span>
-      </AccessLink>
+      <div class="step-items">
+        <AccessLink to="/daily/morning" class="step-item active">
+          <span class="step-num">1</span>
+          <span>Morning Commitment</span>
+        </AccessLink>
+        <AccessLink to="/daily/additional-work" class="step-item">
+          <span class="step-num">2</span>
+          <span>Additional Work</span>
+        </AccessLink>
+        <AccessLink to="/daily/eod" class="step-item">
+          <span class="step-num">3</span>
+          <span>EOD Outcome</span>
+        </AccessLink>
+      </div>
+
+      <div class="workflow-actions">
+        <AccessLink
+          to="/raise-blockers"
+          class="btn-report-blocker"
+          title="Laporkan kendala kritis atau dependensi"
+          data-testid="report-blocker-btn"
+        >
+          <AlertTriangle :size="15" />
+          <span>Laporkan Blocker</span>
+        </AccessLink>
+      </div>
     </nav>
 
     <!-- Toasts -->
@@ -299,52 +353,68 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Konteks Hari Ini Panel -->
+      <!-- Konteks Hari Ini Panel (IMP-027 Restrukturisasi & Pembersihan Metrik) -->
       <section class="panel context-panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Konteks Hari Ini</div>
             <h2>Jadwal & Batas Pengisian Hari Ini</h2>
           </div>
-          <span class="badge badge-info">Kebijakan: On-Time {{ morningOnTimeCutoff }} · Cut-Off {{ morningLockCutoff }} WIB</span>
+          <span class="badge badge-info" data-testid="context-date-badge">{{ formattedWorkDate || 'Hari Kerja Aktif' }}</span>
         </div>
         <div class="panel-body">
           <div class="context-grid">
-            <div class="context-item">
-              <span class="context-label">Tanggal Kerja</span>
-              <span class="context-value mono">{{ workDate || '...' }}</span>
-              <span class="context-sub">Hari Kerja Aktif</span>
-            </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-ontime">
               <span class="context-label">Batas On-Time</span>
               <span class="context-value mono">{{ morningOnTimeCutoff }} WIB</span>
-              <span class="context-sub">Cut-Off Penguncian: {{ morningLockCutoff }} WIB</span>
             </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-cutoff">
+              <span class="context-label">Batas Cut-Off</span>
+              <span class="context-value mono">{{ morningLockCutoff }} WIB</span>
+            </div>
+            <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
-                <span v-if="isMorningLocked" class="badge badge-danger">LOCKED (Pasca Cut-Off)</span>
-                <span v-else-if="isLate" class="badge badge-late">LATE (Jendela Toleransi)</span>
+                <span v-if="hasSubmittedMorning" class="badge badge-active">SUBMITTED (Terkunci)</span>
+                <span v-else-if="isMorningLocked" class="badge badge-danger">LOCKED (Pasca Cut-Off)</span>
+                <span v-else-if="isLate" class="badge badge-late">Terlambat (LATE)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
-              <span class="context-sub">Jam Server: {{ currentTime || '...' }}</span>
             </div>
-            <div class="context-item">
-              <span class="context-label">Initial Daily Status</span>
+            <div class="context-item" data-testid="context-item-initial-status">
+              <span class="context-label">Status Awal Hari (Initial Daily Status)</span>
               <div class="context-value">
                 <span v-if="initialDailyStatus === 'GREEN'" class="badge badge-active">GREEN — Terkendali</span>
                 <span v-else-if="initialDailyStatus === 'AMBER'" class="badge badge-warning">AMBER — Berisiko</span>
                 <span v-else-if="initialDailyStatus === 'RED'" class="badge badge-danger">RED — Kritis</span>
                 <span v-else class="badge badge-neutral">0 KOMITMEN</span>
               </div>
-              <span class="context-sub">Agregasi Tingkat Risiko</span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Alert Banner jika terkunci -->
-      <div v-if="isMorningLocked" class="alert-banner locked" role="alert">
+      <!-- Alert Banner jika komitmen pagi telah disubmit (Baseline Locked) -->
+      <div v-if="hasSubmittedMorning" class="alert-banner submitted" role="status">
+        <CheckCircle2 :size="20" class="text-green" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Morning Commitment Telah Terkunci (Baseline Locked):</strong>
+            <span> Disubmit pada {{ formatTime(morningSubmittedAt) }} WIB.</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Komitmen harian telah dicatat secara resmi sebagai baseline kerja hari ini. Form ini dikunci untuk menjaga integritas data akuntabilitas. Perubahan komitmen hanya dapat diajukan melalui mekanisme koreksi resmi.
+          </p>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/corrections/morning" class="btn btn-secondary btn-sm">
+              Ajukan Koreksi Komitmen
+            </AccessLink>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Banner jika terkunci karena cut-off waktu -->
+      <div v-else-if="isMorningLocked" class="alert-banner locked" role="alert">
         <Lock :size="20" />
         <div>
           <strong>Batas Cut-Off ({{ morningLockCutoff }} WIB) Telah Berakhir — Formulir Terkunci (DEC-002):</strong>
@@ -352,24 +422,25 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Alert Banner jika Late (09:00 - 09:30) -->
-      <div v-else-if="isLate" class="alert-banner late">
+      <!-- Alert Banner jika Late (IMP-028) -->
+      <div v-else-if="isLate" class="alert-banner late" role="status" data-testid="late-alert-banner">
         <Clock :size="20" />
         <div>
-          <strong>Jendela Grace Period / Late Aktif ({{ morningOnTimeCutoff }} – {{ morningLockCutoff }} WIB):</strong>
-          Batas waktu On-Time telah terlewati, namun Anda masih berada sebelum batas cut-off penguncian. Komitmen yang dikirim sekarang langsung sah dengan status <strong>LATE</strong>.
+          <strong>Pengisian Melewati Batas Waktu:</strong>
+          Batas waktu On-Time ({{ morningOnTimeCutoff }} WIB) telah berakhir, namun Anda masih dapat mengirimkan komitmen sebelum sistem terkunci pada pukul {{ morningLockCutoff }} WIB. Komitmen Anda hari ini akan dicatat dengan status <strong>Terlambat (LATE)</strong>.
         </div>
       </div>
 
-      <!-- Zero Commitment Option Box (DEC-004) -->
+      <!-- Zero Commitment Option Box (IMP-029) -->
       <div class="zero-box">
         <label class="zero-label">
           <input
             type="checkbox"
             v-model="isZeroCommitment"
-            :disabled="isMorningLocked"
+            :disabled="isFormLocked"
+            data-testid="zero-commitment-checkbox"
           />
-          <span>Hari ini tidak ada komitmen harian khusus (0 Komitmen / Zero Commitment — DEC-004)</span>
+          <span data-testid="zero-commitment-label">Hari ini tidak ada komitmen harian khusus (0 Komitmen)</span>
         </label>
         <div v-if="isZeroCommitment" class="zero-reason-box">
           <label for="zero-reason-input" class="form-label">
@@ -381,12 +452,12 @@ onMounted(() => {
             class="input-control"
             rows="2"
             placeholder="Contoh: Mengikuti workshop arsitektur sistem seharian penuh bersama tim infra..."
-            :disabled="isMorningLocked"
+            :disabled="isFormLocked"
             minlength="10"
             required
           ></textarea>
-          <span class="field-sub">
-            Status hari ini akan tercatat sebagai <strong>NOT_APPLICABLE — NO_COMMITMENT</strong> (bukan No Submission).
+          <span class="field-sub" data-testid="zero-commitment-subtext">
+            Hari Anda akan dicatat resmi sebagai <strong>Bebas Komitmen (Disetujui)</strong>, sehingga Anda tetap aman dan terbebas dari catatan Pelanggaran Pengisian (No Submission).
           </span>
         </div>
       </div>
@@ -428,7 +499,7 @@ onMounted(() => {
               <button
                 type="button"
                 class="btn btn-secondary"
-                :disabled="isMorningLocked"
+                :disabled="isFormLocked"
                 @click="applyCarryOver(item)"
               >
                 <Copy :size="14" />
@@ -447,7 +518,7 @@ onMounted(() => {
             <h2>Daftar Komitmen Hari Ini ({{ commitmentSlots.length }}/3)</h2>
           </div>
           <button
-            v-if="commitmentSlots.length < 3 && !isMorningLocked"
+            v-if="commitmentSlots.length < 3 && !isFormLocked"
             type="button"
             class="btn btn-secondary"
             @click="addSlot"
@@ -472,7 +543,7 @@ onMounted(() => {
                 </span>
               </div>
               <button
-                v-if="commitmentSlots.length > 1 && !isMorningLocked"
+                v-if="commitmentSlots.length > 1 && !isFormLocked"
                 type="button"
                 class="remove-btn"
                 title="Hapus slot"
@@ -490,7 +561,7 @@ onMounted(() => {
                 class="input-control"
                 rows="2"
                 placeholder="Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini..."
-                :disabled="isMorningLocked"
+                :disabled="isFormLocked"
                 required
               ></textarea>
             </div>
@@ -505,7 +576,7 @@ onMounted(() => {
                   type="url"
                   class="input-control with-icon"
                   placeholder="https://github.com/... atau https://docs.google.com/..."
-                  :disabled="isMorningLocked"
+                  :disabled="isFormLocked"
                 />
               </div>
             </div>
@@ -523,7 +594,7 @@ onMounted(() => {
                     :name="`risk-${idx}`"
                     value="GREEN"
                     v-model="slot.initialRisk"
-                    :disabled="isMorningLocked"
+                    :disabled="isFormLocked"
                   />
                   <div class="risk-title">GREEN</div>
                   <div class="risk-desc">Terkendali Mandiri (Tanpa hambatan eksternal)</div>
@@ -538,7 +609,7 @@ onMounted(() => {
                     :name="`risk-${idx}`"
                     value="AMBER"
                     v-model="slot.initialRisk"
-                    :disabled="isMorningLocked"
+                    :disabled="isFormLocked"
                   />
                   <div class="risk-title">AMBER</div>
                   <div class="risk-desc">Ada Dependensi / Potensi Hambatan</div>
@@ -553,7 +624,7 @@ onMounted(() => {
                     :name="`risk-${idx}`"
                     value="RED"
                     v-model="slot.initialRisk"
-                    :disabled="isMorningLocked"
+                    :disabled="isFormLocked"
                   />
                   <div class="risk-title">RED</div>
                   <div class="risk-desc">Kritis / Memerlukan Intervensi Atasan</div>
@@ -570,7 +641,7 @@ onMounted(() => {
                   class="input-control"
                   rows="2"
                   placeholder="Jelaskan hambatan atau pihak yang ditunggu agar pimpinan dapat memantau..."
-                  :disabled="isMorningLocked"
+                  :disabled="isFormLocked"
                   required
                 ></textarea>
               </div>
@@ -582,7 +653,7 @@ onMounted(() => {
                   type="text"
                   class="input-control"
                   placeholder="Misal: Bantuan eskalasi review PR ke Tech Lead"
-                  :disabled="isMorningLocked"
+                  :disabled="isFormLocked"
                 />
               </div>
             </div>
@@ -591,7 +662,7 @@ onMounted(() => {
       </section>
 
       <!-- Action Footer -->
-      <div v-if="!isMorningLocked" class="action-footer">
+      <div v-if="!isFormLocked" class="action-footer">
         <div class="footer-info">
           Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off {{ morningLockCutoff }} WIB.
         </div>
@@ -703,8 +774,43 @@ onMounted(() => {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
+}
+
+.step-items {
+  display: flex;
   gap: 32px;
+}
+
+.workflow-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-report-blocker {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-report-blocker:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  text-decoration: none;
 }
 
 .step-item {
@@ -849,6 +955,47 @@ onMounted(() => {
   line-height: 1.5;
 }
 
+.alert-banner.submitted {
+  background: var(--color-status-green-bg);
+  border: 1px solid var(--color-status-green-border);
+  color: var(--color-status-green-fg);
+}
+
+.submitted-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.submitted-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.submitted-banner-desc {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.submitted-banner-actions {
+  margin-top: 4px;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  width: fit-content;
+}
+
 .alert-banner.locked {
   background: var(--color-status-neutral-bg);
   border: 1px solid var(--color-status-neutral-border);
@@ -886,6 +1033,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.zero-reason-box .field-sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.zero-reason-box .field-sub strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
 }
 
 /* Copy forward panel */

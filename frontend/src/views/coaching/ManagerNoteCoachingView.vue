@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
@@ -177,17 +177,7 @@ onMounted(() => {
 <template>
   <div class="coaching-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Manajerial / <strong>Catatan Evaluasi Kerja &amp; Pembinaan Tim (Prototipe 10)</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/blockers" class="btn-topbar">Antrean Blocker</AccessLink>
-        <AccessLink to="/daily/morning" class="btn-topbar">My Today</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Management / Catatan Coaching" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

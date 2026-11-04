@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -11,7 +11,6 @@ import {
   Send,
   RotateCcw,
   Info,
-  CalendarDays,
 } from 'lucide-vue-next';
 
 interface LeaveRequestItem {
@@ -165,19 +164,7 @@ onMounted(() => {
 <template>
   <div class="leave-layout">
     <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Workspace / <strong>My Leave Request</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/leave/queue" class="btn-topbar">
-          <CalendarDays :size="16" />
-          <span>Antrean Approval</span>
-        </AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My Leave" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

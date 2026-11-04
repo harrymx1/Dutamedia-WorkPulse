@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -7,7 +8,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
-  ListFilter,
   User,
   ArrowUpRight,
 } from 'lucide-vue-next';
@@ -81,23 +81,14 @@ onMounted(() => {
 <template>
   <div class="aging-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">Blocker / <strong>Radar Penuaan &amp; Pelanggaran SLA (Prototipe 14)</strong></span>
-      </div>
-      <div class="topbar-right">
+    <TopBar breadcrumb="Management / Penuaan & Eskalasi">
+      <template #actions>
         <button type="button" class="btn-topbar" :disabled="loading" @click="loadAgingMetrics">
           <RefreshCw :size="15" :class="{ spinning: loading }" />
           <span>Segarkan Data</span>
         </button>
-        <AccessLink to="/blockers" class="btn-topbar">
-          <ListFilter :size="16" />
-          <span>Antrean Tiket</span>
-        </AccessLink>
-      </div>
-    </header>
+      </template>
+    </TopBar>
 
     <!-- Toast -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

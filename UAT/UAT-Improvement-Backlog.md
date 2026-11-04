@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 22 Calon Perbaikan (IMP-001 s.d. IMP-022)
+> **Total Temuan:** 44 Calon Perbaikan (IMP-001 s.d. IMP-044)
 
 ---
 
@@ -46,29 +46,50 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 | Finding ID | Title | Category | Page / Module | Related TC | Priority | Status |
 | :---: | :--- | :--- | :--- | :---: | :---: | :---: |
-| **IMP-001** | Penyempurnaan Tagline Value Proposition Hero Login | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-002** | Penyesuaian Judul Poin Fitur 1 Komitmen Harian Menyeluruh | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-003** | Penyesuaian Deskripsi Subtitle Poin Fitur 1 Komitmen Harian | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-004** | Penyelarasan Judul & Subtitle Poin Fitur 2 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-005** | Penyelarasan Judul & Subtitle Poin Fitur 3 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-006** | Standardisasi Ikon Vektor SVG pada 3 Poin Fitur Panel Kiri | Visual Design & Styling | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-007** | Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-008** | Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form | Visual Design & Styling | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-009** | Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment" | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Candidate |
-| **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Candidate |
-| **IMP-012** | Keselarasan Visual Panel Hero Kiri antara Tab Login dan Aktivasi | Layout & Spacing | `/activate` & `/login` | `TC-AUTH-003` | Medium | Candidate |
-| **IMP-013** | Penambahan Skenario Uji Khusus State Akun Nonaktif & Rate Limit | User Experience (UX) | `/login` & Error Guard | `TC-AUTH-002` | Medium | Candidate |
-| **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Candidate |
-| **IMP-015** | Penggantian Tombol Riwayat Menjadi Ikon Notifikasi Ber-badge Merah | Navigation & Architecture | Header Bar / Shell | `TC-DLYM-001` | High | Candidate |
-| **IMP-016** | Penempatan Tombol "Lapor Blocker" Konsisten pada 3 Tab My Today | User Experience (UX) | `/daily/*` (My Today) | `TC-DLYM-001` | High | Candidate |
-| **IMP-017** | Konsolidasi Menu Sidebar Induk "My Today" & Label 'Dutamedia' | Navigation & Architecture | Enterprise Sidebar | `TC-AUTH-001` | High | Candidate |
-| **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Candidate |
-| **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Candidate |
-| **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Candidate |
-| **IMP-021** | Pemisahan Nama Lengkap dan Jabatan pada Tampilan User | Copywriting & Microcopy | `/profile` & Header | `TC-AUTH-007` | Medium | Candidate |
-| **IMP-022** | Penyelarasan Layout Body Profil Sesuai 3 Seksi Prototipe 24 | Layout & Spacing | `/profile` | `TC-AUTH-007` | High | Candidate |
-| **IMP-023** | Pengalihan Tombol Pemulihan Layar 403 Mengikuti Rute Kanonikal Peran | Navigation & Architecture | `ErrorPageView.vue` | `TC-AUTH-005` | High | Candidate |
+| **IMP-001** | Penyempurnaan Tagline Value Proposition Hero Login | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-002** | Penyesuaian Judul Poin Fitur 1 Komitmen Harian Menyeluruh | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-003** | Penyesuaian Deskripsi Subtitle Poin Fitur 1 Komitmen Harian | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-004** | Penyelarasan Judul & Subtitle Poin Fitur 2 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-005** | Penyelarasan Judul & Subtitle Poin Fitur 3 dengan Desain UI/UX | Copywriting & Microcopy | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-006** | Standardisasi Ikon Vektor SVG pada 3 Poin Fitur Panel Kiri | Visual Design & Styling | `/login` (Panel Kiri) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-007** | Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-008** | Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form | Visual Design & Styling | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-009** | Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment" | Copywriting & Microcopy | `/login` (Form Kanan) | `TC-AUTH-001` | Low | Implemented (Pending UAT) |
+| **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Closed (Descoped) |
+| **IMP-012** | Keselarasan Visual Panel Hero Kiri antara Tab Login dan Aktivasi | Layout & Spacing | `/activate` & `/login` | `TC-AUTH-003` | Medium | Implemented (Pending UAT) |
+| **IMP-013** | Penambahan Skenario Uji Khusus State Akun Nonaktif & Rate Limit | User Experience (UX) | `/login` & Error Guard | `TC-AUTH-002` | Medium | Implemented (Pending UAT) |
+| **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
+| **IMP-015** | Penggantian Tombol Riwayat Menjadi Ikon Notifikasi Ber-badge Merah | Navigation & Architecture | Header Bar / Shell | `TC-DLYM-001` | High | Implemented (Pending UAT) |
+| **IMP-016** | Penempatan Tombol "Lapor Blocker" Konsisten pada 3 Tab My Today | User Experience (UX) | `/daily/*` (My Today) | `TC-DLYM-001` | High | Implemented (Pending UAT) |
+| **IMP-017** | Konsolidasi Menu Sidebar Induk "My Today" & Label 'Dutamedia' | Navigation & Architecture | Enterprise Sidebar | `TC-AUTH-001` | High | Implemented (Pending UAT) |
+| **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
+| **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Implemented (Pending UAT) |
+| **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
+| **IMP-021** | Pemisahan Nama Lengkap dan Jabatan pada Tampilan User | Copywriting & Microcopy | `/profile` & Header | `TC-AUTH-007` | Medium | Implemented (Pending UAT) |
+| **IMP-022** | Penyelarasan Layout Body Profil Sesuai 3 Seksi Prototipe 24 | Layout & Spacing | `/profile` | `TC-AUTH-007` | High | Implemented (Pending UAT) |
+| **IMP-023** | Pengalihan Tombol Pemulihan Layar 403 Mengikuti Rute Kanonikal Peran | Navigation & Architecture | `ErrorPageView.vue` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
+| **IMP-024** | Penyeragaman Topbar Administrasi Menggunakan Breadcrumb Hirarkis | Navigation & Consistency | `/admin/*` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
+| **IMP-025** | Konsolidasi Topbar Administrasi: Eliminasi Menu Duplikat & Avatar Bulat | UI/UX & Information Architecture | `admin-layout` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
+| **IMP-026** | Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Navigasi 'Workspace' | Architecture & Separation of Duties (IAM) | `EnterpriseSidebar` & `navigation.ts` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
+| **IMP-027** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Hari Ini | Layout & Visual Cleanliness | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
+| **IMP-028** | Penyempurnaan Microcopy Banner Keterlambatan Pengisian Komitmen | Microcopy & UX Content | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
+| **IMP-029** | Eliminasi Kode Keputusan Arsitektur Internal 'DEC-004' dari Label Checkbox | Copywriting & Polish | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
+| **IMP-030** | Transformasi Microcopy Penjelasan Komitmen Nol dari Enum Database Teknis Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
+| **IMP-031** | Eliminasi Kebocoran Kode Desain '(Prototipe 03)' pada Subtitle Halaman Additional Work | Copywriting & Polish | `/daily/additional-work` | `TC-DLYA-001` | Medium | Implemented (Pending UAT) |
+| **IMP-032** | Perbaikan Overflow Horizontal Kolom Input Atasan Penugas pada Grid Dua Kolom Additional Work | Layout & Responsive Styling | `/daily/additional-work` | `TC-DLYA-002` | High | Implemented (Pending UAT) |
+| **IMP-033** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Waktu EOD di Halaman EOD Outcome | Layout & Visual Cleanliness | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-034** | Eliminasi Kebocoran Kode Desain '(Prototipe 04)' pada Subtitle Halaman EOD Outcome | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-035** | Eliminasi Kode Arsitektur 'DEC-003' & Penyempurnaan Narasi Humanis pada Seksi Refleksi Mandiri EOD | Microcopy & UX Communication | `/daily/eod` | `TC-DLYE-002` | High | Implemented (Pending UAT) |
+| **IMP-036** | Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-037** | Perbaikan Tata Letak Kolom Textarea Catatan Kelanjutan Tugas EOD (Pelebaran 100% & Penyelarasan Label Vertikal) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | High | Implemented (Pending UAT) |
+| **IMP-038** | Penyelarasan Kelengkapan Opsi Evaluasi Pekerjaan Tambahan (Opsi Dibatalkan & Alur Kelanjutan / Alasan) | Functional Consistency & Business Logic | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-039** | Transformasi Format Badge Alasan Pekerjaan Tambahan dari Enum Raw Database Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/eod` & `/daily/additional-work` | `TC-DLYA-001` | Low | Implemented (Pending UAT) |
+| **IMP-040** | Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /raise-blockers (Eliminasi Modal Pop-Up Redundan) | Navigation & Consistency | `/daily/eod` & `/daily/*` | `TC-BLKR-001`, `TC-DLYE-001` | High | Implemented (Pending UAT) |
+| **IMP-041** | Penyelarasan Menyeluruh Halaman Blocker Sesuai Prototipe 05 (Tombol Kembali, Judul & 2 Tab) | Layout & Information Architecture | `/raise-blockers` | `TC-BLKR-001`, `TC-BLKR-005` | High | Implemented (Pending UAT) |
+| **IMP-042** | Eliminasi Tombol 'Lihat Antrean Blocker Aktif' dari Formulir Pelaporan Blocker Karyawan | RBAC & Access Control | `/raise-blockers` | `TC-BLKR-001`, `TC-AUTH-005` | Medium | Implemented (Pending UAT) |
+| **IMP-043** | Penyeragaman Topbar Blocker: Breadcrumb 'Workspace / Blocker', Avatar Inisial & Lonceng Notifikasi | Navigation & Visual Consistency | `/raise-blockers` | `TC-BLKR-001` | Medium | Implemented (Pending UAT) |
+| **IMP-044** | Pembersihan Footer Form Pelaporan Blocker: Penyesuaian Tombol Aksi Bersihkan & Kirim | Copywriting & Visual Cleanliness | `/raise-blockers` | `TC-BLKR-001` | Low | Implemented (Pending UAT) |
 
 ---
 
@@ -85,7 +106,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan penekanan yang lebih tajam pada aspek deteksi risiko dini bagi tim dan manajemen sejak awal hari.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -100,7 +123,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghindari bias persepsi bahwa sistem WorkPulse hanya digunakan pada pagi hari; mencerminkan siklus akuntabilitas kerja harian yang menyeluruh.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -115,7 +140,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Bahasa terasa lebih memotivasi, menekankan dampak dan realisme komitmen dibanding sekadar keterikatan administratif pada jam cut-off.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -132,7 +159,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Konsistensi 100% antara spesifikasi desain produk resmi dengan implementasi antarmuka.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Dokumen Desain UI/UX & Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -149,7 +178,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menegaskan filosofi WorkPulse sebagai platform pemberdayaan dan pendampingan, bukan sekadar alat monitoring (*micromanagement*).
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Dokumen Desain UI/UX & Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -164,7 +195,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Meningkatkan visual maturity, konsistensi render di lintas platform OS/browser, dan estetika enterprise grade.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Komponen `LoginView.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -172,14 +205,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-007
 - **Title:** Penyesuaian Headline Form Kanan Menjadi Lebih Inklusif Alur
 - **Category:** Copywriting & Microcopy
-- **Page / Module:** Halaman Login (`/login`, Form Kanan)
+- **Page / Module:** Halaman Login (`/login`, Hero Panel Kiri & Header Form)
 - **Related Test Case:** `TC-AUTH-001`
 - **Current Condition:** Headline form berbunyi *"Fokus pada Hasil, Tuntaskan Kendala."*
 - **Proposed Improvement:** Rumuskan kembali headline agar mencakup transparansi komitmen dan kolaborasi, tidak terkesan sempit pada pelaporan hasil akhir semata.
 - **Rationale / Expected Benefit:** Selaras dengan esensi WorkPulse yang mencakup penetapan komitmen, transparansi blocker harian, dan evaluasi hasil secara proporsional.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 1 (IMP-007) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit d7ab91d, 229c93b (Change Register: CHG-014)
+- **Implementation Note:** Menyesuaikan headline utama pada panel hero halaman login (`LoginView.vue`) dan halaman aktivasi (`ActivateView.vue`) menjadi rumusan kalimat mengalir dua baris: `Komitmen jelas,<br>hambatan tuntas` tanpa tanda titik akhir sesuai kaidah tipografi headline digital modern. Frasa ini mencerminkan ritme akuntabilitas kerja harian yang seimbang antara penetapan komitmen pagi hari dan penuntasan hambatan kerja, tanpa persepsi sempit sekadar pelaporan hasil akhir.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 1 (IMP-007) telah resmi ditutup.
 
 ---
 
@@ -187,14 +224,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-008
 - **Title:** Fleksibilitas & Penyesuaian Label Versi Sistem di Header Form
 - **Category:** Visual Design & Styling
-- **Page / Module:** Halaman Login (`/login`, Form Kanan)
+- **Page / Module:** Halaman Login (`/login`, Form Kanan / Hero Footer)
 - **Related Test Case:** `TC-AUTH-001`
 - **Current Condition:** Label versi tertulis statis: *"WorkPulse v2.0 • Clean-Slate Architecture"*.
 - **Proposed Improvement:** Ganti teks tersebut menjadi *"WorkPulse v1.5 · Dutamedia"* dan pastikan penomoran versi dapat terbaca secara fleksibel/dinamis dari konfigurasi rilis aplikasi.
 - **Rationale / Expected Benefit:** Penomoran versi selaras dengan dokumen acuan rilis internal dan menghapus istilah teknis arsitektur dari hadapan pengguna umum.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 2 (IMP-008) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit e86742b (Change Register: CHG-015)
+- **Implementation Note:** Membuat modul konfigurasi aplikasi terpusat `frontend/src/config/app.ts` (`APP_CONFIG`) dengan properti versi yang fleksibel (default `'v1.5'` dengan dukungan override environment variable `VITE_APP_VERSION`) dan format merek `"WorkPulse v1.5 · Dutamedia"`. Memperbarui footer panel hero di `LoginView.vue` dan `ActivateView.vue` agar membaca nilai dinamis ini serta menghapus istilah teknis arsitektur rekayasa internal (*"Clean-Slate Architecture"*) dan penomoran statis `v2.0`. Seluruh pengujian otomatis (84 unit test) lulus 100%.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 2 (IMP-008) telah resmi ditutup.
 
 ---
 
@@ -202,14 +243,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-009
 - **Title:** Penyesuaian Label Lingkungan Kerja "Internal Workspace Environment"
 - **Category:** Copywriting & Microcopy
-- **Page / Module:** Halaman Login (`/login`, Form Kanan)
+- **Page / Module:** Halaman Login & Aktivasi (`/login`, `/activate`, Footer Panel Hero)
 - **Related Test Case:** `TC-AUTH-001`
-- **Current Condition:** Header form login menampilkan nama badan usaha *"PT Dutamedia Mandiri Pratama"*.
+- **Current Condition:** Baris kedua footer panel hero menampilkan nama badan usaha *"PT Dutamedia Mandiri Pratama"*.
 - **Proposed Improvement:** Ubah label penanda konteks menjadi *"Internal Workspace Environment"*.
 - **Rationale / Expected Benefit:** Memberikan penegasan batas ruang kerja internal tanpa redundansi nama perusahaan yang sudah terwakili di logo dan branding.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 3 (IMP-009) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit b611ad9 (Change Register: CHG-016)
+- **Implementation Note:** Memperbarui baris kedua footer panel hero di `LoginView.vue` dan `ActivateView.vue` dari `PT Dutamedia Mandiri Pratama` menjadi `Internal Workspace Environment` selaras dengan Prototipe 01 baris 935 sebagai indikator batas lingkungan kerja internal. Seluruh pengujian otomatis (86 unit test) lulus 100%.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 3 (IMP-009) telah resmi ditutup.
 
 ---
 
@@ -220,11 +265,15 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Page / Module:** Halaman Login (`/login`, Footer Kanan)
 - **Related Test Case:** `TC-AUTH-001`
 - **Current Condition:** Footer menampilkan detail teknis implementasi keamanan: *"Perlindungan sesi via HttpOnly & CSRF Double-Submit"*.
-- **Proposed Improvement:** Ganti microcopy menjadi teks panduan praktis: *"Kendala akses akun? Hubungi Tim IT Support atau Tim HRGA."*
+- **Proposed Improvement:** Ganti microcopy menjadi teks panduan praktis: *"Kendala akses akun? Hubungi Admin System atau Tim HRGA."*
 - **Rationale / Expected Benefit:** Memberikan nilai bantu nyata kepada karyawan awam saat menghadapi kesulitan autentikasi, dibanding menampilkan jargon teknis backend/security.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 4 (IMP-010) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 2c5bbe8, 871eaba (Change Register: CHG-017)
+- **Implementation Note:** Memperbarui microcopy pada area `.help-hint` di bawah tombol login `LoginView.vue` dari teks teknis backend `Perlindungan sesi via HttpOnly & CSRF Double-Submit` menjadi teks panduan bantuan akses pengguna `Kendala akses akun? Hubungi Admin System atau Tim HRGA.` selaras dengan keputusan Acceptance Owner. Seluruh pengujian otomatis (87 unit test) lulus 100%.
+- **Closure & Verification Note:** Implementasi telah selesai, hasil penyesuaian visual pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Standalone 4 (IMP-010) telah resmi ditutup.
 
 ---
 
@@ -239,7 +288,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Alur penanganan lupa kata sandi merupakan standar esensial bagi pengguna aplikasi web untuk mencegah kebuntuan akses.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Halaman `/login`)
-- **Status:** Candidate
+- **Status:** Closed (Descoped)
+- **Product Decision:** DEC-008-UAT Amandemen — Keputusan Definitif Acceptance Owner (03/11/2026): Tombol / tautan mandiri "Lupa kata sandi?" ditiadakan dari form login. Pemulihan akun dan reset kata sandi merupakan prosedur administratif terpusat yang ditangani oleh Admin System dan Tim HRGA, bukan fitur mandiri antarmuka. Kebutuhan bantuan bagi pengguna yang lupa sandi telah sepenuhnya terwadahi secara terpadu melalui microcopy panduan akses akun (*"Kendala akses akun? Hubungi Admin System atau Tim HRGA."* pada IMP-010).
+- **Closure Note:** Temuan resmi DITUTUP (CLOSED) dengan status Descoped / Not Required atas penetapan resmi Acceptance Owner. Standalone 5 resmi ditutup.
 
 ---
 
@@ -254,7 +305,9 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan pengalaman visual yang konsisten dan mulus bagi pengguna saat berpindah antara tab login dan aktivasi.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (`ActivateView.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 1 (SOL-AUTH-HERO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 802712e (Change Register: CHG-010)
 
 ---
 
@@ -269,7 +322,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memastikan keamanan sistem tetap diimbangi dengan kejelasan umpan balik (*user feedback*) saat terjadi kondisi pencegahan akses.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Exception Filter & Throttler)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 6 (IMP-013) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 376acf1, 4dc067c (Change Register: CHG-019)
+- **Implementation Note:** Multi-tier negative authentication hardening telah diimplementasikan penuh: (1) Penanganan akun `INACTIVE` dengan pesan error ramah mengarahkan ke HRGA, (2) `AllExceptionsFilter` memetakan status HTTP 429 ke `AUTH_RATE_LIMIT_EXCEEDED` dengan pesan ramah berbahasa Indonesia, (3) `auth.controller.ts` membatasi `@Throttle` login dengan batas aman (maksimum 5 percobaan), (4) Client-side defense-in-depth lockout pada `LoginView.vue` memblokir tombol pada percobaan ke-5 berturut-turut dengan countdown timer dinamis 60 detik (`Terkunci (60s)`), dan (5) Dokumen `UAT-Manual-Test-Cases.md` skenario `TC-AUTH-002` telah diperkaya dengan 3 sub-skenario pengujian spesifik.
+- **Closure & Verification Note:** Implementasi telah selesai, automated tests 100% pass (unit backend & frontend), verifikasi manual Acceptance Owner diterima, seluruh kriteria penerimaan terpenuhi, dan Standalone 6 resmi ditutup.
 
 ---
 
@@ -284,7 +341,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Tampilan header menjadi lebih bersih, elegan, dan hemat ruang horizontal (*clean visual hierarchy*).
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Header Bar)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tombol teks profil pada header bar navigasi telah digantikan secara global oleh komponen Circular User Avatar berbasis inisial nama dinamis pengguna aktif melalui komponen terpusat `TopBar.vue`, mengarahkan langsung ke rute `/profile` tanpa dropdown.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -299,7 +360,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan pusat kesadaran notifikasi instan bagi pengguna tanpa harus menavigasi menu tersembunyi.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Prototipe UI/UX Header)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Product Decision:** DEC-008-UAT (Alternatif A — Static Notification Navigation; Keputusan Acceptance Owner 02/11/2026: Ikon Bell statis navigasi ke /notifications; Ditolak: Dynamic unread counter & real-time engine)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Sesuai keputusan produk definitif DEC-008-UAT, tombol teks 'Riwayat Saya' pada header bar telah digantikan dengan tombol Ikon Notifikasi (SVG Lucide Bell) pada `TopBar.vue` yang berfungsi sebagai shortcut akses navigasi langsung ke `/notifications` tanpa unread counter/badge/red dot.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -314,7 +380,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memungkinkan karyawan melaporkan hambatan kritis kapan saja (pagi, siang, maupun sore) dengan lokasi tombol yang konsisten dan ergonomis.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Rancangan Tab My Today)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 7 (IMP-016) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 84b0d83 (Change Register: CHG-020)
+- **Implementation Note:** Struktur baris tab kerja harian (`.workflow-bar`) telah distandarisasi pada `MorningCommitmentView.vue`, `AdditionalWorkView.vue`, dan `EodOutcomeView.vue` menggunakan pembagian kontainer `.step-items` dan `.workflow-actions`. Tombol `.btn-report-blocker` (menggunakan `AccessLink` ke `/blockers/raise` dengan ikon AlertTriangle dan styling token kanonikal prototipe) ditempatkan konsisten di sisi kanan tab bar pada ketiga halaman, tombol modal lama di heading EOD telah dibersihkan, dan suite pengujian unit otomatis telah ditambahkan.
+- **Closure & Verification Note:** Implementasi telah selesai, automated tests 100% pass (32 unit test frontend pass, build clean), peninjauan Vercel Preview telah diterima oleh Acceptance Owner, seluruh Acceptance Criteria terkait terpenuhi, dan Standalone 7 telah resmi ditutup.
 
 ---
 
@@ -333,7 +403,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Mencegah redundansi navigasi antara sidebar dan tab dalam halaman, merapikan struktur menu sidebar, dan menyelaraskan fungsi bar navigasi atas.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (`EnterpriseSidebar.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 8 (IMP-017) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 9f8a65f (Change Register: CHG-021)
+- **Implementation Note:** Teks brand caption di bawah logo WorkPulse pada sidebar telah diringkas menjadi 'Dutamedia'. Tiga tautan alur harian terpisah di grup Workspace telah disatukan menjadi satu menu induk 'My Today' (ikon Clock, target `/daily/morning`), didukung fungsi `isItemActive()` yang menjaga status highlight aktif saat pengguna berada di sub-halaman `/daily/*`, serta penyediaan rute alias `/daily` redirect ke `/daily/morning`.
+- **Closure & Verification Note:** Implementasi telah selesai, automated tests 100% pass (32 test suite frontend pass, 96 tests), peninjauan Vercel Preview diterima Acceptance Owner, seluruh Acceptance Criteria terpenuhi, dan Standalone 8 telah resmi ditutup.
 
 ---
 
@@ -348,7 +422,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Mengurangi redundansi identitas brand pada satu layar dan menciptakan hierarki visual yang lebih rapi.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (`ProfileView.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Badge redundan 'WP' dan teks jenama 'WorkPulse' pada topbar halaman `/profile` (`ProfileView.vue`) telah dieliminasi sepenuhnya. Digantikan dengan standar global `TopBar.vue` dengan breadcrumb tunggal kanonikal 'Profil Akun'.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -363,7 +441,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan konsistensi pengalaman navigasi global (*unified layout pattern*) di seluruh halaman WorkPulse.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Rancangan Header Global)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** **SOLUSI GLOBAL UTAMA:** Mengimplementasikan standardisasi topbar global di seluruh 26 halaman aplikasi menggunakan komponen terpusat `TopBar.vue` (`[Breadcrumb] ... [Bell] [Avatar]`). Mengeliminasi inkonsistensi layout, tautan teks profil, tombol logout mengambang, dan menu navigasi horizontal duplikat di seluruh header aplikasi.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -378,7 +460,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Konsistensi visual dan identitas personal pengguna yang lebih akurat dan profesional.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** TBD (`ProfileView.vue` & `EnterpriseSidebar.vue`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Mengimplementasikan utilitas penjanaan inisial avatar tunggal dan deterministik (`getUserInitials` di `frontend/src/utils/initials.ts`). Menegakkan aturan seragam: 2 karakter huruf kapital (1 kata: 2 karakter pertama; 2-4+ kata: huruf pertama kata pertama dan terakhir; fallback email/'U'). Diterapkan seragam pada `EnterpriseSidebar.vue`, `TopBar.vue`, dan avatar besar kartu identitas `ProfileView.vue` (Aditya Nugroho konsisten menghasilkan 'AN').
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -392,8 +478,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** Pisahkan field nama lengkap pengguna ("Aditya Nugroho") dengan field jabatan ("Frontend Engineer") secara visual atau struktural, tanpa menggabungkan nama dan jabatan dalam tanda kurung pada satu string teks.
 - **Rationale / Expected Benefit:** Membedakan entitas nama individu dari penugasan organisasi secara profesional dan sesuai prinsip desain basis data.
 - **Priority:** Medium
-- **Evidence / Screenshot Reference:** TBD (`ProfileView.vue`)
-- **Status:** Candidate
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`ProfileView.vue` & `EnterpriseSidebar.vue`)
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 3 (SOL-PROF-LAYO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 512bbd1, 05876bb, 6bafd19 (Change Register: CHG-012)
+- **Implementation Note:** Memisahkan field nama lengkap pengguna ("Aditya Nugroho") dan jabatan fungsional ("Frontend Engineer") sebagai elemen visual mandiri tanpa konkatenasi tanda kurung. Mengimplementasikan sanitasi nama otomatis pada level store (`auth.ts`), sidebar (`EnterpriseSidebar.vue`), dan profil (`ProfileView.vue`) serta utilitas inisial avatar (`initials.ts`), sehingga string lama berformat "Nama (Jabatan)" otomatis dibersihkan menjadi murni nama individu dan inisial avatar konsisten 'AN'. Data seeder backend (`seed.ts`) juga dibersihkan dari atribut jabatan dalam tanda kurung.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 3 (SOL-PROF-LAYO) telah resmi ditutup.
 
 ---
 
@@ -408,7 +498,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan tampilan pengaturan akun enterprise yang lengkap, profesional, dan 100% selaras dengan acuan desain resmi perusahaan.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/24-Profile-Settings.html`
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 3 (SOL-PROF-LAYO) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 512bbd1, 05876bb, 6bafd19 (Change Register: CHG-012)
+- **Implementation Note:** Menyelaraskan seluruh struktur body halaman `/profile` (`ProfileView.vue`) dengan Prototipe 24 (`24-Profile-Settings.html`): Page Heading kanonikal ("Identitas & Konteks Akun" / "Profil Pengguna & Keamanan Akun"), Hero Identity Strip horizontal dengan avatar 68px berlatar mint soft, Seksi 1 Kartu Identitas & Penugasan Efektif (Read-Only 9 atribut master data organisasi + RoleBasedPromptHint kanonikal), Seksi 2 Keamanan & Pembaruan Kata Sandi Mandiri (meter kekuatan 4 segmen + checklist real-time + show/hide eye toggle + logout sesi aktif), dan Seksi 3 Ringkasan Kanal Notifikasi Perangkat Ini (Browser Push status, aturan tetap pengingat 60m sebelum cut-off, dan kanal sistem tetap). Toolbar simulasi khusus prototipe (`.sim-bar`) diabaikan/dieliminasi dari kode produksi.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 3 (SOL-PROF-LAYO) telah resmi ditutup.
 
 ---
 
@@ -422,8 +516,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** Ubah rute tombol pemulihan agar memanggil helper navigasi berbasis peran (misal: `getRoleBasedHomeRoute(user.role)`), sehingga untuk peran EMPLOYEE tombol otomatis mengarahkan ke `/daily/morning`, sedangkan untuk peran manajerial mengarahkan ke `/dashboard`.
 - **Rationale / Expected Benefit:** Menegakkan konsistensi tata kelola pendaratan berbasis peran (DEC-012) di seluruh alur pemulihan error sistem.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** TBD (`ErrorPageView.vue`)
-- **Status:** Candidate
+- **Evidence / Screenshot Reference:** Temuan Sesi Manual UAT 30 Okt 2026 (`ErrorPageView.vue`)
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 9 (IMP-023) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 6bd9f6d (Change Register: CHG-022)
+- **Implementation Note:** Menyelaraskan rute tombol pemulihan pada layar Error 403 / Forbidden (`ErrorPageView.vue`) menggunakan helper kanonikal `getLandingRouteForRole(auth.user?.role)` sehingga rute tujuan bersifat adaptif berbasis peran pengguna: `/daily/morning` untuk EMPLOYEE, `/dashboard` untuk peran manajerial (SUPERVISOR, MANAGER, VP, CEO), `/compliance` untuk HRGA, `/admin/organization` untuk SYSTEM_ADMIN, dan fallback `/login` jika sesi unauthenticated. Melakukan standardisasi label tombol pemulihan menjadi "Kembali ke Beranda" (atau "Ke Halaman Login" jika tidak terautentikasi) serta melengkapi pengujian unit komprehensif pada `ErrorPageView.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 9 (IMP-023) resmi ditutup.
 
 ### [IMP-024] Penyeragaman Topbar Administrasi Menggunakan Breadcrumb Hirarkis Menggantikan Badge Duplikat WP
 - **Finding ID:** IMP-024
@@ -436,7 +534,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan redundansi elemen visual identitas jenama di layar, memberikan hierarki navigasi yang jelas bagi pengguna, dan menyeragamkan pola antarmuka di seluruh portal.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`/admin/organization`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tercakup penuh oleh Solusi Global IMP-019. Seluruh modul administrasi (`/admin/organization`, `/admin/policies`, `/admin/users`, `/admin/temporary-reviewers`, `/admin/notifications`, `/admin/invitations`) kini menerapkan breadcrumb hirarkis bersih (contoh: 'Administration / Pemetaan Organisasi', 'Administration / Pengaturan Kebijakan') menggantikan badge logo duplikat WP.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -451,7 +553,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kebersihan antarmuka (declutter), menegakkan prinsip *Single Source of Navigation*, dan memastikan konsistensi visual identitas pengguna di seluruh sudut aplikasi.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`/admin/organization`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tercakup penuh oleh Solusi Global IMP-019. Seluruh tautan navigasi horizontal pada header administrasi yang menduplikasi menu sidebar telah dibersihkan (decluttering). Sisi kanan header diseragamkan dengan avatar inisial bulat 'SA' dan ikon lonceng notifikasi.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -459,14 +565,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-026
 - **Title:** Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Akses dan Grup Navigasi 'Workspace'
 - **Category:** Architecture & Separation of Duties (IAM)
-- **Page / Module:** Navigasi Sidebar (`navGroups` / `router/navigation.ts`) & Router Guard
+- **Page / Module:** Navigasi Sidebar (`navGroups` / `router/navigation.ts`) & Router Guard (`router/index.ts`)
 - **Related Test Case:** `TC-AUTH-005`, `TC-ADMN-002`
 - **Current Condition:** Akun berkedudukan peran `SYSTEM_ADMIN` saat ini masih melihat dan memiliki akses ke grup menu *Workspace* (Morning Commitment, Additional Work, EOD Outcome, Lapor Blocker, Cuti Saya, Koreksi).
 - **Proposed Improvement:** Terapkan pemisahan tugas (*Separation of Duties*) tegas pada tingkat navigasi dan hak akses: Akun `SYSTEM_ADMIN` adalah identitas pengelola sistem (bukan jabatan operasional karyawan perusahaan). Nonaktifkan grup navigasi *Workspace* untuk peran `SYSTEM_ADMIN`, sehingga akun admin murni hanya mengelola konfigurasi sistem (*Administration*) dan pemantauan eskalasi/audit (*Management*). Setiap PIC pengelola admin (misal HRGA/IT) yang memiliki kewajiban komitmen harian tetap menggunakan akun karyawan pribadinya masing-masing.
 - **Rationale / Expected Benefit:** Mencegah terjadinya pencemaran data komitmen operasional pada akun sistem, menegakkan kepatuhan tata kelola akses enterprise (IAM Governance & Separation of Duties), serta menyederhanakan fokus antarmuka administrator.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Keputusan Arsitektur Acceptance Owner Sesi 30 Okt 2026
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 10 (IMP-026) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 5f9dfba (Change Register: CHG-023)
+- **Implementation Note:** Menerapkan pemisahan tugas (Separation of Duties) tegas pada tingkat navigasi dan hak akses: mendefinisikan konstanta peran operasional `OPERATIONAL_ROLES` di `navigation.ts`, memfilter dan menonaktifkan grup `Workspace` secara penuh pada `navForRole` untuk peran `SYSTEM_ADMIN` sehingga sidebar hanya menampilkan grup `Management` dan `Administration`. Menerapkan route guard dua lapis dengan `roles: OPERATIONAL_ROLES` pada 8 rute kerja operasional (`/daily/morning`, `/daily/additional-work`, `/daily/eod`, `/daily/history`, `/raise-blockers`, `/corrections/morning`, `/corrections/eod`, `/leave/my`) di `router/index.ts` untuk mencegah akses manual langsung. Melengkapi unit test komprehensif pada `navigation.spec.ts` dan `EnterpriseSidebar.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (104 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 10 (IMP-026) resmi ditutup.
 
 ### [IMP-027] Restrukturisasi & Pembersihan Kartu Metrik Konteks Hari Ini di Formulir Morning Commitment
 - **Finding ID:** IMP-027
@@ -484,7 +594,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan antarmuka konteks yang bersih (*decluttered*), elegan, mudah dipindai dalam hitungan detik, serta menempatkan tanggal secara intuitif.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335046155_20813e00.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 11 (IMP-027) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 44f457e (Change Register: CHG-024)
+- **Implementation Note:** Restrukturisasi dan pembersihan 4 kartu metrik panel Konteks Hari Ini di `MorningCommitmentView.vue`: mengonversi badge kanan atas menjadi penanggalan dinamis bahasa Indonesia (`formattedWorkDate`, cth: 'Jumat, 30 Oktober 2026'), subkotak 1 berfokus mandiri pada Batas On-Time, subkotak 2 berfokus mandiri pada Batas Cut-Off, subkotak 3 berfokus mandiri pada Status Waktu tanpa jam server, dan subkotak 4 berfokus mandiri pada Status Awal Hari (Initial Daily Status) tanpa subteks redundan. Seluruh subteks teknis redundan (Hari Kerja Aktif, Agregasi Tingkat Risiko, Jam Server) telah dieliminasi dari DOM.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (105 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 11 (IMP-027) resmi ditutup.
 
 ---
 
@@ -499,7 +613,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kebingungan terminologi teknis asing (*Grace Period*) dan mengomunikasikan status keterlambatan secara transparan dan profesional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335279186_dd87879d.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 12 (IMP-028) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 86c6f65, 29a81c2 (Change Register: CHG-025)
+- **Implementation Note:** Menyederhanakan microcopy banner keterlambatan pengisian Morning Commitment (`MorningCommitmentView.vue`) dengan mengeliminasi penuh jargon asing 'Grace Period' dan menyelaraskan judul menjadi 'Pengisian Melewati Batas Waktu:' tanpa rentang jam redundan, serta isi penjelasan yang komunikatif dan transparan ('Batas waktu On-Time (09:00 WIB) telah berakhir, namun Anda masih dapat mengirimkan komitmen sebelum sistem terkunci pada pukul 23:59 WIB. Komitmen Anda hari ini akan dicatat dengan status Terlambat (LATE).'). Menyelaraskan teks badge pada Subkotak 3 menjadi 'Terlambat (LATE)' menggantikan 'LATE (Jendela Toleransi)'. Melengkapi unit test komprehensif pada `MorningCommitmentView.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (106 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 12 (IMP-028) resmi ditutup.
 
 ---
 
@@ -514,7 +632,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kebersihan antarmuka dari kebocoran referensi kode/dokumen internal developer yang tidak relevan bagi pengguna akhir.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335392439_f299efbc.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 13 (IMP-029) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit b584a1e (Change Register: CHG-026)
+- **Implementation Note:** Mengeliminasi kode arsitektur internal developer '— DEC-004' dan duplikasi istilah asing 'Zero Commitment' dari label checkbox komitmen nol di `MorningCommitmentView.vue`. Menyelaraskan teks label secara presisi dengan Prototipe 02 L1962: 'Hari ini tidak ada komitmen harian khusus (0 Komitmen)'. Melengkapi unit test pada `MorningCommitmentView.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (107 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 13 (IMP-029) resmi ditutup.
 
 ---
 
@@ -529,7 +651,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan kepastian psikologis dan pemahaman yang jelas bagi karyawan tanpa harus membaca istilah kode pemrograman basis data.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335392439_f299efbc.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 14 (IMP-030) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 3b379e1; 432d3c7 (Change Register: CHG-027)
+- **Implementation Note:** Mentransformasi microcopy penjelasan komitmen nol dari enum database teknis 'NOT_APPLICABLE — NO_COMMITMENT' menjadi kalimat bisnis profesional yang menenangkan: 'Hari Anda akan dicatat resmi sebagai Bebas Komitmen (Disetujui), sehingga Anda tetap aman dan terbebas dari catatan Pelanggaran Pengisian (No Submission).', menyempurnakan ukuran font menjadi 12px dan warna sekunder terkurasi sesuai Prototipe 02 kanonikal, serta melengkapi automated unit test pada MorningCommitmentView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (108 frontend, 112 backend) lulus 100%, verifikasi visual dan penyempurnaan tipografi pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 14 (IMP-030) resmi ditutup.
 
 ### [IMP-031] Eliminasi Kebocoran Kode Desain '(Prototipe 03)' pada Subtitle Halaman Additional Work
 - **Finding ID:** IMP-031
@@ -542,7 +668,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kebingungan pengguna akhir dan menjaga kebersihan tampilan sistem enterprise dari atribut artefak pengembang.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793339328832_32e00c67.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 15 (IMP-031) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit de72a39 (Change Register: CHG-028)
+- **Implementation Note:** Mengeliminasi kebocoran kode/istilah artefak desain internal developer '(Prototipe 03)' dari subtitle halaman Additional Work (AdditionalWorkView.vue), menyelaraskan narasi menjadi kalimat bisnis profesional enterprise yang transparan: 'Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari secara transparan tanpa mengubah baseline komitmen pagi.', serta melengkapi automated unit test pada AdditionalWorkView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (109 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 15 (IMP-031) resmi ditutup.
 
 ---
 
@@ -558,7 +688,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793339328832_32e00c67.png`, `media_1793339337197_a3ca7431.jpg`, dan `media_1793339635779_f0f5e534.png`)
 - **Catatan Tambahan Perilaku:** Saat validasi browser terpicu pada dropdown ini, browser secara otomatis melakukan fokus ke elemen yang meluap ke kanan tersebut sehingga seluruh viewport mengalami pergeseran horizontal (*horizontal scroll jump*), menyebabkan sisi kiri form terpotong.
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 16 (IMP-032) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 2d9477d (Change Register: CHG-029)
+- **Implementation Note:** Menambahkan penegakan box containment dan truncation CSS pada formulir Additional Work (AdditionalWorkView.vue) dengan min-width: 0, width: 100%, max-width: 100% pada .form-row dan .form-group untuk mencegah kebocoran grid horizontal, membatasi elemen input/select dengan text-overflow: ellipsis, menerapkan transisi dinamis single-column saat alasan bukan NEWLY_ASSIGNED, menambahkan media query responsif mobile/tablet (max-width: 768px), serta melengkapi automated unit test pada AdditionalWorkView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (110 frontend, 112 backend) lulus 100%, verifikasi visual dan responsivitas pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 16 (IMP-032) resmi ditutup.
 
 ### [IMP-033] Restrukturisasi & Pembersihan Kartu Metrik Konteks Waktu EOD di Halaman EOD Outcome
 - **Finding ID:** IMP-033
@@ -576,7 +710,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menciptakan konsistensi visual 100% antara formulir pagi dan sore, membuat informasi waktu kerja mudah dicerna, dan menghilangkan redundansi teks.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793340699307_aae27820.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 17 (IMP-033) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit c7d316f (Change Register: CHG-030)
+- **Implementation Note:** Menyelaraskan dan merestrukturisasi kartu metrik Konteks Waktu EOD di EodOutcomeView.vue secara 100% konsisten dengan IMP-027, memindahkan penanggalan ke badge dinamis bahasa Indonesia (formattedWorkDate) di panel head, memfokuskan 4 kartu metrik pada Batas On-Time (17:00 WIB), Batas Cut-Off (21:00 WIB), Status Waktu, dan Total Item Evaluasi, mengeliminasi teks redundan Tanggal Kerja dan string ISO mentah, serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (111 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 17 (IMP-033) resmi ditutup.
 
 ---
 
@@ -591,7 +729,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kebersihan antarmuka dari istilah teknis pengembang dan menghadirkan pengalaman pengguna enterprise yang profesional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793340550967_1819bf97.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 18 (IMP-034) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 78b32ef (Change Register: CHG-031)
+- **Implementation Note:** Mengeliminasi kode artefak desain internal developer '(Prototipe 04)' dari subtitle halaman EOD Outcome (EodOutcomeView.vue), menyelaraskan copywriting menjadi kalimat akuntabel enterprise yang elegan: 'Evaluasi capaian nyata komitmen harian Anda di akhir jam kerja. Lakukan refleksi mandiri secara transparan dan tentukan tindak lanjut tugas secara akuntabel.', serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (112 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 18 (IMP-034) resmi ditutup.
 
 ---
 
@@ -608,7 +750,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kebocoran kode teknis `DEC-003` dan istilah hukum/defensif ("secara punitif"), serta menumbuhkan budaya akuntabilitas psikologis yang aman (*psychological safety*).
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793340577050_134e4c8b.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 19 (IMP-035) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 721d413 (Change Register: CHG-032)
+- **Implementation Note:** Mengeliminasi kode arsitektur internal developer 'DEC-003' dan istilah legalistik defensif 'secara punitif' dari seksi Refleksi Mandiri EOD Outcome (EodOutcomeView.vue), mengubah kicker menjadi 'Refleksi Mandiri Akhir Hari', badge menjadi 'Penilaian Otonom Karyawan', serta menyempurnakan narasi deskripsi menjadi kalimat humanis bernada keamanan psikologis (psychological safety): 'Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.', serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (113 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 19 (IMP-035) resmi ditutup.
 
 ### [IMP-036] Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD
 - **Finding ID:** IMP-036
@@ -624,7 +770,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan antarmuka ramah pengguna (*user-friendly*) tanpa kebocoran istilah kode pemrograman (*leak of developer jargon*).
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342065674_58df17a2.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 20 (IMP-036) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ff6a964 (Change Register: CHG-033)
+- **Implementation Note:** Mengeliminasi seluruh kebocoran kode enum teknis huruf besar dan bergaris bawah dari opsi pencapaian dan keputusan kelanjutan tugas EOD (EodOutcomeView.vue), mengganti label menjadi bahasa Indonesia bisnis yang natural ('Selesai', 'Sebagian', 'Belum Selesai', 'Dibatalkan', 'Lanjutkan Besok (Tugas Berlanjut)', dan 'Tidak Dilanjutkan'), membersihkan imbuhan deskripsi bahasa Inggris pada label form, serta memverifikasi ketidakhadiran kode enum teknis via automated unit test di EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (114 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 20 (IMP-036) resmi ditutup.
 
 ---
 
@@ -639,7 +789,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kejanggalan tata letak visual (*visual alignment defect*), memberikan ruang ketik yang lega dan proporsional bagi karyawan, dan membuat placeholder terbaca sempurna.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342065674_58df17a2.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 21 (IMP-037) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 18ef669 (Change Register: CHG-034)
+- **Implementation Note:** Memperbaiki tata letak kolom textarea Catatan Kelanjutan Tugas EOD (EodOutcomeView.vue) dengan memperkenalkan kontainer semantik vertikal .continuation-reason-group berformat flex column (gap 6px), menetapkan width: 100%, box-sizing: border-box, dan font-family inherit pada .input-control (khususnya textarea.input-control), menetapkan display: block pada .form-label, serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (115 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 21 (IMP-037) resmi ditutup.
 
 ---
 
@@ -656,7 +810,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kesetaraan perlakuan akuntabilitas antara tugas komitmen pagi dan tugas tambahan ad-hoc, serta mencegah adanya tugas menggantung tanpa status kelanjutan yang jelas.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342477791_64b18d0a.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 22 (IMP-038) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 5e4cd3a (Change Register: CHG-035)
+- **Implementation Note:** Menyelaraskan kelengkapan kapabilitas evaluasi pekerjaan tambahan pada EodOutcomeView.vue dengan komitmen pagi: menambahkan opsi radio Dibatalkan (CANCELLED) beserta kondisional textarea alasan pembatalan tugas (Alasan Pembatalan Pekerjaan Tambahan *), serta menyediakan alur keputusan kelanjutan tugas (Lanjutkan Besok vs Tidak Dilanjutkan) beserta textarea Catatan Kelanjutan * saat tugas berstatus Sebagian atau Belum Selesai, dan memverifikasi kelengkapan fungsional via automated unit test di EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (116 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 22 (IMP-038) resmi ditutup.
 
 ---
 
@@ -675,20 +833,28 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan tampilan yang bersih, mudah dipahami oleh seluruh staf dan pimpinan non-teknis, serta konsisten dengan prinsip desain enterprise WorkPulse.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342477791_64b18d0a.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 23 (IMP-039) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit c8a1af2 (Change Register: CHG-036)
+- **Implementation Note:** Mentransformasi format badge alasan pekerjaan tambahan pada AdditionalWorkView.vue dan EodOutcomeView.vue dari enum raw database menjadi bahasa bisnis baku ('Penugasan Baru Atasan', 'Perbaikan Error / Bug Kritis', 'Terlewat Catat Pagi', 'Pengalihan Prioritas', dan 'Lainnya'), membersihkan kode enum dari dropdown pilihan form, memberlakukan input dinamis wajib Keterangan Alasan Lainnya * saat memilih alasan 'Lainnya' (OTHER), dan memverifikasi kelengkapan validasi serta tampilan via automated unit tests di AdditionalWorkView.spec.ts dan EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (117 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 23 (IMP-039) resmi ditutup.
 
-### [IMP-040] Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /blockers/raise (Eliminasi Modal Pop-Up Redundan)
+### [IMP-040] Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /raise-blockers (Eliminasi Modal Pop-Up Redundan)
 - **Finding ID:** IMP-040
-- **Title:** Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /blockers/raise (Eliminasi Modal Pop-Up Redundan)
+- **Title:** Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /raise-blockers (Eliminasi Modal Pop-Up Redundan)
 - **Category:** Navigation & Consistency
 - **Page / Module:** Halaman Evaluasi Sore (`/daily/eod`) & Seluruh Tab My Today
 - **Related Test Case:** `TC-BLKR-001`, `TC-DLYE-001`
-- **Current Condition:** Tombol "+ Laporkan Blocker Mendesak" di halaman EOD memunculkan modal dialog pop-up terpisah (`media_1793343838939_99a0aba8.png`), padahal sistem telah memiliki halaman formulir pelaporan mandiri resmi di `/blockers/raise`.
-- **Proposed Improvement:** Hapus implementasi modal pop-up pada tombol tersebut. Selaraskan seluruh tombol "Lapor Blocker" pada 3 sub-halaman My Today agar secara konsisten langsung mengarahkan (*direct navigate*) ke halaman kanonikal `/blockers/raise` dengan posisi tata letak yang presisi di sisi kanan tab navigasi.
+- **Current Condition:** Tombol "+ Laporkan Blocker Mendesak" di halaman EOD memunculkan modal dialog pop-up terpisah (`media_1793343838939_99a0aba8.png`), padahal sistem telah memiliki halaman formulir pelaporan mandiri resmi di `/raise-blockers`.
+- **Proposed Improvement:** Hapus implementasi modal pop-up pada tombol tersebut. Selaraskan seluruh tombol "Lapor Blocker" pada 3 sub-halaman My Today agar secara konsisten langsung mengarahkan (*direct navigate*) ke halaman kanonikal `/raise-blockers` dengan posisi tata letak yang presisi di sisi kanan tab navigasi.
 - **Rationale / Expected Benefit:** Menghilangkan duplikasi antarmuka input blocker, mencegah fragmentasi alur pengguna, dan memastikan karyawan mengisi formulir kendala yang lengkap dan terstandarisasi.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343838939_99a0aba8.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 24 (IMP-040) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 85873df (Change Register: CHG-037)
+- **Implementation Note:** Menyelaraskan seluruh tautan tombol "Laporkan Blocker" pada alur navigasi workflow bar di 3 sub-halaman My Today (EodOutcomeView, MorningCommitmentView, AdditionalWorkView) agar secara konsisten dan kanonikal mengarahkan langsung ke '/raise-blockers'. Mengeliminasi 100% template markup modal popup instant blocker, modal state, method submitInstantBlocker(), pemanggilan API redundan GET /v1/organization/users saat inisialisasi EOD, icon X dari lucide-vue-next, serta aturan CSS modal tak terpakai pada EodOutcomeView.vue.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (118 frontend, 112 backend) lulus 100%, verifikasi visual dan interaksi pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 24 (IMP-040) resmi ditutup.
 
 ---
 
@@ -709,7 +875,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberdayakan karyawan untuk tidak hanya melaporkan kendala, tetapi juga memantau eskalasi SLA blocker pribadinya secara transparan dalam satu pusat kendali yang terpadu.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Dokumen Desain Prototipe 05 (`05-Raise-Instant-Blocker.html`) dan Temuan UAT Sesi 30 Okt 2026 (`media_1793343601793_ab991d08.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 4 (SOL-BLKR-FORM) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
+- **Implementation Note:** Menyelaraskan seluruh struktur dan tata letak halaman pelaporan blocker karyawan dengan Prototipe 05 (`05-Raise-Instant-Blocker.html`): menambahkan tombol kembali `← Kembali ke Ruang Kerja My Today` (ke `/daily/morning`), menyelaraskan judul `Laporkan & Pantau Blocker` dengan subtitle panduan ramah bisnis, mengeliminasi kicker teknis `MANAJEMEN KENDALA & ESKALASI OTOMATIS`, serta menyediakan 2 tab navigasi: (1) Buat Laporan Blocker dan (2) Blocker Saya (daftar kendala yang dilaporkan dari GET /blockers?mine=raised, badge hitungan aktif, filter status, SLA aging, dan detail kartu kendala). Mengeliminasi toolbar dummy simulasi prototipe (`[Mode Simulasi Prototipe]`).
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi visual review pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
 
 ---
 
@@ -724,7 +894,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menegakkan kepatuhan hak akses berbasis peran (RBAC) dan mencegah kebingungan navigasi karyawan operasional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343601793_ab991d08.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 4 (SOL-BLKR-FORM) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
+- **Implementation Note:** Mengeliminasi tombol link `Lihat Antrean Blocker Aktif` (link ke antrean eskalasi manajemen `/blockers`) dari header formulir pelaporan blocker karyawan (`RaiseBlockerView.vue`). Hak akses antrean manajerial ditegakkan murni melalui navigasi *Management*, sedangkan karyawan biasa memantau kendala pribadinya secara terisolasi melalui Tab 2 "Blocker Saya".
+- **Closure & Verification Note:** Implementasi telah selesai, ketiadaan tombol link manajerial telah diverifikasi pada Vercel Preview dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
 
 ---
 
@@ -742,7 +916,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menegakkan keseragaman sistem navigasi global WorkPulse dan memberikan tampilan yang proporsional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343601793_ab991d08.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 2 (SOL-SHLL-TOPB) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 12cd263, c2af091 (Change Register: CHG-011)
+- **Implementation Note:** Tercakup penuh oleh Solusi Global IMP-019. Breadcrumb halaman blocker telah diselaraskan mengikuti hierarki sidebar yang sebenarnya: 'Workspace / Blocker' untuk Laporkan & Pantau Blocker (dengan migrasi rute kanonikal ke '/raise-blockers' dan redirect backward compatibility dari '/blockers/raise'), serta 'Management / Antrean Eskalasi Blocker' untuk rute '/blockers'. Tombol teks mengambang kanan atas digantikan dengan avatar inisial bulat dan ikon lonceng notifikasi, serta padding/margin diselaraskan mengikuti batas kontainer grid konten.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi Visual Review navigasi & breadcrumb blocker telah selesai, hasil Vercel Preview telah diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 2 telah resmi ditutup.
 
 ---
 
@@ -757,7 +935,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Antarmuka form menjadi bersih (*clean*), ramah pengguna, dan fungsional.
 - **Priority:** Low
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343639591_9cbf93a7.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Group 4 (SOL-BLKR-FORM) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
+- **Implementation Note:** Membersihkan dan menyelaraskan bar aksi bawah formulir pelaporan blocker: mengeliminasi teks kode internal `(Audit Trail DEC-008)`, memperbarui teks petunjuk menjadi ramah bisnis (*"Pastikan fakta kendala akurat dan objektif untuk mempercepat penanganan oleh atasan."*), mengganti tombol Batal menjadi tombol sekunder *"Bersihkan Formulir"* (mereset seluruh isian form, error, dan notifikasi), serta mengubah label submit menjadi *"Kirim Laporan Blocker"*. Bar aksi diformat secara `fixed` menempel di dasar layar (`bottom: 0`) dan membentang penuh 100% selebar main body dari sisi kanan sidebar (`left: 232px`) hingga tepi kanan layar (`right: 0`) selaras dengan Prototipe 05.
+- **Closure & Verification Note:** Implementasi telah selesai, remediasi visual fixed full-width footer pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
 
 ---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

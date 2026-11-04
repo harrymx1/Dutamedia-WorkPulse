@@ -94,7 +94,7 @@ test.describe('E2E 01: Auth, Activation, Profile & Security Lifecycle', () => {
     await page.waitForURL((url) => url.pathname.includes('/profile'));
 
     // 2. Verifikasi data pengguna di profil
-    await expect(page.locator('.profile-layout')).toContainText('Aditya Nugroho (Frontend Engineer)');
+    await expect(page.locator('.profile-layout')).toContainText('Aditya Nugroho');
     await expect(page.locator('.profile-layout')).toContainText('dev.frontend@dutamedia.com');
 
     // 3. Coba ganti kata sandi dengan konfirmasi salah

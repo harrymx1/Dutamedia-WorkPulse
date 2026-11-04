@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -270,20 +270,7 @@ onUnmounted(() => {
 <template>
   <div class="admin-layout">
     <!-- Top Navigation Bar -->
-    <header class="top-nav">
-      <div class="nav-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-name">WorkPulse</span>
-        <span class="system-tag">Tata Kelola Kebijakan</span>
-      </div>
-      <div class="nav-right">
-        <AccessLink to="/admin/organization" class="nav-link">Struktur Organisasi</AccessLink>
-        <AccessLink to="/admin/temporary-reviewers" class="nav-link">Reviewer Sementara</AccessLink>
-        <AccessLink to="/admin/users" class="nav-link">Kelola Pengguna</AccessLink>
-        <AccessLink to="/admin/policies" class="nav-link active">Pengaturan Kebijakan</AccessLink>
-        <AccessLink to="/profile" class="nav-link">Profil Saya</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Administration / Pengaturan Kebijakan" />
 
     <!-- Toast Notifications -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AccessLink from '../../components/AccessLink.vue';
+import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -144,17 +144,7 @@ onMounted(() => {
 <template>
   <div class="daily-layout">
     <!-- Topbar Navigation -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="brand-badge">WP</div>
-        <span class="brand-title">WorkPulse</span>
-        <span class="breadcrumb">My Account / <strong>Riwayat Akuntabilitas</strong></span>
-      </div>
-      <div class="topbar-right">
-        <AccessLink to="/daily/morning" class="nav-btn">Morning Check-in</AccessLink>
-        <AccessLink to="/profile" class="nav-btn">Profil</AccessLink>
-      </div>
-    </header>
+    <TopBar breadcrumb="Workspace / My History" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">

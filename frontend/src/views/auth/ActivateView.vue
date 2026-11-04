@@ -2,7 +2,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
-import { Eye, EyeOff, CheckCircle2, AlertCircle, KeyRound } from 'lucide-vue-next';
+import { Eye, EyeOff, CheckCircle2, AlertCircle, KeyRound, Target, Flag, Users } from 'lucide-vue-next';
+import { APP_CONFIG } from '../../config/app';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -105,34 +106,47 @@ async function handleActivate() {
       <div class="brand-content">
         <div class="badge-eyebrow">
           <span class="pulse-dot"></span>
-          Aktivasi Akun Karyawan
+          Sistem Akuntabilitas Harian
         </div>
-        <h1>Mulai Perjalanan Akuntabilitas Anda.</h1>
+        <h1>Komitmen jelas,<br>hambatan tuntas</h1>
         <p>
-          Tautan aktivasi berlaku 72 jam sejak diterbitkan oleh Administrator. Buat kata sandi aman untuk memulai akses harian Anda.
+          Platform transparansi kerja harian untuk mengenali risiko sejak dini dan memastikan hambatan operasional ditangani secara objektif dan terukur
         </p>
 
         <div class="feature-pillars">
           <div class="pillar-item">
-            <div class="pillar-icon">🔒</div>
+            <div class="pillar-icon">
+              <Target :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Keamanan Berlapis Argon2id</strong>
-              <span>Kata sandi dienkripsi dengan standar industri tertinggi tanpa penyimpanan teks biasa.</span>
+              <strong>Komitmen Harian</strong>
+              <span>Tetapkan 1–3 komitmen kerja utama yang realistis untuk diselesaikan hari ini.</span>
             </div>
           </div>
           <div class="pillar-item">
-            <div class="pillar-icon">⏱️</div>
+            <div class="pillar-icon">
+              <Flag :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Batas Waktu Tautan 72 Jam</strong>
-              <span>Token sekali pakai untuk menjamin integritas undangan akun baru.</span>
+              <strong>Pelaporan Hambatan Kerja</strong>
+              <span>Sampaikan hal yang menghambat pekerjaan atau koordinasi agar dapat segera ditindaklanjuti.</span>
+            </div>
+          </div>
+          <div class="pillar-item">
+            <div class="pillar-icon">
+              <Users :size="16" />
+            </div>
+            <div class="pillar-text">
+              <strong>Kemitraan & Dukungan Tim</strong>
+              <span>Bangun keselarasan kerja dan saling dukung untuk mencapai tujuan bersama.</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="brand-footer">
-        <span>WorkPulse v2.0 • Clean-Slate Architecture</span>
-        <span>PT Dutamedia Mandiri Pratama</span>
+        <span>{{ APP_CONFIG.brandVersionLabel }}</span>
+        <span>Internal Workspace Environment</span>
       </div>
     </aside>
 

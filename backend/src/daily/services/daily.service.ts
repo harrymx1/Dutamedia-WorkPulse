@@ -292,43 +292,173 @@ export class DailyService {
       });
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      // Upsert daily record
-      const record = await tx.dailyAccountabilityRecord.upsert({
-        where: {
-          userId_workDate: {
-            userId,
-            workDate,
-          },
-        },
-        create: {
+    // 1. Periksa keberadaan record di luar transaksi terlebih dahulu
+    const existing = await this.prisma.dailyAccountabilityRecord.findUnique({
+      where: {
+        userId_workDate: {
           userId,
           workDate,
-          orgContextSnapshot,
+        },
+      },
+    });
+
+    if (existing && existing.morningSubmittedAt != null) {
+      throw new AppException({
+        code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+        message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
+    }
+
+    // Jika record sudah ada dengan morningSubmittedAt == null (misal dari pre-seeding atau cuti)
+    if (existing) {
+      return this.executeMorningUpdate(
+        existing.id,
+        timingConfig,
+        orgContextSnapshot,
+        morningTiming,
+        initialDailyStatus,
+        dto.zeroCommitmentReason,
+        resolvedCommitments,
+      );
+    }
+
+    // 2. Jika record belum ada: jalankan transaksi pembuatan baru dengan proteksi P2002 bersih di luar tx
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const created = await tx.dailyAccountabilityRecord.create({
+          data: {
+            userId,
+            workDate,
+            orgContextSnapshot,
+            policySnapshot: timingConfig,
+            morningSubmittedAt: this.clockService.now(),
+            morningTiming,
+            initialDailyStatus,
+            zeroCommitmentReason: dto.zeroCommitmentReason ? dto.zeroCommitmentReason.trim() : null,
+          },
+        });
+
+        for (const c of resolvedCommitments) {
+          await tx.commitment.create({
+            data: {
+              dailyRecordId: created.id,
+              sequenceNo: c.sequenceNo,
+              taskText: c.taskText,
+              referenceLink: c.referenceLink,
+              initialRisk: c.initialRisk,
+              knownBlockerNote: c.knownBlockerNote,
+              supportNeeded: c.supportNeeded,
+              isCarryOver: c.isCarryOver,
+              carryOverDaysCount: c.carryOverDaysCount,
+              originCommitmentId: c.originCommitmentId,
+            },
+          });
+        }
+
+        return tx.dailyAccountabilityRecord.findUniqueOrThrow({
+          where: { id: created.id },
+          include: {
+            commitments: {
+              orderBy: { sequenceNo: 'asc' },
+            },
+            additionalWorks: true,
+          },
+        });
+      });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        // Transaksi gagal telah di-rollback penuh oleh Prisma.
+        // Query di bawah dijalankan di luar transaksi pada koneksi bersih:
+        const conflicting = await this.prisma.dailyAccountabilityRecord.findUnique({
+          where: {
+            userId_workDate: {
+              userId,
+              workDate,
+            },
+          },
+        });
+
+        if (conflicting && conflicting.morningSubmittedAt != null) {
+          throw new AppException({
+            code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+            message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          });
+        }
+
+        if (conflicting && conflicting.morningSubmittedAt == null) {
+          return this.executeMorningUpdate(
+            conflicting.id,
+            timingConfig,
+            orgContextSnapshot,
+            morningTiming,
+            initialDailyStatus,
+            dto.zeroCommitmentReason,
+            resolvedCommitments,
+          );
+        }
+
+        throw new AppException({
+          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+          message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Helper internal: Memperbarui record harian yang telah ada dengan atomic guard
+   */
+  private async executeMorningUpdate(
+    recordId: string,
+    timingConfig: any,
+    orgContextSnapshot: any,
+    morningTiming: TimingStatus,
+    initialDailyStatus: DailyRiskStatus,
+    zeroCommitmentReason: string | undefined,
+    resolvedCommitments: Array<{
+      sequenceNo: number;
+      taskText: string;
+      referenceLink: string | null;
+      initialRisk: CommitmentRisk;
+      knownBlockerNote: string | null;
+      supportNeeded: string | null;
+      isCarryOver: boolean;
+      carryOverDaysCount: number;
+      originCommitmentId?: string;
+    }>,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const updateResult = await tx.dailyAccountabilityRecord.updateMany({
+        where: {
+          id: recordId,
+          morningSubmittedAt: null, // ATOMIC GUARD: Hanya update jika belum pernah disubmit
+        },
+        data: {
+          morningSubmittedAt: this.clockService.now(),
+          morningTiming,
+          initialDailyStatus,
+          zeroCommitmentReason: zeroCommitmentReason ? zeroCommitmentReason.trim() : null,
           policySnapshot: timingConfig,
-          morningSubmittedAt: this.clockService.now(),
-          morningTiming,
-          initialDailyStatus,
-          zeroCommitmentReason: dto.zeroCommitmentReason ? dto.zeroCommitmentReason.trim() : null,
-        },
-        update: {
-          morningSubmittedAt: this.clockService.now(),
-          morningTiming,
-          initialDailyStatus,
-          zeroCommitmentReason: dto.zeroCommitmentReason ? dto.zeroCommitmentReason.trim() : null,
+          orgContextSnapshot,
         },
       });
 
-      // Hapus komitmen lama jika ada pengiriman ulang sebelum cutoff
-      await tx.commitment.deleteMany({
-        where: { dailyRecordId: record.id },
-      });
+      if (updateResult.count === 0) {
+        throw new AppException({
+          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+          message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
 
-      // Masukkan komitmen yang telah divalidasi
       for (const c of resolvedCommitments) {
         await tx.commitment.create({
           data: {
-            dailyRecordId: record.id,
+            dailyRecordId: recordId,
             sequenceNo: c.sequenceNo,
             taskText: c.taskText,
             referenceLink: c.referenceLink,
@@ -342,20 +472,18 @@ export class DailyService {
         });
       }
 
-      return tx.dailyAccountabilityRecord.findUnique({
-        where: { id: record.id },
+      return tx.dailyAccountabilityRecord.findUniqueOrThrow({
+        where: { id: recordId },
         include: {
           commitments: {
             orderBy: { sequenceNo: 'asc' },
           },
+          additionalWorks: true,
         },
       });
     });
   }
 
-  /**
-   * Menambahkan tugas tambahan di siang hari (Additional Work, Prototipe 03).
-   */
   async submitAdditionalWork(userId: string, recordId: string, dto: SubmitAdditionalWorkDto) {
     const record = await this.prisma.dailyAccountabilityRecord.findUnique({
       where: { id: recordId },
@@ -426,6 +554,15 @@ export class DailyService {
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'Catatan akuntabilitas untuk tanggal tersebut tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    // Penegakan DEF-002: Tolak jika EOD Outcome sudah pernah disubmit
+    if (record.eodSubmittedAt != null) {
+      throw new AppException({
+        code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+        message: 'EOD Outcome hari ini telah diserahkan dan terkunci (DEC-002). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
 
@@ -506,22 +643,41 @@ export class DailyService {
         }
       }
 
-      // Update record EOD
+      // Update record EOD secara atomic dengan conditional guard (eodSubmittedAt: null)
       // DEC-003: Hak opsi GREEN tetap sah dan dilarang dikunci
-      const updatedRecord = await tx.dailyAccountabilityRecord.update({
-        where: { id: record.id },
+      const updateResult = await tx.dailyAccountabilityRecord.updateMany({
+        where: {
+          id: record.id,
+          eodSubmittedAt: null, // KRITERIA ATOMIC GUARD: Hanya update jika belum pernah disubmit
+        },
         data: {
           eodSubmittedAt: this.clockService.now(),
           eodTiming,
           finalDailyStatus: dto.finalDailyStatus,
         },
-        include: {
-          commitments: true,
-          additionalWorks: true,
-        },
       });
 
-      return updatedRecord;
+      if (updateResult.count === 0) {
+        throw new AppException({
+          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+          message: 'Evaluasi EOD Outcome hari ini telah ditutup secara resmi dan terkunci (FR-26). Perubahan data wajib melalui alur permohonan koreksi EOD.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+
+      // Query data segar terbaru yang benar-benar tersimpan di database
+      return tx.dailyAccountabilityRecord.findUniqueOrThrow({
+        where: { id: record.id },
+        include: {
+          commitments: {
+            orderBy: { sequenceNo: 'asc' },
+          },
+          additionalWorks: {
+            orderBy: { createdAt: 'asc' },
+            include: { assignedByUser: { select: { id: true, fullName: true } } },
+          },
+        },
+      });
     });
   }
 

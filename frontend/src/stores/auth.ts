@@ -10,6 +10,14 @@ export interface UserProfile {
   status: string;
 }
 
+function sanitizeUserProfile(u: UserProfile | null | undefined): UserProfile | null {
+  if (!u) return null;
+  return {
+    ...u,
+    fullName: u.fullName ? u.fullName.replace(/\s*\([^)]*\)/g, '').trim() : u.fullName,
+  };
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserProfile | null>(null);
   const isLoading = ref<boolean>(false);
@@ -27,8 +35,8 @@ export const useAuthStore = defineStore('auth', () => {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      user.value = res.data.user;
-      return res.data.user;
+      user.value = sanitizeUserProfile(res.data.user);
+      return user.value!;
     } catch (err: any) {
       error.value = err.message || 'Login gagal';
       throw err;
@@ -70,7 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true;
     try {
       const res = await apiClient<{ user: UserProfile }>('/v1/auth/me');
-      user.value = res.data.user;
+      user.value = sanitizeUserProfile(res.data.user);
       return user.value;
     } catch {
       user.value = null;

@@ -46,14 +46,22 @@ const ADMIN_LEVEL: RoleName[] = [
   'CEO_MANAGEMENT',
 ];
 
+/** Peran staf operasional yang memiliki kewajiban komitmen harian (IMP-026). */
+export const OPERATIONAL_ROLES: RoleName[] = [
+  'EMPLOYEE',
+  'SUPERVISOR',
+  'HEAD',
+  'PROJECT_MANAGER',
+  'HRGA',
+  'CEO_MANAGEMENT',
+];
+
 export const navGroups: NavGroup[] = [
   {
     title: 'Workspace',
     items: [
-      { label: 'Morning Commitment', to: '/daily/morning', iconName: 'Sunrise' },
-      { label: 'Additional Work', to: '/daily/additional-work', iconName: 'PlusCircle' },
-      { label: 'EOD Outcome', to: '/daily/eod', iconName: 'Sunset' },
-      { label: 'Lapor Blocker', to: '/blockers/raise', iconName: 'AlertTriangle' },
+      { label: 'My Today', to: '/daily/morning', iconName: 'Clock' },
+      { label: 'Lapor Blocker', to: '/raise-blockers', iconName: 'AlertTriangle' },
       { label: 'Riwayat Saya', to: '/daily/history', iconName: 'CalendarDays' },
       { label: 'Cuti Saya', to: '/leave/my', iconName: 'Plane' },
       { label: 'Koreksi Komitmen Pagi', to: '/corrections/morning', iconName: 'FileEdit' },
@@ -94,6 +102,14 @@ export const navGroups: NavGroup[] = [
 export function navForRole(role: string | undefined | null): NavGroup[] {
   if (!role) return [];
   return navGroups
+    .filter((g) => {
+      // IMP-026: Persona SYSTEM_ADMIN murni untuk konfigurasi sistem & pengawasan manajerial,
+      // grup 'Workspace' dinonaktifkan sepenuhnya guna menegakkan Separation of Duties.
+      if (role === 'SYSTEM_ADMIN' && g.title === 'Workspace') {
+        return false;
+      }
+      return true;
+    })
     .map((g) => ({
       title: g.title,
       items: g.items.filter((i) => !i.roles || i.roles.includes(role as RoleName)),

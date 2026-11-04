@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getLandingRouteForRole } from '../../router/navigation';
-import { Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-vue-next';
+import { Eye, EyeOff, ShieldCheck, AlertCircle, Target, Flag, Users } from 'lucide-vue-next';
+import { APP_CONFIG } from '../../config/app';
 
 const router = useRouter();
 const route = useRoute();
@@ -16,6 +17,35 @@ const showPassword = ref(false);
 const errorMessage = ref<string | null>(null);
 const emailError = ref<string | null>(null);
 const passwordError = ref<string | null>(null);
+
+// Client-side rate-limit lockout guard (Defense-in-depth: max 5 failed attempts per 60s)
+const failedAttempts = ref(0);
+const lockoutSecondsRemaining = ref(0);
+let lockoutTimer: any = null;
+
+function triggerLockout(durationSeconds = 60) {
+  lockoutSecondsRemaining.value = durationSeconds;
+  errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+
+  if (lockoutTimer) clearInterval(lockoutTimer);
+  lockoutTimer = setInterval(() => {
+    lockoutSecondsRemaining.value--;
+    if (lockoutSecondsRemaining.value > 0) {
+      errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+    } else {
+      clearInterval(lockoutTimer);
+      lockoutTimer = null;
+      failedAttempts.value = 0;
+      errorMessage.value = null;
+    }
+  }, 1000);
+}
+
+onUnmounted(() => {
+  if (lockoutTimer) {
+    clearInterval(lockoutTimer);
+  }
+});
 
 function validate(): boolean {
   let valid = true;
@@ -43,10 +73,15 @@ function validate(): boolean {
 }
 
 async function handleLogin() {
+  if (lockoutSecondsRemaining.value > 0) {
+    errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+    return;
+  }
   if (!validate()) return;
 
   try {
     await authStore.login(email.value, password.value);
+    failedAttempts.value = 0;
     // Kembali ke halaman yang semula dituju (bila ada & aman), jika tidak ke /dashboard
     const redirect = route.query.redirect;
     const safeRedirect =
@@ -54,7 +89,20 @@ async function handleLogin() {
     const landing = getLandingRouteForRole(authStore.user?.role);
     router.push(safeRedirect || landing);
   } catch (err: any) {
-    errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
+    if (
+      err?.statusCode === 429 ||
+      err?.code === 'AUTH_RATE_LIMIT_EXCEEDED' ||
+      (typeof err?.message === 'string' && err.message.includes('ThrottlerException'))
+    ) {
+      triggerLockout(60);
+    } else {
+      failedAttempts.value++;
+      if (failedAttempts.value >= 5) {
+        triggerLockout(60);
+      } else {
+        errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
+      }
+    }
   }
 }
 </script>
@@ -76,39 +124,45 @@ async function handleLogin() {
           <span class="pulse-dot"></span>
           Sistem Akuntabilitas Harian
         </div>
-        <h1>Fokus pada Hasil, Tuntaskan Kendala.</h1>
+        <h1>Komitmen jelas,<br>hambatan tuntas</h1>
         <p>
-          Platform transparansi kerja harian, penyelarasan komitmen pagi, dan eskalasi hambatan operasional tim secara objektif & terukur.
+          Platform transparansi kerja harian untuk mengenali risiko sejak dini dan memastikan hambatan operasional ditangani secara objektif dan terukur
         </p>
 
         <div class="feature-pillars">
           <div class="pillar-item">
-            <div class="pillar-icon">✓</div>
+            <div class="pillar-icon">
+              <Target :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Komitmen Pagi Tuntas</strong>
-              <span>Sinkronisasi 1-3 target kerja utama sebelum batas jam cutoff kantor.</span>
+              <strong>Komitmen Harian</strong>
+              <span>Tetapkan 1–3 komitmen kerja utama yang realistis untuk diselesaikan hari ini.</span>
             </div>
           </div>
           <div class="pillar-item">
-            <div class="pillar-icon">⚡</div>
+            <div class="pillar-icon">
+              <Flag :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Eskalasi Kendala Terukur</strong>
-              <span>Tiket hambatan langsung dipetakan ke Project Authority atau Squad Lead.</span>
+              <strong>Pelaporan Hambatan Kerja</strong>
+              <span>Sampaikan hal yang menghambat pekerjaan atau koordinasi agar dapat segera ditindaklanjuti.</span>
             </div>
           </div>
           <div class="pillar-item">
-            <div class="pillar-icon">📊</div>
+            <div class="pillar-icon">
+              <Users :size="16" />
+            </div>
             <div class="pillar-text">
-              <strong>Evaluasi Objektif Bebas Bias</strong>
-              <span>Tinjauan berbasis bukti nyata transaksi harian tanpa manipulasi manual.</span>
+              <strong>Kemitraan & Dukungan Tim</strong>
+              <span>Bangun keselarasan kerja dan saling dukung untuk mencapai tujuan bersama.</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="brand-footer">
-        <span>WorkPulse v2.0 • Clean-Slate Architecture</span>
-        <span>PT Dutamedia Mandiri Pratama</span>
+        <span>{{ APP_CONFIG.brandVersionLabel }}</span>
+        <span>Internal Workspace Environment</span>
       </div>
     </aside>
 
@@ -193,17 +247,17 @@ async function handleLogin() {
             <button
               type="submit"
               class="btn btn-primary"
-              :disabled="authStore.isLoading"
+              :disabled="authStore.isLoading || lockoutSecondsRemaining > 0"
             >
-              <ShieldCheck v-if="!authStore.isLoading" :size="18" />
-              <span>{{ authStore.isLoading ? 'Memverifikasi Kredensial...' : 'Masuk ke Sistem' }}</span>
+              <ShieldCheck v-if="!authStore.isLoading && lockoutSecondsRemaining === 0" :size="18" />
+              <span>{{ authStore.isLoading ? 'Memverifikasi Kredensial...' : (lockoutSecondsRemaining > 0 ? `Terkunci (${lockoutSecondsRemaining}s)` : 'Masuk ke Sistem') }}</span>
             </button>
           </form>
 
           <div class="divider-rule"></div>
 
           <div class="help-hint">
-            <span>Perlindungan sesi via HttpOnly & CSRF Double-Submit</span>
+            <span>Kendala akses akun? Hubungi Admin System atau Tim HRGA.</span>
           </div>
         </div>
       </div>

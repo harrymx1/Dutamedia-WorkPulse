@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { AllExceptionsFilter } from './all-exceptions.filter';
 import { AppException } from '../exceptions/app.exception';
 import { ErrorCode } from '../constants/error-codes';
-import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, HttpStatus, HttpException } from '@nestjs/common';
 
 describe('AllExceptionsFilter (EP01-TK006 / SAD IV.2.2)', () => {
   const filter = new AllExceptionsFilter();
@@ -84,6 +84,25 @@ describe('AllExceptionsFilter (EP01-TK006 / SAD IV.2.2)', () => {
     expect(body.error.code).toBe(ErrorCode.INTERNAL_SERVER_ERROR);
     expect(body.error.message).toBe('Terjadi kesalahan internal pada sistem.');
     expect(body.meta.requestId).toBe('req_unhandled');
+  });
+
+  it('should transform 429 Too Many Requests into AUTH_RATE_LIMIT_EXCEEDED with friendly Indonesian message (IMP-013)', () => {
+    const { host, getStatus, getJson } = createMockHost('req_rate_limit');
+
+    const throttlerException = new HttpException(
+      'ThrottlerException: Too Many Requests',
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+    filter.catch(throttlerException, host);
+
+    expect(getStatus()).toBe(429);
+    const body = getJson();
+    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(429);
+    expect(body.error.code).toBe(ErrorCode.AUTH_RATE_LIMIT_EXCEEDED);
+    expect(body.error.message).toContain('Terlalu banyak percobaan masuk');
+    expect(body.error.message).not.toContain('ThrottlerException');
+    expect(body.meta.requestId).toBe('req_rate_limit');
   });
 });
 
