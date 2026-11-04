@@ -223,7 +223,43 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
 
     await checkbox.setValue(true);
     expect(wrapper.text()).toContain('Alasan Tidak Menetapkan Komitmen');
-    expect(wrapper.text()).toContain('NOT_APPLICABLE — NO_COMMITMENT');
+    expect(wrapper.text()).toContain('Bebas Komitmen (Disetujui)');
+  });
+
+  it('transforms zero commitment explanation into business language (IMP-030)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-30',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '23:59',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const checkbox = wrapper.find('[data-testid="zero-commitment-checkbox"]');
+    await checkbox.setValue(true);
+
+    const subtext = wrapper.find('[data-testid="zero-commitment-subtext"]');
+    expect(subtext.exists()).toBe(true);
+    expect(subtext.text()).toContain('Bebas Komitmen (Disetujui)');
+    expect(subtext.text()).toContain('Pelanggaran Pengisian (No Submission)');
+    expect(subtext.text()).not.toContain('NOT_APPLICABLE');
+    expect(subtext.text()).not.toContain('NO_COMMITMENT');
   });
 
   it('allows adding commitment slots up to 3 (DEC-004)', async () => {

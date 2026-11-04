@@ -456,8 +456,8 @@ onMounted(() => {
             minlength="10"
             required
           ></textarea>
-          <span class="field-sub">
-            Status hari ini akan tercatat sebagai <strong>NOT_APPLICABLE — NO_COMMITMENT</strong> (bukan No Submission).
+          <span class="field-sub" data-testid="zero-commitment-subtext">
+            Hari Anda akan dicatat resmi sebagai <strong>Bebas Komitmen (Disetujui)</strong>, sehingga Anda tetap aman dan terbebas dari catatan Pelanggaran Pengisian (No Submission).
           </span>
         </div>
       </div>
