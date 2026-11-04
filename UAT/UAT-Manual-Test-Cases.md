@@ -2,10 +2,10 @@
 
 > **Sistem:** WorkPulse (Daily Accountability & Blocker Log System)  
 > **Organisasi:** PT Dutamedia Mandiri Pratama  
-> **Versi Dokumen:** 2.0.0 (Remediated Master Suite)  
+> **Versi Dokumen:** 2.1.0 (Evolved Master Suite — v1.1.0-uat-pkg)  
 > **Target Penguji Manual:** Harry (Acceptance Owner)  
 > **Format Standar:** Sesuai Phase 7 Master Prompt (Field Eksekusi Wajib Kosong)  
-> **Tanggal Audit Remediasi:** 29 Oktober 2026  
+> **Tanggal Audit Remediasi:** 04 November 2026 (Phase 4 Package Evolution)  
 > **Total Test Case:** Tepat 42 Test Case Operasional (100% Selaras dengan Execution Log & RTM)  
 
 ---
@@ -44,14 +44,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Buka URL aplikasi pada address bar browser.
    - **Lokasi:** Address bar browser menuju `http://localhost:5173/` atau URL staging WorkPulse.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Sistem mendeteksi status belum login dan secara otomatis me-redirect browser ke rute `/login`. Formulir login tampil dengan layout bersih, logo WorkPulse, input email, input password, dan tombol "Masuk ke Sistem".
-   - **Verifikasi:** Periksa URL di browser adalah `http://localhost:5173/login`. Tidak ada error 404 atau layar putih.
+   - **Hasil yang diharapkan:** Sistem mendeteksi status belum login dan secara otomatis me-redirect browser ke rute `/login`. Halaman login menampilkan panel hero hijau di sisi kiri dengan tagline: *"Platform transparansi kerja harian, identifikasi risiko lebih awal, dan eskalasi hambatan operasional tim secara objektif & terukur."*, serta 3 poin fitur dengan ikon vektor SVG terstandarisasi. Formulir login di kanan tampil bersih dengan headline *"Masuk ke Workspace Akuntabilitas"*, badge versi sistem dinamis `v1.0.0-rc1`, indikator lingkungan `Internal Workspace Environment`, input email, input password, tombol "Masuk ke Sistem", dan tautan bantuan *"Kendala akses akun? Hubungi Admin System atau Tim HRGA."*.
+   - **Verifikasi:** Periksa URL di browser adalah `http://localhost:5173/login`. Tidak ada error 404 atau teks build teknis yang bocor.
 2. **Langkah 2**
    - **Aksi:** Masukkan email terdaftar dan kata sandi valid, lalu klik tombol "Masuk ke Sistem".
    - **Lokasi:** Halaman `/login` pada field Email (`#email-input`) dan Password (`#password-input`).
    - **Data:** Email: `dev.frontend@dutamedia.com`, Password: `Password123!`
    - **Hasil yang diharapkan:** Tombol login menampilkan animasi loading singkat, toast sukses "Login berhasil" muncul, dan aplikasi mengarahkan browser ke rute kanonikal Employee: `/daily/morning`.
-   - **Verifikasi:** Periksa bahwa URL aktif adalah `/daily/morning`. Sidebar permanen 232px tampil di sisi kiri dengan 3 grup navigasi (*Workspace*, *Management*, *Administration*). Di bagian footer sidebar (`.side-bottom`), tertera nama "Aditya Nugroho" dengan badge peran "EMPLOYEE".
+   - **Verifikasi:** Periksa bahwa URL aktif adalah `/daily/morning`. Sidebar permanen 232px tampil di sisi kiri dengan brand caption "Dutamedia" yang ringkas dan menu terpadu "My Today". Di bagian footer sidebar (`.side-bottom`), tertera nama bersih "Aditya Nugroho" (tanpa tanda kurung peran). Topbar atas menampilkan avatar profil inisial "AN" dan ikon lonceng notifikasi terpadu.
 3. **Langkah 3**
    - **Aksi:** Periksa ketiadaan tombol darurat melayang pada antarmuka.
    - **Lokasi:** Sudut kiri bawah atau seluruh area viewport desktop.
@@ -100,6 +100,12 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Data:** Tidak ada.
    - **Hasil yang diharapkan:** Sistem menolak autentikasi. Muncul pesan peringatan/toast merah berbahasa Indonesia: "Kredensial tidak valid" atau "Email atau kata sandi salah". Pengguna tetap berada di halaman `/login`.
    - **Verifikasi:** URL browser tetap `/login`. Sesi tidak dibuat (local storage / cookies tidak berisi token JWT).
+3. **Langkah 3 (Verifikasi Proteksi Brute-Force & Rate Limiting - IMP-013)**
+   - **Aksi:** Masukkan password salah sebanyak 5 kali berturut-turut pada akun yang sama.
+   - **Lokasi:** Form login `/login`.
+   - **Data:** Password: `SalahPassword999` (5x submit).
+   - **Hasil yang diharapkan:** Pada kegagalan ke-5, form terkunci sementara (*lockout* 15 menit), tombol submit menjadi disabled, dan banner peringatan muncul dengan timer hitung mundur: "Akun dikunci sementara demi keamanan. Coba lagi dalam XXm XXd.".
+   - **Verifikasi:** Tombol "Masuk ke Sistem" tidak dapat diklik selama timer berjalan.
 
 - **Expected Final Result:** Login gagal secara aman, tidak ada kebocoran data sesi, pesan kesalahan jelas dan ramah pengguna.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot toast/alert pesan kesalahan penolakan login.
@@ -456,7 +462,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Lokasi:** Menu "Komitmen Pagi" (`/daily/morning`).
    - **Data:** Tidak ada.
    - **Hasil yang diharapkan:** Halaman terbuka dengan header tanggal hari ini, indikator waktu pengisian, dan kartu formulir komitmen item ke-1.
-   - **Verifikasi:** Terdapat tombol "+ Tambah Komitmen", checkbox opsi 0 komitmen, dan tombol "Simpan & Kirim Komitmen Pagi".
+   - **Verifikasi:** Terdapat tombol "+ Tambah Komitmen", checkbox opsi 0 komitmen, tombol "Simpan & Kirim Komitmen Pagi", panel konteks waktu dengan badge tanggal dinamis Indonesia, dan tombol "Laporkan Blocker" di sisi kanan workflow bar (IMP-016, IMP-027).
 2. **Langkah 2**
    - **Aksi:** Isi komitmen pertama: masukkan judul tugas, pilih kategori proyek/inisiatif dari dropdown, dan tentukan estimasi durasi.
    - **Lokasi:** Form Komitmen Item 1.
@@ -913,7 +919,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Buka halaman EOD Outcome via sidebar.
    - **Lokasi:** `/daily/eod`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman menampilkan daftar seluruh komitmen hari ini dengan radio button / dropdown pilihan status pencapaian: `Done`, `In Progress`, `Blocked`, `Cancelled`.
+   - **Hasil yang diharapkan:** Halaman menampilkan daftar seluruh komitmen hari ini dengan pilihan status bahasa bisnis: Selesai, Sebagian, Belum Selesai, Dibatalkan (tanpa kode enum teknis), tombol "Laporkan Blocker" di bar alur yang langsung mengarahkan ke /raise-blockers tanpa modal dialog pop-up mati, serta kolom catatan kelanjutan tugas selebar 100% (IMP-016, IMP-036, IMP-037, IMP-040).
    - **Verifikasi:** Setiap item memiliki opsi status yang dapat diklik.
 2. **Langkah 2**
    - **Aksi:** Pilih status `Done` untuk seluruh item komitmen.
@@ -951,7 +957,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Scenario ID:** `SCN-DLYE-02`
 - **Requirement ID:** `FR-22`, `FR-23`, `DEC-003`
 - **Judul:** Heuristic Status Suggestion & Verifikasi Regulasi Anti-Lock Green (DEC-003)
-- **Tujuan:** Memvalidasi aturan baku DEC-003: meskipun salah satu tugas berstatus `Blocked` dan sistem secara heuristik menyarankan status Kuning/Merah, **OPSI HIJAU DILARANG DIKUNCI**. Karyawan tetap berhak memilih status Hijau dengan menyertakan justifikasi mandiri.
+- **Tujuan:** Memvalidasi hak otonom karyawan: meskipun salah satu tugas berstatus belum tuntas dan sistem secara heuristik menyarankan status Kuning/Merah, opsi Hijau tetap dapat dipilih secara bebas dengan badge "Penilaian Otonom Karyawan" dan narasi refleksi mandiri yang suportif tanpa istilah defensif/punitif (DEC-003, IMP-035). Karyawan tetap berhak memilih status Hijau dengan menyertakan justifikasi mandiri.
 - **Modul / Halaman:** EOD Outcome (`/daily/eod`)
 - **Kategori Pengujian:** Business Rules / Non-Binding Heuristics
 - **Teknik Desain Test Case:** Decision Table Testing
@@ -1106,7 +1112,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Requirement ID:** `FR-29`, `FR-30`, `DEC-007`
 - **Judul:** Pelaporan Hambatan Baru Tingkat Kritis (Raise Blocker) & Verifikasi Target SLA
 - **Tujuan:** Memvalidasi bahwa setiap pengguna dapat melaporkan kendala teknis kritis, memilih tipe hambatan dan dampak organisasi, serta memverifikasi bahwa sistem menyematkan target SLA respons 2 jam secara otomatis.
-- **Modul / Halaman:** Raise Blocker (`/blockers/raise`)
+- **Modul / Halaman:** Raise Blocker (`/raise-blockers`)
 - **Kategori Pengujian:** Happy Path / Workflow Initialization
 - **Teknik Desain Test Case:** Equivalence Partitioning & Decision Table
 - **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
@@ -1114,14 +1120,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Risk Rationale:** Hambatan kritis yang tidak tercatat dengan SLA akurat berisiko menunda pengiriman proyek dan merugikan reputasi perusahaan.
 - **Preconditions:** Login sebagai Employee.
 - **Test Data ID:** `TD-BLKR-01`
-- **Persiapan Sebelum Tes:** Buka menu "Lapor Blocker" via sidebar kiri (`/blockers/raise`).
+- **Persiapan Sebelum Tes:** Buka menu "Lapor Blocker" via sidebar kiri atau klik "Laporkan Blocker" dari My Today (`/raise-blockers`).
 
 **Langkah Pengujian:**
 1. **Langkah 1**
    - **Aksi:** Buka halaman Raise Blocker.
-   - **Lokasi:** `/blockers/raise`.
+   - **Lokasi:** `/raise-blockers`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Formulir pelaporan blocker terbuka dengan field: Judul Hambatan, Deskripsi Rinci, Tingkat Keparahan (Kritis, Tinggi, Sedang), Tipe Hambatan (Teknis, Infrastruktur, Dependensi, Vendor), dan Estimasi Dampak.
+   - **Hasil yang diharapkan:** Halaman Laporkan & Pantau Blocker terbuka di `/raise-blockers` dengan tautan navigasi `← Kembali ke Ruang Kerja My Today`, 2 Tab Navigasi (*Tab 1: Buat Laporan Blocker* dan *Tab 2: Blocker Saya*), formulir detail kendala lengkap, serta footer aksi full-width fixed dengan tombol sekunder "Bersihkan Formulir" dan primer "Kirim Laporan Blocker" (IMP-041, IMP-042, IMP-044).
    - **Verifikasi:** Seluruh field dan dropdown dalam kondisi interaktif.
 2. **Langkah 2**
    - **Aksi:** Isi detail hambatan tingkat kritis.
@@ -1133,7 +1139,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Klik tombol "Kirim Laporan Hambatan".
    - **Lokasi:** Tombol submit.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Toast sukses muncul "Hambatan kritis berhasil dilaporkan". Aplikasi me-redirect pengguna ke halaman Antrean Blocker (`/blockers`).
+   - **Hasil yang diharapkan:** Toast sukses muncul "Hambatan kritis berhasil dilaporkan". Aplikasi menampilkan toast sukses dan mengarahkan pelapor (EMPLOYEE) langsung ke Tab 2 "Blocker Saya" pada halaman `/raise-blockers` untuk memantau tiket kendala aktifnya secara transparan (tanpa tombol antrean manajerial).
    - **Verifikasi:** Blocker baru tercantum di bagian paling atas antrean dengan status `OPEN`, badge merah `KRITIS`, dan timer countdown SLA aktif.
 
 - **Expected Final Result:** Blocker kritis tersimpan dengan status OPEN, SLA 2 jam terpasang deterministik, dan siap ditindaklanjuti oleh atasan.
@@ -2186,7 +2192,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 **Langkah Pengujian:**
 1. **Langkah 1 (Pelaporan)**
    - **Aksi:** Login sebagai Employee, buka `/blockers/raise`. Buat laporan kendala kritis terkait akses jaringan API server.
-   - **Lokasi:** `/blockers/raise`.
+   - **Lokasi:** `/raise-blockers`.
    - **Data:** Judul: `API Server Gateway Network Unreachable`, Severity: `KRITIS`, Dampak: `TEAM_BLOCKED`.
    - **Hasil yang diharapkan:** Blocker tersimpan berstatus `OPEN` dengan target SLA respons 2 jam.
    - **Verifikasi:** Muncul di antrean blocker pribadi.
