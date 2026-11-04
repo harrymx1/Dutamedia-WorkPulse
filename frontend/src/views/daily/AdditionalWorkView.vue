@@ -164,7 +164,7 @@ onMounted(() => {
 
       <div class="workflow-actions">
         <AccessLink
-          to="/blockers/raise"
+          to="/raise-blockers"
           class="btn-report-blocker"
           title="Laporkan kendala kritis atau dependensi"
           data-testid="report-blocker-btn"

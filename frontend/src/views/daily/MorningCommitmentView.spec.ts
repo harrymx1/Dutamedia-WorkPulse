@@ -19,7 +19,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
         { path: '/daily/history', component: { template: '<div>History</div>' } },
         { path: '/profile', component: { template: '<div>Profile</div>' } },
         { path: '/corrections/morning', component: { template: '<div>MorningCorrection</div>' } },
-        { path: '/blockers/raise', component: { template: '<div>Raise</div>' } },
+        { path: '/raise-blockers', component: { template: '<div>Raise</div>' } },
       ],
     });
   });
@@ -483,6 +483,6 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     const blockerBtn = wrapper.find('[data-testid="report-blocker-btn"]');
     expect(blockerBtn.exists()).toBe(true);
     expect(blockerBtn.text()).toContain('Laporkan Blocker');
-    expect(blockerBtn.attributes('href')).toBe('/blockers/raise');
+    expect(blockerBtn.attributes('href')).toBe('/raise-blockers');
   });
 });

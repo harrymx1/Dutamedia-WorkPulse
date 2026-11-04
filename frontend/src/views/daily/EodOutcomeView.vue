@@ -8,7 +8,6 @@ import {
   AlertCircle,
   Lock,
   AlertTriangle,
-  X,
 } from 'lucide-vue-next';
 
 interface CommitmentOutcomeItem {
@@ -89,17 +88,6 @@ const commitments = ref<CommitmentOutcomeItem[]>([]);
 const additionalWorks = ref<AdditionalWorkOutcomeItem[]>([]);
 const finalDailyStatus = ref<'GREEN' | 'AMBER' | 'RED'>('GREEN');
 
-// Instant blocker modal state
-const isBlockerModalOpen = ref(false);
-const blockerType = ref('TECHNICAL');
-const blockerSeverity = ref('HIGH');
-const blockerImpact = ref('TASK');
-const blockerDesc = ref('');
-const blockerOwnerType = ref('ORGANIZATIONAL_AUTHORITY');
-const blockerOwnerId = ref('');
-const blockerProjectCode = ref('');
-const availableUsers = ref<Array<{ id: string; fullName: string }>>([]);
-
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 const isSubmittedSuccess = ref(false);
@@ -164,13 +152,6 @@ async function loadTodayState() {
     } else {
       eodSubmittedAt.value = null;
       isSubmittedSuccess.value = false;
-    }
-
-    // Load users for blocker modal
-    const usersRes = await apiClient<Array<{ id: string; fullName: string }>>('/v1/organization/users');
-    availableUsers.value = usersRes.data || [];
-    if (availableUsers.value.length > 0) {
-      blockerOwnerId.value = availableUsers.value[0].id;
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat evaluasi EOD.', true);
@@ -245,40 +226,6 @@ async function submitEod() {
   }
 }
 
-async function submitInstantBlocker() {
-  if (blockerDesc.value.trim().length < 10) {
-    showToast('Deskripsi kendala minimal 10 karakter.', true);
-    return;
-  }
-
-  if (blockerOwnerType.value === 'PROJECT_AUTHORITY' && blockerProjectCode.value.trim().length === 0) {
-    showToast('Kode proyek referensi wajib diisi bila memilih Kewenangan Proyek.', true);
-    return;
-  }
-
-  try {
-    await apiClient('/blockers', {
-      method: 'POST',
-      body: JSON.stringify({
-        type: blockerType.value,
-        severity: blockerSeverity.value,
-        impact: blockerImpact.value,
-        description: blockerDesc.value.trim(),
-        ownerNeededType: blockerOwnerType.value,
-        assignedOwnerId: blockerOwnerId.value,
-        projectCodeReference: blockerOwnerType.value === 'PROJECT_AUTHORITY' ? blockerProjectCode.value.trim() : undefined,
-      }),
-    });
-
-    showToast('Kendala mendesak (Instant Blocker) berhasil dilaporkan ke antrean eskalasi.');
-    isBlockerModalOpen.value = false;
-    blockerDesc.value = '';
-    blockerProjectCode.value = '';
-  } catch (err: any) {
-    showToast(err.message || 'Gagal melaporkan kendala.', true);
-  }
-}
-
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
@@ -318,7 +265,7 @@ onMounted(() => {
 
       <div class="workflow-actions">
         <AccessLink
-          to="/blockers/raise"
+          to="/raise-blockers"
           class="btn-report-blocker"
           title="Laporkan kendala kritis atau dependensi"
           data-testid="report-blocker-btn"
@@ -671,94 +618,6 @@ onMounted(() => {
         </AccessLink>
       </div>
     </main>
-
-    <!-- Modal Instant Blocker -->
-    <div v-if="isBlockerModalOpen" class="modal-backdrop" role="dialog" aria-modal="true">
-      <div class="modal-box">
-        <div class="modal-header">
-          <div>
-            <h3>Laporkan Kendala Mendesak (Instant Blocker)</h3>
-            <p>Eskalasi kendala ke antrean reviewer dengan target respon SLA (Prototipe 05).</p>
-          </div>
-          <button type="button" class="icon-btn" @click="isBlockerModalOpen = false">
-            <X :size="20" />
-          </button>
-        </div>
-
-        <form @submit.prevent="submitInstantBlocker" class="modal-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Jenis Kendala *</label>
-              <select v-model="blockerType" class="input-control" required>
-                <option value="TECHNICAL">Teknis / Arsitektur (TECHNICAL)</option>
-                <option value="REQUIREMENT">Kebutuhan / Spesifikasi (REQUIREMENT)</option>
-                <option value="APPROVAL">Persetujuan / Approval (APPROVAL)</option>
-                <option value="VENDOR">Vendor / Pihak Ketiga (VENDOR)</option>
-                <option value="INFRA">Infrastruktur / Cloud (INFRA)</option>
-                <option value="OTHER">Lainnya (OTHER)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Tingkat Keparahan *</label>
-              <select v-model="blockerSeverity" class="input-control" required>
-                <option value="LOW">Low (Rendah)</option>
-                <option value="MEDIUM">Medium (Sedang)</option>
-                <option value="HIGH">High (Tinggi)</option>
-                <option value="CRITICAL">Critical (Kritis)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Deskripsi Kendala *</label>
-            <textarea
-              v-model="blockerDesc"
-              class="input-control"
-              rows="3"
-              placeholder="Jelaskan kendala, dampak terhadap timeline, dan tindakan mitigasi yang telah dicoba..."
-              minlength="10"
-              required
-            ></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Konteks Kewenangan *</label>
-              <select v-model="blockerOwnerType" class="input-control" required>
-                <option value="ORGANIZATIONAL_AUTHORITY">Kewenangan Hierarki (Supervisor/Head)</option>
-                <option value="PROJECT_AUTHORITY">Kewenangan Proyek (Project Manager)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Penerima Eskalasi (Owner) *</label>
-              <select v-model="blockerOwnerId" class="input-control" required>
-                <option v-for="u in availableUsers" :key="u.id" :value="u.id">
-                  {{ u.fullName }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div v-if="blockerOwnerType === 'PROJECT_AUTHORITY'" class="form-group">
-            <label class="form-label">Kode Proyek Referensi *</label>
-            <input
-              v-model="blockerProjectCode"
-              type="text"
-              class="input-control"
-              placeholder="Contoh: PRJ-WORKPULSE-01"
-              required
-            />
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" @click="isBlockerModalOpen = false">Batal</button>
-            <button type="submit" class="btn btn-primary">Laporkan Blocker</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -1412,73 +1271,6 @@ textarea.input-control {
 .post-submit-header p {
   font-size: 13px;
   color: var(--color-text-secondary);
-}
-
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-}
-
-.modal-box {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 580px;
-  width: 100%;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.modal-header h3 {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.modal-header p {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-
-.modal-form {
-  padding: 20px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
 }
 
 .toast-popup {

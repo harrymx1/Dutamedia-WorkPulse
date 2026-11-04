@@ -17,7 +17,7 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
         { path: '/daily/additional-work', component: AdditionalWorkView },
         { path: '/daily/eod', component: { template: '<div>EOD</div>' } },
         { path: '/profile', component: { template: '<div>Profile</div>' } },
-        { path: '/blockers/raise', component: { template: '<div>Raise</div>' } },
+        { path: '/raise-blockers', component: { template: '<div>Raise</div>' } },
       ],
     });
   });
@@ -64,7 +64,7 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     const blockerBtn = wrapper.find('[data-testid="report-blocker-btn"]');
     expect(blockerBtn.exists()).toBe(true);
     expect(blockerBtn.text()).toContain('Laporkan Blocker');
-    expect(blockerBtn.attributes('href')).toBe('/blockers/raise');
+    expect(blockerBtn.attributes('href')).toBe('/raise-blockers');
   });
 
   it('eliminates internal design code (Prototipe 03) from page subtitle (IMP-031)', async () => {
