@@ -68,7 +68,10 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-020** | Konsistensi Penjanaan Huruf Inisial Avatar (2 Huruf Nama Lengkap) | Visual Design & Styling | Avatar Global | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
 | **IMP-021** | Pemisahan Nama Lengkap dan Jabatan pada Tampilan User | Copywriting & Microcopy | `/profile` & Header | `TC-AUTH-007` | Medium | Implemented (Pending UAT) |
 | **IMP-022** | Penyelarasan Layout Body Profil Sesuai 3 Seksi Prototipe 24 | Layout & Spacing | `/profile` | `TC-AUTH-007` | High | Implemented (Pending UAT) |
-| **IMP-023** | Pengalihan Tombol Pemulihan Layar 403 Mengikuti Rute Kanonikal Peran | Navigation & Architecture | `ErrorPageView.vue` | `TC-AUTH-005` | High | Candidate |
+| **IMP-023** | Pengalihan Tombol Pemulihan Layar 403 Mengikuti Rute Kanonikal Peran | Navigation & Architecture | `ErrorPageView.vue` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
+| **IMP-024** | Penyeragaman Topbar Administrasi Menggunakan Breadcrumb Hirarkis | Navigation & Consistency | `/admin/*` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
+| **IMP-025** | Konsolidasi Topbar Administrasi: Eliminasi Menu Duplikat & Avatar Bulat | UI/UX & Information Architecture | `admin-layout` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
+| **IMP-026** | Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Navigasi 'Workspace' | Architecture & Separation of Duties (IAM) | `EnterpriseSidebar` & `navigation.ts` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
 
 ---
 
@@ -495,8 +498,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** Ubah rute tombol pemulihan agar memanggil helper navigasi berbasis peran (misal: `getRoleBasedHomeRoute(user.role)`), sehingga untuk peran EMPLOYEE tombol otomatis mengarahkan ke `/daily/morning`, sedangkan untuk peran manajerial mengarahkan ke `/dashboard`.
 - **Rationale / Expected Benefit:** Menegakkan konsistensi tata kelola pendaratan berbasis peran (DEC-012) di seluruh alur pemulihan error sistem.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** TBD (`ErrorPageView.vue`)
-- **Status:** Candidate
+- **Evidence / Screenshot Reference:** Temuan Sesi Manual UAT 30 Okt 2026 (`ErrorPageView.vue`)
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 9 (IMP-023) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 6bd9f6d (Change Register: CHG-022)
+- **Implementation Note:** Menyelaraskan rute tombol pemulihan pada layar Error 403 / Forbidden (`ErrorPageView.vue`) menggunakan helper kanonikal `getLandingRouteForRole(auth.user?.role)` sehingga rute tujuan bersifat adaptif berbasis peran pengguna: `/daily/morning` untuk EMPLOYEE, `/dashboard` untuk peran manajerial (SUPERVISOR, MANAGER, VP, CEO), `/compliance` untuk HRGA, `/admin/organization` untuk SYSTEM_ADMIN, dan fallback `/login` jika sesi unauthenticated. Melakukan standardisasi label tombol pemulihan menjadi "Kembali ke Beranda" (atau "Ke Halaman Login" jika tidak terautentikasi) serta melengkapi pengujian unit komprehensif pada `ErrorPageView.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 9 (IMP-023) resmi ditutup.
 
 ### [IMP-024] Penyeragaman Topbar Administrasi Menggunakan Breadcrumb Hirarkis Menggantikan Badge Duplikat WP
 - **Finding ID:** IMP-024
@@ -540,14 +547,18 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Finding ID:** IMP-026
 - **Title:** Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Akses dan Grup Navigasi 'Workspace'
 - **Category:** Architecture & Separation of Duties (IAM)
-- **Page / Module:** Navigasi Sidebar (`navGroups` / `router/navigation.ts`) & Router Guard
+- **Page / Module:** Navigasi Sidebar (`navGroups` / `router/navigation.ts`) & Router Guard (`router/index.ts`)
 - **Related Test Case:** `TC-AUTH-005`, `TC-ADMN-002`
 - **Current Condition:** Akun berkedudukan peran `SYSTEM_ADMIN` saat ini masih melihat dan memiliki akses ke grup menu *Workspace* (Morning Commitment, Additional Work, EOD Outcome, Lapor Blocker, Cuti Saya, Koreksi).
 - **Proposed Improvement:** Terapkan pemisahan tugas (*Separation of Duties*) tegas pada tingkat navigasi dan hak akses: Akun `SYSTEM_ADMIN` adalah identitas pengelola sistem (bukan jabatan operasional karyawan perusahaan). Nonaktifkan grup navigasi *Workspace* untuk peran `SYSTEM_ADMIN`, sehingga akun admin murni hanya mengelola konfigurasi sistem (*Administration*) dan pemantauan eskalasi/audit (*Management*). Setiap PIC pengelola admin (misal HRGA/IT) yang memiliki kewajiban komitmen harian tetap menggunakan akun karyawan pribadinya masing-masing.
 - **Rationale / Expected Benefit:** Mencegah terjadinya pencemaran data komitmen operasional pada akun sistem, menegakkan kepatuhan tata kelola akses enterprise (IAM Governance & Separation of Duties), serta menyederhanakan fokus antarmuka administrator.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Keputusan Arsitektur Acceptance Owner Sesi 30 Okt 2026
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 10 (IMP-026) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 5f9dfba (Change Register: CHG-023)
+- **Implementation Note:** Menerapkan pemisahan tugas (Separation of Duties) tegas pada tingkat navigasi dan hak akses: mendefinisikan konstanta peran operasional `OPERATIONAL_ROLES` di `navigation.ts`, memfilter dan menonaktifkan grup `Workspace` secara penuh pada `navForRole` untuk peran `SYSTEM_ADMIN` sehingga sidebar hanya menampilkan grup `Management` dan `Administration`. Menerapkan route guard dua lapis dengan `roles: OPERATIONAL_ROLES` pada 8 rute kerja operasional (`/daily/morning`, `/daily/additional-work`, `/daily/eod`, `/daily/history`, `/raise-blockers`, `/corrections/morning`, `/corrections/eod`, `/leave/my`) di `router/index.ts` untuk mencegah akses manual langsung. Melengkapi unit test komprehensif pada `navigation.spec.ts` dan `EnterpriseSidebar.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (104 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 10 (IMP-026) resmi ditutup.
 
 ### [IMP-027] Restrukturisasi & Pembersihan Kartu Metrik Konteks Hari Ini di Formulir Morning Commitment
 - **Finding ID:** IMP-027
