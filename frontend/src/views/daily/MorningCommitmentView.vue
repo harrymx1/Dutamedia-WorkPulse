@@ -79,6 +79,32 @@ function formatTime(isoStr: string | null) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-027)
+const formattedWorkDate = computed(() => {
+  if (!workDate.value) return '';
+  const parts = workDate.value.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month, day);
+    return d.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  const d = new Date(workDate.value);
+  if (isNaN(d.getTime())) return workDate.value;
+  return d.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+});
+
 // Computed initial daily status
 const initialDailyStatus = computed(() => {
   if (isZeroCommitment.value) return 'NOT_APPLICABLE_NO_COMMITMENT';
@@ -327,28 +353,26 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Konteks Hari Ini Panel -->
+      <!-- Konteks Hari Ini Panel (IMP-027 Restrukturisasi & Pembersihan Metrik) -->
       <section class="panel context-panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Konteks Hari Ini</div>
             <h2>Jadwal & Batas Pengisian Hari Ini</h2>
           </div>
-          <span class="badge badge-info">Kebijakan: On-Time {{ morningOnTimeCutoff }} · Cut-Off {{ morningLockCutoff }} WIB</span>
+          <span class="badge badge-info" data-testid="context-date-badge">{{ formattedWorkDate || 'Hari Kerja Aktif' }}</span>
         </div>
         <div class="panel-body">
           <div class="context-grid">
-            <div class="context-item">
-              <span class="context-label">Tanggal Kerja</span>
-              <span class="context-value mono">{{ workDate || '...' }}</span>
-              <span class="context-sub">Hari Kerja Aktif</span>
-            </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-ontime">
               <span class="context-label">Batas On-Time</span>
               <span class="context-value mono">{{ morningOnTimeCutoff }} WIB</span>
-              <span class="context-sub">Cut-Off Penguncian: {{ morningLockCutoff }} WIB</span>
             </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-cutoff">
+              <span class="context-label">Batas Cut-Off</span>
+              <span class="context-value mono">{{ morningLockCutoff }} WIB</span>
+            </div>
+            <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
                 <span v-if="hasSubmittedMorning" class="badge badge-active">SUBMITTED (Terkunci)</span>
@@ -356,17 +380,15 @@ onMounted(() => {
                 <span v-else-if="isLate" class="badge badge-late">LATE (Jendela Toleransi)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
-              <span class="context-sub">Jam Server: {{ currentTime || '...' }}</span>
             </div>
-            <div class="context-item">
-              <span class="context-label">Initial Daily Status</span>
+            <div class="context-item" data-testid="context-item-initial-status">
+              <span class="context-label">Status Awal Hari (Initial Daily Status)</span>
               <div class="context-value">
                 <span v-if="initialDailyStatus === 'GREEN'" class="badge badge-active">GREEN — Terkendali</span>
                 <span v-else-if="initialDailyStatus === 'AMBER'" class="badge badge-warning">AMBER — Berisiko</span>
                 <span v-else-if="initialDailyStatus === 'RED'" class="badge badge-danger">RED — Kritis</span>
                 <span v-else class="badge badge-neutral">0 KOMITMEN</span>
               </div>
-              <span class="context-sub">Agregasi Tingkat Risiko</span>
             </div>
           </div>
         </div>

@@ -55,6 +55,69 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(wrapper.text()).toContain('Initial Daily Status');
   });
 
+  it('renders restructured and decluttered context metric cards with dynamic date badge (IMP-027)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-30',
+          currentTime: '08:45',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '23:59',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    // 1. Right header tag renders dynamic Indonesian day and date
+    const dateBadge = wrapper.find('[data-testid="context-date-badge"]');
+    expect(dateBadge.exists()).toBe(true);
+    expect(dateBadge.text()).toBe('Jumat, 30 Oktober 2026');
+
+    // 2. Subkotak 1: Batas On-Time without subtext
+    const ontimeCard = wrapper.find('[data-testid="context-item-ontime"]');
+    expect(ontimeCard.exists()).toBe(true);
+    expect(ontimeCard.text()).toContain('Batas On-Time');
+    expect(ontimeCard.text()).toContain('09:00 WIB');
+    expect(ontimeCard.find('.context-sub').exists()).toBe(false);
+
+    // 3. Subkotak 2: Batas Cut-Off without subtext
+    const cutoffCard = wrapper.find('[data-testid="context-item-cutoff"]');
+    expect(cutoffCard.exists()).toBe(true);
+    expect(cutoffCard.text()).toContain('Batas Cut-Off');
+    expect(cutoffCard.text()).toContain('23:59 WIB');
+    expect(cutoffCard.find('.context-sub').exists()).toBe(false);
+
+    // 4. Subkotak 3: Status Waktu without server time subtext
+    const timeStatusCard = wrapper.find('[data-testid="context-item-time-status"]');
+    expect(timeStatusCard.exists()).toBe(true);
+    expect(timeStatusCard.text()).toContain('Status Waktu');
+    expect(timeStatusCard.text()).toContain('ON-TIME');
+    expect(timeStatusCard.text()).not.toContain('Jam Server');
+
+    // 5. Subkotak 4: Status Awal Hari without risk aggregation subtext
+    const riskStatusCard = wrapper.find('[data-testid="context-item-initial-status"]');
+    expect(riskStatusCard.exists()).toBe(true);
+    expect(riskStatusCard.text()).toContain('Status Awal Hari');
+    expect(riskStatusCard.text()).toContain('GREEN — Terkendali');
+    expect(riskStatusCard.text()).not.toContain('Agregasi Tingkat Risiko');
+
+    // Redundant text eliminated
+    expect(wrapper.text()).not.toContain('Hari Kerja Aktif');
+    expect(wrapper.text()).not.toContain('Kebijakan: On-Time');
+  });
+
   it('toggles zero commitment mode on checkbox check (DEC-004)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
