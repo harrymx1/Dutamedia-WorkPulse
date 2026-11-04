@@ -118,6 +118,50 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(wrapper.text()).not.toContain('Kebijakan: On-Time');
   });
 
+  it('renders human-friendly late banner and Terlambat (LATE) badge without Grace Period jargon (IMP-028)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-30',
+          currentTime: '09:15',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '23:59',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    // 1. Late alert banner is rendered
+    const lateBanner = wrapper.find('[data-testid="late-alert-banner"]');
+    expect(lateBanner.exists()).toBe(true);
+    expect(lateBanner.text()).toContain('Pengisian Melewati Batas Waktu');
+    expect(lateBanner.text()).toContain('09:00 – 23:59 WIB');
+    expect(lateBanner.text()).toContain('Batas waktu On-Time (09:00 WIB) telah berakhir');
+    expect(lateBanner.text()).toContain('sebelum sistem terkunci pada pukul 23:59 WIB');
+    expect(lateBanner.text()).toContain('Terlambat (LATE)');
+
+    // 2. Technical and confusing jargon is completely eliminated
+    expect(wrapper.text()).not.toContain('Grace Period');
+    expect(wrapper.text()).not.toContain('Jendela Toleransi');
+
+    // 3. Status Waktu badge in Subkotak 3 displays "Terlambat (LATE)"
+    const timeStatusCard = wrapper.find('[data-testid="context-item-time-status"]');
+    expect(timeStatusCard.exists()).toBe(true);
+    expect(timeStatusCard.text()).toContain('Terlambat (LATE)');
+  });
+
   it('toggles zero commitment mode on checkbox check (DEC-004)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,

@@ -377,7 +377,7 @@ onMounted(() => {
               <div class="context-value">
                 <span v-if="hasSubmittedMorning" class="badge badge-active">SUBMITTED (Terkunci)</span>
                 <span v-else-if="isMorningLocked" class="badge badge-danger">LOCKED (Pasca Cut-Off)</span>
-                <span v-else-if="isLate" class="badge badge-late">LATE (Jendela Toleransi)</span>
+                <span v-else-if="isLate" class="badge badge-late">Terlambat (LATE)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
             </div>
@@ -422,12 +422,12 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Alert Banner jika Late (09:00 - 09:30) -->
-      <div v-else-if="isLate" class="alert-banner late">
+      <!-- Alert Banner jika Late (IMP-028) -->
+      <div v-else-if="isLate" class="alert-banner late" role="status" data-testid="late-alert-banner">
         <Clock :size="20" />
         <div>
-          <strong>Jendela Grace Period / Late Aktif ({{ morningOnTimeCutoff }} – {{ morningLockCutoff }} WIB):</strong>
-          Batas waktu On-Time telah terlewati, namun Anda masih berada sebelum batas cut-off penguncian. Komitmen yang dikirim sekarang langsung sah dengan status <strong>LATE</strong>.
+          <strong>Pengisian Melewati Batas Waktu ({{ morningOnTimeCutoff }} – {{ morningLockCutoff }} WIB):</strong>
+          Batas waktu On-Time ({{ morningOnTimeCutoff }} WIB) telah berakhir, namun Anda masih dapat mengirimkan komitmen sebelum sistem terkunci pada pukul {{ morningLockCutoff }} WIB. Komitmen Anda hari ini akan dicatat dengan status <strong>Terlambat (LATE)</strong>.
         </div>
       </div>
 
