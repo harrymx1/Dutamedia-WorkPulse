@@ -81,6 +81,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-033** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Waktu EOD di Halaman EOD Outcome | Layout & Visual Cleanliness | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-034** | Eliminasi Kebocoran Kode Desain '(Prototipe 04)' pada Subtitle Halaman EOD Outcome | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-035** | Eliminasi Kode Arsitektur 'DEC-003' & Penyempurnaan Narasi Humanis pada Seksi Refleksi Mandiri EOD | Microcopy & UX Communication | `/daily/eod` | `TC-DLYE-002` | High | Implemented (Pending UAT) |
+| **IMP-036** | Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -761,7 +762,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan antarmuka ramah pengguna (*user-friendly*) tanpa kebocoran istilah kode pemrograman (*leak of developer jargon*).
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342065674_58df17a2.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 20 (IMP-036) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit ff6a964 (Change Register: CHG-033)
+- **Implementation Note:** Mengeliminasi seluruh kebocoran kode enum teknis huruf besar dan bergaris bawah dari opsi pencapaian dan keputusan kelanjutan tugas EOD (EodOutcomeView.vue), mengganti label menjadi bahasa Indonesia bisnis yang natural ('Selesai', 'Sebagian', 'Belum Selesai', 'Dibatalkan', 'Lanjutkan Besok (Tugas Berlanjut)', dan 'Tidak Dilanjutkan'), membersihkan imbuhan deskripsi bahasa Inggris pada label form, serta memverifikasi ketidakhadiran kode enum teknis via automated unit test di EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (114 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 20 (IMP-036) resmi ditutup.
 
 ---
 
