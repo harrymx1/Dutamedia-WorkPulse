@@ -155,4 +155,92 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     expect(formRow.classes()).toContain('single-col');
     expect(wrapper.find('[data-testid="assigned-by-group"]').exists()).toBe(false);
   });
+
+  it('formats reason badge in business language and enforces required input when reason is OTHER (IMP-039)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/daily/today')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              success: true,
+              data: {
+                workDate: '2026-10-30',
+                record: {
+                  id: 'rec-today-01',
+                  additionalWorks: [
+                    {
+                      id: 'aw-1',
+                      taskText: 'Menyusun dokumentasi API tambahan',
+                      reason: 'NEWLY_ASSIGNED',
+                      assignedByUser: { fullName: 'Bambang Sutrisno, M.Kom' },
+                    },
+                    {
+                      id: 'aw-2',
+                      taskText: 'Perbaikan crash server auth',
+                      reason: 'OPERATIONAL_INCIDENT',
+                      assignedByUser: null,
+                    },
+                    {
+                      id: 'aw-3',
+                      taskText: 'Merancang arsitektur cache',
+                      reason: 'OTHER',
+                      assignedByUser: null,
+                    },
+                  ],
+                },
+              },
+            }),
+          });
+        }
+        if (url.includes('/v1/organization/users')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              success: true,
+              data: [
+                { id: 'mgr-1', fullName: 'Bambang Sutrisno, M.Kom', email: 'bambang.sutrisno@dutamedia.co.id' },
+              ],
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: {} }),
+        });
+      }),
+    );
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Verify badges are rendered in human-friendly business language
+    const worksList = wrapper.find('.works-list');
+    expect(worksList.exists()).toBe(true);
+    expect(worksList.text()).toContain('Penugasan Baru Atasan');
+    expect(worksList.text()).toContain('Perbaikan Error / Bug Kritis');
+    expect(worksList.text()).toContain('Lainnya');
+
+    // No raw uppercase enum leaked into DOM
+    expect(worksList.text()).not.toContain('NEWLY_ASSIGNED');
+    expect(worksList.text()).not.toContain('OPERATIONAL_INCIDENT');
+
+    // Test selection of OTHER dynamic input appearance
+    const selectReason = wrapper.find('[data-testid="select-reason"]');
+    await selectReason.setValue('OTHER');
+
+    const formRow = wrapper.find('[data-testid="form-row-reason"]');
+    // When OTHER, it should be 2 columns (Reason + Other Reason input), NOT single-col
+    expect(formRow.classes()).not.toContain('single-col');
+
+    const otherReasonGroup = wrapper.find('[data-testid="other-reason-group"]');
+    expect(otherReasonGroup.exists()).toBe(true);
+    expect(otherReasonGroup.text()).toContain('Keterangan Alasan Lainnya *');
+
+    const inputOther = wrapper.find('[data-testid="input-other-reason"]');
+    expect(inputOther.exists()).toBe(true);
+  });
 });

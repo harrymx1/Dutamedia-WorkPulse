@@ -55,6 +55,17 @@ function formatTime(isoStr: string | null) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+function formatReason(reason: string): string {
+  const map: Record<string, string> = {
+    NEWLY_ASSIGNED: 'Penugasan Baru Atasan',
+    OPERATIONAL_INCIDENT: 'Perbaikan Error / Bug Kritis',
+    MISSED_IN_PLANNING: 'Terlewat Catat Pagi',
+    PRIORITY_CHANGE: 'Pengalihan Prioritas',
+    OTHER: 'Lainnya',
+  };
+  return map[reason] || reason;
+}
+
 // Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-033)
 const formattedWorkDate = computed(() => {
   if (!workDate.value) return '';
@@ -511,7 +522,7 @@ onMounted(() => {
             <div v-for="w in additionalWorks" :key="w.id" class="eval-card">
               <div class="eval-header">
                 <span class="eval-task">{{ w.taskText }}</span>
-                <span class="badge badge-info">{{ w.reason }}</span>
+                <span class="badge badge-info">{{ formatReason(w.reason) }}</span>
               </div>
 
               <div class="form-group">

@@ -36,6 +36,18 @@ const availableManagers = ref<SimpleUser[]>([]);
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
 const formAssignedBy = ref('');
+const formOtherReason = ref('');
+
+function formatReason(reason: string): string {
+  const map: Record<string, string> = {
+    NEWLY_ASSIGNED: 'Penugasan Baru Atasan',
+    OPERATIONAL_INCIDENT: 'Perbaikan Error / Bug Kritis',
+    MISSED_IN_PLANNING: 'Terlewat Catat Pagi',
+    PRIORITY_CHANGE: 'Pengalihan Prioritas',
+    OTHER: 'Lainnya',
+  };
+  return map[reason] || reason;
+}
 
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
@@ -80,12 +92,21 @@ async function addAdditionalWork() {
     return;
   }
 
+  if (formReason.value === 'OTHER' && formOtherReason.value.trim().length < 3) {
+    showToast('Keterangan alasan lainnya wajib diisi minimal 3 karakter untuk menjelaskan konteks pekerjaan.', true);
+    return;
+  }
+
+  const finalTaskText = formReason.value === 'OTHER'
+    ? `${formTaskText.value.trim()} (Alasan: ${formOtherReason.value.trim()})`
+    : formTaskText.value.trim();
+
   submitting.value = true;
   try {
     await apiClient(`/daily/records/${recordId.value}/additional-work`, {
       method: 'POST',
       body: JSON.stringify({
-        taskText: formTaskText.value.trim(),
+        taskText: finalTaskText,
         reason: formReason.value,
         assignedByUserId: formReason.value === 'NEWLY_ASSIGNED' ? formAssignedBy.value : undefined,
       }),
@@ -95,6 +116,7 @@ async function addAdditionalWork() {
     formTaskText.value = '';
     formReason.value = 'NEWLY_ASSIGNED';
     formAssignedBy.value = '';
+    formOtherReason.value = '';
     await loadTodayState();
   } catch (err: any) {
     showToast(err.message || 'Gagal menambahkan pekerjaan tambahan.', true);
@@ -205,15 +227,15 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <div class="form-row" :class="{ 'single-col': formReason !== 'NEWLY_ASSIGNED' }" data-testid="form-row-reason">
+            <div class="form-row" :class="{ 'single-col': formReason !== 'NEWLY_ASSIGNED' && formReason !== 'OTHER' }" data-testid="form-row-reason">
               <div class="form-group">
                 <label for="select-reason" class="form-label">Alasan Pekerjaan Tambahan *</label>
                 <select id="select-reason" v-model="formReason" class="input-control" required data-testid="select-reason">
-                  <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan (NEWLY_ASSIGNED)</option>
-                  <option value="MISSED_IN_PLANNING">Terlewat saat Perencanaan Pagi (MISSED_IN_PLANNING)</option>
-                  <option value="PRIORITY_CHANGE">Perubahan Prioritas Proyek (PRIORITY_CHANGE)</option>
-                  <option value="OPERATIONAL_INCIDENT">Insiden Operasional / Bug Mendesak (OPERATIONAL_INCIDENT)</option>
-                  <option value="OTHER">Lainnya (OTHER)</option>
+                  <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan</option>
+                  <option value="OPERATIONAL_INCIDENT">Perbaikan Error / Bug Kritis</option>
+                  <option value="MISSED_IN_PLANNING">Tugas Terlewat Dicatat Pagi</option>
+                  <option value="PRIORITY_CHANGE">Pengalihan Prioritas Kerja</option>
+                  <option value="OTHER">Lainnya</option>
                 </select>
               </div>
 
@@ -225,6 +247,19 @@ onMounted(() => {
                     {{ user.fullName }} ({{ user.email }})
                   </option>
                 </select>
+              </div>
+
+              <div v-if="formReason === 'OTHER'" class="form-group" data-testid="other-reason-group">
+                <label for="input-other-reason" class="form-label">Keterangan Alasan Lainnya *</label>
+                <input
+                  id="input-other-reason"
+                  v-model="formOtherReason"
+                  type="text"
+                  class="input-control"
+                  placeholder="Jelaskan alasan khusus pekerjaan ini..."
+                  required
+                  data-testid="input-other-reason"
+                />
               </div>
             </div>
 
@@ -256,7 +291,7 @@ onMounted(() => {
               <div class="work-main">
                 <div class="work-header">
                   <span class="work-idx">#{{ idx + 1 }}</span>
-                  <span class="badge badge-info">{{ item.reason }}</span>
+                  <span class="badge badge-info">{{ formatReason(item.reason) }}</span>
                   <span v-if="item.assignedByUser" class="assigned-by">
                     Ditugaskan oleh: <strong>{{ item.assignedByUser.fullName }}</strong>
                   </span>

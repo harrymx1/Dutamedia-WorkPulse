@@ -415,6 +415,12 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     // Radio inputs exist
     const cancelledRadio = wrapper.find('input[name="w-outcome-w-2"][value="CANCELLED"]');
     expect(cancelledRadio.exists()).toBe(true);
+
+    // Verify reason badges are formatted to human-friendly business language (IMP-039)
+    expect(evalList.text()).toContain('Perbaikan Error / Bug Kritis');
+    expect(evalList.text()).toContain('Penugasan Baru Atasan');
+    expect(evalList.text()).not.toContain('OPERATIONAL_INCIDENT');
+    expect(evalList.text()).not.toContain('NEWLY_ASSIGNED');
   });
 
   // =========================================================================
