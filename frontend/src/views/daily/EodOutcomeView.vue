@@ -481,7 +481,7 @@ onMounted(() => {
                   </label>
                 </div>
 
-                <div v-if="c.continuation === 'CONTINUE'" class="mt-2">
+                <div v-if="c.continuation === 'CONTINUE'" class="mt-2 continuation-reason-group">
                   <label class="form-label">Catatan Kelanjutan *</label>
                   <textarea
                     v-model="c.continuationReason"
@@ -1120,6 +1120,14 @@ onMounted(() => {
   margin-top: 8px;
 }
 
+.continuation-reason-group {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
 /* Status Reflection Cards */
 .reflection-desc {
   font-size: 13px;
@@ -1245,18 +1253,28 @@ onMounted(() => {
 }
 
 .form-label {
+  display: block;
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .input-control {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
   padding: 9px 12px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   font-size: 13px;
   background: #fff;
   color: var(--color-text-primary);
+}
+
+textarea.input-control {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
 }
 
 .input-control:focus {

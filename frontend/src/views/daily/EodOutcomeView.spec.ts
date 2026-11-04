@@ -303,6 +303,49 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(wrapper.text()).not.toContain('(Continuation Reason)');
   });
 
+  it('renders continuation reason textarea with full-width layout container (IMP-037)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-28',
+          currentTime: '17:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-1',
+            commitments: [
+              { id: 'c-1', taskText: 'Task 1', outcome: 'NOT_COMPLETED', outcomeReason: '', continuation: 'CONTINUE', continuationReason: 'Rencana tindak lanjut besok pagi' },
+            ],
+            additionalWorks: [],
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const reasonGroup = wrapper.find('.continuation-reason-group');
+    expect(reasonGroup.exists()).toBe(true);
+
+    const label = reasonGroup.find('label.form-label');
+    expect(label.exists()).toBe(true);
+    expect(label.text()).toBe('Catatan Kelanjutan *');
+
+    const textarea = reasonGroup.find('textarea.input-control');
+    expect(textarea.exists()).toBe(true);
+    expect(textarea.attributes('placeholder')).toBe('Jelaskan progres sisa dan rencana penuntasan besok...');
+    expect((textarea.element as HTMLTextAreaElement).value).toBe('Rencana tindak lanjut besok pagi');
+  });
+
   // =========================================================================
   // PENGUJIAN TIGA KONDISI DEF-002 (Kondisi A, B, C)
   // =========================================================================
