@@ -68,7 +68,7 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
 
     expect(wrapper.text()).toContain('EOD Outcome & Daily Reflection');
     expect(wrapper.text()).toContain('Konteks Waktu EOD');
-    expect(wrapper.text()).toContain('Refleksi Mandiri Karyawan (DEC-003)');
+    expect(wrapper.text()).toContain('Refleksi Mandiri Akhir Hari');
     expect(wrapper.text()).toContain('GREEN');
     expect(wrapper.text()).toContain('AMBER');
     expect(wrapper.text()).toContain('RED');
@@ -195,6 +195,51 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     );
     expect(subtitle.text()).not.toContain('Prototipe 04');
     expect(wrapper.text()).not.toContain('Prototipe 04');
+  });
+
+  it('eliminates architecture code DEC-003 and legalistic jargon from self-reflection section (IMP-035)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-28',
+          currentTime: '17:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-1',
+            commitments: [],
+            additionalWorks: [],
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Kicker & Badge checks
+    expect(wrapper.text()).toContain('Refleksi Mandiri Akhir Hari');
+    expect(wrapper.text()).toContain('Penilaian Otonom Karyawan');
+
+    // Reflection description check
+    const reflectionDesc = wrapper.find('.reflection-desc');
+    expect(reflectionDesc.exists()).toBe(true);
+    expect(reflectionDesc.text()).toBe(
+      'Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.',
+    );
+
+    // Absolute elimination of internal architecture code and punitive wording
+    expect(wrapper.text()).not.toContain('DEC-003');
+    expect(wrapper.text()).not.toContain('secara punitif');
+    expect(wrapper.text()).not.toContain('Proteksi Hak Opsi GREEN');
   });
 
   // =========================================================================

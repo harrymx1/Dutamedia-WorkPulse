@@ -536,18 +536,18 @@ onMounted(() => {
         </div>
       </section>
 
-      <!-- Final Daily Self-Reflection Status (DEC-003: Hak Opsi GREEN Tidak Boleh Dikunci) -->
+      <!-- Final Daily Self-Reflection Status (Hak Opsi GREEN Bebas & Humanis) -->
       <section class="panel">
         <div class="panel-head">
           <div>
-            <div class="kicker">Refleksi Mandiri Karyawan (DEC-003)</div>
+            <div class="kicker">Refleksi Mandiri Akhir Hari</div>
             <h2>Status Refleksi Akhir Hari Ini (Final Daily Status)</h2>
           </div>
-          <span class="badge badge-active">Proteksi Hak Opsi GREEN</span>
+          <span class="badge badge-active">Penilaian Otonom Karyawan</span>
         </div>
         <div class="panel-body">
           <p class="reflection-desc">
-            Bagaimana penilaian mandiri Anda terhadap pencapaian keseluruhan hari ini? Sesuai <strong>DEC-003</strong>, sistem tidak pernah mengunci opsi GREEN secara punitif.
+            Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.
           </p>
 
           <div class="status-selection-grid">
