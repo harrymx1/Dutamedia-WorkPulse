@@ -72,6 +72,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-024** | Penyeragaman Topbar Administrasi Menggunakan Breadcrumb Hirarkis | Navigation & Consistency | `/admin/*` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
 | **IMP-025** | Konsolidasi Topbar Administrasi: Eliminasi Menu Duplikat & Avatar Bulat | UI/UX & Information Architecture | `admin-layout` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
 | **IMP-026** | Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Navigasi 'Workspace' | Architecture & Separation of Duties (IAM) | `EnterpriseSidebar` & `navigation.ts` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
+| **IMP-027** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Hari Ini | Layout & Visual Cleanliness | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -576,7 +577,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan antarmuka konteks yang bersih (*decluttered*), elegan, mudah dipindai dalam hitungan detik, serta menempatkan tanggal secara intuitif.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335046155_20813e00.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 11 (IMP-027) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 44f457e (Change Register: CHG-024)
+- **Implementation Note:** Restrukturisasi dan pembersihan 4 kartu metrik panel Konteks Hari Ini di `MorningCommitmentView.vue`: mengonversi badge kanan atas menjadi penanggalan dinamis bahasa Indonesia (`formattedWorkDate`, cth: 'Jumat, 30 Oktober 2026'), subkotak 1 berfokus mandiri pada Batas On-Time, subkotak 2 berfokus mandiri pada Batas Cut-Off, subkotak 3 berfokus mandiri pada Status Waktu tanpa jam server, dan subkotak 4 berfokus mandiri pada Status Awal Hari (Initial Daily Status) tanpa subteks redundan. Seluruh subteks teknis redundan (Hari Kerja Aktif, Agregasi Tingkat Risiko, Jam Server) telah dieliminasi dari DOM.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (105 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 11 (IMP-027) resmi ditutup.
 
 ---
 
