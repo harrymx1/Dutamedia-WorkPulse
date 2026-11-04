@@ -82,6 +82,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-034** | Eliminasi Kebocoran Kode Desain '(Prototipe 04)' pada Subtitle Halaman EOD Outcome | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-035** | Eliminasi Kode Arsitektur 'DEC-003' & Penyempurnaan Narasi Humanis pada Seksi Refleksi Mandiri EOD | Microcopy & UX Communication | `/daily/eod` | `TC-DLYE-002` | High | Implemented (Pending UAT) |
 | **IMP-036** | Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-037** | Perbaikan Tata Letak Kolom Textarea Catatan Kelanjutan Tugas EOD (Pelebaran 100% & Penyelarasan Label Vertikal) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | High | Implemented (Pending UAT) |
 
 ---
 
@@ -781,7 +782,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kejanggalan tata letak visual (*visual alignment defect*), memberikan ruang ketik yang lega dan proporsional bagi karyawan, dan membuat placeholder terbaca sempurna.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793342065674_58df17a2.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 21 (IMP-037) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 18ef669 (Change Register: CHG-034)
+- **Implementation Note:** Memperbaiki tata letak kolom textarea Catatan Kelanjutan Tugas EOD (EodOutcomeView.vue) dengan memperkenalkan kontainer semantik vertikal .continuation-reason-group berformat flex column (gap 6px), menetapkan width: 100%, box-sizing: border-box, dan font-family inherit pada .input-control (khususnya textarea.input-control), menetapkan display: block pada .form-label, serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (115 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 21 (IMP-037) resmi ditutup.
 
 ---
 
