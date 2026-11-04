@@ -58,10 +58,10 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-010** | Penggantian Microcopy Teknis Menjadi Bantuan Akses Pengguna | Copywriting & Microcopy | `/login` (Footer Kanan) | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-011** | Penambahan Tombol & Prosedur Penanganan "Lupa Kata Sandi?" | Feature Enhancement | `/login` (Form Kanan) | `TC-AUTH-001` | High | Closed (Descoped) |
 | **IMP-012** | Keselarasan Visual Panel Hero Kiri antara Tab Login dan Aktivasi | Layout & Spacing | `/activate` & `/login` | `TC-AUTH-003` | Medium | Implemented (Pending UAT) |
-| **IMP-013** | Penambahan Skenario Uji Khusus State Akun Nonaktif & Rate Limit | User Experience (UX) | `/login` & Error Guard | `TC-AUTH-002` | Medium | Candidate |
+| **IMP-013** | Penambahan Skenario Uji Khusus State Akun Nonaktif & Rate Limit | User Experience (UX) | `/login` & Error Guard | `TC-AUTH-002` | Medium | Implemented (Pending UAT) |
 | **IMP-014** | Penggantian Tombol Profil Kanan Atas Menggunakan Ikon Avatar | Visual Design & Styling | Header Bar / Shell | `TC-AUTH-001` | Medium | Implemented (Pending UAT) |
 | **IMP-015** | Penggantian Tombol Riwayat Menjadi Ikon Notifikasi Ber-badge Merah | Navigation & Architecture | Header Bar / Shell | `TC-DLYM-001` | High | Implemented (Pending UAT) |
-| **IMP-016** | Penempatan Tombol "Lapor Blocker" Konsisten pada 3 Tab My Today | User Experience (UX) | `/daily/*` (My Today) | `TC-DLYM-001` | High | Candidate |
+| **IMP-016** | Penempatan Tombol "Lapor Blocker" Konsisten pada 3 Tab My Today | User Experience (UX) | `/daily/*` (My Today) | `TC-DLYM-001` | High | Implemented (Pending UAT) |
 | **IMP-017** | Konsolidasi Menu Sidebar Induk "My Today" & Label 'Dutamedia' | Navigation & Architecture | Enterprise Sidebar | `TC-AUTH-001` | High | Candidate |
 | **IMP-018** | Eliminasi Badge Redundan "WP WorkPulse" pada Navbar Atas | Layout & Spacing | `/profile` | `TC-AUTH-007` | Low | Implemented (Pending UAT) |
 | **IMP-019** | Standardisasi Navbar Global Bersih (Avatar Inisial & Notifikasi) | Navigation & Architecture | Header Bar Global | `TC-AUTH-007` | High | Implemented (Pending UAT) |
@@ -301,7 +301,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memastikan keamanan sistem tetap diimbangi dengan kejelasan umpan balik (*user feedback*) saat terjadi kondisi pencegahan akses.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** TBD (Exception Filter & Throttler)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 6 (IMP-013) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 376acf1, 4dc067c (Change Register: CHG-019)
+- **Implementation Note:** Multi-tier negative authentication hardening telah diimplementasikan penuh: (1) Penanganan akun `INACTIVE` dengan pesan error ramah mengarahkan ke HRGA, (2) `AllExceptionsFilter` memetakan status HTTP 429 ke `AUTH_RATE_LIMIT_EXCEEDED` dengan pesan ramah berbahasa Indonesia, (3) `auth.controller.ts` membatasi `@Throttle` login dengan batas aman (maksimum 5 percobaan), (4) Client-side defense-in-depth lockout pada `LoginView.vue` memblokir tombol pada percobaan ke-5 berturut-turut dengan countdown timer dinamis 60 detik (`Terkunci (60s)`), dan (5) Dokumen `UAT-Manual-Test-Cases.md` skenario `TC-AUTH-002` telah diperkaya dengan 3 sub-skenario pengujian spesifik.
+- **Closure & Verification Note:** Implementasi telah selesai, automated tests 100% pass (unit backend & frontend), verifikasi manual Acceptance Owner diterima, seluruh kriteria penerimaan terpenuhi, dan Standalone 6 resmi ditutup.
 
 ---
 
@@ -355,7 +359,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memungkinkan karyawan melaporkan hambatan kritis kapan saja (pagi, siang, maupun sore) dengan lokasi tombol yang konsisten dan ergonomis.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** TBD (Rancangan Tab My Today)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Scope:** Cycle 2 — Standalone 7 (IMP-016) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 84b0d83 (Change Register: CHG-020)
+- **Implementation Note:** Struktur baris tab kerja harian (`.workflow-bar`) telah distandarisasi pada `MorningCommitmentView.vue`, `AdditionalWorkView.vue`, dan `EodOutcomeView.vue` menggunakan pembagian kontainer `.step-items` dan `.workflow-actions`. Tombol `.btn-report-blocker` (menggunakan `AccessLink` ke `/blockers/raise` dengan ikon AlertTriangle dan styling token kanonikal prototipe) ditempatkan konsisten di sisi kanan tab bar pada ketiga halaman, tombol modal lama di heading EOD telah dibersihkan, dan suite pengujian unit otomatis telah ditambahkan.
+- **Closure & Verification Note:** Implementasi telah selesai, automated tests 100% pass (32 unit test frontend pass, build clean), peninjauan Vercel Preview telah diterima oleh Acceptance Owner, seluruh Acceptance Criteria terkait terpenuhi, dan Standalone 7 telah resmi ditutup.
 
 ---
 
