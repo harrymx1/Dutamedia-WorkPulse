@@ -5,7 +5,6 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getUserInitials } from '../../utils/initials';
 import {
-  Shield,
   KeyRound,
   CheckCircle2,
   AlertCircle,
@@ -162,37 +161,6 @@ const formattedExemption = computed(() => {
   return 'Tidak Ada Pengecualian Aktif';
 });
 
-// Official Canonical Prompt Hints (Prototipe 24)
-const CANONICAL_PROMPT_HINTS: Record<string, string> = {
-  Engineering:
-    'Contoh: Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji',
-  Quality:
-    'Contoh: Menyelesaikan pengujian fitur, verifikasi kualitas, atau penelusuran temuan defect hari ini',
-  'Operations & Infrastructure':
-    'Contoh: Menyelesaikan konfigurasi atau pekerjaan infrastruktur yang direncanakan hari ini',
-  'R&D':
-    'Contoh: Menyelesaikan eksplorasi teknis, evaluasi arsitektur, atau penyusunan rekomendasi riset hari ini',
-  Delivery:
-    'Contoh: Menyelesaikan koordinasi atau pekerjaan yang mendukung delivery proyek hari ini',
-  'Business Development':
-    'Contoh: Menyelesaikan penjajakan kemitraan, tindak lanjut prospek, atau penyusunan proposal bisnis hari ini',
-  'Sales Enablement & Presales':
-    'Contoh: Menyelesaikan materi atau kebutuhan pendukung aktivitas penjualan hari ini',
-  Finance:
-    'Contoh: Menyelesaikan rekonsiliasi atau proses administrasi keuangan yang menjadi prioritas hari ini',
-  HRGA:
-    'Contoh: Menyelesaikan proses administrasi atau kebutuhan operasional karyawan hari ini',
-  Management:
-    'Contoh: Meninjau progres inisiatif strategis, evaluasi prioritas, atau koordinasi antar-pimpinan hari ini',
-};
-
-const canonicalPromptHint = computed(() => {
-  const func = formattedFunction.value;
-  return (
-    CANONICAL_PROMPT_HINTS[func] ||
-    'Contoh: Menyelesaikan komitmen bernilai dan segera melaporkan kendala jika ada hambatan.'
-  );
-});
 
 // Real-Time Password Validation Criteria
 const isMinLengthMet = computed(() => newPassword.value.length >= 8);
@@ -395,24 +363,10 @@ async function handleLogout() {
             </div>
           </div>
 
-          <!-- Kotak Pratinjau RoleBasedPromptHint Aktif -->
-          <div class="prompt-hint-box" aria-live="polite" data-testid="prompt-hint-box">
-            <div class="prompt-hint-head">
-              <div class="prompt-hint-title">
-                <Shield :size="16" />
-                <span>Pratinjau Panduan Komitmen Pagi Aktif (Role-Based Reflection Prompt / RoleBasedPromptHint)</span>
-              </div>
-              <span class="pill green" data-testid="prompt-hint-badge">Fungsi: {{ formattedFunction }}</span>
-            </div>
-            <div class="prompt-hint-text" data-testid="prompt-hint-text">
-              {{ canonicalPromptHint }}
-            </div>
-          </div>
-
-          <div class="info-note-box">
+          <div class="info-note-box" data-testid="profile-governance-note">
             <Info :size="18" class="note-icon" />
             <div>
-              Atribut identitas, pemetaan <em>Canonical Function</em>, <em>Direct Manager</em>, dan status <em>Exemption</em> dikelola secara terpusat oleh HRGA &amp; System Administrator melalui menu Pemetaan Organisasi. Jika terdapat pembaruan jabatan atau perpindahan unit, silakan hubungi HRGA.
+              Seluruh data identitas, fungsi organisasi, atasan langsung, dan status dispensasi kerja dikelola secara terpusat oleh tim HRGA &amp; Admin Sistem melalui menu Struktur Organisasi. Jika terdapat pembaruan jabatan atau mutasi unit kerja, silakan hubungi HRGA.
             </div>
           </div>
         </div>
@@ -914,41 +868,6 @@ h1 {
   font-weight: 700;
   color: var(--color-text-primary, #0E211B);
   word-break: break-word;
-}
-
-/* RoleBasedPromptHint Box */
-.prompt-hint-box {
-  margin-top: 20px;
-  padding: 16px 18px;
-  border-radius: 10px;
-  background: var(--color-brand-tint, #E6F4EE);
-  border: 1px solid #B7DCCB;
-  border-left: 4px solid var(--color-brand-primary, #00674D);
-}
-
-.prompt-hint-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
-}
-
-.prompt-hint-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--color-brand-primary, #00674D);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.prompt-hint-text {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--color-text-primary, #0E211B);
-  line-height: 1.5;
 }
 
 .info-note-box {

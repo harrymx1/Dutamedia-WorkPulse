@@ -348,13 +348,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Atribut profil dasar (Nama, Email, Role Sistem, Status Akun, User ID) terverifikasi tampil; ketiadaan visualisasi atribut organisasi (Jabatan 'Frontend Software Engineer', Departemen 'Engineering', dan Atasan Langsung 'Bambang Pratama') dicatat secara transparan sebagai gap implementasi UAT-REQ-PROFILE-001 (Needs Clarification), sehingga pengujian tidak mengklaim kepenuhan requirement yang belum didukung antarmuka.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot halaman `/profile` yang menampilkan kartu identitas pengguna (`.identity-card`) beserta area metadata dan prompt hint.
-- **Actual Result:** Halaman /profile berhasil dibuka, data identitas pengguna (Nama, Email, Role EMPLOYEE, Status ACTIVE, User ID) terverifikasi. Terkonfirmasi bahwa Jabatan, Departemen, dan Atasan Langsung belum diekspos di UI, serta dicatat 5 temuan perbaikan (IMP-018 s.d. IMP-022) terkait keselarasan layout terhadap prototipe 24.
+- **Actual Result:** Halaman /profile berhasil diverifikasi: identitas resmi (Nama Aditya Nugroho, Email dev.frontend@dutamedia.com, Role EMPLOYEE, Status ACTIVE, User ID) terverifikasi tampil; kotak prompt hint pratinjau dieliminasi dari profil (Opsi A) agar halaman fokus pada identitas dan keamanan, catatan tata kelola dirapikan ke bahasa Indonesia resmi, dan bimbingan komitmen dipindahkan ke placeholder form Morning Commitment sesuai PRD v1.6 FR-12.
 - **Execution Status:** Pass
 - **Tester:** Harry
 - **Execution Date:** 2026-10-30
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** Terverifikasi identitas profil; gap visualisasi atribut organisasi & penyelarasan layout prototipe 24 tercatat di Improvement Backlog (IMP-018 s.d. IMP-022).
+- **Catatan:** Terverifikasi eliminasi prompt-hint-box dari profil (CR-008), perapian catatan tata kelola, dan implementasi placeholder responsif peran komitmen pagi (PRD v1.6 FR-12).
 
 ---
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
+import { useAuthStore } from '../../stores/auth';
+import { getPromptHintForFunction, resolveUserFunction } from '../../config/prompts';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -103,6 +105,20 @@ const formattedWorkDate = computed(() => {
     month: 'long',
     year: 'numeric',
   });
+});
+
+// Role-Based Output Prompt & Responsive Placeholder (PRD v1.6 FR-12 / AC-37)
+const authStore = useAuthStore();
+const isDesktopOrTablet = ref(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
+
+const userFunction = computed(() => resolveUserFunction(authStore.user));
+const promptHint = computed(() => getPromptHintForFunction(userFunction.value));
+
+const commitmentPlaceholder = computed(() => {
+  if (isDesktopOrTablet.value) {
+    return `Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini. Misalnya: ${promptHint.value}`;
+  }
+  return 'Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini...';
 });
 
 // Computed initial daily status
@@ -294,6 +310,12 @@ function showToast(msg: string, isError = false) {
 }
 
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    const updateViewport = () => {
+      isDesktopOrTablet.value = window.innerWidth >= 768;
+    };
+    window.addEventListener('resize', updateViewport);
+  }
   loadTodayState();
 });
 </script>
@@ -560,7 +582,7 @@ onMounted(() => {
                 v-model="slot.taskText"
                 class="input-control"
                 rows="2"
-                placeholder="Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini..."
+                :placeholder="commitmentPlaceholder"
                 :disabled="isFormLocked"
                 required
               ></textarea>

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import MorningCommitmentView from './MorningCommitmentView.vue';
+import { useAuthStore } from '../../stores/auth';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -484,5 +485,44 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(blockerBtn.exists()).toBe(true);
     expect(blockerBtn.text()).toContain('Laporkan Blocker');
     expect(blockerBtn.attributes('href')).toBe('/raise-blockers');
+  });
+
+  it('renders role-based responsive placeholder with canonical prompt hint (PRD v1.6 FR-12 / AC-37)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-1',
+      fullName: 'Aditya Nugroho',
+      email: 'dev.frontend@dutamedia.com',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    };
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-04',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const textarea = wrapper.find('.slots-body textarea.input-control');
+    expect(textarea.exists()).toBe(true);
+    expect(textarea.attributes('placeholder')).toContain('Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini.');
+    expect(textarea.attributes('placeholder')).toContain('Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji');
   });
 });

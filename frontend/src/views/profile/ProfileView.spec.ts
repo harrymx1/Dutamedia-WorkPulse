@@ -155,8 +155,10 @@ describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 &
     expect(panel1.text()).toContain('Master Data Organisasi (Read-Only)');
     expect(panel1.find('[data-testid="info-fullname"]').text()).toBe('Aditya Nugroho');
     expect(panel1.find('[data-testid="info-email"]').text()).toBe('dev.frontend@dutamedia.com');
-    expect(panel1.find('[data-testid="prompt-hint-box"]').exists()).toBe(true);
-    expect(panel1.find('[data-testid="prompt-hint-badge"]').text()).toContain('Engineering');
+    // Negative assertion: Prompt hint preview box is eliminated from profile view (Clean UX)
+    expect(panel1.find('[data-testid="prompt-hint-box"]').exists()).toBe(false);
+    expect(panel1.find('[data-testid="profile-governance-note"]').exists()).toBe(true);
+    expect(panel1.find('[data-testid="profile-governance-note"]').text()).toContain('Seluruh data identitas');
 
     // Section 2: Keamanan & Pembaruan Kata Sandi Mandiri
     const panel2 = wrapper.find('[data-testid="panel-security"]');

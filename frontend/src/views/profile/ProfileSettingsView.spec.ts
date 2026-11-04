@@ -43,7 +43,8 @@ describe('ProfileSettingsView.vue (Prototipe 24 / EP14 - Pengaturan Profil & Kea
 
     expect(wrapper.text()).toContain('Budi Pratama');
     expect(wrapper.text()).toContain('budi@dutamedia.com');
-    expect(wrapper.text()).toContain('Role-Based Reflection Prompt');
+    expect(wrapper.text()).not.toContain('Role-Based Reflection Prompt');
+    expect(wrapper.text()).toContain('Seluruh data identitas');
     expect(wrapper.text()).toContain('Keamanan & Kata Sandi');
   });
 });
