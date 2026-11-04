@@ -74,6 +74,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-026** | Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Navigasi 'Workspace' | Architecture & Separation of Duties (IAM) | `EnterpriseSidebar` & `navigation.ts` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
 | **IMP-027** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Hari Ini | Layout & Visual Cleanliness | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
 | **IMP-028** | Penyempurnaan Microcopy Banner Keterlambatan Pengisian Komitmen | Microcopy & UX Content | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
+| **IMP-029** | Eliminasi Kode Keputusan Arsitektur Internal 'DEC-004' dari Label Checkbox | Copywriting & Polish | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -616,7 +617,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menjaga kebersihan antarmuka dari kebocoran referensi kode/dokumen internal developer yang tidak relevan bagi pengguna akhir.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335392439_f299efbc.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 13 (IMP-029) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit b584a1e (Change Register: CHG-026)
+- **Implementation Note:** Mengeliminasi kode arsitektur internal developer '— DEC-004' dan duplikasi istilah asing 'Zero Commitment' dari label checkbox komitmen nol di `MorningCommitmentView.vue`. Menyelaraskan teks label secara presisi dengan Prototipe 02 L1962: 'Hari ini tidak ada komitmen harian khusus (0 Komitmen)'. Melengkapi unit test pada `MorningCommitmentView.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (107 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 13 (IMP-029) resmi ditutup.
 
 ---
 
