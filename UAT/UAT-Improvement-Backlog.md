@@ -73,6 +73,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-025** | Konsolidasi Topbar Administrasi: Eliminasi Menu Duplikat & Avatar Bulat | UI/UX & Information Architecture | `admin-layout` | `TC-ADMN-002` | Medium | Implemented (Pending UAT) |
 | **IMP-026** | Tata Kelola Persona Akun SYSTEM_ADMIN: Penonaktifan Navigasi 'Workspace' | Architecture & Separation of Duties (IAM) | `EnterpriseSidebar` & `navigation.ts` | `TC-AUTH-005` | High | Implemented (Pending UAT) |
 | **IMP-027** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Hari Ini | Layout & Visual Cleanliness | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
+| **IMP-028** | Penyempurnaan Microcopy Banner Keterlambatan Pengisian Komitmen | Microcopy & UX Content | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -596,7 +597,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kebingungan terminologi teknis asing (*Grace Period*) dan mengomunikasikan status keterlambatan secara transparan dan profesional.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793335279186_dd87879d.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 12 (IMP-028) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 86c6f65, 29a81c2 (Change Register: CHG-025)
+- **Implementation Note:** Menyederhanakan microcopy banner keterlambatan pengisian Morning Commitment (`MorningCommitmentView.vue`) dengan mengeliminasi penuh jargon asing 'Grace Period' dan menyelaraskan judul menjadi 'Pengisian Melewati Batas Waktu:' tanpa rentang jam redundan, serta isi penjelasan yang komunikatif dan transparan ('Batas waktu On-Time (09:00 WIB) telah berakhir, namun Anda masih dapat mengirimkan komitmen sebelum sistem terkunci pada pukul 23:59 WIB. Komitmen Anda hari ini akan dicatat dengan status Terlambat (LATE).'). Menyelaraskan teks badge pada Subkotak 3 menjadi 'Terlambat (LATE)' menggantikan 'LATE (Jendela Toleransi)'. Melengkapi unit test komprehensif pada `MorningCommitmentView.spec.ts`.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (106 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 12 (IMP-028) resmi ditutup.
 
 ---
 
