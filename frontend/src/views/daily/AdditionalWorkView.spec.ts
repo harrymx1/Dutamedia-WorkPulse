@@ -66,4 +66,31 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     expect(blockerBtn.text()).toContain('Laporkan Blocker');
     expect(blockerBtn.attributes('href')).toBe('/blockers/raise');
   });
+
+  it('eliminates internal design code (Prototipe 03) from page subtitle (IMP-031)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-28',
+          additionalWorks: [],
+          availableManagers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const subtitle = wrapper.find('[data-testid="additional-work-subtitle"]');
+    expect(subtitle.exists()).toBe(true);
+    expect(subtitle.text()).toBe(
+      'Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari secara transparan tanpa mengubah baseline komitmen pagi.',
+    );
+    expect(subtitle.text()).not.toContain('Prototipe 03');
+    expect(wrapper.text()).not.toContain('Prototipe 03');
+  });
 });

@@ -167,8 +167,8 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <h1>Additional Work (Pekerjaan Tambahan)</h1>
-          <p class="subtitle">
-            Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari tanpa mengubah baseline komitmen pagi (Prototipe 03).
+          <p class="subtitle" data-testid="additional-work-subtitle">
+            Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari secara transparan tanpa mengubah baseline komitmen pagi.
           </p>
         </div>
       </div>
