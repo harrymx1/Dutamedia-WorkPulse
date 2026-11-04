@@ -205,10 +205,10 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" :class="{ 'single-col': formReason !== 'NEWLY_ASSIGNED' }" data-testid="form-row-reason">
               <div class="form-group">
                 <label for="select-reason" class="form-label">Alasan Pekerjaan Tambahan *</label>
-                <select id="select-reason" v-model="formReason" class="input-control" required>
+                <select id="select-reason" v-model="formReason" class="input-control" required data-testid="select-reason">
                   <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan (NEWLY_ASSIGNED)</option>
                   <option value="MISSED_IN_PLANNING">Terlewat saat Perencanaan Pagi (MISSED_IN_PLANNING)</option>
                   <option value="PRIORITY_CHANGE">Perubahan Prioritas Proyek (PRIORITY_CHANGE)</option>
@@ -217,9 +217,9 @@ onMounted(() => {
                 </select>
               </div>
 
-              <div v-if="formReason === 'NEWLY_ASSIGNED'" class="form-group">
+              <div v-if="formReason === 'NEWLY_ASSIGNED'" class="form-group" data-testid="assigned-by-group">
                 <label for="select-assigned-by" class="form-label">Ditugaskan Oleh (Atasan Langsung/Lead) *</label>
-                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" required>
+                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" required data-testid="select-assigned-by">
                   <option value="" disabled>-- Pilih Atasan Penugas --</option>
                   <option v-for="user in availableManagers" :key="user.id" :value="user.id">
                     {{ user.fullName }} ({{ user.email }})
@@ -491,33 +491,66 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.form-row.single-col {
+  grid-template-columns: 1fr;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .form-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .input-control {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 9px 12px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   font-size: 13px;
   background: #fff;
   color: var(--color-text-primary);
+  text-overflow: ellipsis;
+}
+
+select.input-control {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .input-control:focus {
