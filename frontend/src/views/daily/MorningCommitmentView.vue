@@ -1035,6 +1035,17 @@ onMounted(() => {
   gap: 8px;
 }
 
+.zero-reason-box .field-sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.zero-reason-box .field-sub strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
 /* Copy forward panel */
 .copy-desc {
   font-size: 13px;
