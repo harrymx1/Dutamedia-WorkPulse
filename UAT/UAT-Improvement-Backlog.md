@@ -76,6 +76,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-028** | Penyempurnaan Microcopy Banner Keterlambatan Pengisian Komitmen | Microcopy & UX Content | `/daily/morning` | `TC-DLYM-001` | Medium | Implemented (Pending UAT) |
 | **IMP-029** | Eliminasi Kode Keputusan Arsitektur Internal 'DEC-004' dari Label Checkbox | Copywriting & Polish | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
 | **IMP-030** | Transformasi Microcopy Penjelasan Komitmen Nol dari Enum Database Teknis Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/morning` | `TC-DLYM-002` | Medium | Implemented (Pending UAT) |
+| **IMP-031** | Eliminasi Kebocoran Kode Desain '(Prototipe 03)' pada Subtitle Halaman Additional Work | Copywriting & Polish | `/daily/additional-work` | `TC-DLYA-001` | Medium | Implemented (Pending UAT) |
 
 ---
 
@@ -654,7 +655,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kebingungan pengguna akhir dan menjaga kebersihan tampilan sistem enterprise dari atribut artefak pengembang.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793339328832_32e00c67.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 15 (IMP-031) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit de72a39 (Change Register: CHG-028)
+- **Implementation Note:** Mengeliminasi kebocoran kode/istilah artefak desain internal developer '(Prototipe 03)' dari subtitle halaman Additional Work (AdditionalWorkView.vue), menyelaraskan narasi menjadi kalimat bisnis profesional enterprise yang transparan: 'Catat pekerjaan dadakan, penugasan baru dari atasan, atau insiden operasional yang muncul di siang hari secara transparan tanpa mengubah baseline komitmen pagi.', serta melengkapi automated unit test pada AdditionalWorkView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (109 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 15 (IMP-031) resmi ditutup.
 
 ---
 
