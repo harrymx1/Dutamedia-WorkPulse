@@ -143,11 +143,10 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
 
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    // 1. Late alert banner is rendered
+    // 1. Late alert banner is rendered cleanly without redundant range in title
     const lateBanner = wrapper.find('[data-testid="late-alert-banner"]');
     expect(lateBanner.exists()).toBe(true);
-    expect(lateBanner.text()).toContain('Pengisian Melewati Batas Waktu');
-    expect(lateBanner.text()).toContain('09:00 – 23:59 WIB');
+    expect(lateBanner.text()).toContain('Pengisian Melewati Batas Waktu:');
     expect(lateBanner.text()).toContain('Batas waktu On-Time (09:00 WIB) telah berakhir');
     expect(lateBanner.text()).toContain('sebelum sistem terkunci pada pukul 23:59 WIB');
     expect(lateBanner.text()).toContain('Terlambat (LATE)');

@@ -426,7 +426,7 @@ onMounted(() => {
       <div v-else-if="isLate" class="alert-banner late" role="status" data-testid="late-alert-banner">
         <Clock :size="20" />
         <div>
-          <strong>Pengisian Melewati Batas Waktu ({{ morningOnTimeCutoff }} – {{ morningLockCutoff }} WIB):</strong>
+          <strong>Pengisian Melewati Batas Waktu:</strong>
           Batas waktu On-Time ({{ morningOnTimeCutoff }} WIB) telah berakhir, namun Anda masih dapat mengirimkan komitmen sebelum sistem terkunci pada pukul {{ morningLockCutoff }} WIB. Komitmen Anda hari ini akan dicatat dengan status <strong>Terlambat (LATE)</strong>.
         </div>
       </div>
