@@ -431,15 +431,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Zero Commitment Option Box (DEC-004) -->
+      <!-- Zero Commitment Option Box (IMP-029) -->
       <div class="zero-box">
         <label class="zero-label">
           <input
             type="checkbox"
             v-model="isZeroCommitment"
             :disabled="isFormLocked"
+            data-testid="zero-commitment-checkbox"
           />
-          <span>Hari ini tidak ada komitmen harian khusus (0 Komitmen / Zero Commitment — DEC-004)</span>
+          <span data-testid="zero-commitment-label">Hari ini tidak ada komitmen harian khusus (0 Komitmen)</span>
         </label>
         <div v-if="isZeroCommitment" class="zero-reason-box">
           <label for="zero-reason-input" class="form-label">

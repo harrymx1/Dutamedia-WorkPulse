@@ -161,6 +161,38 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(timeStatusCard.text()).toContain('Terlambat (LATE)');
   });
 
+  it('eliminates internal architecture code DEC-004 from zero commitment checkbox label (IMP-029)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-30',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '23:59',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const zeroLabel = wrapper.find('[data-testid="zero-commitment-label"]');
+    expect(zeroLabel.exists()).toBe(true);
+    expect(zeroLabel.text()).toBe('Hari ini tidak ada komitmen harian khusus (0 Komitmen)');
+    expect(zeroLabel.text()).not.toContain('DEC-004');
+    expect(zeroLabel.text()).not.toContain('Zero Commitment');
+  });
+
   it('toggles zero commitment mode on checkbox check (DEC-004)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
