@@ -80,6 +80,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-032** | Perbaikan Overflow Horizontal Kolom Input Atasan Penugas pada Grid Dua Kolom Additional Work | Layout & Responsive Styling | `/daily/additional-work` | `TC-DLYA-002` | High | Implemented (Pending UAT) |
 | **IMP-033** | Restrukturisasi & Pembersihan Kartu Metrik Konteks Waktu EOD di Halaman EOD Outcome | Layout & Visual Cleanliness | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-034** | Eliminasi Kebocoran Kode Desain '(Prototipe 04)' pada Subtitle Halaman EOD Outcome | Copywriting & Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
+| **IMP-035** | Eliminasi Kode Arsitektur 'DEC-003' & Penyempurnaan Narasi Humanis pada Seksi Refleksi Mandiri EOD | Microcopy & UX Communication | `/daily/eod` | `TC-DLYE-002` | High | Implemented (Pending UAT) |
 
 ---
 
@@ -740,7 +741,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kebocoran kode teknis `DEC-003` dan istilah hukum/defensif ("secara punitif"), serta menumbuhkan budaya akuntabilitas psikologis yang aman (*psychological safety*).
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793340577050_134e4c8b.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 19 (IMP-035) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 721d413 (Change Register: CHG-032)
+- **Implementation Note:** Mengeliminasi kode arsitektur internal developer 'DEC-003' dan istilah legalistik defensif 'secara punitif' dari seksi Refleksi Mandiri EOD Outcome (EodOutcomeView.vue), mengubah kicker menjadi 'Refleksi Mandiri Akhir Hari', badge menjadi 'Penilaian Otonom Karyawan', serta menyempurnakan narasi deskripsi menjadi kalimat humanis bernada keamanan psikologis (psychological safety): 'Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.', serta melengkapi automated unit test pada EodOutcomeView.spec.ts.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (113 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 19 (IMP-035) resmi ditutup.
 
 ### [IMP-036] Eliminasi Kode Enum Teknis 'CONTINUE', 'DO_NOT_CONTINUE', dan 'NOT_COMPLETED' pada Opsi Evaluasi EOD
 - **Finding ID:** IMP-036
