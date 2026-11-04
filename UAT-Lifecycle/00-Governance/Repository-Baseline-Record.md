@@ -19,7 +19,7 @@
 | **Repository Root** | `D:/PKL Duta Media/Dutamedia-WorkPulse` |
 | **Repository Name** | `Dutamedia-WorkPulse` |
 | **Remote Origin URL** | `https://github.com/harrymx1/Dutamedia-WorkPulse.git` |
-| **Active Branch** | `main` |
+| **Active Branch** | `remediation/cycle-01-fixes` (Branched from `main` @ `f3359f5`) |
 | **Tracking Remote** | `origin/main` |
 | **Active Release Tag** | `v1.0.0-rc1` (Application) / `v1.0.1-uat-pkg` (UAT Baseline) |
 | **Parent Commit SHA (Pre-UAT)** | `3bf9a7a67cbdbf279f061f22c836e4fba6ef9e95` (Short: `3bf9a7a`) |
@@ -28,7 +28,8 @@
 | **Master Governance Framework Commit SHA** | `fbccbf0c5f27fa2691debfe19db1e982be424ba5` (Short: `fbccbf0`) |
 | **Governance Corrections Commit SHA** | `cb1d02dcca51e6976c9ec796575111297c35da79` (Short: `cb1d02d`) |
 | **Governance Alignment (CHG-004) Commit SHA** | `bd795ed3cf9938c7653e7807024f9cbfc40aea89` (Short: `bd795ed`) |
-| **Current Remote HEAD SHA** | `bd795ed3cf9938c7653e7807024f9cbfc40aea89` |
+| **Register & Baseline Synchronization Commit SHA** | `f3359f52226b9019c816c7658ac69309bcc905e0` (Short: `f3359f5`) |
+| **Current Remote HEAD SHA** | `f3359f52226b9019c816c7658ac69309bcc905e0` |
 
 ---
 
@@ -85,8 +86,8 @@ Berikut adalah file yang sengaja tidak dimasukkan ke dalam commit baseline karen
 Pemeriksaan sinkronisasi jarak jauh (*remote verification*) membuktikan:
 
 - **Perintah Verifikasi:** `git ls-remote origin main`
-- **Hasil Remote Hash Terkini:** `bd795ed3cf9938c7653e7807024f9cbfc40aea89`
-- **Status Sinkronisasi:** `Your branch is up to date with 'origin/main'`. (Commit remote CHG-004 `bd795ed` tersinkronisasi 100% di remote).
+- **Hasil Remote Hash Terkini:** `f3359f52226b9019c816c7658ac69309bcc905e0`
+- **Status Sinkronisasi:** `Your branch is up to date with 'origin/main'`. (Commit remote `f3359f5` tersinkronisasi 100% di remote origin/main).
 - **Integritas Remote:** Seluruh 18 artefak baseline dan dokumen tata kelola tersimpan utuh di repositori GitHub PT Dutamedia Mandiri Pratama.
 
 ---
@@ -95,9 +96,9 @@ Pemeriksaan sinkronisasi jarak jauh (*remote verification*) membuktikan:
 
 | Dimensi Penilaian | Kriteria Evaluasi | Status Evaluasi | Catatan Validasi |
 | :--- | :--- | :---: | :--- |
-| **Git Baseline Integrity** | Commit baseline `c9fb597` tersimpan, linear, dan sinkron di remote. | **MET (100%)** | Silsilah linear terverifikasi utuh (`3bf9a7a` $\rightarrow$ `c9fb597` $\rightarrow$ `5af797c` $\rightarrow$ `fbccbf0` $\rightarrow$ `cb1d02d` $\rightarrow$ `bd795ed`). |
+| **Git Baseline Integrity** | Commit baseline `c9fb597` tersimpan, linear, dan sinkron di remote. | **MET (100%)** | Silsilah linear terverifikasi utuh (`3bf9a7a` $\rightarrow$ `c9fb597` $\rightarrow$ `5af797c` $\rightarrow$ `fbccbf0` $\rightarrow$ `cb1d02d` $\rightarrow$ `bd795ed` $\rightarrow$ `f3359f5`). |
 | **Documentation Completeness** | 18 file artefak UAT pra-lifecycle terinventarisasi utuh. | **MET (100%)** | Seluruh file tercatat di Change Register `CHG-000` s.d. `CHG-004`. |
-| **Technical Validation** | Validasi integritas kode sumber aplikasi dan status working tree. | **MET (100%)** | **Application Source Code:** Clean / Zero Diff pada `frontend/`, `backend/`, `e2e/`, dan `supabase/`.<br>**Overall Git Working Tree:** Clean. |
+| **Technical Validation** | Validasi integritas kode sumber aplikasi dan status working tree. | **MET (100%)** | **Application Source Code:** Clean / Zero Diff pada `frontend/`, `backend/`, `e2e/`, dan `supabase/`.<br>**Phase 0 Working Tree:** 6 file deliverable Phase 0 berstatus Untracked lokal; 4 file tata kelola Modified (Uncommitted) menunggu otorisasi Phase 1. |
 | **Security Compliance** | Resolusi celah paparan kredensial demo pada repositori publik (`VERIF-FIND-001`). | **NOT MET (Pending Owner Action)** | Menunggu penyelesaian perubahan visibilitas repo menjadi Private & rotasi kredensial oleh Harry. |
 | **Formal Owner Approval** | Pengesahan formal oleh Harry selaku Acceptance Owner. | **PENDING PHASE -1 CLOSURE GATE** | Otorisasi `DEC-003-UAT` mengesahkan koreksi tata kelola, bukan penutupan Phase -1. Penutupan fase resmi menunggu penyelesaian Subphase -1.7. |
 

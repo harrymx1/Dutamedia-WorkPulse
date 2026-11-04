@@ -20,9 +20,12 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
     mockPrisma = {
       dailyAccountabilityRecord: {
         findUnique: vi.fn(),
+        findUniqueOrThrow: vi.fn(),
         findMany: vi.fn().mockResolvedValue([]),
-        upsert: vi.fn(),
+        create: vi.fn(),
         update: vi.fn(),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        upsert: vi.fn(),
       },
       commitment: {
         findUnique: vi.fn(),
@@ -105,21 +108,24 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         zeroCommitmentReason: 'Pelatihan internal perusahaan sepanjang hari',
       };
 
-      mockPrisma.dailyAccountabilityRecord.upsert.mockResolvedValue({
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
         id: 'rec-1',
         initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
       });
-      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
         id: 'rec-1',
         initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
         commitments: [],
+        additionalWorks: [],
       });
 
       const result = await service.submitMorningCheckin('usr-1', dto);
       expect(result?.initialDailyStatus).toBe(DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT);
-      expect(mockPrisma.dailyAccountabilityRecord.upsert).toHaveBeenCalledWith(
+      expect(mockPrisma.dailyAccountabilityRecord.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          create: expect.objectContaining({
+          data: expect.objectContaining({
             initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
             zeroCommitmentReason: 'Pelatihan internal perusahaan sepanjang hari',
           }),
@@ -149,10 +155,14 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         },
       });
 
-      mockPrisma.dailyAccountabilityRecord.upsert.mockResolvedValue({ id: 'rec-today' });
-      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-today',
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+      });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
         id: 'rec-today',
         commitments: [{ id: 'new-c1', carryOverDaysCount: 3 }],
+        additionalWorks: [],
       });
 
       await service.submitMorningCheckin('usr-1', dto);
@@ -167,19 +177,80 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         }),
       );
     });
+
+    it('throws BUSINESS_RULE_ALREADY_SUBMITTED when morning commitment is already submitted (DEF-001)', async () => {
+      const p2002Error: any = new Error('Unique constraint failed');
+      p2002Error.code = 'P2002';
+      mockPrisma.dailyAccountabilityRecord.create.mockRejectedValue(p2002Error);
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-1',
+        morningSubmittedAt: new Date('2026-10-28T08:00:00.000Z'),
+      });
+
+      const dto = {
+        workDate: '2026-10-28',
+        commitments: [{ taskText: 'Task 1', initialRisk: CommitmentRisk.GREEN }],
+      };
+
+      await expect(service.submitMorningCheckin('usr-1', dto)).rejects.toThrowError(AppException);
+      try {
+        await service.submitMorningCheckin('usr-1', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED);
+        expect(err.getStatus()).toBe(422);
+      }
+    });
+
+    it('succeeds when pre-existing record has null morningSubmittedAt (Two-Path conflict resolution)', async () => {
+      const p2002Error: any = new Error('Unique constraint failed');
+      p2002Error.code = 'P2002';
+      mockPrisma.dailyAccountabilityRecord.create.mockRejectedValue(p2002Error);
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-pre-existing',
+        morningSubmittedAt: null,
+      });
+      mockPrisma.dailyAccountabilityRecord.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-pre-existing',
+        morningSubmittedAt: new Date('2026-10-28T08:30:00.000Z'),
+        commitments: [{ id: 'c-1', taskText: 'Task 1' }],
+        additionalWorks: [],
+      });
+
+      const dto = {
+        workDate: '2026-10-28',
+        commitments: [{ taskText: 'Task 1', initialRisk: CommitmentRisk.GREEN }],
+      };
+
+      const result = await service.submitMorningCheckin('usr-1', dto);
+      expect(result.id).toBe('rec-pre-existing');
+      expect(mockPrisma.dailyAccountabilityRecord.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            id: 'rec-pre-existing',
+            morningSubmittedAt: null,
+          },
+        }),
+      );
+    });
   });
 
-  describe('submitEodOutcome (DEC-003)', () => {
+  describe('submitEodOutcome (DEC-003 & DEF-002)', () => {
     it('permits employee to confirm GREEN status even with carry-overs (DEC-003 No Green Lock)', async () => {
       mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
         id: 'rec-today',
         userId: 'usr-1',
         workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
       });
 
-      mockPrisma.dailyAccountabilityRecord.update.mockResolvedValue({
+      mockPrisma.dailyAccountabilityRecord.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
         id: 'rec-today',
         finalDailyStatus: DailyRiskStatus.GREEN,
+        eodSubmittedAt: new Date('2026-10-28T10:00:00.000Z'),
+        commitments: [],
+        additionalWorks: [],
       });
 
       const dto = {
@@ -201,13 +272,65 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
 
       const result = await service.submitEodOutcome('usr-1', dto);
       expect(result.finalDailyStatus).toBe(DailyRiskStatus.GREEN);
-      expect(mockPrisma.dailyAccountabilityRecord.update).toHaveBeenCalledWith(
+      expect(mockPrisma.dailyAccountabilityRecord.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
+          where: {
+            id: 'rec-today',
+            eodSubmittedAt: null,
+          },
           data: expect.objectContaining({
             finalDailyStatus: DailyRiskStatus.GREEN,
           }),
         }),
       );
+    });
+
+    it('throws BUSINESS_RULE_ALREADY_SUBMITTED when EOD outcome is already submitted (DEF-002)', async () => {
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: new Date('2026-10-28T17:30:00.000Z'),
+      });
+
+      const dto = {
+        workDate: '2026-10-28',
+        commitmentOutcomes: [],
+        finalDailyStatus: DailyRiskStatus.GREEN,
+      };
+
+      await expect(service.submitEodOutcome('usr-1', dto)).rejects.toThrowError(AppException);
+      try {
+        await service.submitEodOutcome('usr-1', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED);
+        expect(err.getStatus()).toBe(422);
+      }
+    });
+
+    it('throws BUSINESS_RULE_ALREADY_SUBMITTED when conditional atomic update fails due to concurrency race', async () => {
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+      });
+      // Simulate concurrent update where another request already updated eodSubmittedAt
+      mockPrisma.dailyAccountabilityRecord.updateMany.mockResolvedValue({ count: 0 });
+
+      const dto = {
+        workDate: '2026-10-28',
+        commitmentOutcomes: [],
+        finalDailyStatus: DailyRiskStatus.GREEN,
+      };
+
+      await expect(service.submitEodOutcome('usr-1', dto)).rejects.toThrowError(AppException);
+      try {
+        await service.submitEodOutcome('usr-1', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED);
+        expect(err.getStatus()).toBe(422);
+      }
     });
   });
 });
