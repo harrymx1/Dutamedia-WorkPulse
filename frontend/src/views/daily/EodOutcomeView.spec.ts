@@ -79,6 +79,87 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(greenRadio.attributes('disabled')).toBeUndefined();
   });
 
+  it('renders restructured and decluttered context metric cards with dynamic date badge (IMP-033)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-10-30',
+          currentTime: '16:45',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-context-test',
+            commitments: [
+              {
+                id: 'c-1',
+                sequenceNo: 1,
+                taskText: 'Menyelesaikan modul reporting',
+                initialRisk: 'GREEN',
+              },
+              {
+                id: 'c-2',
+                sequenceNo: 2,
+                taskText: 'Review PR frontend',
+                initialRisk: 'GREEN',
+              },
+            ],
+            additionalWorks: [
+              {
+                id: 'aw-1',
+                taskText: 'Investigasi insiden production bug',
+              },
+            ],
+            finalDailyStatus: 'GREEN',
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Dynamic date badge in panel head
+    const dateBadge = wrapper.find('[data-testid="context-date-badge"]');
+    expect(dateBadge.exists()).toBe(true);
+    expect(dateBadge.text()).toContain('Oktober 2026');
+
+    // Context Card 1: On-Time Cut-off
+    const onTimeCard = wrapper.find('[data-testid="context-item-ontime"]');
+    expect(onTimeCard.exists()).toBe(true);
+    expect(onTimeCard.text()).toContain('Batas On-Time');
+    expect(onTimeCard.text()).toContain('17:00 WIB');
+
+    // Context Card 2: Lock Cut-off
+    const cutOffCard = wrapper.find('[data-testid="context-item-cutoff"]');
+    expect(cutOffCard.exists()).toBe(true);
+    expect(cutOffCard.text()).toContain('Batas Cut-Off');
+    expect(cutOffCard.text()).toContain('21:00 WIB');
+
+    // Context Card 3: Time status
+    const timeStatusCard = wrapper.find('[data-testid="context-item-time-status"]');
+    expect(timeStatusCard.exists()).toBe(true);
+    expect(timeStatusCard.text()).toContain('Status Waktu');
+    expect(timeStatusCard.text()).toContain('ON-TIME');
+
+    // Context Card 4: Evaluation total items (2 commitments + 1 additional work = 3)
+    const evalCountCard = wrapper.find('[data-testid="context-item-eval-count"]');
+    expect(evalCountCard.exists()).toBe(true);
+    expect(evalCountCard.text()).toContain('Total Item Evaluasi');
+    expect(evalCountCard.text()).toContain('3 Tugas');
+
+    // Redundant text 'Tanggal Kerja' should not exist in the context grid
+    const contextGrid = wrapper.find('.context-grid');
+    expect(contextGrid.text()).not.toContain('Tanggal Kerja');
+  });
+
   // =========================================================================
   // PENGUJIAN TIGA KONDISI DEF-002 (Kondisi A, B, C)
   // =========================================================================

@@ -55,6 +55,25 @@ function formatTime(isoStr: string | null) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-033)
+const formattedWorkDate = computed(() => {
+  if (!workDate.value) return '';
+  const parts = workDate.value.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const dateObj = new Date(year, month, day);
+    return dateObj.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  return workDate.value;
+});
+
 const commitments = ref<CommitmentOutcomeItem[]>([]);
 const additionalWorks = ref<AdditionalWorkOutcomeItem[]>([]);
 const finalDailyStatus = ref<'GREEN' | 'AMBER' | 'RED'>('GREEN');
@@ -319,26 +338,26 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Konteks Waktu EOD Panel -->
+      <!-- Konteks Waktu EOD Panel (IMP-033 Restrukturisasi & Pembersihan Metrik) -->
       <section class="panel context-panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Konteks Waktu EOD</div>
             <h2>Batas Evaluasi Akhir Hari</h2>
           </div>
-          <span class="badge badge-info">On-Time {{ eodOnTimeCutoff }} · Cut-Off {{ eodLockCutoff }} WIB</span>
+          <span class="badge badge-info" data-testid="context-date-badge">{{ formattedWorkDate || 'Hari Kerja Aktif' }}</span>
         </div>
         <div class="panel-body">
           <div class="context-grid">
-            <div class="context-item">
-              <span class="context-label">Tanggal Kerja</span>
-              <span class="context-value mono">{{ workDate || '...' }}</span>
-            </div>
-            <div class="context-item">
-              <span class="context-label">Batas On-Time EOD</span>
+            <div class="context-item" data-testid="context-item-ontime">
+              <span class="context-label">Batas On-Time</span>
               <span class="context-value mono">{{ eodOnTimeCutoff }} WIB</span>
             </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-cutoff">
+              <span class="context-label">Batas Cut-Off</span>
+              <span class="context-value mono">{{ eodLockCutoff }} WIB</span>
+            </div>
+            <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
                 <span v-if="hasSubmittedEod" class="badge badge-active">SUBMITTED (Terkunci)</span>
@@ -347,7 +366,7 @@ onMounted(() => {
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
             </div>
-            <div class="context-item">
+            <div class="context-item" data-testid="context-item-eval-count">
               <span class="context-label">Total Item Evaluasi</span>
               <span class="context-value mono">{{ commitments.length + additionalWorks.length }} Tugas</span>
             </div>
