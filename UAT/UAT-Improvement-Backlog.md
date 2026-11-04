@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 22 Calon Perbaikan (IMP-001 s.d. IMP-022)
+> **Total Temuan:** 44 Calon Perbaikan (IMP-001 s.d. IMP-044)
 
 ---
 
@@ -85,6 +85,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-037** | Perbaikan Tata Letak Kolom Textarea Catatan Kelanjutan Tugas EOD (Pelebaran 100% & Penyelarasan Label Vertikal) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | High | Implemented (Pending UAT) |
 | **IMP-038** | Penyelarasan Kelengkapan Opsi Evaluasi Pekerjaan Tambahan (Opsi Dibatalkan & Alur Kelanjutan / Alasan) | Functional Consistency & Business Logic | `/daily/eod` | `TC-DLYE-001` | Medium | Implemented (Pending UAT) |
 | **IMP-039** | Transformasi Format Badge Alasan Pekerjaan Tambahan dari Enum Raw Database Menjadi Bahasa Bisnis | Microcopy & UX Communication | `/daily/eod` & `/daily/additional-work` | `TC-DLYA-001` | Low | Implemented (Pending UAT) |
+| **IMP-040** | Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /raise-blockers (Eliminasi Modal Pop-Up Redundan) | Navigation & Consistency | `/daily/eod` & `/daily/*` | `TC-BLKR-001`, `TC-DLYE-001` | High | Implemented (Pending UAT) |
+| **IMP-041** | Penyelarasan Menyeluruh Halaman Blocker Sesuai Prototipe 05 (Tombol Kembali, Judul & 2 Tab) | Layout & Information Architecture | `/raise-blockers` | `TC-BLKR-001`, `TC-BLKR-005` | High | Implemented (Pending UAT) |
+| **IMP-042** | Eliminasi Tombol 'Lihat Antrean Blocker Aktif' dari Formulir Pelaporan Blocker Karyawan | RBAC & Access Control | `/raise-blockers` | `TC-BLKR-001`, `TC-AUTH-005` | Medium | Implemented (Pending UAT) |
+| **IMP-043** | Penyeragaman Topbar Blocker: Breadcrumb 'Workspace / Blocker', Avatar Inisial & Lonceng Notifikasi | Navigation & Visual Consistency | `/raise-blockers` | `TC-BLKR-001` | Medium | Implemented (Pending UAT) |
+| **IMP-044** | Pembersihan Footer Form Pelaporan Blocker: Penyesuaian Tombol Aksi Bersihkan & Kirim | Copywriting & Visual Cleanliness | `/raise-blockers` | `TC-BLKR-001` | Low | Implemented (Pending UAT) |
 
 ---
 
@@ -834,18 +839,22 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Implementation Note:** Mentransformasi format badge alasan pekerjaan tambahan pada AdditionalWorkView.vue dan EodOutcomeView.vue dari enum raw database menjadi bahasa bisnis baku ('Penugasan Baru Atasan', 'Perbaikan Error / Bug Kritis', 'Terlewat Catat Pagi', 'Pengalihan Prioritas', dan 'Lainnya'), membersihkan kode enum dari dropdown pilihan form, memberlakukan input dinamis wajib Keterangan Alasan Lainnya * saat memilih alasan 'Lainnya' (OTHER), dan memverifikasi kelengkapan validasi serta tampilan via automated unit tests di AdditionalWorkView.spec.ts dan EodOutcomeView.spec.ts.
 - **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (117 frontend, 112 backend) lulus 100%, verifikasi visual pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 23 (IMP-039) resmi ditutup.
 
-### [IMP-040] Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /blockers/raise (Eliminasi Modal Pop-Up Redundan)
+### [IMP-040] Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /raise-blockers (Eliminasi Modal Pop-Up Redundan)
 - **Finding ID:** IMP-040
-- **Title:** Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /blockers/raise (Eliminasi Modal Pop-Up Redundan)
+- **Title:** Pengalihan Tombol 'Lapor Blocker' Menjadi Navigasi Langsung ke /raise-blockers (Eliminasi Modal Pop-Up Redundan)
 - **Category:** Navigation & Consistency
 - **Page / Module:** Halaman Evaluasi Sore (`/daily/eod`) & Seluruh Tab My Today
 - **Related Test Case:** `TC-BLKR-001`, `TC-DLYE-001`
-- **Current Condition:** Tombol "+ Laporkan Blocker Mendesak" di halaman EOD memunculkan modal dialog pop-up terpisah (`media_1793343838939_99a0aba8.png`), padahal sistem telah memiliki halaman formulir pelaporan mandiri resmi di `/blockers/raise`.
-- **Proposed Improvement:** Hapus implementasi modal pop-up pada tombol tersebut. Selaraskan seluruh tombol "Lapor Blocker" pada 3 sub-halaman My Today agar secara konsisten langsung mengarahkan (*direct navigate*) ke halaman kanonikal `/blockers/raise` dengan posisi tata letak yang presisi di sisi kanan tab navigasi.
+- **Current Condition:** Tombol "+ Laporkan Blocker Mendesak" di halaman EOD memunculkan modal dialog pop-up terpisah (`media_1793343838939_99a0aba8.png`), padahal sistem telah memiliki halaman formulir pelaporan mandiri resmi di `/raise-blockers`.
+- **Proposed Improvement:** Hapus implementasi modal pop-up pada tombol tersebut. Selaraskan seluruh tombol "Lapor Blocker" pada 3 sub-halaman My Today agar secara konsisten langsung mengarahkan (*direct navigate*) ke halaman kanonikal `/raise-blockers` dengan posisi tata letak yang presisi di sisi kanan tab navigasi.
 - **Rationale / Expected Benefit:** Menghilangkan duplikasi antarmuka input blocker, mencegah fragmentasi alur pengguna, dan memastikan karyawan mengisi formulir kendala yang lengkap dan terstandarisasi.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Sesi 30 Okt 2026 (`media_1793343838939_99a0aba8.png`)
-- **Status:** Candidate
+- **Status:** Implemented (Pending UAT)
+- **Remediation Group:** Cycle 2 — Standalone 24 (IMP-040) [Status: CLOSED / IMPLEMENTED]
+- **Implementation Reference:** Commit 85873df (Change Register: CHG-037)
+- **Implementation Note:** Menyelaraskan seluruh tautan tombol "Laporkan Blocker" pada alur navigasi workflow bar di 3 sub-halaman My Today (EodOutcomeView, MorningCommitmentView, AdditionalWorkView) agar secara konsisten dan kanonikal mengarahkan langsung ke '/raise-blockers'. Mengeliminasi 100% template markup modal popup instant blocker, modal state, method submitInstantBlocker(), pemanggilan API redundan GET /v1/organization/users saat inisialisasi EOD, icon X dari lucide-vue-next, serta aturan CSS modal tak terpakai pada EodOutcomeView.vue.
+- **Closure & Verification Note:** Implementasi telah selesai, seluruh pengujian unit (118 frontend, 112 backend) lulus 100%, verifikasi visual dan interaksi pada Vercel Preview telah diverifikasi dan disetujui Acceptance Owner (Harry), seluruh kriteria penerimaan terpenuhi, dan Standalone 24 (IMP-040) resmi ditutup.
 
 ---
 
