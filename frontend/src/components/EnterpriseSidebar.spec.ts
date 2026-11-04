@@ -53,5 +53,27 @@ describe('EnterpriseSidebar.vue (IMP-020, IMP-021)', () => {
     const role = wrapper.find('[data-testid="nav-role"]');
     expect(role.text()).toBe('Staff / Employee');
   });
+
+  it('renders concise "Dutamedia" brand caption and consolidated "My Today" menu item (IMP-017)', async () => {
+    const wrapper = mount(EnterpriseSidebar, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    // 1. Brand caption must be "Dutamedia" (not "Dutamedia Intranet")
+    const brandCaption = wrapper.find('.brand-caption');
+    expect(brandCaption.exists()).toBe(true);
+    expect(brandCaption.text()).toBe('Dutamedia');
+
+    // 2. Workspace group must contain single consolidated "My Today"
+    const navTextList = wrapper.findAll('.nav-text').map((n) => n.text());
+    expect(navTextList).toContain('My Today');
+    expect(navTextList).not.toContain('Morning Commitment');
+    expect(navTextList).not.toContain('Additional Work');
+    expect(navTextList).not.toContain('EOD Outcome');
+  });
 });
 

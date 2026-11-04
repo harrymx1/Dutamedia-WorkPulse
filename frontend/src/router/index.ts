@@ -81,6 +81,10 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
   },
   {
+    path: '/daily',
+    redirect: '/daily/morning',
+  },
+  {
     path: '/daily/morning',
     name: 'daily-morning',
     component: MorningCommitmentView,

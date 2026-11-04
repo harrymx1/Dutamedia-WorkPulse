@@ -50,9 +50,7 @@ export const navGroups: NavGroup[] = [
   {
     title: 'Workspace',
     items: [
-      { label: 'Morning Commitment', to: '/daily/morning', iconName: 'Sunrise' },
-      { label: 'Additional Work', to: '/daily/additional-work', iconName: 'PlusCircle' },
-      { label: 'EOD Outcome', to: '/daily/eod', iconName: 'Sunset' },
+      { label: 'My Today', to: '/daily/morning', iconName: 'Clock' },
       { label: 'Lapor Blocker', to: '/raise-blockers', iconName: 'AlertTriangle' },
       { label: 'Riwayat Saya', to: '/daily/history', iconName: 'CalendarDays' },
       { label: 'Cuti Saya', to: '/leave/my', iconName: 'Plane' },

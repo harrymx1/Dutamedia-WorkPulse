@@ -117,6 +117,16 @@ const iconMap: Record<string, any> = {
 function getIconComponent(name: string) {
   return iconMap[name] || Activity;
 }
+
+function isItemActive(to: string): boolean {
+  if (to === '/daily/morning') {
+    return route.path === '/daily/morning' ||
+           route.path === '/daily/additional-work' ||
+           route.path === '/daily/eod' ||
+           route.path === '/daily';
+  }
+  return route.path === to;
+}
 </script>
 
 <template>
@@ -132,7 +142,7 @@ function getIconComponent(name: string) {
         <div class="brand-mark">WP</div>
         <div class="brand-info">
           <div class="brand-name">WorkPulse</div>
-          <div class="brand-caption">Dutamedia Intranet</div>
+          <div class="brand-caption">Dutamedia</div>
         </div>
         <!-- Mobile close button (hanya muncul pada viewport mobile saat drawer terbuka) -->
         <button
@@ -159,6 +169,7 @@ function getIconComponent(name: string) {
             :key="item.to"
             :to="item.to"
             class="nav-link"
+            :class="{ active: isItemActive(item.to) }"
             active-class="active"
             :title="item.label"
             @click="closeSidebar"

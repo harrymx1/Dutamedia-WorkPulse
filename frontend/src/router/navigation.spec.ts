@@ -62,4 +62,10 @@ describe('Navigasi & RBAC frontend', () => {
     expect(queueRoute).toBeDefined();
     expect(queueRoute?.name).toBe('blockers-queue');
   });
+
+  it('rute /daily terdaftar dan dialihkan (redirect) ke /daily/morning (IMP-017)', () => {
+    const dailyRoute = router.getRoutes().find((r) => r.path === '/daily');
+    expect(dailyRoute).toBeDefined();
+    expect(dailyRoute?.redirect).toBe('/daily/morning');
+  });
 });
