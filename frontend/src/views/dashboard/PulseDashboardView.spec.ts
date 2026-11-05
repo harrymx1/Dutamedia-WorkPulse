@@ -107,5 +107,63 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     expect(wrapper.find('h1').text()).toBe('Function Pulse');
   });
+
+  it('restricts tabs for HEAD role: only Team and Function, omits Management Pulse and defaults to Function Pulse', async () => {
+    const authStore = (await import('../../stores/auth')).useAuthStore();
+    authStore.user = {
+      id: 'head-id',
+      email: 'head@dutamedia.com',
+      fullName: 'Bambang Pratama',
+      role: 'HEAD',
+      function: 'Engineering',
+      status: 'ACTIVE',
+    } as any;
+
+    const wrapper = mount(PulseDashboardView, {
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true },
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Default pendaratan HEAD adalah Function Pulse
+    expect(wrapper.find('h1').text()).toBe('Function Pulse');
+
+    // Tab yang muncul hanya 2: Team Pulse & Function Pulse
+    const tabs = wrapper.findAll('.scope-tab');
+    expect(tabs.length).toBe(2);
+    expect(tabs[0].text()).toContain('Team Pulse');
+    expect(tabs[1].text()).toContain('Function Pulse');
+
+    // Tab Management Pulse TIDAK ADA
+    expect(wrapper.text()).not.toContain('Management Pulse');
+  });
+
+  it('restricts tabs for SUPERVISOR role: hides scope-tabs selector and defaults to Team Pulse', async () => {
+    const authStore = (await import('../../stores/auth')).useAuthStore();
+    authStore.user = {
+      id: 'spv-id',
+      email: 'spv@dutamedia.com',
+      fullName: 'Supervisor Lead',
+      role: 'SUPERVISOR',
+      function: 'Engineering',
+      status: 'ACTIVE',
+    } as any;
+
+    const wrapper = mount(PulseDashboardView, {
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true },
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('h1').text()).toBe('Team Pulse');
+    // Karena hanya ada 1 cakupan yang diizinkan (AC-63), switcher disembunyikan
+    expect(wrapper.find('.scope-tabs').exists()).toBe(false);
+  });
 });
 

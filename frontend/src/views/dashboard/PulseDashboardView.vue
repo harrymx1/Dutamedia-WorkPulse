@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
 import {
   Clock,
@@ -31,10 +32,60 @@ interface SupportFeedItem {
   createdAt: string;
 }
 
+const auth = useAuthStore();
+
+type ScopeType = 'team' | 'function' | 'management';
+
+/**
+ * Matriks Otorisasi Cakupan Pulse Dashboard (PRD v1.6 Hal. 54 & UI-UX Spec 4.8 AC-63):
+ * - team (Team Pulse / L1): SUPERVISOR, HEAD, PROJECT_MANAGER, CEO_MANAGEMENT, SYSTEM_ADMIN
+ * - function (Function Pulse / L2): HEAD, CEO_MANAGEMENT, SYSTEM_ADMIN
+ * - management (Management Pulse / Executive): CEO_MANAGEMENT, SYSTEM_ADMIN, HRGA
+ */
+const allowedScopes = computed<ScopeType[]>(() => {
+  const role = auth.user?.role;
+  if (!role) {
+    return ['team', 'function', 'management'];
+  }
+
+  const scopes: ScopeType[] = [];
+
+  if (['SUPERVISOR', 'HEAD', 'PROJECT_MANAGER', 'CEO_MANAGEMENT', 'SYSTEM_ADMIN'].includes(role)) {
+    scopes.push('team');
+  }
+
+  if (['HEAD', 'CEO_MANAGEMENT', 'SYSTEM_ADMIN'].includes(role)) {
+    scopes.push('function');
+  }
+
+  if (['CEO_MANAGEMENT', 'SYSTEM_ADMIN', 'HRGA'].includes(role)) {
+    scopes.push('management');
+  }
+
+  return scopes;
+});
+
+function getDefaultScope(role?: string | null): ScopeType {
+  if (role === 'HEAD') return 'function';
+  if (role === 'CEO_MANAGEMENT' || role === 'HRGA') return 'management';
+  return 'team';
+}
+
 const loading = ref(false);
-const activeScope = ref<'team' | 'function' | 'management'>('team');
+const activeScope = ref<ScopeType>(getDefaultScope(auth.user?.role));
 const selectedProject = ref('ALL');
 const selectedPeriod = ref('today');
+
+// Sinkronkan activeScope jika penugasan / role berubah
+watch(
+  () => auth.user?.role,
+  (newRole) => {
+    if (!allowedScopes.value.includes(activeScope.value)) {
+      activeScope.value = getDefaultScope(newRole);
+      loadDashboardData();
+    }
+  },
+);
 
 const metrics = ref<DashboardMetrics>({
   totalEmployees: 32,
@@ -151,10 +202,11 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Scope Switcher Bar -->
+      <!-- Scope Switcher Bar: Hanya muncul jika pengguna memiliki > 1 cakupan (PRD v1.6 Hal 54, AC-63) -->
       <div class="scope-bar">
-        <div class="scope-tabs" role="tablist">
+        <div v-if="allowedScopes.length > 1" class="scope-tabs" role="tablist">
           <button
+            v-if="allowedScopes.includes('team')"
             type="button"
             class="scope-tab"
             :class="{ active: activeScope === 'team' }"
@@ -164,6 +216,7 @@ onMounted(() => {
             <span class="badge">Supervisor</span>
           </button>
           <button
+            v-if="allowedScopes.includes('function')"
             type="button"
             class="scope-tab"
             :class="{ active: activeScope === 'function' }"
@@ -173,6 +226,7 @@ onMounted(() => {
             <span class="badge">Head of Dept</span>
           </button>
           <button
+            v-if="allowedScopes.includes('management')"
             type="button"
             class="scope-tab"
             :class="{ active: activeScope === 'management' }"
