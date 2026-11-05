@@ -25,6 +25,13 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
       },
       organizationalAssignment: {
         findFirst: vi.fn(),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      temporaryReviewerAssignment: {
+        count: vi.fn().mockResolvedValue(0),
+      },
+      projectAuthorityMapping: {
+        count: vi.fn().mockResolvedValue(0),
       },
       $transaction: vi.fn().mockImplementation(async (callback) => {
         return await callback(mockPrisma);

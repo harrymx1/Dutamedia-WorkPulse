@@ -124,22 +124,20 @@ export class AuthService {
         })
       : 0;
 
-    const tempReviewerCount = (this.prisma as any).temporaryReviewerAssignment?.count
-      ? await (this.prisma as any).temporaryReviewerAssignment.count({
+    const tempReviewerCount = this.prisma.temporaryReviewerAssignment?.count
+      ? await this.prisma.temporaryReviewerAssignment.count({
           where: {
-            reviewerUserId: user.id,
-            isActive: true,
-            startDate: { lte: today },
-            endDate: { gte: today },
+            delegateUserId: user.id,
+            effectiveDate: { lte: today },
+            expiryDate: { gte: today },
           },
         })
       : 0;
 
-    const projectLeadCount = (this.prisma as any).projectAuthorityMapping?.count
-      ? await (this.prisma as any).projectAuthorityMapping.count({
+    const projectLeadCount = this.prisma.projectAuthorityMapping?.count
+      ? await this.prisma.projectAuthorityMapping.count({
           where: {
             projectManagerId: user.id,
-            isActive: true,
             effectiveDate: { lte: today },
             OR: [{ endDate: null }, { endDate: { gte: today } }],
           },
