@@ -14,11 +14,15 @@ import { SubmitAdditionalWorkDto } from '../dto/submit-additional-work.dto';
 import { SubmitEodOutcomeDto } from '../dto/submit-eod-outcome.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
+import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
 
 @Controller(['daily', 'api/daily'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class DailyController {
-  constructor(private readonly dailyService: DailyService) {}
+  constructor(
+    private readonly dailyService: DailyService,
+    private readonly scopeResolver: ScopeResolverService,
+  ) {}
 
   @Get('today')
   async getTodayState(@Req() req: any, @Query('date') date?: string) {
@@ -48,10 +52,15 @@ export class DailyController {
   @Get('history')
   async getWeeklyHistory(
     @Req() req: any,
+    @Query('userId') userId?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.dailyService.getWeeklyHistory(req.user.id, startDate, endDate);
+    const targetUserId = userId || req.user.id;
+    if (targetUserId !== req.user.id) {
+      await this.scopeResolver.enforceUserScope(req.user.id, targetUserId);
+    }
+    return this.dailyService.getWeeklyHistory(targetUserId, startDate, endDate);
   }
 }
 

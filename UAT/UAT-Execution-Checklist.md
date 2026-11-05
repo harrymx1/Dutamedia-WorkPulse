@@ -108,7 +108,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
 | [P] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | PASS | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
-| [ ] | `TC-SUPV-001` | Penegakan Batasan Scope Hierarki Supervisor & Penolakan Lintas Divisi | Not Run | Akses review bawahan tim lain ditolak HTTP 403 AUTH_FORBIDDEN_SCOPE |
+| [P] | `TC-SUPV-001` | Penegakan Batasan Scope Hierarki Supervisor & Penolakan Lintas Divisi | PASS | Terverifikasi isolasi antrean supervisor & penolakan review lintas divisi HTTP 403 AUTH_FORBIDDEN_SCOPE (req_faadb374) |
 | [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head & Penegakan Batasan Lintas Fungsi | Not Run | Dashboard memuat seluruh squad fungsi; lintas divisi ditolak 403 |
 
 ---

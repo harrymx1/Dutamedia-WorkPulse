@@ -2471,13 +2471,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Sistem secara mutlak menegakkan isolasi hierarki bawahan langsung untuk peran Supervisor dan menggagalkan intervensi lintas departemen dengan status HTTP 403.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar penolakan 403 AUTH_FORBIDDEN_SCOPE pada Network console saat mencoba mereview cuti staf divisi lain.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Terverifikasi 100% secara empiris: (1) Antrean /leave/queue pada akun Supervisor Engineering (Bambang Pratama) hanya memuat permohonan staf bawahan langsung (Siti Rahma - Backend Engineer) dan mengisolasi permohonan staf divisi lain (Maya Putri - RnD/Creative). (2) Percobaan review cuti staf lintas divisi (#a54f90ad-9904-4f5a-a1ce-75dda46409a2) langsung ditolak oleh backend ScopeResolver dengan HTTP 403 Forbidden, kode error AUTH_FORBIDDEN_SCOPE, dan pesan: 'Anda tidak memiliki kewenangan untuk mengakses atau meninjau rekaman di luar fungsi/squad Anda.' (requestId: req_faadb374).
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-05
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Terverifikasi isolasi hierarki manajerial Lapis 2 SAD IV.4, DEC-010, FR-08, FR-35, FR-41, serta implementasi CR-009 & CR-010.
 
 ---
 

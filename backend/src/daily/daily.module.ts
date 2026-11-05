@@ -7,9 +7,10 @@ import { WorkdayService } from './services/workday.service';
 import { ClockService } from '../common/time/clock.service';
 import { AuthModule } from '../auth/auth.module';
 import { PolicyModule } from '../policy/policy.module';
+import { OrganizationModule } from '../organization/organization.module';
 
 @Module({
-  imports: [AuthModule, PolicyModule],
+  imports: [AuthModule, PolicyModule, OrganizationModule],
   controllers: [DailyController, BlockerController],
   providers: [DailyService, BlockerService, WorkdayService, ClockService],
   exports: [DailyService, BlockerService, WorkdayService],
