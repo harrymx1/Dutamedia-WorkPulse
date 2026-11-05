@@ -78,7 +78,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toContain('Team Pulse');
+    expect(wrapper.find('h1').text()).toBe('Management Dashboard');
     expect(wrapper.text()).toContain('Belum Mengisi Komitmen');
     expect(wrapper.text()).toContain('Komitmen Waspada (Amber)');
     expect(wrapper.text()).toContain('Komitmen Kritis (Merah)');
@@ -105,8 +105,8 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     await functionTab.trigger('click');
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toContain('Function Pulse');
-    expect(wrapper.find('h1').text()).not.toContain('(Divisi Saya)');
+    expect(wrapper.find('h1').text()).toBe('Management Dashboard');
+    expect(wrapper.find('.eyebrow').exists()).toBe(false);
   });
 
   it('restricts tabs for HEAD role: defaults to Divisi Saya (Function Pulse) and omits Seluruh Perusahaan', async () => {
@@ -129,8 +129,8 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // Default pendaratan HEAD adalah Divisi Saya (Function Pulse) tanpa redundansi di h1
-    expect(wrapper.find('h1').text()).toBe('Function Pulse');
+    // Default pendaratan HEAD adalah Divisi Saya dengan judul konsisten Management Dashboard
+    expect(wrapper.find('h1').text()).toBe('Management Dashboard');
     expect(wrapper.find('[data-testid="active-scope-badge"]').text()).toBe('Divisi Engineering');
     // Hanya tab Divisi Saya yang muncul (tidak ada Tim Proyek jika bukan Project Lead, dan tidak ada Seluruh Perusahaan)
     const tabs = wrapper.findAll('.scope-tab');
@@ -215,7 +215,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('Team Pulse');
+    expect(wrapper.find('h1').text()).toBe('Management Dashboard');
     const tabs = wrapper.findAll('.scope-tab');
     expect(tabs.length).toBe(1);
     expect(tabs[0].text()).toContain('Tim (Proyek)');

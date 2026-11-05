@@ -272,11 +272,7 @@ function handleScopeChange(scope: 'team' | 'function' | 'management') {
   loadDashboardData();
 }
 
-const scopeTitle = computed(() => {
-  if (activeScope.value === 'team') return 'Team Pulse';
-  if (activeScope.value === 'function') return 'Function Pulse';
-  return 'Management Pulse';
-});
+const scopeTitle = computed(() => 'Management Dashboard');
 
 const scopeBadgeLabel = computed(() => {
   if (activeScope.value === 'team') {
@@ -337,7 +333,6 @@ onMounted(() => {
       <!-- Page Heading -->
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Dashboard Operasional &amp; Radar Eskalasi</span>
           <h1>{{ scopeTitle }}</h1>
           <p class="subtitle">{{ scopeSubtitle }}</p>
         </div>
