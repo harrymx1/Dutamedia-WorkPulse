@@ -18,6 +18,9 @@ export interface LoginResult {
     fullName: string;
     role: string;
     status: string;
+    jobTitle?: string | null;
+    function?: string | null;
+    managerName?: string | null;
   };
   session: {
     id: string;
@@ -97,9 +100,16 @@ export class AuthService {
         OR: [{ endDate: null }, { endDate: { gte: today } }],
       },
       orderBy: { effectiveDate: 'desc' },
+      include: {
+        directManager: { select: { fullName: true } },
+      },
     });
 
     const role: string = activeOrg?.role || CanonicalRole.EMPLOYEE;
+    const jobTitle: string | null = (activeOrg as any)?.jobTitle || null;
+    const orgFunction: string | null = (activeOrg as any)?.function || null;
+    const managerName: string | null =
+      (activeOrg as any)?.directManager?.fullName || null;
 
     // Penerbitan Sesi Baru (24 Jam)
     const sessionTokenRaw = this.tokenService.generateRandomToken(32);
@@ -137,6 +147,9 @@ export class AuthService {
         fullName: user.fullName,
         role,
         status: user.status,
+        jobTitle,
+        function: orgFunction,
+        managerName,
       },
       session: {
         id: session.id,

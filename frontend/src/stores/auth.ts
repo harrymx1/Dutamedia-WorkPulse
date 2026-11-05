@@ -8,6 +8,9 @@ export interface UserProfile {
   fullName: string;
   role: string;
   status: string;
+  jobTitle?: string | null;
+  function?: string | null;
+  managerName?: string | null;
 }
 
 function sanitizeUserProfile(u: UserProfile | null | undefined): UserProfile | null {

@@ -108,8 +108,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
 | [P] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | PASS | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
-| [P] | `TC-SUPV-001` | Penegakan Batasan Scope Hierarki Supervisor & Penolakan Lintas Divisi | PASS | Terverifikasi isolasi antrean supervisor & penolakan review lintas divisi HTTP 403 AUTH_FORBIDDEN_SCOPE (req_faadb374) |
-| [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head & Penegakan Batasan Lintas Fungsi | Not Run | Dashboard memuat seluruh squad fungsi; lintas divisi ditolak 403 |
+| [ ] | `TC-SUPV-001` | Penegakan Scope Project Lead / Supervisor (`Tim Proyek` & Bawahan) & Penolakan Lintas Scope/Divisi (403) | Needs Retest (CR-013) | Perlu diuji ulang: pembatasan tab `Tim (Proyek)` di `/dashboard` (CR-013) + isolasi `/leave/queue` |
+| [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head (`Divisi Saya`) & Penegakan Batasan Lintas Fungsi (403) | Not Run | Tab `Divisi Saya` memuat seluruh anggota divisi; lintas divisi/scope CEO ditolak 403 |
 
 ---
 
@@ -130,8 +130,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-DLYM-006` | Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter) | PASS | Teks 2 karakter ("Te") ditolak sistem dengan pesan error: "Slot #1: Deskripsi komitmen wajib diisi minimal 3 karakter." Form tidak terkirim. |
 | [ ] | `TC-DLYM-002` | Opsi 0 Komitmen dengan Justifikasi Wajib >= 10 Karakter | | |
-| [X] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time) | DEFECT | 3 Komitmen tersimpan sukses di DB, namun form tidak terkunci (inputs tetap editable & tombol submit aktif) [DEF-001] |
-| [P] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini pada Komitmen Pagi | PASS | Pemilihan AMBER pada Komitmen #2 berhasil memunculkan input kendala & bantuan, initial daily status reaktif berubah menjadi AMBER — Berisiko, dan tersimpan sukses |
+| [ ] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (dengan Pemilih Proyek & Blocker Aktif Opsional) | Needs Retest (CR-013 & DEF-001) | Wajib diuji ulang di Kelompok 5: penguncian form DEF-001 + dropdown Proyek Terkait & tombol Pilih Blocker Aktif (CR-013) |
+| [ ] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini & Penautan Blocker Menghambat pada Komitmen Pagi | Needs Retest (CR-013) | Wajib diuji ulang di Kelompok 5: kotak risiko AMBER/RED + dropdown Tautkan Blocker Aktif yang Menghambat (CR-013) |
 | [ ] | `TC-DLYM-004` | Fitur Salin Komitmen Hari Sebelumnya (Copy-Forward) | | |
 | [P] | `TC-DLYM-005` | Penguncian Form Komitmen Pagi Pasca Cut-Off (DEC-002) | PASS | Terverifikasi empiris pada jam 10:36 WIB (> 09:30): status LOCKED, banner DEC-002 tampil, form disabled/read-only |
 | [ ] | `TC-DLYM-007` | Pencegahan Duplikasi Komitmen Pagi & Penguncian Atomik Multi-Tab (DEF-001) | Not Run | Tab 1 sukses; Tab 2 ditolak atomik HTTP 422 BUSINESS_RULE_ALREADY_SUBMITTED |
@@ -144,14 +144,14 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 - **Prasyarat:** Komitmen pagi telah terisi.
 - **Test Data:** `TD-DLYA-01` dan `TD-DLYA-02`.
 - **Urutan Eksekusi:**
-  1. Uji validasi field wajib pemberi instruksi & proyek (`TC-DLYA-002`).
-  2. Catat tugas tambahan valid (`TC-DLYA-001`).
+  1. Uji validasi field wajib pemberi instruksi & fleksibilitas proyek opsional (`TC-DLYA-002`).
+  2. Catat tugas tambahan valid dengan pemilih proyek & blocker aktif opsional (`TC-DLYA-001`).
   3. Uji batas maksimal 5 tugas tambahan (`TC-DLYA-003`).
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [P] | `TC-DLYA-002` | Validasi Field Wajib Pemberi Instruksi & Proyek Ad-Hoc | PASS | Pengosongan dropdown penugas ditolak validasi sistem (terpicu tooltip wajib isi), setelah Bambang Pratama dipilih tugas berhasil tersimpan |
-| [P] | `TC-DLYA-001` | Pencatatan Tugas Tambahan Ad-Hoc & Integrasi ke EOD | PASS | Tugas ad-hoc #1 (Investigasi performa rendering Vue) tersimpan dengan penugas Bambang Pratama dan otomatis muncul di form evaluasi EOD bersama 3 komitmen pagi (Total 4 tugas) |
+| [ ] | `TC-DLYA-002` | Validasi Field Wajib Pemberi Instruksi (`NEWLY_ASSIGNED`) & Opsi Proyek Ad-Hoc | Needs Retest (CR-013) | Wajib diuji ulang di Kelompok 6: penugas wajib untuk NEWLY_ASSIGNED & Proyek Terkait bersifat opsional (CR-013) |
+| [ ] | `TC-DLYA-001` | Pencatatan Tugas Tambahan Ad-Hoc (Proyek & Blocker Aktif Opsional) & Integrasi ke EOD | Needs Retest (CR-013) | Wajib diuji ulang di Kelompok 6: dropdown Proyek Terkait, tombol Pilih Blocker Aktif, & integrasi ke EOD (CR-013) |
 | [ ] | `TC-DLYA-003` | Batas Maksimum 5 Tugas Tambahan Ad-Hoc Per Hari | | |
 
 ---
@@ -259,7 +259,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [ ] | `TC-COAC-001` | Pemberian Catatan Bimbingan Manajer (Coaching Note) | | |
-| [ ] | `TC-DASH-001` | Pemantauan Dasbor Operasional Tim (Team Pulse) | | |
+| [ ] | `TC-DASH-001` | Pemantauan Dasbor Operasional Tim Proyek (`Tim (Proyek)`) oleh Project Lead / Supervisor | Not Run (Updated CR-013) | Tab `Tim (Proyek)`, filter proyek, 4 KPI riil, & daftar dinamis `attentionItems` |
 | [ ] | `TC-DASH-002` | Pemantauan Radar Risiko Proyek & Inisiatif Strategis | | |
 | [ ] | `TC-COAC-002` | Validasi Kerahasiaan Catatan Bimbingan & Larangan Catatan Diri Sendiri | Not Run | Catatan diri ditolak HTTP 400; catatan rahasia terisolasi dari staf |
 | [ ] | `TC-NOTF-001` | Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca | Not Run | Lencana TopBar sinkron reaktif; tandai terbaca mereset counter lencana |
@@ -297,7 +297,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [ ] | `TC-DASH-003` | Tinjauan Laporan Eksekutif & Pengujian Fitur Unduh Data | | |
-| [ ] | `TC-CEO-001` | Pengawasan Eksekutif Universal, Ekspor Berkas Audit, & Kebijakan CEO | Not Run | Dasbor universal transparan; unduh berkas audit streaming berhasil |
+| [ ] | `TC-CEO-001` | Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Kebijakan CEO | Not Run (Updated CR-013) | Tab `Seluruh Perusahaan`, Filter Divisi & Proyek dinamis, unduh berkas audit CSV, & Policy Owner |
 
 ---
 

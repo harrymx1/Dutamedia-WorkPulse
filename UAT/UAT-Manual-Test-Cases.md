@@ -527,15 +527,15 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 ### TC-DLYM-001: Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time)
 - **Test Case ID:** `TC-DLYM-001`
 - **Scenario ID:** `SCN-DLYM-01`
-- **Requirement ID:** `FR-09`, `FR-13`, `FR-16`, `DEC-001`, `DEC-004`
-- **Judul:** Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time Submission)
-- **Tujuan:** Memvalidasi bahwa karyawan dapat mengisi komitmen harian (1 hingga batas 3 komitmen) dengan tagging proyek dan estimasi durasi sebelum jam cut-off pagi, serta mendapatkan badge status *On-Time*.
+- **Requirement ID:** `FR-09`, `FR-13`, `FR-16`, `DEC-001`, `DEC-004`, `CR-013`
+- **Judul:** Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (On-Time Submission) dengan Pemilih Proyek & Blocker Aktif Opsional
+- **Tujuan:** Memvalidasi bahwa karyawan dapat mengisi komitmen harian (1 hingga batas 3 komitmen) lengkap dengan pemilih proyek opsional (`Proyek Terkait (Opsional)`), tombol pemilih cepat `Pilih Blocker Aktif` pada tautan referensi, serta tingkat risiko awal sebelum jam cut-off pagi, dan mendapatkan badge status *On-Time* dengan formulir yang langsung terkunci pasca-submit.
 - **Modul / Halaman:** Morning Commitment (`/daily/morning`)
 - **Kategori Pengujian:** Happy Path / Boundary Value Analysis
 - **Teknik Desain Test Case:** Boundary Value Analysis (1, 2, 3 items) & Equivalence Partitioning
 - **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
 - **Priority:** **Critical (P0)**
-- **Risk Rationale:** Merupakan proses bisnis paling inti yang dilakukan seluruh karyawan Dutamedia setiap pagi.
+- **Risk Rationale:** Merupakan proses bisnis paling inti yang dilakukan seluruh karyawan Dutamedia setiap pagi dan menjadi sumber pengaitan komitmen ke proyek (`scope=team`) pada Pulse Dashboard.
 - **Preconditions:** Login sebagai `dev.frontend@dutamedia.com`. Hari kerja aktif sebelum jam cut-off pagi.
 - **Test Data ID:** `TD-DLYM-01` dan `TD-DLYM-02`
 - **Persiapan Sebelum Tes:** Pastikan belum ada komitmen yang disubmit untuk tanggal hari ini.
@@ -545,36 +545,36 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Buka halaman Morning Commitment via sidebar.
    - **Lokasi:** Menu "Komitmen Pagi" (`/daily/morning`).
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman terbuka dengan header tanggal hari ini, indikator waktu pengisian, dan kartu formulir komitmen item ke-1.
-   - **Verifikasi:** Terdapat tombol "+ Tambah Komitmen", checkbox opsi 0 komitmen, tombol "Simpan & Kirim Komitmen Pagi", panel konteks waktu dengan badge tanggal dinamis Indonesia, dan tombol "Laporkan Blocker" di sisi kanan workflow bar (IMP-016, IMP-027).
+   - **Hasil yang diharapkan:** Halaman terbuka dengan header tanggal hari ini, indikator waktu pengisian, dan kartu formulir komitmen item ke-1. Pada setiap slot komitmen tampil: textarea `Teks Komitmen Terukur *`, dropdown `Proyek Terkait (Opsional)`, field `Tautan Dokumen / PR / Tiket (Opsional)` berdampingan dengan tombol inline `Pilih Blocker Aktif`, serta pilihan `Tingkat Risiko Awal & Potensi Kendala *` (`GREEN`, `AMBER`, `RED`).
+   - **Verifikasi:** Terdapat tombol "+ Tambah Slot", checkbox opsi 0 komitmen, tombol "Kirim Morning Commitment", panel konteks waktu dengan badge tanggal dinamis Indonesia, dan tombol "Laporkan Blocker" di sisi kanan workflow bar (IMP-016, IMP-027, CR-013). Tidak ada overflow horizontal pada grup input tautan dan tombol `Pilih Blocker Aktif`.
 2. **Langkah 2**
-   - **Aksi:** Isi komitmen pertama: masukkan judul tugas, pilih kategori proyek/inisiatif dari dropdown, dan tentukan estimasi durasi.
-   - **Lokasi:** Form Komitmen Item 1.
-   - **Data:** Judul: `Menyelesaikan migrasi VAPID Push Notification`, Proyek: `WorkPulse Platform Core 2026 (WP-CORE)`, Durasi: `4 Jam`.
-   - **Hasil yang diharapkan:** Field terisi rapi tanpa error.
-   - **Verifikasi:** Teks judul dan dropdown proyek terpilih sesuai data.
+   - **Aksi:** Isi komitmen pertama: masukkan teks komitmen terukur, pilih proyek dari dropdown `Proyek Terkait (Opsional)`, dan klik tombol `Pilih Blocker Aktif` di samping input tautan untuk melihat daftar blocker aktif (atau isi tautan PR/tiket secara manual).
+   - **Lokasi:** Form Komitmen Slot #1.
+   - **Data:** Teks: `Menyelesaikan migrasi VAPID Push Notification`, Proyek: `[PRJ-CORE] Core Banking Settlement Engine` (atau proyek aktif yang tersedia), Risiko: `GREEN`.
+   - **Hasil yang diharapkan:** Dropdown proyek menampilkan opsi `-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --` beserta daftar proyek resmi dengan posisi panah dropdown (chevron) yang proporsional. Saat tombol `Pilih Blocker Aktif` diklik, muncul popover daftar blocker aktif (atau info tidak ada blocker aktif) tanpa merusak lebar kolom. Jika blocker dipilih, field tautan otomatis terisi `#BLK-XXXXXX` dan dropdown proyek otomatis menyesuaikan proyek blocker terkait.
+   - **Verifikasi:** Teks komitmen, dropdown proyek (`projectCode`), dan tautan referensi/blocker (`linkedBlockerId`) terpilih sesuai data.
 3. **Langkah 3**
-   - **Aksi:** Klik tombol "+ Tambah Komitmen" untuk membuat item ke-2 dan item ke-3.
-   - **Lokasi:** Tombol di bawah kartu komitmen.
-   - **Data:** Item 2: `Code review PR modul leave approval` (2 Jam); Item 3: `Unit test coverage router guard` (2 Jam).
-   - **Hasil yang diharapkan:** Kartu komitmen ke-2 dan ke-3 muncul. Setelah mencapai tepat 3 item, tombol "+ Tambah Komitmen" dinonaktifkan atau disembunyikan (DEC-004: batas maksimal 3 komitmen).
+   - **Aksi:** Klik tombol "+ Tambah Slot" untuk membuat item ke-2 dan item ke-3.
+   - **Lokasi:** Tombol di header daftar komitmen.
+   - **Data:** Item 2: `Code review PR modul leave approval` (Proyek: `[PRJ-PORTAL]`); Item 3: `Unit test coverage router guard` (Proyek: `-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --`).
+   - **Hasil yang diharapkan:** Kartu komitmen ke-2 dan ke-3 muncul. Setelah mencapai tepat 3 item, tombol "+ Tambah Slot" dinonaktifkan (DEC-004: batas maksimal 3 komitmen).
    - **Verifikasi:** Jumlah total kartu komitmen adalah tepat 3. Tidak dapat menambah item ke-4.
 4. **Langkah 4**
-   - **Aksi:** Klik tombol "Simpan & Kirim Komitmen Pagi".
+   - **Aksi:** Klik tombol "Kirim Morning Commitment".
    - **Lokasi:** Tombol aksi utama di bagian bawah form.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Konfirmasi pengiriman muncul, pengguna klik konfirmasi, toast sukses muncul "Komitmen pagi berhasil disimpan". Formulir beralih ke tampilan *Summary Card* harian berstatus **On-Time** (Badge Hijau).
-   - **Verifikasi:** Lakukan refresh browser (F5). Ketiga komitmen tetap tampil utuh dengan status On-Time.
+   - **Hasil yang diharapkan:** Pengiriman diproses, banner sukses hijau tampil, dan formulir beralih ke state terkunci (read-only) berstatus **ON_TIME**.
+   - **Verifikasi:** Lakukan refresh browser (F5). Ketiga komitmen beserta pilihan proyek dan tautan referensi tetap tampil utuh dalam kondisi terkunci.
 
-- **Expected Final Result:** 3 Komitmen berhasil disimpan di database, status waktu tercatat *On-Time*, dan data persisten saat reload.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot ringkasan komitmen pagi yang memuat 3 item dan badge On-Time.
-- **Actual Result:** Pengiriman 3 komitmen berhasil diproses sistem (toast notifikasi hijau muncul dan panel sukses di bawah tampil). Namun form tidak terkunci: seluruh textarea komitmen tetap dapat diedit dan tombol Kirim Morning Commitment tetap aktif dan dapat diklik ulang.
-- **Execution Status:** FAIL
+- **Expected Final Result:** 3 Komitmen beserta metadata proyek (`projectCode`) dan blocker (`linkedBlockerId`) berhasil disimpan di database, status waktu tercatat *On-Time*, form terkunci, dan data persisten saat reload.
+- **Bukti yang Perlu Dikumpulkan:** Screenshot ringkasan komitmen pagi yang memuat 3 item, pilihan proyek/blocker, dan badge On-Time.
+- **Actual Result:** Pengiriman 3 komitmen berhasil diproses sistem (toast notifikasi hijau muncul dan panel sukses di bawah tampil). Namun pada Cycle 1 form tidak terkunci [DEF-001 - telah diperbaiki, perlu retest bersama komponen CR-013].
+- **Execution Status:** Needs Retest (CR-013 & DEF-001)
 - **Tester:** Harry
 - **Execution Date:** 2026-10-30
 - **Defect ID:** DEF-001
-- **Retest Result:** 
-- **Catatan:** Memicu tiket cacat DEF-001 karena melanggar penguncian baseline DEC-001 & FR-09.
+- **Retest Result:** Pending Retest
+- **Catatan:** Diperbarui dengan cakupan CR-013 (pemilih proyek opsional & quick-picker Pilih Blocker Aktif inline). Wajib diuji ulang saat memasuki Kelompok 5.
 
 ---
 
@@ -635,9 +635,9 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 ### TC-DLYM-003: Penandaan Indikasi Hambatan Dini pada Komitmen Pagi
 - **Test Case ID:** `TC-DLYM-003`
 - **Scenario ID:** `SCN-DLYM-03`
-- **Requirement ID:** `FR-11`
-- **Judul:** Penandaan Indikasi Hambatan Dini pada Komitmen Pagi (Early Blocker Flag)
-- **Tujuan:** Memvalidasi bahwa karyawan dapat menandai potensi kendala/blocker sejak pagi hari pada item komitmen tertentu, sehingga atasan mendapatkan sinyal peringatan dini pada dasbor pemantauan.
+- **Requirement ID:** `FR-11`, `CR-013`
+- **Judul:** Penandaan Indikasi Hambatan Dini pada Komitmen Pagi (Early Blocker Flag & Penautan Blocker Menghambat)
+- **Tujuan:** Memvalidasi bahwa karyawan dapat menandai potensi kendala/blocker sejak pagi hari (`AMBER` atau `RED`) pada item komitmen tertentu, menautkan blocker aktif yang menghambat tugas tersebut (opsional), serta mengisi catatan kendala dini sehingga atasan/Project Lead mendapatkan sinyal peringatan dini pada Pulse Dashboard.
 - **Modul / Halaman:** Morning Commitment (`/daily/morning`)
 - **Kategori Pengujian:** Business Process / Usability
 - **Teknik Desain Test Case:** Equivalence Partitioning
@@ -650,33 +650,36 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 **Langkah Pengujian:**
 1. **Langkah 1**
-   - **Aksi:** Isi komitmen 1: masukkan judul komitmen dan pilih proyek.
+   - **Aksi:** Isi komitmen 1: masukkan teks komitmen terukur dan pilih proyek dari dropdown `Proyek Terkait (Opsional)`.
    - **Lokasi:** Kartu komitmen item 1.
-   - **Data:** Judul: `Integrasi webhook Brevo email dispatcher`, Proyek: `WP-CORE`.
+   - **Data:** Teks: `Integrasi webhook Brevo email dispatcher`, Proyek: `[PRJ-CORE] Core Banking Settlement Engine` (atau `WP-CORE`).
    - **Hasil yang diharapkan:** Data terinput dengan rapi.
-   - **Verifikasi:** Teks judul dan proyek terpilih.
+   - **Verifikasi:** Teks komitmen dan proyek terpilih.
 2. **Langkah 2**
-   - **Aksi:** Centang opsi "Ada potensi kendala / indikasi hambatan pada tugas ini sejak pagi".
-   - **Lokasi:** Checkbox penanda kendala dini pada kartu komitmen.
-   - **Data:** Checkbox dicentang.
-   - **Hasil yang diharapkan:** Muncul field opsional singkat: "Catatan potensi kendala (cth: menunggu API key vendor)".
-   - **Verifikasi:** Field catatan potensi kendala terbuka.
+   - **Aksi:** Pada bagian `Tingkat Risiko Awal & Potensi Kendala *`, klik kartu **`AMBER`** (Ada Dependensi / Potensi Hambatan) atau **`RED`** (Kritis / Memerlukan Intervensi Atasan).
+   - **Lokasi:** Pemilih risiko awal pada kartu komitmen.
+   - **Data:** Risiko: `AMBER`.
+   - **Hasil yang diharapkan:** Muncul kotak kondisional kuning/merah yang memuat 3 field:
+     1. Dropdown **`Tautkan Blocker Aktif yang Menghambat (Opsional)`** (`data-testid="hindered-blocker-select-0"`) untuk memilih tiket blocker aktif jika hambatan berasal dari tiket blocker yang sudah ada.
+     2. Field wajib **`Catatan Potensi Kendala (Known Blocker Note) *`**.
+     3. Field opsional **`Bantuan yang Diharapkan (Support Needed)`**.
+   - **Verifikasi:** Ketiga field dalam kotak kondisional terbuka rapi, dan jika memilih salah satu blocker aktif pada dropdown, field catatan potensi kendala otomatis terisi deskripsi blocker tersebut (jika sebelumnya kosong).
 3. **Langkah 3**
-   - **Aksi:** Masukkan catatan singkat: `Menunggu credential API Brevo dari GA`, lalu klik tombol kirim komitmen.
+   - **Aksi:** Pilih blocker aktif yang menghambat (jika ada) atau masukkan catatan singkat: `Menunggu credential API Brevo dari GA`, isi bantuan yang diharapkan: `Perlu follow-up ke tim GA`, lalu klik tombol kirim komitmen.
    - **Lokasi:** Formulir komitmen pagi.
-   - **Data:** Catatan kendala terisi.
-   - **Hasil yang diharapkan:** Komitmen tersimpan sukses. Pada ringkasan komitmen, kartu tugas tersebut memiliki badge khusus berwarna kuning/oranye: "Potensi Kendala (Early Blocker Flag)".
-   - **Verifikasi:** Badge potensi kendala tampil jelas pada kartu komitmen.
+   - **Data:** Catatan kendala & bantuan terisi.
+   - **Hasil yang diharapkan:** Status awal hari (*Initial Daily Status*) di kartu konteks atas secara reaktif berubah menjadi **`AMBER — Berisiko`** (atau `RED — Terhambat`). Saat dikirim, komitmen tersimpan sukses.
+   - **Verifikasi:** Indikasi kendala dini dan penautan blocker tersimpan utuh saat halaman dimuat ulang.
 
-- **Expected Final Result:** Indikasi kendala dini tercatat di database dan memicu penanda visual peringatan pada kartu tugas.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot kartu ringkasan komitmen yang memuat badge Early Blocker Flag.
+- **Expected Final Result:** Indikasi kendala dini beserta tautan blocker yang menghambat tercatat di database dan memicu penanda visual peringatan pada kartu konteks harian serta Pulse Dashboard.
+- **Bukti yang Perlu Dikumpulkan:** Screenshot kartu komitmen dengan kotak kondisional AMBER/RED yang menampilkan dropdown Tautkan Blocker Aktif yang Menghambat.
 - **Actual Result:** Pemilihan risiko AMBER pada slot Komitmen #2 berhasil memunculkan form input potensi kendala dan bantuan yang diharapkan. Status awal hari (Initial Daily Status) di kartu konteks atas secara instan dan reaktif berubah menjadi AMBER — Berisiko. Seluruh catatan kendala dini tersimpan sukses ke database.
-- **Execution Status:** PASS
+- **Execution Status:** Needs Retest (CR-013)
 - **Tester:** Harry
 - **Execution Date:** 2026-10-30
 - **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** Fitur Early Blocker Flag terverifikasi berfungsi sempurna.
+- **Retest Result:** Pending Retest
+- **Catatan:** Diperbarui dengan penambahan dropdown 'Tautkan Blocker Aktif yang Menghambat (Opsional)' sesuai CR-013. Wajib diverifikasi ulang saat memasuki Kelompok 5.
 
 ---
 
@@ -885,15 +888,15 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 ### TC-DLYA-001: Pencatatan Tugas Tambahan Ad-Hoc di Tengah Jam Kerja
 - **Test Case ID:** `TC-DLYA-001`
 - **Scenario ID:** `SCN-DLYA-01`
-- **Requirement ID:** `FR-17`, `FR-18`, `FR-19`
-- **Judul:** Pencatatan Tugas Tambahan Ad-Hoc di Siang Hari & Integrasi ke Rekap EOD
-- **Tujuan:** Memastikan karyawan dapat mencatat tugas mendadak di luar rencana pagi hari dengan menyertakan pemberi instruksi, dan tugas tersebut otomatis terdaftar pada evaluasi sore (EOD).
+- **Requirement ID:** `FR-17`, `FR-18`, `FR-19`, `CR-013`
+- **Judul:** Pencatatan Tugas Tambahan Ad-Hoc di Siang Hari (dengan Pemilih Proyek & Blocker Aktif Opsional) & Integrasi ke Rekap EOD
+- **Tujuan:** Memastikan karyawan dapat mencatat tugas mendadak di luar rencana pagi hari dengan menyertakan pemberi instruksi, memilih proyek terkait secara opsional (`Proyek Terkait (Opsional)`), memilih blocker aktif melalui tombol `Pilih Blocker Aktif` pada tautan referensi, dan memastikan tugas tersebut otomatis terdaftar pada evaluasi sore (EOD).
 - **Modul / Halaman:** Additional Work (`/daily/additional-work`)
 - **Kategori Pengujian:** Happy Path / Inter-Module Integration
 - **Teknik Desain Test Case:** Use Case Testing
 - **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
 - **Priority:** **High (P1)**
-- **Risk Rationale:** Tugas mendadak yang tidak tercatat membuat capaian kerja karyawan tidak terukur secara adil di mata manajemen.
+- **Risk Rationale:** Tugas mendadak yang tidak tercatat membuat capaian kerja karyawan tidak terukur secara adil di mata manajemen dan Project Lead.
 - **Preconditions:** Komitmen pagi sudah diisi dan tersimpan.
 - **Test Data ID:** `TD-DLYA-01`
 - **Persiapan Sebelum Tes:** Login sebagai Employee dan buka `/daily/additional-work`.
@@ -903,84 +906,84 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Buka menu "Tugas Tambahan" via sidebar kiri.
    - **Lokasi:** Menu navigasi `/daily/additional-work`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman terbuka menampilkan ringkasan komitmen pagi yang sudah ada dan form pencatatan tugas tambahan baru.
-   - **Verifikasi:** Terdapat field Judul Tugas, Dropdown Pemberi Instruksi (Direct Manager, PM, dll.), Dropdown Proyek, dan Estimasi Durasi.
+   - **Hasil yang diharapkan:** Halaman terbuka menampilkan ringkasan komitmen pagi yang sudah ada (beserta badge proyek jika ada) dan form pencatatan tugas tambahan baru.
+   - **Verifikasi:** Terdapat field `Deskripsi Pekerjaan Tambahan *`, pilihan `Alasan Pekerjaan Tambahan *` (dan dropdown `Ditugaskan Oleh (Atasan Langsung/Lead) *` saat memilih `Penugasan Baru dari Atasan`), dropdown `Proyek Terkait (Opsional)`, serta field `Tautan Referensi / Tiket Tugas (Opsional)` yang berdampingan rapi dengan tombol inline `Pilih Blocker Aktif` tanpa overflow horizontal.
 2. **Langkah 2**
-   - **Aksi:** Isi detail tugas tambahan mendesak dari atasan.
+   - **Aksi:** Isi detail tugas tambahan mendesak dari atasan, pilih proyek dari dropdown `Proyek Terkait (Opsional)`, dan uji klik tombol `Pilih Blocker Aktif` (atau isi tautan referensi).
    - **Lokasi:** Formulir Tugas Tambahan.
-   - **Data:** Judul: `Hotfix urgent bug memory leak payment`, Pemberi Instruksi: `Bambang Pratama (Tech Lead)`, Proyek: `WP-CORE`, Durasi: `2 Jam`.
-   - **Hasil yang diharapkan:** Seluruh field terisi lengkap dan valid.
+   - **Data:** Deskripsi: `Hotfix urgent bug memory leak payment`, Alasan: `Penugasan Baru dari Atasan (NEWLY_ASSIGNED)`, Ditugaskan Oleh: `Bambang Pratama`, Proyek: `[PRJ-CORE] Core Banking Settlement Engine` (opsional), Tautan Referensi / Blocker: pilih dari popover `Pilih Blocker Aktif` atau ketik `#BLK-73C5C7`.
+   - **Hasil yang diharapkan:** Seluruh field terisi lengkap dan valid; popover `Pilih Blocker Aktif` tampil proporsional di bawah grup input dan otomatis mengisi kode tiket `#BLK-...` serta menyesuaikan proyek terkait saat dipilih.
    - **Verifikasi:** Field tidak menampilkan indikator error.
 3. **Langkah 3**
-   - **Aksi:** Klik tombol "Simpan Tugas Tambahan".
+   - **Aksi:** Klik tombol "+ Simpan Pekerjaan Tambahan".
    - **Lokasi:** Tombol submit.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Toast sukses muncul "Tugas tambahan berhasil dicatat". Item baru muncul pada daftar tugas ad-hoc hari ini dengan badge "Ad-Hoc / Tambahan".
-   - **Verifikasi:** Item baru tercantum dalam tabel/kartu tugas tambahan di halaman tersebut.
+   - **Hasil yang diharapkan:** Toast/banner sukses muncul. Item baru muncul pada daftar riwayat pekerjaan tambahan hari ini lengkap dengan badge alasan, badge proyek (misal `[PRJ-CORE]`), dan tautan referensi/blocker.
+   - **Verifikasi:** Item baru tercantum dalam kartu daftar pekerjaan tambahan di halaman tersebut.
 4. **Langkah 4**
    - **Aksi:** Navigasi ke menu "Hasil Sore (EOD)" via sidebar.
    - **Lokasi:** Menu `/daily/eod`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman EOD menampilkan daftar tugas yang harus dievaluasi, mencakup 3 komitmen pagi PLUS 1 tugas tambahan yang baru saja dicatat.
+   - **Hasil yang diharapkan:** Halaman EOD menampilkan daftar tugas yang harus dievaluasi, mencakup komitmen pagi PLUS tugas tambahan yang baru saja dicatat.
    - **Verifikasi:** Total item yang harus dievaluasi bertambah sesuai jumlah tugas tambahan yang diinput.
 
-- **Expected Final Result:** Tugas ad-hoc berhasil dicatat dengan asosiasi instruktur yang jelas dan otomatis terintegrasi ke form EOD sore hari.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot halaman Additional Work dan screenshot halaman EOD yang menampilkan item tugas tambahan.
+- **Expected Final Result:** Tugas ad-hoc berhasil dicatat dengan asosiasi instruktur, metadata proyek (`projectCode`), dan tautan blocker (`linkedBlockerId`) yang jelas serta otomatis terintegrasi ke form EOD sore hari.
+- **Bukti yang Perlu Dikumpulkan:** Screenshot halaman Additional Work (memperlihatkan dropdown Proyek Terkait, tombol Pilih Blocker Aktif, dan kartu riwayat ad-hoc) serta screenshot halaman EOD.
 - **Actual Result:** Tugas tambahan ("Investigasi performa rendering Vue") berhasil dicatat dengan atasan penugas ("Bambang Pratama"), tersimpan di database, dan secara otomatis terintegrasi ke form EOD Outcome pada seksi "Evaluasi Pekerjaan Tambahan (1)" bersama 3 komitmen pagi sehingga total evaluasi bertambah menjadi 4 tugas.
-- **Execution Status:** PASS
+- **Execution Status:** Needs Retest (CR-013)
 - **Tester:** Harry
 - **Execution Date:** 2026-10-30
 - **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** Alur integrasi data dari Additional Work ke evaluasi EOD berjalan 100% mulus dan konsisten.
+- **Retest Result:** Pending Retest
+- **Catatan:** Diperbarui dengan cakupan CR-013 (dropdown Proyek Terkait Opsional & inline Pilih Blocker Aktif pada Additional Work). Wajib diuji ulang saat memasuki Kelompok 6.
 
 ---
 
-### TC-DLYA-002: Validasi Field Wajib Pemberi Instruksi & Proyek Tugas Ad-Hoc
+### TC-DLYA-002: Validasi Field Wajib Pemberi Instruksi & Opsi Proyek Tugas Ad-Hoc
 - **Test Case ID:** `TC-DLYA-002`
 - **Scenario ID:** `SCN-DLYA-02`
-- **Requirement ID:** `FR-18`
-- **Judul:** Validasi Field Wajib Pemberi Instruksi & Asosiasi Proyek Tugas Ad-Hoc
-- **Tujuan:** Memastikan karyawan tidak dapat menyimpan tugas tambahan ad-hoc tanpa memilih siapa yang menginstruksikan tugas tersebut dan tanpa mengaitkannya ke proyek yang valid.
+- **Requirement ID:** `FR-18`, `CR-013`
+- **Judul:** Validasi Field Wajib Pemberi Instruksi (`NEWLY_ASSIGNED`) & Fleksibilitas Proyek Opsional Tugas Ad-Hoc
+- **Tujuan:** Memastikan karyawan tidak dapat menyimpan tugas tambahan dengan alasan `Penugasan Baru dari Atasan` tanpa memilih siapa yang menginstruksikan tugas tersebut, sekaligus memastikan field `Proyek Terkait (Opsional)` bersifat opsional (mendukung pekerjaan rutin divisi non-proyek maupun pekerjaan proyek).
 - **Modul / Halaman:** Additional Work (`/daily/additional-work`)
 - **Kategori Pengujian:** Negative Testing / Data Integrity
 - **Teknik Desain Test Case:** Equivalence Partitioning
 - **Role:** `EMPLOYEE` (`dev.frontend@dutamedia.com`)
 - **Priority:** **Medium (P2)**
-- **Risk Rationale:** Tugas liar yang tidak jelas pemberi instruksinya memicu distorsi akuntabilitas jam kerja.
+- **Risk Rationale:** Tugas penugasan baru yang tidak jelas pemberi instruksinya memicu distorsi akuntabilitas jam kerja, sementara pemaksaan proyek pada staf divisi non-proyek (misal HRGA/Finance) akan menghambat pencatatan tugas rutin.
 - **Preconditions:** Berada di form pencatatan `/daily/additional-work`.
 - **Test Data ID:** `TD-DLYA-03`
 - **Persiapan Sebelum Tes:** Buka `/daily/additional-work`.
 
 **Langkah Pengujian:**
 1. **Langkah 1**
-   - **Aksi:** Masukkan judul tugas tambahan tetapi kosongkan pilihan "Pemberi Instruksi" dan "Proyek".
+   - **Aksi:** Masukkan deskripsi tugas tambahan, pastikan alasan terpilih `Penugasan Baru dari Atasan`, tetapi kosongkan pilihan dropdown `Ditugaskan Oleh (Atasan Langsung/Lead) *`.
    - **Lokasi:** Form tugas tambahan.
-   - **Data:** Judul: `Investigasi performa rendering Vue`. Dropdown instruksi: Kosong, Dropdown proyek: Kosong.
+   - **Data:** Deskripsi: `Investigasi performa rendering Vue`. Dropdown Ditugaskan Oleh: Kosong (`-- Pilih Nama Atasan / Lead --`).
    - **Hasil yang diharapkan:** Form terisi sebagian.
-   - **Verifikasi:** Dropdown berada pada nilai placeholder awal.
+   - **Verifikasi:** Dropdown penugas berada pada nilai placeholder awal.
 2. **Langkah 2**
-   - **Aksi:** Klik tombol "Simpan Tugas Tambahan".
+   - **Aksi:** Klik tombol "+ Simpan Pekerjaan Tambahan".
    - **Lokasi:** Tombol submit.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Sistem memblokir penyimpanan. Muncul pesan validasi merah pada kedua dropdown: "Pemberi instruksi wajib dipilih" dan "Proyek terkait wajib dipilih".
+   - **Hasil yang diharapkan:** Sistem memblokir penyimpanan karena atasan penugas wajib dipilih untuk kategori `Penugasan Baru dari Atasan`.
    - **Verifikasi:** Tidak ada penambahan data ke daftar tugas.
 3. **Langkah 3**
-   - **Aksi:** Pilih instruktur dan proyek yang valid lalu simpan kembali.
+   - **Aksi:** Pilih instruktur yang valid (`Bambang Pratama`), biarkan `Proyek Terkait (Opsional)` pada opsi default `-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --` (atau pilih proyek `[PRJ-CORE]`), lalu klik simpan kembali.
    - **Lokasi:** Form tugas tambahan.
-   - **Data:** Instruktur: `Bambang Pratama`, Proyek: `WP-CORE`.
-   - **Hasil yang diharapkan:** Validasi lolos dan tugas tambahan tersimpan sukses.
-   - **Verifikasi:** Data masuk ke tabel tugas hari ini.
+   - **Data:** Instruktur: `Bambang Pratama`, Proyek: Opsional (`-- Tidak Terkait Proyek --` atau `[PRJ-CORE]`).
+   - **Hasil yang diharapkan:** Validasi lolos dan tugas tambahan tersimpan sukses tanpa memaksa staf non-proyek memilih proyek.
+   - **Verifikasi:** Data masuk ke daftar pekerjaan tambahan hari ini.
 
-- **Expected Final Result:** Aturan wajib pemberi instruksi dan proyek berjalan tegak, mencegah data tugas mengambang (*orphaned task*).
-- **Bukti yang Perlu Dikumpulkan:** Screenshot pesan validasi saat dropdown instruksi dan proyek dikosongkan.
+- **Expected Final Result:** Aturan wajib pemberi instruksi berjalan tegak untuk penugasan atasan, dan pemilihan proyek bersifat opsional sesuai struktur kerja PT Dutamedia Mandiri Pratama (CR-013).
+- **Bukti yang Perlu Dikumpulkan:** Screenshot pesan validasi saat dropdown penugas dikosongkan dan saat berhasil disimpan.
 - **Actual Result:** Sistem menolak penyimpanan tugas tambahan saat dropdown atasan penugas kosong dengan memunculkan tooltip wajib isi. Setelah atasan (Bambang Pratama) dipilih, tugas berhasil tersimpan dan tampil di daftar tugas hari ini.
-- **Execution Status:** PASS
+- **Execution Status:** Needs Retest (CR-013)
 - **Tester:** Harry
 - **Execution Date:** 2026-10-30
 - **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** Teridentifikasi temuan tata letak IMP-032 terkait overflow horizontal dropdown penugas saat divalidasi.
+- **Retest Result:** Pending Retest
+- **Catatan:** Diperbarui sesuai CR-013 (Proyek Terkait bersifat opsional, Penugas wajib untuk NEWLY_ASSIGNED). Wajib diverifikasi ulang pada Kelompok 6.
 
 ---
 
@@ -1626,19 +1629,19 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-CORR-002: Persetujuan Permohonan Koreksi oleh Direct Manager
+### TC-CORR-002: Persetujuan Permohonan Koreksi oleh Direct Manager (Head of Engineering)
 - **Test Case ID:** `TC-CORR-002`
 - **Scenario ID:** `SCN-CORR-02`
 - **Requirement ID:** `FR-39`, `DEC-006`, `DEC-013`
 - **Judul:** Persetujuan Permohonan Koreksi oleh Atasan Langsung (Direct Manager Approval)
-- **Tujuan:** Memvalidasi bahwa atasan langsung dapat melihat permohonan koreksi bawahan, membandingkan data usulan, menyetujui permohonan, dan memverifikasi data komitmen terbarui secara otomatis.
+- **Tujuan:** Memvalidasi bahwa atasan langsung (`Head of Engineering`) dapat melihat permohonan koreksi bawahan langsungnya di divisi Engineering, membandingkan data usulan, menyetujui permohonan, dan memverifikasi data komitmen terbarui secara otomatis.
 - **Modul / Halaman:** Correction Review (`/corrections/review`)
 - **Kategori Pengujian:** Workflow Transition / Role Authority
 - **Teknik Desain Test Case:** State Transition Testing
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Role:** `HEAD` / Direct Manager (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering)
 - **Priority:** **High (P1)**
 - **Risk Rationale:** Alur persetujuan yang gagal membuat data karyawan tetap berstatus melanggar aturan secara keliru.
-- **Preconditions:** Login sebagai `lead.tech@dutamedia.com`. Terdapat pengajuan koreksi `TC-CORR-001` berstatus `PENDING` dari Aditya Nugroho.
+- **Preconditions:** Login sebagai `head.eng@dutamedia.com` (Arif Budiman). Terdapat pengajuan koreksi `TC-CORR-001` berstatus `PENDING` dari Aditya Nugroho.
 - **Test Data ID:** `TD-AUTH-02` dan `TD-CORR-01`
 - **Persiapan Sebelum Tes:** Buka `/corrections/review`.
 
@@ -1648,7 +1651,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Lokasi:** `/corrections/review`.
    - **Data:** Tidak ada.
    - **Hasil yang diharapkan:** Antrean peninjauan koreksi terbuka. Pengajuan dari "Aditya Nugroho" tampil dengan detail tanggal, alasan internet mati, dan tombol aksi: "Setujui" serta "Tolak".
-   - **Verifikasi:** Data perbandingan sebelum (Kosong) vs sesudah (2 Komitmen) tampil transparan.
+   - **Verifikasi:** Data perbandingan sebelum vs sesudah tampil transparan.
 2. **Langkah 2**
    - **Aksi:** Klik tombol "Setujui Permohonan".
    - **Lokasi:** Baris pengajuan Aditya Nugroho.
@@ -1660,10 +1663,10 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Lokasi:** Modal persetujuan.
    - **Data:** Catatan atasan.
    - **Hasil yang diharapkan:** Toast sukses muncul "Koreksi berhasil disetujui". Status pengajuan berubah menjadi `APPROVED`. Data komitmen tanggal terkait langsung terisi di riwayat kerja Aditya Nugroho.
-   - **Verifikasi:** Pengajuan berpindah ke tab "Riwayat Disetujui". Jejak audit log permanen (DEC-013) mencatat ID atasan dan timestamp persetujuan.
+   - **Verifikasi:** Pengajuan berpindah ke tab "Riwayat Disetujui". Jejak audit log permanen (DEC-013) mencatat ID atasan (`Arif Budiman`) dan timestamp persetujuan.
 
 - **Expected Final Result:** Koreksi disetujui, status bertransisi ke APPROVED, data komitmen tanggal bersangkutan terisi resmi, dan audit log tercatat abadi.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot pengajuan di tab Disetujui dengan badge hijau APPROVED dan catatan supervisor.
+- **Bukti yang Perlu Dikumpulkan:** Screenshot pengajuan di tab Disetujui dengan badge hijau APPROVED dan catatan atasan.
 - **Actual Result:** 
 - **Execution Status:** 
 - **Tester:** 
@@ -1679,14 +1682,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Scenario ID:** `SCN-CORR-03`
 - **Requirement ID:** `FR-40`, `DEC-010`
 - **Judul:** Penolakan Permohonan Koreksi dengan Alasan Wajib (Anti-Silent Rejection)
-- **Tujuan:** Memvalidasi bahwa atasan yang menolak permohonan koreksi bawahan wajib menyertakan alasan penolakan tertulis minimal 10 karakter agar ada transparansi evaluasi bagi karyawan.
+- **Tujuan:** Memvalidasi bahwa atasan langsung yang menolak permohonan koreksi bawahan wajib menyertakan alasan penolakan tertulis minimal 10 karakter agar ada transparansi evaluasi bagi karyawan.
 - **Modul / Halaman:** Correction Review (`/corrections/review`)
 - **Kategori Pengujian:** Negative Testing / Boundary Value
 - **Teknik Desain Test Case:** Boundary Value Analysis (< 10 char vs >= 10 char)
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Role:** `HEAD` / Direct Manager (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering)
 - **Priority:** **High (P1)**
 - **Risk Rationale:** Penolakan sepihak tanpa alasan tertulis memicu ketidakpastian dan ketegangan hubungan kerja antara atasan dan bawahan.
-- **Preconditions:** Login sebagai Supervisor. Terdapat permohonan koreksi berstatus `PENDING`.
+- **Preconditions:** Login sebagai Atasan Langsung (`head.eng@dutamedia.com`). Terdapat permohonan koreksi berstatus `PENDING`.
 - **Test Data ID:** `TD-CORR-02`
 - **Persiapan Sebelum Tes:** Buka `/corrections/review`.
 
@@ -1939,19 +1942,19 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-LEAV-002: Persetujuan Permohonan Cuti oleh Atasan Langsung
+### TC-LEAV-002: Persetujuan Permohonan Cuti oleh Atasan Langsung (Head of Engineering)
 - **Test Case ID:** `TC-LEAV-002`
 - **Scenario ID:** `SCN-LEAV-02`
 - **Requirement ID:** `FR-46`
 - **Judul:** Persetujuan Permohonan Cuti Tim oleh Atasan Langsung & Pemotongan Kuota
-- **Tujuan:** Memvalidasi bahwa atasan langsung dapat melihat antrean permohonan cuti bawahannya, memverifikasi ketersediaan personil pengganti, menyetujui permohonan, dan memverifikasi bahwa sisa kuota cuti karyawan terpotong secara tepat.
+- **Tujuan:** Memvalidasi bahwa atasan langsung (`Head of Engineering`) dapat melihat antrean permohonan cuti bawahannya di divisi Engineering, memverifikasi ketersediaan personil pengganti, menyetujui permohonan, dan memverifikasi bahwa sisa kuota cuti karyawan terpotong secara tepat.
 - **Modul / Halaman:** Leave Approval Queue (`/leave/queue`)
 - **Kategori Pengujian:** Workflow Transition / State Transition
 - **Teknik Desain Test Case:** State Transition Testing
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Role:** `HEAD` / Direct Manager (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering)
 - **Priority:** **High (P1)**
 - **Risk Rationale:** Hambatan pada persetujuan cuti menyebabkan ketidakpastian izin kerja karyawan dan kekacauan jadwal proyek.
-- **Preconditions:** Login sebagai Supervisor. Terdapat pengajuan cuti berstatus `PENDING` dari Aditya Nugroho (`TC-LEAV-001`).
+- **Preconditions:** Login sebagai `head.eng@dutamedia.com` (Arif Budiman). Terdapat pengajuan cuti berstatus `PENDING` dari Aditya Nugroho (`TC-LEAV-001`) atau Siti Rahma.
 - **Test Data ID:** `TD-LEAV-02`
 - **Persiapan Sebelum Tes:** Buka `/leave/queue`.
 
@@ -2080,14 +2083,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Scenario ID:** `SCN-COAC-01`
 - **Requirement ID:** `FR-49`, `DEC-010`
 - **Judul:** Pemberian Catatan Bimbingan Manajer (Manager Coaching Note DEC-010)
-- **Tujuan:** Memvalidasi bahwa atasan dapat menyematkan catatan bimbingan atau apresiasi kerja pada komitmen bawahan dengan catatan tertulis minimal 10 karakter, dan bawahan dapat membaca catatan tersebut di timeline kerjanya.
+- **Tujuan:** Memvalidasi bahwa atasan langsung (`Head of Engineering`) dapat menyematkan catatan bimbingan atau apresiasi kerja pada komitmen bawahan dengan catatan tertulis minimal 10 karakter, dan bawahan dapat membaca catatan tersebut di timeline kerjanya.
 - **Modul / Halaman:** Manager Note Coaching (`/coaching`)
 - **Kategori Pengujian:** Usability / Coaching & Feedback
 - **Teknik Desain Test Case:** Boundary Value & Use Case Testing
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Role:** `HEAD` / Direct Manager (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering)
 - **Priority:** **Medium (P2)**
 - **Risk Rationale:** Ketiadaan media bimbingan manajer membuat evaluasi kerja harian menjadi transaksional dan mengabaikan pembinaan SDM.
-- **Preconditions:** Login sebagai Supervisor. Bawahan (Aditya Nugroho) memiliki komitmen kerja di sistem.
+- **Preconditions:** Login sebagai `head.eng@dutamedia.com` (Arif Budiman). Bawahan langsungnya di divisi Engineering (Aditya Nugroho, Siti Rahma, Bambang Pratama) terdaftar di sistem.
 - **Test Data ID:** `TD-COAC-01`
 - **Persiapan Sebelum Tes:** Buka `/coaching`.
 
@@ -2123,54 +2126,54 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-DASH-001: Pemantauan Dasbor Operasional Tim (Team Pulse) oleh Supervisor
+### TC-DASH-001: Pemantauan Dasbor Operasional Tim Proyek (Team Pulse) oleh Project Lead / Supervisor
 - **Test Case ID:** `TC-DASH-001`
 - **Scenario ID:** `SCN-DASH-01`
-- **Requirement ID:** `FR-50`, `FR-28`, `FR-36`
-- **Judul:** Pemantauan Dasbor Operasional Tim (Team Pulse) oleh Supervisor
-- **Tujuan:** Memvalidasi bahwa Supervisor yang login langsung mendarat di `/dashboard` dan disajikan metrik agregat tim: persentase partisipasi komitmen, kartu personil butuh bantuan, komitmen berisiko, dan feed dukungan lintas fungsi.
+- **Requirement ID:** `FR-50`, `FR-28`, `FR-36`, `CR-013`
+- **Judul:** Pemantauan Dasbor Operasional Tim Proyek (`Tim (Proyek)`) oleh Project Lead / Supervisor
+- **Tujuan:** Memvalidasi bahwa Project Lead / Supervisor yang login langsung mendarat di `/dashboard` pada tab lingkup **`Tim (Proyek)`** (`scope=team`), dapat memfilter berdasarkan proyek yang dipimpinnya, serta disajikan metrik agregat riil dari database (bukan teks statis/hardcode): jumlah belum mengisi komitmen, komitmen waspada (Amber), komitmen kritis (Red), blocker belum direspon, dan daftar dinamis personil yang butuh bantuan.
 - **Modul / Halaman:** Pulse Dashboard (`/dashboard`)
 - **Kategori Pengujian:** UI/UX / Aggregation & Visualization
 - **Teknik Desain Test Case:** Equivalence Partitioning
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Role:** `SUPERVISOR` / Project Lead (`lead.tech@dutamedia.com`)
 - **Priority:** **High (P1)**
-- **Risk Rationale:** Dasbor operasional adalah pusat komando harian atasan untuk mengidentifikasi macetnya tugas tim.
-- **Preconditions:** Login sebagai `lead.tech@dutamedia.com`. Anggota tim (Aditya dan Siti) telah memiliki data komitmen dan blocker di sistem.
+- **Risk Rationale:** Dasbor operasional adalah pusat komando harian pimpinan proyek untuk mengidentifikasi macetnya tugas tim proyek lintas fungsi.
+- **Preconditions:** Login sebagai `lead.tech@dutamedia.com` (berperan `SUPERVISOR` / Project Lead, bukan `HEAD`). Anggota tim telah memiliki data komitmen dan blocker di sistem.
 - **Test Data ID:** `TD-AUTH-02`
 - **Persiapan Sebelum Tes:** Masuk ke `/dashboard`.
 
 **Langkah Pengujian:**
-1. **Langkah 1**
-   - **Aksi:** Buka halaman Dasbor Utama via navigasi.
+1. **Langkah 1 (Verifikasi Tab Scope & Filter Proyek)**
+   - **Aksi:** Buka halaman Dasbor Utama via navigasi (`/dashboard`). Amati tab scope dan dropdown filter di bagian header.
    - **Lokasi:** `/dashboard`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Tab "Team Pulse" aktif secara default dengan badge peran "Supervisor". Di sudut kanan atas tertera indikator lingkup aktif: "TEAM (Divisi Engineering)".
-   - **Verifikasi:** Header dan layout dashboard sesuai prototipe HTML 07.
-2. **Langkah 2**
+   - **Hasil yang diharapkan:** Hanya tab **"Tim (Proyek)"** (`data-testid="scope-tab-team"`) yang tampil dan aktif secara default (tab *Divisi Saya* dan *Seluruh Perusahaan* disembunyikan karena pengguna bukan Head Divisi maupun CEO). Tersedia dropdown filter proyek (`data-testid="filter-project-select"`) untuk menyaring proyek yang dipimpin.
+   - **Verifikasi:** Header, tab scope `Tim (Proyek)`, dan filter proyek tampil rapi sesuai arsitektur 3-Scope CR-013.
+2. **Langkah 2 (Verifikasi 4 Kartu Metrik Operasional Dinamis)**
    - **Aksi:** Amati 4 kartu metrik operasional teratas.
    - **Lokasi:** Baris KPI ringkasan.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Menampilkan 4 kartu statistik:
-     1. Belum Mengisi Komitmen (Jumlah & % Partisipasi)
-     2. Komitmen Waspada (Kuning / Amber)
-     3. Komitmen Kritis (Merah)
-     4. Blocker Belum Direspon (dengan link "Buka Antrean Blocker")
-   - **Verifikasi:** Nilai numerik pada kartu mencerminkan kondisi riil database seeder.
-3. **Langkah 3**
-   - **Aksi:** Periksa widget "Personil Butuh Bantuan Hari Ini".
+   - **Hasil yang diharapkan:** Menampilkan 4 kartu statistik dinamis dari database:
+     1. `Belum Mengisi Komitmen` (Jumlah belum submit & % Tingkat penyelesaian / sudah submit)
+     2. `Komitmen Waspada (Kuning)` (`amberCommitmentsCount`)
+     3. `Komitmen Kritis (Merah)` (`redCommitmentsCount`)
+     4. `Blocker Belum Direspon` (`unacknowledgedBlockersCount` dengan link "Buka Antrean Blocker")
+   - **Verifikasi:** Nilai numerik pada keempat kartu sinkron 100% dengan payload API `/api/v1/dashboard/pulse?scope=team`.
+3. **Langkah 3 (Verifikasi Daftar Dinamis Personil Butuh Bantuan Hari Ini)**
+   - **Aksi:** Periksa widget "Personil Butuh Bantuan Hari Ini" di kolom kiri.
    - **Lokasi:** Kolom kiri dashboard.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Daftar personil tim yang memiliki blocker kritis atau komitmen berisiko tampil dengan tombol aksi "Bantu" atau "Catat".
-   - **Verifikasi:** Kartu anggota tim yang memiliki kendala tampil dengan badge Blocker Kritis.
-4. **Langkah 4**
-   - **Aksi:** Periksa widget "Feed Dukungan Lintas Fungsi".
+   - **Hasil yang diharapkan:** Daftar menampilkan personil nyata dari database (`attentionItems`) yang sedang memiliki blocker terbuka atau komitmen berisiko (`AMBER`/`RED`) lengkap dengan kode proyek `[PRJ-...]`, judul kendala, dan tombol aksi "Tanggapi" / "Catat Coaching". Jika tidak ada kendala aktif, menampilkan pesan status kosong yang bersih (tidak menampilkan nama hardcode statis seperti Budi Pratama / Citra Lestari).
+   - **Verifikasi:** Kartu anggota tim tampil dinamis sesuai kondisi riil database.
+4. **Langkah 4 (Verifikasi Feed Dukungan Lintas Fungsi)**
+   - **Aksi:** Periksa widget "Feed Dukungan Lintas Fungsi" di kolom kanan.
    - **Lokasi:** Kolom kanan dashboard.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Menampilkan timeline catatan bantuan rekan kerja atau status kosong yang ramah jika belum ada interaksi hari ini.
+   - **Hasil yang diharapkan:** Menampilkan timeline catatan bantuan rekan kerja (`supportLogs`) atau status kosong yang ramah jika belum ada interaksi hari ini.
    - **Verifikasi:** Widget ter-render rapi tanpa overflow horizontal.
 
-- **Expected Final Result:** Dasbor Team Pulse menyajikan visibilitas operasional 360 derajat kondisi tim tanpa cacat visual.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot halaman penuh Dashboard Team Pulse.
+- **Expected Final Result:** Dasbor `Tim (Proyek)` menyajikan visibilitas operasional proyek secara real-time dan akurat sesuai CR-013.
+- **Bukti yang Perlu Dikumpulkan:** Screenshot halaman penuh Dashboard `Tim (Proyek)`.
 - **Actual Result:** 
 - **Execution Status:** 
 - **Tester:** 
@@ -2439,45 +2442,54 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-SUPV-001: Penegakan Batasan Scope Hierarki Bawahan Supervisor & Penolakan Lintas Divisi (403)
+### TC-SUPV-001: Penegakan Batasan Scope Project Lead / Technical Lead (`Tim Proyek`) & Isolasi Kepegawaian (403)
 - **Test Case ID:** `TC-SUPV-001`
 - **Scenario ID:** `SCN-SUPV-01`
-- **Requirement ID:** `FR-08`, `FR-35`, `FR-41`, `DEC-010`
-- **Judul:** Penegakan Batasan Scope Hierarki Bawahan Supervisor & Penolakan Lintas Divisi (403)
-- **Tujuan:** Memvalidasi penegakan Scope Resolver 3-Lapis pada level Supervisor: memastikan Team Lead hanya dapat melihat dan meninjau data anggota tim bawahan langsungnya, serta memverifikasi bahwa upaya meninjau cuti atau koreksi karyawan di luar divisinya ditolak dengan HTTP 403 Forbidden `AUTH_FORBIDDEN_SCOPE`.
-- **Modul / Halaman:** Persetujuan Cuti (`/leave/queue`) & Review Koreksi (`/corrections/review`)
+- **Requirement ID:** `FR-08`, `FR-35`, `FR-41`, `DEC-010`, `CR-013`
+- **Judul:** Penegakan Batasan Scope Project Lead / Technical Lead (`Tim Proyek`) & Isolasi Kepegawaian Lintas Wewenang (403)
+- **Tujuan:** Memvalidasi pemisahan tegas antara kepemimpinan **Tim Proyek (`scope=team`)** dan wewenang **Kepegawaian Divisi (`HEAD`)** sesuai struktur resmi PT Dutamedia Mandiri Pratama (`CR-013`): memastikan Technical Lead 1 (`Bambang Pratama` - `lead.tech@dutamedia.com`) yang sejajar dengan Developer di bawah Head of Engineering dan memimpin proyek `WP-CORE` & `PRJ-CORE` hanya melihat tab **`Tim (Proyek)`** di `/dashboard` (serta ditolak HTTP 403 `AUTH_FORBIDDEN_SCOPE` jika mengakses `scope=function` atau `scope=management`), tidak mencampuri antrean persetujuan cuti kepegawaian di `/leave/queue`, dan ditolak HTTP 403 `AUTH_FORBIDDEN_SCOPE` jika mencoba me-review cuti staf lain via API.
+- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Persetujuan Cuti (`/leave/queue`), & Review Koreksi (`/corrections/review`)
 - **Kategori Pengujian:** RBAC / Scope Enforcement / Security Boundary Testing
 - **Teknik Desain Test Case:** Decision Table & Boundary Value Testing
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com` - Bambang Pratama)
+- **Role:** `SUPERVISOR` / Project Lead (`lead.tech@dutamedia.com` - Bambang Pratama, Technical Lead 1)
 - **Priority:** **Critical (P0)**
-- **Risk Rationale:** Pelanggaran batasan scope hierarki merusak prinsip tata kelola manajerial dan membuka kebocoran data personal antar departemen.
-- **Preconditions:** Bambang Pratama login sebagai Supervisor Engineering. Bawahan langsung Bambang adalah Aditya Nugroho (`dev.frontend`) dan Siti Rahma (`dev.backend`). Maya Putri (`designer@dutamedia.com`) adalah bawahan Rian Kurniawan di divisi Creative/RnD. Terdapat permohonan cuti dari Maya Putri di database.
-- **Test Data ID:** `TD-SUPV-01` (ID Permohonan Cuti milik Maya Putri)
-- **Persiapan Sebelum Tes:** Pastikan Bambang login aktif di peramban.
+- **Risk Rationale:** Pelanggaran batasan scope proyek vs divisi merusak tata kelola organisasi PT Dutamedia Mandiri Pratama (di mana Tech Lead memimpin eksekusi teknis proyek, sedangkan urusan kepegawaian berada di tangan Head of Engineering).
+- **Preconditions:** Bambang Pratama (`lead.tech@dutamedia.com`) berperan `SUPERVISOR` (`Technical Lead 1`) yang sejajar dengan `Aditya Nugroho` (`Frontend Developer`) dan `Siti Rahma` (`Backend Developer`) di bawah **Arif Budiman (`head.eng@dutamedia.com` - Head of Engineering)**, serta terdaftar sebagai Project Lead untuk `WP-CORE` dan `PRJ-CORE`. Terdapat permohonan cuti `PENDING` dari Siti Rahma (Engineering) dan Maya Putri (`designer@dutamedia.com` - Principal Engineer R&D).
+- **Test Data ID:** `TD-SUPV-01` (ID Permohonan Cuti milik Maya Putri / Siti Rahma)
+- **Persiapan Sebelum Tes:** Login sebagai Bambang Pratama (`lead.tech@dutamedia.com` / `Password123!`).
 
 **Langkah Pengujian:**
-1. **Langkah 1**
+1. **Langkah 1 (Verifikasi Pembatasan Tab Scope `Tim (Proyek)` pada Pulse Dashboard `/dashboard`)**
+   - **Aksi:** Login sebagai `lead.tech@dutamedia.com` dan mendarat di `/dashboard`. Amati pilihan tab scope yang tampil di sudut kanan atas header, serta uji pemanggilan API `/api/v1/dashboard/pulse?scope=function` dan `/api/v1/dashboard/pulse?scope=management` via Console.
+   - **Lokasi:** Rute `/dashboard`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:**
+     - Pada UI `/dashboard`, hanya tab **`Tim (Proyek)`** (`data-testid="scope-tab-team"`) yang muncul beserta dropdown filter proyek (`Semua Proyek Saya`, `[WP-CORE]`, `[PRJ-CORE]`). Tab **`Divisi Saya`** dan **`Seluruh Perusahaan`** TIDAK muncul karena Bambang bukan `HEAD` dan bukan `CEO_MANAGEMENT`.
+     - Kartu "Personil Butuh Bantuan Hari Ini" menampilkan anggota tim proyek `WP-CORE` yang sedang mengalami kendala (`Aditya Nugroho`).
+     - Jika dipanggil paksa via API, `GET /api/v1/dashboard/pulse?scope=function` dan `GET /api/v1/dashboard/pulse?scope=management` ditolak oleh backend dengan status **HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`)**.
+   - **Verifikasi:** Visibilitas tab UI dan proteksi endpoint backend `/dashboard/pulse` terkunci ketat pada `scope=team`.
+2. **Langkah 2 (Verifikasi Isolasi Wewenang Kepegawaian pada `/leave/queue`)**
    - **Aksi:** Buka menu "Persetujuan Cuti" pada rute `/leave/queue`.
    - **Lokasi:** Rute `/leave/queue`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Antrean permohonan cuti menampilkan data pengajuan anggota tim Engineering (Aditya Nugroho dan Siti Rahma). Permohonan cuti milik Maya Putri (divisi Creative) tidak muncul dalam daftar tampilan default Supervisor Engineering.
-   - **Verifikasi:** Tidak ada kebocoran data cuti staf Creative di antrean tampilan Bambang.
-2. **Langkah 2 (Simulasi Percobaan Akses Langsung API / Review Lintas Divisi)**
-   - **Aksi:** Melalui Developer Console atau Postman/cURL, kirimkan permintaan POST untuk me-review permohonan cuti milik Maya Putri (`/leave/requests/{id-cuti-maya}/review`) dengan keputusan APPROVE.
-   - **Lokasi:** Endpoint `/leave/requests/:id/review` atau `/leave/:id/review`.
-   - **Data:** ID: ID Permohonan Cuti Maya Putri, Decision: `APPROVE`, ReviewNotes: `Disetujui oleh Tech Lead`
-   - **Hasil yang diharapkan:** Backend mengevaluasi wewenang melalui `ScopeResolverService.canAccessUser`. Karena Bambang bukan atasan langsung Maya dan tidak memiliki delegasi reviewer sementara di fungsi Creative, backend menolak akses dengan status HTTP 403 Forbidden dan kode galat `AUTH_FORBIDDEN_SCOPE`. Pesan galat berbunyi: *"Pengguna tidak memiliki wewenang hierarki atau scope yang sah untuk mengakses sumber daya ini."*
+   - **Hasil yang diharapkan:** Karena sesuai bagan organisasi PT Dutamedia Mandiri Pratama urusan kepegawaian (cuti) berada di bawah wewenang **Head of Engineering (`Arif Budiman`)** dan Technical Lead 1 sejajar dengan Developer, antrean `/leave/queue` pada akun Bambang Pratama tidak menampilkan permohonan cuti milik Maya Putri (R&D) maupun rekan sejajarnya.
+   - **Verifikasi:** Tidak ada kebocoran data cuti lintas divisi/wewenang di tampilan Bambang.
+3. **Langkah 3 (Simulasi Percobaan Akses Langsung API / Review Cuti di Luar Wewenang)**
+   - **Aksi:** Melalui Developer Console, kirimkan permintaan POST untuk me-review permohonan cuti milik Maya Putri (`/api/v1/leave/requests/{id-cuti-maya}/review`) dengan keputusan `APPROVE`.
+   - **Lokasi:** Endpoint `/api/v1/leave/requests/:id/review`.
+   - **Data:** ID: ID Permohonan Cuti Maya Putri, Decision: `APPROVE`, ReviewNote: `Test bypass lintas divisi oleh Technical Lead`
+   - **Hasil yang diharapkan:** Backend mengevaluasi wewenang melalui `ScopeResolverService.canAccessUser`. Karena Bambang bukan atasan langsung Maya dan tidak memiliki delegasi reviewer sementara di fungsi R&D, backend menolak akses dengan status **HTTP 403 Forbidden** dan kode galat `AUTH_FORBIDDEN_SCOPE`.
    - **Verifikasi:** Permohonan cuti Maya Putri tetap dalam status aslinya dan tidak berubah.
 
-- **Expected Final Result:** Sistem secara mutlak menegakkan isolasi hierarki bawahan langsung untuk peran Supervisor dan menggagalkan intervensi lintas departemen dengan status HTTP 403.
-- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar penolakan 403 AUTH_FORBIDDEN_SCOPE pada Network console saat mencoba mereview cuti staf divisi lain.
-- **Actual Result:** Terverifikasi 100% secara empiris: (1) Antrean /leave/queue pada akun Supervisor Engineering (Bambang Pratama) hanya memuat permohonan staf bawahan langsung (Siti Rahma - Backend Engineer) dan mengisolasi permohonan staf divisi lain (Maya Putri - RnD/Creative). (2) Percobaan review cuti staf lintas divisi (#a54f90ad-9904-4f5a-a1ce-75dda46409a2) langsung ditolak oleh backend ScopeResolver dengan HTTP 403 Forbidden, kode error AUTH_FORBIDDEN_SCOPE, dan pesan: 'Anda tidak memiliki kewenangan untuk mengakses atau meninjau rekaman di luar fungsi/squad Anda.' (requestId: req_faadb374).
-- **Execution Status:** Pass
+- **Expected Final Result:** Sistem secara mutlak menegakkan bahwa Project Lead / Technical Lead hanya mengakses scope `Tim (Proyek)` pada dashboard dan menggagalkan akses kepegawaian `Divisi Saya` / `Seluruh Perusahaan` maupun intervensi cuti lintas kewenangan dengan status HTTP 403 `AUTH_FORBIDDEN_SCOPE`.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar `/dashboard` pada akun Bambang (`Technical Lead 1`) yang hanya menampilkan tab `Tim (Proyek)` serta tangkapan layar penolakan 403 `AUTH_FORBIDDEN_SCOPE` pada Console.
+- **Actual Result:** Sebelumnya lulus pada verifikasi penolakan 403 `/leave/queue` (req_faadb374), perlu diuji ulang (Retest) untuk memverifikasi pembatasan 3-Scope Dashboard (`CR-013`) dan struktur organisasi resmi PT Dutamedia Mandiri Pratama.
+- **Execution Status:** Needs Retest (CR-013)
 - **Tester:** Harry
 - **Execution Date:** 2026-11-05
 - **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** Terverifikasi isolasi hierarki manajerial Lapis 2 SAD IV.4, DEC-010, FR-08, FR-35, FR-41, serta implementasi CR-009 & CR-010.
+- **Retest Result:** Pending Retest
+- **Catatan:** Selaras penuh dengan struktur organisasi resmi PT Dutamedia Mandiri Pratama (`CR-013`).
 
 ---
 
@@ -2490,25 +2502,25 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Modul / Halaman:** Catatan Coaching (`/coaching`)
 - **Kategori Pengujian:** Negative Testing & Confidentiality Access Control
 - **Teknik Desain Test Case:** Equivalence Partitioning & Decision Table Testing
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`) dilanjutkan `EMPLOYEE` (`dev.frontend@dutamedia.com`)
+- **Role:** `HEAD` (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering) dilanjutkan `EMPLOYEE` (`dev.frontend@dutamedia.com` - Aditya Nugroho)
 - **Priority:** **High (P1)**
 - **Risk Rationale:** Kebocoran catatan rahasia manajerial (*Confidential*) ke staf dapat memicu friksi internal tim; pembiaran pembuatan catatan diri sendiri merusak integritas evaluasi atasan.
-- **Preconditions:** Bambang Pratama login sebagai Supervisor. Aditya Nugroho login di peramban terpisah sebagai Employee.
+- **Preconditions:** Arif Budiman (`head.eng@dutamedia.com`) login sebagai Head of Engineering. Aditya Nugroho login di peramban terpisah sebagai Employee.
 - **Test Data ID:** `TD-COAC-02` (Payload catatan rahasia dan catatan bersama)
-- **Persiapan Sebelum Tes:** Buka halaman `/coaching` sebagai Bambang Pratama.
+- **Persiapan Sebelum Tes:** Buka halaman `/coaching` sebagai Arif Budiman (`head.eng@dutamedia.com`).
 
 **Langkah Pengujian:**
 1. **Langkah 1 (Uji Larangan Catatan untuk Diri Sendiri)**
-   - **Aksi:** Coba buat catatan manajerial dengan memilih nama diri sendiri (Bambang Pratama) atau kirimkan request API dengan `subjectUserId` sama dengan ID pembuat.
+   - **Aksi:** Coba buat catatan manajerial dengan memilih nama diri sendiri (Arif Budiman) atau kirimkan request API dengan `subjectUserId` sama dengan ID pembuat.
    - **Lokasi:** Formulir `/coaching` atau endpoint `/coaching/notes`.
-   - **Data:** `subjectUserId`: ID Bambang Pratama, Content: `Evaluasi performa diri sendiri triwulan ini.`
+   - **Data:** `subjectUserId`: ID Arif Budiman, Content: `Evaluasi performa diri sendiri triwulan ini.`
    - **Hasil yang diharapkan:** Dropdown subjek di UI menyaring nama atasan sendiri sehingga tidak dapat dipilih. Jika dikirim melalui API, backend menolak dengan HTTP 400 Bad Request dan pesan: *"Atasan tidak dapat membuat catatan pembinaan/manajerial untuk dirinya sendiri."*
    - **Verifikasi:** Tidak ada catatan yang terbentuk untuk diri sendiri.
 2. **Langkah 2 (Pembuatan Catatan Rahasia Manajerial)**
    - **Aksi:** Pilih subjek Aditya Nugroho, tipe catatan `CORRECTIVE`, pilih visibilitas `CONFIDENTIAL_MANAGER_ONLY`. Masukkan konten: `Perlu peningkatan ketelitian saat merge pull request ke branch staging.` Klik "Simpan Catatan Manajerial".
    - **Lokasi:** Formulir pembuatan catatan di `/coaching`.
    - **Data:** Subjek: Aditya Nugroho, Visibilitas: `CONFIDENTIAL_MANAGER_ONLY`
-   - **Hasil yang diharapkan:** Catatan berhasil disimpan. Catatan muncul pada feed coaching Bambang dengan label badge gembok merah *"Rahasia Manajerial (Internal Atasan)"*.
+   - **Hasil yang diharapkan:** Catatan berhasil disimpan. Catatan muncul pada feed coaching Arif Budiman dengan label badge gembok merah *"Rahasia Manajerial (Internal Atasan)"*.
    - **Verifikasi:** Catatan tersimpan dengan visibilitas konfidensial.
 3. **Langkah 3 (Verifikasi Isolasi pada Sisi Karyawan)**
    - **Aksi:** Beralih ke sesi login Aditya Nugroho (`dev.frontend@dutamedia.com`). Buka halaman `/coaching` (atau riwayat pembinaan di profil).
@@ -2518,7 +2530,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Verifikasi:** Catatan rahasia manajerial tidak bocor ke sisi staf bersangkutan.
 
 - **Expected Final Result:** Sistem secara sempurna menegakkan larangan pembuatan catatan diri sendiri dan menjaga kerahasiaan catatan manajerial konfidensial dari penglihatan staf.
-- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar feed catatan pada akun Supervisor (memperlihatkan badge rahasia) dan tangkapan layar feed pada akun Employee (memperlihatkan catatan rahasia tersembunyi).
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar feed catatan pada akun Head of Engineering (memperlihatkan badge rahasia) dan tangkapan layar feed pada akun Employee (memperlihatkan catatan rahasia tersembunyi).
 - **Actual Result:** 
 - **Execution Status:** Not Run
 - **Tester:** Harry
@@ -2529,51 +2541,56 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-HEAD-001: Pengawasan Lintas Tim dalam Satu Divisi & Penegakan Batasan Lintas Fungsi oleh Head
+### TC-HEAD-001: Pengawasan Lintas Anggota dalam Satu Divisi (`Divisi Saya`), Wewenang Kepegawaian, & Penegakan Batasan Lintas Fungsi oleh Head
 - **Test Case ID:** `TC-HEAD-001`
 - **Scenario ID:** `SCN-HEAD-01`
-- **Requirement ID:** `FR-08`, `FR-48`, `FR-51`, `DEC-010`
-- **Judul:** Pengawasan Lintas Tim dalam Satu Divisi & Penegakan Batasan Lintas Fungsi oleh Head
-- **Tujuan:** Memvalidasi wewenang Kepala Divisi (HEAD Scope per SAD IV.4): memastikan Head dapat melihat komitmen, risiko, dan kendala seluruh tim di bawah divisinya (*Function-wide Scope*), namun secara tegas dicegah dan ditolak dengan HTTP 403 jika mencoba mengakses data atau menyetujui kebijakan divisi lain tanpa pendelegasian resmi.
-- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Laporan Eksekutif (`/reports`), & Kebijakan (`/admin/policies`)
+- **Requirement ID:** `FR-08`, `FR-48`, `FR-51`, `DEC-010`, `CR-013`
+- **Judul:** Pengawasan Seluruh Anggota Divisi (`Divisi Saya`), Wewenang Kepegawaian, & Penegakan Batasan Lintas Fungsi oleh Head of Engineering
+- **Tujuan:** Memvalidasi wewenang Kepala Divisi (`HEAD` Scope per SAD IV.4 & `CR-013`) menggunakan akun resmi **Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman)**: memastikan Head langsung melihat tab **`Divisi Saya`** (`scope=function`) pada `/dashboard` yang merangkum seluruh anggota divisinya (`Bambang Pratama`, `Aditya Nugroho`, `Siti Rahma`, `Fajar Ramadhan`) tanpa tab `Seluruh Perusahaan`, memegang antrean persetujuan cuti divisinya di `/leave/queue`, dapat mengakses `/admin/policies`, serta ditolak dengan **HTTP 403 (`AUTH_FORBIDDEN_SCOPE`)** jika mencoba mengakses data staf divisi lain (`Maya Putri` - `RnD`) atau `scope=management`.
+- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Persetujuan Cuti (`/leave/queue`), & Kebijakan (`/admin/policies`)
 - **Kategori Pengujian:** RBAC / Function-Wide Scope Enforcement
 - **Teknik Desain Test Case:** Equivalence Partitioning & Scope Boundary Testing
-- **Role:** `HEAD` (Kepala Divisi Engineering)
+- **Role:** `HEAD` (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering)
 - **Priority:** **High (P1)**
-- **Risk Rationale:** Head memerlukan visibilitas makro atas seluruh squad di fungsinya tanpa melanggar yurisdiksi divisi otonom lain.
-- **Preconditions:** Login sebagai pengguna berpenugasan `HEAD` pada fungsi Engineering. Di bawah Engineering terdapat squad Frontend dan Backend. Fungsi Creative/RnD berada di bawah Kepala Divisi terpisah.
-- **Test Data ID:** `TD-HEAD-01` (Data tim Engineering dan data tim Creative)
-- **Persiapan Sebelum Tes:** Buka halaman `/dashboard` sebagai Head of Engineering.
+- **Risk Rationale:** Head memerlukan visibilitas makro dan wewenang kepegawaian atas seluruh anggota yang sejajar di bawah divisinya tanpa melanggar yurisdiksi divisi lain atau wewenang CEO.
+- **Preconditions:** Login sebagai **Arif Budiman (`head.eng@dutamedia.com` / `Password123!`)** yang berperan `HEAD` pada divisi `Engineering`. Di bawah Arif Budiman terdapat Technical Lead 1 (`Bambang Pratama`) dan para Developer (`Aditya Nugroho`, `Siti Rahma`, `Fajar Ramadhan`). Di luar divisi Engineering terdapat `Maya Putri` (`designer@dutamedia.com` - Principal Engineer pada divisi `RnD`).
+- **Test Data ID:** `TD-HEAD-01` (Data divisi Engineering dan data divisi R&D)
+- **Persiapan Sebelum Tes:** Login sebagai `head.eng@dutamedia.com` (`Password123!`) dan buka `/dashboard`.
 
 **Langkah Pengujian:**
-1. **Langkah 1 (Pengawasan Lintas Tim dalam Satu Fungsi)**
-   - **Aksi:** Buka Pulse Dashboard (`/dashboard`) dan pilih scope tampilan "Divisi / Fungsi".
-   - **Lokasi:** Kontrol scope tampilan pada `/dashboard`.
-   - **Data:** Scope: `Fungsi (Engineering)`
-   - **Hasil yang diharapkan:** Dasbor menampilkan metrik konsolidasi seluruh squad rekayasa perangkat lunak: total staf tim Frontend dan Backend, persentase penyerahan komitmen pagi divisi, serta daftar kendala aktif lintas squad Engineering.
-   - **Verifikasi:** Data staf Frontend (Aditya) dan Backend (Siti) tampil terpadu dalam cakupan fungsi Engineering.
+1. **Langkah 1 (Pengawasan Seluruh Anggota Divisi pada Tab `Divisi Saya` & Antrean Cuti Divisi)**
+   - **Aksi:** Buka Pulse Dashboard (`/dashboard`) dan amati tab scope yang aktif, lalu cek sekilas `/leave/queue`.
+   - **Lokasi:** Rute `/dashboard` dan `/leave/queue`.
+   - **Data:** Scope: `Divisi Saya` (`scope=function`)
+   - **Hasil yang diharapkan:**
+     - Pada `/dashboard`, hanya tab **"Divisi Saya"** (`data-testid="scope-tab-function"`) yang tampil dan aktif secara default (tab **"Seluruh Perusahaan"** TIDAK muncul karena Arif bukan CEO, dan tab **"Tim (Proyek)"** tidak muncul karena Arif adalah Escalation Reviewer/Head Divisi, bukan Project Lead langsung).
+     - Dasbor menampilkan metrik konsolidasi seluruh anggota divisi Engineering beserta kartu "Personil Butuh Bantuan Hari Ini" (`Aditya Nugroho`).
+     - Pada `/leave/queue`, tampil permohonan cuti bawahan langsungnya di divisi Engineering (`Siti Rahma`), namun TIDAK menampilkan permohonan cuti `Maya Putri` (divisi `RnD`).
+   - **Verifikasi:** Data personel dan kepegawaian divisi Engineering tampil utuh dalam cakupan `HEAD` of Engineering.
 2. **Langkah 2 (Pengujian Hak Akses Menu Kebijakan Operasional)**
    - **Aksi:** Buka menu "Kebijakan & Cut-off" pada rute `/admin/policies`.
    - **Lokasi:** Menu sidebar Administration -> Kebijakan & Cut-off (`/admin/policies`).
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman terbuka dengan hak akses sah (Head memiliki izin `@Roles(CanonicalRole.HEAD)` untuk membuka dan mengajukan versi kebijakan). Tombol "Buat Versi Kebijakan Baru" aktif.
-   - **Verifikasi:** Head dapat mengusulkan perubahan jam cut-off atau SLA blocker dengan mengisi form justifikasi resmi.
-3. **Langkah 3 (Penolakan Akses Lintas Batas Fungsi)**
-   - **Aksi:** Coba akses data riwayat komitmen staf divisi Creative (`designer@dutamedia.com`) secara langsung melalui API atau URL detail.
-   - **Lokasi:** API `/daily/history?userId={id-designer}`.
-   - **Data:** ID Pengguna Maya Putri (divisi RnD/Creative).
-   - **Hasil yang diharapkan:** Backend ScopeResolver memeriksa fungsi target (`RnD`) terhadap fungsi pemanggil (`Engineering`). Karena fungsi tidak cocok dan pemanggil bukan Universal Admin/CEO, permintaan ditolak dengan HTTP 403 Forbidden `AUTH_FORBIDDEN_SCOPE`.
-   - **Verifikasi:** Tidak ada kebocoran data komitmen divisi Creative kepada Head of Engineering.
+   - **Hasil yang diharapkan:** Halaman terbuka dengan hak akses sah (Head memiliki izin `@Roles(CanonicalRole.HEAD)` untuk membuka dan mengelola versi kebijakan). Tombol "+ Buat Versi Kebijakan Baru" aktif.
+   - **Verifikasi:** Head dapat mengakses halaman `/admin/policies` tanpa dicegat route guard `/forbidden`.
+3. **Langkah 3 (Penolakan Akses Lintas Batas Divisi & Scope CEO)**
+   - **Aksi:** Melalui Developer Console, coba panggil:
+     a. Data riwayat komitmen staf divisi R&D (`Maya Putri` - `designer@dutamedia.com`) via `GET /api/v1/daily/history?userId={id-maya}` (atau review cuti Maya Putri via `POST /api/v1/leave/requests/{id-cuti-maya}/review`).
+     b. Dashboard scope CEO (`GET /api/v1/dashboard/pulse?scope=management`) dan filter divisi lain (`GET /api/v1/dashboard/pulse?scope=function&function=RnD`).
+   - **Lokasi:** Browser Developer Console (F12).
+   - **Data:** ID Pengguna Maya Putri (divisi `RnD`) & query scope lintas batas.
+   - **Hasil yang diharapkan:** Backend `ScopeResolverService` dan `DashboardController` menolak seluruh permintaan lintas batas tersebut dengan status **HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`)**.
+   - **Verifikasi:** Tidak ada kebocoran data komitmen/cuti divisi R&D maupun akses scope CEO kepada Head of Engineering.
 
-- **Expected Final Result:** Head berhasil menjalankan pengawasan terpadu seluruh squad di bawah divisinya dan dibatasi secara presisi dari intrusi data divisi lain.
-- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Pulse Dashboard fungsi Engineering dan tangkapan layar penolakan 403 saat memanggil data lintas divisi.
+- **Expected Final Result:** Head of Engineering (`head.eng@dutamedia.com`) berhasil menjalankan pengawasan terpadu seluruh staf di bawah divisinya melalui tab `Divisi Saya` & `/leave/queue`, dapat mengakses `/admin/policies`, dan dibatasi secara presisi dari intrusi data divisi lain maupun scope CEO (HTTP 403).
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Pulse Dashboard tab `Divisi Saya` pada akun `head.eng@dutamedia.com` dan tangkapan layar penolakan 403 saat memanggil data lintas divisi/scope.
 - **Actual Result:** 
 - **Execution Status:** Not Run
 - **Tester:** Harry
 - **Execution Date:** 
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Menggunakan akun resmi Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman) tanpa perlu mengubah role akun lain.
 
 ---
 
@@ -2586,10 +2603,10 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Modul / Halaman:** Radar Risiko Proyek (`/projects/risk`) & Antrean Blocker (`/blockers`)
 - **Kategori Pengujian:** Happy Path / Project Authority Governance
 - **Teknik Desain Test Case:** Decision Table & Functional Workflow
-- **Role:** `PROJECT_MANAGER` / Project Authority Lead (penugasan otoritas proyek `WP-CORE`)
+- **Role:** `PROJECT_MANAGER` (`pm@dutamedia.com` - Dimas Prakoso, Project Manager 1) / Project Authority Lead (`lead.tech@dutamedia.com` - Bambang Pratama, Technical Lead 1 untuk proyek `WP-CORE` & `PRJ-CORE`)
 - **Priority:** **High (P1)**
-- **Risk Rationale:** Hambatan berkonteks proyek yang tidak dapat diintervensi oleh PM akan menghambat milestone rilis klien dan memicu keterlambatan deliverables.
-- **Preconditions:** Login sebagai pengguna yang memiliki penugasan Project Authority aktif pada proyek `WP-CORE`. Terdapat 1 tiket kendala yang dilaporkan oleh karyawan dengan memilih konteks wewenang `PROJECT_AUTHORITY` dan kode proyek `WP-CORE`.
+- **Risk Rationale:** Hambatan berkonteks proyek yang tidak dapat diintervensi oleh PM/Project Lead akan menghambat milestone rilis klien dan memicu keterlambatan deliverables.
+- **Preconditions:** Login sebagai pengguna yang memiliki penugasan Project Authority aktif pada proyek `WP-CORE` (`lead.tech@dutamedia.com`) atau `PRJ-PORTAL` (`pm@dutamedia.com`). Terdapat 1 tiket kendala yang dilaporkan oleh karyawan dengan memilih konteks wewenang `PROJECT_AUTHORITY` dan kode proyek `WP-CORE`.
 - **Test Data ID:** `TD-PM-01` (Tiket kendala proyek `WP-CORE` dan proyek penugasan)
 - **Persiapan Sebelum Tes:** Masuk ke halaman `/projects/risk`.
 
@@ -2757,29 +2774,29 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-CEO-001: Pengawasan Eksekutif Universal, Ekspor Berkas Audit, & Tata Kelola Kebijakan oleh Direksi
+### TC-CEO-001: Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Tata Kelola Kebijakan oleh Direksi
 - **Test Case ID:** `TC-CEO-001`
 - **Scenario ID:** `SCN-CEO-01`
-- **Requirement ID:** `FR-08`, `FR-48`, `FR-50`, `DEC-010`
-- **Judul:** Pengawasan Eksekutif Universal, Ekspor Berkas Audit, & Tata Kelola Kebijakan oleh Direksi
-- **Tujuan:** Memvalidasi hak akses dan wewenang tingkat tertinggi Direksi / CEO (`CEO_MANAGEMENT`): memastikan Direktur memiliki visibilitas universal ke seluruh dasbor dan divisi tanpa restriksi scope, dapat mengunduh berkas ekspor audit data resmi perusahaan (`/api/v1/reports/export`), serta memiliki wewenang menetapkan penugasan pemilik kebijakan (*Policy Owner Assignment*) di `/admin/policies`.
+- **Requirement ID:** `FR-08`, `FR-48`, `FR-50`, `DEC-010`, `CR-013`
+- **Judul:** Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Tata Kelola Kebijakan oleh Direksi
+- **Tujuan:** Memvalidasi hak akses dan wewenang tingkat tertinggi Direksi / CEO (`CEO_MANAGEMENT`): memastikan Direktur memiliki visibilitas universal pada `/dashboard` melalui tab **`Seluruh Perusahaan`** (`scope=management`) lengkap dengan **Filter Divisi** (`data-testid="filter-division-select"`) dan **Filter Proyek** (`data-testid="filter-project-select"`), dapat mengunduh berkas ekspor audit data resmi perusahaan (`/api/v1/reports/export`), serta memiliki wewenang menetapkan penugasan pemilik kebijakan (*Policy Owner Assignment*) di `/admin/policies`.
 - **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Laporan Eksekutif (`/reports`), & Kebijakan (`/admin/policies`)
 - **Kategori Pengujian:** Happy Path / Executive Governance & Universal Scope Testing
 - **Teknik Desain Test Case:** Universal Boundary & Data Export Verification
 - **Role:** `CEO_MANAGEMENT` (`direktur@dutamedia.com` - Hendra Wijaya)
 - **Priority:** **High (P1)**
-- **Risk Rationale:** Pimpinan tertinggi membutuhkan jaminan kelancaran akses audit menyeluruh tanpa terhalang sekat fungsional operasional.
+- **Risk Rationale:** Pimpinan tertinggi membutuhkan jaminan kelancaran akses audit menyeluruh lintas 7 divisi dan seluruh proyek tanpa terhalang sekat fungsional operasional.
 - **Preconditions:** Login sebagai `direktur@dutamedia.com` (Hendra Wijaya) dan mendarat di `/dashboard`.
 - **Test Data ID:** `TD-CEO-01` (Kredensial Direktur dan parameter ekspor periode '2026-11')
 - **Persiapan Sebelum Tes:** Pastikan akun login adalah `direktur@dutamedia.com`.
 
 **Langkah Pengujian:**
-1. **Langkah 1 (Verifikasi Visibilitas Universal Pulse Dashboard)**
-   - **Aksi:** Buka halaman Pulse Dashboard (`/dashboard`). Periksa metrik seluruh perusahaan dan lakukan pergantian filter scope antara 'Seluruh Tim', 'Engineering', dan 'Creative/RnD'.
+1. **Langkah 1 (Verifikasi Visibilitas Universal Pulse Dashboard & Filter Divisi/Proyek)**
+   - **Aksi:** Buka halaman Pulse Dashboard (`/dashboard`). Periksa tab scope yang aktif secara default (`Seluruh Perusahaan`), lalu uji pergantian dropdown **Filter Divisi** (`Semua Divisi`, `Divisi Engineering`, `Divisi R&D & Technical Advisory`, dll.) serta **Filter Proyek** (`Semua Proyek`, `[PRJ-CORE]`, dll.).
    - **Lokasi:** Rute `/dashboard`.
-   - **Data:** Scope: `Universal / Seluruh Perusahaan`.
-   - **Hasil yang diharapkan:** Seluruh metrik agregat perusahaan tampil transparan: tingkat penyelesaian komitmen total, jumlah karyawan yang tidak hadir/tidak submit, serta radar risiko proyek lintas departemen. Tidak ada galat scope boundary (403).
-   - **Verifikasi:** Direktur dapat melihat detail data staf divisi manapun secara langsung.
+   - **Data:** Scope: `Seluruh Perusahaan` (`scope=management`), Filter Divisi: `Engineering` & `RnD`, Filter Proyek: `PRJ-CORE`.
+   - **Hasil yang diharapkan:** Tab **`Seluruh Perusahaan`** (`data-testid="scope-tab-management"`) aktif secara default. Dropdown Filter Divisi (`data-testid="filter-division-select"`) dan Filter Proyek (`data-testid="filter-project-select"`) tampil dan memperbarui metrik agregat perusahaan serta daftar "Personil Butuh Bantuan Hari Ini" secara dinamis sesuai divisi/proyek yang dipilih tanpa galat scope boundary (403).
+   - **Verifikasi:** Direktur dapat memfilter dan melihat detail data staf divisi maupun proyek manapun secara langsung.
 2. **Langkah 2 (Pengujian Unduh Ekspor Berkas Audit Resmi / Export Report)**
    - **Aksi:** Buka menu "Laporan Eksekutif" pada rute `/reports`. Pilih periode laporan (misal: Bulan Berjalan) dan klik tombol "Ekspor Berkas Audit (CSV/JSON)".
    - **Lokasi:** Halaman `/reports` pada tombol aksi ekspor.
@@ -2960,10 +2977,10 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Modul / Halaman:** Lintas Modul (`/daily/morning` -> `/daily/additional-work` -> `/daily/eod` -> `/dashboard`)
 - **Kategori Pengujian:** End-to-End User Journey / Cross-Module Integration
 - **Teknik Desain Test Case:** Use Case Testing
-- **Role:** Multi-Aktor (`EMPLOYEE` dilanjutkan `SUPERVISOR`)
+- **Role:** Multi-Aktor (`EMPLOYEE`: `dev.frontend@dutamedia.com`, `HEAD`: `head.eng@dutamedia.com` / `SUPERVISOR` Project Lead: `lead.tech@dutamedia.com`)
 - **Priority:** **Critical (P0)**
 - **Risk Rationale:** Membuktikan bahwa seluruh modul harian terhubung secara mulus tanpa data terputus di tengah jalan.
-- **Preconditions:** Akun Employee (`dev.frontend@dutamedia.com`) dan Supervisor (`lead.tech@dutamedia.com`) siap digunakan.
+- **Preconditions:** Akun Employee (`dev.frontend@dutamedia.com`), Head of Engineering (`head.eng@dutamedia.com`), dan Project Lead (`lead.tech@dutamedia.com`) siap digunakan.
 - **Test Data ID:** `TD-AUTH-01`, `TD-DLYM-01`, `TD-DLYA-01`, `TD-DLYE-01`
 - **Persiapan Sebelum Tes:** Mulai dengan login sebagai Employee.
 
@@ -3088,8 +3105,8 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Data:** Usulan: `1. Setup Docker Postgres; 2. Analisis slow query`. Alasan: `Kabel fiber optik ISP kantor terputus seharian.`
    - **Hasil yang diharapkan:** Toast sukses muncul "Permohonan koreksi terkirim". Status pengajuan tercatat `PENDING`.
    - **Verifikasi:** Pengajuan tampil pada tabel riwayat koreksi pribadi berstatus PENDING.
-3. **Langkah 3 (Peninjauan oleh Atasan)**
-   - **Aksi:** Logout dari Employee, lalu login sebagai Supervisor (`lead.tech@dutamedia.com`). Buka menu `/corrections/review`.
+3. **Langkah 3 (Peninjauan oleh Atasan Langsung / Head of Engineering)**
+   - **Aksi:** Logout dari Employee, lalu login sebagai Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman). Buka menu `/corrections/review`.
    - **Lokasi:** `/corrections/review`.
    - **Data:** Tidak ada.
    - **Hasil yang diharapkan:** Atasan melihat pengajuan koreksi dari Aditya Nugroho dengan rincian data usulan dan alasan ISP mati.
@@ -3118,14 +3135,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Scenario ID:** `SCN-E2E-04`
 - **Requirement ID:** `FR-45`, `FR-46`, `FR-47`, `DEC-008`
 - **Judul:** Siklus Rekonsiliasi Cuti Otomatis: Pengajuan Cuti -> Approval Atasan -> Pembebasan Otomatis dari Pelanggaran Kepatuhan
-- **Tujuan:** Memvalidasi seluruh perjalanan pengguna terkait izin cuti: pengajuan cuti mandiri oleh karyawan, persetujuan oleh atasan, pemotongan kuota, dan verifikasi otomatis bahwa saat hari cuti tiba karyawan dibebaskan dari pengisian komitmen dengan status *Superseded by Approved Leave* (DEC-008).
+- **Tujuan:** Memvalidasi seluruh perjalanan pengguna terkait izin cuti: pengajuan cuti mandiri oleh karyawan, persetujuan oleh atasan langsung (`Head of Engineering`), pemotongan kuota, dan verifikasi otomatis bahwa saat hari cuti tiba karyawan dibebaskan dari pengisian komitmen dengan status *Superseded by Approved Leave* (DEC-008).
 - **Modul / Halaman:** Lintas Modul (`/leave/my` -> `/leave/queue` -> `/compliance` -> `/daily/history`)
 - **Kategori Pengujian:** End-to-End User Journey / Automated Reconciliation
 - **Teknik Desain Test Case:** Use Case Testing & Decision Table
-- **Role:** Multi-Aktor (`EMPLOYEE`, `SUPERVISOR`, `HRGA`)
+- **Role:** Multi-Aktor (`EMPLOYEE`, `HEAD`, `HRGA`)
 - **Priority:** **Critical (P0)**
 - **Risk Rationale:** Membuktikan bahwa integrasi modul cuti dan mesin kepatuhan bekerja sinkron tanpa menghasilkan penalti palsu (*false penalty*) bagi karyawan yang cuti resmi.
-- **Preconditions:** Akun Employee (`dev.frontend@dutamedia.com`) memiliki kuota cuti tahunan >= 1 hari. Akun Supervisor dan HRGA aktif.
+- **Preconditions:** Akun Employee (`dev.frontend@dutamedia.com`) memiliki kuota cuti tahunan >= 1 hari. Akun Head of Engineering (`head.eng@dutamedia.com`) dan HRGA (`hrga@dutamedia.com`) aktif.
 - **Test Data ID:** `TD-LEAV-01` dan `TD-LEAV-02`
 - **Persiapan Sebelum Tes:** Login sebagai Employee.
 
@@ -3136,8 +3153,8 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Data:** Jenis: `Cuti Tahunan`, Tanggal: Hari ini, Alasan: `Urusan administrasi kependudukan keluarga di luar kota`.
    - **Hasil yang diharapkan:** Pengajuan cuti tersimpan dengan status `PENDING`.
    - **Verifikasi:** Permohonan muncul di tabel riwayat cuti pribadi.
-2. **Langkah 2 (Persetujuan oleh Atasan)**
-   - **Aksi:** Logout, lalu login sebagai Supervisor (`lead.tech@dutamedia.com`). Buka `/leave/queue`. Klik "Setujui" pada pengajuan cuti Aditya Nugroho.
+2. **Langkah 2 (Persetujuan oleh Atasan Langsung / Head of Engineering)**
+   - **Aksi:** Logout, lalu login sebagai Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman). Buka `/leave/queue`. Klik "Setujui" pada pengajuan cuti Aditya Nugroho.
    - **Lokasi:** `/leave/queue`.
    - **Data:** Catatan persetujuan atasan.
    - **Hasil yang diharapkan:** Permohonan cuti bertransisi menjadi `APPROVED`. Kuota cuti Aditya berkurang 1 hari.

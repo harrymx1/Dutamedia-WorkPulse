@@ -97,6 +97,8 @@ const formattedRole = computed(() => {
 });
 
 const formattedJobTitle = computed(() => {
+  if (authStore.user?.jobTitle) return authStore.user.jobTitle;
+
   const email = authStore.user?.email || '';
   if (email.includes('frontend')) return 'Frontend Engineer';
   if (email.includes('backend')) return 'Backend Engineer';
@@ -126,6 +128,15 @@ const formattedJobTitle = computed(() => {
 });
 
 const formattedFunction = computed(() => {
+  const fn = authStore.user?.function;
+  if (fn) {
+    if (fn === 'OperationsInfrastructure') return 'Operations & Infrastructure';
+    if (fn === 'RnD') return 'R&D & Technical Advisory';
+    if (fn === 'SalesEnablementPresales') return 'Commercial (Sales Enablement & Presales)';
+    if (fn === 'BusinessDevelopment') return 'Commercial (Business Development)';
+    return fn;
+  }
+
   const r = authStore.user?.role;
   switch (r) {
     case 'HRGA':
@@ -141,6 +152,9 @@ const formattedFunction = computed(() => {
 });
 
 const formattedManager = computed(() => {
+  if (authStore.user?.managerName) {
+    return authStore.user.managerName.replace(/\s*\([^)]*\)/g, '').trim();
+  }
   const r = authStore.user?.role;
   if (r === 'CEO_MANAGEMENT' || r === 'CEO') return 'Dewan Komisaris';
   if (r === 'HEAD' || r === 'HEAD_OF_DEPARTMENT') return 'Hendra Wijaya';

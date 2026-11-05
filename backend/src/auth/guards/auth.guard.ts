@@ -79,12 +79,32 @@ export class AuthGuard implements CanActivate {
       });
     }
 
+    let activeOrg: any = null;
+    if (this.prisma.organizationalAssignment?.findFirst) {
+      const today = new Date();
+      activeOrg = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId: session.user.id,
+          effectiveDate: { lte: today },
+          OR: [{ endDate: null }, { endDate: { gte: today } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
+        include: {
+          directManager: { select: { fullName: true } },
+        },
+      });
+    }
+
     request.user = {
       ...payload,
       id: session.user.id,
       email: session.user.email,
       fullName: session.user.fullName,
       status: session.user.status,
+      role: activeOrg?.role || payload.role || 'EMPLOYEE',
+      jobTitle: activeOrg?.jobTitle || null,
+      function: activeOrg?.function || null,
+      managerName: activeOrg?.directManager?.fullName || null,
     };
     request.sessionId = session.id;
 

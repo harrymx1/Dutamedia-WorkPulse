@@ -1,3 +1,11 @@
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+dotenv.config();
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env.production') });
+}
+
 import {
   PrismaClient,
   CanonicalRole,
@@ -20,14 +28,14 @@ import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 
 /**
- * WorkPulse Master Database Seeder (Tahap 1.2)
+ * WorkPulse Master Database Seeder (Selaras Bagan Resmi PT Dutamedia Mandiri Pratama — CR-013)
  *
- * Menginisialisasi data awal perusahaan Dutamedia secara deterministik dan idempoten:
- * 1. Akun Superadmin & Direktur Utama
- * 2. Struktur Tim Inti & Relasi Atasan-Bawahan
- * 3. Master Kebijakan Operasional (Cutoff, Blocker SLA, Compliance, Correction)
- * 4. Kalender Libur Nasional 2026 (Baseline Workday)
- * 5. Data Uji Coba Simulasi (Komitmen, Blocker Aktif, Pengajuan Cuti)
+ * Menginisialisasi dan menyinkronkan data fondasi perusahaan Dutamedia secara deterministik & idempoten:
+ * 1. Akun Pimpinan, Head Divisi, Project Manager, Technical Lead, dan Staf Operasional
+ * 2. Struktur Organisasi & Hierarki Pelaporan (Tech Lead & Developer sejajar di bawah Head of Engineering)
+ * 3. Pemetaan Kewenangan Tim Proyek (ProjectAuthorityMapping: WP-CORE, PRJ-CORE, PRJ-PORTAL, PRJ-MOBILE)
+ * 4. Master Kebijakan Operasional & Kalender Libur Nasional 2026
+ * 5. Data Uji Coba Simulasi (Komitmen berproyek, Blocker Aktif, Pengajuan Cuti Lintas Divisi)
  */
 const connectionString =
   process.env.DATABASE_URL ||
@@ -54,73 +62,145 @@ async function hashPassword(plainText: string): Promise<string> {
 }
 
 async function main() {
-  console.log('🌱 [WorkPulse Seed] Memulai inisialisasi basis data Dutamedia...');
+  console.log('🌱 [WorkPulse Seed] Memulai sinkronisasi basis data PT Dutamedia Mandiri Pratama...');
 
-  // Tanggal berlaku resmi per hari ini (memenuhi regulasi trigger anti-backdating database)
-  const todayDate = new Date();
+  // Tanggal kerja hari ini dalam zona waktu Asia/Jakarta (memenuhi trigger trg_no_backdating)
+  const todayStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  const todayDate = new Date(todayStr);
 
-  // Kata sandi standar untuk seluruh akun pengujian lokal
+  // Kata sandi standar untuk seluruh akun pengujian
   const defaultPasswordHash = await hashPassword('Password123!');
 
   // =========================================================================
-  // 1. SEED USERS (Akun Fondasi Perusahaan)
+  // 1. SEED USERS (Akun Resmi Sesuai Bagan Organisasi PT Dutamedia Mandiri Pratama)
   // =========================================================================
-  console.log('👤 [1/6] Seeding Akun Pengguna...');
+  console.log('👤 [1/6] Seeding & Sinkronisasi Akun Pengguna...');
 
   const usersData = [
+    // Pucuk Pimpinan & System Admin
     {
       email: 'admin@dutamedia.com',
       fullName: 'Sistem Administrator',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
     {
       email: 'direktur@dutamedia.com',
       fullName: 'Hendra Wijaya',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
+    // Divisi Engineering
     {
-      email: 'hrga@dutamedia.com',
-      fullName: 'Dewi Lestari',
+      email: 'head.eng@dutamedia.com',
+      fullName: 'Arif Budiman',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
     {
       email: 'lead.tech@dutamedia.com',
       fullName: 'Bambang Pratama',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
-    },
-    {
-      email: 'lead.creative@dutamedia.com',
-      fullName: 'Rian Kurniawan',
-      status: UserStatus.ACTIVE,
-      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
     {
       email: 'dev.frontend@dutamedia.com',
       fullName: 'Aditya Nugroho',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
     {
       email: 'dev.backend@dutamedia.com',
       fullName: 'Siti Rahma',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
-    },
-    {
-      email: 'designer@dutamedia.com',
-      fullName: 'Maya Putri',
-      status: UserStatus.ACTIVE,
-      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
     {
       email: 'calon.karyawan@dutamedia.com',
       fullName: 'Fajar Ramadhan',
       status: UserStatus.INVITED,
       passwordHash: null,
+      preserveStatusOnUpdate: true, // Pertahankan status jika sudah diaktivasi saat UAT TC-AUTH-003
+    },
+    // Divisi Delivery
+    {
+      email: 'head.delivery@dutamedia.com',
+      fullName: 'Dharma Putra',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'pm@dutamedia.com',
+      fullName: 'Dimas Prakoso',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'qa@dutamedia.com',
+      fullName: 'Nadia Kusuma',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    // Divisi Operations & Infrastructure
+    {
+      email: 'head.ops@dutamedia.com',
+      fullName: 'Gunawan Setiawan',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'lead.creative@dutamedia.com',
+      fullName: 'Rian Kurniawan',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    // Divisi R&D & Technical Advisory
+    {
+      email: 'designer@dutamedia.com',
+      fullName: 'Maya Putri',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    // Divisi Commercial (Sales Enablement & Presales)
+    {
+      email: 'head.sales@dutamedia.com',
+      fullName: 'Lukman Hakim',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    // Divisi Finance
+    {
+      email: 'finance@dutamedia.com',
+      fullName: 'Ratna Sari',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    // Divisi HRGA & Corporate Legal Administration
+    {
+      email: 'hrga@dutamedia.com',
+      fullName: 'Dewi Lestari',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
     },
   ];
 
@@ -131,129 +211,250 @@ async function main() {
       where: { email: u.email },
       update: {
         fullName: u.fullName,
-        status: u.status,
+        ...(!u.preserveStatusOnUpdate && { status: u.status }),
         ...(u.passwordHash && { passwordHash: u.passwordHash }),
       },
-      create: u,
+      create: {
+        email: u.email,
+        fullName: u.fullName,
+        status: u.status,
+        passwordHash: u.passwordHash,
+      },
     });
     userMap[u.email] = user;
   }
 
   const adminUser = userMap['admin@dutamedia.com'];
   const direkturUser = userMap['direktur@dutamedia.com'];
-  const hrgaUser = userMap['hrga@dutamedia.com'];
+  const headEngUser = userMap['head.eng@dutamedia.com'];
   const techLeadUser = userMap['lead.tech@dutamedia.com'];
-  const creativeLeadUser = userMap['lead.creative@dutamedia.com'];
   const frontendUser = userMap['dev.frontend@dutamedia.com'];
   const backendUser = userMap['dev.backend@dutamedia.com'];
-  const designerUser = userMap['designer@dutamedia.com'];
   const newHireUser = userMap['calon.karyawan@dutamedia.com'];
+  const headDeliveryUser = userMap['head.delivery@dutamedia.com'];
+  const pmUser = userMap['pm@dutamedia.com'];
+  const qaUser = userMap['qa@dutamedia.com'];
+  const headOpsUser = userMap['head.ops@dutamedia.com'];
+  const opsSupvUser = userMap['lead.creative@dutamedia.com'];
+  const rndPrincipalUser = userMap['designer@dutamedia.com'];
+  const headSalesUser = userMap['head.sales@dutamedia.com'];
+  const financeUser = userMap['finance@dutamedia.com'];
+  const hrgaUser = userMap['hrga@dutamedia.com'];
 
   // =========================================================================
-  // 2. SEED ORGANIZATIONAL ASSIGNMENTS (Pohon Hierarki & Jabatan)
+  // 2. SEED ORGANIZATIONAL ASSIGNMENTS (Pohon Hierarki Resmi PT Dutamedia)
   // =========================================================================
-  console.log('🏢 [2/6] Seeding Struktur Organisasi & Hierarki Pelaporan...');
+  console.log('🏢 [2/6] Menyinkronkan Struktur Organisasi & Hierarki Pelaporan...');
 
   const orgAssignments = [
-    {
-      userId: adminUser.id,
-      jobTitle: 'System Administrator & SecOps',
-      role: CanonicalRole.SYSTEM_ADMIN,
-      function: CanonicalFunction.OperationsInfrastructure,
-      directManagerId: null,
-      effectiveDate: todayDate,
-      assignmentReason: 'Initial System Admin provisioning',
-      createdByUserId: adminUser.id,
-    },
+    // Pucuk Pimpinan & System Admin
     {
       userId: direkturUser.id,
-      jobTitle: 'Chief Executive Officer / Managing Director',
+      jobTitle: 'Chief Executive Officer (CEO)',
       role: CanonicalRole.CEO_MANAGEMENT,
       function: CanonicalFunction.Management,
       directManagerId: null,
       effectiveDate: todayDate,
-      assignmentReason: 'Executive Leadership governance',
+      assignmentReason: 'Executive Leadership governance PT Dutamedia Mandiri Pratama',
       createdByUserId: adminUser.id,
     },
     {
-      userId: hrgaUser.id,
-      jobTitle: 'HRGA & People Operations Lead',
-      role: CanonicalRole.HRGA,
-      function: CanonicalFunction.HRGA,
+      userId: adminUser.id,
+      jobTitle: 'Infrastructure & System Administrator',
+      role: CanonicalRole.SYSTEM_ADMIN,
+      function: CanonicalFunction.OperationsInfrastructure,
+      directManagerId: null,
+      effectiveDate: todayDate,
+      assignmentReason: 'System Administration & SecOps governance (IMP-026)',
+      createdByUserId: adminUser.id,
+    },
+    // 1. Divisi Engineering: Head of Engineering membawahi sejajar Tech Lead 1 & para Developer
+    {
+      userId: headEngUser.id,
+      jobTitle: 'Head of Engineering',
+      role: CanonicalRole.HEAD,
+      function: CanonicalFunction.Engineering,
       directManagerId: direkturUser.id,
       effectiveDate: todayDate,
-      assignmentReason: 'HRGA department authority',
+      assignmentReason: 'Penetapan Kepala Divisi Engineering PT Dutamedia Mandiri Pratama',
       createdByUserId: adminUser.id,
     },
     {
       userId: techLeadUser.id,
-      jobTitle: 'Software Engineering Team Lead',
+      jobTitle: 'Technical Lead 1',
       role: CanonicalRole.SUPERVISOR,
       function: CanonicalFunction.Engineering,
-      directManagerId: direkturUser.id,
+      directManagerId: headEngUser.id,
       effectiveDate: todayDate,
-      assignmentReason: 'Engineering department supervision',
-      createdByUserId: adminUser.id,
-    },
-    {
-      userId: creativeLeadUser.id,
-      jobTitle: 'Creative & Multimedia Team Lead',
-      role: CanonicalRole.SUPERVISOR,
-      function: CanonicalFunction.RnD,
-      directManagerId: direkturUser.id,
-      effectiveDate: todayDate,
-      assignmentReason: 'Creative & UI/UX supervision',
+      assignmentReason: 'Penugasan Technical Lead 1 (sejajar di bawah Head of Engineering)',
       createdByUserId: adminUser.id,
     },
     {
       userId: frontendUser.id,
-      jobTitle: 'Frontend Software Engineer',
+      jobTitle: 'Frontend Developer',
       role: CanonicalRole.EMPLOYEE,
       function: CanonicalFunction.Engineering,
-      directManagerId: techLeadUser.id,
+      directManagerId: headEngUser.id,
       effectiveDate: todayDate,
-      assignmentReason: 'Frontend engineering assignment',
+      assignmentReason: 'Penugasan Frontend Developer (sejajar di bawah Head of Engineering)',
       createdByUserId: hrgaUser.id,
     },
     {
       userId: backendUser.id,
-      jobTitle: 'Backend Software Engineer',
+      jobTitle: 'Backend Developer',
       role: CanonicalRole.EMPLOYEE,
       function: CanonicalFunction.Engineering,
-      directManagerId: techLeadUser.id,
+      directManagerId: headEngUser.id,
       effectiveDate: todayDate,
-      assignmentReason: 'Backend platform assignment',
-      createdByUserId: hrgaUser.id,
-    },
-    {
-      userId: designerUser.id,
-      jobTitle: 'UI/UX Product Designer',
-      role: CanonicalRole.EMPLOYEE,
-      function: CanonicalFunction.RnD,
-      directManagerId: creativeLeadUser.id,
-      effectiveDate: todayDate,
-      assignmentReason: 'Product design assignment',
+      assignmentReason: 'Penugasan Backend Developer (sejajar di bawah Head of Engineering)',
       createdByUserId: hrgaUser.id,
     },
     {
       userId: newHireUser.id,
-      jobTitle: 'Junior Software Engineer',
+      jobTitle: 'Junior Developer',
       role: CanonicalRole.EMPLOYEE,
       function: CanonicalFunction.Engineering,
-      directManagerId: techLeadUser.id,
+      directManagerId: headEngUser.id,
       effectiveDate: todayDate,
-      assignmentReason: 'New hire onboarding assignment',
+      assignmentReason: 'Onboarding Junior Developer di bawah Head of Engineering',
       createdByUserId: hrgaUser.id,
+    },
+    // 2. Divisi Delivery: Head of Delivery membawahi sejajar Project Manager 1 & QA Specialist
+    {
+      userId: headDeliveryUser.id,
+      jobTitle: 'Head of Delivery',
+      role: CanonicalRole.HEAD,
+      function: CanonicalFunction.Delivery,
+      directManagerId: direkturUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penetapan Kepala Divisi Delivery PT Dutamedia Mandiri Pratama',
+      createdByUserId: adminUser.id,
+    },
+    {
+      userId: pmUser.id,
+      jobTitle: 'Project Manager 1',
+      role: CanonicalRole.PROJECT_MANAGER,
+      function: CanonicalFunction.Delivery,
+      directManagerId: headDeliveryUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Project Manager 1 di bawah Head of Delivery',
+      createdByUserId: adminUser.id,
+    },
+    {
+      userId: qaUser.id,
+      jobTitle: 'Software Quality Assurance Specialist',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.Delivery,
+      directManagerId: headDeliveryUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Software QA Specialist di bawah Head of Delivery',
+      createdByUserId: hrgaUser.id,
+    },
+    // 3. Divisi Operations & Infrastructure: Head of Ops membawahi Operations Supervisor
+    {
+      userId: headOpsUser.id,
+      jobTitle: 'Head of Operations & Infrastructure',
+      role: CanonicalRole.HEAD,
+      function: CanonicalFunction.OperationsInfrastructure,
+      directManagerId: direkturUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penetapan Kepala Divisi Operations & Infrastructure',
+      createdByUserId: adminUser.id,
+    },
+    {
+      userId: opsSupvUser.id,
+      jobTitle: 'Operations Supervisor',
+      role: CanonicalRole.SUPERVISOR,
+      function: CanonicalFunction.OperationsInfrastructure,
+      directManagerId: headOpsUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Operations Supervisor di bawah Head of Operations & Infrastructure',
+      createdByUserId: adminUser.id,
+    },
+    // 4. Divisi R&D & Technical Advisory: Principal Engineer melapor ke CEO
+    {
+      userId: rndPrincipalUser.id,
+      jobTitle: 'Principal Engineer (R&D & Technical Advisory)',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.RnD,
+      directManagerId: direkturUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Principal Engineer — R&D & Technical Advisory',
+      createdByUserId: hrgaUser.id,
+    },
+    // 5. Divisi Commercial: Head of Sales Enablement & Presales melapor ke CEO
+    {
+      userId: headSalesUser.id,
+      jobTitle: 'Head of Sales Enablement & Presales',
+      role: CanonicalRole.HEAD,
+      function: CanonicalFunction.SalesEnablementPresales,
+      directManagerId: direkturUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penetapan Head of Sales Enablement & Presales (Commercial)',
+      createdByUserId: adminUser.id,
+    },
+    // 6. Divisi Finance: Senior Finance Staff melapor ke CEO
+    {
+      userId: financeUser.id,
+      jobTitle: 'Senior Finance Staff',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.Finance,
+      directManagerId: direkturUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Senior Finance Staff',
+      createdByUserId: hrgaUser.id,
+    },
+    // 7. Divisi HRGA & Corporate Legal Administration
+    {
+      userId: hrgaUser.id,
+      jobTitle: 'HRGA & Corporate Legal Administration',
+      role: CanonicalRole.HRGA,
+      function: CanonicalFunction.HRGA,
+      directManagerId: direkturUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penetapan HRGA & Corporate Legal Administration',
+      createdByUserId: adminUser.id,
     },
   ];
 
   for (const assignment of orgAssignments) {
-    const existing = await prisma.organizationalAssignment.findFirst({
-      where: { userId: assignment.userId, endDate: null },
+    const allRows = await prisma.organizationalAssignment.findMany({
+      where: { userId: assignment.userId },
+      orderBy: [{ endDate: 'asc' }, { effectiveDate: 'desc' }],
     });
-    if (!existing) {
+
+    if (allRows.length === 0) {
       await prisma.organizationalAssignment.create({ data: assignment });
+    } else {
+      const [primaryRow, ...extraRows] = allRows;
+      await prisma.organizationalAssignment.update({
+        where: { id: primaryRow.id },
+        data: {
+          jobTitle: assignment.jobTitle,
+          role: assignment.role,
+          function: assignment.function,
+          directManagerId: assignment.directManagerId,
+          endDate: null,
+          assignmentReason: assignment.assignmentReason,
+        },
+      });
+      if (extraRows.length > 0) {
+        await prisma.organizationalAssignment.deleteMany({
+          where: { id: { in: extraRows.map((r) => r.id) } },
+        });
+      }
     }
+  }
+
+  // Rapikan akun uji tambahan (misal karyawan.baru@dutamedia.com jika ada di DB) agar memiliki atasan Head of Engineering
+  const extraTestUser = await prisma.user.findUnique({
+    where: { email: 'karyawan.baru@dutamedia.com' },
+  });
+  if (extraTestUser) {
+    await prisma.organizationalAssignment.updateMany({
+      where: { userId: extraTestUser.id, endDate: null, directManagerId: null },
+      data: { directManagerId: headEngUser.id },
+    });
   }
 
   // =========================================================================
@@ -278,8 +479,8 @@ async function main() {
     {
       category: PolicyCategory.BLOCKER_SLA,
       configurationValues: {
-        l1AcknowledgeTargetMinutes: 120, // 2 Jam
-        l2AutoEscalateMinutes: 240,     // 4 Jam
+        l1AcknowledgeTargetMinutes: 120,
+        l2AutoEscalateMinutes: 240,
         emergencyChannels: ['EMAIL', 'IN_APP_CENTER'],
       },
       effectiveDate: todayDate,
@@ -352,34 +553,76 @@ async function main() {
   }
 
   // =========================================================================
-  // 5. SEED PROJECT & INVITATION SIMULASI
+  // 5. SEED PROJECT AUTHORITIES & INVITATION SIMULASI
   // =========================================================================
-  console.log('🚀 [5/6] Seeding Proyek & Token Undangan Aktivasi...');
+  console.log('🚀 [5/6] Seeding Pemetaan Kewenangan Proyek (Project Authority) & Token Undangan...');
 
-  // 5a. Proyek Resmi
-  const existingProject = await prisma.projectAuthorityMapping.findFirst({
-    where: { projectCode: 'WP-CORE' },
-  });
-  if (!existingProject) {
-    await prisma.projectAuthorityMapping.create({
-      data: {
-        projectCode: 'WP-CORE',
-        projectName: 'WorkPulse Platform Core 2026',
-        projectManagerId: techLeadUser.id,
-        escalationReviewerId: direkturUser.id,
-        involvedFunction: CanonicalFunction.Engineering,
-        effectiveDate: todayDate,
-        assignmentReason: 'Core platform development governance',
-        createdByUserId: adminUser.id,
-      },
+  const projectsCatalog = [
+    {
+      projectCode: 'WP-CORE',
+      projectName: 'WorkPulse Platform Core 2026',
+      projectManagerId: techLeadUser.id,
+      escalationReviewerId: headEngUser.id,
+      involvedFunction: CanonicalFunction.Engineering,
+      assignmentReason: 'Kepemimpinan teknis proyek WorkPulse Core oleh Technical Lead 1 (Bambang Pratama)',
+    },
+    {
+      projectCode: 'PRJ-CORE',
+      projectName: 'Core Banking Settlement Engine',
+      projectManagerId: techLeadUser.id,
+      escalationReviewerId: headEngUser.id,
+      involvedFunction: CanonicalFunction.Engineering,
+      assignmentReason: 'Kepemimpinan teknis proyek Core Banking oleh Technical Lead 1 (Bambang Pratama)',
+    },
+    {
+      projectCode: 'PRJ-PORTAL',
+      projectName: 'Dutamedia Client Portal v2.4',
+      projectManagerId: pmUser.id,
+      escalationReviewerId: headDeliveryUser.id,
+      involvedFunction: CanonicalFunction.Delivery,
+      assignmentReason: 'Kepemimpinan manajemen proyek Client Portal oleh Project Manager 1 (Dimas Prakoso)',
+    },
+    {
+      projectCode: 'PRJ-MOBILE',
+      projectName: 'Customer SuperApp Mobile',
+      projectManagerId: pmUser.id,
+      escalationReviewerId: headDeliveryUser.id,
+      involvedFunction: CanonicalFunction.Delivery,
+      assignmentReason: 'Kepemimpinan manajemen proyek SuperApp Mobile oleh Project Manager 1 (Dimas Prakoso)',
+    },
+  ];
+
+  for (const prj of projectsCatalog) {
+    const existingPa = await prisma.projectAuthorityMapping.findFirst({
+      where: { projectCode: prj.projectCode, endDate: null },
     });
+    if (!existingPa) {
+      await prisma.projectAuthorityMapping.create({
+        data: {
+          ...prj,
+          effectiveDate: todayDate,
+          createdByUserId: adminUser.id,
+        },
+      });
+    } else {
+      await prisma.projectAuthorityMapping.update({
+        where: { id: existingPa.id },
+        data: {
+          projectName: prj.projectName,
+          projectManagerId: prj.projectManagerId,
+          escalationReviewerId: prj.escalationReviewerId,
+          involvedFunction: prj.involvedFunction,
+          assignmentReason: prj.assignmentReason,
+        },
+      });
+    }
   }
 
   // 5b. Token Undangan 72 Jam untuk Calon Karyawan
   const existingInvitation = await prisma.userInvitation.findFirst({
     where: { userId: newHireUser.id, status: 'PENDING' },
   });
-  if (!existingInvitation) {
+  if (!existingInvitation && newHireUser.status === UserStatus.INVITED) {
     const rawActivationToken = 'wp_seed_invite_token_72h_demo_secret';
     const tokenHash = crypto.createHash('sha256').update(rawActivationToken).digest('hex');
 
@@ -388,7 +631,7 @@ async function main() {
         userId: newHireUser.id,
         tokenHash,
         status: 'PENDING',
-        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000), // 72 jam
+        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
         createdByUserId: hrgaUser.id,
       },
     });
@@ -397,17 +640,11 @@ async function main() {
   // =========================================================================
   // 6. SEED REKOR AKTIVITAS HARI INI (Sample Records untuk UI & E2E)
   // =========================================================================
-  console.log('📊 [6/6] Seeding Rekor Harian, Blocker & Pengajuan Cuti...');
+  console.log('📊 [6/6] Menyinkronkan Rekor Harian, Blocker Proyek & Pengajuan Cuti...');
 
-  const todayStr = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-  const workDate = new Date(todayStr);
+  const workDate = todayDate;
 
-  // 6a. Daily Accountability Record untuk Frontend Dev
+  // 6a. Daily Accountability Record untuk Frontend Dev (Aditya Nugroho)
   const existingDaily = await prisma.dailyAccountabilityRecord.findUnique({
     where: {
       userId_workDate: {
@@ -415,6 +652,7 @@ async function main() {
         workDate,
       },
     },
+    include: { commitments: true },
   });
 
   if (!existingDaily) {
@@ -424,8 +662,12 @@ async function main() {
         workDate,
         orgContextSnapshot: {
           department: 'Engineering',
-          jobTitle: 'Frontend Software Engineer',
-          managerName: 'Bambang Pratama',
+          jobTitle: 'Frontend Developer',
+          managerName: 'Arif Budiman',
+          commitmentMeta: {
+            1: { projectCode: 'WP-CORE', linkedBlockerId: null },
+            2: { projectCode: 'WP-CORE', linkedBlockerId: null },
+          },
         },
         policySnapshot: {
           morningCutoff: '09:30',
@@ -456,7 +698,6 @@ async function main() {
       include: { commitments: true },
     });
 
-    // 6b. Blocker Ticket aktif terkait komitmen #2
     const targetCommitment = daily.commitments.find((c) => c.sequenceNo === 2);
     await prisma.blockerTicket.create({
       data: {
@@ -466,23 +707,48 @@ async function main() {
         severity: BlockerSeverity.HIGH,
         impact: BlockerImpact.TASK,
         description: 'CI runner mengalami Out Of Memory (OOM) saat proses bundle minification',
-        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        ownerNeededType: AuthorityContext.PROJECT_AUTHORITY,
         assignedOwnerId: techLeadUser.id,
         projectCodeReference: 'WP-CORE',
         status: 'OPEN',
-        targetResolutionAt: new Date(Date.now() + 4 * 3600 * 1000), // SLA 4 Jam
+        targetResolutionAt: new Date(Date.now() + 4 * 3600 * 1000),
+      },
+    });
+  } else {
+    // Pastikan orgContextSnapshot pada rekaman hari ini selaras dengan proyek WP-CORE & Head of Engineering
+    const currentSnap = (existingDaily.orgContextSnapshot as Record<string, any>) || {};
+    const existingMeta = currentSnap.commitmentMeta || {};
+    const updatedMeta: Record<number, any> = { ...existingMeta };
+    for (const c of existingDaily.commitments) {
+      if (!updatedMeta[c.sequenceNo]?.projectCode) {
+        updatedMeta[c.sequenceNo] = {
+          ...(updatedMeta[c.sequenceNo] || {}),
+          projectCode: 'WP-CORE',
+        };
+      }
+    }
+    await prisma.dailyAccountabilityRecord.update({
+      where: { id: existingDaily.id },
+      data: {
+        orgContextSnapshot: {
+          ...currentSnap,
+          department: 'Engineering',
+          jobTitle: 'Frontend Developer',
+          managerName: 'Arif Budiman',
+          commitmentMeta: updatedMeta,
+        },
       },
     });
   }
 
-  // 6c. Pengajuan Cuti Mendatang untuk Backend Dev
-  const existingLeave = await prisma.leaveRequest.findFirst({
+  // 6b. Pengajuan Cuti PENDING untuk Backend Dev (Siti Rahma - Divisi Engineering)
+  const existingLeaveSiti = await prisma.leaveRequest.findFirst({
     where: { userId: backendUser.id, status: 'PENDING' },
   });
-  if (!existingLeave) {
-    const tomorrow = new Date();
+  if (!existingLeaveSiti) {
+    const tomorrow = new Date(workDate);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date();
+    const dayAfter = new Date(workDate);
     dayAfter.setDate(dayAfter.getDate() + 2);
 
     await prisma.leaveRequest.create({
@@ -497,29 +763,29 @@ async function main() {
     });
   }
 
-  // 6c-2. Pengajuan Cuti Mendatang untuk UI/UX Designer (Maya Putri - RnD/Creative) untuk UAT TC-SUPV-001 (TD-SUPV-01)
+  // 6c. Pengajuan Cuti PENDING untuk Principal Engineer R&D (Maya Putri - Divisi RnD)
   const existingLeaveMaya = await prisma.leaveRequest.findFirst({
-    where: { userId: designerUser.id, status: 'PENDING' },
+    where: { userId: rndPrincipalUser.id, status: 'PENDING' },
   });
   if (!existingLeaveMaya) {
-    const startLeave = new Date();
+    const startLeave = new Date(workDate);
     startLeave.setDate(startLeave.getDate() + 3);
-    const endLeave = new Date();
+    const endLeave = new Date(workDate);
     endLeave.setDate(endLeave.getDate() + 4);
 
     await prisma.leaveRequest.create({
       data: {
-        userId: designerUser.id,
+        userId: rndPrincipalUser.id,
         startDate: startLeave,
         endDate: endLeave,
         leaveType: 'ANNUAL',
-        reason: 'Keperluan riset desain luar kota (UAT Test Data TD-SUPV-01)',
+        reason: 'Keperluan riset arsitektur sistem luar kota (UAT Test Data TD-SUPV-01)',
         status: 'PENDING',
       },
     });
   }
 
-  // 6d. Notifikasi In-App untuk Tech Lead
+  // 6d. Notifikasi In-App untuk Technical Lead 1 & Head of Engineering
   const existingNotif = await prisma.notification.findFirst({
     where: { recipientUserId: techLeadUser.id, triggerType: 'BLOCKER_RAISED' },
   });
@@ -529,29 +795,35 @@ async function main() {
         recipientUserId: techLeadUser.id,
         triggerType: 'BLOCKER_RAISED',
         channel: NotificationChannel.IN_APP_CENTER,
-        title: 'Kendala Baru Dilaporkan',
-        message: 'Aditya Nugroho melaporkan kendala teknis: CI runner mengalami Out Of Memory.',
+        title: 'Kendala Proyek [WP-CORE] Dilaporkan',
+        message: 'Aditya Nugroho melaporkan kendala teknis pada proyek WP-CORE: CI runner mengalami Out Of Memory.',
         actionUrl: '/blockers',
         status: NotificationStatus.SENT,
       },
     });
   }
 
-  console.log('✅ [WorkPulse Seed] Sukses! Seluruh data fondasi Dutamedia siap digunakan.');
+  console.log('✅ [WorkPulse Seed] Sukses! Seluruh data struktur organisasi PT Dutamedia Mandiri Pratama telah sinkron.');
   console.log(`
-  ════════════════════════════════════════════════════════════════
-  DAFTAR KREDENSIAL PENGUJIAN LOKAL (Password: Password123!)
-  ════════════════════════════════════════════════════════════════
-  • Superadmin : admin@dutamedia.com
-  • Direktur   : direktur@dutamedia.com
-  • HRGA       : hrga@dutamedia.com
-  • Tech Lead  : lead.tech@dutamedia.com
-  • Creative   : lead.creative@dutamedia.com
-  • Frontend   : dev.frontend@dutamedia.com
-  • Backend    : dev.backend@dutamedia.com
-  • Designer   : designer@dutamedia.com
-  • Token Demo : wp_seed_invite_token_72h_demo_secret (Untuk calon.karyawan@dutamedia.com)
-  ════════════════════════════════════════════════════════════════
+  ════════════════════════════════════════════════════════════════════════════
+  DAFTAR AKUN RESMI PT DUTAMEDIA MANDIRI PRATAMA (Password: Password123!)
+  ════════════════════════════════════════════════════════════════════════════
+  • CEO (Management)         : direktur@dutamedia.com       (Hendra Wijaya)
+  • System Admin             : admin@dutamedia.com          (Sistem Administrator)
+  • Head of Engineering      : head.eng@dutamedia.com       (Arif Budiman)     [HEAD]
+  • Technical Lead 1 (Eng)   : lead.tech@dutamedia.com      (Bambang Pratama)  [SUPERVISOR / Project Lead WP-CORE & PRJ-CORE]
+  • Frontend Developer (Eng) : dev.frontend@dutamedia.com   (Aditya Nugroho)   [EMPLOYEE]
+  • Backend Developer (Eng)  : dev.backend@dutamedia.com    (Siti Rahma)       [EMPLOYEE]
+  • Head of Delivery         : head.delivery@dutamedia.com  (Dharma Putra)     [HEAD]
+  • Project Manager 1 (Del)  : pm@dutamedia.com             (Dimas Prakoso)    [PROJECT_MANAGER / Project Lead PRJ-PORTAL & PRJ-MOBILE]
+  • Software QA (Del)        : qa@dutamedia.com             (Nadia Kusuma)     [EMPLOYEE]
+  • Head of Ops & Infra      : head.ops@dutamedia.com       (Gunawan Setiawan) [HEAD]
+  • Operations Supervisor    : lead.creative@dutamedia.com  (Rian Kurniawan)   [SUPERVISOR]
+  • Principal Engineer (R&D) : designer@dutamedia.com       (Maya Putri)       [EMPLOYEE]
+  • Head of Sales & Presales : head.sales@dutamedia.com     (Lukman Hakim)     [HEAD]
+  • Senior Finance Staff     : finance@dutamedia.com        (Ratna Sari)       [EMPLOYEE]
+  • HRGA & Legal Admin       : hrga@dutamedia.com           (Dewi Lestari)     [HRGA]
+  ════════════════════════════════════════════════════════════════════════════
   `);
 }
 
