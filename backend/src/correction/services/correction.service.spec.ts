@@ -14,6 +14,7 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
   let mockPrisma: any;
   let mockClock: any;
   let mockPolicy: any;
+  let mockScopeResolver: any;
 
   beforeEach(() => {
     mockPrisma = {
@@ -49,7 +50,17 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
       }),
     };
 
-    service = new CorrectionService(mockPrisma, mockClock, mockPolicy);
+    mockScopeResolver = {
+      canAccessUser: vi.fn().mockResolvedValue(true),
+      enforceUserScope: vi.fn().mockResolvedValue(undefined),
+    };
+
+    service = new CorrectionService(
+      mockPrisma,
+      mockClock,
+      mockPolicy,
+      mockScopeResolver,
+    );
   });
 
   describe('createCorrectionRequest', () => {
@@ -162,6 +173,50 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
           data: expect.objectContaining({ actionCode: 'CORRECTION_APPROVED' }),
         }),
       );
+    });
+
+    it('enforces scope boundary and denies cross-division correction review', async () => {
+      mockPrisma.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-cross',
+        requestedByUserId: 'usr-cross-division',
+        status: CorrectionStatus.PENDING,
+      });
+
+      mockScopeResolver.enforceUserScope.mockRejectedValueOnce(
+        new AppException({
+          code: 'AUTH_FORBIDDEN_SCOPE',
+          message: 'Akses ditolak di luar hierarki',
+          statusCode: 403,
+        }),
+      );
+
+      await expect(
+        service.reviewCorrectionRequest('mgr-tech', 'cr-cross', {
+          decision: 'APPROVE',
+          reviewNote: 'Catatan review pengujian wewenang',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      expect(mockScopeResolver.enforceUserScope).toHaveBeenCalledWith(
+        'mgr-tech',
+        'usr-cross-division',
+      );
+    });
+
+    it('filters correction requests to only include accessible subordinates', async () => {
+      mockPrisma.correctionRequest.findMany.mockResolvedValue([
+        { id: 'cr-1', requestedByUserId: 'usr-subordinate-eng' },
+        { id: 'cr-2', requestedByUserId: 'usr-creative-staff' },
+      ]);
+
+      mockScopeResolver.canAccessUser.mockImplementation(async (_caller: string, target: string) => {
+        return target === 'usr-subordinate-eng';
+      });
+
+      const queue = await service.getCorrectionRequests({}, 'mgr-tech');
+      expect(queue).toHaveLength(1);
+      expect(queue[0].id).toBe('cr-1');
+      expect(mockScopeResolver.canAccessUser).toHaveBeenCalledTimes(2);
     });
   });
 });

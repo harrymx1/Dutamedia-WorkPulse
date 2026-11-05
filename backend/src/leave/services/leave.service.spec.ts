@@ -7,6 +7,7 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
   let service: LeaveService;
   let mockPrisma: any;
   let mockClock: any;
+  let mockScopeResolver: any;
 
   beforeEach(() => {
     mockPrisma = {
@@ -33,7 +34,12 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
       now: vi.fn(() => new Date('2026-10-28T10:00:00.000Z')),
     };
 
-    service = new LeaveService(mockPrisma, mockClock);
+    mockScopeResolver = {
+      canAccessUser: vi.fn().mockResolvedValue(true),
+      enforceUserScope: vi.fn().mockResolvedValue(undefined),
+    };
+
+    service = new LeaveService(mockPrisma, mockClock, mockScopeResolver);
   });
 
   describe('createLeaveRequest', () => {
@@ -111,6 +117,49 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
           }),
         }),
       );
+    });
+
+    it('enforces scope boundary and denies cross-division review with AUTH_FORBIDDEN_SCOPE', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-cross',
+        userId: 'usr-cross-division',
+        status: LeaveStatus.PENDING,
+      });
+
+      mockScopeResolver.enforceUserScope.mockRejectedValueOnce(
+        new AppException({
+          code: 'AUTH_FORBIDDEN_SCOPE',
+          message: 'Akses ditolak di luar hierarki',
+          statusCode: 403,
+        }),
+      );
+
+      await expect(
+        service.reviewLeaveRequest('mgr-tech', 'lv-cross', {
+          decision: 'APPROVE',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      expect(mockScopeResolver.enforceUserScope).toHaveBeenCalledWith(
+        'mgr-tech',
+        'usr-cross-division',
+      );
+    });
+
+    it('filters approval queue to only include accessible subordinates', async () => {
+      mockPrisma.leaveRequest.findMany.mockResolvedValue([
+        { id: 'lv-1', userId: 'usr-subordinate-eng' },
+        { id: 'lv-2', userId: 'usr-creative-staff' },
+      ]);
+
+      mockScopeResolver.canAccessUser.mockImplementation(async (_caller: string, target: string) => {
+        return target === 'usr-subordinate-eng';
+      });
+
+      const queue = await service.getApprovalQueue('mgr-tech');
+      expect(queue).toHaveLength(1);
+      expect(queue[0].id).toBe('lv-1');
+      expect(mockScopeResolver.canAccessUser).toHaveBeenCalledTimes(2);
     });
   });
 });

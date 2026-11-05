@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ClockService } from '../../common/time/clock.service';
 import { PolicyService } from '../../policy/services/policy.service';
+import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import {
@@ -21,6 +22,7 @@ export class CorrectionService {
     private readonly prisma: PrismaService,
     private readonly clockService: ClockService,
     private readonly policyService: PolicyService,
+    private readonly scopeResolverService: ScopeResolverService,
   ) {}
 
   /**
@@ -162,11 +164,14 @@ export class CorrectionService {
   /**
    * Mengambil antrean permohonan koreksi (Prototipe 22).
    */
-  async getCorrectionRequests(filters?: {
-    status?: CorrectionStatus;
-    requesterId?: string;
-  }) {
-    return this.prisma.correctionRequest.findMany({
+  async getCorrectionRequests(
+    filters?: {
+      status?: CorrectionStatus;
+      requesterId?: string;
+    },
+    reviewerUserId?: string,
+  ) {
+    const list = await this.prisma.correctionRequest.findMany({
       where: {
         ...(filters?.status && { status: filters.status }),
         ...(filters?.requesterId && { requestedByUserId: filters.requesterId }),
@@ -180,6 +185,22 @@ export class CorrectionService {
       },
       orderBy: [{ createdAt: 'desc' }],
     });
+
+    if (!reviewerUserId) {
+      return list;
+    }
+
+    const accessible: typeof list = [];
+    for (const item of list) {
+      const canAccess = await this.scopeResolverService.canAccessUser(
+        reviewerUserId,
+        item.requestedByUserId,
+      );
+      if (canAccess) {
+        accessible.push(item);
+      }
+    }
+    return accessible;
   }
 
   /**
@@ -202,6 +223,12 @@ export class CorrectionService {
         statusCode: HttpStatus.NOT_FOUND,
       });
     }
+
+    // Penegakan batas wewenang hierarki manajerial 3-Lapis (WP-EP03-TK006 / SAD IV.4 & DEC-010)
+    await this.scopeResolverService.enforceUserScope(
+      reviewerUserId,
+      req.requestedByUserId,
+    );
 
     if (req.status !== CorrectionStatus.PENDING) {
       throw new AppException({

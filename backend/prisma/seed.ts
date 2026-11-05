@@ -497,6 +497,28 @@ async function main() {
     });
   }
 
+  // 6c-2. Pengajuan Cuti Mendatang untuk UI/UX Designer (Maya Putri - RnD/Creative) untuk UAT TC-SUPV-001 (TD-SUPV-01)
+  const existingLeaveMaya = await prisma.leaveRequest.findFirst({
+    where: { userId: designerUser.id, status: 'PENDING' },
+  });
+  if (!existingLeaveMaya) {
+    const startLeave = new Date();
+    startLeave.setDate(startLeave.getDate() + 3);
+    const endLeave = new Date();
+    endLeave.setDate(endLeave.getDate() + 4);
+
+    await prisma.leaveRequest.create({
+      data: {
+        userId: designerUser.id,
+        startDate: startLeave,
+        endDate: endLeave,
+        leaveType: 'ANNUAL',
+        reason: 'Keperluan riset desain luar kota (UAT Test Data TD-SUPV-01)',
+        status: 'PENDING',
+      },
+    });
+  }
+
   // 6d. Notifikasi In-App untuk Tech Lead
   const existingNotif = await prisma.notification.findFirst({
     where: { recipientUserId: techLeadUser.id, triggerType: 'BLOCKER_RAISED' },

@@ -468,13 +468,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Pengguna dinonaktifkan secara mutlak diblokir dari akses sistem dan diberikan pesan instruksi kontak HRGA yang jelas.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir login dengan pesan penolakan status akun dinonaktifkan.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Pengguna akun berstatus INACTIVE (calon.karyawan@dutamedia.com) yang mencoba login ditolak secara tegas oleh backend dengan HTTP 401 dan antarmuka menampilkan pesan peringatan ramah 'Akun Anda dinonaktifkan oleh administrator. Hubungi HRGA untuk informasi lebih lanjut.' tanpa kebocoran sesi JWT.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-05
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Terverifikasi penonaktifan akun via admin dan penolakan login status INACTIVE sesuai FR-01 & DEC-012.
 
 ---
 
@@ -510,13 +510,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Pengguna berstatus INVITED dipandu untuk melakukan aktivasi melalui email dan dicegah masuk ke sistem secara prematur.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir login dengan pesan peringatan akun belum diaktifkan.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Pengguna akun berstatus INVITED (karyawan.baru@dutamedia.com) yang mencoba login ditolak secara tegas oleh backend dengan HTTP 401 dan antarmuka menampilkan pesan peringatan ramah 'Akun Anda belum diaktifkan. Silakan periksa tautan aktivasi pada email Anda atau hubungi administrator.' tanpa kebocoran sesi JWT.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-05
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Terverifikasi penerbitan undangan baru via admin dan penolakan login status INVITED sesuai FR-01, FR-02 & DEC-012.
 
 ---
 
@@ -2847,13 +2847,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Prinsip Pemisahan Tugas (IMP-026) terbukti ditegakkan 100% sempurna baik pada elemen antarmuka sidebar maupun pada penjaga rute peramban (*Router Guards*).
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar sidebar admin (tanpa menu Workspace) dan tangkapan layar halaman `/forbidden` saat mencoba mengakses `/daily/morning`.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Prinsip Pemisahan Tugas (Separation of Duties - IMP-026) terbukti ditegakkan: sidebar admin@dutamedia.com bersih total dari kelompok menu WORKSPACE (hanya memuat Management dan Administration), dan percobaan akses URL langsung ke /daily/morning berhasil dicegat oleh client router guard dengan pengalihan ke /forbidden (403 — Akses Dibatasi). Tombol 'Kembali ke Beranda' berhasil mengembalikan admin ke /admin/organization.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-05
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Terverifikasi pemisahan tugas IAM dan proteksi route guard rute operasional untuk persona SYSTEM_ADMIN.
 
 ---
 

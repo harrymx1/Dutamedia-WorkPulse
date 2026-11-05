@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
 import { LeaveStatus, NotificationChannel } from '@prisma/client';
 import {
   CreateLeaveRequestDto,
@@ -14,6 +15,7 @@ export class LeaveService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clockService: ClockService,
+    private readonly scopeResolverService: ScopeResolverService,
   ) {}
 
   /**
@@ -107,8 +109,8 @@ export class LeaveService {
   /**
    * Mengambil antrean persetujuan cuti untuk Atasan / HRGA (Prototipe 21).
    */
-  async getApprovalQueue(status?: LeaveStatus) {
-    return this.prisma.leaveRequest.findMany({
+  async getApprovalQueue(reviewerUserId?: string, status?: LeaveStatus) {
+    const list = await this.prisma.leaveRequest.findMany({
       where: {
         ...(status && { status }),
       },
@@ -118,6 +120,22 @@ export class LeaveService {
       },
       orderBy: [{ createdAt: 'desc' }],
     });
+
+    if (!reviewerUserId) {
+      return list;
+    }
+
+    const accessible: typeof list = [];
+    for (const item of list) {
+      const canAccess = await this.scopeResolverService.canAccessUser(
+        reviewerUserId,
+        item.userId,
+      );
+      if (canAccess) {
+        accessible.push(item);
+      }
+    }
+    return accessible;
   }
 
   /**
@@ -140,6 +158,9 @@ export class LeaveService {
         statusCode: HttpStatus.NOT_FOUND,
       });
     }
+
+    // Penegakan batas wewenang hierarki manajerial 3-Lapis (WP-EP03-TK006 / SAD IV.4 & DEC-010)
+    await this.scopeResolverService.enforceUserScope(reviewerUserId, leave.userId);
 
     if (leave.status !== LeaveStatus.PENDING) {
       throw new AppException({

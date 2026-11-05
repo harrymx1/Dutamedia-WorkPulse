@@ -56,19 +56,44 @@ export async function apiClient<T = any>(
     credentials: 'include', // Kirim HttpOnly access_token & csrf_token
   });
 
-  let responseBody: any;
+  let responseBody: any = null;
   const contentType = response.headers?.get?.('content-type') || '';
   if (contentType && contentType.includes('application/json')) {
-    responseBody = await response.json();
-  } else if (typeof response.json === 'function') {
-    responseBody = await response.json().catch(async () => {
-      return typeof response.text === 'function' ? await response.text() : null;
-    });
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = null;
+    }
   } else if (typeof response.text === 'function') {
-    responseBody = await response.text();
+    try {
+      const rawText = await response.text();
+      try {
+        responseBody = JSON.parse(rawText);
+      } catch {
+        responseBody = rawText ? { message: rawText } : null;
+      }
+    } catch {
+      responseBody = null;
+    }
+  } else if (typeof response.json === 'function') {
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = null;
+    }
   }
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new ApiError({
+        code: 'AUTH_RATE_LIMIT_EXCEEDED',
+        message:
+          'Terlalu banyak percobaan masuk atau permintaan dalam waktu singkat. Demi keamanan sistem, silakan tunggu 1 menit sebelum mencoba kembali.',
+        details: [],
+        statusCode: 429,
+      });
+    }
+
     const errObj = responseBody?.error || {};
     throw new ApiError({
       code: errObj.code || 'UNKNOWN_ERROR',

@@ -33,8 +33,8 @@ export class LeaveController {
   }
 
   @Get('queue')
-  async getApprovalQueue(@Query('status') status?: LeaveStatus) {
-    return this.leaveService.getApprovalQueue(status);
+  async getApprovalQueue(@Req() req: any, @Query('status') status?: LeaveStatus) {
+    return this.leaveService.getApprovalQueue(req.user?.id, status);
   }
 
   @Post([':id/review', 'requests/:id/review'])

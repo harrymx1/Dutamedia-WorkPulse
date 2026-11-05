@@ -32,13 +32,17 @@ export class CorrectionController {
 
   @Get()
   async getCorrectionRequests(
+    @Req() req: any,
     @Query('status') status?: CorrectionStatus,
     @Query('requesterId') requesterId?: string,
   ) {
-    return this.correctionService.getCorrectionRequests({
-      status,
-      requesterId,
-    });
+    return this.correctionService.getCorrectionRequests(
+      {
+        status,
+        requesterId,
+      },
+      req?.user?.id,
+    );
   }
 
   @Post(':id/review')

@@ -72,8 +72,8 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [P] | `TC-AUTH-007` | Inspeksi & Verifikasi Manajemen Profil Pribadi Pengguna | PASS | Terverifikasi data profil dasar dapat diakses; gap atribut organisasi (Jabatan/Departemen/Atasan) & layout prototipe 24 tercatat di Improvement Backlog (IMP-018 s.d. IMP-022) |
 | [P] | `TC-AUTH-008` | Pembaruan Kata Sandi Mandiri & Validasi Keamanan Form | PASS | Terverifikasi seluruh 8 langkah: validasi field kosong, min 8 char, mismatch konfirmasi, penolakan password lama salah, update sukses, pembuktian login baru, dan teardown pemulihan ke Password123! |
 | [P] | `TC-AUTH-006` | Pengakhiran Sesi Aman (Logout) & Pencegahan Back Cache | PASS | Terverifikasi logout menghancurkan sesi, redirect ke /login, dan tombol Back browser dicegat router guard tanpa kebocoran cache |
-| [ ] | `TC-AUTH-009` | Penolakan Login Akun Pengguna Dinonaktifkan (Status INACTIVE) | Not Run | Pesan penonaktifan HRGA terverifikasi |
-| [ ] | `TC-AUTH-010` | Penolakan Login Akun Pengguna Belum Diaktivasi (Status INVITED) | Not Run | Pesan aktivasi via email terverifikasi |
+| [P] | `TC-AUTH-009` | Penolakan Login Akun Pengguna Dinonaktifkan (Status INACTIVE) | PASS | Terverifikasi penolakan akun INACTIVE dengan pesan kontak HRGA |
+| [P] | `TC-AUTH-010` | Penolakan Login Akun Pengguna Belum Diaktivasi (Status INVITED) | PASS | Terverifikasi penolakan login akun INVITED dengan pesan aktivasi email |
 
 ---
 
@@ -107,7 +107,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
-| [ ] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | Not Run | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
+| [P] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | PASS | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
 | [ ] | `TC-SUPV-001` | Penegakan Batasan Scope Hierarki Supervisor & Penolakan Lintas Divisi | Not Run | Akses review bawahan tim lain ditolak HTTP 403 AUTH_FORBIDDEN_SCOPE |
 | [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head & Penegakan Batasan Lintas Fungsi | Not Run | Dashboard memuat seluruh squad fungsi; lintas divisi ditolak 403 |
 
