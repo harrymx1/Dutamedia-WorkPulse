@@ -48,7 +48,7 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
         service.createLeaveRequest('usr-1', {
           startDate: '2026-10-30',
           endDate: '2026-10-28',
-          leaveType: 'Cuti Tahunan',
+          leaveType: 'ANNUAL',
           reason: 'Liburan keluarga',
         }),
       ).rejects.toThrowError(AppException);
@@ -69,7 +69,7 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
       const res = await service.createLeaveRequest('usr-1', {
         startDate: '2026-10-29',
         endDate: '2026-10-30',
-        leaveType: 'Cuti Tahunan',
+        leaveType: 'ANNUAL',
         reason: 'Urusan keluarga',
       });
 
