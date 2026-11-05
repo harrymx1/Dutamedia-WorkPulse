@@ -18,6 +18,7 @@ interface LeaveQueueItem {
   id: string;
   startDate: string;
   endDate: string;
+  leaveType?: string;
   reason?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   reconciled?: boolean;
@@ -98,6 +99,23 @@ const filteredQueue = computed(() => {
     return true;
   });
 });
+
+function formatLeaveType(type?: string): string {
+  switch (type) {
+    case 'ANNUAL':
+      return 'Cuti Tahunan';
+    case 'SICK':
+      return 'Cuti Sakit';
+    case 'SPECIAL_LEAVE':
+      return 'Cuti Khusus';
+    case 'MATERNITY':
+      return 'Cuti Melahirkan';
+    case 'UNPAID':
+      return 'Di Luar Tanggungan';
+    default:
+      return type || 'Cuti Tahunan';
+  }
+}
 
 function calculateDuration(start: string, end: string): number {
   if (!start || !end) return 0;
@@ -291,6 +309,7 @@ onMounted(() => {
                   </div>
                 </td>
                 <td>
+                  <span class="pill-type">{{ formatLeaveType(item.leaveType) }}</span>
                   <div class="date-main">{{ formatDateRange(item.startDate, item.endDate) }}</div>
                   <div class="date-sub">{{ calculateDuration(item.startDate, item.endDate) }} hari kerja</div>
                 </td>
@@ -668,6 +687,18 @@ h1 {
 .emp-role {
   font-size: 11.5px;
   color: var(--color-text-secondary, #5C6E68);
+}
+
+.pill-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #E8F5E9;
+  color: #1B5E20;
+  border: 1px solid #C8E6C9;
+  margin-bottom: 4px;
 }
 
 .date-main {

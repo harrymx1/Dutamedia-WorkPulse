@@ -11,12 +11,14 @@ import {
   Send,
   RotateCcw,
   Info,
+  Tag,
 } from 'lucide-vue-next';
 
 interface LeaveRequestItem {
   id: string;
   startDate: string;
   endDate: string;
+  leaveType?: string;
   reason?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   reconciled?: boolean;
@@ -87,6 +89,23 @@ const filteredRequests = computed(() => {
   });
 });
 
+function formatLeaveType(type?: string): string {
+  switch (type) {
+    case 'ANNUAL':
+      return 'Cuti Tahunan';
+    case 'SICK':
+      return 'Cuti Sakit';
+    case 'SPECIAL_LEAVE':
+      return 'Cuti Khusus';
+    case 'MATERNITY':
+      return 'Cuti Melahirkan';
+    case 'UNPAID':
+      return 'Di Luar Tanggungan';
+    default:
+      return type || 'Cuti Tahunan';
+  }
+}
+
 function calculateDuration(start: string, end: string): number {
   if (!start || !end) return 0;
   const d1 = new Date(start);
@@ -140,6 +159,7 @@ async function handleSubmit() {
 }
 
 function handleReset() {
+  leaveType.value = 'ANNUAL';
   startDate.value = '';
   endDate.value = '';
   reason.value = '';
@@ -199,6 +219,25 @@ onMounted(() => {
           </div>
           <div class="panel-body">
             <form @submit.prevent="handleSubmit" novalidate>
+              <div class="field">
+                <label for="leaveType">Jenis Cuti <span class="required">*</span></label>
+                <div class="input-wrap">
+                  <Tag :size="16" class="field-icon" />
+                  <select
+                    id="leaveType"
+                    v-model="leaveType"
+                    class="input select-input"
+                    required
+                  >
+                    <option value="ANNUAL">Cuti Tahunan</option>
+                    <option value="SICK">Cuti Sakit</option>
+                    <option value="SPECIAL_LEAVE">Cuti Khusus (Pernikahan, Duka Cita, Keluarga)</option>
+                    <option value="MATERNITY">Cuti Melahirkan / Keguguran</option>
+                    <option value="UNPAID">Cuti di Luar Tanggungan (Tanpa Upah)</option>
+                  </select>
+                </div>
+              </div>
+
               <div class="field">
                 <label for="startDate">Tanggal mulai <span class="required">*</span></label>
                 <div class="input-wrap">
@@ -351,6 +390,7 @@ onMounted(() => {
               <tbody>
                 <tr v-for="req in filteredRequests" :key="req.id">
                   <td>
+                    <span class="pill-type">{{ formatLeaveType(req.leaveType) }}</span>
                     <div class="date-main">{{ formatDateRange(req.startDate, req.endDate) }}</div>
                     <div class="date-sub">{{ calculateDuration(req.startDate, req.endDate) }} hari kerja</div>
                   </td>
@@ -576,6 +616,23 @@ h1 {
   font-size: 12px;
   color: var(--color-brand-primary, #00674D);
   margin-top: 4px;
+}
+
+.select-input {
+  cursor: pointer;
+  background-color: #FFFFFF;
+}
+
+.pill-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #E8F5E9;
+  color: #1B5E20;
+  border: 1px solid #C8E6C9;
+  margin-bottom: 4px;
 }
 
 .textarea {
