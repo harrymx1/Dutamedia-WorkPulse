@@ -110,14 +110,35 @@ const selectedPeriod = ref('today');
 
 const divisionOptions = [
   { value: 'ALL', label: 'Semua Divisi Perusahaan' },
-  { value: 'ENGINEERING', label: 'Divisi Engineering' },
-  { value: 'DELIVERY', label: 'Divisi Delivery' },
-  { value: 'OPERATIONS_INFRA', label: 'Divisi Operations & Infrastructure' },
-  { value: 'COMMERCIAL', label: 'Divisi Commercial & Sales Enablement' },
-  { value: 'FINANCE', label: 'Divisi Finance' },
-  { value: 'HRGA', label: 'Divisi HRGA & Legal' },
-  { value: 'RND_ADVISORY', label: 'R&D & Technical Advisory' },
+  { value: 'Engineering', label: 'Divisi Engineering' },
+  { value: 'Delivery', label: 'Divisi Delivery' },
+  { value: 'Quality', label: 'Divisi Quality Assurance' },
+  { value: 'OperationsInfrastructure', label: 'Divisi Operations & Infrastructure' },
+  { value: 'SalesEnablementPresales', label: 'Divisi Sales Enablement & Presales' },
+  { value: 'BusinessDevelopment', label: 'Divisi Business Development' },
+  { value: 'Finance', label: 'Divisi Finance' },
+  { value: 'HRGA', label: 'Divisi HRGA' },
+  { value: 'RnD', label: 'R&D & Technical Advisory' },
 ];
+
+const divisionLabelMap: Record<string, string> = {
+  Engineering: 'Divisi Engineering',
+  ENGINEERING: 'Divisi Engineering',
+  Delivery: 'Divisi Delivery',
+  DELIVERY: 'Divisi Delivery',
+  Quality: 'Divisi Quality Assurance',
+  OperationsInfrastructure: 'Divisi Operations & Infrastructure',
+  OPERATIONS_INFRA: 'Divisi Operations & Infrastructure',
+  RnD: 'R&D & Technical Advisory',
+  RND_ADVISORY: 'R&D & Technical Advisory',
+  SalesEnablementPresales: 'Divisi Sales Enablement & Presales',
+  BusinessDevelopment: 'Divisi Business Development',
+  COMMERCIAL: 'Divisi Commercial & Sales',
+  Finance: 'Divisi Finance',
+  FINANCE: 'Divisi Finance',
+  HRGA: 'Divisi HRGA',
+  Management: 'Direksi & Manajemen',
+};
 
 // Sinkronkan activeScope jika penugasan / role berubah
 watch(
@@ -252,15 +273,29 @@ function handleScopeChange(scope: 'team' | 'function' | 'management') {
 }
 
 const scopeTitle = computed(() => {
-  if (activeScope.value === 'team') return 'Team Pulse (Tim Proyek)';
-  if (activeScope.value === 'function') return 'Function Pulse (Divisi Saya)';
-  return 'Management Pulse (Seluruh Perusahaan)';
+  if (activeScope.value === 'team') return 'Team Pulse';
+  if (activeScope.value === 'function') return 'Function Pulse';
+  return 'Management Pulse';
 });
 
 const scopeBadgeLabel = computed(() => {
-  if (activeScope.value === 'team') return 'TIM PROYEK';
-  if (activeScope.value === 'function') return 'DIVISI SAYA';
-  return 'SELURUH PERUSAHAAN';
+  if (activeScope.value === 'team') {
+    if (selectedProject.value !== 'ALL') {
+      return `Proyek ${selectedProject.value}`;
+    }
+    if (metrics.value.ledProjects && metrics.value.ledProjects.length > 0) {
+      return `Proyek: ${metrics.value.ledProjects.map((p) => p.projectCode).join(', ')}`;
+    }
+    return 'Tim Proyek Aktif';
+  }
+  if (activeScope.value === 'function') {
+    const fn = metrics.value.callerFunction || auth.user?.function || 'Engineering';
+    return divisionLabelMap[fn] || `Divisi ${fn}`;
+  }
+  if (selectedDivision.value !== 'ALL') {
+    return divisionLabelMap[selectedDivision.value] || `Divisi ${selectedDivision.value}`;
+  }
+  return 'PT Dutamedia Mandiri Pratama';
 });
 
 const scopeSubtitle = computed(() => {
@@ -311,7 +346,7 @@ onMounted(() => {
             <Users :size="16" />
           </div>
           <div>
-            <div class="scope-label">Lingkup Aktif</div>
+            <div class="scope-label">Lingkup Unit</div>
             <strong class="scope-name" data-testid="active-scope-badge">{{ scopeBadgeLabel }}</strong>
           </div>
         </div>

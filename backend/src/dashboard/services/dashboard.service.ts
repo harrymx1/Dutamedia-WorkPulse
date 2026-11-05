@@ -165,8 +165,20 @@ export class DashboardService {
       }
 
       if (targetDivision) {
+        const normalizedTarget = targetDivision.toLowerCase().replace(/[^a-z0-9]/g, '');
         const divisionUserIds = new Set(
-          activeAssignments.filter((a) => a.function === targetDivision).map((a) => a.userId),
+          activeAssignments
+            .filter((a) => {
+              if (!a.function) return false;
+              if (a.function === targetDivision) return true;
+              const normFunc = String(a.function).toLowerCase().replace(/[^a-z0-9]/g, '');
+              return (
+                normFunc === normalizedTarget ||
+                normFunc.includes(normalizedTarget) ||
+                normalizedTarget.includes(normFunc)
+              );
+            })
+            .map((a) => a.userId),
         );
         totalEmployees = divisionUserIds.size;
         todayRecords = todayRecords.filter((r: any) => divisionUserIds.has(r.userId));

@@ -105,7 +105,8 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     await functionTab.trigger('click');
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toContain('Function Pulse (Divisi Saya)');
+    expect(wrapper.find('h1').text()).toContain('Function Pulse');
+    expect(wrapper.find('h1').text()).not.toContain('(Divisi Saya)');
   });
 
   it('restricts tabs for HEAD role: defaults to Divisi Saya (Function Pulse) and omits Seluruh Perusahaan', async () => {
@@ -128,8 +129,9 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // Default pendaratan HEAD adalah Divisi Saya (Function Pulse)
-    expect(wrapper.find('h1').text()).toContain('Function Pulse (Divisi Saya)');
+    // Default pendaratan HEAD adalah Divisi Saya (Function Pulse) tanpa redundansi di h1
+    expect(wrapper.find('h1').text()).toBe('Function Pulse');
+    expect(wrapper.find('[data-testid="active-scope-badge"]').text()).toBe('Divisi Engineering');
     // Hanya tab Divisi Saya yang muncul (tidak ada Tim Proyek jika bukan Project Lead, dan tidak ada Seluruh Perusahaan)
     const tabs = wrapper.findAll('.scope-tab');
     expect(tabs.length).toBe(1);
@@ -213,7 +215,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toContain('Team Pulse (Tim Proyek)');
+    expect(wrapper.find('h1').text()).toBe('Team Pulse');
     const tabs = wrapper.findAll('.scope-tab');
     expect(tabs.length).toBe(1);
     expect(tabs[0].text()).toContain('Tim (Proyek)');
