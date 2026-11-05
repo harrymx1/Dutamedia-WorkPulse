@@ -11,7 +11,14 @@ import { CanonicalRole } from '@prisma/client';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get(['dashboard/pulse', 'api/dashboard/pulse', 'dashboard/metrics', 'api/dashboard/metrics'])
+  @Get([
+    'dashboard/pulse',
+    'api/dashboard/pulse',
+    'api/v1/dashboard/pulse',
+    'dashboard/metrics',
+    'api/dashboard/metrics',
+    'api/v1/dashboard/metrics',
+  ])
   async getPulseMetrics(
     @Req() req: any,
     @Query('scope') scope?: string,

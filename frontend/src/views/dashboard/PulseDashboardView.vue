@@ -192,7 +192,10 @@ async function loadDashboardData() {
     if (activeScope.value === 'management' && selectedDivision.value !== 'ALL') {
       query.set('function', selectedDivision.value);
     }
-    if (selectedProject.value !== 'ALL') {
+    if (
+      (activeScope.value === 'team' || activeScope.value === 'management') &&
+      selectedProject.value !== 'ALL'
+    ) {
       query.set('projectCode', selectedProject.value);
     }
 
@@ -239,6 +242,12 @@ async function loadDashboardData() {
 
 function handleScopeChange(scope: 'team' | 'function' | 'management') {
   activeScope.value = scope;
+  if (scope === 'function') {
+    selectedProject.value = 'ALL';
+    selectedDivision.value = 'ALL';
+  } else if (scope === 'team') {
+    selectedDivision.value = 'ALL';
+  }
   loadDashboardData();
 }
 
@@ -310,12 +319,13 @@ onMounted(() => {
 
       <!-- Scope Switcher & Filter Bar -->
       <div class="scope-bar">
-        <div v-if="allowedScopes.length > 1" class="scope-tabs" role="tablist">
+        <div v-if="allowedScopes.length >= 1" class="scope-tabs" role="tablist">
           <button
             v-if="allowedScopes.includes('team')"
             type="button"
             class="scope-tab"
             :class="{ active: activeScope === 'team' }"
+            data-testid="scope-tab-team"
             @click="handleScopeChange('team')"
           >
             <span>Tim (Proyek)</span>
@@ -326,6 +336,7 @@ onMounted(() => {
             type="button"
             class="scope-tab"
             :class="{ active: activeScope === 'function' }"
+            data-testid="scope-tab-function"
             @click="handleScopeChange('function')"
           >
             <span>Divisi Saya</span>
@@ -336,6 +347,7 @@ onMounted(() => {
             type="button"
             class="scope-tab"
             :class="{ active: activeScope === 'management' }"
+            data-testid="scope-tab-management"
             @click="handleScopeChange('management')"
           >
             <span>Seluruh Perusahaan</span>
@@ -357,14 +369,17 @@ onMounted(() => {
             </option>
           </select>
 
-          <!-- Filter Proyek -->
+          <!-- Filter Proyek khusus pada cakupan Tim (Proyek) dan Seluruh Perusahaan (CEO) -->
           <select
+            v-if="activeScope === 'team' || activeScope === 'management'"
             v-model="selectedProject"
             class="filter-select"
             data-testid="filter-project-select"
             @change="loadDashboardData"
           >
-            <option value="ALL">Semua Proyek &amp; Inisiatif</option>
+            <option value="ALL">
+              {{ activeScope === 'team' ? 'Semua Proyek Saya' : 'Semua Proyek & Inisiatif' }}
+            </option>
             <option
               v-for="prj in projectFilterOptions"
               :key="prj.projectCode"

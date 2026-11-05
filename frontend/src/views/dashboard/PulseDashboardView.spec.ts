@@ -130,8 +130,13 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     // Default pendaratan HEAD adalah Divisi Saya (Function Pulse)
     expect(wrapper.find('h1').text()).toContain('Function Pulse (Divisi Saya)');
-    // Tab Seluruh Perusahaan TIDAK ADA
+    // Hanya tab Divisi Saya yang muncul (tidak ada Tim Proyek jika bukan Project Lead, dan tidak ada Seluruh Perusahaan)
+    const tabs = wrapper.findAll('.scope-tab');
+    expect(tabs.length).toBe(1);
+    expect(tabs[0].text()).toContain('Divisi Saya');
     expect(wrapper.text()).not.toContain('Seluruh Perusahaan');
+    // Filter Proyek tidak ditampilkan pada tab Divisi Saya
+    expect(wrapper.find('[data-testid="filter-project-select"]').exists()).toBe(false);
   });
 
   it('shows Tim (Proyek) and Divisi Saya tabs when HEAD is also a Project Lead', async () => {
@@ -188,7 +193,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     expect(tabs[1].text()).toContain('Divisi Saya');
   });
 
-  it('restricts tabs for SUPERVISOR / Project Lead role: hides scope-tabs selector and defaults to Team Pulse', async () => {
+  it('restricts tabs for SUPERVISOR / Project Lead role: shows only Tim (Proyek) tab with project filter and defaults to Team Pulse', async () => {
     const authStore = (await import('../../stores/auth')).useAuthStore();
     authStore.user = {
       id: 'spv-id',
@@ -209,6 +214,9 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(wrapper.find('h1').text()).toContain('Team Pulse (Tim Proyek)');
-    expect(wrapper.find('.scope-tabs').exists()).toBe(false);
+    const tabs = wrapper.findAll('.scope-tab');
+    expect(tabs.length).toBe(1);
+    expect(tabs[0].text()).toContain('Tim (Proyek)');
+    expect(wrapper.find('[data-testid="filter-project-select"]').exists()).toBe(true);
   });
 });

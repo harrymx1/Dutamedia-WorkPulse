@@ -88,4 +88,40 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
     const mobile = projectRisks.find((p) => p.projectCode === 'PRJ-MOBILE');
     expect(mobile?.riskLevel).toBe('LOW');
   });
+
+  it('marks isProjectLead true only for direct projectManagerId and not for escalationReviewerId', async () => {
+    mockPrisma.user.count.mockResolvedValue(5);
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
+    mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+    mockPrisma.projectAuthorityMapping = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          projectCode: 'WP-CORE',
+          projectName: 'WorkPulse Core Engine',
+          projectManagerId: 'user-sup-01',
+          escalationReviewerId: 'user-head-eng',
+          involvedFunction: 'Engineering',
+        },
+      ]),
+    };
+
+    const headPulse = await service.getPulseMetrics({
+      userId: 'user-head-eng',
+      userRole: 'HEAD',
+      userFunction: 'Engineering',
+      scope: 'function',
+    });
+    expect(headPulse.isProjectLead).toBe(false);
+    expect(headPulse.ledProjects).toHaveLength(0);
+
+    const leadPulse = await service.getPulseMetrics({
+      userId: 'user-sup-01',
+      userRole: 'SUPERVISOR',
+      userFunction: 'Engineering',
+      scope: 'team',
+    });
+    expect(leadPulse.isProjectLead).toBe(true);
+    expect(leadPulse.ledProjects).toHaveLength(1);
+    expect(leadPulse.ledProjects[0].projectCode).toBe('WP-CORE');
+  });
 });

@@ -67,11 +67,10 @@ export class DashboardService {
       projectName,
     }));
 
-    // Tentukan apakah pemanggil adalah Project Lead
+    // Tentukan apakah pemanggil adalah Project Lead langsung (projectManagerId)
+    // Catatan: escalationReviewerId adalah atasan eskalasi struktural (Head/CEO), bukan Project Lead harian
     const callerLedMappings = options?.userId
-      ? projectMappings.filter(
-          (m) => m.projectManagerId === options.userId || m.escalationReviewerId === options.userId,
-        )
+      ? projectMappings.filter((m) => m.projectManagerId === options.userId)
       : [];
     const isProjectLead =
       callerLedMappings.length > 0 ||

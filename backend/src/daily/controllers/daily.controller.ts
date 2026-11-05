@@ -16,7 +16,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
 
-@Controller(['daily', 'api/daily'])
+@Controller(['daily', 'api/daily', 'api/v1/daily'])
 @UseGuards(AuthGuard, CsrfGuard)
 export class DailyController {
   constructor(

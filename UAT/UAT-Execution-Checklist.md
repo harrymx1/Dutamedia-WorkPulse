@@ -108,7 +108,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
 | [P] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | PASS | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
-| [ ] | `TC-SUPV-001` | Penegakan Scope Project Lead / Supervisor (`Tim Proyek` & Bawahan) & Penolakan Lintas Scope/Divisi (403) | Needs Retest (CR-013) | Perlu diuji ulang: pembatasan tab `Tim (Proyek)` di `/dashboard` (CR-013) + isolasi `/leave/queue` |
+| [P] | `TC-SUPV-001` | Penegakan Scope Project Lead / Supervisor (`Tim Proyek` & Bawahan) & Penolakan Lintas Scope/Divisi (403) | PASS | Terverifikasi CR-013: Bambang (`lead.tech@dutamedia.com`) hanya melihat tab `Tim (Proyek)` di `/dashboard`; akses `/api/dashboard/pulse?scope=function` & `management` serta review cuti luar wewenang ditolak HTTP 403 (`AUTH_FORBIDDEN_SCOPE`) |
 | [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head (`Divisi Saya`) & Penegakan Batasan Lintas Fungsi (403) | Not Run | Tab `Divisi Saya` memuat seluruh anggota divisi; lintas divisi/scope CEO ditolak 403 |
 
 ---

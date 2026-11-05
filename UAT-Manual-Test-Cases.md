@@ -2460,13 +2460,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 **Langkah Pengujian:**
 1. **Langkah 1 (Verifikasi Pembatasan Tab Scope `Tim (Proyek)` pada Pulse Dashboard `/dashboard`)**
-   - **Aksi:** Login sebagai `lead.tech@dutamedia.com` dan mendarat di `/dashboard`. Amati pilihan tab scope yang tampil di sudut kanan atas header, serta uji pemanggilan API `/api/v1/dashboard/pulse?scope=function` dan `/api/v1/dashboard/pulse?scope=management` via Console.
+   - **Aksi:** Login sebagai `lead.tech@dutamedia.com` dan mendarat di `/dashboard`. Amati pilihan tab scope yang tampil di sudut kanan atas header, serta uji pemanggilan API `/api/dashboard/pulse?scope=function` dan `/api/dashboard/pulse?scope=management` via Console.
    - **Lokasi:** Rute `/dashboard`.
    - **Data:** Tidak ada.
    - **Hasil yang diharapkan:**
      - Pada UI `/dashboard`, hanya tab **`Tim (Proyek)`** (`data-testid="scope-tab-team"`) yang muncul beserta dropdown filter proyek (`Semua Proyek Saya`, `[WP-CORE]`, `[PRJ-CORE]`). Tab **`Divisi Saya`** dan **`Seluruh Perusahaan`** TIDAK muncul karena Bambang bukan `HEAD` dan bukan `CEO_MANAGEMENT`.
      - Kartu "Personil Butuh Bantuan Hari Ini" menampilkan anggota tim proyek `WP-CORE` yang sedang mengalami kendala (`Aditya Nugroho`).
-     - Jika dipanggil paksa via API, `GET /api/v1/dashboard/pulse?scope=function` dan `GET /api/v1/dashboard/pulse?scope=management` ditolak oleh backend dengan status **HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`)**.
+     - Jika dipanggil paksa via API, `GET /api/dashboard/pulse?scope=function` dan `GET /api/dashboard/pulse?scope=management` ditolak oleh backend dengan status **HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`)**.
    - **Verifikasi:** Visibilitas tab UI dan proteksi endpoint backend `/dashboard/pulse` terkunci ketat pada `scope=team`.
 2. **Langkah 2 (Verifikasi Isolasi Wewenang Kepegawaian pada `/leave/queue`)**
    - **Aksi:** Buka menu "Persetujuan Cuti" pada rute `/leave/queue`.
@@ -2483,13 +2483,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Sistem secara mutlak menegakkan bahwa Project Lead / Technical Lead hanya mengakses scope `Tim (Proyek)` pada dashboard dan menggagalkan akses kepegawaian `Divisi Saya` / `Seluruh Perusahaan` maupun intervensi cuti lintas kewenangan dengan status HTTP 403 `AUTH_FORBIDDEN_SCOPE`.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar `/dashboard` pada akun Bambang (`Technical Lead 1`) yang hanya menampilkan tab `Tim (Proyek)` serta tangkapan layar penolakan 403 `AUTH_FORBIDDEN_SCOPE` pada Console.
-- **Actual Result:** Sebelumnya lulus pada verifikasi penolakan 403 `/leave/queue` (req_faadb374), perlu diuji ulang (Retest) untuk memverifikasi pembatasan 3-Scope Dashboard (`CR-013`) dan struktur organisasi resmi PT Dutamedia Mandiri Pratama.
-- **Execution Status:** Needs Retest (CR-013)
+- **Actual Result:** Terverifikasi penuh sesuai struktur resmi PT Dutamedia Mandiri Pratama (CR-013): Bambang Pratama (`lead.tech@dutamedia.com` - Technical Lead 1, role SUPERVISOR) pada `/dashboard` hanya melihat tab `Tim (Proyek)` beserta dropdown proyek (`WP-CORE`, `PRJ-CORE`) tanpa tab `Divisi Saya` atau `Seluruh Perusahaan`; pemanggilan paksa `GET /api/dashboard/pulse?scope=function` dan `GET /api/dashboard/pulse?scope=management` ditolak backend dengan HTTP 403 (`AUTH_FORBIDDEN_SCOPE`); halaman `/leave/queue` bersih dari permohonan cuti luar wewenang dan percobaan review cuti Maya Putri (R&D) via API ditolak dengan HTTP 403 (`AUTH_FORBIDDEN_SCOPE`).
+- **Execution Status:** Pass
 - **Tester:** Harry
 - **Execution Date:** 2026-11-05
 - **Defect ID:** -
-- **Retest Result:** Pending Retest
-- **Catatan:** Selaras penuh dengan struktur organisasi resmi PT Dutamedia Mandiri Pratama (`CR-013`).
+- **Retest Result:** Pass
+- **Catatan:** Lulus penuh pasca penyelarasan 3-Scope Dashboard (`CR-013`) dan struktur organisasi resmi PT Dutamedia Mandiri Pratama.
 
 ---
 
@@ -2575,8 +2575,8 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Verifikasi:** Head dapat mengakses halaman `/admin/policies` tanpa dicegat route guard `/forbidden`.
 3. **Langkah 3 (Penolakan Akses Lintas Batas Divisi & Scope CEO)**
    - **Aksi:** Melalui Developer Console, coba panggil:
-     a. Data riwayat komitmen staf divisi R&D (`Maya Putri` - `designer@dutamedia.com`) via `GET /api/v1/daily/history?userId={id-maya}` (atau review cuti Maya Putri via `POST /api/v1/leave/requests/{id-cuti-maya}/review`).
-     b. Dashboard scope CEO (`GET /api/v1/dashboard/pulse?scope=management`) dan filter divisi lain (`GET /api/v1/dashboard/pulse?scope=function&function=RnD`).
+     a. Data riwayat komitmen staf divisi R&D (`Maya Putri` - `designer@dutamedia.com`) via `GET /api/daily/history?userId={id-maya}` (atau review cuti Maya Putri via `POST /api/v1/leave/requests/{id-cuti-maya}/review`).
+     b. Dashboard scope CEO (`GET /api/dashboard/pulse?scope=management`) dan filter divisi lain (`GET /api/dashboard/pulse?scope=function&function=RnD`).
    - **Lokasi:** Browser Developer Console (F12).
    - **Data:** ID Pengguna Maya Putri (divisi `RnD`) & query scope lintas batas.
    - **Hasil yang diharapkan:** Backend `ScopeResolverService` dan `DashboardController` menolak seluruh permintaan lintas batas tersebut dengan status **HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`)**.
