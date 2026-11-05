@@ -718,11 +718,18 @@ h1 {
 }
 
 .filter-select {
-  padding: 6px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 6px 34px 6px 12px;
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 6px;
   font-size: 12.5px;
-  background: #FFFFFF;
+  background-color: #FFFFFF;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C6E68' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px 14px;
 }
 
 .metrics-grid {
