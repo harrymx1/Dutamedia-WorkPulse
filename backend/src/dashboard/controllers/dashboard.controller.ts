@@ -12,7 +12,12 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get(['dashboard/pulse', 'api/dashboard/pulse', 'dashboard/metrics', 'api/dashboard/metrics'])
-  async getPulseMetrics(@Req() req: any, @Query('scope') scope?: string) {
+  async getPulseMetrics(
+    @Req() req: any,
+    @Query('scope') scope?: string,
+    @Query('function') filterFunction?: string,
+    @Query('projectCode') projectCode?: string,
+  ) {
     const userRole = req.user?.role;
     if (scope === 'management') {
       if (
@@ -24,7 +29,7 @@ export class DashboardController {
         throw new AppException({
           statusCode: HttpStatus.FORBIDDEN,
           code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
-          message: 'Anda tidak memiliki kewenangan untuk mengakses cakupan Management Pulse.',
+          message: 'Anda tidak memiliki kewenangan untuk mengakses cakupan Seluruh Perusahaan (Management Pulse).',
         });
       }
     }
@@ -38,11 +43,18 @@ export class DashboardController {
         throw new AppException({
           statusCode: HttpStatus.FORBIDDEN,
           code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
-          message: 'Anda tidak memiliki kewenangan untuk mengakses cakupan Function Pulse.',
+          message: 'Anda tidak memiliki kewenangan untuk mengakses cakupan Divisi Saya (Function Pulse).',
         });
       }
     }
-    return this.dashboardService.getPulseMetrics();
+    return this.dashboardService.getPulseMetrics({
+      userId: req.user?.id,
+      userRole: req.user?.role,
+      userFunction: req.user?.function,
+      scope,
+      filterFunction,
+      projectCode,
+    });
   }
 
   @Get(['projects/risk', 'api/projects/risk', 'dashboard/projects', 'api/dashboard/projects'])
@@ -55,4 +67,3 @@ export class DashboardController {
     return [];
   }
 }
-

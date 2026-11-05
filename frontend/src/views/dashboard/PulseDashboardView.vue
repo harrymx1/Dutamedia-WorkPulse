@@ -13,6 +13,25 @@ import {
   HeartHandshake,
 } from 'lucide-vue-next';
 
+interface AttentionItem {
+  id: string;
+  userName: string;
+  jobTitle: string;
+  function: string;
+  projectCode: string | null;
+  level: 'RED' | 'AMBER';
+  badgeLabel: string;
+  description: string;
+  supportNote: string;
+  actionUrl: string;
+  actionLabel: string;
+}
+
+interface ProjectOption {
+  projectCode: string;
+  projectName: string;
+}
+
 interface DashboardMetrics {
   totalEmployees: number;
   submittedCount: number;
@@ -21,6 +40,11 @@ interface DashboardMetrics {
   redCommitmentsCount: number;
   unacknowledgedBlockersCount: number;
   completionRatePercent: number;
+  isProjectLead?: boolean;
+  callerFunction?: string | null;
+  ledProjects?: ProjectOption[];
+  availableProjects?: ProjectOption[];
+  attentionItems?: AttentionItem[];
 }
 
 interface SupportFeedItem {
@@ -36,11 +60,13 @@ const auth = useAuthStore();
 
 type ScopeType = 'team' | 'function' | 'management';
 
+const isDynamicProjectLead = ref(false);
+
 /**
- * Matriks Otorisasi Cakupan Pulse Dashboard (PRD v1.6 Hal. 54 & UI-UX Spec 4.8 AC-63):
- * - team (Team Pulse / L1): SUPERVISOR, HEAD, PROJECT_MANAGER, CEO_MANAGEMENT, SYSTEM_ADMIN
- * - function (Function Pulse / L2): HEAD, CEO_MANAGEMENT, SYSTEM_ADMIN
- * - management (Management Pulse / Executive): CEO_MANAGEMENT, SYSTEM_ADMIN, HRGA
+ * Aturan Cakupan Pulse Dashboard PT Dutamedia Mandiri Pratama:
+ * - team (Tim Proyek): Hanya untuk Project Lead (siapapun yang memimpin proyek di ProjectAuthorityMapping, atau PROJECT_MANAGER / SUPERVISOR)
+ * - function (Divisi Saya): Hanya untuk Kepala Divisi (HEAD)
+ * - management (Seluruh Perusahaan): Hanya untuk CEO (CEO_MANAGEMENT), SYSTEM_ADMIN, HRGA — dilengkapi filter per Divisi
  */
 const allowedScopes = computed<ScopeType[]>(() => {
   const role = auth.user?.role;
@@ -50,11 +76,16 @@ const allowedScopes = computed<ScopeType[]>(() => {
 
   const scopes: ScopeType[] = [];
 
-  if (['SUPERVISOR', 'HEAD', 'PROJECT_MANAGER', 'CEO_MANAGEMENT', 'SYSTEM_ADMIN'].includes(role)) {
+  const isLead =
+    isDynamicProjectLead.value ||
+    role === 'PROJECT_MANAGER' ||
+    role === 'SUPERVISOR';
+
+  if (isLead) {
     scopes.push('team');
   }
 
-  if (['HEAD', 'CEO_MANAGEMENT', 'SYSTEM_ADMIN'].includes(role)) {
+  if (role === 'HEAD') {
     scopes.push('function');
   }
 
@@ -62,19 +93,31 @@ const allowedScopes = computed<ScopeType[]>(() => {
     scopes.push('management');
   }
 
-  return scopes;
+  return scopes.length > 0 ? scopes : ['team'];
 });
 
 function getDefaultScope(role?: string | null): ScopeType {
   if (role === 'HEAD') return 'function';
-  if (role === 'CEO_MANAGEMENT' || role === 'HRGA') return 'management';
+  if (role === 'CEO_MANAGEMENT' || role === 'SYSTEM_ADMIN' || role === 'HRGA') return 'management';
   return 'team';
 }
 
 const loading = ref(false);
 const activeScope = ref<ScopeType>(getDefaultScope(auth.user?.role));
+const selectedDivision = ref('ALL');
 const selectedProject = ref('ALL');
 const selectedPeriod = ref('today');
+
+const divisionOptions = [
+  { value: 'ALL', label: 'Semua Divisi Perusahaan' },
+  { value: 'ENGINEERING', label: 'Divisi Engineering' },
+  { value: 'DELIVERY', label: 'Divisi Delivery' },
+  { value: 'OPERATIONS_INFRA', label: 'Divisi Operations & Infrastructure' },
+  { value: 'COMMERCIAL', label: 'Divisi Commercial & Sales Enablement' },
+  { value: 'FINANCE', label: 'Divisi Finance' },
+  { value: 'HRGA', label: 'Divisi HRGA & Legal' },
+  { value: 'RND_ADVISORY', label: 'R&D & Technical Advisory' },
+];
 
 // Sinkronkan activeScope jika penugasan / role berubah
 watch(
@@ -88,13 +131,36 @@ watch(
 );
 
 const metrics = ref<DashboardMetrics>({
-  totalEmployees: 32,
-  submittedCount: 28,
-  noSubmissionCount: 4,
-  amberCommitmentsCount: 5,
-  redCommitmentsCount: 3,
-  unacknowledgedBlockersCount: 2,
-  completionRatePercent: 87.5,
+  totalEmployees: 0,
+  submittedCount: 0,
+  noSubmissionCount: 0,
+  amberCommitmentsCount: 0,
+  redCommitmentsCount: 0,
+  unacknowledgedBlockersCount: 0,
+  completionRatePercent: 0,
+  availableProjects: [
+    { projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing' },
+    { projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync' },
+    { projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android' },
+  ],
+  attentionItems: [],
+});
+
+const projectFilterOptions = computed<ProjectOption[]>(() => {
+  if (
+    activeScope.value === 'team' &&
+    metrics.value.ledProjects &&
+    metrics.value.ledProjects.length > 0
+  ) {
+    return metrics.value.ledProjects;
+  }
+  return (
+    metrics.value.availableProjects || [
+      { projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing' },
+      { projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync' },
+      { projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android' },
+    ]
+  );
 });
 
 const feedItems = ref<SupportFeedItem[]>([]);
@@ -120,12 +186,46 @@ function showToast(msg: string, isError = false) {
 async function loadDashboardData() {
   loading.value = true;
   try {
+    const query = new URLSearchParams({
+      scope: activeScope.value,
+    });
+    if (activeScope.value === 'management' && selectedDivision.value !== 'ALL') {
+      query.set('function', selectedDivision.value);
+    }
+    if (selectedProject.value !== 'ALL') {
+      query.set('projectCode', selectedProject.value);
+    }
+
     const [metricRes, feedRes] = await Promise.all([
-      apiClient<DashboardMetrics>(`/dashboard/metrics?scope=${activeScope.value}`),
+      apiClient<any>(`/dashboard/metrics?${query.toString()}`),
       apiClient<SupportFeedItem[]>('/dashboard/feed'),
     ]);
     if (metricRes?.data) {
-      metrics.value = metricRes.data;
+      const d = metricRes.data;
+      const totalEmp = d.totalEmployees ?? 0;
+      const submitted = d.submittedCount ?? d.checkedInCount ?? 0;
+      const noSub = d.noSubmissionCount ?? Math.max(0, totalEmp - submitted);
+      const amber = d.amberCommitmentsCount ?? d.commitments?.amberCount ?? 0;
+      const red = d.redCommitmentsCount ?? d.commitments?.redCount ?? 0;
+      const unack = d.unacknowledgedBlockersCount ?? d.blockers?.totalOpen ?? 0;
+      const rate = d.completionRatePercent ?? d.participationRate ?? 0;
+
+      if (typeof d.isProjectLead === 'boolean') {
+        isDynamicProjectLead.value = d.isProjectLead;
+      }
+
+      metrics.value = {
+        ...d,
+        totalEmployees: totalEmp,
+        submittedCount: submitted,
+        noSubmissionCount: noSub,
+        amberCommitmentsCount: amber,
+        redCommitmentsCount: red,
+        unacknowledgedBlockersCount: unack,
+        completionRatePercent: rate,
+        availableProjects: d.availableProjects || metrics.value.availableProjects,
+        attentionItems: Array.isArray(d.attentionItems) ? d.attentionItems : [],
+      };
     }
 
     const feedData = feedRes?.data || feedRes;
@@ -143,19 +243,25 @@ function handleScopeChange(scope: 'team' | 'function' | 'management') {
 }
 
 const scopeTitle = computed(() => {
-  if (activeScope.value === 'team') return 'Team Pulse';
-  if (activeScope.value === 'function') return 'Function Pulse';
-  return 'Management Pulse';
+  if (activeScope.value === 'team') return 'Team Pulse (Tim Proyek)';
+  if (activeScope.value === 'function') return 'Function Pulse (Divisi Saya)';
+  return 'Management Pulse (Seluruh Perusahaan)';
+});
+
+const scopeBadgeLabel = computed(() => {
+  if (activeScope.value === 'team') return 'TIM PROYEK';
+  if (activeScope.value === 'function') return 'DIVISI SAYA';
+  return 'SELURUH PERUSAHAAN';
 });
 
 const scopeSubtitle = computed(() => {
   if (activeScope.value === 'team') {
-    return 'Ringkasan kondisi tim dan hal yang membutuhkan perhatian segera, dalam lingkup personil langsung Anda.';
+    return 'Ringkasan status kerja, komitmen harian, dan kendala (blocker) personel yang tergabung dalam proyek yang Anda pimpin.';
   }
   if (activeScope.value === 'function') {
-    return 'Tinjauan operasional departemen lintas unit kerja, agregasi blocker dan eskalasi hambatan produksi.';
+    return 'Tinjauan operasional seluruh anggota di divisi Anda, kepatuhan komitmen harian, serta eskalasi hambatan kerja.';
   }
-  return 'Laporan eksekutif kesehatan organisasi menyeluruh, tingkat kepatuhan harian, dan radar risiko proyek.';
+  return 'Laporan eksekutif kesehatan organisasi menyeluruh lintas divisi, tingkat kepatuhan harian, dan radar risiko proyek.';
 });
 
 function formatRelativeTime(dateStr: string) {
@@ -197,12 +303,12 @@ onMounted(() => {
           </div>
           <div>
             <div class="scope-label">Lingkup Aktif</div>
-            <strong class="scope-name">{{ activeScope.toUpperCase() }}</strong>
+            <strong class="scope-name" data-testid="active-scope-badge">{{ scopeBadgeLabel }}</strong>
           </div>
         </div>
       </div>
 
-      <!-- Scope Switcher Bar: Hanya muncul jika pengguna memiliki > 1 cakupan (PRD v1.6 Hal 54, AC-63) -->
+      <!-- Scope Switcher & Filter Bar -->
       <div class="scope-bar">
         <div v-if="allowedScopes.length > 1" class="scope-tabs" role="tablist">
           <button
@@ -212,8 +318,8 @@ onMounted(() => {
             :class="{ active: activeScope === 'team' }"
             @click="handleScopeChange('team')"
           >
-            <span>Team Pulse</span>
-            <span class="badge">Supervisor</span>
+            <span>Tim (Proyek)</span>
+            <span class="badge">Project Lead</span>
           </button>
           <button
             v-if="allowedScopes.includes('function')"
@@ -222,8 +328,8 @@ onMounted(() => {
             :class="{ active: activeScope === 'function' }"
             @click="handleScopeChange('function')"
           >
-            <span>Function Pulse</span>
-            <span class="badge">Head of Dept</span>
+            <span>Divisi Saya</span>
+            <span class="badge">Head Divisi</span>
           </button>
           <button
             v-if="allowedScopes.includes('management')"
@@ -232,18 +338,42 @@ onMounted(() => {
             :class="{ active: activeScope === 'management' }"
             @click="handleScopeChange('management')"
           >
-            <span>Management Pulse</span>
+            <span>Seluruh Perusahaan</span>
             <span class="badge">CEO / Direksi</span>
           </button>
         </div>
 
         <div class="filter-tools">
-          <select v-model="selectedProject" class="filter-select">
-            <option value="ALL">Semua Proyek &amp; Inisiatif</option>
-            <option value="CORE_PAYMENT">Core Payment Engine</option>
-            <option value="MERCHANT_PORTAL">Merchant Portal Web</option>
-            <option value="WORKPULSE_APP">WorkPulse Fullstack</option>
+          <!-- Filter Divisi khusus pada cakupan Seluruh Perusahaan (CEO) -->
+          <select
+            v-if="activeScope === 'management'"
+            v-model="selectedDivision"
+            class="filter-select"
+            data-testid="filter-division-select"
+            @change="loadDashboardData"
+          >
+            <option v-for="div in divisionOptions" :key="div.value" :value="div.value">
+              {{ div.label }}
+            </option>
           </select>
+
+          <!-- Filter Proyek -->
+          <select
+            v-model="selectedProject"
+            class="filter-select"
+            data-testid="filter-project-select"
+            @change="loadDashboardData"
+          >
+            <option value="ALL">Semua Proyek &amp; Inisiatif</option>
+            <option
+              v-for="prj in projectFilterOptions"
+              :key="prj.projectCode"
+              :value="prj.projectCode"
+            >
+              [{{ prj.projectCode }}] {{ prj.projectName }}
+            </option>
+          </select>
+
           <select v-model="selectedPeriod" class="filter-select">
             <option value="today">Hari Ini</option>
             <option value="yesterday">Kemarin</option>
@@ -320,7 +450,7 @@ onMounted(() => {
 
       <!-- 2-Column Action & Feed Layout -->
       <div class="content-grid">
-        <!-- Kolom Kiri: Action Needed -->
+        <!-- Kolom Kiri: Action Needed (Dinamis dari Data Nyata) -->
         <section class="panel">
           <div class="panel-head">
             <div>
@@ -329,35 +459,41 @@ onMounted(() => {
             </div>
           </div>
           <div class="panel-body">
-            <div class="action-items-list">
-              <div class="action-item alert">
-                <div class="item-icon-wrap red">
-                  <AlertCircle :size="18" />
+            <div
+              v-if="!metrics.attentionItems || metrics.attentionItems.length === 0"
+              class="empty-feed"
+              data-testid="empty-attention-items"
+            >
+              <CheckCircle2 :size="32" class="empty-icon" />
+              <p>Seluruh personel dalam lingkup ini berjalan terkendali hari ini (Tidak ada komitmen Amber/Merah).</p>
+            </div>
+            <div v-else class="action-items-list">
+              <div
+                v-for="item in metrics.attentionItems"
+                :key="item.id"
+                class="action-item"
+                :class="item.level === 'RED' ? 'alert' : 'warn'"
+              >
+                <div class="item-icon-wrap" :class="item.level === 'RED' ? 'red' : 'amber'">
+                  <AlertCircle v-if="item.level === 'RED'" :size="18" />
+                  <Clock v-else :size="18" />
                 </div>
                 <div class="item-info">
-                  <div class="item-title">Budi Pratama · Software Engineer</div>
-                  <div class="item-desc">Terkendala akses staging Redis &amp; DB Sandbox untuk uji migrasi VAPID.</div>
+                  <div class="item-title">{{ item.userName }} · {{ item.jobTitle }}</div>
+                  <div class="item-desc">{{ item.description }}</div>
                   <div class="item-meta">
-                    <span class="pill red">Blocker Kritis</span>
-                    <span>Menunggu respon Lead Infra</span>
+                    <span class="pill" :class="item.level === 'RED' ? 'red' : 'amber'">
+                      {{ item.badgeLabel }}
+                    </span>
+                    <span v-if="item.projectCode" class="pill neutral">
+                      Proyek: {{ item.projectCode }}
+                    </span>
+                    <span>{{ item.supportNote }}</span>
                   </div>
                 </div>
-                <AccessLink to="/blockers" class="btn btn-secondary btn-sm">Bantu</AccessLink>
-              </div>
-
-              <div class="action-item warn">
-                <div class="item-icon-wrap amber">
-                  <Clock :size="18" />
-                </div>
-                <div class="item-info">
-                  <div class="item-title">Citra Lestari · QA Specialist</div>
-                  <div class="item-desc">Komitmen Amber: Menunggu mock endpoint Brevo untuk verifikasi webhook.</div>
-                  <div class="item-meta">
-                    <span class="pill amber">Komitmen Amber</span>
-                    <span>Target selesai 16:00 WIB</span>
-                  </div>
-                </div>
-                <AccessLink to="/coaching" class="btn btn-secondary btn-sm">Catat</AccessLink>
+                <AccessLink :to="item.actionUrl" class="btn btn-secondary btn-sm">
+                  {{ item.actionLabel }}
+                </AccessLink>
               </div>
             </div>
           </div>
@@ -578,6 +714,7 @@ h1 {
 .filter-tools {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .filter-select {
@@ -753,7 +890,7 @@ h1 {
 
 .item-title {
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 750;
 }
 
 .item-desc {
@@ -766,6 +903,7 @@ h1 {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 11.5px;
   color: var(--color-text-secondary, #5C6E68);
 }
@@ -842,6 +980,7 @@ h1 {
   color: var(--color-text-secondary, #5C6E68);
   font-size: 12.5px;
   gap: 8px;
+  text-align: center;
 }
 
 .empty-icon {

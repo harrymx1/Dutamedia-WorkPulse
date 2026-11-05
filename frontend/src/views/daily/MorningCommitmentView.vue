@@ -22,6 +22,8 @@ import {
 interface CommitmentSlot {
   taskText: string;
   referenceLink: string;
+  projectCode: string;
+  linkedBlockerId: string;
   initialRisk: 'GREEN' | 'AMBER' | 'RED';
   knownBlockerNote: string;
   supportNeeded: string;
@@ -29,10 +31,26 @@ interface CommitmentSlot {
   carryOverDaysCount: number;
 }
 
+interface ProjectOption {
+  projectCode: string;
+  projectName: string;
+}
+
+interface ActiveBlockerOption {
+  id: string;
+  code: string;
+  description: string;
+  severity: string;
+  projectCodeReference: string | null;
+  status: string;
+}
+
 interface CarryOverDraft {
   originCommitmentId: string;
   taskText: string;
   referenceLink: string | null;
+  projectCode?: string | null;
+  linkedBlockerId?: string | null;
   carryOverDaysCount: number;
   suggestedRisk: 'GREEN' | 'AMBER' | 'RED';
   isAmberWarningAdvised: boolean;
@@ -54,11 +72,19 @@ const zeroCommitmentReason = ref('');
 
 const isCopyForwardOpen = ref(false);
 const availableCarryOvers = ref<CarryOverDraft[]>([]);
+const availableProjects = ref<ProjectOption[]>([
+  { projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing' },
+  { projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync' },
+  { projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android' },
+]);
+const activeBlockers = ref<ActiveBlockerOption[]>([]);
 
 const commitmentSlots = ref<CommitmentSlot[]>([
   {
     taskText: '',
     referenceLink: '',
+    projectCode: '',
+    linkedBlockerId: '',
     initialRisk: 'GREEN',
     knownBlockerNote: '',
     supportNeeded: '',
@@ -144,6 +170,8 @@ async function loadTodayState() {
       };
       record: any;
       availableCarryOvers: CarryOverDraft[];
+      availableProjects?: ProjectOption[];
+      activeBlockers?: ActiveBlockerOption[];
     }>('/daily/today');
 
     const data = res.data;
@@ -154,6 +182,12 @@ async function loadTodayState() {
     isMorningLocked.value = data.cutoffTimings.isMorningLocked;
     isLate.value = data.currentTime > data.cutoffTimings.morningOnTimeCutoff && !data.cutoffTimings.isMorningLocked;
     availableCarryOvers.value = data.availableCarryOvers || [];
+    if (Array.isArray(data.availableProjects) && data.availableProjects.length > 0) {
+      availableProjects.value = data.availableProjects;
+    }
+    if (Array.isArray(data.activeBlockers)) {
+      activeBlockers.value = data.activeBlockers;
+    }
 
     // Jika record sudah ada di DB
     if (data.record) {
@@ -168,6 +202,8 @@ async function loadTodayState() {
         commitmentSlots.value = data.record.commitments.map((c: any) => ({
           taskText: c.taskText,
           referenceLink: c.referenceLink || '',
+          projectCode: c.projectCode || '',
+          linkedBlockerId: c.linkedBlockerId || '',
           initialRisk: c.initialRisk,
           knownBlockerNote: c.knownBlockerNote || '',
           supportNeeded: c.supportNeeded || '',
@@ -195,6 +231,8 @@ function addSlot() {
   commitmentSlots.value.push({
     taskText: '',
     referenceLink: '',
+    projectCode: '',
+    linkedBlockerId: '',
     initialRisk: 'GREEN',
     knownBlockerNote: '',
     supportNeeded: '',
@@ -222,6 +260,8 @@ function applyCarryOver(draft: CarryOverDraft) {
     commitmentSlots.value[targetIndex] = {
       taskText: draft.taskText,
       referenceLink: draft.referenceLink || '',
+      projectCode: draft.projectCode || '',
+      linkedBlockerId: draft.linkedBlockerId || '',
       initialRisk: draft.suggestedRisk,
       knownBlockerNote: '',
       supportNeeded: '',
@@ -231,6 +271,40 @@ function applyCarryOver(draft: CarryOverDraft) {
     showToast(`Draf tugas carry-over #${draft.carryOverDaysCount} diterapkan ke slot #${targetIndex + 1}.`);
   } else {
     showToast('Semua 3 slot telah terisi. Hapus salah satu slot terlebih dahulu.', true);
+  }
+}
+
+function handleResolveBlockerSelect(slotIndex: number, event: Event) {
+  const selectEl = event.target as HTMLSelectElement;
+  const blockerId = selectEl.value;
+  if (!blockerId) return;
+
+  const blocker = activeBlockers.value.find((b) => b.id === blockerId);
+  const slot = commitmentSlots.value[slotIndex];
+  if (blocker && slot) {
+    slot.referenceLink = `[${blocker.code}] ${blocker.description}`;
+    slot.linkedBlockerId = blocker.id;
+    if (blocker.projectCodeReference && !slot.projectCode) {
+      slot.projectCode = blocker.projectCodeReference;
+    }
+    if (!slot.taskText.trim()) {
+      slot.taskText = `Menyelesaikan kendala ${blocker.code}: ${blocker.description}`;
+    }
+  }
+  selectEl.value = '';
+}
+
+function handleHinderedByBlockerChange(slotIndex: number) {
+  const slot = commitmentSlots.value[slotIndex];
+  if (!slot || !slot.linkedBlockerId) return;
+  const blocker = activeBlockers.value.find((b) => b.id === slot.linkedBlockerId);
+  if (blocker) {
+    if (!slot.knownBlockerNote.trim()) {
+      slot.knownBlockerNote = `Terkait kendala aktif ${blocker.code}: ${blocker.description}`;
+    }
+    if (blocker.projectCodeReference && !slot.projectCode) {
+      slot.projectCode = blocker.projectCodeReference;
+    }
   }
 }
 
@@ -273,6 +347,8 @@ async function submitMorningCheckin() {
         : commitmentSlots.value.map((s) => ({
             taskText: s.taskText.trim(),
             referenceLink: s.referenceLink.trim() ? s.referenceLink.trim() : undefined,
+            projectCode: s.projectCode.trim() ? s.projectCode.trim() : undefined,
+            linkedBlockerId: s.linkedBlockerId.trim() ? s.linkedBlockerId.trim() : undefined,
             initialRisk: s.initialRisk,
             knownBlockerNote: s.knownBlockerNote.trim() ? s.knownBlockerNote.trim() : undefined,
             supportNeeded: s.supportNeeded.trim() ? s.supportNeeded.trim() : undefined,
@@ -588,18 +664,51 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <!-- Reference link input -->
-            <div class="form-group">
-              <label class="form-label">Tautan Dokumen / PR / Tiket (Opsional)</label>
-              <div class="input-with-icon">
-                <LinkIcon :size="16" class="inner-icon" />
-                <input
-                  v-model="slot.referenceLink"
-                  type="url"
-                  class="input-control with-icon"
-                  placeholder="https://github.com/... atau https://docs.google.com/..."
+            <!-- Proyek Terkait & Tautan Referensi / Pilih Blocker Aktif -->
+            <div class="form-row-meta">
+              <div class="form-group">
+                <label class="form-label">Proyek Terkait (Opsional)</label>
+                <select
+                  v-model="slot.projectCode"
+                  class="input-control"
                   :disabled="isFormLocked"
-                />
+                  :data-testid="`select-project-${idx}`"
+                >
+                  <option value="">-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --</option>
+                  <option
+                    v-for="prj in availableProjects"
+                    :key="prj.projectCode"
+                    :value="prj.projectCode"
+                  >
+                    [{{ prj.projectCode }}] {{ prj.projectName }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Tautan Dokumen / PR / Tiket (Opsional)</label>
+                <div class="input-with-icon">
+                  <LinkIcon :size="16" class="inner-icon" />
+                  <input
+                    v-model="slot.referenceLink"
+                    type="text"
+                    class="input-control with-icon"
+                    placeholder="https://github.com/... atau kode tiket #BLK-..."
+                    :disabled="isFormLocked"
+                  />
+                </div>
+                <div v-if="!isFormLocked && activeBlockers.length > 0" class="blocker-quick-picker">
+                  <select
+                    class="input-control input-sm"
+                    :data-testid="`resolve-blocker-picker-${idx}`"
+                    @change="handleResolveBlockerSelect(idx, $event)"
+                  >
+                    <option value="">+ Pilih Blocker Aktif untuk Diselesaikan (Opsional)...</option>
+                    <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
+                      {{ blk.code }} ({{ blk.severity }}) — {{ blk.description }}
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -656,6 +765,22 @@ onMounted(() => {
 
             <!-- Known Blocker & Support Needed (Muncul jika AMBER / RED) -->
             <div v-if="slot.initialRisk === 'AMBER' || slot.initialRisk === 'RED'" class="blocker-inputs-box">
+              <div class="form-group">
+                <label class="form-label">Tautkan Blocker Aktif yang Menghambat (Opsional)</label>
+                <select
+                  v-model="slot.linkedBlockerId"
+                  class="input-control"
+                  :disabled="isFormLocked"
+                  :data-testid="`hindered-blocker-select-${idx}`"
+                  @change="handleHinderedByBlockerChange(idx)"
+                >
+                  <option value="">-- Tidak terkait tiket blocker yang sudah ada (Kendala baru) --</option>
+                  <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
+                    {{ blk.code }} [{{ blk.severity }}] — {{ blk.description }}
+                  </option>
+                </select>
+              </div>
+
               <div class="form-group">
                 <label class="form-label">Catatan Potensi Kendala (Known Blocker Note) *</label>
                 <textarea
@@ -1459,5 +1584,26 @@ onMounted(() => {
   background: var(--color-status-red-bg);
   color: var(--color-status-red-fg);
   border: 1px solid var(--color-status-red-border);
+}
+
+.form-row-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .form-row-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blocker-quick-picker {
+  margin-top: 6px;
+}
+
+.input-sm {
+  font-size: 12px;
+  padding: 6px 10px;
 }
 </style>

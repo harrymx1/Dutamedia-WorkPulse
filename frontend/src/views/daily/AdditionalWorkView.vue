@@ -15,6 +15,9 @@ interface AdditionalWorkItem {
   id: string;
   taskText: string;
   reason: string;
+  projectCode?: string | null;
+  linkedBlockerId?: string | null;
+  referenceLink?: string | null;
   assignedByUser?: { id: string; fullName: string };
   createdAt: string;
 }
@@ -25,6 +28,20 @@ interface SimpleUser {
   email: string;
 }
 
+interface ProjectOption {
+  projectCode: string;
+  projectName: string;
+}
+
+interface ActiveBlockerOption {
+  id: string;
+  code: string;
+  description: string;
+  severity: string;
+  projectCodeReference: string | null;
+  status: string;
+}
+
 // State
 const loading = ref(false);
 const submitting = ref(false);
@@ -32,11 +49,20 @@ const recordId = ref<string | null>(null);
 const workDate = ref('');
 const additionalWorks = ref<AdditionalWorkItem[]>([]);
 const availableManagers = ref<SimpleUser[]>([]);
+const availableProjects = ref<ProjectOption[]>([
+  { projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing' },
+  { projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync' },
+  { projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android' },
+]);
+const activeBlockers = ref<ActiveBlockerOption[]>([]);
 
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
 const formAssignedBy = ref('');
 const formOtherReason = ref('');
+const formProjectCode = ref('');
+const formReferenceLink = ref('');
+const formLinkedBlockerId = ref('');
 
 function formatReason(reason: string): string {
   const map: Record<string, string> = {
@@ -58,9 +84,17 @@ async function loadTodayState() {
     const res = await apiClient<{
       workDate: string;
       record: any;
+      availableProjects?: ProjectOption[];
+      activeBlockers?: ActiveBlockerOption[];
     }>('/daily/today');
 
     workDate.value = res.data.workDate;
+    if (Array.isArray(res.data.availableProjects) && res.data.availableProjects.length > 0) {
+      availableProjects.value = res.data.availableProjects;
+    }
+    if (Array.isArray(res.data.activeBlockers)) {
+      activeBlockers.value = res.data.activeBlockers;
+    }
     if (res.data.record) {
       recordId.value = res.data.record.id;
       additionalWorks.value = res.data.record.additionalWorks || [];
@@ -74,6 +108,25 @@ async function loadTodayState() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleBlockerSelect(event: Event) {
+  const selectEl = event.target as HTMLSelectElement;
+  const blockerId = selectEl.value;
+  if (!blockerId) return;
+
+  const blocker = activeBlockers.value.find((b) => b.id === blockerId);
+  if (blocker) {
+    formLinkedBlockerId.value = blocker.id;
+    formReferenceLink.value = `[${blocker.code}] ${blocker.description}`;
+    if (blocker.projectCodeReference && !formProjectCode.value) {
+      formProjectCode.value = blocker.projectCodeReference;
+    }
+    if (!formTaskText.value.trim()) {
+      formTaskText.value = `Menyelesaikan kendala ${blocker.code}: ${blocker.description}`;
+    }
+  }
+  selectEl.value = '';
 }
 
 async function addAdditionalWork() {
@@ -109,6 +162,9 @@ async function addAdditionalWork() {
         taskText: finalTaskText,
         reason: formReason.value,
         assignedByUserId: formReason.value === 'NEWLY_ASSIGNED' ? formAssignedBy.value : undefined,
+        projectCode: formProjectCode.value.trim() ? formProjectCode.value.trim() : undefined,
+        referenceLink: formReferenceLink.value.trim() ? formReferenceLink.value.trim() : undefined,
+        linkedBlockerId: formLinkedBlockerId.value.trim() ? formLinkedBlockerId.value.trim() : undefined,
       }),
     });
 
@@ -117,6 +173,9 @@ async function addAdditionalWork() {
     formReason.value = 'NEWLY_ASSIGNED';
     formAssignedBy.value = '';
     formOtherReason.value = '';
+    formProjectCode.value = '';
+    formReferenceLink.value = '';
+    formLinkedBlockerId.value = '';
     await loadTodayState();
   } catch (err: any) {
     showToast(err.message || 'Gagal menambahkan pekerjaan tambahan.', true);
@@ -263,6 +322,51 @@ onMounted(() => {
               </div>
             </div>
 
+            <div class="form-row">
+              <div class="form-group">
+                <label for="select-project" class="form-label">Proyek Terkait (Opsional)</label>
+                <select
+                  id="select-project"
+                  v-model="formProjectCode"
+                  class="input-control"
+                  data-testid="select-additional-project"
+                >
+                  <option value="">-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --</option>
+                  <option
+                    v-for="prj in availableProjects"
+                    :key="prj.projectCode"
+                    :value="prj.projectCode"
+                  >
+                    [{{ prj.projectCode }}] {{ prj.projectName }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="input-ref-link" class="form-label">Tautan Referensi / Tiket Blocker (Opsional)</label>
+                <input
+                  id="input-ref-link"
+                  v-model="formReferenceLink"
+                  type="text"
+                  class="input-control"
+                  placeholder="https://... atau kode tiket #BLK-..."
+                />
+                <div v-if="activeBlockers.length > 0" style="margin-top: 6px;">
+                  <select
+                    class="input-control"
+                    style="font-size: 12px; padding: 6px 10px;"
+                    data-testid="select-additional-blocker"
+                    @change="handleBlockerSelect($event)"
+                  >
+                    <option value="">+ Pilih Blocker Aktif yang Diselesaikan / Terkait (Opsional)...</option>
+                    <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
+                      {{ blk.code }} ({{ blk.severity }}) — {{ blk.description }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div class="form-actions">
               <button type="submit" class="btn btn-primary" :disabled="submitting">
                 <Plus :size="16" />
@@ -292,11 +396,17 @@ onMounted(() => {
                 <div class="work-header">
                   <span class="work-idx">#{{ idx + 1 }}</span>
                   <span class="badge badge-info">{{ formatReason(item.reason) }}</span>
+                  <span v-if="item.projectCode" class="badge badge-info" style="background: #E6F4EE; color: #00674D;">
+                    Proyek: {{ item.projectCode }}
+                  </span>
                   <span v-if="item.assignedByUser" class="assigned-by">
                     Ditugaskan oleh: <strong>{{ item.assignedByUser.fullName }}</strong>
                   </span>
                 </div>
                 <div class="work-title">{{ item.taskText }}</div>
+                <div v-if="item.referenceLink" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">
+                  Referensi: {{ item.referenceLink }}
+                </div>
               </div>
             </div>
           </div>

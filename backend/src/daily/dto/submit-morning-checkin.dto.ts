@@ -34,6 +34,14 @@ export class CommitmentItemDto {
   @IsOptional()
   @IsUUID('4', { message: 'ID komitmen asal tidak valid' })
   originCommitmentId?: string;
+
+  @IsOptional()
+  @IsString()
+  projectCode?: string;
+
+  @IsOptional()
+  @IsString()
+  linkedBlockerId?: string;
 }
 
 export class SubmitMorningCheckinDto {

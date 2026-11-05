@@ -12,5 +12,17 @@ export class SubmitAdditionalWorkDto {
   @IsOptional()
   @IsUUID('4', { message: 'ID atasan penugasan tidak valid' })
   assignedByUserId?: string;
+
+  @IsOptional()
+  @IsString()
+  referenceLink?: string;
+
+  @IsOptional()
+  @IsString()
+  projectCode?: string;
+
+  @IsOptional()
+  @IsString()
+  linkedBlockerId?: string;
 }
 

@@ -102,20 +102,108 @@ export class DailyService {
       });
 
       if (prevRecord) {
+        const prevMeta = (prevRecord.orgContextSnapshot as any)?.commitmentMeta || {};
         availableCarryOvers = prevRecord.commitments
           .filter((c) => c.continuation === ContinuationStatus.CONTINUE)
           .map((c) => {
             const nextCount = c.carryOverDaysCount + 1;
+            const cMeta = prevMeta[String(c.sequenceNo)] || {};
             return {
               originCommitmentId: c.id,
               taskText: c.taskText,
               referenceLink: c.referenceLink,
+              projectCode: cMeta.projectCode || null,
+              linkedBlockerId: cMeta.linkedBlockerId || null,
               carryOverDaysCount: nextCount,
               suggestedRisk: nextCount >= 3 ? CommitmentRisk.AMBER : c.initialRisk,
               isAmberWarningAdvised: nextCount >= 3, // DEC-003: Saran AMBER jika 3+ hari berlanjut
             };
           });
       }
+    }
+
+    // Ambil daftar proyek aktif dari ProjectAuthorityMapping (+ fallback daftar proyek standar)
+    const defaultProjects = [
+      { projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing' },
+      { projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync' },
+      { projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android' },
+    ];
+    let dbProjects: Array<{ projectCode: string; projectName: string }> = [];
+    if ((this.prisma as any).projectAuthorityMapping?.findMany) {
+      const mappings = await (this.prisma as any).projectAuthorityMapping.findMany({
+        where: {
+          effectiveDate: { lte: todayDate },
+          OR: [{ endDate: null }, { endDate: { gte: todayDate } }],
+        },
+        select: { projectCode: true, projectName: true },
+      });
+      dbProjects = mappings || [];
+    }
+    const projectMap = new Map<string, string>();
+    for (const p of [...dbProjects, ...defaultProjects]) {
+      if (p.projectCode && !projectMap.has(p.projectCode)) {
+        projectMap.set(p.projectCode, p.projectName);
+      }
+    }
+    const availableProjects = Array.from(projectMap.entries()).map(([projectCode, projectName]) => ({
+      projectCode,
+      projectName,
+    }));
+
+    // Ambil daftar blocker aktif (OPEN / ACKNOWLEDGED / IN_PROGRESS)
+    let activeBlockers: Array<{
+      id: string;
+      code: string;
+      description: string;
+      severity: string;
+      projectCodeReference: string | null;
+      status: string;
+    }> = [];
+    if ((this.prisma as any).blockerTicket?.findMany) {
+      const openBlockers = await (this.prisma as any).blockerTicket.findMany({
+        where: {
+          status: { in: ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'] },
+        },
+        orderBy: { raisedAt: 'desc' },
+        take: 30,
+      });
+      activeBlockers = (openBlockers || []).map((b: any) => ({
+        id: b.id,
+        code: `#BLK-${String(b.id).slice(0, 6).toUpperCase()}`,
+        description: b.description,
+        severity: b.severity,
+        projectCodeReference: b.projectCodeReference || null,
+        status: b.status,
+      }));
+    }
+
+    // Perkaya record dengan metadata projectCode & linkedBlockerId dari orgContextSnapshot
+    let enrichedRecord: any = record;
+    if (record) {
+      const snap = (record.orgContextSnapshot as any) || {};
+      const commitmentMeta = snap.commitmentMeta || {};
+      const additionalWorkMeta = snap.additionalWorkMeta || {};
+
+      enrichedRecord = {
+        ...record,
+        commitments: (record.commitments || []).map((c: any) => {
+          const meta = commitmentMeta[String(c.sequenceNo)] || {};
+          return {
+            ...c,
+            projectCode: meta.projectCode || null,
+            linkedBlockerId: meta.linkedBlockerId || c.blockers?.[0]?.id || null,
+          };
+        }),
+        additionalWorks: (record.additionalWorks || []).map((aw: any) => {
+          const meta = additionalWorkMeta[String(aw.id)] || {};
+          return {
+            ...aw,
+            projectCode: meta.projectCode || null,
+            linkedBlockerId: meta.linkedBlockerId || null,
+            referenceLink: meta.referenceLink || null,
+          };
+        }),
+      };
     }
 
     return {
@@ -129,8 +217,10 @@ export class DailyService {
         isMorningLocked,
         isEodLocked,
       },
-      record,
+      record: enrichedRecord,
       availableCarryOvers,
+      availableProjects,
+      activeBlockers,
     };
   }
 
@@ -236,6 +326,7 @@ export class DailyService {
     // Validasi & resolusi copy-forward komitmen (DEC-013)
     const prevWorkdayStr = await this.workdayService.getPreviousWorkday(userId, workDate);
     const resolvedCommitments: any[] = [];
+    const commitmentMeta: Record<string, { projectCode?: string | null; linkedBlockerId?: string | null }> = {};
 
     for (let i = 0; i < dto.commitments.length; i++) {
       const item = dto.commitments[i];
@@ -279,8 +370,15 @@ export class DailyService {
         carryOverDaysCount = parentCommitment.carryOverDaysCount + 1;
       }
 
+      const seqNo = i + 1;
+      const projectCode = item.projectCode && item.projectCode.trim() ? item.projectCode.trim() : null;
+      const linkedBlockerId = item.linkedBlockerId && item.linkedBlockerId.trim() ? item.linkedBlockerId.trim() : null;
+      if (projectCode || linkedBlockerId) {
+        commitmentMeta[String(seqNo)] = { projectCode, linkedBlockerId };
+      }
+
       resolvedCommitments.push({
-        sequenceNo: i + 1,
+        sequenceNo: seqNo,
         taskText: item.taskText.trim(),
         referenceLink: item.referenceLink ? item.referenceLink.trim() : null,
         initialRisk: item.initialRisk,
@@ -289,7 +387,13 @@ export class DailyService {
         isCarryOver,
         carryOverDaysCount,
         originCommitmentId,
+        projectCode,
+        linkedBlockerId,
       });
+    }
+
+    if (Object.keys(commitmentMeta).length > 0) {
+      (orgContextSnapshot as any).commitmentMeta = commitmentMeta;
     }
 
     // 1. Periksa keberadaan record di luar transaksi terlebih dahulu
@@ -513,7 +617,7 @@ export class DailyService {
       });
     }
 
-    return this.prisma.additionalWork.create({
+    const createdAw = await this.prisma.additionalWork.create({
       data: {
         dailyRecordId: record.id,
         taskText: dto.taskText.trim(),
@@ -524,6 +628,35 @@ export class DailyService {
         assignedByUser: { select: { id: true, fullName: true, email: true } },
       },
     });
+
+    const projectCode = dto.projectCode && dto.projectCode.trim() ? dto.projectCode.trim() : null;
+    const linkedBlockerId = dto.linkedBlockerId && dto.linkedBlockerId.trim() ? dto.linkedBlockerId.trim() : null;
+    const referenceLink = dto.referenceLink && dto.referenceLink.trim() ? dto.referenceLink.trim() : null;
+
+    if ((projectCode || linkedBlockerId || referenceLink) && createdAw?.id && this.prisma.dailyAccountabilityRecord.update) {
+      const currentSnap = (record.orgContextSnapshot as any) || {};
+      const additionalWorkMeta = {
+        ...(currentSnap.additionalWorkMeta || {}),
+        [String(createdAw.id)]: { projectCode, linkedBlockerId, referenceLink },
+      };
+      await this.prisma.dailyAccountabilityRecord.update({
+        where: { id: record.id },
+        data: {
+          orgContextSnapshot: {
+            ...currentSnap,
+            additionalWorkMeta,
+          },
+        },
+      });
+    }
+
+    if (!createdAw) return createdAw;
+    return {
+      ...createdAw,
+      projectCode,
+      linkedBlockerId,
+      referenceLink,
+    };
   }
 
   /**

@@ -78,7 +78,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('Team Pulse');
+    expect(wrapper.find('h1').text()).toContain('Team Pulse');
     expect(wrapper.text()).toContain('Belum Mengisi Komitmen');
     expect(wrapper.text()).toContain('Komitmen Waspada (Amber)');
     expect(wrapper.text()).toContain('Komitmen Kritis (Merah)');
@@ -87,7 +87,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     expect(wrapper.text()).toContain('Membantu: Redis Timeout di Staging');
   });
 
-  it('switches scope tab to Function Pulse', async () => {
+  it('switches scope tab to Divisi Saya (Function Pulse)', async () => {
     const wrapper = mount(PulseDashboardView, {
       global: {
         plugins: [router],
@@ -100,15 +100,15 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     const functionTab = wrapper.findAll('.scope-tab')[1];
-    expect(functionTab.text()).toContain('Function Pulse');
+    expect(functionTab.text()).toContain('Divisi Saya');
 
     await functionTab.trigger('click');
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('Function Pulse');
+    expect(wrapper.find('h1').text()).toContain('Function Pulse (Divisi Saya)');
   });
 
-  it('restricts tabs for HEAD role: only Team and Function, omits Management Pulse and defaults to Function Pulse', async () => {
+  it('restricts tabs for HEAD role: defaults to Divisi Saya (Function Pulse) and omits Seluruh Perusahaan', async () => {
     const authStore = (await import('../../stores/auth')).useAuthStore();
     authStore.user = {
       id: 'head-id',
@@ -128,20 +128,67 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // Default pendaratan HEAD adalah Function Pulse
-    expect(wrapper.find('h1').text()).toBe('Function Pulse');
-
-    // Tab yang muncul hanya 2: Team Pulse & Function Pulse
-    const tabs = wrapper.findAll('.scope-tab');
-    expect(tabs.length).toBe(2);
-    expect(tabs[0].text()).toContain('Team Pulse');
-    expect(tabs[1].text()).toContain('Function Pulse');
-
-    // Tab Management Pulse TIDAK ADA
-    expect(wrapper.text()).not.toContain('Management Pulse');
+    // Default pendaratan HEAD adalah Divisi Saya (Function Pulse)
+    expect(wrapper.find('h1').text()).toContain('Function Pulse (Divisi Saya)');
+    // Tab Seluruh Perusahaan TIDAK ADA
+    expect(wrapper.text()).not.toContain('Seluruh Perusahaan');
   });
 
-  it('restricts tabs for SUPERVISOR role: hides scope-tabs selector and defaults to Team Pulse', async () => {
+  it('shows Tim (Proyek) and Divisi Saya tabs when HEAD is also a Project Lead', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/dashboard/metrics')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              totalEmployees: 8,
+              submittedCount: 6,
+              noSubmissionCount: 2,
+              amberCommitmentsCount: 1,
+              redCommitmentsCount: 0,
+              unacknowledgedBlockersCount: 0,
+              completionRatePercent: 75,
+              isProjectLead: true,
+              ledProjects: [{ projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine' }],
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const authStore = (await import('../../stores/auth')).useAuthStore();
+    authStore.user = {
+      id: 'head-id',
+      email: 'head@dutamedia.com',
+      fullName: 'Bambang Pratama',
+      role: 'HEAD',
+      function: 'Engineering',
+      status: 'ACTIVE',
+    } as any;
+
+    const wrapper = mount(PulseDashboardView, {
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true },
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const tabs = wrapper.findAll('.scope-tab');
+    expect(tabs.length).toBe(2);
+    expect(tabs[0].text()).toContain('Tim (Proyek)');
+    expect(tabs[1].text()).toContain('Divisi Saya');
+  });
+
+  it('restricts tabs for SUPERVISOR / Project Lead role: hides scope-tabs selector and defaults to Team Pulse', async () => {
     const authStore = (await import('../../stores/auth')).useAuthStore();
     authStore.user = {
       id: 'spv-id',
@@ -161,9 +208,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('Team Pulse');
-    // Karena hanya ada 1 cakupan yang diizinkan (AC-63), switcher disembunyikan
+    expect(wrapper.find('h1').text()).toContain('Team Pulse (Tim Proyek)');
     expect(wrapper.find('.scope-tabs').exists()).toBe(false);
   });
 });
-
