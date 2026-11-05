@@ -54,7 +54,7 @@ export class OrganizationController {
   @Post('admin/organization/assignments')
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(RolesGuard)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
   async assignUser(
     @Body() dto: AssignOrgDto,
     @CurrentUser('id') adminUserId: string,

@@ -1,6 +1,13 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { getLandingRouteForRole, OPERATIONAL_ROLES, ALL_MANAGERIAL } from './navigation';
+import {
+  getLandingRouteForRole,
+  OPERATIONAL_ROLES,
+  ALL_MANAGERIAL,
+  ADMIN_LEVEL,
+  HR_APPROVAL_ROLES,
+  canAccessRoute,
+} from './navigation';
 import LoginView from '../views/auth/LoginView.vue';
 import ActivateView from '../views/auth/ActivateView.vue';
 import ProfileView from '../views/profile/ProfileView.vue';
@@ -60,25 +67,25 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/users',
     name: 'admin-users',
     component: AdminUsersView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/admin/organization',
     name: 'admin-organization',
     component: OrgMappingView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/admin/temporary-reviewers',
     name: 'admin-temporary-reviewers',
     component: TempReviewerView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/admin/policies',
     name: 'admin-policies',
     component: PolicySettingsView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/daily',
@@ -122,31 +129,31 @@ const routes: RouteRecordRaw[] = [
     path: '/blockers',
     name: 'blockers-queue',
     component: BlockerQueueView,
-    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true },
   },
   {
     path: '/blockers/aging',
     name: 'blockers-aging',
     component: EscalationAgingView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true },
   },
   {
     path: '/coaching',
     name: 'coaching-notes',
     component: ManagerNoteCoachingView,
-    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
+    meta: { requiresAuth: true, requiresSubordinates: true },
   },
   {
     path: '/compliance',
     name: 'compliance-queue',
     component: ComplianceQueueView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/exemptions',
     name: 'exemption-management',
     component: ExemptionManagementView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/corrections/morning',
@@ -164,7 +171,7 @@ const routes: RouteRecordRaw[] = [
     path: '/corrections/review',
     name: 'corrections-review',
     component: CorrectionReviewView,
-    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
+    meta: { requiresAuth: true, roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true },
   },
   {
     path: '/leave/my',
@@ -176,7 +183,7 @@ const routes: RouteRecordRaw[] = [
     path: '/leave/queue',
     name: 'leave-queue',
     component: LeaveApprovalQueueView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR'] },
+    meta: { requiresAuth: true, roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true },
   },
   {
     path: '/notifications',
@@ -188,19 +195,19 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/notifications',
     name: 'admin-notifications',
     component: NotificationChannelSetupView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/dashboard',
     name: 'pulse-dashboard',
     component: PulseDashboardView,
-    meta: { requiresAuth: true, roles: ALL_MANAGERIAL },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true },
   },
   {
     path: '/projects/risk',
     name: 'project-risk',
     component: ProjectRiskView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA', 'SUPERVISOR', 'PROJECT_MANAGER', 'PM'] },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true },
   },
   {
     path: '/reports',
@@ -212,7 +219,7 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/invitations',
     name: 'admin-invitations',
     component: AdminUserInvitationView,
-    meta: { requiresAuth: true, roles: ['SYSTEM_ADMIN', 'HRGA', 'CEO_MANAGEMENT'] },
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/forbidden',
@@ -262,11 +269,8 @@ router.beforeEach(async (to, _from, next) => {
       }
     }
 
-    if (to.meta.roles && Array.isArray(to.meta.roles)) {
-      const allowedRoles = to.meta.roles as string[];
-      if (!authStore.user?.role || !allowedRoles.includes(authStore.user.role)) {
-        return next({ name: 'forbidden', query: { from: to.fullPath }, replace: true });
-      }
+    if (!canAccessRoute(to.path, authStore.user)) {
+      return next({ name: 'forbidden', query: { from: to.fullPath }, replace: true });
     }
   }
 
@@ -274,4 +278,3 @@ router.beforeEach(async (to, _from, next) => {
 });
 
 export default router;
-

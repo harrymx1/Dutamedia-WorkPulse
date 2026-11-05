@@ -21,6 +21,9 @@ export interface LoginResult {
     jobTitle?: string | null;
     function?: string | null;
     managerName?: string | null;
+    hasSubordinates?: boolean;
+    isTemporaryReviewer?: boolean;
+    isProjectLead?: boolean;
   };
   session: {
     id: string;
@@ -111,6 +114,38 @@ export class AuthService {
     const managerName: string | null =
       (activeOrg as any)?.directManager?.fullName || null;
 
+    const subordinateCount = this.prisma.organizationalAssignment?.count
+      ? await this.prisma.organizationalAssignment.count({
+          where: {
+            directManagerId: user.id,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+        })
+      : 0;
+
+    const tempReviewerCount = (this.prisma as any).temporaryReviewerAssignment?.count
+      ? await (this.prisma as any).temporaryReviewerAssignment.count({
+          where: {
+            reviewerUserId: user.id,
+            isActive: true,
+            startDate: { lte: today },
+            endDate: { gte: today },
+          },
+        })
+      : 0;
+
+    const projectLeadCount = (this.prisma as any).projectAuthorityMapping?.count
+      ? await (this.prisma as any).projectAuthorityMapping.count({
+          where: {
+            projectManagerId: user.id,
+            isActive: true,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+        })
+      : 0;
+
     // Penerbitan Sesi Baru (24 Jam)
     const sessionTokenRaw = this.tokenService.generateRandomToken(32);
     const sessionTokenHash = this.tokenService.hashToken(sessionTokenRaw);
@@ -150,6 +185,9 @@ export class AuthService {
         jobTitle,
         function: orgFunction,
         managerName,
+        hasSubordinates: subordinateCount > 0,
+        isTemporaryReviewer: tempReviewerCount > 0,
+        isProjectLead: projectLeadCount > 0,
       },
       session: {
         id: session.id,

@@ -42,7 +42,7 @@ export class ProjectAuthorityController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
   async createProjectAuthority(
     @Body() dto: CreateProjectAuthorityDto,
     @CurrentUser('id') adminUserId: string,
@@ -52,7 +52,7 @@ export class ProjectAuthorityController {
 
   @Patch(':id/end')
   @HttpCode(HttpStatus.OK)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
   async endProjectAuthority(
     @Param('id') id: string,
     @CurrentUser('id') adminUserId: string,

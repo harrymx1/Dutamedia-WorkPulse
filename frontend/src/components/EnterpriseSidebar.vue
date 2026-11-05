@@ -40,7 +40,7 @@ const route = useRoute();
 const router = useRouter();
 const { isMobileSidebarOpen, closeSidebar } = useLayout();
 
-const groups = computed(() => navForRole(auth.user?.role));
+const groups = computed(() => navForRole(auth.user));
 
 const userDisplayName = computed(() => {
   const raw = auth.user?.fullName;

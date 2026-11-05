@@ -11,6 +11,9 @@ export interface UserProfile {
   jobTitle?: string | null;
   function?: string | null;
   managerName?: string | null;
+  hasSubordinates?: boolean;
+  isTemporaryReviewer?: boolean;
+  isProjectLead?: boolean;
 }
 
 function sanitizeUserProfile(u: UserProfile | null | undefined): UserProfile | null {
@@ -30,7 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isSuperAdmin = computed(() => user.value?.role === 'SYSTEM_ADMIN');
   const isHRGA = computed(() => user.value?.role === 'HRGA');
 
-  async function login(email: string, password: string):Promise<UserProfile> {
+  async function login(email: string, password: string): Promise<UserProfile> {
     isLoading.value = true;
     error.value = null;
     try {

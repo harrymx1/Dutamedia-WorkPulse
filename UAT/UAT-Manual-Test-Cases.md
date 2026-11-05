@@ -2522,12 +2522,12 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Data:** Subjek: Aditya Nugroho, Visibilitas: `CONFIDENTIAL_MANAGER_ONLY`
    - **Hasil yang diharapkan:** Catatan berhasil disimpan. Catatan muncul pada feed coaching Arif Budiman dengan label badge gembok merah *"Rahasia Manajerial (Internal Atasan)"*.
    - **Verifikasi:** Catatan tersimpan dengan visibilitas konfidensial.
-3. **Langkah 3 (Verifikasi Isolasi pada Sisi Karyawan)**
-   - **Aksi:** Beralih ke sesi login Aditya Nugroho (`dev.frontend@dutamedia.com`). Buka halaman `/coaching` (atau riwayat pembinaan di profil).
-   - **Lokasi:** Halaman `/coaching` pada akun Aditya Nugroho.
+3. **Langkah 3 (Verifikasi Isolasi pada Sisi Karyawan Tanpa Bawahan)**
+   - **Aksi:** Beralih ke sesi login Aditya Nugroho (`dev.frontend@dutamedia.com`). Periksa sidebar (menu `Catatan Coaching` tidak tampil karena Aditya tidak memiliki bawahan), coba akses URL `/coaching`, dan panggil API `GET /api/coaching/users/{id-aditya}` via Console.
+   - **Lokasi:** Rute `/coaching` & endpoint `/api/coaching/users/:id` pada akun Aditya Nugroho.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Aditya **TIDAK DAPAT MELIHAT** catatan yang berstatus `CONFIDENTIAL_MANAGER_ONLY` tersebut. Daftar catatan pribadi Aditya tetap bersih atau hanya memuat catatan yang bertipe `SHARED_WITH_EMPLOYEE`.
-   - **Verifikasi:** Catatan rahasia manajerial tidak bocor ke sisi staf bersangkutan.
+   - **Hasil yang diharapkan:** Karena Aditya tidak memiliki bawahan (`hasSubordinates = false`), menu `Catatan Coaching` tidak tampil di sidebar dan akses langsung ke `/coaching` dialihkan ke `/forbidden` (`403 — Akses Dibatasi`). Selain itu, respons API `GET /api/coaching/users/{id-aditya}` menyaring keluar catatan `CONFIDENTIAL_MANAGER_ONLY` sehingga hanya mengembalikan catatan `SHARED_WITH_EMPLOYEE`.
+   - **Verifikasi:** Catatan rahasia manajerial tidak bocor ke sisi staf bersangkutan baik di UI maupun API.
 
 - **Expected Final Result:** Sistem secara sempurna menegakkan larangan pembuatan catatan diri sendiri dan menjaga kerahasiaan catatan manajerial konfidensial dari penglihatan staf.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar feed catatan pada akun Head of Engineering (memperlihatkan badge rahasia) dan tangkapan layar feed pada akun Employee (memperlihatkan catatan rahasia tersembunyi).
@@ -2546,8 +2546,8 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Scenario ID:** `SCN-HEAD-01`
 - **Requirement ID:** `FR-08`, `FR-48`, `FR-51`, `DEC-010`, `CR-013`
 - **Judul:** Pengawasan Seluruh Anggota Divisi (`Divisi Saya`), Wewenang Kepegawaian, & Penegakan Batasan Lintas Fungsi oleh Head of Engineering
-- **Tujuan:** Memvalidasi wewenang Kepala Divisi (`HEAD` Scope per SAD IV.4 & `CR-013`) menggunakan akun resmi **Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman)**: memastikan Head langsung melihat tab **`Divisi Saya`** (`scope=function`) pada `/dashboard` yang merangkum seluruh anggota divisinya (`Bambang Pratama`, `Aditya Nugroho`, `Siti Rahma`, `Fajar Ramadhan`) tanpa tab `Seluruh Perusahaan`, memegang antrean persetujuan cuti divisinya di `/leave/queue`, dapat mengakses `/admin/policies`, serta ditolak dengan **HTTP 403 (`AUTH_FORBIDDEN_SCOPE`)** jika mencoba mengakses data staf divisi lain (`Maya Putri` - `RnD`) atau `scope=management`.
-- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Persetujuan Cuti (`/leave/queue`), & Kebijakan (`/admin/policies`)
+- **Tujuan:** Memvalidasi wewenang Kepala Divisi (`HEAD` Scope per SAD IV.4 & `CR-013`) menggunakan akun resmi **Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman)**: memastikan Head langsung melihat tab **`Divisi Saya`** (`scope=function`) pada `/dashboard` yang merangkum seluruh anggota divisinya (`Bambang Pratama`, `Aditya Nugroho`, `Siti Rahma`, `Fajar Ramadhan`) tanpa tab `Seluruh Perusahaan`, memegang wewenang kepegawaian divisinya (`/leave/queue`, `/corrections/review`) serta `/coaching` (karena memiliki bawahan), **TIDAK** melihat grup `Administration` (dan ditolak 403 di `/admin/policies`), serta ditolak dengan **HTTP 403 (`AUTH_FORBIDDEN_SCOPE`)** jika mencoba mengakses data staf divisi lain (`Maya Putri` - `RnD`) atau `scope=management`.
+- **Modul / Halaman:** Pulse Dashboard (`/dashboard`), Persetujuan Cuti (`/leave/queue`), Catatan Coaching (`/coaching`), & Proteksi Administrasi (`/admin/policies`)
 - **Kategori Pengujian:** RBAC / Function-Wide Scope Enforcement
 - **Teknik Desain Test Case:** Equivalence Partitioning & Scope Boundary Testing
 - **Role:** `HEAD` (`head.eng@dutamedia.com` - Arif Budiman, Head of Engineering)
@@ -2567,12 +2567,15 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
      - Dasbor menampilkan metrik konsolidasi seluruh anggota divisi Engineering beserta kartu "Personil Butuh Bantuan Hari Ini" (`Aditya Nugroho`).
      - Pada `/leave/queue`, tampil permohonan cuti bawahan langsungnya di divisi Engineering (`Siti Rahma`), namun TIDAK menampilkan permohonan cuti `Maya Putri` (divisi `RnD`).
    - **Verifikasi:** Data personel dan kepegawaian divisi Engineering tampil utuh dalam cakupan `HEAD` of Engineering.
-2. **Langkah 2 (Pengujian Hak Akses Menu Kebijakan Operasional)**
-   - **Aksi:** Buka menu "Kebijakan & Cut-off" pada rute `/admin/policies`.
-   - **Lokasi:** Menu sidebar Administration -> Kebijakan & Cut-off (`/admin/policies`).
+2. **Langkah 2 (Verifikasi Aturan Sidebar & Hak Akses Halaman: Poin 1, 2, dan 3)**
+   - **Aksi:** Amati grup dan menu yang tampil pada sidebar kiri akun `HEAD` (`Arif Budiman`), lalu coba akses langsung URL `/admin/policies` melalui address bar browser.
+   - **Lokasi:** Sidebar kiri & rute `/admin/policies`, `/leave/queue`, `/corrections/review`, `/coaching`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman terbuka dengan hak akses sah (Head memiliki izin `@Roles(CanonicalRole.HEAD)` untuk membuka dan mengelola versi kebijakan). Tombol "+ Buat Versi Kebijakan Baru" aktif.
-   - **Verifikasi:** Head dapat mengakses halaman `/admin/policies` tanpa dicegat route guard `/forbidden`.
+   - **Hasil yang diharapkan:**
+     - **Poin 1 (Isolasi Grup `Administration`):** Grup navigasi **`Administration` TIDAK MUNCUL** di sidebar akun `HEAD` (hanya muncul untuk `SYSTEM_ADMIN`, `HRGA`, dan `CEO_MANAGEMENT`). Saat `HEAD` mencoba mengakses `/admin/policies` via URL, router guard mencegat dan mengalihkan ke `/forbidden` (`403 — Akses Dibatasi`).
+     - **Poin 2 (Menu Kepegawaian di Grup `Management`):** Menu `Persetujuan Cuti` (`/leave/queue`) dan `Review Koreksi & Cuti` (`/corrections/review`) tampil dan dapat diakses oleh `HEAD` (`Arif Budiman`) serta `CEO_MANAGEMENT` (dan Reviewer Sementara aktif), namun disembunyikan & ditolak 403 bagi akun selain itu (seperti `SUPERVISOR` / Tech Lead murni).
+     - **Poin 3 (`Catatan Coaching` Berbasis Kepemilikan Bawahan):** Menu `Catatan Coaching` (`/coaching`) tampil dan dapat diakses karena `Arif Budiman` memiliki bawahan langsung aktif (`hasSubordinates = true`), serta disembunyikan & ditolak 403 bagi akun yang tidak memiliki bawahan.
+   - **Verifikasi:** Visibilitas sidebar dan proteksi halaman berjalan sinkron 100% sesuai aturan Role & Kewenangan.
 3. **Langkah 3 (Penolakan Akses Lintas Batas Divisi & Scope CEO)**
    - **Aksi:** Melalui Developer Console, coba panggil:
      a. Data riwayat komitmen staf divisi R&D (`Maya Putri` - `designer@dutamedia.com`) via `GET /api/daily/history?userId={id-maya}` (atau review cuti Maya Putri via `POST /api/v1/leave/requests/{id-cuti-maya}/review`).
@@ -2582,7 +2585,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Hasil yang diharapkan:** Backend `ScopeResolverService` dan `DashboardController` menolak seluruh permintaan lintas batas tersebut dengan status **HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`)**.
    - **Verifikasi:** Tidak ada kebocoran data komitmen/cuti divisi R&D maupun akses scope CEO kepada Head of Engineering.
 
-- **Expected Final Result:** Head of Engineering (`head.eng@dutamedia.com`) berhasil menjalankan pengawasan terpadu seluruh staf di bawah divisinya melalui tab `Divisi Saya` & `/leave/queue`, dapat mengakses `/admin/policies`, dan dibatasi secara presisi dari intrusi data divisi lain maupun scope CEO (HTTP 403).
+- **Expected Final Result:** Head of Engineering (`head.eng@dutamedia.com`) berhasil menjalankan pengawasan terpadu seluruh staf di bawah divisinya melalui tab `Divisi Saya`, `/leave/queue`, `/corrections/review`, dan `/coaching`, tidak melihat grup `Administration` (403 pada `/admin/policies`), serta dibatasi secara presisi dari intrusi data divisi lain maupun scope CEO (HTTP 403).
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Pulse Dashboard tab `Divisi Saya` pada akun `head.eng@dutamedia.com` dan tangkapan layar penolakan 403 saat memanggil data lintas divisi/scope.
 - **Actual Result:** 
 - **Execution Status:** Not Run

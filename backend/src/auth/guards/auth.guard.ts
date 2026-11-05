@@ -80,8 +80,8 @@ export class AuthGuard implements CanActivate {
     }
 
     let activeOrg: any = null;
+    const today = new Date();
     if (this.prisma.organizationalAssignment?.findFirst) {
-      const today = new Date();
       activeOrg = await this.prisma.organizationalAssignment.findFirst({
         where: {
           userId: session.user.id,
@@ -95,6 +95,38 @@ export class AuthGuard implements CanActivate {
       });
     }
 
+    const subordinateCount = this.prisma.organizationalAssignment?.count
+      ? await this.prisma.organizationalAssignment.count({
+          where: {
+            directManagerId: session.user.id,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+        })
+      : 0;
+
+    const tempReviewerCount = (this.prisma as any).temporaryReviewerAssignment?.count
+      ? await (this.prisma as any).temporaryReviewerAssignment.count({
+          where: {
+            reviewerUserId: session.user.id,
+            isActive: true,
+            startDate: { lte: today },
+            endDate: { gte: today },
+          },
+        })
+      : 0;
+
+    const projectLeadCount = (this.prisma as any).projectAuthorityMapping?.count
+      ? await (this.prisma as any).projectAuthorityMapping.count({
+          where: {
+            projectManagerId: session.user.id,
+            isActive: true,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+        })
+      : 0;
+
     request.user = {
       ...payload,
       id: session.user.id,
@@ -105,6 +137,9 @@ export class AuthGuard implements CanActivate {
       jobTitle: activeOrg?.jobTitle || null,
       function: activeOrg?.function || null,
       managerName: activeOrg?.directManager?.fullName || null,
+      hasSubordinates: subordinateCount > 0,
+      isTemporaryReviewer: tempReviewerCount > 0,
+      isProjectLead: projectLeadCount > 0,
     };
     request.sessionId = session.id;
 

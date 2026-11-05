@@ -38,7 +38,7 @@ export class TemporaryReviewerController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
   async createTemporaryReviewer(
     @Body() dto: CreateTemporaryReviewerDto,
     @CurrentUser('id') adminUserId: string,

@@ -17,7 +17,8 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { CanonicalRole, PolicyCategory } from '@prisma/client';
 
 @Controller(['policies', 'api/policies'])
-@UseGuards(AuthGuard, CsrfGuard)
+@UseGuards(AuthGuard, CsrfGuard, RolesGuard)
+@Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
@@ -39,7 +40,7 @@ export class PolicyController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT, CanonicalRole.HEAD)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
   async createPolicyVersion(
     @Body() dto: CreatePolicyVersionDto,
     @Req() req: any,
@@ -54,7 +55,7 @@ export class PolicyController {
 
   @Post('owners')
   @UseGuards(RolesGuard)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
   async assignPolicyOwner(
     @Body() dto: AssignPolicyOwnerDto,
     @Req() req: any,
