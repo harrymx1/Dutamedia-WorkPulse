@@ -10,6 +10,7 @@ import {
   CommitmentRisk,
   ContinuationStatus,
   DailyRiskStatus,
+  LeaveStatus,
   PolicyCategory,
   TimingStatus,
 } from '@prisma/client';
@@ -61,6 +62,26 @@ export class DailyService {
 
     const isMorningLocked = currentTimeStr > morningLockCutoff;
     const isEodLocked = currentTimeStr > eodLockCutoff;
+
+    // Ambil permohonan cuti aktif yang telah disetujui hari ini (DEC-007 & DEC-008)
+    let activeLeave: any = null;
+    if ((this.prisma as any).leaveRequest?.findFirst) {
+      activeLeave = await this.prisma.leaveRequest.findFirst({
+        where: {
+          userId,
+          status: LeaveStatus.APPROVED,
+          startDate: { lte: todayDate },
+          endDate: { gte: todayDate },
+        },
+        select: {
+          id: true,
+          leaveType: true,
+          startDate: true,
+          endDate: true,
+          reason: true,
+        },
+      });
+    }
 
     // Ambil record hari ini jika sudah pernah dibuat
     const record = await this.prisma.dailyAccountabilityRecord.findUnique({
@@ -217,6 +238,15 @@ export class DailyService {
         isMorningLocked,
         isEodLocked,
       },
+      activeLeave: activeLeave
+        ? {
+            id: activeLeave.id,
+            leaveType: activeLeave.leaveType,
+            startDate: activeLeave.startDate.toISOString().split('T')[0],
+            endDate: activeLeave.endDate.toISOString().split('T')[0],
+            reason: activeLeave.reason,
+          }
+        : null,
       record: enrichedRecord,
       availableCarryOvers,
       availableProjects,
@@ -241,6 +271,26 @@ export class DailyService {
     }
 
     const workDate = new Date(inputWorkDate);
+
+    // Penegakan DEC-008: Pembebasan pengisian komitmen saat dalam masa cuti resmi disetujui
+    if ((this.prisma as any).leaveRequest?.findFirst) {
+      const activeLeave = await this.prisma.leaveRequest.findFirst({
+        where: {
+          userId,
+          status: LeaveStatus.APPROVED,
+          startDate: { lte: workDate },
+          endDate: { gte: workDate },
+        },
+      });
+      if (activeLeave) {
+        throw new AppException({
+          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+          message:
+            'Anda sedang dalam masa cuti resmi yang telah disetujui (Superseded by Approved Leave). Anda dibebaskan dari kewajiban komitmen harian.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+    }
 
     // Ambil kebijakan waktu checkin
     const timingPolicy = await this.policyService.getActivePolicy(
@@ -668,6 +718,26 @@ export class DailyService {
     const inputWorkDate = dto.workDate.split('T')[0];
 
     const workDate = new Date(inputWorkDate);
+
+    // Penegakan DEC-008: Pembebasan pelaporan EOD saat dalam masa cuti resmi disetujui
+    if ((this.prisma as any).leaveRequest?.findFirst) {
+      const activeLeave = await this.prisma.leaveRequest.findFirst({
+        where: {
+          userId,
+          status: LeaveStatus.APPROVED,
+          startDate: { lte: workDate },
+          endDate: { gte: workDate },
+        },
+      });
+      if (activeLeave) {
+        throw new AppException({
+          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+          message:
+            'Anda sedang dalam masa cuti resmi yang telah disetujui. Pelaporan evaluasi sore dinonaktifkan.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+    }
 
     const record = await this.prisma.dailyAccountabilityRecord.findUnique({
       where: {

@@ -622,13 +622,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Aturan batas 10 karakter berjalan ketat, mencegah bypass 0 komitmen tanpa pertanggungjawaban jelas.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot pesan validasi gagal saat < 10 char dan screenshot kartu ringkasan saat >= 10 char sukses.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Terverifikasi 100% pada staging production oleh Harry pada 05 November 2026 menggunakan akun dev.backend@dutamedia.com. Checkbox 0 komitmen memunculkan textarea alasan; submit kosong dan submit teks pendek (< 10 karakter) ditolak validasi; pengisian alasan valid >= 10 karakter ('Mengikuti workshop PostgreSQL indexing seharian') berhasil disubmit, form terkunci, dan layar menampilkan ringkasan status NOT_APPLICABLE - NO_COMMITMENT.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-05
+- **Defect ID:** -
+- **Retest Result:** Pass
+- **Catatan:** Aturan anti-bypass DEC-004 terverifikasi ketat.
 
 ---
 
@@ -2587,12 +2587,12 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Head of Engineering (`head.eng@dutamedia.com`) berhasil menjalankan pengawasan terpadu seluruh staf di bawah divisinya melalui tab `Divisi Saya`, `/leave/queue`, `/corrections/review`, dan `/coaching`, tidak melihat grup `Administration` (403 pada `/admin/policies`), serta dibatasi secara presisi dari intrusi data divisi lain maupun scope CEO (HTTP 403).
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Pulse Dashboard tab `Divisi Saya` pada akun `head.eng@dutamedia.com` dan tangkapan layar penolakan 403 saat memanggil data lintas divisi/scope.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Terverifikasi 100% pada staging production (`dutamedia-workpulse.vercel.app`) oleh Harry pada 05 November 2026. Langkah 1: Tab scope "Divisi Saya" aktif mandiri tanpa kebocoran scope atau tab tidak sah; antrean cuti menampilkan anggota divisi Engineering. Langkah 2: Sidebar grup `Administration` bersih (tidak tampil bagi Head) dan akses langsung `/admin/policies` dialihkan 403 /forbidden; menu kepegawaian `/leave/queue` dan `/corrections/review` tampil dan dapat diakses; menu `/coaching` tampil karena memiliki bawahan langsung. Langkah 3: Eksekusi console fetch ke riwayat Maya Putri (RnD), scope CEO (`scope=management`), dan filter divisi luar (`scope=function&function=RnD`) seluruhnya ditolak backend dengan HTTP 403 Forbidden (`AUTH_FORBIDDEN_SCOPE`).
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-05
 - **Defect ID:** -
-- **Retest Result:** -
+- **Retest Result:** Pass
 - **Catatan:** Menggunakan akun resmi Head of Engineering (`head.eng@dutamedia.com` - Arif Budiman) tanpa perlu mengubah role akun lain.
 
 ---

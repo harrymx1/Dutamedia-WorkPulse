@@ -109,7 +109,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [P] | `TC-AUTH-005` | Proteksi Akses URL Ilegal Antarmuka & Layar Error 403 | PASS | Terverifikasi pencegatan URL ilegal /admin/organization untuk role EMPLOYEE, redirect ke /forbidden?from=..., dan tombol Kembali ke Dashboard aktif |
 | [P] | `TC-ADMN-003` | Penegakan Pemisahan Tugas (IMP-026) & Pemblokiran Total Workspace Admin | PASS | Sidebar bersih dari Workspace; akses URL dicegat ke /forbidden (403) |
 | [P] | `TC-SUPV-001` | Penegakan Scope Project Lead / Supervisor (`Tim Proyek` & Bawahan) & Penolakan Lintas Scope/Divisi (403) | PASS | Terverifikasi CR-013: Bambang (`lead.tech@dutamedia.com`) hanya melihat tab `Tim (Proyek)` di `/dashboard`; akses `/api/dashboard/pulse?scope=function` & `management` serta review cuti luar wewenang ditolak HTTP 403 (`AUTH_FORBIDDEN_SCOPE`) |
-| [ ] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head (`Divisi Saya`) & Penegakan Batasan Lintas Fungsi (403) | Not Run | Tab `Divisi Saya` memuat seluruh anggota divisi; lintas divisi/scope CEO ditolak 403 |
+| [P] | `TC-HEAD-001` | Pengawasan Lintas Tim Divisi Head (`Divisi Saya`), Wewenang Kepegawaian, & Penegakan Batasan Lintas Fungsi (403) | PASS | Terverifikasi: Arif Budiman (`head.eng@dutamedia.com`) melihat tab `Divisi Saya` mandiri, antrean cuti divisi tampil, menu kepegawaian & coaching aktif, sidebar Administration tidak bocor, serta akses lintas divisi (Maya Putri - RnD) dan scope CEO ditolak HTTP 403 (`AUTH_FORBIDDEN_SCOPE`) |
 
 ---
 
@@ -129,7 +129,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-DLYM-006` | Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter) | PASS | Teks 2 karakter ("Te") ditolak sistem dengan pesan error: "Slot #1: Deskripsi komitmen wajib diisi minimal 3 karakter." Form tidak terkirim. |
-| [ ] | `TC-DLYM-002` | Opsi 0 Komitmen dengan Justifikasi Wajib >= 10 Karakter | | |
+| [P] | `TC-DLYM-002` | Opsi 0 Komitmen dengan Justifikasi Wajib >= 10 Karakter | PASS | Checkbox 0 komitmen memunculkan textarea alasan; submit kosong dan < 10 karakter ditolak; alasan >= 10 karakter berhasil disubmit dan form terkunci rapi |
 | [ ] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (dengan Pemilih Proyek & Blocker Aktif Opsional) | Needs Retest (CR-013 & DEF-001) | Wajib diuji ulang di Kelompok 5: penguncian form DEF-001 + dropdown Proyek Terkait & tombol Pilih Blocker Aktif (CR-013) |
 | [ ] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini & Penautan Blocker Menghambat pada Komitmen Pagi | Needs Retest (CR-013) | Wajib diuji ulang di Kelompok 5: kotak risiko AMBER/RED + dropdown Tautkan Blocker Aktif yang Menghambat (CR-013) |
 | [ ] | `TC-DLYM-004` | Fitur Salin Komitmen Hari Sebelumnya (Copy-Forward) | | |

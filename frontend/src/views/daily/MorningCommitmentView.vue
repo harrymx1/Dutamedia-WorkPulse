@@ -17,6 +17,7 @@ import {
   Copy,
   ChevronDown,
   ChevronUp,
+  CalendarCheck,
 } from 'lucide-vue-next';
 
 interface CommitmentSlot {
@@ -56,6 +57,14 @@ interface CarryOverDraft {
   isAmberWarningAdvised: boolean;
 }
 
+interface ActiveLeave {
+  id: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
+
 // State
 const loading = ref(false);
 const submitting = ref(false);
@@ -66,6 +75,7 @@ const isLate = ref(false);
 const morningOnTimeCutoff = ref('09:00');
 const morningLockCutoff = ref('09:30');
 const morningSubmittedAt = ref<string | null>(null);
+const activeLeave = ref<ActiveLeave | null>(null);
 
 const isZeroCommitment = ref(false);
 const zeroCommitmentReason = ref('');
@@ -100,7 +110,31 @@ const isSubmittedSuccess = ref(false);
 const hasSubmittedMorning = computed(() => {
   return morningSubmittedAt.value !== null && morningSubmittedAt.value !== '';
 });
-const isFormLocked = computed(() => isMorningLocked.value || hasSubmittedMorning.value);
+const isFormLocked = computed(() => isMorningLocked.value || hasSubmittedMorning.value || Boolean(activeLeave.value));
+
+function formatLeaveType(type?: string): string {
+  switch (type) {
+    case 'ANNUAL':
+      return 'Cuti Tahunan';
+    case 'SICK':
+      return 'Cuti Sakit';
+    case 'SPECIAL_LEAVE':
+      return 'Cuti Khusus';
+    case 'MATERNITY':
+      return 'Cuti Melahirkan';
+    case 'UNPAID':
+      return 'Cuti di Luar Tanggungan';
+    default:
+      return type || 'Cuti Resmi';
+  }
+}
+
+function formatLeaveDateRange(startStr?: string, endStr?: string): string {
+  if (!startStr || !endStr) return '';
+  const s = new Date(startStr);
+  const e = new Date(endStr);
+  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+}
 
 function formatTime(isoStr: string | null) {
   if (!isoStr) return '';
@@ -173,9 +207,11 @@ async function loadTodayState() {
       availableCarryOvers: CarryOverDraft[];
       availableProjects?: ProjectOption[];
       activeBlockers?: ActiveBlockerOption[];
+      activeLeave?: ActiveLeave | null;
     }>('/daily/today');
 
     const data = res.data;
+    activeLeave.value = (data as any).activeLeave || null;
     workDate.value = data.workDate;
     currentTime.value = data.currentTime;
     morningOnTimeCutoff.value = data.cutoffTimings.morningOnTimeCutoff;
@@ -482,7 +518,8 @@ onMounted(() => {
             <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
-                <span v-if="hasSubmittedMorning" class="badge badge-active">SUBMITTED (Terkunci)</span>
+                <span v-if="activeLeave" class="badge badge-active">CUTI RESMI (APPROVED LEAVE)</span>
+                <span v-else-if="hasSubmittedMorning" class="badge badge-active">SUBMITTED (Terkunci)</span>
                 <span v-else-if="isMorningLocked" class="badge badge-danger">LOCKED (Pasca Cut-Off)</span>
                 <span v-else-if="isLate" class="badge badge-late">Terlambat (LATE)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
@@ -491,7 +528,8 @@ onMounted(() => {
             <div class="context-item" data-testid="context-item-initial-status">
               <span class="context-label">Status Awal Hari (Initial Daily Status)</span>
               <div class="context-value">
-                <span v-if="initialDailyStatus === 'GREEN'" class="badge badge-active">GREEN — Terkendali</span>
+                <span v-if="activeLeave" class="badge badge-neutral">CUTI (DIKECUALIKAN)</span>
+                <span v-else-if="initialDailyStatus === 'GREEN'" class="badge badge-active">GREEN — Terkendali</span>
                 <span v-else-if="initialDailyStatus === 'AMBER'" class="badge badge-warning">AMBER — Berisiko</span>
                 <span v-else-if="initialDailyStatus === 'RED'" class="badge badge-danger">RED — Kritis</span>
                 <span v-else class="badge badge-neutral">0 KOMITMEN</span>
@@ -501,8 +539,30 @@ onMounted(() => {
         </div>
       </section>
 
+      <!-- Alert Banner jika sedang dalam masa cuti resmi disetujui (DEC-008) -->
+      <div v-if="activeLeave" class="alert-banner leave" role="status" data-testid="leave-active-banner">
+        <CalendarCheck :size="20" class="text-green" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
+            <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan (DEC-008), Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini (Superseded by Approved Leave).
+          </p>
+          <div v-if="activeLeave.reason" class="leave-banner-reason">
+            Keterangan: {{ activeLeave.reason }}
+          </div>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/leave/my" class="btn btn-secondary btn-sm">
+              Lihat Riwayat Cuti Saya
+            </AccessLink>
+          </div>
+        </div>
+      </div>
+
       <!-- Alert Banner jika komitmen pagi telah disubmit (Baseline Locked) -->
-      <div v-if="hasSubmittedMorning" class="alert-banner submitted" role="status">
+      <div v-else-if="hasSubmittedMorning" class="alert-banner submitted" role="status">
         <CheckCircle2 :size="20" class="text-green" />
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
@@ -538,8 +598,32 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Zero Commitment Option Box (IMP-029) -->
-      <div class="zero-box">
+      <!-- Leave Notice Box saat cuti resmi aktif (DEC-008) -->
+      <div v-if="activeLeave" class="leave-notice-box" data-testid="leave-notice-box">
+        <div class="leave-notice-content">
+          <CalendarCheck :size="32" class="text-green" />
+          <div class="leave-notice-text">
+            <h3>Hari Bebas Komitmen Kerja (Cuti Disetujui)</h3>
+            <p>
+              Sistem mencatat kehadiran Anda sebagai <strong>Superseded by Approved Leave</strong>. Anda tidak perlu menetapkan target komitmen harian, mencatat pekerjaan tambahan, maupun melaporkan evaluasi sore hari ini.
+            </p>
+            <div class="leave-notice-meta">
+              <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
+              <span>Periode: <strong>{{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</strong></span>
+              <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason }}"</em></span>
+            </div>
+          </div>
+        </div>
+        <div class="leave-notice-actions">
+          <AccessLink to="/leave/my" class="btn btn-secondary">
+            Lihat Permohonan Cuti Saya
+          </AccessLink>
+        </div>
+      </div>
+
+      <template v-else>
+        <!-- Zero Commitment Option Box (IMP-029) -->
+        <div class="zero-box">
         <label class="zero-label">
           <input
             type="checkbox"
@@ -848,6 +932,7 @@ onMounted(() => {
           </div>
         </div>
       </section>
+      </template>
 
       <!-- Action Footer -->
       <div v-if="!isFormLocked" class="action-footer">
@@ -1147,6 +1232,69 @@ onMounted(() => {
   background: var(--color-status-green-bg);
   border: 1px solid var(--color-status-green-border);
   color: var(--color-status-green-fg);
+}
+
+.alert-banner.leave {
+  background: var(--color-status-green-bg);
+  border: 1px solid var(--color-status-green-border);
+  color: var(--color-status-green-fg);
+}
+
+.leave-banner-reason {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+
+.leave-notice-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.leave-notice-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.leave-notice-text h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.leave-notice-text p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.leave-notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.leave-notice-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .submitted-banner-content {
