@@ -9,6 +9,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Briefcase,
+  ChevronDown,
 } from 'lucide-vue-next';
 
 interface AdditionalWorkItem {
@@ -55,6 +56,7 @@ const availableProjects = ref<ProjectOption[]>([
   { projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android' },
 ]);
 const activeBlockers = ref<ActiveBlockerOption[]>([]);
+const isBlockerPickerOpen = ref(false);
 
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
@@ -110,23 +112,16 @@ async function loadTodayState() {
   }
 }
 
-function handleBlockerSelect(event: Event) {
-  const selectEl = event.target as HTMLSelectElement;
-  const blockerId = selectEl.value;
-  if (!blockerId) return;
-
-  const blocker = activeBlockers.value.find((b) => b.id === blockerId);
-  if (blocker) {
-    formLinkedBlockerId.value = blocker.id;
-    formReferenceLink.value = `[${blocker.code}] ${blocker.description}`;
-    if (blocker.projectCodeReference && !formProjectCode.value) {
-      formProjectCode.value = blocker.projectCodeReference;
-    }
-    if (!formTaskText.value.trim()) {
-      formTaskText.value = `Menyelesaikan kendala ${blocker.code}: ${blocker.description}`;
-    }
+function selectBlockerItem(blocker: ActiveBlockerOption) {
+  formLinkedBlockerId.value = blocker.id;
+  formReferenceLink.value = `[${blocker.code}] ${blocker.description}`;
+  if (blocker.projectCodeReference && !formProjectCode.value) {
+    formProjectCode.value = blocker.projectCodeReference;
   }
-  selectEl.value = '';
+  if (!formTaskText.value.trim()) {
+    formTaskText.value = `Menyelesaikan kendala ${blocker.code}: ${blocker.description}`;
+  }
+  isBlockerPickerOpen.value = false;
 }
 
 async function addAdditionalWork() {
@@ -343,26 +338,57 @@ onMounted(() => {
               </div>
 
               <div class="form-group">
-                <label for="input-ref-link" class="form-label">Tautan Referensi / Tiket Blocker (Opsional)</label>
-                <input
-                  id="input-ref-link"
-                  v-model="formReferenceLink"
-                  type="text"
-                  class="input-control"
-                  placeholder="https://... atau kode tiket #BLK-..."
-                />
-                <div v-if="activeBlockers.length > 0" style="margin-top: 6px;">
-                  <select
-                    class="input-control"
-                    style="font-size: 12px; padding: 6px 10px;"
-                    data-testid="select-additional-blocker"
-                    @change="handleBlockerSelect($event)"
-                  >
-                    <option value="">+ Pilih Blocker Aktif yang Diselesaikan / Terkait (Opsional)...</option>
-                    <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
-                      {{ blk.code }} ({{ blk.severity }}) — {{ blk.description }}
-                    </option>
-                  </select>
+                <label for="input-ref-link" class="form-label">Tautan Referensi / Tiket Tugas (Opsional)</label>
+                <div class="input-picker-group">
+                  <input
+                    id="input-ref-link"
+                    v-model="formReferenceLink"
+                    type="text"
+                    class="input-control picker-input-flex"
+                    placeholder="https://... atau pilih blocker"
+                  />
+                  <div class="picker-dropdown-wrap">
+                    <button
+                      type="button"
+                      class="btn-picker-trigger"
+                      data-testid="select-additional-blocker"
+                      title="Pilih tiket blocker aktif yang sedang ditangani"
+                      @click="isBlockerPickerOpen = !isBlockerPickerOpen"
+                    >
+                      <span>Pilih Blocker Aktif</span>
+                      <ChevronDown :size="13" />
+                    </button>
+                    <div
+                      v-if="isBlockerPickerOpen"
+                      class="picker-dropdown-menu show"
+                    >
+                      <div class="picker-menu-header">
+                        <span>Blocker Aktif ({{ activeBlockers.length }})</span>
+                        <span class="picker-menu-sub">Klik untuk menautkan</span>
+                      </div>
+                      <div v-if="activeBlockers.length === 0" class="picker-empty">
+                        Tidak ada tiket blocker aktif saat ini.
+                      </div>
+                      <button
+                        v-for="blk in activeBlockers"
+                        :key="blk.id"
+                        type="button"
+                        class="picker-menu-item"
+                        @click="selectBlockerItem(blk)"
+                      >
+                        <div class="picker-item-top">
+                          <span class="picker-item-code">{{ blk.code }}</span>
+                          <span
+                            class="badge-mini"
+                            :class="blk.status === 'OPEN' ? 'open' : blk.status === 'ACKNOWLEDGED' ? 'ack' : 'in-prog'"
+                          >
+                            {{ blk.severity }} · {{ blk.status }}
+                          </span>
+                        </div>
+                        <div class="picker-item-title">{{ blk.description }}</div>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -605,7 +631,7 @@ onMounted(() => {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .panel-head {
@@ -820,5 +846,158 @@ select.input-control {
   background: var(--color-status-red-bg);
   color: var(--color-status-red-fg);
   border: 1px solid var(--color-status-red-border);
+}
+
+.input-picker-group {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.picker-input-flex {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-dropdown-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.btn-picker-trigger {
+  height: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  background: var(--color-surface-subtle, #f1f5f9);
+  border: 1px solid var(--color-border-strong, #cbd5e1);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-picker-trigger:hover:not(:disabled) {
+  background: #e6f4ee;
+  border-color: var(--color-brand-primary);
+}
+
+.picker-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 340px;
+  max-width: 90vw;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 28px rgba(14, 33, 27, 0.14);
+  z-index: 100;
+  padding: 6px;
+}
+
+.picker-dropdown-menu.show {
+  display: block;
+}
+
+.picker-menu-header {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.picker-menu-sub {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: none;
+  color: var(--color-text-secondary);
+}
+
+.picker-empty {
+  padding: 12px 10px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.picker-menu-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 9px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+  display: block;
+}
+
+.picker-menu-item:hover {
+  background: var(--color-surface-subtle, #f8fafc);
+}
+
+.picker-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.picker-item-code {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-status-amber-fg);
+  font-family: var(--font-mono);
+}
+
+.picker-item-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.badge-mini {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.badge-mini.open {
+  background: var(--color-status-red-bg);
+  color: var(--color-status-red-fg);
+}
+
+.badge-mini.ack {
+  background: var(--color-status-amber-bg);
+  color: var(--color-status-amber-fg);
+}
+
+.badge-mini.in-prog {
+  background: var(--color-status-green-bg);
+  color: var(--color-status-green-fg);
 }
 </style>
