@@ -554,6 +554,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
               isAmberWarningAdvised: false,
               projectCode: 'PRJ-CORE',
               referenceLink: '',
+              continuationReason: 'Menunggu hasil pengujian benchmark',
             },
           ],
         },
@@ -573,6 +574,8 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     // Expand panel
     await copyPanel.find('.panel-head').trigger('click');
     expect(copyPanel.find('.copy-desc').text()).toBe('Pilih tugas dari hari kerja sebelumnya untuk disalin ke slot komitmen hari ini:');
+    expect(copyPanel.find('.carry-note').exists()).toBe(true);
+    expect(copyPanel.find('.carry-note .note-val').text()).toBe('"Menunggu hasil pengujian benchmark"');
 
     // 2. Put user input in Slot 1 (e.g. choose a project) to test non-destructive placement
     const projectSelect = wrapper.find('.slot-card select');

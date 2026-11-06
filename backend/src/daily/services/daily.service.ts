@@ -138,6 +138,7 @@ export class DailyService {
               carryOverDaysCount: nextCount,
               suggestedRisk: nextCount >= 3 ? CommitmentRisk.AMBER : c.initialRisk,
               isAmberWarningAdvised: nextCount >= 3, // DEC-003: Saran AMBER jika 3+ hari berlanjut
+              continuationReason: c.continuationReason || null,
             };
           });
       }

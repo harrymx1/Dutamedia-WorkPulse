@@ -57,6 +57,7 @@ interface CarryOverDraft {
   carryOverDaysCount: number;
   suggestedRisk: 'GREEN' | 'AMBER' | 'RED';
   isAmberWarningAdvised: boolean;
+  continuationReason?: string | null;
 }
 
 interface ActiveLeave {
@@ -861,6 +862,10 @@ onMounted(() => {
                   <span v-if="item.isAmberWarningAdvised" class="amber-advice">
                     Carry-over 3+ hari berturut-turut — Disarankan AMBER (DEC-003)
                   </span>
+                </div>
+                <div v-if="item.continuationReason" class="carry-note">
+                  <span class="note-label">Catatan EOD Kemarin:</span>
+                  <span class="note-val">"{{ item.continuationReason }}"</span>
                 </div>
               </div>
               <button
@@ -1840,6 +1845,37 @@ onMounted(() => {
   font-size: 11px;
   color: var(--color-status-amber-fg);
   font-weight: 600;
+}
+
+.carry-main {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.carry-note {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--color-surface-subtle, #f8fafc);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.carry-note .note-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.carry-note .note-val {
+  font-size: 12px;
+  color: var(--color-text-primary);
+  font-style: italic;
+  line-height: 1.45;
 }
 
 /* Slots Form */
