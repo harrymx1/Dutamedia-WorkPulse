@@ -850,16 +850,6 @@ onMounted(() => {
             <div class="kicker">Slot Komitmen Harian</div>
             <h2>Daftar Komitmen Hari Ini ({{ commitmentSlots.length }}/3)</h2>
           </div>
-          <button
-            v-if="commitmentSlots.length < 3 && !isFormLocked"
-            type="button"
-            class="btn btn-add-slot-header"
-            @click="addSlot"
-            data-testid="add-slot-btn"
-          >
-            <Plus :size="16" />
-            <span>Tambah Slot</span>
-          </button>
         </div>
 
         <div class="panel-body slots-body">
@@ -1081,14 +1071,14 @@ onMounted(() => {
               type="button"
               class="btn-add-slot-bottom"
               @click="addSlot"
-              data-testid="add-slot-bottom-btn"
+              data-testid="add-slot-btn"
             >
               <Plus :size="16" />
               <span>Tambah Slot Komitmen ({{ commitmentSlots.length }}/3)</span>
             </button>
             <div v-else class="slots-max-hint">
               <CheckCircle2 :size="15" class="text-green" />
-              <span>Batas maksimal 3 komitmen harian telah tercapai (DEC-004).</span>
+              <span>Batas maksimal 3 komitmen harian telah tercapai.</span>
             </div>
           </div>
         </div>
@@ -1812,24 +1802,6 @@ onMounted(() => {
 }
 
 /* Slots Form */
-.btn-add-slot-header {
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-brand-primary);
-  color: var(--color-brand-primary);
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  padding: 6px 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-add-slot-header:hover {
-  background: var(--color-brand-tint);
-}
-
 .slots-body {
   display: flex;
   flex-direction: column;
@@ -1915,12 +1887,19 @@ onMounted(() => {
 .remove-btn {
   background: transparent;
   border: none;
-  color: var(--color-text-secondary);
+  color: #dc2626;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .remove-btn:hover {
-  color: var(--color-status-red-fg);
+  color: #991b1b;
+  opacity: 0.8;
 }
 
 .form-group {
