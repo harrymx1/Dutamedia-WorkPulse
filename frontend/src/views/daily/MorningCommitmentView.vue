@@ -20,6 +20,7 @@ import {
   ChevronUp,
   CalendarCheck,
   Check,
+  Bookmark,
 } from 'lucide-vue-next';
 
 interface CommitmentSlot {
@@ -197,12 +198,16 @@ const commitmentPlaceholder = computed(() => {
   return 'Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini...';
 });
 
+const tomorrowPriority = ref<string | null>(null);
+
 // Computed initial daily status
 const initialDailyStatus = computed(() => {
   if (isZeroCommitment.value) return 'NOT_APPLICABLE_NO_COMMITMENT';
   const hasRed = commitmentSlots.value.some((c) => c.initialRisk === 'RED');
   if (hasRed) return 'RED';
-  const hasAmber = commitmentSlots.value.some((c) => c.initialRisk === 'AMBER');
+  const hasAmber = commitmentSlots.value.some(
+    (c) => c.initialRisk === 'AMBER' || !!c.linkedBlockerId,
+  );
   if (hasAmber) return 'AMBER';
   return 'GREEN';
 });
@@ -234,6 +239,7 @@ async function loadTodayState() {
     isMorningLocked.value = data.cutoffTimings.isMorningLocked;
     isLate.value = data.currentTime > data.cutoffTimings.morningOnTimeCutoff && !data.cutoffTimings.isMorningLocked;
     availableCarryOvers.value = data.availableCarryOvers || [];
+    tomorrowPriority.value = (data as any).tomorrowPriority || null;
     if (Array.isArray(data.availableProjects) && data.availableProjects.length > 0) {
       availableProjects.value = data.availableProjects;
     }
@@ -372,6 +378,9 @@ function selectBlockerForSlot(slotIndex: number, blocker: ActiveBlockerOption) {
   if (blocker && slot) {
     slot.referenceLink = `[${blocker.code}] ${blocker.description}`;
     slot.linkedBlockerId = blocker.id;
+    if (slot.initialRisk === 'GREEN') {
+      slot.initialRisk = 'AMBER';
+    }
     if (blocker.projectCodeReference && !slot.projectCode) {
       slot.projectCode = blocker.projectCodeReference;
     }
@@ -893,6 +902,22 @@ onMounted(() => {
         </div>
 
         <div class="panel-body slots-body">
+          <!-- Context Hint: Tomorrow Priority dari EOD Kemarin (Non-Binding Context) -->
+          <div
+            v-if="tomorrowPriority && !isZeroCommitment"
+            class="tomorrow-priority-hint"
+            data-testid="tomorrow-priority-banner"
+          >
+            <div class="tomorrow-priority-hint-content">
+              <span class="tomorrow-priority-hint-label">
+                <Bookmark :size="14" class="text-amber" />
+                <span>Prioritas Kemarin Sore:</span>
+              </span>
+              <span class="tomorrow-priority-hint-text">"{{ tomorrowPriority }}"</span>
+            </div>
+            <span class="badge badge-warning">Hanya Referensi</span>
+          </div>
+
           <div
             v-for="(slot, idx) in commitmentSlots"
             :key="idx"
@@ -1875,6 +1900,44 @@ onMounted(() => {
   font-size: 12px;
   color: var(--color-text-primary);
   font-style: italic;
+  line-height: 1.45;
+}
+
+/* Tomorrow Priority Context Hint */
+.tomorrow-priority-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-surface-subtle, #f8fafc);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 3px solid var(--color-status-amber, #d97706);
+  border-radius: var(--radius-sm, 6px);
+  margin-bottom: 2px;
+}
+
+.tomorrow-priority-hint-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.tomorrow-priority-hint-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tomorrow-priority-hint-text {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-text-primary);
   line-height: 1.45;
 }
 

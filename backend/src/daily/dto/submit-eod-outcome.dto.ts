@@ -104,5 +104,9 @@ export class SubmitEodOutcomeDto {
   @ValidateNested()
   @Type(() => InstantBlockerDto)
   instantBlocker?: InstantBlockerDto;
+
+  @IsOptional()
+  @IsString()
+  tomorrowPriority?: string;
 }
 

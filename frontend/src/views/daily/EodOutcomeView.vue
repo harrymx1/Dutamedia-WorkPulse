@@ -87,6 +87,7 @@ const formattedWorkDate = computed(() => {
 const commitments = ref<CommitmentOutcomeItem[]>([]);
 const additionalWorks = ref<AdditionalWorkOutcomeItem[]>([]);
 const finalDailyStatus = ref<'GREEN' | 'AMBER' | 'RED'>('GREEN');
+const tomorrowPriority = ref('');
 
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
@@ -148,6 +149,7 @@ async function loadTodayState() {
       if (data.record.finalDailyStatus && data.record.finalDailyStatus !== 'NOT_APPLICABLE_NO_COMMITMENT') {
         finalDailyStatus.value = data.record.finalDailyStatus;
       }
+      tomorrowPriority.value = (data.record.orgContextSnapshot as any)?.tomorrowPriority || '';
       isSubmittedSuccess.value = !!eodSubmittedAt.value;
     } else {
       eodSubmittedAt.value = null;
@@ -206,6 +208,7 @@ async function submitEod() {
         continuationReason: w.continuation === 'CONTINUE' ? w.continuationReason.trim() : undefined,
       })),
       finalDailyStatus: finalDailyStatus.value, // DEC-003: Hak konfirmasi status GREEN dijamin bebas
+      tomorrowPriority: tomorrowPriority.value.trim() ? tomorrowPriority.value.trim() : undefined,
     };
 
     const res = await apiClient<{ eodSubmittedAt?: string }>('/daily/eod', {
@@ -585,6 +588,25 @@ onMounted(() => {
                 Kendala kritis tidak terselesaikan dan membutuhkan intervensi langsung atasan.
               </p>
             </label>
+          </div>
+
+          <!-- Field Tomorrow Priority (Opsional) -->
+          <div class="field-group" style="margin-top: 20px;">
+            <label class="form-label" for="tomorrow-priority-input">
+              <span>Prioritas Esok Hari (Tomorrow Priority)</span>
+              <span class="field-sub-inline" style="font-weight: normal; font-size: 12px; color: var(--color-text-secondary); margin-left: 6px;">(Opsional)</span>
+            </label>
+            <textarea
+              id="tomorrow-priority-input"
+              v-model="tomorrowPriority"
+              class="input-control"
+              rows="2"
+              placeholder="Tuliskan catatan fokus atau prioritas yang perlu langsung ditangani pada awal hari kerja berikutnya..."
+              :disabled="isFormLocked"
+            ></textarea>
+            <span class="field-sub" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
+              Catatan ini akan otomatis muncul sebagai banner pengingat konteks di bagian atas formulir Morning Commitment esok hari. Bersifat murni referensi dan tidak menjadi komitmen otomatis.
+            </span>
           </div>
         </div>
       </section>

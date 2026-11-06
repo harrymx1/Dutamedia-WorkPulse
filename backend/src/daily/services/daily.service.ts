@@ -108,6 +108,7 @@ export class DailyService {
 
     // Ambil komitmen carry-over yang tersedia dari previousWorkday (FR-11, DEC-013)
     let availableCarryOvers: any[] = [];
+    let tomorrowPriority: string | null = null;
     if (!record || record.commitments.length === 0) {
       const prevWorkdayStr = await this.workdayService.getPreviousWorkday(userId, todayDate);
       const prevRecord = await this.prisma.dailyAccountabilityRecord.findUnique({
@@ -123,6 +124,7 @@ export class DailyService {
       });
 
       if (prevRecord) {
+        tomorrowPriority = (prevRecord.orgContextSnapshot as any)?.tomorrowPriority || null;
         const prevMeta = (prevRecord.orgContextSnapshot as any)?.commitmentMeta || {};
         availableCarryOvers = prevRecord.commitments
           .filter((c) => c.continuation === ContinuationStatus.CONTINUE)
@@ -136,8 +138,8 @@ export class DailyService {
               projectCode: cMeta.projectCode || null,
               linkedBlockerId: cMeta.linkedBlockerId || null,
               carryOverDaysCount: nextCount,
-              suggestedRisk: nextCount >= 3 ? CommitmentRisk.AMBER : c.initialRisk,
-              isAmberWarningAdvised: nextCount >= 3, // DEC-003: Saran AMBER jika 3+ hari berlanjut
+              suggestedRisk: nextCount >= 2 ? CommitmentRisk.AMBER : c.initialRisk,
+              isAmberWarningAdvised: nextCount >= 2, // DEC-003: Saran AMBER jika carry-over berlanjut
               continuationReason: c.continuationReason || null,
             };
           });
@@ -252,6 +254,7 @@ export class DailyService {
       availableCarryOvers,
       availableProjects,
       activeBlockers,
+      tomorrowPriority,
     };
   }
 
@@ -348,7 +351,9 @@ export class DailyService {
     let initialDailyStatus: DailyRiskStatus = DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT;
     if (dto.commitments.length > 0) {
       const hasRed = dto.commitments.some((c) => c.initialRisk === CommitmentRisk.RED);
-      const hasAmber = dto.commitments.some((c) => c.initialRisk === CommitmentRisk.AMBER);
+      const hasAmber = dto.commitments.some(
+        (c) => c.initialRisk === CommitmentRisk.AMBER || !!c.linkedBlockerId,
+      );
       if (hasRed) {
         initialDailyStatus = DailyRiskStatus.RED;
       } else if (hasAmber) {
@@ -849,6 +854,14 @@ export class DailyService {
 
       // Update record EOD secara atomic dengan conditional guard (eodSubmittedAt: null)
       // DEC-003: Hak opsi GREEN tetap sah dan dilarang dikunci
+      const currentOrgContext = (record.orgContextSnapshot as any) || {};
+      const updatedOrgContext = {
+        ...currentOrgContext,
+        ...(dto.tomorrowPriority && dto.tomorrowPriority.trim()
+          ? { tomorrowPriority: dto.tomorrowPriority.trim() }
+          : {}),
+      };
+
       const updateResult = await tx.dailyAccountabilityRecord.updateMany({
         where: {
           id: record.id,
@@ -858,6 +871,7 @@ export class DailyService {
           eodSubmittedAt: this.clockService.now(),
           eodTiming,
           finalDailyStatus: dto.finalDailyStatus,
+          orgContextSnapshot: updatedOrgContext,
         },
       });
 

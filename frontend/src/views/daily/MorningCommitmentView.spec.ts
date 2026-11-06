@@ -39,6 +39,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -70,6 +71,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -133,6 +135,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -176,6 +179,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -208,6 +212,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -241,6 +246,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -277,6 +283,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -476,6 +483,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -515,6 +523,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [],
         },
       }),
@@ -545,6 +554,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
             isMorningLocked: false,
           },
           record: null,
+          tomorrowPriority: 'Selesaikan optimasi redis sebelum sprint review',
           availableCarryOvers: [
             {
               originCommitmentId: 'origin-123',
@@ -576,6 +586,12 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(copyPanel.find('.copy-desc').text()).toBe('Pilih tugas dari hari kerja sebelumnya untuk disalin ke slot komitmen hari ini:');
     expect(copyPanel.find('.carry-note').exists()).toBe(true);
     expect(copyPanel.find('.carry-note .note-val').text()).toBe('"Menunggu hasil pengujian benchmark"');
+
+    // Verify Tomorrow Priority banner from yesterday EOD
+    const tomorrowBanner = wrapper.find('[data-testid="tomorrow-priority-banner"]');
+    expect(tomorrowBanner.exists()).toBe(true);
+    expect(tomorrowBanner.text()).toContain('Prioritas Kemarin Sore:');
+    expect(tomorrowBanner.text()).toContain('Selesaikan optimasi redis sebelum sprint review');
 
     // 2. Put user input in Slot 1 (e.g. choose a project) to test non-destructive placement
     const projectSelect = wrapper.find('.slot-card select');
