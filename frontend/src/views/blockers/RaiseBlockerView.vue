@@ -603,7 +603,7 @@ onMounted(() => {
             <div class="panel-head">
               <div>
                 <h2>Penanggung Jawab Awal &amp; Jalur Kewenangan</h2>
-                <p class="panel-desc">Tentukan konteks kewenangan penanganan kendala (DEC-002).</p>
+                <p class="panel-desc">Tentukan konteks kewenangan penanganan kendala.</p>
               </div>
               <span class="pill pill-brand">Bagian 2 dari 2</span>
             </div>
@@ -638,7 +638,7 @@ onMounted(() => {
                   <div class="auth-icon"><FolderGit2 :size="20" /></div>
                   <div>
                     <strong>Project Authority (Kewenangan Proyek)</strong>
-                    <p>Ditangani oleh personil berwenang di proyek terkait (DEC-002: Wajib mencantumkan kode proyek).</p>
+                    <p>Ditangani oleh personil berwenang di proyek terkait.</p>
                   </div>
                 </label>
               </div>
@@ -671,10 +671,10 @@ onMounted(() => {
                 <div>
                   <strong>Jalur Penanganan Otomatis:</strong>
                   <p v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                    Tiket diteruskan ke Atasan Langsung struktural. Timer SLA dimulai seketika saat tiket terbit.
+                    Tiket akan langsung diteruskan ke Atasan Langsung Anda. Batas waktu respons mulai dihitung mundur sejak tiket terbit.
                   </p>
                   <p v-else>
-                    Tiket diteruskan ke Lead Proyek <strong>{{ projectCode || '(Pilih Proyek)' }}</strong> sesuai Project Authority Mapping aktif.
+                    Tiket akan langsung diteruskan ke Project Lead untuk ditindaklanjuti.
                   </p>
                 </div>
               </div>
