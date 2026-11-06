@@ -853,8 +853,9 @@ onMounted(() => {
           <button
             v-if="commitmentSlots.length < 3 && !isFormLocked"
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-add-slot-header"
             @click="addSlot"
+            data-testid="add-slot-btn"
           >
             <Plus :size="16" />
             <span>Tambah Slot</span>
@@ -1070,6 +1071,24 @@ onMounted(() => {
                   :disabled="isFormLocked"
                 />
               </div>
+            </div>
+          </div>
+
+          <!-- Bottom Add Slot Action (Linear Downward Flow) -->
+          <div v-if="!isFormLocked" class="slots-bottom-action">
+            <button
+              v-if="commitmentSlots.length < 3"
+              type="button"
+              class="btn-add-slot-bottom"
+              @click="addSlot"
+              data-testid="add-slot-bottom-btn"
+            >
+              <Plus :size="16" />
+              <span>Tambah Slot Komitmen ({{ commitmentSlots.length }}/3)</span>
+            </button>
+            <div v-else class="slots-max-hint">
+              <CheckCircle2 :size="15" class="text-green" />
+              <span>Batas maksimal 3 komitmen harian telah tercapai (DEC-004).</span>
             </div>
           </div>
         </div>
@@ -1793,10 +1812,71 @@ onMounted(() => {
 }
 
 /* Slots Form */
+.btn-add-slot-header {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-add-slot-header:hover {
+  background: var(--color-brand-tint);
+}
+
 .slots-body {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.slots-bottom-action {
+  margin-top: 4px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-add-slot-bottom {
+  width: 100%;
+  padding: 12px 18px;
+  background: var(--color-surface);
+  border: 1.5px dashed var(--color-brand-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-brand-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-add-slot-bottom:hover {
+  background: var(--color-brand-tint);
+  border-style: solid;
+}
+
+.slots-max-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  padding: 10px 16px;
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  width: 100%;
+  justify-content: center;
 }
 
 .slot-card {
