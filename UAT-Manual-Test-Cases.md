@@ -871,12 +871,12 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Mekanisme atomic locking DEF-001 terbukti 100% kokoh mencegah duplikasi komitmen pagi dari multi-tab maupun klik ganda.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar banner sukses terkunci pada Tab 1 dan tangkapan layar penolakan 422 pada Tab 2.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Concurrency lock DEF-001 terbukti kokoh 100%. Komitmen di Tab 1 berhasil disubmit dan baseline langsung terkunci resmi. Penyerahan kedua dari Tab 2 tanpa refresh halaman langsung ditolak mutlak oleh backend dengan status HTTP 422 BUSINESS_RULE_ALREADY_SUBMITTED dan pesan ramah pengguna: "Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi." Antarmuka Tab 2 reaktif menyinkronkan state ke status baseline terkunci tanpa duplikasi baris di database.
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 
-- **Defect ID:** -
-- **Retest Result:** -
+- **Execution Date:** 2026-11-06
+- **Defect ID:** DEF-001 (Resolved)
+- **Retest Result:** PASS
 - **Catatan:** Verifikasi tuntas resolusi DEF-001 pasca-remediasi Cycle 1.
 
 ---
