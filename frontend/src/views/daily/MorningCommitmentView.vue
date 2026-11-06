@@ -1458,27 +1458,21 @@ onMounted(() => {
 }
 
 .summary-card {
-  background: #F3F5F4;
-  border: 1px solid #D8E0DC;
-  border-left: 4px solid var(--color-brand-primary, #00674D);
-  border-radius: var(--radius-sm, 6px);
-  padding: 10px 14px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-.summary-card.summary-card-green {
-  border-left-color: var(--color-brand-primary, #00674D);
+  gap: 8px;
 }
 
 .summary-card.summary-card-amber {
-  border-left-color: #D97706;
+  border-left: 4px solid #f59e0b;
 }
 
 .summary-card.summary-card-red {
-  border-left-color: #DC2626;
+  border-left: 4px solid #ef4444;
 }
 
 .summary-card-top {
@@ -1491,37 +1485,34 @@ onMounted(() => {
 .summary-slot-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .slot-number {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: #374151;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--color-brand-primary);
 }
 
 .summary-risk-pill .badge {
-  font-size: 10.5px;
+  font-size: 11px;
   padding: 2px 8px;
   font-weight: 600;
 }
 
 .summary-task-text {
   font-size: 13.5px;
-  font-weight: 700;
-  color: #0E211B;
-  line-height: 1.4;
-  margin: 1px 0 2px 0;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.45;
 }
 
 .summary-meta-grid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: 6px;
-  border-top: 1px dashed #D1D5DB;
+  gap: 5px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-border-subtle);
 }
 
 .meta-field {
@@ -1533,22 +1524,21 @@ onMounted(() => {
 }
 
 .meta-label {
-  color: #4B5563;
+  color: var(--color-text-secondary);
   font-weight: 600;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 11.5px;
   min-width: 125px;
   flex-shrink: 0;
 }
 
 .meta-val {
-  color: #111827;
-  font-weight: 500;
+  color: var(--color-text-primary);
   font-size: 11.5px;
 }
 
 .meta-val.text-muted {
-  color: #6B7280;
+  color: var(--color-text-disabled);
   font-weight: 500;
 }
 
@@ -1556,7 +1546,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #111827;
+  color: var(--color-text-primary);
   font-size: 11.5px;
 }
 
@@ -1571,9 +1561,9 @@ onMounted(() => {
 }
 
 .meta-pill.project-pill {
-  background: #FFFFFF;
-  color: var(--color-brand-primary, #00674D);
-  border: 1px solid #D1D5DB;
+  background: var(--color-surface);
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .meta-pill.blocker-pill {
@@ -1584,7 +1574,7 @@ onMounted(() => {
 
 .meta-link {
   font-size: 11.5px;
-  color: var(--color-brand-primary, #00674D);
+  color: var(--color-brand-primary);
   font-weight: 600;
   text-decoration: underline;
   display: inline-flex;
@@ -1600,10 +1590,10 @@ onMounted(() => {
 }
 
 .summary-callout {
-  background: #FFFFFF;
-  border: 1px solid #D1D5DB;
-  border-radius: var(--radius-sm, 4px);
-  padding: 6px 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1619,13 +1609,13 @@ onMounted(() => {
 
 .callout-tag {
   font-weight: 700;
-  color: #4B5563;
+  color: var(--color-text-secondary);
   min-width: 120px;
-  font-size: 11px;
+  font-size: 11.5px;
 }
 
 .callout-desc {
-  color: #111827;
+  color: var(--color-text-primary);
   line-height: 1.35;
 }
 
@@ -1634,14 +1624,13 @@ onMounted(() => {
 }
 
 .zero-summary-card {
-  background: #F3F5F4;
-  border: 1px solid #D8E0DC;
-  border-radius: var(--radius-sm, 6px);
-  padding: 12px 16px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .zero-summary-badge-row {
