@@ -1451,6 +1451,10 @@ onMounted(() => {
 }
 
 .summary-body {
+  background: var(--color-canvas, #F7FAF9);
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1458,25 +1462,29 @@ onMounted(() => {
 }
 
 .summary-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-left: 3px solid var(--color-status-green-border);
+  background: #FFFFFF;
+  border: 1px solid #CAD7D1;
+  border-left: 4px solid var(--color-brand-primary, #00674D);
   border-radius: var(--radius-sm, 6px);
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(14, 33, 27, 0.05), 0 1px 2px rgba(14, 33, 27, 0.03);
+}
+
+.summary-card.summary-card-green {
+  border-left-color: var(--color-brand-primary, #00674D);
 }
 
 .summary-card.summary-card-amber {
-  border-left-color: var(--color-status-amber-border);
-  background: #fffdfa;
+  border-left-color: #D97706;
+  background: #FFFFFF;
 }
 
 .summary-card.summary-card-red {
-  border-left-color: var(--color-status-red-border);
-  background: #fefafa;
+  border-left-color: #DC2626;
+  background: #FFFFFF;
 }
 
 .summary-card-top {
@@ -1625,14 +1633,23 @@ onMounted(() => {
   line-height: 1.35;
 }
 
+.zero-summary-panel .panel-body {
+  background: var(--color-canvas, #F7FAF9);
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
 .zero-summary-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
+  background: #FFFFFF;
+  border: 1px solid #CAD7D1;
   border-radius: var(--radius-sm, 6px);
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 1px 3px rgba(14, 33, 27, 0.05);
 }
 
 .zero-summary-badge-row {
