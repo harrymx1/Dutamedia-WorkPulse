@@ -385,6 +385,9 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     // 2. Tampilan beralih ke Summary View resmi (tidak ada lagi input textarea yang meminta isian)
     expect(wrapper.find('[data-testid="morning-summary-panel"]').exists()).toBe(true);
     expect(wrapper.find('textarea').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Proyek:');
+    expect(wrapper.text()).toContain('Tautan / PR / Tiket:');
+    expect(wrapper.text()).toContain('Blocker Aktif:');
 
     // 3. Tombol submit tidak tersedia (action footer disembunyikan)
     const submitBtn = wrapper.findAll('button').find(b => b.text().includes('Kirim Morning Commitment'));

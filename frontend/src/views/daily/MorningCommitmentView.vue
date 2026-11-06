@@ -14,6 +14,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Link as LinkIcon,
+  ExternalLink,
   Copy,
   ChevronDown,
   ChevronUp,
@@ -705,33 +706,40 @@ onMounted(() => {
               </div>
 
               <div class="summary-meta-grid">
-                <div class="meta-item">
+                <div class="meta-field">
                   <span class="meta-label">Proyek:</span>
                   <span class="meta-pill project-pill">
                     {{ getProjectName(slot.projectCode) }}
                   </span>
                 </div>
 
-                <div v-if="slot.referenceLink || slot.linkedBlockerId" class="meta-item">
-                  <span class="meta-label">Tautan / Kendala:</span>
-                  <span v-if="slot.linkedBlockerId" class="meta-pill blocker-pill">
-                    <AlertTriangle :size="13" />
-                    <span>{{ getBlockerCode(slot.linkedBlockerId) }}</span>
-                  </span>
+                <div class="meta-field">
+                  <span class="meta-label">Tautan / PR / Tiket:</span>
                   <a
-                    v-else-if="slot.referenceLink && slot.referenceLink.startsWith('http')"
+                    v-if="slot.referenceLink && slot.referenceLink.startsWith('http')"
                     :href="slot.referenceLink"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="meta-link"
+                    title="Buka tautan dokumen / PR"
                   >
-                    <LinkIcon :size="13" />
-                    <span>{{ slot.referenceLink }}</span>
+                    <ExternalLink :size="11" />
+                    <span class="truncate-link">{{ slot.referenceLink }}</span>
                   </a>
-                  <span v-else-if="slot.referenceLink" class="meta-pill text-pill">
-                    <LinkIcon :size="13" />
+                  <span v-else-if="slot.referenceLink" class="meta-val text-link-inline">
+                    <LinkIcon :size="11" />
                     <span>{{ slot.referenceLink }}</span>
                   </span>
+                  <span v-else class="meta-val text-muted">-</span>
+                </div>
+
+                <div class="meta-field">
+                  <span class="meta-label">Blocker Aktif:</span>
+                  <span v-if="slot.linkedBlockerId" class="meta-pill blocker-pill">
+                    <AlertTriangle :size="11" />
+                    <span>{{ getBlockerCode(slot.linkedBlockerId) }}</span>
+                  </span>
+                  <span v-else class="meta-val text-muted">-</span>
                 </div>
               </div>
 
@@ -1433,7 +1441,7 @@ onMounted(() => {
 /* Summary Cards (Mode Review / Pasca-Submit Resmi) */
 .summary-panel,
 .zero-summary-panel {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .summary-head-badge {
@@ -1445,20 +1453,20 @@ onMounted(() => {
 .summary-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
+  gap: 10px;
+  padding: 14px 16px;
 }
 
 .summary-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-left: 4px solid var(--color-status-green-border);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
+  border-left: 3px solid var(--color-status-green-border);
+  border-radius: var(--radius-sm, 6px);
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .summary-card.summary-card-amber {
@@ -1475,57 +1483,86 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  line-height: 1.2;
 }
 
 .summary-slot-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .slot-number {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.summary-risk-pill .badge {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+
 .summary-task-text {
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--color-text-primary);
-  line-height: 1.5;
+  line-height: 1.4;
+  margin: 1px 0 2px 0;
 }
 
 .summary-meta-grid {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
-  padding-top: 4px;
+  gap: 6px 20px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--color-border-subtle);
 }
 
-.meta-item {
+.meta-field {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11.5px;
 }
 
 .meta-label {
   color: var(--color-text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.meta-val {
+  color: var(--color-text-primary);
+  font-size: 11.5px;
+}
+
+.meta-val.text-muted {
+  color: var(--color-text-muted, #9ca3af);
   font-weight: 500;
 }
 
-.meta-pill {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
+.text-link-inline {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  color: var(--color-text-primary);
+  font-size: 11.5px;
+}
+
+.meta-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .meta-pill.project-pill {
@@ -1540,64 +1577,68 @@ onMounted(() => {
   border: 1px solid var(--color-status-amber-border);
 }
 
-.meta-pill.text-pill {
-  background: var(--color-surface-subtle);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border-subtle);
-}
-
 .meta-link {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--color-brand-primary);
   text-decoration: underline;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  max-width: 260px;
+}
+
+.truncate-link {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .summary-callout {
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
+  border-radius: var(--radius-sm, 4px);
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 11.5px;
+  margin-top: 2px;
 }
 
 .callout-entry {
   display: flex;
+  align-items: baseline;
   gap: 8px;
 }
 
 .callout-tag {
   font-weight: 700;
   color: var(--color-text-secondary);
-  min-width: 130px;
+  min-width: 120px;
+  font-size: 11px;
 }
 
 .callout-desc {
   color: var(--color-text-primary);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .zero-summary-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  padding: 24px;
+  border-radius: var(--radius-sm, 6px);
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .zero-summary-badge-row {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .zero-summary-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -1605,23 +1646,23 @@ onMounted(() => {
 }
 
 .zero-summary-reason {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
   font-style: italic;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: var(--color-surface-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 4px);
   border-left: 3px solid var(--color-brand-primary);
 }
 
 .zero-summary-note {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 11.5px;
   color: var(--color-text-secondary);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .submitted-banner-content {
