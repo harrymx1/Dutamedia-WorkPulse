@@ -673,13 +673,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Indikasi kendala dini beserta tautan blocker yang menghambat tercatat di database dan memicu penanda visual peringatan pada kartu konteks harian serta Pulse Dashboard.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot kartu komitmen dengan kotak kondisional AMBER/RED yang menampilkan dropdown Tiket Blocker Penyebab.
-- **Actual Result:** Pemilihan risiko AMBER pada slot Komitmen #2 berhasil memunculkan form input potensi kendala dan bantuan yang diharapkan. Status awal hari (Initial Daily Status) di kartu konteks atas secara instan dan reaktif berubah menjadi AMBER — Berisiko. Seluruh catatan kendala dini tersimpan sukses ke database.
-- **Execution Status:** Needs Retest (CR-013)
+- **Actual Result:** Pemilihan risiko AMBER pada slot Komitmen #1 (Aditya Nugroho) berhasil memunculkan form input potensi kendala dan bantuan yang diharapkan. Status awal hari (Initial Daily Status) di kartu konteks atas secara instan dan reaktif berubah menjadi AMBER — Berisiko. Seluruh catatan kendala dini dan bantuan yang diharapkan tersimpan sukses ke database dan tampil presisi pada Mode Kartu Ringkasan Resmi (Summary Cards) pasca-submit (media_1793947468926_25c5ef16.png, media_1793947478503_74be81cf.jpg).
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 2026-10-30
+- **Execution Date:** 2026-11-06
 - **Defect ID:** 
-- **Retest Result:** Pending Retest
-- **Catatan:** Diperbarui dengan label dropdown 'Tiket Blocker Penyebab (Opsional)' sesuai CR-013 dan perbaikan microcopy UAT. Wajib diverifikasi ulang saat memasuki Kelompok 5.
+- **Retest Result:** PASS (Cycle 2 / CR-013 Retest)
+- **Catatan:** Lulus penuh pengujian empiris Cycle 2 pasca penyelarasan microcopy dan CR-013. Baseline terkunci rapi pada 13.44 WIB.
 
 ---
 
@@ -721,13 +721,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Aturan DEC-011 berjalan akurat; hanya tugas yang belum tuntas yang disalin ke hari baru.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot form setelah tombol Copy-Forward diklik (memperlihatkan hanya item Continue yang tersalin).
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Tombol 'Lihat Draf' menampilkan hanya komitmen kemarin yang berstatus Continue ('Optimasi query database index dan redis cache clustering') lengkap dengan Catatan Kelanjutan EOD dan badge Carry-Over #1. Tugas kemarin yang sudah Selesai (COMPLETED) terbukti diabaikan sesuai DEC-011. Tombol 'Salin ke Slot' menyalin tugas secara non-destruktif ke Slot #1, mengunci tombol menjadi 'Sudah Tersalin', dan komitmen berhasil disubmit serta terkunci resmi pada pukul 15.38 WIB (Baseline Locked) dengan badge Carry-Over #1, Proyek [PRJ-CORE], dan tautan referensi Jira tersimpan presisi. Bukti: media_1793954307867_2208b015.jpg, media_1793954329120_6e0eba95.png.
+- **Execution Status:** PASS
+- **Tester:** Harry
+- **Execution Date:** 2026-11-06
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** DEC-011 terbukti berjalan akurat. Fitur salin komitmen kemarin aman dari duplikasi berulang dan mengadopsi proteksi penempatan slot non-destruktif. 
 
 ---
 
