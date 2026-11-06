@@ -656,14 +656,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Hasil yang diharapkan:** Data terinput dengan rapi.
    - **Verifikasi:** Teks komitmen dan proyek terpilih.
 2. **Langkah 2**
-   - **Aksi:** Pada bagian `Tingkat Risiko Awal & Potensi Kendala *`, klik kartu **`AMBER`** (Ada Dependensi / Potensi Hambatan) atau **`RED`** (Kritis / Memerlukan Intervensi Atasan).
+   - **Aksi:** Pada bagian `Tingkat Risiko Tugas Hari Ini *`, klik kartu **`AMBER`** (Ada Dependensi / Potensi Hambatan) atau **`RED`** (Kritis / Memerlukan Intervensi Atasan).
    - **Lokasi:** Pemilih risiko awal pada kartu komitmen.
    - **Data:** Risiko: `AMBER`.
    - **Hasil yang diharapkan:** Muncul kotak kondisional kuning/merah yang memuat 3 field:
-     1. Dropdown **`Tautkan Blocker Aktif yang Menghambat (Opsional)`** (`data-testid="hindered-blocker-select-0"`) untuk memilih tiket blocker aktif jika hambatan berasal dari tiket blocker yang sudah ada.
-     2. Field wajib **`Catatan Potensi Kendala (Known Blocker Note) *`**.
-     3. Field opsional **`Bantuan yang Diharapkan (Support Needed)`**.
-   - **Verifikasi:** Ketiga field dalam kotak kondisional terbuka rapi, dan jika memilih salah satu blocker aktif pada dropdown, field catatan potensi kendala otomatis terisi deskripsi blocker tersebut (jika sebelumnya kosong).
+     1. Dropdown **`Tiket Blocker Penyebab (Opsional)`** (`data-testid="hindered-blocker-select-0"`) dengan opsi default `-- Tidak Terkait Tiket Blocker Aktif --` untuk memilih tiket blocker aktif jika hambatan berasal dari tiket blocker yang sudah ada.
+     2. Field wajib **`Uraian Resiko atau Potensi Kendala *`**.
+     3. Field opsional **`Tindakan / Bantuan yang Diharapkan (Opsional)`**.
+   - **Verifikasi:** Ketiga field dalam kotak kondisional terbuka rapi, dan jika memilih salah satu blocker aktif pada dropdown, field uraian resiko atau potensi kendala otomatis terisi deskripsi blocker tersebut (jika sebelumnya kosong).
 3. **Langkah 3**
    - **Aksi:** Pilih blocker aktif yang menghambat (jika ada) atau masukkan catatan singkat: `Menunggu credential API Brevo dari GA`, isi bantuan yang diharapkan: `Perlu follow-up ke tim GA`, lalu klik tombol kirim komitmen.
    - **Lokasi:** Formulir komitmen pagi.
@@ -672,14 +672,14 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Verifikasi:** Indikasi kendala dini dan penautan blocker tersimpan utuh saat halaman dimuat ulang.
 
 - **Expected Final Result:** Indikasi kendala dini beserta tautan blocker yang menghambat tercatat di database dan memicu penanda visual peringatan pada kartu konteks harian serta Pulse Dashboard.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot kartu komitmen dengan kotak kondisional AMBER/RED yang menampilkan dropdown Tautkan Blocker Aktif yang Menghambat.
+- **Bukti yang Perlu Dikumpulkan:** Screenshot kartu komitmen dengan kotak kondisional AMBER/RED yang menampilkan dropdown Tiket Blocker Penyebab.
 - **Actual Result:** Pemilihan risiko AMBER pada slot Komitmen #2 berhasil memunculkan form input potensi kendala dan bantuan yang diharapkan. Status awal hari (Initial Daily Status) di kartu konteks atas secara instan dan reaktif berubah menjadi AMBER — Berisiko. Seluruh catatan kendala dini tersimpan sukses ke database.
 - **Execution Status:** Needs Retest (CR-013)
 - **Tester:** Harry
 - **Execution Date:** 2026-10-30
 - **Defect ID:** 
 - **Retest Result:** Pending Retest
-- **Catatan:** Diperbarui dengan penambahan dropdown 'Tautkan Blocker Aktif yang Menghambat (Opsional)' sesuai CR-013. Wajib diverifikasi ulang saat memasuki Kelompok 5.
+- **Catatan:** Diperbarui dengan label dropdown 'Tiket Blocker Penyebab (Opsional)' sesuai CR-013 dan perbaikan microcopy UAT. Wajib diverifikasi ulang saat memasuki Kelompok 5.
 
 ---
 

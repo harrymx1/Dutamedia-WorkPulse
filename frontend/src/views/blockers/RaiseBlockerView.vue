@@ -463,7 +463,7 @@ onMounted(() => {
               <div class="form-group">
                 <label for="linkedCommitment">Tautkan ke Komitmen / Tugas Hari Ini <span class="opt">(opsional)</span></label>
                 <select id="linkedCommitment" v-model="linkedCommitmentId">
-                  <option value="">— Tidak terkait tugas tertentu (Kendala Umum / Fasilitas) —</option>
+                  <option value="">— Tidak Terkait Komitmen Hari Ini —</option>
                   <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
                     [Komitmen #{{ c.sequenceNumber }}] {{ c.taskText }}
                   </option>
@@ -570,7 +570,7 @@ onMounted(() => {
                   v-model="description"
                   rows="5"
                   minlength="20"
-                  placeholder="Jelaskan fakta kendala, pesan error, serta langkah mandiri yang sudah dicoba... (min. 20 karakter)"
+                  placeholder="Jelaskan fakta kendala, pihak/area yang terdampak, serta langkah mandiri yang sudah dicoba... (min. 20 karakter)"
                   required
                 ></textarea>
               </div>

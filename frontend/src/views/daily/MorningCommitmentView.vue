@@ -912,7 +912,7 @@ onMounted(() => {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Tautan Dokumen / PR / Tiket (Opsional)</label>
+                <label class="form-label">Tautkan Tiket Tugas atau Blocker yang Ingin Dikerjakan (Opsional)</label>
                 <div class="input-picker-group">
                   <div class="input-with-icon picker-input-flex">
                     <LinkIcon :size="16" class="inner-icon" />
@@ -972,7 +972,7 @@ onMounted(() => {
 
             <!-- Initial Risk Selection -->
             <div class="form-group">
-              <label class="form-label">Tingkat Risiko Awal & Potensi Kendala *</label>
+              <label class="form-label">Tingkat Risiko Tugas Hari Ini *</label>
               <div class="risk-options">
                 <label
                   class="risk-card green"
@@ -1024,7 +1024,7 @@ onMounted(() => {
             <!-- Known Blocker & Support Needed (Muncul jika AMBER / RED) -->
             <div v-if="slot.initialRisk === 'AMBER' || slot.initialRisk === 'RED'" class="blocker-inputs-box">
               <div class="form-group">
-                <label class="form-label">Tautkan Blocker Aktif yang Menghambat (Opsional)</label>
+                <label class="form-label">Tiket Blocker Penyebab (Opsional)</label>
                 <select
                   v-model="slot.linkedBlockerId"
                   class="input-control"
@@ -1032,7 +1032,7 @@ onMounted(() => {
                   :data-testid="`hindered-blocker-select-${idx}`"
                   @change="handleHinderedByBlockerChange(idx)"
                 >
-                  <option value="">-- Tidak terkait tiket blocker yang sudah ada (Kendala baru) --</option>
+                  <option value="">-- Tidak Terkait Tiket Blocker Aktif --</option>
                   <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
                     {{ blk.code }} [{{ blk.severity }}] — {{ truncateOptionText(blk.description, 65) }}
                   </option>
@@ -1040,24 +1040,24 @@ onMounted(() => {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Catatan Potensi Kendala (Known Blocker Note) *</label>
+                <label class="form-label">Uraian Resiko atau Potensi Kendala *</label>
                 <textarea
                   v-model="slot.knownBlockerNote"
                   class="input-control"
                   rows="2"
-                  placeholder="Jelaskan hambatan atau pihak yang ditunggu agar pimpinan dapat memantau..."
+                  placeholder="Jelaskan apa/siapa yang ditunggu atau dependensi apa yang berpotensi menghambat..."
                   :disabled="isFormLocked"
                   required
                 ></textarea>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Bantuan yang Diharapkan (Support Needed)</label>
+                <label class="form-label">Tindakan / Bantuan yang Diharapkan (Opsional)</label>
                 <input
                   v-model="slot.supportNeeded"
                   type="text"
                   class="input-control"
-                  placeholder="Misal: Bantuan eskalasi review PR ke Tech Lead"
+                  placeholder="Misal: Butuh Tech Lead bantu review PR sebelum jam 13:00"
                   :disabled="isFormLocked"
                 />
               </div>
