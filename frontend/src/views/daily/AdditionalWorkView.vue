@@ -326,7 +326,7 @@ onMounted(() => {
                   class="input-control"
                   data-testid="select-additional-project"
                 >
-                  <option value="">-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --</option>
+                  <option value="">-- Non-Proyek / Operasional Rutin --</option>
                   <option
                     v-for="prj in availableProjects"
                     :key="prj.projectCode"

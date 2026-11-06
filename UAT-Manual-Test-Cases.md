@@ -551,12 +551,12 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Isi komitmen pertama: masukkan teks komitmen terukur, pilih proyek dari dropdown `Proyek Terkait (Opsional)`, dan klik tombol `Pilih Blocker Aktif` di samping input tautan untuk melihat daftar blocker aktif (atau isi tautan PR/tiket secara manual).
    - **Lokasi:** Form Komitmen Slot #1.
    - **Data:** Teks: `Menyelesaikan migrasi VAPID Push Notification`, Proyek: `[PRJ-CORE] Core Banking Settlement Engine` (atau proyek aktif yang tersedia), Risiko: `GREEN`.
-   - **Hasil yang diharapkan:** Dropdown proyek menampilkan opsi `-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --` beserta daftar proyek resmi dengan posisi panah dropdown (chevron) yang proporsional. Saat tombol `Pilih Blocker Aktif` diklik, muncul popover daftar blocker aktif (atau info tidak ada blocker aktif) tanpa merusak lebar kolom. Jika blocker dipilih, field tautan otomatis terisi `#BLK-XXXXXX` dan dropdown proyek otomatis menyesuaikan proyek blocker terkait.
+   - **Hasil yang diharapkan:** Dropdown proyek menampilkan opsi `-- Non-Proyek / Operasional Rutin --` beserta daftar proyek resmi dengan posisi panah dropdown (chevron) yang proporsional. Saat tombol `Pilih Blocker Aktif` diklik, muncul popover daftar blocker aktif (atau info tidak ada blocker aktif) tanpa merusak lebar kolom. Jika blocker dipilih, field tautan otomatis terisi `#BLK-XXXXXX` dan dropdown proyek otomatis menyesuaikan proyek blocker terkait.
    - **Verifikasi:** Teks komitmen, dropdown proyek (`projectCode`), dan tautan referensi/blocker (`linkedBlockerId`) terpilih sesuai data.
 3. **Langkah 3**
    - **Aksi:** Klik tombol "+ Tambah Slot" untuk membuat item ke-2 dan item ke-3.
    - **Lokasi:** Tombol di header daftar komitmen.
-   - **Data:** Item 2: `Code review PR modul leave approval` (Proyek: `[PRJ-PORTAL]`); Item 3: `Unit test coverage router guard` (Proyek: `-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --`).
+   - **Data:** Item 2: `Code review PR modul leave approval` (Proyek: `[PRJ-PORTAL]`); Item 3: `Unit test coverage router guard` (Proyek: `-- Non-Proyek / Operasional Rutin --`).
    - **Hasil yang diharapkan:** Kartu komitmen ke-2 dan ke-3 muncul. Setelah mencapai tepat 3 item, tombol "+ Tambah Slot" dinonaktifkan (DEC-004: batas maksimal 3 komitmen).
    - **Verifikasi:** Jumlah total kartu komitmen adalah tepat 3. Tidak dapat menambah item ke-4.
 4. **Langkah 4**
@@ -969,9 +969,9 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Hasil yang diharapkan:** Sistem memblokir penyimpanan karena atasan penugas wajib dipilih untuk kategori `Penugasan Baru dari Atasan`.
    - **Verifikasi:** Tidak ada penambahan data ke daftar tugas.
 3. **Langkah 3**
-   - **Aksi:** Pilih instruktur yang valid (`Bambang Pratama`), biarkan `Proyek Terkait (Opsional)` pada opsi default `-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --` (atau pilih proyek `[PRJ-CORE]`), lalu klik simpan kembali.
+   - **Aksi:** Pilih instruktur yang valid (`Bambang Pratama`), biarkan `Proyek Terkait (Opsional)` pada opsi default `-- Non-Proyek / Operasional Rutin --` (atau pilih proyek `[PRJ-CORE]`), lalu klik simpan kembali.
    - **Lokasi:** Form tugas tambahan.
-   - **Data:** Instruktur: `Bambang Pratama`, Proyek: Opsional (`-- Tidak Terkait Proyek --` atau `[PRJ-CORE]`).
+   - **Data:** Instruktur: `Bambang Pratama`, Proyek: Opsional (`-- Non-Proyek / Operasional Rutin --` atau `[PRJ-CORE]`).
    - **Hasil yang diharapkan:** Validasi lolos dan tugas tambahan tersimpan sukses tanpa memaksa staf non-proyek memilih proyek.
    - **Verifikasi:** Data masuk ke daftar pekerjaan tambahan hari ini.
 

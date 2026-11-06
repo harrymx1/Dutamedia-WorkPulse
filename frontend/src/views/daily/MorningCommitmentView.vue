@@ -144,7 +144,7 @@ function formatTime(isoStr: string | null) {
 }
 
 function getProjectName(code?: string | null): string {
-  if (!code) return 'Pekerjaan Rutin Divisi';
+  if (!code) return 'Non-Proyek / Operasional Rutin';
   const prj = availableProjects.value.find((p) => p.projectCode === code);
   return prj ? `[${prj.projectCode}] ${prj.projectName}` : `[${code}]`;
 }
@@ -900,7 +900,7 @@ onMounted(() => {
                   :disabled="isFormLocked"
                   :data-testid="`select-project-${idx}`"
                 >
-                  <option value="">-- Tidak Terkait Proyek (Pekerjaan Rutin Divisi) --</option>
+                  <option value="">-- Non-Proyek / Operasional Rutin --</option>
                   <option
                     v-for="prj in availableProjects"
                     :key="prj.projectCode"
