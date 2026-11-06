@@ -1451,10 +1451,6 @@ onMounted(() => {
 }
 
 .summary-body {
-  background: var(--color-canvas, #F7FAF9);
-  border-top: 1px solid var(--color-border-subtle);
-  border-bottom-left-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1462,15 +1458,15 @@ onMounted(() => {
 }
 
 .summary-card {
-  background: #FFFFFF;
-  border: 1px solid #CAD7D1;
+  background: #F3F5F4;
+  border: 1px solid #D8E0DC;
   border-left: 4px solid var(--color-brand-primary, #00674D);
   border-radius: var(--radius-sm, 6px);
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 1px 3px rgba(14, 33, 27, 0.05), 0 1px 2px rgba(14, 33, 27, 0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .summary-card.summary-card-green {
@@ -1479,12 +1475,10 @@ onMounted(() => {
 
 .summary-card.summary-card-amber {
   border-left-color: #D97706;
-  background: #FFFFFF;
 }
 
 .summary-card.summary-card-red {
   border-left-color: #DC2626;
-  background: #FFFFFF;
 }
 
 .summary-card-top {
@@ -1503,7 +1497,7 @@ onMounted(() => {
 .slot-number {
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-text-secondary);
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1516,8 +1510,8 @@ onMounted(() => {
 
 .summary-task-text {
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-weight: 700;
+  color: #0E211B;
   line-height: 1.4;
   margin: 1px 0 2px 0;
 }
@@ -1527,7 +1521,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 4px;
   padding-top: 6px;
-  border-top: 1px dashed var(--color-border-subtle);
+  border-top: 1px dashed #D1D5DB;
 }
 
 .meta-field {
@@ -1539,7 +1533,7 @@ onMounted(() => {
 }
 
 .meta-label {
-  color: var(--color-text-secondary);
+  color: #4B5563;
   font-weight: 600;
   white-space: nowrap;
   font-size: 11px;
@@ -1548,12 +1542,13 @@ onMounted(() => {
 }
 
 .meta-val {
-  color: var(--color-text-primary);
+  color: #111827;
+  font-weight: 500;
   font-size: 11.5px;
 }
 
 .meta-val.text-muted {
-  color: var(--color-text-muted, #9ca3af);
+  color: #6B7280;
   font-weight: 500;
 }
 
@@ -1561,7 +1556,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-text-primary);
+  color: #111827;
   font-size: 11.5px;
 }
 
@@ -1576,25 +1571,26 @@ onMounted(() => {
 }
 
 .meta-pill.project-pill {
-  background: var(--color-surface-subtle);
-  color: var(--color-brand-primary);
-  border: 1px solid var(--color-border-subtle);
+  background: #FFFFFF;
+  color: var(--color-brand-primary, #00674D);
+  border: 1px solid #D1D5DB;
 }
 
 .meta-pill.blocker-pill {
-  background: var(--color-status-amber-bg);
-  color: var(--color-status-amber-fg);
-  border: 1px solid var(--color-status-amber-border);
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
 }
 
 .meta-link {
   font-size: 11.5px;
-  color: var(--color-brand-primary);
+  color: var(--color-brand-primary, #00674D);
+  font-weight: 600;
   text-decoration: underline;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 260px;
+  max-width: 480px;
 }
 
 .truncate-link {
@@ -1604,8 +1600,8 @@ onMounted(() => {
 }
 
 .summary-callout {
-  background: var(--color-surface-subtle);
-  border: 1px solid var(--color-border-subtle);
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
   border-radius: var(--radius-sm, 4px);
   padding: 6px 10px;
   display: flex;
@@ -1623,33 +1619,29 @@ onMounted(() => {
 
 .callout-tag {
   font-weight: 700;
-  color: var(--color-text-secondary);
+  color: #4B5563;
   min-width: 120px;
   font-size: 11px;
 }
 
 .callout-desc {
-  color: var(--color-text-primary);
+  color: #111827;
   line-height: 1.35;
 }
 
 .zero-summary-panel .panel-body {
-  background: var(--color-canvas, #F7FAF9);
-  border-top: 1px solid var(--color-border-subtle);
-  border-bottom-left-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
   padding: 14px 16px;
 }
 
 .zero-summary-card {
-  background: #FFFFFF;
-  border: 1px solid #CAD7D1;
+  background: #F3F5F4;
+  border: 1px solid #D8E0DC;
   border-radius: var(--radius-sm, 6px);
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 1px 3px rgba(14, 33, 27, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .zero-summary-badge-row {
