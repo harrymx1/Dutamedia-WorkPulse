@@ -283,7 +283,7 @@ async function loadTodayState() {
 
 function addSlot() {
   if (commitmentSlots.value.length >= 3) {
-    showToast('Maksimal 3 komitmen terencana dalam satu hari (DEC-004).', true);
+    showToast('Maksimal 3 komitmen terencana dalam satu hari.', true);
     return;
   }
   commitmentSlots.value.push({
@@ -415,12 +415,12 @@ async function submitMorningCheckin() {
 
   if (isZeroCommitment.value) {
     if (zeroCommitmentReason.value.trim().length < 10) {
-      errorMessage.value = 'Alasan tidak menetapkan komitmen wajib diisi minimal 10 karakter (DEC-004).';
+      errorMessage.value = 'Alasan tidak menetapkan komitmen wajib diisi minimal 10 karakter.';
       return;
     }
   } else {
     if (commitmentSlots.value.length === 0 || commitmentSlots.value.length > 3) {
-      errorMessage.value = 'Jumlah komitmen harus 1 hingga 3 tugas (DEC-004).';
+      errorMessage.value = 'Jumlah komitmen harus 1 hingga 3 tugas.';
       return;
     }
 
@@ -472,6 +472,14 @@ async function submitMorningCheckin() {
     await loadTodayState();
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal mengirim Morning Commitment.';
+    // Jika backend melaporkan sudah disubmit (konflik multi-tab), sinkronkan state agar langsung ke mode terkunci
+    if (
+      err.code === 'BUSINESS_RULE_ALREADY_SUBMITTED' ||
+      err.statusCode === 422 ||
+      (err.message && err.message.includes('telah diserahkan dan terkunci'))
+    ) {
+      await loadTodayState();
+    }
   } finally {
     submitting.value = false;
   }
@@ -605,7 +613,7 @@ onMounted(() => {
             <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
           </div>
           <p class="submitted-banner-desc">
-            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan (DEC-008), Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini (Superseded by Approved Leave).
+            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini (Superseded by Approved Leave).
           </p>
           <div v-if="activeLeave.reason" class="leave-banner-reason">
             Keterangan: {{ activeLeave.reason }}
@@ -641,7 +649,7 @@ onMounted(() => {
       <div v-else-if="isMorningLocked" class="alert-banner locked" role="alert">
         <Lock :size="20" />
         <div>
-          <strong>Batas Cut-Off ({{ morningLockCutoff }} WIB) Telah Berakhir — Formulir Terkunci (DEC-002):</strong>
+          <strong>Batas Cut-Off ({{ morningLockCutoff }} WIB) Telah Berakhir — Formulir Terkunci:</strong>
           Jendela pengisian Morning Commitment hari ini telah ditutup sesuai Kebijakan Sistem. Anda tetap dapat mencatat pekerjaan dadakan di halaman <em>Additional Work</em> dan menyelesaikan <em>EOD Outcome</em> sore hari.
         </div>
       </div>
@@ -869,7 +877,7 @@ onMounted(() => {
                     Carry-Over #{{ item.carryOverDaysCount }}
                   </span>
                   <span v-if="item.isAmberWarningAdvised" class="amber-advice">
-                    Carry-over 3+ hari berturut-turut — Disarankan AMBER (DEC-003)
+                    Carry-over 3+ hari berturut-turut — Disarankan AMBER
                   </span>
                 </div>
                 <div v-if="item.continuationReason" class="carry-note">

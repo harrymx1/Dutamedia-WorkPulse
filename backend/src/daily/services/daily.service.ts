@@ -465,7 +465,7 @@ export class DailyService {
     if (existing && existing.morningSubmittedAt != null) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-        message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+        message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
@@ -542,7 +542,7 @@ export class DailyService {
         if (conflicting && conflicting.morningSubmittedAt != null) {
           throw new AppException({
             code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-            message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+            message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           });
         }
@@ -561,7 +561,7 @@ export class DailyService {
 
         throw new AppException({
           code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+          message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         });
       }
@@ -610,7 +610,7 @@ export class DailyService {
       if (updateResult.count === 0) {
         throw new AppException({
           code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message: 'Morning Commitment hari ini telah diserahkan dan terkunci (DEC-001). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+          message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         });
       }

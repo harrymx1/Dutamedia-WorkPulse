@@ -622,4 +622,103 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(copyBtn.attributes('disabled')).toBeUndefined();
     expect(copyBtn.text()).toContain('Salin ke Slot');
   });
+
+  it('automatically synchronizes state to locked mode when multi-tab submission collision (422 ALREADY_SUBMITTED) occurs', async () => {
+    let callCount = 0;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string, opts?: any) => {
+      callCount++;
+      // Initial load: record is null
+      if (url.includes('/daily/today') && callCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              workDate: '2026-11-06',
+              currentTime: '08:30',
+              cutoffTimings: {
+                morningOnTimeCutoff: '09:00',
+                morningLockCutoff: '09:30',
+                isMorningLocked: false,
+              },
+              record: null,
+              availableCarryOvers: [],
+            },
+          }),
+        });
+      }
+
+      // Submit POST call fails with 422
+      if (url.includes('/daily/morning') && opts?.method === 'POST') {
+        return Promise.resolve({
+          ok: false,
+          status: 422,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            code: 'BUSINESS_RULE_ALREADY_SUBMITTED',
+            message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
+            statusCode: 422,
+          }),
+        });
+      }
+
+      // Subsequent /daily/today load returns the submitted record
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: {
+            workDate: '2026-11-06',
+            currentTime: '08:35',
+            cutoffTimings: {
+              morningOnTimeCutoff: '09:00',
+              morningLockCutoff: '09:30',
+              isMorningLocked: false,
+            },
+            record: {
+              id: 'rec-123',
+              morningSubmittedAt: '2026-11-06T08:32:00.000Z',
+              initialDailyStatus: 'GREEN',
+              commitments: [
+                {
+                  id: 'c-1',
+                  sequenceNo: 1,
+                  taskText: 'Submitted from Tab 1',
+                  initialRisk: 'GREEN',
+                },
+              ],
+            },
+            availableCarryOvers: [],
+          },
+        }),
+      });
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Fill in commitment text
+    const textarea = wrapper.find('textarea');
+    await textarea.setValue('Task from Tab 2');
+
+    // Click submit
+    const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Kirim Morning Commitment'));
+    expect(submitBtn).toBeDefined();
+    await submitBtn!.trigger('click');
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Error toast should appear with clean message without DEC-001
+    const errorToast = wrapper.find('.toast-popup.error');
+    expect(errorToast.exists()).toBe(true);
+    expect(errorToast.text()).toContain('Morning Commitment hari ini telah diserahkan dan terkunci.');
+    expect(errorToast.text()).not.toContain('DEC-001');
+
+    // View should have automatically loaded the locked baseline
+    expect(wrapper.text()).toContain('Morning Commitment Telah Terkunci');
+    expect(wrapper.text()).toContain('Submitted from Tab 1');
+  });
 });
