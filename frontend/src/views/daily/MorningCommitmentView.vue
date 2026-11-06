@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarCheck,
+  Check,
 } from 'lucide-vue-next';
 
 interface CommitmentSlot {
@@ -292,15 +293,48 @@ function addSlot() {
 
 function removeSlot(index: number) {
   if (commitmentSlots.value.length === 1) {
-    showToast('Minimal 1 slot komitmen atau centang opsi 0 Komitmen (DEC-004).', true);
+    commitmentSlots.value[0] = {
+      taskText: '',
+      referenceLink: '',
+      projectCode: '',
+      linkedBlockerId: '',
+      initialRisk: 'GREEN',
+      knownBlockerNote: '',
+      supportNeeded: '',
+      carryOverDaysCount: 0,
+    };
+    showToast('Slot komitmen dikosongkan.');
     return;
   }
   commitmentSlots.value.splice(index, 1);
 }
 
+function isSlotUntouched(slot: CommitmentSlot): boolean {
+  return (
+    !slot.taskText.trim() &&
+    !slot.referenceLink.trim() &&
+    !slot.projectCode &&
+    !slot.linkedBlockerId &&
+    slot.initialRisk === 'GREEN' &&
+    !slot.knownBlockerNote.trim() &&
+    !slot.supportNeeded.trim()
+  );
+}
+
+function isDraftApplied(originCommitmentId: string): boolean {
+  return commitmentSlots.value.some(
+    (s) => s.originCommitmentId === originCommitmentId && s.taskText.trim().length > 0
+  );
+}
+
 function applyCarryOver(draft: CarryOverDraft) {
-  // Cari slot kosong pertama, atau tambahkan jika slot < 3
-  let targetIndex = commitmentSlots.value.findIndex((s) => !s.taskText.trim());
+  if (isDraftApplied(draft.originCommitmentId)) {
+    showToast('Draf tugas ini sudah disalin ke komitmen hari ini.', true);
+    return;
+  }
+
+  // Cari slot komitmen pertama yang belum mendapat masukan apapun dari pengguna
+  let targetIndex = commitmentSlots.value.findIndex(isSlotUntouched);
   if (targetIndex === -1 && commitmentSlots.value.length < 3) {
     addSlot();
     targetIndex = commitmentSlots.value.length - 1;
@@ -320,7 +354,7 @@ function applyCarryOver(draft: CarryOverDraft) {
     };
     showToast(`Draf tugas carry-over #${draft.carryOverDaysCount} diterapkan ke slot #${targetIndex + 1}.`);
   } else {
-    showToast('Semua 3 slot telah terisi. Hapus salah satu slot terlebih dahulu.', true);
+    showToast('Semua 3 slot telah terisi atau memiliki masukan. Hapus atau kosongkan salah satu slot terlebih dahulu.', true);
   }
 }
 
@@ -800,7 +834,7 @@ onMounted(() => {
         <div class="panel-head clickable" @click="isCopyForwardOpen = !isCopyForwardOpen">
           <div>
             <div class="kicker">Lanjutan Hari Kerja Sebelumnya</div>
-            <h2>Draf Tugas Berlanjut dari Kemarin (Continuation = Continue)</h2>
+            <h2>Draf Tugas Berlanjut dari Kemarin</h2>
           </div>
           <div class="head-right">
             <span class="badge badge-info">{{ availableCarryOvers.length }} Tersedia</span>
@@ -814,7 +848,7 @@ onMounted(() => {
 
         <div v-if="isCopyForwardOpen" class="panel-body">
           <p class="copy-desc">
-            Pilih tugas dari hari kerja sebelumnya untuk disalin ke slot komitmen hari ini (DEC-013):
+            Pilih tugas dari hari kerja sebelumnya untuk disalin ke slot komitmen hari ini:
           </p>
           <div class="carry-list">
             <div v-for="item in availableCarryOvers" :key="item.originCommitmentId" class="carry-card">
@@ -831,12 +865,13 @@ onMounted(() => {
               </div>
               <button
                 type="button"
-                class="btn btn-secondary"
-                :disabled="isFormLocked"
+                class="btn btn-secondary icon-text-btn"
+                :disabled="isFormLocked || isDraftApplied(item.originCommitmentId)"
                 @click="applyCarryOver(item)"
               >
-                <Copy :size="14" />
-                <span>Salin ke Slot</span>
+                <Check v-if="isDraftApplied(item.originCommitmentId)" :size="14" />
+                <Copy v-else :size="14" />
+                <span>{{ isDraftApplied(item.originCommitmentId) ? 'Sudah Tersalin' : 'Salin ke Slot' }}</span>
               </button>
             </div>
           </div>
@@ -1312,6 +1347,12 @@ onMounted(() => {
 
 .panel-head.clickable {
   cursor: pointer;
+}
+
+.head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .kicker {

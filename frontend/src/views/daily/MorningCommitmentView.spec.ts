@@ -530,4 +530,77 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(textarea.attributes('placeholder')).toContain('Deskripsikan deliverable utama yang dapat diverifikasi selesai hari ini.');
     expect(textarea.attributes('placeholder')).toContain('Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji');
   });
+
+  it('handles Copy-Forward UX: clean titles, non-destructive slot placement, single-click disable, and reset on delete', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-06',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [
+            {
+              originCommitmentId: 'origin-123',
+              taskText: 'Tugas Lanjutan Kemarin',
+              suggestedRisk: 'AMBER',
+              carryOverDaysCount: 1,
+              isAmberWarningAdvised: false,
+              projectCode: 'PRJ-CORE',
+              referenceLink: '',
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // 1. Verify clean titles
+    const copyPanel = wrapper.find('.copy-forward-panel');
+    expect(copyPanel.exists()).toBe(true);
+    expect(copyPanel.find('h2').text()).toBe('Draf Tugas Berlanjut dari Kemarin');
+
+    // Expand panel
+    await copyPanel.find('.panel-head').trigger('click');
+    expect(copyPanel.find('.copy-desc').text()).toBe('Pilih tugas dari hari kerja sebelumnya untuk disalin ke slot komitmen hari ini:');
+
+    // 2. Put user input in Slot 1 (e.g. choose a project) to test non-destructive placement
+    const projectSelect = wrapper.find('.slot-card select');
+    await projectSelect.setValue('PRJ-CORE');
+
+    // 3. Click "Salin ke Slot"
+    const copyBtn = copyPanel.find('.carry-card button');
+    expect(copyBtn.text()).toContain('Salin ke Slot');
+    await copyBtn.trigger('click');
+
+    // 4. Verify Slot 1 was NOT overridden, and a new slot was added
+    const slotCards = wrapper.findAll('.slot-card');
+    expect(slotCards.length).toBe(2);
+    // Slot 1 still has projectCode, taskText is empty
+    expect(slotCards[0].find('textarea').element.value).toBe('');
+    // Slot 2 has the copied carry-over
+    expect(slotCards[1].find('textarea').element.value).toBe('Tugas Lanjutan Kemarin');
+
+    // 5. Verify button is now disabled and displays "Sudah Tersalin"
+    expect(copyBtn.attributes('disabled')).toBeDefined();
+    expect(copyBtn.text()).toContain('Sudah Tersalin');
+
+    // 6. Delete Slot 2 (which holds the draft)
+    const removeBtnSlot2 = slotCards[1].find('.remove-btn');
+    await removeBtnSlot2.trigger('click');
+
+    // Verify draft button is re-enabled!
+    expect(copyBtn.attributes('disabled')).toBeUndefined();
+    expect(copyBtn.text()).toContain('Salin ke Slot');
+  });
 });
