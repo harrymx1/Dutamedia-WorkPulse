@@ -130,7 +130,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-DLYM-006` | Validasi Panjang Deskripsi Komitmen Pagi (< 5 Karakter) | PASS | Teks 2 karakter ("Te") ditolak sistem dengan pesan error: "Slot #1: Deskripsi komitmen wajib diisi minimal 3 karakter." Form tidak terkirim. |
 | [P] | `TC-DLYM-002` | Opsi 0 Komitmen dengan Justifikasi Wajib >= 10 Karakter | PASS | Checkbox 0 komitmen memunculkan textarea alasan; submit kosong dan < 10 karakter ditolak; alasan >= 10 karakter berhasil disubmit dan form terkunci rapi |
-| [ ] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (dengan Pemilih Proyek & Blocker Aktif Opsional) | Needs Retest (CR-013 & DEF-001) | Wajib diuji ulang di Kelompok 5: penguncian form DEF-001 + dropdown Proyek Terkait & tombol Pilih Blocker Aktif (CR-013) |
+| [P] | `TC-DLYM-001` | Pengisian 1 s.d. 3 Komitmen Pagi Tepat Waktu (dengan Pemilih Proyek & Blocker Aktif Opsional) | PASS | Lolos retest Cycle 2. DEF-001 tuntas: 3 komitmen, pilihan proyek, dan tingkat risiko tersimpan utuh dan terkunci persisten. Tampilan pasca-submit bertransformasi ke Mode Kartu Ringkasan Resmi (Summary Cards). |
 | [ ] | `TC-DLYM-003` | Penandaan Indikasi Hambatan Dini & Penautan Blocker Menghambat pada Komitmen Pagi | Needs Retest (CR-013) | Wajib diuji ulang di Kelompok 5: kotak risiko AMBER/RED + dropdown Tautkan Blocker Aktif yang Menghambat (CR-013) |
 | [ ] | `TC-DLYM-004` | Fitur Salin Komitmen Hari Sebelumnya (Copy-Forward) | | |
 | [P] | `TC-DLYM-005` | Penguncian Form Komitmen Pagi Pasca Cut-Off (DEC-002) | PASS | Terverifikasi empiris pada jam 10:36 WIB (> 09:30): status LOCKED, banner DEC-002 tampil, form disabled/read-only |

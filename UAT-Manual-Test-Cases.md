@@ -568,13 +568,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** 3 Komitmen beserta metadata proyek (`projectCode`) dan blocker (`linkedBlockerId`) berhasil disimpan di database, status waktu tercatat *On-Time*, form terkunci, dan data persisten saat reload.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot ringkasan komitmen pagi yang memuat 3 item, pilihan proyek/blocker, dan badge On-Time.
-- **Actual Result:** Pengiriman 3 komitmen berhasil diproses sistem (toast notifikasi hijau muncul dan panel sukses di bawah tampil). Namun pada Cycle 1 form tidak terkunci [DEF-001 - telah diperbaiki, perlu retest bersama komponen CR-013].
-- **Execution Status:** Needs Retest (CR-013 & DEF-001)
+- **Actual Result:** Pengiriman 3 komitmen berhasil diproses sistem (toast hijau muncul, banner Baseline Locked tampil, dan form terkunci read-only). Lakukan refresh browser (F5): data 3 komitmen, pilihan proyek, dan tingkat risiko tetap tersimpan utuh dan terkunci persisten. Tampilan pasca-submit telah ditingkatkan dari sekadar form disabled menjadi Mode Kartu Ringkasan Resmi (Executive Read-Only Summary Cards) tanpa elemen input form sehingga bersih dan tidak memberi impresi meminta isian lagi.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 2026-10-30
-- **Defect ID:** DEF-001
-- **Retest Result:** Pending Retest
-- **Catatan:** Diperbarui dengan cakupan CR-013 (pemilih proyek opsional & quick-picker Pilih Blocker Aktif inline). Wajib diuji ulang saat memasuki Kelompok 5.
+- **Execution Date:** 2026-11-06
+- **Defect ID:** DEF-001 (Resolved & Verified)
+- **Retest Result:** Pass
+- **Catatan:** Lolos verifikasi Cycle 2. DEF-001 dan CR-013 tuntas. Form pasca-submit bertransformasi menjadi dedicated Read-Only Summary Cards.
 
 ---
 

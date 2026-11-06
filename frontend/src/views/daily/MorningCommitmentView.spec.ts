@@ -382,9 +382,9 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(wrapper.text()).toContain('Morning Commitment Telah Terkunci (Baseline Locked)');
     expect(wrapper.text()).toContain('SUBMITTED (Terkunci)');
 
-    // 2. Seluruh input tidak dapat diubah (disabled)
-    const textarea = wrapper.find('textarea');
-    expect(textarea.attributes('disabled')).toBeDefined();
+    // 2. Tampilan beralih ke Summary View resmi (tidak ada lagi input textarea yang meminta isian)
+    expect(wrapper.find('[data-testid="morning-summary-panel"]').exists()).toBe(true);
+    expect(wrapper.find('textarea').exists()).toBe(false);
 
     // 3. Tombol submit tidak tersedia (action footer disembunyikan)
     const submitBtn = wrapper.findAll('button').find(b => b.text().includes('Kirim Morning Commitment'));
@@ -438,9 +438,10 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
 
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // Verifikasi kondisi awal terkunci
+    // Verifikasi kondisi awal terkunci beralih ke Summary View
     expect(wrapper.text()).toContain('SUBMITTED (Terkunci)');
-    expect(wrapper.find('textarea').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="morning-summary-panel"]').exists()).toBe(true);
+    expect(wrapper.find('textarea').exists()).toBe(false);
     expect(wrapper.findAll('button').find(b => b.text().includes('Kirim Morning Commitment'))).toBeUndefined();
 
     // Tahap 2: Simulasikan refresh halaman (komponen dimuat ulang dan fetch dipanggil kembali)
@@ -449,11 +450,12 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     });
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // Form harus tetap terkunci persisten dari data database
+    // Form harus tetap terkunci persisten dari data database dan tetap di Summary View
     expect(fetchMock).toHaveBeenCalled();
     expect(refreshedWrapper.text()).toContain('SUBMITTED (Terkunci)');
     expect(refreshedWrapper.find('.alert-banner.submitted').exists()).toBe(true);
-    expect(refreshedWrapper.find('textarea').attributes('disabled')).toBeDefined();
+    expect(refreshedWrapper.find('[data-testid="morning-summary-panel"]').exists()).toBe(true);
+    expect(refreshedWrapper.find('textarea').exists()).toBe(false);
     expect(refreshedWrapper.findAll('button').find(b => b.text().includes('Kirim Morning Commitment'))).toBeUndefined();
   });
 

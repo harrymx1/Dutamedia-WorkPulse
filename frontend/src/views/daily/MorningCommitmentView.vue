@@ -142,6 +142,18 @@ function formatTime(isoStr: string | null) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+function getProjectName(code?: string | null): string {
+  if (!code) return 'Pekerjaan Rutin Divisi';
+  const prj = availableProjects.value.find((p) => p.projectCode === code);
+  return prj ? `[${prj.projectCode}] ${prj.projectName}` : `[${code}]`;
+}
+
+function getBlockerCode(id?: string | null): string {
+  if (!id) return '';
+  const blk = activeBlockers.value.find((b) => b.id === id);
+  return blk ? `${blk.code} — ${blk.description}` : `#BLK-${id.slice(0, 6).toUpperCase()}`;
+}
+
 // Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-027)
 const formattedWorkDate = computed(() => {
   if (!workDate.value) return '';
@@ -621,6 +633,128 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Mode 1: Komitmen Pagi Telah Terkunci (Baseline Locked / Read-Only Summary Mode) -->
+      <template v-else-if="hasSubmittedMorning">
+        <!-- 1A: Jika 0 Komitmen -->
+        <section v-if="isZeroCommitment" class="panel zero-summary-panel" data-testid="zero-commitment-summary">
+          <div class="panel-head">
+            <div>
+              <div class="kicker">Komitmen Harian Resmi</div>
+              <h2>Status 0 Komitmen (Bebas Komitmen Kerja Hari Ini)</h2>
+            </div>
+            <span class="badge badge-neutral">0 KOMITMEN (RESMI)</span>
+          </div>
+          <div class="panel-body">
+            <div class="zero-summary-card">
+              <div class="zero-summary-badge-row">
+                <span class="badge badge-neutral">Bebas Komitmen (Disetujui)</span>
+              </div>
+              <div class="zero-summary-label">Alasan Tidak Menetapkan Komitmen:</div>
+              <div class="zero-summary-reason">
+                "{{ zeroCommitmentReason }}"
+              </div>
+              <div class="zero-summary-note">
+                <CheckCircle2 :size="16" class="text-green" />
+                <span>Telah dicatat secara resmi di database dan terbebas dari catatan Pelanggaran Pengisian (No Submission).</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 1B: Daftar Komitmen Resmi -->
+        <section v-else class="panel summary-panel" data-testid="morning-summary-panel">
+          <div class="panel-head">
+            <div>
+              <div class="kicker">Komitmen Pagi Resmi (Baseline Terkunci)</div>
+              <h2>Daftar Target Komitmen Hari Ini ({{ commitmentSlots.length }} Tugas)</h2>
+            </div>
+            <div class="summary-head-badge">
+              <CheckCircle2 :size="16" class="text-green" />
+              <span class="badge badge-active">TERCATAT RESMI</span>
+            </div>
+          </div>
+
+          <div class="panel-body summary-body">
+            <div
+              v-for="(slot, idx) in commitmentSlots"
+              :key="idx"
+              class="summary-card"
+              :class="{
+                'summary-card-green': slot.initialRisk === 'GREEN',
+                'summary-card-amber': slot.initialRisk === 'AMBER',
+                'summary-card-red': slot.initialRisk === 'RED',
+              }"
+              :data-testid="`summary-slot-${idx}`"
+            >
+              <div class="summary-card-top">
+                <div class="summary-slot-badge">
+                  <span class="slot-number">Komitmen #{{ idx + 1 }}</span>
+                  <span v-if="slot.carryOverDaysCount > 0" class="badge badge-warning">
+                    Carry-Over #{{ slot.carryOverDaysCount }}
+                  </span>
+                </div>
+                <div class="summary-risk-pill">
+                  <span v-if="slot.initialRisk === 'GREEN'" class="badge badge-active">GREEN — Terkendali</span>
+                  <span v-else-if="slot.initialRisk === 'AMBER'" class="badge badge-warning">AMBER — Berisiko</span>
+                  <span v-else-if="slot.initialRisk === 'RED'" class="badge badge-danger">RED — Kritis</span>
+                </div>
+              </div>
+
+              <div class="summary-task-text">
+                {{ slot.taskText }}
+              </div>
+
+              <div class="summary-meta-grid">
+                <div class="meta-item">
+                  <span class="meta-label">Proyek:</span>
+                  <span class="meta-pill project-pill">
+                    {{ getProjectName(slot.projectCode) }}
+                  </span>
+                </div>
+
+                <div v-if="slot.referenceLink || slot.linkedBlockerId" class="meta-item">
+                  <span class="meta-label">Tautan / Kendala:</span>
+                  <span v-if="slot.linkedBlockerId" class="meta-pill blocker-pill">
+                    <AlertTriangle :size="13" />
+                    <span>{{ getBlockerCode(slot.linkedBlockerId) }}</span>
+                  </span>
+                  <a
+                    v-else-if="slot.referenceLink && slot.referenceLink.startsWith('http')"
+                    :href="slot.referenceLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="meta-link"
+                  >
+                    <LinkIcon :size="13" />
+                    <span>{{ slot.referenceLink }}</span>
+                  </a>
+                  <span v-else-if="slot.referenceLink" class="meta-pill text-pill">
+                    <LinkIcon :size="13" />
+                    <span>{{ slot.referenceLink }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Callout jika AMBER / RED -->
+              <div
+                v-if="slot.initialRisk !== 'GREEN' && (slot.knownBlockerNote || slot.supportNeeded)"
+                class="summary-callout"
+              >
+                <div v-if="slot.knownBlockerNote" class="callout-entry">
+                  <span class="callout-tag">Potensi Hambatan:</span>
+                  <span class="callout-desc">{{ slot.knownBlockerNote }}</span>
+                </div>
+                <div v-if="slot.supportNeeded" class="callout-entry">
+                  <span class="callout-tag">Bantuan Dibutuhkan:</span>
+                  <span class="callout-desc">{{ slot.supportNeeded }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </template>
+
+      <!-- Mode 2: Formulir Pengisian Komitmen Pagi (Sebelum Submit) -->
       <template v-else>
         <!-- Zero Commitment Option Box (IMP-029) -->
         <div class="zero-box">
@@ -932,27 +1066,26 @@ onMounted(() => {
           </div>
         </div>
       </section>
+        <!-- Action Footer -->
+        <div v-if="!isFormLocked" class="action-footer">
+          <div class="footer-info">
+            Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off {{ morningLockCutoff }} WIB.
+          </div>
+          <div class="footer-btns">
+            <button
+              type="button"
+              class="btn btn-primary"
+              :disabled="submitting"
+              @click="submitMorningCheckin"
+            >
+              <span>{{ submitting ? 'Mengirim...' : 'Kirim Morning Commitment' }}</span>
+            </button>
+          </div>
+        </div>
       </template>
 
-      <!-- Action Footer -->
-      <div v-if="!isFormLocked" class="action-footer">
-        <div class="footer-info">
-          Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off {{ morningLockCutoff }} WIB.
-        </div>
-        <div class="footer-btns">
-          <button
-            type="button"
-            class="btn btn-primary"
-            :disabled="submitting"
-            @click="submitMorningCheckin"
-          >
-            <span>{{ submitting ? 'Mengirim...' : 'Kirim Morning Commitment' }}</span>
-          </button>
-        </div>
-      </div>
-
       <!-- Success / Post-Submit Navigation Panel -->
-      <div v-if="isSubmittedSuccess" class="post-submit-panel">
+      <div v-if="hasSubmittedMorning" class="post-submit-panel">
         <div class="post-submit-header">
           <CheckCircle2 :size="20" class="text-green" />
           <div>
@@ -1295,6 +1428,200 @@ onMounted(() => {
 .leave-notice-actions {
   display: flex;
   gap: 10px;
+}
+
+/* Summary Cards (Mode Review / Pasca-Submit Resmi) */
+.summary-panel,
+.zero-summary-panel {
+  margin-top: 20px;
+}
+
+.summary-head-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 4px solid var(--color-status-green-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.summary-card.summary-card-amber {
+  border-left-color: var(--color-status-amber-border);
+  background: #fffdfa;
+}
+
+.summary-card.summary-card-red {
+  border-left-color: var(--color-status-red-border);
+  background: #fefafa;
+}
+
+.summary-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-slot-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-number {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-task-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.summary-meta-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.meta-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.meta-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.meta-pill.project-pill {
+  background: var(--color-surface-subtle);
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.meta-pill.blocker-pill {
+  background: var(--color-status-amber-bg);
+  color: var(--color-status-amber-fg);
+  border: 1px solid var(--color-status-amber-border);
+}
+
+.meta-pill.text-pill {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.meta-link {
+  font-size: 12px;
+  color: var(--color-brand-primary);
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.summary-callout {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.callout-entry {
+  display: flex;
+  gap: 8px;
+}
+
+.callout-tag {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  min-width: 130px;
+}
+
+.callout-desc {
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.zero-summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zero-summary-badge-row {
+  margin-bottom: 4px;
+}
+
+.zero-summary-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.zero-summary-reason {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-style: italic;
+  padding: 12px 16px;
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-brand-primary);
+}
+
+.zero-summary-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
 }
 
 .submitted-banner-content {
