@@ -1516,18 +1516,18 @@ onMounted(() => {
 
 .summary-meta-grid {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 20px;
+  flex-direction: column;
+  gap: 4px;
   padding-top: 6px;
   border-top: 1px dashed var(--color-border-subtle);
 }
 
 .meta-field {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 11.5px;
+  line-height: 1.35;
 }
 
 .meta-label {
@@ -1535,6 +1535,8 @@ onMounted(() => {
   font-weight: 600;
   white-space: nowrap;
   font-size: 11px;
+  min-width: 125px;
+  flex-shrink: 0;
 }
 
 .meta-val {
