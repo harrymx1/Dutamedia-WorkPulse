@@ -274,8 +274,8 @@ onMounted(() => {
           </div>
         </div>
         <div class="panel-body">
-          <div v-if="isMaxReached" class="alert-banner warning" style="margin-bottom: 16px;" data-testid="max-limit-banner">
-            <AlertTriangle :size="18" />
+          <div v-if="isMaxReached" class="alert-banner warning" data-testid="max-limit-banner">
+            <AlertTriangle :size="18" class="alert-icon" />
             <span>Batas maksimum 5 tugas tambahan per hari telah tercapai. Anda tidak dapat menambahkan tugas baru lagi hari ini.</span>
           </div>
 
@@ -631,6 +631,31 @@ onMounted(() => {
   gap: 12px;
   align-items: flex-start;
   font-size: 13px;
+}
+
+.alert-banner {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.alert-banner.warning {
+  background: var(--color-status-amber-bg, #fffbeb);
+  border: 1px solid var(--color-status-amber-border, #fcd34d);
+  color: var(--color-status-amber-fg, #92400e);
+}
+
+.alert-banner .alert-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-status-amber-fg, #b45309);
 }
 
 .alert-link {

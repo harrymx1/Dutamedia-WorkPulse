@@ -1025,13 +1025,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Batas atas 5 tugas tambahan bekerja presisi, melindungi integritas beban kerja harian.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot tampilan halaman saat mencapai batas 5 tugas tambahan dengan form terkunci.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Lolos verifikasi Cycle 2 (08 Nov 2026). Setelah tugas tambahan ke-5 berhasil disimpan (media_1794156671203_e3f38a23.jpg), form pencatatan langsung mengaktifkan banner batas maksimum, mendisable textarea dan seluruh dropdown, serta mengunci tombol submit menjadi 'Batas 5 Tugas Tercapai' (media_1794156676888_dee657fc.jpg). Sistem berhasil mencegah penambahan item ke-6.
+- **Execution Status:** PASS
+- **Tester:** Harry
+- **Execution Date:** 2026-11-08
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Batas atas beban kerja harian FR-20 terbukti presisi 100%.
 
 ---
 

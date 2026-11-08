@@ -152,7 +152,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-DLYA-002` | Validasi Field Wajib Pemberi Instruksi (`NEWLY_ASSIGNED`) & Opsi Proyek Ad-Hoc | PASS | Lolos retest Cycle 2 (08 Nov 2026). Aturan CR-013 terbukti presisi: submit NEWLY_ASSIGNED tanpa atasan dicegat browser tooltip wajib pilih; setelah dipilih Bambang Pratama dengan proyek dikosongkan, tugas berhasil tersimpan (#1 Investigasi performa rendering Vue). Bukti: media_1794123017594_f2b9f383.png, media_1794123081537_cf67c2c0.png. |
 | [P] | `TC-DLYA-001` | Pencatatan Tugas Tambahan Ad-Hoc (Proyek & Blocker Aktif Opsional) & Integrasi ke EOD | PASS | Lolos retest Cycle 2 (08 Nov 2026). Tugas ad-hoc kedua tersimpan lengkap dengan proyek [PRJ-CORE], atasan Arif Budiman, dan tautan blocker aktif [#BLK-1F1151]. Halaman EOD (/daily/eod) otomatis mengintegrasikan seluruh komitmen (1 pagi + 2 tambahan = 3 total target). Bukti: media_1794123275527_369ed019.png, media_1794123328209_e71cc20d.png. |
-| [ ] | `TC-DLYA-003` | Batas Maksimum 5 Tugas Tambahan Ad-Hoc Per Hari | | |
+| [P] | `TC-DLYA-003` | Batas Maksimum 5 Tugas Tambahan Ad-Hoc Per Hari | PASS | Lolos verifikasi Cycle 2 (08 Nov 2026). Batas atas 5 tugas tambahan terbukti aktif: setelah item ke-5 tersimpan, banner peringatan batas muncul, input form disabled, dan tombol submit terkunci menjadi 'Batas 5 Tugas Tercapai' sehingga item ke-6 dicegah. Bukti: media_1794156671203_e3f38a23.jpg, media_1794156676888_dee657fc.jpg. |
 
 ---
 
