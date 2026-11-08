@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
   Plus,
@@ -57,6 +57,7 @@ const availableProjects = ref<ProjectOption[]>([
 ]);
 const activeBlockers = ref<ActiveBlockerOption[]>([]);
 const isBlockerPickerOpen = ref(false);
+const isMaxReached = computed(() => additionalWorks.value.length >= 5);
 
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
@@ -127,6 +128,11 @@ function selectBlockerItem(blocker: ActiveBlockerOption) {
 async function addAdditionalWork() {
   if (!recordId.value) {
     showToast('Silakan isi Morning Commitment hari ini terlebih dahulu sebelum mencatat pekerjaan tambahan.', true);
+    return;
+  }
+
+  if (isMaxReached.value) {
+    showToast('Maksimum 5 tugas tambahan per hari kerja telah terpenuhi.', true);
     return;
   }
 
@@ -268,6 +274,11 @@ onMounted(() => {
           </div>
         </div>
         <div class="panel-body">
+          <div v-if="isMaxReached" class="alert-banner warning" style="margin-bottom: 16px;" data-testid="max-limit-banner">
+            <AlertTriangle :size="18" />
+            <span>Batas maksimum 5 tugas tambahan per hari telah tercapai. Anda tidak dapat menambahkan tugas baru lagi hari ini.</span>
+          </div>
+
           <form @submit.prevent="addAdditionalWork" class="form-container">
             <div class="form-group">
               <label for="input-task-text" class="form-label">Deskripsi Pekerjaan Tambahan *</label>
@@ -277,6 +288,7 @@ onMounted(() => {
                 class="input-control"
                 rows="2"
                 placeholder="Deskripsikan pekerjaan tambahan atau tugas baru yang dikerjakan..."
+                :disabled="isMaxReached"
                 required
               ></textarea>
             </div>
@@ -284,7 +296,7 @@ onMounted(() => {
             <div class="form-row" :class="{ 'single-col': formReason !== 'NEWLY_ASSIGNED' && formReason !== 'OTHER' }" data-testid="form-row-reason">
               <div class="form-group">
                 <label for="select-reason" class="form-label">Alasan Pekerjaan Tambahan *</label>
-                <select id="select-reason" v-model="formReason" class="input-control" required data-testid="select-reason">
+                <select id="select-reason" v-model="formReason" class="input-control" :disabled="isMaxReached" required data-testid="select-reason">
                   <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan</option>
                   <option value="OPERATIONAL_INCIDENT">Perbaikan Error / Bug Kritis</option>
                   <option value="MISSED_IN_PLANNING">Tugas Terlewat Dicatat Pagi</option>
@@ -295,7 +307,7 @@ onMounted(() => {
 
               <div v-if="formReason === 'NEWLY_ASSIGNED'" class="form-group" data-testid="assigned-by-group">
                 <label for="select-assigned-by" class="form-label">Ditugaskan Oleh (Atasan Langsung/Lead) *</label>
-                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" required data-testid="select-assigned-by">
+                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" :disabled="isMaxReached" required data-testid="select-assigned-by">
                   <option value="" disabled>-- Pilih Atasan Penugas --</option>
                   <option v-for="user in availableManagers" :key="user.id" :value="user.id">
                     {{ user.fullName }} ({{ user.email }})
@@ -394,9 +406,9 @@ onMounted(() => {
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" :disabled="submitting">
+              <button type="submit" class="btn btn-primary" :disabled="submitting || isMaxReached" data-testid="btn-add-additional-work">
                 <Plus :size="16" />
-                <span>{{ submitting ? 'Menambahkan...' : 'Tambahkan Pekerjaan' }}</span>
+                <span>{{ submitting ? 'Menambahkan...' : (isMaxReached ? 'Batas 5 Tugas Tercapai' : 'Tambahkan Pekerjaan') }}</span>
               </button>
             </div>
           </form>

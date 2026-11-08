@@ -243,4 +243,56 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     const inputOther = wrapper.find('[data-testid="input-other-reason"]');
     expect(inputOther.exists()).toBe(true);
   });
+
+  it('enforces maximum 5 additional work items limit and disables form (TC-DLYA-003 / FR-20)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/daily/today')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              success: true,
+              data: {
+                workDate: '2026-11-08',
+                record: {
+                  id: 'rec-123',
+                  additionalWorks: [
+                    { id: 'aw-1', taskText: 'Task 1', reason: 'NEWLY_ASSIGNED', createdAt: '2026-11-08T09:00:00Z' },
+                    { id: 'aw-2', taskText: 'Task 2', reason: 'NEWLY_ASSIGNED', createdAt: '2026-11-08T10:00:00Z' },
+                    { id: 'aw-3', taskText: 'Task 3', reason: 'NEWLY_ASSIGNED', createdAt: '2026-11-08T11:00:00Z' },
+                    { id: 'aw-4', taskText: 'Task 4', reason: 'NEWLY_ASSIGNED', createdAt: '2026-11-08T12:00:00Z' },
+                    { id: 'aw-5', taskText: 'Task 5', reason: 'NEWLY_ASSIGNED', createdAt: '2026-11-08T13:00:00Z' },
+                  ],
+                },
+              },
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Verify limit banner is rendered
+    const banner = wrapper.find('[data-testid="max-limit-banner"]');
+    expect(banner.exists()).toBe(true);
+    expect(banner.text()).toContain('Batas maksimum 5 tugas tambahan per hari telah tercapai');
+
+    // Verify submit button is disabled
+    const submitBtn = wrapper.find('[data-testid="btn-add-additional-work"]');
+    expect(submitBtn.attributes('disabled')).toBeDefined();
+    expect(submitBtn.text()).toContain('Batas 5 Tugas Tercapai');
+
+    // Verify textarea is disabled
+    const textarea = wrapper.find('textarea');
+    expect(textarea.attributes('disabled')).toBeDefined();
+  });
 });

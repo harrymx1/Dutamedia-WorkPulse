@@ -929,13 +929,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Tugas ad-hoc berhasil dicatat dengan asosiasi instruktur, metadata proyek (`projectCode`), dan tautan blocker (`linkedBlockerId`) yang jelas serta otomatis terintegrasi ke form EOD sore hari.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot halaman Additional Work (memperlihatkan dropdown Proyek Terkait, tombol Pilih Blocker Aktif, dan kartu riwayat ad-hoc) serta screenshot halaman EOD.
-- **Actual Result:** Tugas tambahan ("Investigasi performa rendering Vue") berhasil dicatat dengan atasan penugas ("Bambang Pratama"), tersimpan di database, dan secara otomatis terintegrasi ke form EOD Outcome pada seksi "Evaluasi Pekerjaan Tambahan (1)" bersama 3 komitmen pagi sehingga total evaluasi bertambah menjadi 4 tugas.
-- **Execution Status:** Needs Retest (CR-013)
+- **Actual Result:** Lolos retest Cycle 2 (08 Nov 2026). Tugas tambahan ad-hoc ("Hotfix urgent bug memory leak payment") berhasil dicatat lengkap dengan proyek `[PRJ-CORE]`, atasan penugas `Arif Budiman`, dan referensi blocker aktif `[#BLK-1F1151]`. Kartu tampil rapi di daftar hari ini dengan total 2 pekerjaan tambahan (media_1794123275527_369ed019.png). Integrasi lintas modul ke form EOD sore hari (/daily/eod) terkonfirmasi sempurna: seksi Evaluasi Pekerjaan Tambahan memuat kedua tugas dan metric Total Item Evaluasi otomatis teragregasi menjadi 3 Tugas (1 pagi + 2 tambahan) (media_1794123328209_e71cc20d.png).
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 2026-10-30
-- **Defect ID:** 
-- **Retest Result:** Pending Retest
-- **Catatan:** Diperbarui dengan cakupan CR-013 (dropdown Proyek Terkait Opsional & inline Pilih Blocker Aktif pada Additional Work). Wajib diuji ulang saat memasuki Kelompok 6.
+- **Execution Date:** 2026-11-08
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Lolos verifikasi penuh Cycle 2 pasca penyesuaian aturan CR-013.
 
 ---
 

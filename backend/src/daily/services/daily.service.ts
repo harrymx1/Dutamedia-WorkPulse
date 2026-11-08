@@ -665,6 +665,18 @@ export class DailyService {
       });
     }
 
+    const existingCount = await this.prisma.additionalWork.count({
+      where: { dailyRecordId: record.id },
+    });
+
+    if (existingCount >= 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Maksimum 5 tugas tambahan per hari kerja telah terpenuhi.',
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
+    }
+
     if (dto.reason === 'NEWLY_ASSIGNED' && !dto.assignedByUserId) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
