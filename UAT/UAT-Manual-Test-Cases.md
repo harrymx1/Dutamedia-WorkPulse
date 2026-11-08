@@ -977,13 +977,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Aturan wajib pemberi instruksi berjalan tegak untuk penugasan atasan, dan pemilihan proyek bersifat opsional sesuai struktur kerja PT Dutamedia Mandiri Pratama (CR-013).
 - **Bukti yang Perlu Dikumpulkan:** Screenshot pesan validasi saat dropdown penugas dikosongkan dan saat berhasil disimpan.
-- **Actual Result:** Sistem menolak penyimpanan tugas tambahan saat dropdown atasan penugas kosong dengan memunculkan tooltip wajib isi. Setelah atasan (Bambang Pratama) dipilih, tugas berhasil tersimpan dan tampil di daftar tugas hari ini.
-- **Execution Status:** Needs Retest (CR-013)
+- **Actual Result:** Lolos retest Cycle 2 (08 Nov 2026). Validasi CR-013 terbukti presisi: sistem memblokir submit form saat alasan `Penugasan Baru dari Atasan` dipilih tanpa menentukan instruktur dengan menampilkan browser tooltip `Please select an item in the list.` (media_1794123017594_f2b9f383.png). Setelah instruktur `Bambang Pratama` dipilih dan field `Proyek Terkait (Opsional)` dibiarkan kosong, tugas `#1 Investigasi performa rendering Vue` berhasil disimpan dan diterbitkan ke daftar hari ini tanpa memaksa pemilihan proyek (media_1794123081537_cf67c2c0.png).
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 2026-10-30
-- **Defect ID:** 
-- **Retest Result:** Pending Retest
-- **Catatan:** Diperbarui sesuai CR-013 (Proyek Terkait bersifat opsional, Penugas wajib untuk NEWLY_ASSIGNED). Wajib diverifikasi ulang pada Kelompok 6.
+- **Execution Date:** 2026-11-08
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Lolos verifikasi penuh Cycle 2 pasca penyesuaian aturan CR-013.
 
 ---
 
