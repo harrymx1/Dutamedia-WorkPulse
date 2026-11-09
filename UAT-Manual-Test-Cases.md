@@ -1275,13 +1275,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Evaluasi sore yang telah diserahkan terkunci secara mutlak baik di UI maupun di backend API (DEF-002 terverifikasi tuntas).
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar formulir terkunci di UI dan tangkapan layar respons API 422 pada tab Network console.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Simulasi percobaan penyerahan ulang EOD (DEF-002) via DevTools Console terbukti ditolak mutlak oleh backend dengan status HTTP 422 Unprocessable Content. Respons API mengembalikan error code `BUSINESS_RULE_ALREADY_SUBMITTED`, pesan resmi: *"EOD Outcome hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi."*, timestamp `2026-11-09T02:03:14.972Z`, dan requestId `req_51023913`. Integritas database dan stempel waktu `eodSubmittedAt` asli pukul 08.40 WIB tetap terlindungi utuh 100%. Bukti: `media_1794189830130_27cb3eca.png`.
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 
-- **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** Verifikasi tuntas resolusi DEF-002 pasca-remediasi Cycle 1.
+- **Execution Date:** 2026-11-09
+- **Defect ID:** DEF-002 (Resolved)
+- **Retest Result:** PASS
+- **Catatan:** Verifikasi tuntas resolusi DEF-002 pasca-remediasi Cycle 1 (Penguncian atomik sisi server terbukti kokoh).
 
 ---
 

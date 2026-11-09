@@ -357,9 +357,19 @@ onMounted(() => {
       <!-- Alert jika terkunci -->
       <div v-else-if="isEodLocked" class="alert-banner locked" role="alert">
         <Lock :size="20" />
-        <div>
-          <strong>Hari Kerja Telah Berakhir & Terkunci Permanen (DEC-002):</strong>
-          Batas cut-off lembur ({{ eodLockCutoff }} WIB) telah terlewati. Evaluasi tidak dapat lagi disubmit secara reguler. Silakan hubungi atasan atau ajukan permohonan koreksi jika diperlukan.
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Hari Kerja Telah Berakhir & Terkunci Permanen:</strong>
+            <span>Batas cut-off lembur ({{ eodLockCutoff }} WIB) telah terlewati.</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Evaluasi tidak dapat lagi disubmit secara reguler. Silakan hubungi atasan atau ajukan permohonan koreksi jika diperlukan.
+          </p>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/corrections/eod" class="btn btn-secondary btn-sm">
+              Ajukan Koreksi EOD
+            </AccessLink>
+          </div>
         </div>
       </div>
 
