@@ -6,6 +6,8 @@ import { ScopeResolverService } from '../../organization/services/scope-resolver
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import {
+  CommitmentOutcome,
+  ContinuationStatus,
   CorrectionClassification,
   CorrectionScopeType,
   CorrectionStatus,
@@ -15,6 +17,22 @@ import {
   CreateCorrectionRequestDto,
   ReviewCorrectionRequestDto,
 } from '../dto/create-correction-request.dto';
+
+function mapRequestedOutcome(rawOutcome?: string): CommitmentOutcome | undefined {
+  if (!rawOutcome) return undefined;
+  if (rawOutcome === 'DONE' || rawOutcome === 'COMPLETED') return CommitmentOutcome.COMPLETED;
+  if (rawOutcome === 'IN_PROGRESS' || rawOutcome === 'PARTIALLY_COMPLETED') return CommitmentOutcome.PARTIALLY_COMPLETED;
+  if (rawOutcome === 'BLOCKED' || rawOutcome === 'NOT_COMPLETED') return CommitmentOutcome.NOT_COMPLETED;
+  if (rawOutcome === 'DROPPED' || rawOutcome === 'CANCELLED') return CommitmentOutcome.CANCELLED;
+  return undefined;
+}
+
+function mapRequestedContinuation(rawContinuation?: string): ContinuationStatus | undefined {
+  if (!rawContinuation) return undefined;
+  if (rawContinuation === 'CONTINUE_TOMORROW' || rawContinuation === 'CONTINUE' || rawContinuation === 'HANDOVER') return ContinuationStatus.CONTINUE;
+  if (rawContinuation === 'ARCHIVE' || rawContinuation === 'DO_NOT_CONTINUE') return ContinuationStatus.DO_NOT_CONTINUE;
+  return undefined;
+}
 
 @Injectable()
 export class CorrectionService {
@@ -90,6 +108,9 @@ export class CorrectionService {
         });
 
         // Update komitmen seketika
+        const autoMappedOutcome = mapRequestedOutcome(dto.requestedChange.outcome);
+        const autoMappedContinuation = mapRequestedContinuation(dto.requestedChange.continuation);
+
         await tx.commitment.update({
           where: { id: dto.targetCommitmentId },
           data: {
@@ -97,10 +118,17 @@ export class CorrectionService {
             ...(dto.requestedChange.referenceLink !== undefined && {
               referenceLink: dto.requestedChange.referenceLink?.trim() || null,
             }),
-            ...(dto.requestedChange.outcome && { outcome: dto.requestedChange.outcome }),
+            ...(dto.requestedChange.initialRisk && {
+              initialRisk: dto.requestedChange.initialRisk,
+              ...(['AMBER', 'RED'].includes(dto.requestedChange.initialRisk) && {
+                knownBlockerNote: dto.requestedChange.knownBlockerNote || dto.reason.trim(),
+              }),
+            }),
+            ...(autoMappedOutcome && { outcome: autoMappedOutcome }),
             ...(dto.requestedChange.outcomeReason !== undefined && {
               outcomeReason: dto.requestedChange.outcomeReason?.trim() || null,
             }),
+            ...(autoMappedContinuation && { continuation: autoMappedContinuation }),
           },
         });
 
@@ -243,6 +271,8 @@ export class CorrectionService {
     return this.prisma.$transaction(async (tx) => {
       if (dto.decision === 'APPROVE') {
         const valReq = req.valueRequested as Record<string, any>;
+        const approveMappedOutcome = mapRequestedOutcome(valReq.outcome);
+        const approveMappedContinuation = mapRequestedContinuation(valReq.continuation);
 
         // Terapkan perubahan pada komitmen
         await tx.commitment.update({
@@ -252,11 +282,17 @@ export class CorrectionService {
             ...(valReq.referenceLink !== undefined && {
               referenceLink: valReq.referenceLink?.trim() || null,
             }),
-            ...(valReq.initialRisk && { initialRisk: valReq.initialRisk }),
-            ...(valReq.outcome && { outcome: valReq.outcome }),
+            ...(valReq.initialRisk && {
+              initialRisk: valReq.initialRisk,
+              ...(['AMBER', 'RED'].includes(valReq.initialRisk) && {
+                knownBlockerNote: valReq.knownBlockerNote || req.reason.trim(),
+              }),
+            }),
+            ...(approveMappedOutcome && { outcome: approveMappedOutcome }),
             ...(valReq.outcomeReason !== undefined && {
               outcomeReason: valReq.outcomeReason?.trim() || null,
             }),
+            ...(approveMappedContinuation && { continuation: approveMappedContinuation }),
           },
         });
 

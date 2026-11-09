@@ -171,7 +171,7 @@ onMounted(() => {
           <span class="eyebrow">Pengecualian Formal &amp; Hasil Akhir Harian</span>
           <h1>Permohonan Koreksi Evaluasi Sore (EOD)</h1>
           <p class="subtitle">
-            Koreksi hasil capaian EOD setelah batas waktu cut-off 21:00 WIB terkunci (DEC-002). Pilihan hasil akhir tidak pernah membatasi refleksi mandiri GREEN Anda (DEC-003).
+            Koreksi hasil capaian EOD setelah batas waktu cut-off 21:00 WIB terkunci. Pilihan hasil akhir tetap memberikan ruang refleksi mandiri secara objektif.
           </p>
         </div>
       </div>

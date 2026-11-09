@@ -1028,4 +1028,26 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
+
+### [IMP-049] Penyelarasan Pemenuhan Database Constraint chk_blocker_note_required & Pemetaan Enum Outcome/Continuation pada Persetujuan Koreksi
+- **Finding ID:** IMP-049
+- **Title:** Penyelarasan Pemenuhan Database Constraint chk_blocker_note_required & Pemetaan Enum Outcome/Continuation pada Persetujuan Koreksi Komitmen Pasca Cut-Off
+- **Category:** Backend Database Integrity & Validation Invariant
+- **Page / Module:** Review Koreksi (`/corrections/review`) & Koreksi Komitmen Pagi (`/corrections/morning`)
+- **Related Test Case:** `TC-CORR-001`, `TC-CORR-002`
+- **Current Condition:** 
+  1. Ketika karyawan mengajukan koreksi material komitmen pagi dengan peningkatan risiko ke `AMBER` atau `RED`, field `knownBlockerNote` tidak disertakan pada payload karena formulir tidak menyediakan input terpisah.
+  2. Saat Atasan Langsung menyetujui koreksi di `/corrections/review`, backend mengeksekusi `tx.commitment.update` dengan `initialRisk: 'AMBER'`, tetapi `knownBlockerNote` bernilai `NULL`.
+  3. Basis data PostgreSQL memiliki *check constraint* `chk_blocker_note_required` yang mewajibkan `known_blocker_note IS NOT NULL` jika `initial_risk IN ('AMBER', 'RED')`. Hal ini memicu pelanggaran integritas data (`500 Internal Server Error`) sehingga muncul toast error *"Terjadi kesalahan internal pada sistem."*.
+  4. Pada koreksi EOD, string outcome UI (`DONE`, `IN_PROGRESS`, `BLOCKED`, `DROPPED`) dan continuation (`CONTINUE_TOMORROW`, `ARCHIVE`, `HANDOVER`) belum dipetakan ke enum Prisma `CommitmentOutcome` (`COMPLETED`, `PARTIALLY_COMPLETED`, `NOT_COMPLETED`, `CANCELLED`) dan `ContinuationStatus` (`CONTINUE`, `DO_NOT_CONTINUE`).
+- **Proposed Improvement:** 
+  1. Pada `CorrectionService` (`createCorrectionRequest` & `reviewCorrectionRequest`), tambahkan penjamin otomatis: jika `initialRisk` bernilai `AMBER` atau `RED`, set `knownBlockerNote: valReq.knownBlockerNote || req.reason.trim()` sehingga integritas constraint database selalu terpenuhi.
+  2. Tambahkan helper `mapRequestedOutcome` dan `mapRequestedContinuation` untuk menerjemahkan nilai UI ke enum database secara aman.
+  3. Pada `MorningCorrectionRequestView.vue`, sertakan `knownBlockerNote: reason.value.trim()` saat risiko dipilih `AMBER` atau `RED`.
+- **Rationale / Expected Benefit:** Menjamin integritas aturan bisnis invariant database tetap terjaga sempurna tanpa memicu kegagalan transaksi HTTP 500 saat Atasan Langsung menyetujui permohonan koreksi.
+- **Priority:** Critical
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794206256288_69c9798d.jpg`.
+- **Status:** Resolved / Implemented (Frontend & Backend Hotfixed)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

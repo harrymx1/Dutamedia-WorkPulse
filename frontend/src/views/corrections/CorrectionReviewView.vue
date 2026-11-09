@@ -266,7 +266,9 @@ onMounted(() => {
       <div class="modal-card">
         <div class="modal-head">
           <h3>{{ decision === 'APPROVE' ? 'Setujui Permohonan Koreksi' : 'Sampaikan Keberatan / Tolak Koreksi' }}</h3>
-          <button type="button" class="btn-close" @click="isReviewModalOpen = false">✕</button>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isReviewModalOpen = false">
+            <X :size="18" />
+          </button>
         </div>
         <div class="modal-body">
           <p class="modal-hint">

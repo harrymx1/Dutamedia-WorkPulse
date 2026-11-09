@@ -1619,13 +1619,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Permohonan koreksi tersimpan berstatus PENDING dan siap ditinjau oleh atasan langsung di antrean review.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot riwayat permohonan koreksi dengan status PENDING.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Permohonan koreksi komitmen pagi berhasil diajukan dengan klasifikasi MATERIAL. Muncul toast hijau resmi "Permohonan koreksi material telah diajukan. Jendela keberatan aktif 24 jam." dan tiket tercatat pada panel kanan Riwayat Permohonan Koreksi berstatus PENDING dengan badge MATERIAL serta perbandingan diff tersimpan rapi.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** N/A
+- **Catatan:** Pengajuan material membuka jendela sanggahan 24 jam dan mengarahkan tiket ke antrean review Atasan Langsung.
 
 ---
 
@@ -1715,13 +1715,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Penolakan koreksi mewajibkan alasan >= 10 karakter secara ketat; status beralih ke REJECTED secara sah.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot modal penolakan saat alasan < 10 char dan screenshot kartu permohonan dengan status REJECTED.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Penolakan permohonan koreksi material oleh Atasan Langsung (Head of Engineering) berhasil diverifikasi. Validasi catatan penolakan wajib aktif (tombol disabled jika kosong / di bawah batas). Pengisian alasan penolakan resmi >= 10 karakter berhasil dieksekusi dengan toast "Permohonan koreksi berhasil ditolak." dan tiket berpindah keluar dari antrean PENDING ke status REJECTED.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** N/A
+- **Catatan:** Mekanisme Anti-Silent Rejection terbukti bekerja secara efektif mencegah penolakan sepihak tanpa justifikasi.
 
 ---
 
@@ -1880,13 +1880,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Permohonan koreksi evaluasi sore EOD berhasil diajukan dengan validasi kendala teknis dan alasan resmi terpenuhi (UAT-REQ-EODCORR-001); keterbatasan pengikatan tanggal berjalan dicatat sebagai gap implementasi untuk keputusan Harry, ketiadaan upload file fisik dikonfirmasi bukan defek (hanya penjelasan tekstual yang diwajibkan PRD), dan harmonisasi ID lokal UAT-REQ-EODCORR-001 terverifikasi mencegah benturan dengan FR-38 kanonis PRD v1.6.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot form pengajuan terisi lengkap di `/corrections/eod` dan screenshot entri baru berstatus `PENDING` pada panel Riwayat Permohonan Koreksi EOD.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Permohonan koreksi evaluasi sore EOD berhasil diajukan pasca cut-off dengan klasifikasi MATERIAL dan outcome baru DONE (anti-lock green DEC-003). Validasi alasan teruji pada nilai batas (Boundary Value Analysis) tepat 10 karakter ("Lupa input") dan permohonan tersimpan berstatus PENDING di panel riwayat dengan jendela keberatan 24 jam terbuka.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** N/A
+- **Catatan:** Teruji pada nilai batas 10 karakter ("Lupa input"), permohonan material masuk antrean review Atasan Langsung. Keterbatasan pengikatan tanggal berjalan pada hari ini terdokumentasi sebagai gap implementasi.
 
 ---
 

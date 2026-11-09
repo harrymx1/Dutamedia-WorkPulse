@@ -125,6 +125,9 @@ async function submitCorrection() {
         taskText: newTaskText.value.trim(),
         referenceLink: newReferenceLink.value.trim() || null,
         initialRisk: newInitialRisk.value,
+        ...(['AMBER', 'RED'].includes(newInitialRisk.value) && {
+          knownBlockerNote: reason.value.trim(),
+        }),
       },
     };
 
@@ -175,7 +178,7 @@ onMounted(() => {
           <span class="eyebrow">Pengecualian Formal &amp; Jejak Audit Anti-Backdating</span>
           <h1>Permohonan Koreksi Komitmen Pagi</h1>
           <p class="subtitle">
-            Gunakan formulir resmi ini jika Anda memerlukan perbaikan komitmen pagi setelah batas waktu cut-off terkunci (DEC-002). Perubahan minor diterapkan seketika, sedangkan perubahan material ditinjau oleh Atasan Langsung.
+            Gunakan formulir resmi ini jika Anda memerlukan perbaikan komitmen pagi setelah batas waktu cut-off terkunci. Perubahan minor diterapkan seketika, sedangkan perubahan material ditinjau oleh Atasan Langsung.
           </p>
         </div>
       </div>

@@ -216,9 +216,9 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-CORR-001` | Pengajuan Permohonan Koreksi Komitmen Pagi Pasca Cut-Off | | |
-| [ ] | `TC-CORR-006` | Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off | | |
-| [ ] | `TC-CORR-003` | Penolakan Permohonan Koreksi dengan Alasan Wajib >= 10 Char | | |
+| [x] | `TC-CORR-001` | Pengajuan Permohonan Koreksi Komitmen Pagi Pasca Cut-Off | Pass | Permohonan material PENDING dengan toast jendela keberatan 24 jam |
+| [x] | `TC-CORR-006` | Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off | Pass | Permohonan material EOD PENDING outcome DONE (BVA 10 char lolos) |
+| [x] | `TC-CORR-003` | Penolakan Permohonan Koreksi dengan Alasan Wajib >= 10 Char | Pass | Anti-silent rejection terbukti, penolakan tersimpan berstatus REJECTED |
 | [ ] | `TC-CORR-002` | Persetujuan Permohonan Koreksi oleh Direct Manager | | |
 | [ ] | `TC-CORR-004` | Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA | | |
 | [ ] | `TC-CORR-005` | Penerbitan Dispensasi Kepatuhan Resmi & Audit Log (DEC-013) | | |

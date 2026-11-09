@@ -10,6 +10,7 @@ import {
   Clock,
   User,
   Link2,
+  X,
 } from 'lucide-vue-next';
 
 interface ComplianceEventItem {
@@ -298,7 +299,9 @@ onMounted(() => {
       <div class="modal-card">
         <div class="modal-head">
           <h3>Tindak Lanjut Peristiwa Kepatuhan</h3>
-          <button type="button" class="btn-close" @click="isAddressModalOpen = false">✕</button>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isAddressModalOpen = false">
+            <X :size="18" />
+          </button>
         </div>
         <div class="modal-body">
           <p class="modal-hint">
