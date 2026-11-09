@@ -15,6 +15,7 @@ export interface BlockerSlaConfig {
   operatingHoursStart: string;   // "09:00"
   operatingHoursEnd: string;     // "17:00"
   countWeekends: boolean;        // false
+  severityMinutes?: Record<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW', number>; // Target respons per severity (menit)
 }
 
 export interface ComplianceThresholdConfig {
@@ -54,6 +55,7 @@ export const CANONICAL_POLICY_FALLBACKS: Record<PolicyCategory, any> = {
     operatingHoursStart: '09:00',
     operatingHoursEnd: '17:00',
     countWeekends: false,
+    severityMinutes: { CRITICAL: 120, HIGH: 240, MEDIUM: 480, LOW: 1440 },
   } as BlockerSlaConfig,
 
   [PolicyCategory.COMPLIANCE_THRESHOLD]: {

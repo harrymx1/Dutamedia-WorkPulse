@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
@@ -33,6 +33,54 @@ const expectedHelp = ref('');
 const authorityContext = ref<'ORGANIZATIONAL_AUTHORITY' | 'PROJECT_AUTHORITY'>('ORGANIZATIONAL_AUTHORITY');
 const projectCode = ref('');
 const assignedOwnerId = ref('');
+
+// Kebijakan SLA & rekomendasi penanggung jawab otomatis (sumber tunggal: backend)
+const slaMinutes = ref<Record<string, number>>({ CRITICAL: 120, HIGH: 240, MEDIUM: 480, LOW: 1440 });
+const suggestedOwner = ref<{ id: string; fullName: string; jobTitle?: string | null } | null>(null);
+const suggestionReason = ref<'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE'>('NONE');
+const suggestionDivision = ref('');
+const nowTick = ref(Date.now());
+let tickTimer: ReturnType<typeof setInterval> | null = null;
+
+function formatSla(minutes?: number): string {
+  if (!minutes) return '-';
+  if (minutes % 60 === 0) return `${minutes / 60} jam`;
+  return `${minutes} menit`;
+}
+
+async function loadRoutingPreview() {
+  try {
+    const params = new URLSearchParams();
+    if (blockerType.value) params.set('type', blockerType.value);
+    params.set('ownerNeededType', authorityContext.value);
+    if (authorityContext.value === 'PROJECT_AUTHORITY' && projectCode.value) {
+      params.set('projectCode', projectCode.value);
+    }
+    const res = await apiClient<any>(`/blockers/routing-preview?${params.toString()}`);
+    if (res.data) {
+      if (res.data.slaMinutes) slaMinutes.value = res.data.slaMinutes;
+      suggestedOwner.value = res.data.suggestedOwner || null;
+      suggestionReason.value = res.data.reason || 'NONE';
+      suggestionDivision.value = res.data.divisionLabel || '';
+    }
+  } catch {
+    // Preview bersifat informatif; pengiriman tiket tetap ditentukan backend
+  }
+}
+
+watch([blockerType, authorityContext, projectCode], () => {
+  loadRoutingPreview();
+});
+
+function slaRemainingLabel(b: any): { text: string; overdue: boolean } | null {
+  if (!b.targetResolutionAt || ['RESOLVED', 'CLOSED', 'ACCEPTED_RISK'].includes(b.status)) return null;
+  const diffMin = Math.round((new Date(b.targetResolutionAt).getTime() - nowTick.value) / 60000);
+  const abs = Math.abs(diffMin);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  const dur = h > 0 ? `${h}j ${m}m` : `${m}m`;
+  return diffMin >= 0 ? { text: `Sisa SLA ${dur}`, overdue: false } : { text: `Lewat SLA ${dur}`, overdue: true };
+}
 
 export interface AvailableUser {
   id: string;
@@ -106,8 +154,10 @@ watch(projectCode, () => {
 // Pemisahan Tegas Direktori Penanggung Jawab Berdasarkan Konteks Wewenang (DEC-002, IMP-046)
 const eligibleOwners = computed(() => {
   const currentUserId = authStore.user?.id;
-  const currentManagerName = authStore.user?.managerName;
-  const currentDirectManagerId = (authStore.user as any)?.directManagerId;
+  const myDirectManagerId =
+    availableUsers.value.find((u) => u.id === currentUserId)?.directManagerId ||
+    (authStore.user as any)?.directManagerId ||
+    null;
 
   // 1. Filter dasar: singkirkan akun diri sendiri, SYSTEM_ADMIN, dan calon karyawan/non-aktif
   const cleanUsers = availableUsers.value.filter(
@@ -128,11 +178,7 @@ const eligibleOwners = computed(() => {
 
     // Deteksi Atasan Langsung (Direct Supervisor)
     for (const u of cleanUsers) {
-      const isDirectManager =
-        (currentDirectManagerId && u.id === currentDirectManagerId) ||
-        (currentManagerName && u.fullName.toLowerCase().trim() === currentManagerName.toLowerCase().trim()) ||
-        (authStore.user?.email.includes('dev.frontend') && u.email.includes('lead.tech')) ||
-        (authStore.user?.email.includes('dev.backend') && u.email.includes('head.eng'));
+      const isDirectManager = !!myDirectManagerId && u.id === myDirectManagerId;
 
       if (isDirectManager) {
         directManagers.push({ ...u, isDirectManager: true });
@@ -262,13 +308,14 @@ const selectedOwnerDetails = computed(() => {
 });
 
 const defaultSupervisorName = computed(() => {
-  return eligibleOwners.value.directManagers[0]?.fullName || 'Bambang Pratama';
+  return suggestedOwner.value?.fullName || eligibleOwners.value.directManagers[0]?.fullName || '';
 });
 
 const defaultProjectLeadName = computed(() => {
   return (
+    suggestedOwner.value?.fullName ||
     eligibleOwners.value.projectLeads[0]?.fullName ||
-    (projectCode.value.includes('CORE') ? 'Bambang Pratama' : 'Dimas Prakoso')
+    ''
   );
 });
 
@@ -503,7 +550,7 @@ function getStatusLabel(status: string): string {
     case 'ACKNOWLEDGED':
       return 'Telah Diterima';
     case 'OPEN':
-      return 'Menunggu Respons Atasan';
+      return 'Menunggu Respons Penanggung Jawab';
     case 'ACCEPTED_RISK':
       return 'Risiko Diterima';
     case 'CLOSED':
@@ -560,6 +607,14 @@ function getTicketDescription(ticket: any): string {
 onMounted(() => {
   loadInitialData();
   loadMyBlockers();
+  loadRoutingPreview();
+  tickTimer = setInterval(() => {
+    nowTick.value = Date.now();
+  }, 30000);
+});
+
+onBeforeUnmount(() => {
+  if (tickTimer) clearInterval(tickTimer);
 });
 </script>
 
@@ -759,7 +814,7 @@ onMounted(() => {
                     <input type="radio" v-model="blockerSeverity" value="CRITICAL" />
                     <div class="card-head">
                       <span class="sev-badge critical">Critical</span>
-                      <span class="sev-sla">SLA: 60m</span>
+                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.CRITICAL) }}</span>
                     </div>
                     <p class="sev-desc">Pekerjaan terhenti total, memicu notifikasi darurat instan &amp; auto-escalate.</p>
                   </label>
@@ -768,7 +823,7 @@ onMounted(() => {
                     <input type="radio" v-model="blockerSeverity" value="HIGH" />
                     <div class="card-head">
                       <span class="sev-badge high">High</span>
-                      <span class="sev-sla">SLA: 120m</span>
+                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.HIGH) }}</span>
                     </div>
                     <p class="sev-desc">Hambatan berat pada jadwal atau milestone utama harian.</p>
                   </label>
@@ -777,7 +832,7 @@ onMounted(() => {
                     <input type="radio" v-model="blockerSeverity" value="MEDIUM" />
                     <div class="card-head">
                       <span class="sev-badge medium">Medium</span>
-                      <span class="sev-sla">SLA: 240m</span>
+                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.MEDIUM) }}</span>
                     </div>
                     <p class="sev-desc">Hambatan parsial, namun masih dapat mengerjakan komitmen lain.</p>
                   </label>
@@ -786,7 +841,7 @@ onMounted(() => {
                     <input type="radio" v-model="blockerSeverity" value="LOW" />
                     <div class="card-head">
                       <span class="sev-badge low">Low</span>
-                      <span class="sev-sla">SLA: 480m</span>
+                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.LOW) }}</span>
                     </div>
                     <p class="sev-desc">Kendala minor atau ketidaknyamanan operasional berisiko rendah.</p>
                   </label>
@@ -796,7 +851,7 @@ onMounted(() => {
                 <div v-if="blockerSeverity === 'CRITICAL'" class="critical-notice">
                   <AlertTriangle :size="18" />
                   <span>
-                    <strong>Perhatian Skala Critical:</strong> Opsi ini mengaktifkan timer darurat (SLA 60m) dan memicu eskalasi prioritas ke pimpinan divisi.
+                    <strong>Perhatian Skala Critical:</strong> Opsi ini mengaktifkan timer darurat (target respons {{ formatSla(slaMinutes.CRITICAL) }}) dan memicu eskalasi prioritas ke pimpinan divisi.
                   </span>
                 </div>
               </div>
@@ -1010,7 +1065,13 @@ onMounted(() => {
                     Penanggung jawab ditunjuk spesifik: <strong>{{ selectedOwnerDetails.fullName }}</strong> ({{ selectedOwnerDetails.jobTitle || selectedOwnerDetails.role }}). Notifikasi darurat dan eskalasi langsung diarahkan ke yang bersangkutan.
                   </p>
                   <p v-else-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                    Tiket akan langsung diteruskan otomatis ke Atasan Langsung Anda<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>. Batas waktu respons mulai dihitung mundur sejak tiket terbit.
+                    <template v-if="suggestionReason === 'DIVISION_HEAD'">
+                      Karena kategori kendala ini membutuhkan keahlian divisi {{ suggestionDivision }}, tiket otomatis diteruskan ke pimpinan divisi tersebut<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
+                    </template>
+                    <template v-else>
+                      Tiket akan langsung diteruskan otomatis ke Atasan Langsung Anda<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
+                    </template>
+                    Batas waktu respons mulai dihitung mundur sejak tiket terbit. Jika bantuan yang dibutuhkan ada pada orang lain, pilih sendiri pada Penanggung Jawab Khusus.
                   </p>
                   <p v-else-if="!projectCode">
                     Silakan pilih Proyek Terdaftar terlebih dahulu untuk menentukan Pimpinan Proyek yang berwenang menerima eskalasi kendala ini.
@@ -1146,6 +1207,14 @@ onMounted(() => {
               <span class="blocker-meta-item">Dampak: <strong>{{ b.impact }}</strong></span>
               <span class="blocker-meta-item">
                 Penanggung Jawab: <strong>{{ b.assignedOwner?.fullName || 'Belum Ditugaskan' }}</strong>
+              </span>
+              <span
+                v-if="slaRemainingLabel(b)"
+                class="blocker-meta-item sla-countdown"
+                :class="{ overdue: slaRemainingLabel(b)?.overdue }"
+                data-testid="sla-countdown"
+              >
+                <Clock :size="12" /> <strong>{{ slaRemainingLabel(b)?.text }}</strong>
               </span>
               <span v-if="b.linkedCommitment" class="blocker-meta-item">
                 Terkait: <strong>Komitmen #{{ b.linkedCommitment.sequenceNumber }}</strong>
@@ -1501,6 +1570,15 @@ textarea:focus {
 .sev-badge.medium { background: #FEF3C7; color: #92400E; }
 .sev-badge.low { background: #EFF5F2; color: #5C6E68; }
 
+.sla-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary, #0b6b4d);
+}
+.sla-countdown.overdue {
+  color: #b91c1c;
+}
 .sev-sla {
   font-size: 11px;
   color: #5C6E68;

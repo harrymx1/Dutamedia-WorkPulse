@@ -12,7 +12,7 @@ import { BlockerService } from '../services/blocker.service';
 import { RaiseBlockerDto, ResolveBlockerDto } from '../dto/raise-blocker.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
-import { BlockerStatus } from '@prisma/client';
+import { AuthorityContext, BlockerStatus } from '@prisma/client';
 
 @Controller(['blockers', 'api/blockers'])
 @UseGuards(AuthGuard, CsrfGuard)
@@ -22,6 +22,20 @@ export class BlockerController {
   @Post()
   async raiseBlocker(@Req() req: any, @Body() dto: RaiseBlockerDto) {
     return this.blockerService.raiseBlocker(req.user.id, dto);
+  }
+
+  @Get('routing-preview')
+  async getRoutingPreview(
+    @Req() req: any,
+    @Query('type') type?: string,
+    @Query('ownerNeededType') ownerNeededType?: AuthorityContext,
+    @Query('projectCode') projectCode?: string,
+  ) {
+    const [slaMinutes, suggestion] = await Promise.all([
+      this.blockerService.getSlaMinutesMap(),
+      this.blockerService.resolveSuggestedOwner(req.user.id, { type, ownerNeededType, projectCode }),
+    ]);
+    return { slaMinutes, suggestedOwner: suggestion.owner, reason: suggestion.reason, divisionLabel: suggestion.divisionLabel };
   }
 
   @Get('aging')

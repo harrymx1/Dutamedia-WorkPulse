@@ -7,10 +7,19 @@ import { ErrorCode } from '../../common/constants/error-codes';
 import {
   AuthorityContext,
   BlockerStatus,
+  CanonicalFunction,
   NotificationChannel,
   PolicyCategory,
 } from '@prisma/client';
 import { RaiseBlockerDto, ResolveBlockerDto } from '../dto/raise-blocker.dto';
+import { BlockerSlaConfig, CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
+
+// Kategori kendala yang membutuhkan keahlian divisi tertentu (bukan sekadar atasan langsung)
+const BLOCKER_TYPE_DIVISION_ROUTING: Record<string, { function: CanonicalFunction; label: string }> = {
+  INFRA: { function: CanonicalFunction.OperationsInfrastructure, label: 'Operations & Infrastructure' },
+  FINANCE: { function: CanonicalFunction.Finance, label: 'Finance' },
+  LEGAL: { function: CanonicalFunction.HRGA, label: 'HRGA & Legal' },
+};
 
 @Injectable()
 export class BlockerService {
@@ -38,19 +47,12 @@ export class BlockerService {
     // Resolusi assignedOwnerId jika tidak ditentukan secara eksplisit
     let targetOwnerId = dto.assignedOwnerId;
     if (!targetOwnerId) {
-      if (dto.ownerNeededType === AuthorityContext.PROJECT_AUTHORITY && dto.projectCodeReference) {
-        const projMapping = await this.prisma.projectAuthorityMapping.findFirst({
-          where: { projectCode: dto.projectCodeReference.trim() },
-        });
-        targetOwnerId = projMapping?.projectManagerId || projMapping?.escalationReviewerId || undefined;
-      }
-      if (!targetOwnerId) {
-        const orgAssign = await this.prisma.organizationalAssignment.findFirst({
-          where: { userId, endDate: null },
-          orderBy: { createdAt: 'desc' },
-        });
-        targetOwnerId = orgAssign?.directManagerId || undefined;
-      }
+      const suggestion = await this.resolveSuggestedOwner(userId, {
+        type: dto.type,
+        ownerNeededType: dto.ownerNeededType,
+        projectCode: dto.projectCodeReference,
+      });
+      targetOwnerId = suggestion.owner?.id;
     }
 
     if (!targetOwnerId) {
@@ -73,14 +75,13 @@ export class BlockerService {
       });
     }
 
-    // Ambil kebijakan SLA aktif
-    const slaPolicy = await this.policyService.getActivePolicy(PolicyCategory.BLOCKER_SLA);
-    const slaConfig = slaPolicy.configurationValues;
-    const l1Hours = slaConfig.level1Hours || 4;
+    // Target respons SLA ditentukan oleh tingkat keparahan (satu sumber kebijakan)
+    const slaMinutesMap = await this.getSlaMinutesMap();
+    const slaMinutes = slaMinutesMap[dto.severity as keyof typeof slaMinutesMap];
+    const slaLabel = slaMinutes % 60 === 0 ? `${slaMinutes / 60} jam` : `${slaMinutes} menit`;
 
     const raisedAt = this.clockService.now();
-    const targetResolutionAt = new Date(raisedAt.getTime() + l1Hours * 3600 * 1000);
-
+    const targetResolutionAt = new Date(raisedAt.getTime() + slaMinutes * 60 * 1000);
     return this.prisma.$transaction(async (tx) => {
       const ticket = await tx.blockerTicket.create({
         data: {
@@ -110,7 +111,7 @@ export class BlockerService {
           triggerType: 'BLOCKER_RAISED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: `Kendala Baru Dialokasikan: ${dto.severity} Impact ${dto.impact}`,
-          message: `Kendala "${dto.description.slice(0, 100)}" telah dialokasikan kepada Anda dengan target respon ${l1Hours} jam kerja.`,
+          message: `Kendala "${dto.description.slice(0, 100)}" telah dialokasikan kepada Anda dengan target respon ${slaLabel}.`,
           actionUrl: '/blockers',
           relatedEntityType: 'blocker_tickets',
           relatedEntityId: ticket.id,
@@ -121,6 +122,86 @@ export class BlockerService {
     });
   }
 
+  /**
+   * Peta target respons SLA (menit) per tingkat keparahan dari kebijakan aktif.
+   */
+  async getSlaMinutesMap(): Promise<Record<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW', number>> {
+    const fallback = (CANONICAL_POLICY_FALLBACKS[PolicyCategory.BLOCKER_SLA] as BlockerSlaConfig).severityMinutes!;
+    try {
+      const policy = await this.policyService.getActivePolicy(PolicyCategory.BLOCKER_SLA);
+      const configured = (policy?.configurationValues as Partial<BlockerSlaConfig> | undefined)?.severityMinutes;
+      return { ...fallback, ...(configured || {}) };
+    } catch {
+      return fallback;
+    }
+  }
+
+  /**
+   * Menentukan penanggung jawab yang paling tepat ketika pelapor tidak menunjuk siapa pun.
+   * - Kewenangan Proyek: Pimpinan Proyek, lalu Pengarah Proyek.
+   * - Kewenangan Struktural: berdasarkan kategori kendala. Kendala yang butuh keahlian divisi lain
+   *   (INFRA, FINANCE, LEGAL) diarahkan ke pimpinan divisi terkait; selain itu ke Atasan Langsung.
+   */
+  async resolveSuggestedOwner(
+    userId: string,
+    input: { type?: string; ownerNeededType?: AuthorityContext; projectCode?: string | null },
+  ): Promise<{
+    owner: { id: string; fullName: string; jobTitle: string | null } | null;
+    reason: 'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE';
+    divisionLabel?: string;
+  }> {
+    const pick = async (id?: string | null) => {
+      if (!id) return null;
+      const u = await this.prisma.user.findFirst({
+        where: { id, status: 'ACTIVE' },
+        select: {
+          id: true,
+          fullName: true,
+          orgAssignments: { where: { endDate: null }, orderBy: { createdAt: 'desc' }, take: 1, select: { jobTitle: true } },
+        },
+      });
+      return u ? { id: u.id, fullName: u.fullName, jobTitle: u.orgAssignments?.[0]?.jobTitle || null } : null;
+    };
+
+    if (input.ownerNeededType === AuthorityContext.PROJECT_AUTHORITY && input.projectCode?.trim()) {
+      const mapping = await this.prisma.projectAuthorityMapping.findFirst({
+        where: { projectCode: input.projectCode.trim() },
+      });
+      const owner = (await pick(mapping?.projectManagerId)) || (await pick(mapping?.escalationReviewerId));
+      if (owner) return { owner, reason: 'PROJECT_LEAD' };
+    }
+
+    if (input.ownerNeededType !== AuthorityContext.PROJECT_AUTHORITY) {
+      const target = BLOCKER_TYPE_DIVISION_ROUTING[input.type || ''];
+      if (target) {
+        const candidates = await this.prisma.organizationalAssignment.findMany({
+          where: {
+            function: target.function,
+            endDate: null,
+            userId: { not: userId },
+            role: { not: 'SYSTEM_ADMIN' },
+            user: { status: 'ACTIVE' },
+          },
+          select: { userId: true, role: true },
+        });
+        const rank = ['HEAD', 'HRGA', 'SUPERVISOR'];
+        candidates.sort((a, b) => {
+          const ra = rank.indexOf(a.role);
+          const rb = rank.indexOf(b.role);
+          return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
+        });
+        const owner = await pick(candidates[0]?.userId);
+        if (owner) return { owner, reason: 'DIVISION_HEAD', divisionLabel: target.label };
+      }
+    }
+
+    const orgAssign = await this.prisma.organizationalAssignment.findFirst({
+      where: { userId, endDate: null },
+      orderBy: { createdAt: 'desc' },
+    });
+    const manager = await pick(orgAssign?.directManagerId);
+    return manager ? { owner: manager, reason: 'DIRECT_MANAGER' } : { owner: null, reason: 'NONE' };
+  }
   /**
    * Memberikan konfirmasi resmi (Acknowledgement) terhadap tiket kendala.
    */
