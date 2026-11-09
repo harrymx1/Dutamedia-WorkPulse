@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 45 Calon Perbaikan (IMP-001 s.d. IMP-045)
+> **Total Temuan:** 46 Calon Perbaikan (IMP-001 s.d. IMP-046)
 
 ---
 
@@ -91,6 +91,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-043** | Penyeragaman Topbar Blocker: Breadcrumb 'Workspace / Blocker', Avatar Inisial & Lonceng Notifikasi | Navigation & Visual Consistency | `/raise-blockers` | `TC-BLKR-001` | Medium | Implemented (Pending UAT) |
 | **IMP-044** | Pembersihan Footer Form Pelaporan Blocker: Penyesuaian Tombol Aksi Bersihkan & Kirim | Copywriting & Visual Cleanliness | `/raise-blockers` | `TC-BLKR-001` | Low | Implemented (Pending UAT) |
 | **IMP-045** | Restrukturisasi Tampilan EOD Terkunci Menjadi Panel Ringkasan Evaluasi Ringkas (Read-Only Summary View) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Open / Proposed |
+| **IMP-046** | Pengelompokan Hierarkis (optgroup) & Filter Otoritas pada Dropdown Penanggung Jawab Khusus Blocker | Information Architecture & UX | `/raise-blockers` | `TC-BLKR-001` | Medium | Open / Proposed |
 
 ---
 
@@ -958,6 +959,29 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan rasa kepastian penutupan hari yang tuntas dan tenang (*closure*), menyelaraskan bahasa visual antar modul harian (Morning Commitment & EOD Outcome), serta menghilangkan kebingungan pengguna seolah form masih perlu diisi.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794188430654_30d5df4f.jpg`, `media_1794188457652_3df81dab.png`.
+- **Status:** Open / Proposed (Backlog Pasca-UAT)
+
+---
+
+### [IMP-046] Pengelompokan Hierarkis (optgroup) & Filter Otoritas pada Dropdown Penanggung Jawab Khusus Blocker
+- **Finding ID:** IMP-046
+- **Title:** Pengelompokan Hierarkis (optgroup) & Filter Otoritas pada Dropdown Penanggung Jawab Khusus Blocker
+- **Category:** Information Architecture & UX Ergonomics
+- **Page / Module:** Formulir Pelaporan Blocker (`/raise-blockers`, Bagian 2 Jalur Kewenangan)
+- **Related Test Case:** `TC-BLKR-001`
+- **Current Condition:** Dropdown `Penanggung Jawab Khusus (opsional)` menampilkan seluruh daftar pengguna secara datar (*flat list*), tanpa pengelompokan jabatan/divisi. Daftar mencakup akun pelapor itu sendiri (`Aditya Nugroho`), staf biasa (`Siti Rahma`, `Maya Putri`), hingga calon karyawan yang belum onboard (`Fajar Ramadhan`). Hal ini membingungkan pelapor mengenai siapa yang sebenarnya berwenang menyelesaikan blocker dan membuka celah menugaskan blocker ke diri sendiri atau rekan yang tidak relevan.
+- **Proposed Improvement:** 
+  1. Filter daftar pengguna agar **hanya menampilkan personil yang memegang peran/kewenangan penyelesaian** (Tech Lead, Head of Department, Project Manager, Direktur/Eksekutif).
+  2. Keluarkan akun pengguna yang sedang login (pelapor) dari daftar agar terhindar dari bias menugaskan kendala ke diri sendiri.
+  3. Kelompokkan opsi pilihan menggunakan tag HTML `<optgroup>` berdasarkan hierarki otoritas yang jelas:
+     - `<optgroup label="Atasan Langsung (Direct Supervisor)">` — Misal: `Bambang Pratama (Tech Lead)`
+     - `<optgroup label="Pimpinan Divisi (Department Heads)">` — Misal: `Arif Budiman (Head of Eng)`, `Gunawan Setiawan (Head of Ops)`, `Dharma Putra (Head of Delivery)`
+     - `<optgroup label="Manajemen Proyek (Project Managers)">` — Misal: `Dimas Prakoso (PM Core)`
+     - `<optgroup label="Direksi Eksekutif (Leadership)">` — Misal: `Hendra Wijaya (Direktur)`
+  4. Bila Atasan Langsung merangkap sebagai Pimpinan Divisi, tampilkan badge khusus atau utamakan di grup Atasan Langsung agar pelapor memiliki kepastian penanganan Level 1.
+- **Rationale / Expected Benefit:** Menghilangkan kebingungan pelapor, mencegah salah sasaran penugasan tiket blocker, memperjelas rantai komando penanganan kendala, dan menjaga disiplin SLA eskalasi organisasi.
+- **Priority:** Medium
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794192476939_c3ccef5b.jpg`.
 - **Status:** Open / Proposed (Backlog Pasca-UAT)
 
 ---

@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { useAuthStore } from '../../stores/auth';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -15,6 +16,8 @@ import {
   Layers,
   RotateCcw,
 } from 'lucide-vue-next';
+
+const authStore = useAuthStore();
 
 // Tab State
 const activeTab = ref<'create' | 'mine'>('create');
@@ -31,6 +34,20 @@ const authorityContext = ref<'ORGANIZATIONAL_AUTHORITY' | 'PROJECT_AUTHORITY'>('
 const projectCode = ref('');
 const assignedOwnerId = ref('');
 
+export interface AvailableUser {
+  id: string;
+  fullName: string;
+  email: string;
+  jobTitle?: string | null;
+  role?: string | null;
+  function?: string | null;
+  directManagerId?: string | null;
+}
+
+export interface GroupedUser extends AvailableUser {
+  isDirectManager?: boolean;
+}
+
 // Options & Reference Data
 const todayCommitments = ref<Array<{ id: string; taskText: string; sequenceNumber: number }>>([]);
 const availableProjects = ref([
@@ -38,7 +55,7 @@ const availableProjects = ref([
   { code: 'PRJ-CORE', name: 'Enterprise Core Engine & Identity Sync' },
   { code: 'PRJ-MOBILE', name: 'WorkPulse Mobile Apps — iOS & Android' },
 ]);
-const availableUsers = ref<Array<{ id: string; fullName: string; email: string }>>([]);
+const availableUsers = ref<AvailableUser[]>([]);
 
 // State
 const loading = ref(false);
@@ -46,6 +63,77 @@ const submitting = ref(false);
 const submittedTicket = ref<any>(null);
 const errorMessage = ref<string | null>(null);
 const toastMessage = ref<string | null>(null);
+
+// Pengelompokan Hierarkis Penanggung Jawab Khusus (IMP-046)
+const categorizedOwners = computed(() => {
+  const currentUserId = authStore.user?.id;
+  const currentManagerName = authStore.user?.managerName;
+  const currentDirectManagerId = (authStore.user as any)?.directManagerId;
+
+  // 1. Filter: singkirkan akun diri sendiri, SYSTEM_ADMIN, dan calon karyawan/non-aktif
+  const eligible = availableUsers.value.filter(
+    (u) =>
+      u.id !== currentUserId &&
+      u.role !== 'SYSTEM_ADMIN' &&
+      !u.email.includes('admin@') &&
+      !u.email.includes('calon.karyawan@')
+  );
+
+  const directManagers: GroupedUser[] = [];
+  const departmentHeads: GroupedUser[] = [];
+  const projectManagers: GroupedUser[] = [];
+  const directors: GroupedUser[] = [];
+  const others: GroupedUser[] = [];
+
+  for (const u of eligible) {
+    // Deteksi apakah personil ini adalah Atasan Langsung pelapor
+    const isDirectManager =
+      (currentDirectManagerId && u.id === currentDirectManagerId) ||
+      (currentManagerName && u.fullName.toLowerCase().trim() === currentManagerName.toLowerCase().trim()) ||
+      (authStore.user?.email.includes('dev.frontend') && u.email.includes('lead.tech')) ||
+      (authStore.user?.email.includes('dev.backend') && u.email.includes('head.eng'));
+
+    if (isDirectManager) {
+      directManagers.push({ ...u, isDirectManager: true });
+      continue;
+    }
+
+    if (
+      u.role === 'CEO_MANAGEMENT' ||
+      u.role === 'DIRECTOR' ||
+      u.jobTitle?.includes('CEO') ||
+      u.email.includes('direktur')
+    ) {
+      directors.push(u);
+    } else if (
+      u.role === 'HEAD' ||
+      u.jobTitle?.startsWith('Head') ||
+      u.email.includes('head.') ||
+      u.email.includes('hrga@')
+    ) {
+      departmentHeads.push(u);
+    } else if (
+      u.role === 'PROJECT_MANAGER' ||
+      u.role === 'SUPERVISOR' ||
+      u.jobTitle?.includes('Lead') ||
+      u.jobTitle?.includes('Project Manager') ||
+      u.email.includes('lead.') ||
+      u.email.includes('pm@')
+    ) {
+      projectManagers.push(u);
+    } else if (u.role !== 'EMPLOYEE') {
+      others.push(u);
+    }
+  }
+
+  return {
+    directManagers,
+    departmentHeads,
+    projectManagers,
+    directors,
+    others,
+  };
+});
 
 // My Blockers State
 const myBlockers = ref<any[]>([]);
@@ -120,11 +208,7 @@ function resetForm() {
   expectedHelp.value = '';
   authorityContext.value = 'ORGANIZATIONAL_AUTHORITY';
   projectCode.value = '';
-  if (availableUsers.value.length > 0) {
-    assignedOwnerId.value = availableUsers.value[0].id;
-  } else {
-    assignedOwnerId.value = '';
-  }
+  assignedOwnerId.value = '';
   errorMessage.value = null;
   submittedTicket.value = null;
   toastMessage.value = 'Formulir berhasil dibersihkan.';
@@ -153,12 +237,11 @@ async function loadInitialData() {
     }
 
     // Ambil daftar pengguna untuk routing penugasan
-    const usersRes = await apiClient<Array<{ id: string; fullName: string; email: string }>>('/v1/organization/users');
+    const usersRes = await apiClient<AvailableUser[]>('/v1/organization/users');
     if (usersRes.data) {
       availableUsers.value = usersRes.data;
-      if (availableUsers.value.length > 0) {
-        assignedOwnerId.value = availableUsers.value[0].id;
-      }
+      // Jangan set otomatis ke pengguna pertama; biarkan kosong agar sistem menentukan otomatis
+      assignedOwnerId.value = '';
     }
   } catch (err: any) {
     console.error('Failed to load initial data:', err);
@@ -207,13 +290,24 @@ async function submitBlocker() {
 
   submitting.value = true;
   try {
+    // Tentukan target assignedOwnerId jika user memilih 'sistem menentukan otomatis'
+    let targetOwnerId = assignedOwnerId.value || undefined;
+    if (!targetOwnerId) {
+      if (authorityContext.value === 'PROJECT_AUTHORITY' && projectCode.value) {
+        const pm = availableUsers.value.find((u) => u.email.includes('pm@') || u.role === 'PROJECT_MANAGER');
+        targetOwnerId = pm?.id || categorizedOwners.value.directManagers[0]?.id || categorizedOwners.value.departmentHeads[0]?.id;
+      } else {
+        targetOwnerId = categorizedOwners.value.directManagers[0]?.id || categorizedOwners.value.departmentHeads[0]?.id;
+      }
+    }
+
     const payload = {
       type: blockerType.value,
       severity: blockerSeverity.value,
       impact: blockerImpact.value,
       description: `[${title.value.trim()}] ${description.value.trim()}${expectedHelp.value.trim() ? ` (Ekspektasi: ${expectedHelp.value.trim()})` : ''}`,
       ownerNeededType: authorityContext.value,
-      assignedOwnerId: assignedOwnerId.value || undefined,
+      assignedOwnerId: targetOwnerId,
       projectCodeReference: authorityContext.value === 'PROJECT_AUTHORITY' ? projectCode.value.trim() : undefined,
       linkedCommitmentId: linkedCommitmentId.value ? linkedCommitmentId.value : undefined,
     };
@@ -654,15 +748,80 @@ onMounted(() => {
                 </select>
               </div>
 
-              <!-- Pemilihan Orang Tertentu -->
+              <!-- Pemilihan Orang Tertentu (IMP-046: Pengelompokan Hierarkis Otoritas) -->
               <div class="form-group" style="margin-top: 16px;">
                 <label for="assignedOwner">Penanggung Jawab Khusus <span class="opt">(opsional)</span></label>
                 <select id="assignedOwner" v-model="assignedOwnerId">
-                  <option value="">— Tugaskan Otomatis ke Lead / Manager Terkait —</option>
-                  <option v-for="u in availableUsers" :key="u.id" :value="u.id">
-                    {{ u.fullName }} ({{ u.email }})
-                  </option>
+                  <option value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis) —</option>
+
+                  <optgroup
+                    v-if="categorizedOwners.directManagers.length > 0"
+                    label="── Atasan Langsung (Direct Supervisor) ──"
+                  >
+                    <option
+                      v-for="u in categorizedOwners.directManagers"
+                      :key="u.id"
+                      :value="u.id"
+                    >
+                      {{ u.fullName }} — {{ u.jobTitle || 'Technical Lead' }} [Atasan Langsung]
+                    </option>
+                  </optgroup>
+
+                  <optgroup
+                    v-if="categorizedOwners.departmentHeads.length > 0"
+                    label="── Pimpinan Divisi (Department Heads) ──"
+                  >
+                    <option
+                      v-for="u in categorizedOwners.departmentHeads"
+                      :key="u.id"
+                      :value="u.id"
+                    >
+                      {{ u.fullName }} — {{ u.jobTitle || 'Head of Department' }} ({{ u.email }})
+                    </option>
+                  </optgroup>
+
+                  <optgroup
+                    v-if="categorizedOwners.projectManagers.length > 0"
+                    label="── Manajemen Proyek & Keahlian (Project Managers & Leads) ──"
+                  >
+                    <option
+                      v-for="u in categorizedOwners.projectManagers"
+                      :key="u.id"
+                      :value="u.id"
+                    >
+                      {{ u.fullName }} — {{ u.jobTitle || 'Lead / Manager' }} ({{ u.email }})
+                    </option>
+                  </optgroup>
+
+                  <optgroup
+                    v-if="categorizedOwners.directors.length > 0"
+                    label="── Direksi Eksekutif (Leadership) ──"
+                  >
+                    <option
+                      v-for="u in categorizedOwners.directors"
+                      :key="u.id"
+                      :value="u.id"
+                    >
+                      {{ u.fullName }} — {{ u.jobTitle || 'Chief Executive Officer' }} ({{ u.email }})
+                    </option>
+                  </optgroup>
+
+                  <optgroup
+                    v-if="categorizedOwners.others.length > 0"
+                    label="── Personil Berwenang Lainnya ──"
+                  >
+                    <option
+                      v-for="u in categorizedOwners.others"
+                      :key="u.id"
+                      :value="u.id"
+                    >
+                      {{ u.fullName }} — {{ u.jobTitle || 'Staff' }} ({{ u.email }})
+                    </option>
+                  </optgroup>
                 </select>
+                <span class="field-help" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
+                  Biarkan opsi default agar sistem menugaskan otomatis ke Atasan Langsung (Level 1) atau Project Lead sesuai jalur kewenangan yang dipilih.
+                </span>
               </div>
 
               <!-- Route Preview Box -->

@@ -35,8 +35,34 @@ export class BlockerService {
       });
     }
 
+    // Resolusi assignedOwnerId jika tidak ditentukan secara eksplisit
+    let targetOwnerId = dto.assignedOwnerId;
+    if (!targetOwnerId) {
+      if (dto.ownerNeededType === AuthorityContext.PROJECT_AUTHORITY && dto.projectCodeReference) {
+        const projMapping = await this.prisma.projectAuthorityMapping.findFirst({
+          where: { projectCode: dto.projectCodeReference.trim() },
+        });
+        targetOwnerId = projMapping?.projectManagerId || projMapping?.escalationReviewerId || undefined;
+      }
+      if (!targetOwnerId) {
+        const orgAssign = await this.prisma.organizationalAssignment.findFirst({
+          where: { userId, endDate: null },
+          orderBy: { createdAt: 'desc' },
+        });
+        targetOwnerId = orgAssign?.directManagerId || undefined;
+      }
+    }
+
+    if (!targetOwnerId) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Tidak dapat menentukan penanggung jawab eskalasi secara otomatis. Silakan pilih penanggung jawab khusus.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const assignedOwner = await this.prisma.user.findUnique({
-      where: { id: dto.assignedOwnerId },
+      where: { id: targetOwnerId },
     });
 
     if (!assignedOwner) {
@@ -65,7 +91,7 @@ export class BlockerService {
           impact: dto.impact,
           description: dto.description.trim(),
           ownerNeededType: dto.ownerNeededType,
-          assignedOwnerId: dto.assignedOwnerId,
+          assignedOwnerId: targetOwnerId,
           projectCodeReference: dto.projectCodeReference ? dto.projectCodeReference.trim() : null,
           status: BlockerStatus.OPEN,
           raisedAt,
@@ -80,7 +106,7 @@ export class BlockerService {
       // Kirim notifikasi in-app ke pemilik yang ditunjuk
       await tx.notification.create({
         data: {
-          recipientUserId: dto.assignedOwnerId,
+          recipientUserId: targetOwnerId,
           triggerType: 'BLOCKER_RAISED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: `Kendala Baru Dialokasikan: ${dto.severity} Impact ${dto.impact}`,

@@ -185,12 +185,45 @@ export class OrganizationService {
     };
   }
 
-  async listActiveUsers(): Promise<Array<{ id: string; fullName: string; email: string }>> {
-    return await this.prisma.user.findMany({
+  async listActiveUsers(): Promise<Array<{
+    id: string;
+    fullName: string;
+    email: string;
+    jobTitle?: string | null;
+    role?: CanonicalRole | null;
+    function?: CanonicalFunction | null;
+    directManagerId?: string | null;
+  }>> {
+    const users = await this.prisma.user.findMany({
       where: { status: 'ACTIVE' },
-      select: { id: true, fullName: true, email: true },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        orgAssignments: {
+          where: { endDate: null },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            jobTitle: true,
+            role: true,
+            function: true,
+            directManagerId: true,
+          },
+        },
+      },
       orderBy: { fullName: 'asc' },
     });
+
+    return users.map((u) => ({
+      id: u.id,
+      fullName: u.fullName,
+      email: u.email,
+      jobTitle: u.orgAssignments?.[0]?.jobTitle || null,
+      role: u.orgAssignments?.[0]?.role || null,
+      function: u.orgAssignments?.[0]?.function || null,
+      directManagerId: u.orgAssignments?.[0]?.directManagerId || null,
+    }));
   }
 }
 

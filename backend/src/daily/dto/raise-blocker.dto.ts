@@ -29,8 +29,9 @@ export class RaiseBlockerDto {
   @IsEnum(AuthorityContext, { message: 'Konteks kewenangan pemilik tidak valid' })
   ownerNeededType!: AuthorityContext;
 
+  @IsOptional()
   @IsUUID('4', { message: 'ID pemilik eskalasi tidak valid' })
-  assignedOwnerId!: string;
+  assignedOwnerId?: string;
 
   @IsOptional()
   @IsString()
