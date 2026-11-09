@@ -294,7 +294,8 @@ onMounted(() => {
                 <th scope="col">Karyawan</th>
                 <th scope="col">Tanggal &amp; Durasi</th>
                 <th scope="col">Alasan &amp; Jejak Waktu</th>
-                <th scope="col">Status &amp; Keputusan</th>
+                <th scope="col">Status</th>
+                <th scope="col" style="text-align: right;">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -325,34 +326,35 @@ onMounted(() => {
                     Catatan: {{ item.reviewNotes }}
                   </div>
                 </td>
-                <td>
-                  <div v-if="item.status === 'PENDING'" class="actions-line">
-                    <span class="pill yellow" style="margin-bottom: 6px; align-self: flex-start;">Menunggu Review</span>
-                    <div style="display: flex; gap: 8px;">
-                      <button
-                        type="button"
-                        class="btn-action approve"
-                        @click="openReviewModal(item, 'APPROVED')"
-                      >
-                        <Check :size="14" />
-                        <span>Setujui</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn-action reject"
-                        @click="openReviewModal(item, 'REJECTED')"
-                      >
-                        <X :size="14" />
-                        <span>Tolak</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="status-badge-wrap">
-                    <span v-if="item.status === 'APPROVED'" class="pill green">Disetujui</span>
+                <td class="col-status">
+                  <div class="status-badge-wrap">
+                    <span v-if="item.status === 'PENDING'" class="pill yellow">Menunggu Review</span>
+                    <span v-else-if="item.status === 'APPROVED'" class="pill green">Disetujui</span>
                     <span v-else-if="item.status === 'REJECTED'" class="pill red">Ditolak</span>
                     <span v-else class="pill neutral">{{ item.status }}</span>
                     <span v-if="item.reconciled" class="pill neutral">Rekonsiliasi Sah</span>
                   </div>
+                </td>
+                <td class="col-actions" style="text-align: right; vertical-align: middle;">
+                  <div v-if="item.status === 'PENDING'" class="actions-line" style="justify-content: flex-end;">
+                    <button
+                      type="button"
+                      class="btn-action approve"
+                      @click="openReviewModal(item, 'APPROVED')"
+                    >
+                      <Check :size="14" />
+                      <span>Setujui</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action reject"
+                      @click="openReviewModal(item, 'REJECTED')"
+                    >
+                      <X :size="14" />
+                      <span>Tolak</span>
+                    </button>
+                  </div>
+                  <span v-else class="no-action-text">-</span>
                 </td>
               </tr>
             </tbody>
@@ -775,11 +777,26 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 11.5px;
   font-weight: 700;
   border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.col-status {
+  vertical-align: middle;
+}
+
+.col-actions {
+  vertical-align: middle;
+}
+
+.no-action-text {
+  color: var(--color-text-secondary, #94A3B8);
+  font-size: 13px;
+  padding-right: 12px;
 }
 
 .pill.green {

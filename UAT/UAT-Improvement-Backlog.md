@@ -1071,4 +1071,22 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend & Backend Hotfixed)
 
 ---
+
+### [IMP-051] Pemisahan Kolom Status dan Aksi pada Tabel Antrean Persetujuan Cuti (Leave Approval Queue)
+- **Finding ID:** IMP-051
+- **Title:** Pemisahan Kolom Status dan Aksi pada Tabel Antrean Persetujuan Cuti (Leave Approval Queue)
+- **Category:** UI / Visual Layout & Enterprise Table Standards
+- **Page / Module:** Persetujuan Cuti (`/leave/queue`)
+- **Related Test Case:** `TC-LEAV-002`
+- **Current Condition:** Kolom terakhir menggabungkan "STATUS & KEPUTUSAN" dalam satu cell horizontal sempit, menyebabkan badge status "Menunggu Review" terhimpit secara canggung di sebelah tombol Setujui dan teks badge terpotong/membungkus menjadi dua baris ("Menunggu \n Review").
+- **Proposed Improvement:** 
+  1. Pisahkan menjadi dua kolom terpisah berstandar enterprise: kolom "Status" dan kolom "Aksi" (sejajar dengan tabel `CorrectionReviewView` dan `MyLeaveRequestView`).
+  2. Tambahkan properti `white-space: nowrap;` dan padding proporsional pada kelas `.pill` agar teks badge selalu utuh dalam satu baris.
+  3. Posisikan tombol aksi `[✓ Setujui] [✕ Tolak]` secara rapi di kolom "Aksi" dengan perataan kanan (*right-aligned*).
+- **Rationale / Expected Benefit:** Memberikan kejelasan visual status pengajuan cuti secara instan tanpa penumpukan elemen antarmuka yang membingungkan atasan.
+- **Priority:** Medium
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794212912865_003adcb8.png`.
+- **Status:** Resolved / Implemented (Frontend Hotfixed)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*
