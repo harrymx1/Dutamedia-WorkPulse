@@ -92,9 +92,9 @@ async function loadBlockers() {
       if (blockers.value.length > 0 && !selectedTicket.value) {
         selectedTicket.value = blockers.value[0];
       } else if (selectedTicket.value) {
-        // Refresh selected ticket in place
+        // Refresh selected ticket in place atau sinkronkan ke tiket pertama jika tiket terpilih kena filter
         const updated = blockers.value.find((b) => b.id === selectedTicket.value?.id);
-        if (updated) selectedTicket.value = updated;
+        selectedTicket.value = updated || blockers.value[0] || null;
       }
     }
   } catch (err: any) {

@@ -377,35 +377,91 @@ export class DashboardService {
    * Mengambil pemantauan risiko portofolio proyek (Prototipe 13).
    */
   async getProjectRiskOverview() {
-    const projects = [
-      { code: 'PRJ-PORTAL', name: 'Website Customer Portal & Client Billing' },
-      { code: 'PRJ-CORE', name: 'Enterprise Core Engine & Identity Sync' },
-      { code: 'PRJ-MOBILE', name: 'WorkPulse Mobile Apps — iOS & Android' },
-    ];
+    // 1. Ambil seluruh project authority mappings aktif dari DB
+    const mappings = await this.prisma.projectAuthorityMapping.findMany({
+      where: { endDate: null },
+      include: {
+        projectManager: { select: { id: true, fullName: true, email: true } },
+        escalationReviewer: { select: { id: true, fullName: true, email: true } },
+      },
+      orderBy: { projectCode: 'asc' },
+    });
 
+    // 2. Ambil seluruh open blockers
     const allOpenBlockers = await this.prisma.blockerTicket.findMany({
       where: {
         status: { in: [BlockerStatus.OPEN, BlockerStatus.ACKNOWLEDGED, BlockerStatus.IN_PROGRESS] },
       },
+      include: {
+        assignedOwner: { select: { id: true, fullName: true } },
+      },
     });
 
-    return projects.map((prj) => {
-      const prjBlockers = allOpenBlockers.filter((b) => b.projectCodeReference === prj.code);
+    // 3. Ambil komitmen aktif hari ini
+    const today = this.clockService?.now ? this.clockService.now() : (this.clockService?.currentDate ? this.clockService.currentDate() : new Date());
+    today.setHours(0, 0, 0, 0);
+    const todayRecords = await this.prisma.dailyAccountabilityRecord.findMany({
+      where: { workDate: today },
+      include: { commitments: true },
+    });
+
+    return mappings.map((prj) => {
+      // Hitung komitmen aktif pada proyek ini
+      let activeCommitmentsCount = 0;
+      for (const r of todayRecords) {
+        const snap = (r.orgContextSnapshot as any) || {};
+        const cMeta = snap.commitmentMeta || {};
+        for (const c of r.commitments || []) {
+          const pCode = cMeta[String(c.sequenceNo)]?.projectCode || null;
+          if (pCode && pCode.toUpperCase() === prj.projectCode.toUpperCase()) {
+            activeCommitmentsCount++;
+          }
+        }
+      }
+
+      // Hitung blocker terbuka untuk proyek ini
+      const prjBlockers = allOpenBlockers.filter(
+        (b) => b.projectCodeReference && b.projectCodeReference.toUpperCase() === prj.projectCode.toUpperCase(),
+      );
       const criticalCount = prjBlockers.filter((b) => b.severity === BlockerSeverity.CRITICAL).length;
       const highCount = prjBlockers.filter((b) => b.severity === BlockerSeverity.HIGH).length;
 
-      let riskLevel = 'LOW';
+      let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
       if (criticalCount > 0) riskLevel = 'CRITICAL';
       else if (highCount > 0 || prjBlockers.length >= 3) riskLevel = 'HIGH';
       else if (prjBlockers.length > 0) riskLevel = 'MEDIUM';
 
+      // Health Score: 100 base, dikurangi penalti blocker (CRITICAL -40, HIGH -25, MEDIUM -15, LOW -5)
+      let penalty = 0;
+      for (const b of prjBlockers) {
+        if (b.severity === BlockerSeverity.CRITICAL) penalty += 40;
+        else if (b.severity === BlockerSeverity.HIGH) penalty += 25;
+        else if (b.severity === BlockerSeverity.MEDIUM) penalty += 15;
+        else penalty += 5;
+      }
+      const healthScore = Math.max(0, 100 - penalty);
+
+      const topBlocker = [...prjBlockers].sort((a, b) => {
+        const ranks = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        return ranks[b.severity] - ranks[a.severity];
+      })[0];
+
       return {
-        projectCode: prj.code,
-        projectName: prj.name,
+        id: prj.id,
+        code: prj.projectCode,
+        projectCode: prj.projectCode,
+        name: prj.projectName,
+        projectName: prj.projectName,
+        clientName: prj.involvedFunction,
+        leadName: prj.projectManager?.fullName || 'Project Lead',
+        activeCommitmentsCount,
+        openBlockersCount: prjBlockers.length,
         totalBlockers: prjBlockers.length,
         criticalCount,
         highCount,
         riskLevel,
+        healthScore,
+        topBlockerTitle: topBlocker ? `[${topBlocker.severity}] ${(topBlocker.description || '').slice(0, 80)}` : undefined,
       };
     });
   }

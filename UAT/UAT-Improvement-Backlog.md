@@ -1008,4 +1008,24 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend Synced)
 
 ---
+
+### [IMP-048] Sinkronisasi Skema Respon API Risiko Proyek & Integrasi Proyek WP-CORE pada Project Risk Radar
+- **Finding ID:** IMP-048
+- **Title:** Sinkronisasi Skema Respon API Risiko Proyek & Integrasi Proyek WP-CORE pada Project Risk Radar
+- **Category:** Backend API & Frontend Data Contract
+- **Page / Module:** Radar Risiko Proyek (`/projects/risk`) & Antrean Blocker (`/blockers`)
+- **Related Test Case:** `TC-BLKR-005`, `TC-PM-001`
+- **Current Condition:** 
+  1. Halaman `/projects/risk` merender data kosong (hanya simbol `#`, nama lead kosong, nilai komitmen dan blocker hanya string statis `"tugas harian"` dan `"kendala"`, serta risiko hanya `"LOW (%)"`) karena nama properti dari endpoint backend `/dashboard/projects` (`projectCode`, `projectName`, `totalBlockers`) tidak sinkron dengan properti yang diharapkan antarmuka frontend (`code`, `name`, `openBlockersCount`, `healthScore`, `leadName`, `activeCommitmentsCount`).
+  2. Proyek `WP-CORE` (WorkPulse Platform Core 2026) tidak terdaftar pada daftar proyek backend padahal menjadi proyek inti yang memiliki komitmen dan kendala aktif.
+  3. Pada halaman `/blockers`, saat memfilter `Kepemilikan: Ditugaskan ke Saya`, panel detail sebelah kanan tidak otomatis berganti ke tiket pertama hasil filter dan tetap menampilkan tiket sebelumnya yang bukan hak milik pengguna.
+- **Proposed Improvement:** 
+  1. Perbarui service backend `getProjectRiskOverview()` agar mengambil daftar proyek langsung dari database `projectAuthorityMapping` (mencakup `WP-CORE`, `PRJ-CORE`, `PRJ-PORTAL`, `PRJ-MOBILE`), menghitung komitmen aktif hari ini, menghitung blocker terbuka, kalkulasi health score (0-100), dan mengembalikan properti ganda yang kompatibel penuh.
+  2. Perbaiki fungsi `loadBlockers()` pada `BlockerQueueView.vue` agar saat filter kepemilikan berubah, panel detail otomatis berpindah ke tiket pertama hasil filter (`selectedTicket = updated || blockers[0] || null`).
+- **Rationale / Expected Benefit:** Menyajikan radar risiko proyek yang hidup, akurat, dan mencerminkan kondisi riil lapangan tanpa kegagalan pemetaan data.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794200423951_6ccdc24b.jpg`, `media_1794200447730_964c3a77.png`.
+- **Status:** Resolved / Implemented (Frontend & Backend Synced)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

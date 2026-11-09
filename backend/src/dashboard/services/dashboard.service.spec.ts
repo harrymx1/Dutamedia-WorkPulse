@@ -23,9 +23,13 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
       blockerTicket: {
         findMany: vi.fn(),
       },
+      projectAuthorityMapping: {
+        findMany: vi.fn(),
+      },
     };
 
     mockClock = {
+      now: vi.fn(() => new Date('2026-10-28T00:00:00.000Z')),
       currentDate: vi.fn(() => new Date('2026-10-28T00:00:00.000Z')),
     };
 
@@ -71,6 +75,12 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
   });
 
   it('maps project risk level based on linked critical and open blockers', async () => {
+    mockPrisma.projectAuthorityMapping.findMany.mockResolvedValue([
+      { id: '1', projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing', involvedFunction: 'Delivery', projectManager: { fullName: 'Dimas Prakoso' } },
+      { id: '2', projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync', involvedFunction: 'Engineering', projectManager: { fullName: 'Bambang Pratama' } },
+      { id: '3', projectCode: 'PRJ-MOBILE', projectName: 'WorkPulse Mobile Apps — iOS & Android', involvedFunction: 'Delivery', projectManager: { fullName: 'Dimas Prakoso' } },
+    ]);
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
     mockPrisma.blockerTicket.findMany.mockResolvedValue([
       { projectCodeReference: 'PRJ-PORTAL', severity: BlockerSeverity.CRITICAL, status: BlockerStatus.OPEN },
       { projectCodeReference: 'PRJ-CORE', severity: BlockerSeverity.LOW, status: BlockerStatus.OPEN },
