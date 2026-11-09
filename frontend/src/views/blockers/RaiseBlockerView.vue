@@ -231,6 +231,31 @@ const eligibleOwners = computed(() => {
   };
 });
 
+// Rekan / pihak lain di luar jalur kewenangan: pelapor bebas menunjuk orang yang dinilai tepat
+const otherOwners = computed(() => {
+  const currentUserId = authStore.user?.id;
+  const e = eligibleOwners.value;
+  const shown = new Set(
+    [
+      ...e.directManagers,
+      ...e.departmentHeads,
+      ...e.directors,
+      ...e.projectLeads,
+      ...e.projectSponsors,
+    ].map((u) => u.id)
+  );
+  return availableUsers.value
+    .filter(
+      (u) =>
+        u.id !== currentUserId &&
+        u.role !== 'SYSTEM_ADMIN' &&
+        !u.email.includes('admin@') &&
+        !u.email.includes('calon.karyawan@') &&
+        !shown.has(u.id)
+    )
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+});
+
 const selectedOwnerDetails = computed(() => {
   if (!assignedOwnerId.value) return null;
   return availableUsers.value.find((u) => u.id === assignedOwnerId.value) || null;
@@ -956,6 +981,16 @@ onMounted(() => {
                       </option>
                     </optgroup>
                   </template>
+
+                  <!-- 3. REKAN / PIHAK LAIN: pilihan bebas pelapor di luar jalur kewenangan -->
+                  <optgroup
+                    v-if="otherOwners.length > 0 && !(authorityContext === 'PROJECT_AUTHORITY' && !projectCode)"
+                    label="── Rekan / Pihak Lain (Pilihan Pelapor) ──"
+                  >
+                    <option v-for="u in otherOwners" :key="u.id" :value="u.id">
+                      {{ u.fullName }} — {{ u.jobTitle || 'Staf' }}
+                    </option>
+                  </optgroup>
                 </select>
                 <span class="field-help" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
                   {{
