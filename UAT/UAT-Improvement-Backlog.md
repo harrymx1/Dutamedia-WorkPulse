@@ -989,4 +989,23 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
+
+### [IMP-047] Penyempurnaan Tata Letak (Layout) & Penambahan Live Character Counter pada Modal Dialog Resolusi Blocker
+- **Finding ID:** IMP-047
+- **Title:** Penyempurnaan Tata Letak (Layout) & Penambahan Live Character Counter pada Modal Dialog Resolusi Blocker
+- **Category:** UI Polish & Form Usability
+- **Page / Module:** Antrean Eskalasi Blocker (`/blockers`, Modal Resolve & Modal Support)
+- **Related Test Case:** `TC-BLKR-003`
+- **Current Condition:** Pada modal dialog "Selesaikan Kendala (Resolve Blocker)", elemen label berada di sebelah kiri dan textarea berukuran kerdil terhimpit di sebelah kanan secara horizontal akibat absennya styling `.form-group`. Tidak ada penghitung karakter minimum (min. 10 karakter) sehingga pengguna tidak tahu berapa karakter yang telah diketik sebelum menekan tombol submit. Tombol close modal juga menggunakan karakter simbol `✕` yang rentan mojibake.
+- **Proposed Improvement:** 
+  1. Tata ulang `.form-group` dengan flex vertikal (label di atas, field di bawah full-width 100%).
+  2. Berikan styling textarea proporsional dengan min-height, border halus, focus ring hijau brand, dan resize vertikal.
+  3. Tambahkan indikator live character counter `{{ length }} / 10 karakter min` yang berubah warna hijau saat batas minimum 10 karakter terpenuhi.
+  4. Ganti tombol close dengan ikon SVG Lucide `<X :size="18" />` yang bersih.
+- **Rationale / Expected Benefit:** Menghadirkan antarmuka modal resolusi yang ergonomis, rapi, dan memberikan umpan balik langsung kepada pengambil tindakan mengenai pemenuhan batas validasi 10 karakter solusi.
+- **Priority:** Medium
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794199512854_682bd861.png`.
+- **Status:** Resolved / Implemented (Frontend Synced)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

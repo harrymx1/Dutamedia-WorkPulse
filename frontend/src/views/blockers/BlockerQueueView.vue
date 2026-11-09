@@ -15,6 +15,7 @@ import {
   CheckSquare,
   ShieldAlert,
   ChevronRight,
+  X,
 } from 'lucide-vue-next';
 
 interface BlockerTicketItem {
@@ -522,23 +523,27 @@ onMounted(() => {
       <div class="modal-card">
         <div class="modal-head">
           <h3>Salurkan Kontribusi Bantuan (Peer Support)</h3>
-          <button type="button" class="btn-close" @click="isSupportModalOpen = false">✕</button>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isSupportModalOpen = false">
+            <X :size="18" />
+          </button>
         </div>
         <div class="modal-body">
           <p class="modal-hint">
             Catat bantuan konkret yang telah Anda berikan untuk mengurai kendala rekan kerja.
           </p>
           <div class="form-group">
-            <label>Aksi Bantuan yang Diberikan <span class="req">*</span></label>
+            <label for="supportAction">Aksi Bantuan yang Diberikan <span class="req">*</span></label>
             <input
+              id="supportAction"
               v-model="supportAction"
               type="text"
               placeholder="Contoh: Mengirimkan kredensial staging baru via secret manager..."
             />
           </div>
           <div class="form-group">
-            <label>Hasil / Progres yang Dicapai <span class="req">*</span></label>
+            <label for="supportResult">Hasil / Progres yang Dicapai <span class="req">*</span></label>
             <textarea
+              id="supportResult"
               v-model="supportResult"
               rows="3"
               placeholder="Contoh: Koneksi API sandbox telah terverifikasi normal kembali..."
@@ -564,15 +569,23 @@ onMounted(() => {
       <div class="modal-card">
         <div class="modal-head">
           <h3>Selesaikan Kendala (Resolve Blocker)</h3>
-          <button type="button" class="btn-close" @click="isResolveModalOpen = false">✕</button>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isResolveModalOpen = false">
+            <X :size="18" />
+          </button>
         </div>
         <div class="modal-body">
           <p class="modal-hint">
             Catat fakta solusi yang diterapkan agar menjadi referensi pengetahuan bagi tim.
           </p>
           <div class="form-group">
-            <label>Catatan Resolusi / Tindakan Perbaikan <span class="req">*</span></label>
+            <div class="label-row">
+              <label for="resolutionNote">Catatan Resolusi / Tindakan Perbaikan <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: resolutionNote.trim().length >= 10 }">
+                {{ resolutionNote.trim().length }} / 10 karakter min
+              </span>
+            </div>
             <textarea
+              id="resolutionNote"
               v-model="resolutionNote"
               rows="4"
               minlength="10"
@@ -1175,6 +1188,67 @@ h1 {
 
 .modal-body {
   padding: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+.req {
+  color: #DC2626;
+}
+
+.char-count {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.char-count.ok {
+  color: #00674D;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #0F172A;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #00674D;
+  box-shadow: 0 0 0 3px rgba(0, 103, 77, 0.12);
 }
 
 .modal-hint {
