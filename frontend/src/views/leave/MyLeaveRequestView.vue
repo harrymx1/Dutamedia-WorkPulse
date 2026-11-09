@@ -849,15 +849,13 @@ h1 {
 .col-action {
   width: 12%;
   min-width: 110px;
-  text-align: right;
-  padding-right: 20px !important;
+  text-align: center !important;
   white-space: nowrap;
 }
 
 .col-action-cell {
-  text-align: right;
+  text-align: center !important;
   vertical-align: middle !important;
-  padding-right: 20px !important;
   min-width: 110px;
 }
 
@@ -1023,6 +1021,9 @@ h1 {
 }
 
 .btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 5px 12px;
   background: #FFF1F2;
   border: 1px solid #FECDD3;
@@ -1048,7 +1049,6 @@ h1 {
   display: inline-block;
   color: var(--color-text-secondary, #94A3B8);
   font-size: 14px;
-  padding-right: 12px;
 }
 
 @keyframes spin {

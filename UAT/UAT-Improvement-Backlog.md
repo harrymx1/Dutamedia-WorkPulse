@@ -1144,7 +1144,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** 
   1. Tetapkan alokasi lebar proporsional pada header dan cell: `.col-action` (`width: 12%; min-width: 110px;`) dan padding kanan 20px yang konsisten.
   2. Alokasikan lebar kolom tanggal (`18%`), alasan (`44%`), dan status (`26%`) agar tabel stabil dan tidak mengalami *layout jump* antara kondisi beraksi maupun tanpa aksi.
-  3. Berikan styling `.no-action-text` dengan warna muted dan padding terpusat yang seimbang.
+  3. Terapkan perataan tengah presisi horizontal dan vertikal (`text-align: center !important; vertical-align: middle !important;`) baik untuk header th "Aksi", tombol ".btn-cancel", maupun tanda strip netral ".no-action-text".
 - **Rationale / Expected Benefit:** Memberikan estetika tabel yang kokoh, stabil, konsisten di seluruh status pengajuan, serta mencegah *horizontal scroll* yang tidak perlu pada resolusi standar.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794215736960_0ed54016.jpg`.
