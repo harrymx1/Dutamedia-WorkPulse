@@ -963,7 +963,7 @@ onBeforeUnmount(() => {
                 >
                   <!-- 1. JALUR ORGANIZATIONAL AUTHORITY (STRUKTURAL) -->
                   <template v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                    <option value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis: Atasan Langsung) —</option>
+                    <option value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis) —</option>
 
                     <optgroup
                       v-if="eligibleOwners.directManagers.length > 0"
@@ -1008,7 +1008,7 @@ onBeforeUnmount(() => {
                   <!-- 2. JALUR PROJECT AUTHORITY (KEWENANGAN PROYEK) -->
                   <template v-else>
                     <option v-if="!projectCode" value="">— Pilih Proyek Terdaftar terlebih dahulu —</option>
-                    <option v-else value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis: Project Lead) —</option>
+                    <option v-else value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis) —</option>
 
                     <optgroup
                       v-if="eligibleOwners.projectLeads.length > 0"
@@ -1048,11 +1048,7 @@ onBeforeUnmount(() => {
                   </optgroup>
                 </select>
                 <span class="field-help" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
-                  {{
-                    authorityContext === 'ORGANIZATIONAL_AUTHORITY'
-                      ? 'Biarkan opsi default agar sistem menugaskan otomatis ke Atasan Langsung (Level 1) dalam bagan organisasi.'
-                      : 'Biarkan opsi default agar sistem menugaskan otomatis ke Pimpinan Proyek yang berwenang atas proyek ini.'
-                  }}
+                  Jika dibiarkan pada opsi default, sistem secara otomatis menugaskan penanggung jawab sesuai jalur kewenangan dan pemetaan yang berlaku.
                 </span>
               </div>
 
