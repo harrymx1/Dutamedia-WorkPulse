@@ -1471,13 +1471,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Radar penuaan blocker menyajikan visibilitas eskalasi secara akurat bagi manajemen eksekutif.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot halaman Escalation Aging yang memperlihatkan kartu blocker dengan badge Breached SLA.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Halaman radar penuaan blocker (/blockers/aging) berhasil menyajikan ringkasan analitik eskalasi secara akurat: Total Kendala Tertahan (3), Terlewat SLA (2 tiket breached), Prioritas Kritis (1), dan SLA Compliance Rate (33%). Tiket terlewat SLA menampilkan badge merah 'Terlewat (262j)' dan 'Terlewat (90j)'. Tiket yang telah di-resolve pada TC-BLKR-003 otomatis bersih dari antrean aktif.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Visibilitas radar penuaan dan eskalasi blocker untuk level manajerial dan eksekutif (FR-34, DEC-007) terverifikasi akurat dan mutakhir.
 
 ---
 
@@ -1519,13 +1519,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Konteks kewenangan proyek (DEC-006) berfungsi tepat sasaran; PM memegang kendali resolusi blocker inisiatifnya.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot tampilan Blocker Queue dengan filter proyek dan halaman Project Risk Radar terkait.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Filter 'Kepemilikan: Ditugaskan ke Saya' pada antrean blocker (/blockers) menampilkan tiket berkonteks WP-CORE untuk Lead Bambang Pratama. Halaman Project Risk Radar (/projects/risk) menyajikan portofolio 4 proyek aktif secara dinamis dari database, di mana proyek WP-CORE terakumulasi dengan 1 tugas harian aktif, 2 kendala terbuka, skor kesehatan 50%, dan level risiko HIGH.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Wewenang penanganan blocker proyek (DEC-006) dan integrasi radar risiko proyek terverifikasi penuh setelah perbaikan IMP-048.
 
 ---
 
@@ -2635,13 +2635,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Project Manager berhasil mengawasi kesehatan proyek dan menyelesaikan hambatan operasional berbasis otoritas proyek secara independen.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar kartu radar risiko proyek dan tangkapan layar modal penyelesaian blocker proyek berstatus RESOLVED.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Modal dialog Rincian Risiko Proyek untuk WorkPulse Platform Core 2026 (WP-CORE) berhasil dibuka dari tabel radar risiko. Menampilkan Project Lead: Bambang Pratama, Tingkat Risiko: HIGH, Skor Kesehatan: 50 / 100, Blocker Aktif: 2 tiket kendala, Kendala Utama: [HIGH] CI runner mengalami Out Of Memory (OOM) saat proses bundle minification, serta tombol navigasi cepat 'Buka Antrean Blocker Terkait' ke /blockers.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-09
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Seluruh kapabilitas pengawasan radar risiko proyek dan penanganan blocker berkonteks otoritas proyek (FR-30, FR-31, FR-49, DEC-002, DEC-010) terverifikasi 100% tuntas.
 
 ---
 

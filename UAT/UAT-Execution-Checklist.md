@@ -194,10 +194,10 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [x] | `TC-BLKR-001` | Pelaporan Hambatan Baru Tingkat Kritis dengan SLA 2 Jam | Pass | Tiket #e101c2e3 terbit status OPEN, badge CRITICAL, dampak PROJECT, countdown SLA 2 jam aktif (2j 0m) |
 | [x] | `TC-BLKR-002` | Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge) | Pass | Tiket #e101c2e3 bertransisi dari OPEN menjadi ACKNOWLEDGED (badge biru aktif) |
 | [x] | `TC-BLKR-003` | Resolusi Blocker dengan Catatan Solusi Tuntas >= 10 Karakter | Pass | Penolakan input < 10 karakter aktif, tiket #e101c2e3 sukses RESOLVED dengan catatan solusi tuntas |
-| [ ] | `TC-BLKR-004` | Pemantauan Radar Eskalasi Blocker Melewati Batas SLA | | |
-| [ ] | `TC-BLKR-005` | Penanganan Blocker Berdasarkan Kewenangan Proyek (PM) | | |
+| [x] | `TC-BLKR-004` | Pemantauan Radar Eskalasi Blocker Melewati Batas SLA | Pass | Radar aging menampilkan 3 kendala tertahan, 2 tiket breached SLA (262j & 90j), dan compliance rate 33% |
+| [x] | `TC-BLKR-005` | Penanganan Blocker Berdasarkan Kewenangan Proyek (PM) | Pass | Wewenang PM aktif, WP-CORE terakumulasi dengan 1 tugas harian, 2 kendala, risiko HIGH (50%) |
 | [x] | `TC-BLKR-006` | Pemantauan Status & Kontribusi Bantuan pada Tab Blocker Saya | Pass | Tab 2 memuat 4 tiket aktif, filter instan reaktif, countdown SLA, dan kartu empty state terstandar |
-| [ ] | `TC-PM-001` | Pengelolaan Kendala Otoritas Proyek & Pemantauan Radar Risiko PM | Not Run | Skor kesehatan proyek tampil di radar; blocker proyek sukses di-resolve |
+| [x] | `TC-PM-001` | Pengelolaan Kendala Otoritas Proyek & Pemantauan Radar Risiko PM | Pass | Modal rincian WP-CORE tampil: Lead Bambang Pratama, risiko HIGH, Health Score 50/100, 2 kendala |
 
 ---
 
