@@ -85,6 +85,22 @@ export async function apiClient<T = any>(
 
   if (!response.ok) {
     if (response.status === 429) {
+      const renderRouting = response.headers?.get?.('x-render-routing') || '';
+      const isRenderHibernating =
+        renderRouting.includes('hibernate') ||
+        (typeof responseBody === 'object' && responseBody?.message === 'Too Many Requests' && !responseBody?.statusCode) ||
+        responseBody === 'Too Many Requests';
+
+      if (isRenderHibernating) {
+        throw new ApiError({
+          code: 'SERVER_HIBERNATING',
+          message:
+            'Server backend sedang bangun dari mode hening (Render hibernasi). Silakan beri jeda sekitar 20-30 detik sebelum mencoba kembali.',
+          details: [],
+          statusCode: 429,
+        });
+      }
+
       throw new ApiError({
         code: 'AUTH_RATE_LIMIT_EXCEEDED',
         message:

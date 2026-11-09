@@ -23,7 +23,7 @@ const failedAttempts = ref(0);
 const lockoutSecondsRemaining = ref(0);
 let lockoutTimer: any = null;
 
-function triggerLockout(durationSeconds = 60) {
+function triggerLockout(durationSeconds = 30) {
   lockoutSecondsRemaining.value = durationSeconds;
   errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
 
@@ -89,19 +89,31 @@ async function handleLogin() {
     const landing = getLandingRouteForRole(authStore.user?.role);
     router.push(safeRedirect || landing);
   } catch (err: any) {
-    if (
-      err?.statusCode === 429 ||
+    if (err?.code === 'SERVER_HIBERNATING') {
+      // JANGAN lock form! Render sedang bangun dari mode tidur/hibernasi
+      errorMessage.value =
+        err.message ||
+        'Server backend sedang bangun dari mode hening (Render hibernasi). Silakan beri jeda sekitar 20-30 detik sebelum mencoba kembali.';
+    } else if (
       err?.code === 'AUTH_RATE_LIMIT_EXCEEDED' ||
       (typeof err?.message === 'string' && err.message.includes('ThrottlerException'))
     ) {
-      triggerLockout(60);
-    } else {
+      triggerLockout(30);
+    } else if (
+      err?.statusCode === 401 ||
+      err?.code === 'AUTH_INVALID_CREDENTIALS' ||
+      (typeof err?.message === 'string' && err.message.includes('kata sandi tidak valid'))
+    ) {
       failedAttempts.value++;
       if (failedAttempts.value >= 5) {
-        triggerLockout(60);
+        triggerLockout(30);
       } else {
         errorMessage.value = err.message || 'Alamat email atau kata sandi tidak valid.';
       }
+    } else {
+      // Kesalahan jaringan / cold-start Render / timeout: JANGAN dihitung sebagai kegagalan login
+      errorMessage.value =
+        'Server sedang memproses atau bangun dari mode hening (cold-start Render). Silakan tunggu sekitar 15-20 detik lalu coba klik masuk kembali.';
     }
   }
 }

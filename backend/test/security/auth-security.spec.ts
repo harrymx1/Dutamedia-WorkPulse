@@ -116,7 +116,7 @@ describe('Auth Security Verification Suite (WP-EP02-TK006 / SAD IV.3 & VII)', ()
   });
 
   describe('Brute-Force Rate Limiting Configuration', () => {
-    it('login handler must declare 5 requests/minute throttle limit', () => {
+    it('login handler must declare rate limit throttling (20 requests/minute to accommodate cold-starts)', () => {
       // Periksa metadata throttle pada handler login (NestJS Throttler v6)
       const limit = Reflect.getMetadata(
         'THROTTLER:LIMITdefault',
@@ -127,7 +127,7 @@ describe('Auth Security Verification Suite (WP-EP02-TK006 / SAD IV.3 & VII)', ()
         AuthController.prototype.login,
       );
 
-      expect(limit).toBe(5);
+      expect(limit).toBe(20);
       expect(ttl).toBe(60000);
     });
   });
