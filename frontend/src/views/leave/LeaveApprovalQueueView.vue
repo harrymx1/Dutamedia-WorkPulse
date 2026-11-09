@@ -658,12 +658,13 @@ h1 {
   color: var(--color-text-secondary, #5C6E68);
   background: #F8FAF9;
   border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
+  white-space: nowrap;
 }
 
 .queue-table td {
   padding: 14px 18px;
   border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .employee-meta {
@@ -709,11 +710,13 @@ h1 {
 .date-main {
   font-weight: 700;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .date-sub {
   font-size: 12px;
   color: var(--color-text-secondary, #5C6E68);
+  white-space: nowrap;
 }
 
 .reason-text {
@@ -747,6 +750,7 @@ h1 {
 .actions-line {
   display: flex;
   gap: 6px;
+  align-items: center;
 }
 
 .btn-action {
