@@ -172,7 +172,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [P] | `TC-DLYE-003` | Wajib Alasan Penjelasan pada Status Blocked/Cancelled | PASS | Pemilihan status Dibatalkan (CANCELLED) tanpa mengisi textarea alasan berhasil ditolak sistem saat form disubmit (Anti-Silent Drop terverifikasi) |
 | [P] | `TC-DLYE-002` | Heuristic Suggestion & Hak Prerogatif Anti-Lock Green | PASS | Terverifikasi empiris opsi GREEN tidak pernah dikunci atau dinonaktifkan secara punitif saat komitmen berstatus belum selesai (DEC-003 dipatuhi) |
 | [P] | `TC-DLYE-001` | Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome) | PASS | Lolos retest DEF-002: Formulir EOD terkunci permanen pasca submit (read-only) & persisten setelah refresh F5 (media_1794188421001_7783a64a.png, media_1794188430654_30d5df4f.jpg, media_1794188457652_3df81dab.png) |
-| [ ] | `TC-DLYE-004` | Penguncian Form Hasil Sore Pasca Cut-Off EOD | | |
+| [P] | `TC-DLYE-004` | Penguncian Form Hasil Sore Pasca Cut-Off EOD | PASS | Terverifikasi empiris simulasi cut-off: status LOCKED, form disabled, tombol kirim hilang, banner resmi menampilkan tombol 'Ajukan Koreksi EOD' yang sukses mengarahkan ke /corrections/eod (media_1794190824149_affe77d4.jpg, media_1794191447101_a17ddb21.jpg) |
 | [P] | `TC-DLYE-005` | Penguncian Atomik Hasil Evaluasi Sore EOD & Pencegahan Timpa Ulang (DEF-002) | PASS | Lolos retest DEF-002: Penyerahan ulang EOD ditolak mutlak oleh backend dengan status HTTP 422 BUSINESS_RULE_ALREADY_SUBMITTED dan pesan penguncian resmi (media_1794189830130_27cb3eca.png) |
 
 ---

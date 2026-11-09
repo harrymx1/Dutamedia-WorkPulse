@@ -1233,13 +1233,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Penguncian form EOD pasca cut-off bekerja konsisten sesuai DEC-002 dan navigasi ke koreksi EOD tersedia jelas.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot halaman EOD yang terkunci dengan banner instruksi koreksi EOD.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Terverifikasi empiris via simulasi perubahan kebijakan cut-off EOD ke 09:00 WIB. Halaman `/daily/eod` pada akun dev.backend@dutamedia.com mendeteksi status waktu `LOCKED (Pasca 09:00 WIB)` (media_1794190824149_affe77d4.jpg), seluruh form dinonaktifkan, tombol submit disembunyikan, dan banner resmi penguncian menampilkan tombol "Ajukan Koreksi EOD". Mengklik tombol tersebut berhasil mengarahkan pengguna secara mulus ke formulir `/corrections/eod` (media_1794191447101_a17ddb21.jpg).
+- **Execution Status:** PASS
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Penguncian form EOD pasca cut-off dan navigasi pengalihan koreksi DEC-002 terverifikasi 100%.
 
 ---
 
