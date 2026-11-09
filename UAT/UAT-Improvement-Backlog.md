@@ -1050,4 +1050,25 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend & Backend Hotfixed)
 
 ---
+
+### [IMP-050] Inisialisasi Otomatis Antrean Kepatuhan HRGA & Fleksibilitas Penautan Catatan Pembinaan Manajerial
+- **Finding ID:** IMP-050
+- **Title:** Inisialisasi Otomatis Antrean Kepatuhan HRGA & Fleksibilitas Penautan Catatan Pembinaan Manajerial
+- **Category:** Backend Compliance Seeding & Data Integrity
+- **Page / Module:** Antrean Kepatuhan HRGA (`/compliance`)
+- **Related Test Case:** `TC-CORR-004`, `TC-HRGA-001`
+- **Current Condition:** 
+  1. Halaman `/compliance` menampilkan radar dan antrean kosong (0 peristiwa pelanggaran) sehingga tim HRGA tidak dapat menguji alur filter jenjang pola berulang 3x (`PATTERN_FLAG_3X`) maupun tindakan penindakan (*Address*).
+  2. Modal penindakan kepatuhan mewajibkan input UUID catatan pembinaan dari tabel `manager_notes`. Jika HRGA memasukkan catatan teks deskriptif, transaksi berisiko gagal akibat pelanggaran *foreign key* `compliance_events_follow_up_manager_note_id_fkey`.
+  3. Teks subtitle halaman `/compliance` dan `/exemptions` masih mencantumkan kode internal `(DEC-007)`.
+- **Proposed Improvement:** 
+  1. Tambahkan fungsi `ensureSeedEvents()` pada `ComplianceService` agar saat tabel kosong, sistem secara otomatis menginisialisasi peristiwa pola 3 hari (`PATTERN_FLAG_3X` - Siti Rahma) dan peristiwa tidak check-in (`NO_SUBMISSION` - Nadia Kusuma) untuk pengujian operasional HRGA.
+  2. Sempurnakan method `addressComplianceEvent` agar jika input bukan merupakan ID UUID catatan yang ada, sistem secara otomatis menerbitkan rekaman `ManagerNote` pembinaan kepatuhan formal sehingga penautan FK selalu valid.
+  3. Bersihkan kode internal `(DEC-007)` dari microcopy antarmuka pengguna.
+- **Rationale / Expected Benefit:** Memungkinkan tim HRGA melakukan simulasi pemantauan pola 3x dan penindakan peristiwa kepatuhan secara nyata dan deterministik tanpa kendala UUID manual.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794208139958_5b8fe3eb.jpg`.
+- **Status:** Resolved / Implemented (Frontend & Backend Hotfixed)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

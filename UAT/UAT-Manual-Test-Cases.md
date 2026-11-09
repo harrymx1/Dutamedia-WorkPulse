@@ -1667,13 +1667,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Koreksi disetujui, status bertransisi ke APPROVED, data komitmen tanggal bersangkutan terisi resmi, dan audit log tercatat abadi.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot pengajuan di tab Disetujui dengan badge hijau APPROVED dan catatan atasan.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Persetujuan permohonan koreksi material oleh Atasan Langsung (Head of Engineering) berhasil dieksekusi. Muncul toast konfirmasi "Permohonan koreksi berhasil disetujui." dan antrean berpindah ke empty state "Tidak Ada Permohonan Koreksi Tertunda". Data komitmen komparatif di basis data terbarui otomatis dengan menjaga check constraint PostgreSQL chk_blocker_note_required (IMP-049).
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** N/A
+- **Catatan:** Terverifikasi penuh pasca hotfix IMP-049 pada transaksi persetujuan koreksi.
 
 ---
 

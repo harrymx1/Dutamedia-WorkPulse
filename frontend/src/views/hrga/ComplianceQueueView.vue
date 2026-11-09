@@ -154,7 +154,7 @@ onMounted(() => {
           <span class="eyebrow">Pengawasan Kepatuhan &amp; Budaya Positif</span>
           <h1>Antrean Kepatuhan &amp; Tindak Lanjut HRGA</h1>
           <p class="subtitle">
-            Pantau pelanggaran batas waktu check-in secara bertingkat (DEC-007). Sistem menjamin pendekatan non-punitif berorientasi pembinaan (Coaching First).
+            Pantau pelanggaran batas waktu check-in secara bertingkat. Sistem menjamin pendekatan non-punitif berorientasi pembinaan (Coaching First).
           </p>
         </div>
       </div>
@@ -308,11 +308,11 @@ onMounted(() => {
             Kaitkan catatan pembinaan / evaluasi manajerial yang telah dilakukan bersama atasan langsung karyawan (<strong>{{ selectedEvent?.user.fullName }}</strong>).
           </p>
           <div class="form-group">
-            <label>ID Catatan Pembinaan Manajerial <span class="req">*</span></label>
+            <label>ID atau Catatan Pembinaan Manajerial <span class="req">*</span></label>
             <input
               v-model="managerNoteIdInput"
               type="text"
-              placeholder="Masukkan UUID catatan pembinaan dari /coaching..."
+              placeholder="Masukkan UUID catatan pembinaan atau ketikkan ringkasan solusi..."
             />
           </div>
         </div>

@@ -144,7 +144,7 @@ onMounted(() => {
           <span class="eyebrow">Tata Kelola Dispensasi &amp; Pengecualian</span>
           <h1>Kelola Hari Libur &amp; Pengecualian</h1>
           <p class="subtitle">
-            Daftarkan dispensasi akuntabilitas individual (Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus). Hari dispensasi otomatis dikecualikan dari pemantauan pola keterlambatan (DEC-007).
+            Daftarkan dispensasi akuntabilitas individual (Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus). Hari dispensasi otomatis dikecualikan dari pemantauan pola keterlambatan.
           </p>
         </div>
       </div>

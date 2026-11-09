@@ -219,7 +219,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [x] | `TC-CORR-001` | Pengajuan Permohonan Koreksi Komitmen Pagi Pasca Cut-Off | Pass | Permohonan material PENDING dengan toast jendela keberatan 24 jam |
 | [x] | `TC-CORR-006` | Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off | Pass | Permohonan material EOD PENDING outcome DONE (BVA 10 char lolos) |
 | [x] | `TC-CORR-003` | Penolakan Permohonan Koreksi dengan Alasan Wajib >= 10 Char | Pass | Anti-silent rejection terbukti, penolakan tersimpan berstatus REJECTED |
-| [ ] | `TC-CORR-002` | Persetujuan Permohonan Koreksi oleh Direct Manager | | |
+| [x] | `TC-CORR-002` | Persetujuan Permohonan Koreksi oleh Direct Manager | Pass | Persetujuan sukses, empty state antrean aktif, baseline terupdate |
 | [ ] | `TC-CORR-004` | Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA | | |
 | [ ] | `TC-CORR-005` | Penerbitan Dispensasi Kepatuhan Resmi & Audit Log (DEC-013) | | |
 | [ ] | `TC-HRGA-001` | Pengawasan Antrean Kepatuhan & Penindakan via Catatan Pembinaan HRGA | Not Run | Filter tahap kepatuhan aktif dan status beralih ke ADDRESSED |
