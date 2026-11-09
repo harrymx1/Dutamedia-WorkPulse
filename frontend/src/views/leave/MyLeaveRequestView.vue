@@ -46,6 +46,7 @@ const searchQuery = ref('');
 // Toasts
 const toastMessage = ref('');
 const errorMessage = ref('');
+const cancellingId = ref<string | null>(null);
 
 function showToast(msg: string, isError = false) {
   if (isError) {
@@ -164,6 +165,24 @@ function handleReset() {
   endDate.value = '';
   reason.value = '';
   formError.value = '';
+}
+
+async function handleCancel(id: string) {
+  if (!confirm('Apakah Anda yakin ingin membatalkan permohonan cuti ini?')) {
+    return;
+  }
+  cancellingId.value = id;
+  try {
+    await apiClient(`/leave/${id}/cancel`, {
+      method: 'POST',
+    });
+    showToast('Permohonan cuti berhasil dibatalkan.');
+    await loadLeaveRequests();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal membatalkan permohonan cuti.', true);
+  } finally {
+    cancellingId.value = null;
+  }
 }
 
 function formatDateRange(startStr: string, endStr: string) {
@@ -385,6 +404,7 @@ onMounted(() => {
                   <th scope="col">Tanggal Cuti</th>
                   <th scope="col">Alasan &amp; Jejak Pengajuan</th>
                   <th scope="col">Status &amp; Rekonsiliasi</th>
+                  <th scope="col" style="text-align: right;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -411,6 +431,7 @@ onMounted(() => {
                       <span v-if="req.status === 'PENDING'" class="pill blue">Leave (Pending)</span>
                       <span v-else-if="req.status === 'APPROVED'" class="pill green">Leave (Approved)</span>
                       <span v-else-if="req.status === 'REJECTED'" class="pill red">Leave (Rejected)</span>
+                      <span v-else-if="req.status === 'CANCELLED'" class="pill neutral">Leave (Cancelled)</span>
                       <span v-else class="pill neutral">{{ req.status }}</span>
 
                       <span v-if="req.reconciled" class="pill neutral">Superseded by Approved Leave</span>
@@ -424,6 +445,21 @@ onMounted(() => {
                     <span v-else-if="req.status === 'REJECTED'" class="status-sub">
                       Ditolak · Check-in harian tetap berlaku
                     </span>
+                    <span v-else-if="req.status === 'CANCELLED'" class="status-sub">
+                      Dibatalkan mandiri
+                    </span>
+                  </td>
+                  <td style="text-align: right; vertical-align: middle;">
+                    <button
+                      v-if="req.status === 'PENDING'"
+                      type="button"
+                      class="btn-cancel"
+                      :disabled="cancellingId === req.id"
+                      @click="handleCancel(req.id)"
+                    >
+                      {{ cancellingId === req.id ? 'Membatalkan...' : 'Batalkan' }}
+                    </button>
+                    <span v-else class="no-action-text">-</span>
                   </td>
                 </tr>
               </tbody>
@@ -925,6 +961,33 @@ h1 {
 
 .spin {
   animation: spin 1s linear infinite;
+}
+
+.btn-cancel {
+  padding: 5px 12px;
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #BE123C;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #FFE4E6;
+  border-color: #FDA4AF;
+}
+
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.no-action-text {
+  color: var(--color-text-secondary, #94A3B8);
+  font-size: 13px;
 }
 
 @keyframes spin {

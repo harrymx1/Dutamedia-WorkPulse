@@ -233,5 +233,48 @@ export class LeaveService {
       return updated;
     });
   }
+
+  /**
+   * Membatalkan permohonan cuti mandiri yang masih berstatus PENDING (TC-LEAV-004).
+   */
+  async cancelLeaveRequest(userId: string, id: string) {
+    const leave = await this.prisma.leaveRequest.findUnique({
+      where: { id },
+    });
+
+    if (!leave) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Permohonan cuti tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (leave.userId !== userId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: 'Anda hanya dapat membatalkan permohonan cuti milik sendiri.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (leave.status !== LeaveStatus.PENDING) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Hanya permohonan cuti berstatus PENDING yang dapat dibatalkan.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    return this.prisma.leaveRequest.update({
+      where: { id },
+      data: {
+        status: LeaveStatus.CANCELLED,
+      },
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+  }
 }
 

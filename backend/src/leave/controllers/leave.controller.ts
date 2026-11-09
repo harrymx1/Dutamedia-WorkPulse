@@ -45,5 +45,10 @@ export class LeaveController {
   ) {
     return this.leaveService.reviewLeaveRequest(req.user.id, id, dto);
   }
+
+  @Post([':id/cancel', 'requests/:id/cancel'])
+  async cancelLeaveRequest(@Req() req: any, @Param('id') id: string) {
+    return this.leaveService.cancelLeaveRequest(req.user.id, id);
+  }
 }
 

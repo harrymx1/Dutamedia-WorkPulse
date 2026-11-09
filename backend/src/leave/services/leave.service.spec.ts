@@ -162,5 +162,52 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
       expect(mockScopeResolver.canAccessUser).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('cancelLeaveRequest (TC-LEAV-004)', () => {
+    it('cancels pending leave request for the request owner', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-1',
+        userId: 'usr-1',
+        status: LeaveStatus.PENDING,
+      });
+      mockPrisma.leaveRequest.update.mockResolvedValue({
+        id: 'lv-1',
+        status: LeaveStatus.CANCELLED,
+      });
+
+      const res = await service.cancelLeaveRequest('usr-1', 'lv-1');
+      expect(res.status).toBe(LeaveStatus.CANCELLED);
+      expect(mockPrisma.leaveRequest.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'lv-1' },
+          data: { status: LeaveStatus.CANCELLED },
+        }),
+      );
+    });
+
+    it('rejects cancellation if user is not the owner', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-1',
+        userId: 'usr-other',
+        status: LeaveStatus.PENDING,
+      });
+
+      await expect(
+        service.cancelLeaveRequest('usr-1', 'lv-1'),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('rejects cancellation if leave status is already APPROVED', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-1',
+        userId: 'usr-1',
+        status: LeaveStatus.APPROVED,
+      });
+
+      await expect(
+        service.cancelLeaveRequest('usr-1', 'lv-1'),
+      ).rejects.toThrowError(AppException);
+    });
+  });
 });
 

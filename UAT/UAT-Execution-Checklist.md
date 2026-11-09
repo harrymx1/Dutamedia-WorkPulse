@@ -220,10 +220,10 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [x] | `TC-CORR-006` | Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off | Pass | Permohonan material EOD PENDING outcome DONE (BVA 10 char lolos) |
 | [x] | `TC-CORR-003` | Penolakan Permohonan Koreksi dengan Alasan Wajib >= 10 Char | Pass | Anti-silent rejection terbukti, penolakan tersimpan berstatus REJECTED |
 | [x] | `TC-CORR-002` | Persetujuan Permohonan Koreksi oleh Direct Manager | Pass | Persetujuan sukses, empty state antrean aktif, baseline terupdate |
-| [ ] | `TC-CORR-004` | Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA | | |
-| [ ] | `TC-CORR-005` | Penerbitan Dispensasi Kepatuhan Resmi & Audit Log (DEC-013) | | |
-| [ ] | `TC-HRGA-001` | Pengawasan Antrean Kepatuhan & Penindakan via Catatan Pembinaan HRGA | Not Run | Filter tahap kepatuhan aktif dan status beralih ke ADDRESSED |
-| [ ] | `TC-HRGA-002` | Pemberian Dispensasi Resmi Terikat Waktu & Validasi Formulir HRGA | Not Run | Tanggal salah ditolak; dispensasi dinas luar resmi berhasil diterbitkan |
+| [x] | `TC-CORR-004` | Pengawasan Kepatuhan & Deteksi Pola Pelanggaran 3x oleh HRGA | Pass | Radar kepatuhan memuat 4 kartu metrik, pola 3x Siti Rahma terdeteksi |
+| [x] | `TC-CORR-005` | Penerbitan Dispensasi Kepatuhan Resmi & Audit Log (DEC-013) | Pass | Dispensasi dinas luar terbit, jejak audit pencatat Dewi Lestari |
+| [x] | `TC-HRGA-001` | Pengawasan Antrean Kepatuhan & Penindakan via Catatan Pembinaan HRGA | Pass | Filter tahap kepatuhan aktif dan status beralih ke ADDRESSED |
+| [x] | `TC-HRGA-002` | Pemberian Dispensasi Resmi Terikat Waktu & Validasi Formulir HRGA | Pass | Validasi tanggal terbalik ditolak merah, form resmi terbit hijau |
 
 ---
 

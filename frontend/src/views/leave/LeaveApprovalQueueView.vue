@@ -200,7 +200,7 @@ onMounted(() => {
     <main class="main-content">
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Pusat Persetujuan Operasional &amp; Rekonsiliasi (DEC-007)</span>
+          <span class="eyebrow">Pusat Persetujuan Operasional &amp; Rekonsiliasi</span>
           <h1>Leave Approval Queue</h1>
           <p class="subtitle">
             Tinjau permohonan cuti anggota tim dan HRGA. Persetujuan cuti yang melewati cut-off pagi (09:30 WIB) akan otomatis menjalankan rekonsiliasi retroaktif.

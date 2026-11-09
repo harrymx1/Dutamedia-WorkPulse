@@ -1757,13 +1757,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Antrean kepatuhan menyajikan data akurat, deteksi pola pelanggaran 3x bekerja deterministik, dan opsi intervensi HRGA tersedia.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot tampilan Compliance Queue dengan filter pola pelanggaran kritis.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Radar kepatuhan HRGA (/compliance) berhasil memuat 4 kartu metrik (Pola 3x: 1, Peringatan: 0, Eskalasi: 0, Kasus Belum Ditangani: 2). Deteksi pola pelanggaran berulang 3 hari (PATTERN_FLAG_3X) terverifikasi akurat mendeteksi Siti Rahma dengan badge jenjang khusus dan filter tahap berfungsi reaktif.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** N/A
+- **Catatan:** Terverifikasi pada pengujian akun HRGA Dewi Lestari.
 
 ---
 
@@ -1805,13 +1805,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Dispensasi resmi berhasil diterbitkan, status kepatuhan karyawan pulih, dan audit log permanen (DEC-013) tercatat abadi.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot daftar dispensasi aktif di `/exemptions` dan screenshot entri audit trail terkait.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Formulir pembuatan dispensasi berhasil memproses pendaftaran dispensasi resmi terikat waktu untuk Aditya Nugroho (15/11/2026 s/d 20/11/2026) kategori Dinas Luar dengan No. Surat Tugas ST/2026/XI/088. Data langsung tampil pada tabel Daftar Pengecualian Resmi Aktif dengan pencatat Dewi Lestari (DEC-013).
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** None
+- **Catatan:** Bukti tangkapan layar media_1794209971245_2639093f.jpg. Jejak audit penerbitan tersimpan abadi di basis data.
 
 ---
 
@@ -2683,13 +2683,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** HRGA dapat memantau seluruh dinamika kepatuhan perusahaan dan menyelesaikan siklus penindakan pelanggaran secara akuntabel.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar halaman `/compliance` dengan kartu ringkasan dan tangkapan layar status peristiwa kepatuhan yang berhasil diubah menjadi ADDRESSED.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Penindakan peristiwa kepatuhan berhasil diselesaikan. Modal tindak lanjut berhasil menerima catatan pembinaan manajerial ("Telah dilakukan sesi coaching kedisiplinan bersama Atasan Langsung (Arif Budiman)..."), status bertransisi ke ADDRESSED, nama pembina Dewi Lestari tertera pada kolom solusi, toast sukses tampil, dan metrik Kasus Belum Ditangani berkurang dari 2 menjadi 1.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
-- **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** N/A
+- **Catatan:** Terverifikasi penuh pasca penyempurnaan penanganan catatan teks deskriptif IMP-050.
 
 ---
 
@@ -2725,13 +2725,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** HRGA dapat menerbitkan dispensasi resmi terikat waktu secara tertib administrasi dan sistem menolak input tanggal yang tidak logis.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar pesan validasi tanggal salah dan tangkapan layar tabel riwayat dispensasi memuat baris baru yang berhasil diterbitkan.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Uji validasi negatif berhasil menolak input tanggal selesai lebih awal dari tanggal mulai (2026-11-20 s/d 2026-11-15) dengan toast merah ("Tanggal selesai tidak boleh lebih awal dari tanggal mulai."). Uji happy path berhasil menerbitkan dispensasi resmi terikat waktu (15-20 Nov 2026) untuk Aditya Nugroho dengan No Surat Tugas ST/2026/XI/088, toast hijau terbit, dan rekaman tersimpan rapi pada tabel.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
-- **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** None
+- **Catatan:** Bukti tangkapan layar media_1794209971245_2639093f.jpg.
 
 ---
 
