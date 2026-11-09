@@ -1375,13 +1375,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Transisi status berhasil, waktu respons awal tercatat di sistem audit, dan timer breached SLA berhenti.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot kartu blocker yang telah berubah status menjadi `ACKNOWLEDGED` dengan catatan supervisor tertera.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Tombol 'Acknowledge' pada tiket kritis #e101c2e3 berhasil diklik. Status tiket bertransisi sukses dari OPEN menjadi ACKNOWLEDGED (badge biru aktif pada kartu list dan panel detail), tombol Acknowledge hilang dan menyisakan tombol 'Beri Bantuan' & 'Selesaikan', serta respons awal tercatat dalam SLA 2 jam.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Alur konfirmasi penerimaan kendala kritis oleh atasan berhasil 100% dan memenuhi ketentuan SLA.
 
 ---
 
@@ -1423,13 +1423,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Transisi status ke RESOLVED sukses dengan bukti dokumentasi solusi tuntas di database.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot modal penolakan saat solusi < 10 char dan screenshot kartu blocker dengan status RESOLVED.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Validasi batas negatif (< 10 karakter) berhasil menolak input 'Beres' (5/10 karakter) dengan pesan error merah 'Catatan resolusi wajib diisi minimal 10 karakter' dan modal tetap terbuka. Penyelesaian positif (>= 10 karakter) berhasil memproses tiket #e101c2e3 menjadi RESOLVED (badge hijau aktif), metrik kritis aktif berkurang (2 -> 1), metrik aktif berkurang (4 -> 3), serta catatan resolusi akhir tersimpan dan tampil pada panel detail.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Aturan anti-empty resolution (DEC-007, DEC-010) terbukti efektif menegakkan dokumentasi knowledge base penyelesaian insiden. Modal UI telah dipoles dengan live counter 10 karakter min (IMP-047).
 
 ---
 
@@ -1567,13 +1567,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Karyawan dapat memonitor seluruh status, progres penanganan SLA, dan kontribusi bantuan atas kendala yang dilaporkannya secara mandiri melalui Tab "Blocker Saya".
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar Tab 2 "Blocker Saya" memperlihatkan kartu tiket berstatus aktif beserta riwayat bantuan.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Tab "Blocker Saya" berhasil memuat antrean tiket kendala mandiri (4 tiket). Filter reaktif instan (Semua: 4, Aktif: 4, Menunggu Konfirmasi: 0, Selesai/Ditutup: 0) berfungsi tanpa reload, dan menampilkan kartu Empty State terstandar saat kategori kosong. Kartu tiket aktif menampilkan badge keparahan, status penanganan, penanggung jawab, serta countdown SLA berjalan akurat.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-09
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** -
+- **Catatan:** Seluruh kriteria penerimaan pemantauan mandiri karyawan terpenuhi 100%. Riwayat catatan resolusi/bantuan akan terus terupdate saat tiket ditindaklanjuti pada TC-BLKR-002 dan TC-BLKR-003.
 
 ---
 

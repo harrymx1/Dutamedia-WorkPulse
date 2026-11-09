@@ -192,11 +192,11 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [x] | `TC-BLKR-001` | Pelaporan Hambatan Baru Tingkat Kritis dengan SLA 2 Jam | Pass | Tiket #e101c2e3 terbit status OPEN, badge CRITICAL, dampak PROJECT, countdown SLA 2 jam aktif (2j 0m) |
-| [ ] | `TC-BLKR-002` | Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge) | | |
-| [ ] | `TC-BLKR-003` | Resolusi Blocker dengan Catatan Solusi Tuntas >= 10 Karakter | | |
+| [x] | `TC-BLKR-002` | Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge) | Pass | Tiket #e101c2e3 bertransisi dari OPEN menjadi ACKNOWLEDGED (badge biru aktif) |
+| [x] | `TC-BLKR-003` | Resolusi Blocker dengan Catatan Solusi Tuntas >= 10 Karakter | Pass | Penolakan input < 10 karakter aktif, tiket #e101c2e3 sukses RESOLVED dengan catatan solusi tuntas |
 | [ ] | `TC-BLKR-004` | Pemantauan Radar Eskalasi Blocker Melewati Batas SLA | | |
 | [ ] | `TC-BLKR-005` | Penanganan Blocker Berdasarkan Kewenangan Proyek (PM) | | |
-| [ ] | `TC-BLKR-006` | Pemantauan Status & Kontribusi Bantuan pada Tab Blocker Saya | Not Run | Tab 2 menampilkan tiket mandiri, filter status, SLA, dan bantuan rekan |
+| [x] | `TC-BLKR-006` | Pemantauan Status & Kontribusi Bantuan pada Tab Blocker Saya | Pass | Tab 2 memuat 4 tiket aktif, filter instan reaktif, countdown SLA, dan kartu empty state terstandar |
 | [ ] | `TC-PM-001` | Pengelolaan Kendala Otoritas Proyek & Pemantauan Radar Risiko PM | Not Run | Skor kesehatan proyek tampil di radar; blocker proyek sukses di-resolve |
 
 ---
