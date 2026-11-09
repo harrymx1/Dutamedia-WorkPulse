@@ -113,15 +113,28 @@ export class ComplianceService {
     }
 
     const cleanInput = followUpManagerNoteId?.trim();
-    let noteId: string | null = cleanInput || null;
-    if (cleanInput && this.prisma.managerNote) {
-      try {
-        const existingNote = await this.prisma.managerNote.findUnique({
-          where: { id: cleanInput },
-        });
-        if (existingNote) {
-          noteId = existingNote.id;
-        } else if (this.prisma.managerNote.create) {
+    const isUuid = !!cleanInput && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanInput);
+    let noteId: string | null = null;
+
+    if (!this.prisma.managerNote) {
+      noteId = cleanInput;
+    } else if (cleanInput) {
+      if (isUuid) {
+        try {
+          const existingNote = await this.prisma.managerNote.findUnique({
+            where: { id: cleanInput },
+          });
+          if (existingNote) {
+            noteId = existingNote.id;
+          }
+        } catch {
+          // Ignored
+        }
+      }
+
+      // Jika input adalah teks bebas (bukan UUID) atau ID tidak ditemukan di DB, buatkan rekaman ManagerNote baru
+      if (!noteId && this.prisma.managerNote.create) {
+        try {
           const adminOrHr = this.prisma.user?.findFirst
             ? await this.prisma.user.findFirst({ where: { email: 'hrga@dutamedia.com' } })
             : null;
@@ -135,9 +148,9 @@ export class ComplianceService {
             },
           });
           noteId = createdNote.id;
+        } catch {
+          noteId = cleanInput;
         }
-      } catch {
-        noteId = cleanInput;
       }
     }
 
