@@ -407,10 +407,10 @@ onMounted(() => {
             <table class="leave-table">
               <thead>
                 <tr>
-                  <th scope="col">Tanggal Cuti</th>
-                  <th scope="col">Alasan &amp; Jejak Pengajuan</th>
-                  <th scope="col">Status &amp; Rekonsiliasi</th>
-                  <th scope="col" style="text-align: right;">Aksi</th>
+                  <th scope="col" class="col-date">Tanggal Cuti</th>
+                  <th scope="col" class="col-reason">Alasan &amp; Jejak Pengajuan</th>
+                  <th scope="col" class="col-status">Status &amp; Rekonsiliasi</th>
+                  <th scope="col" class="col-action">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -456,7 +456,7 @@ onMounted(() => {
                       Dibatalkan mandiri
                     </span>
                   </td>
-                  <td style="text-align: right; vertical-align: middle;">
+                  <td class="col-action-cell">
                     <button
                       v-if="req.status === 'PENDING'"
                       type="button"
@@ -830,6 +830,37 @@ h1 {
   vertical-align: top;
 }
 
+.col-date {
+  width: 18%;
+  min-width: 130px;
+  white-space: nowrap;
+}
+
+.col-reason {
+  width: 44%;
+  min-width: 220px;
+}
+
+.col-status {
+  width: 26%;
+  min-width: 180px;
+}
+
+.col-action {
+  width: 12%;
+  min-width: 110px;
+  text-align: right;
+  padding-right: 20px !important;
+  white-space: nowrap;
+}
+
+.col-action-cell {
+  text-align: right;
+  vertical-align: middle !important;
+  padding-right: 20px !important;
+  min-width: 110px;
+}
+
 .date-main {
   font-weight: 700;
   font-size: 13.5px;
@@ -1014,8 +1045,10 @@ h1 {
 }
 
 .no-action-text {
+  display: inline-block;
   color: var(--color-text-secondary, #94A3B8);
-  font-size: 13px;
+  font-size: 14px;
+  padding-right: 12px;
 }
 
 @keyframes spin {
