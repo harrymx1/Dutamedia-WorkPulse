@@ -171,7 +171,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [P] | `TC-DLYE-003` | Wajib Alasan Penjelasan pada Status Blocked/Cancelled | PASS | Pemilihan status Dibatalkan (CANCELLED) tanpa mengisi textarea alasan berhasil ditolak sistem saat form disubmit (Anti-Silent Drop terverifikasi) |
 | [P] | `TC-DLYE-002` | Heuristic Suggestion & Hak Prerogatif Anti-Lock Green | PASS | Terverifikasi empiris opsi GREEN tidak pernah dikunci atau dinonaktifkan secara punitif saat komitmen berstatus belum selesai (DEC-003 dipatuhi) |
-| [X] | `TC-DLYE-001` | Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome) | DEFECT | Evaluasi 4 tugas dan status AMBER tersimpan sukses di DB, namun form EOD tidak terkunci (inputs tetap editable & tombol submit aktif) [DEF-002] |
+| [P] | `TC-DLYE-001` | Pelaporan Evaluasi Hasil Kerja Sore Lengkap (EOD Outcome) | PASS | Lolos retest DEF-002: Formulir EOD terkunci permanen pasca submit (read-only) & persisten setelah refresh F5 (media_1794188421001_7783a64a.png, media_1794188430654_30d5df4f.jpg, media_1794188457652_3df81dab.png) |
 | [ ] | `TC-DLYE-004` | Penguncian Form Hasil Sore Pasca Cut-Off EOD | | |
 | [ ] | `TC-DLYE-005` | Penguncian Atomik Hasil Evaluasi Sore EOD & Pencegahan Timpa Ulang (DEF-002) | Not Run | EOD terkunci permanen; submit ulang ditolak HTTP 422 atomik |
 

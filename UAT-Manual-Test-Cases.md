@@ -1083,13 +1083,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Laporan EOD tersimpan rapi, berstatus On-Time, persisten pasca reload, dan status harian karyawan terverifikasi tuntas (Hijau).
 - **Bukti yang Perlu Dikumpulkan:** Screenshot ringkasan EOD yang memuat status Done pada seluruh tugas dan badge On-Time.
-- **Actual Result:** Pengiriman evaluasi EOD untuk 4 tugas (3 komitmen pagi + 1 tugas tambahan) dengan status akhir AMBER berhasil disimpan ke database. Namun formulir tidak terkunci: seluruh opsi capaian radio dan kartu refleksi mandiri tetap aktif dapat diubah, serta tombol Kirim Evaluasi EOD tetap aktif dan dapat diklik kembali.
-- **Execution Status:** FAIL
+- **Actual Result:** Lolos retest Cycle 2 (09 Nov 2026). Pengiriman evaluasi EOD untuk 6 tugas (1 komitmen pagi + 5 tugas tambahan) dengan status akhir GREEN dan refleksi harian berhasil disimpan dengan status waktu On-Time (media_1794188421001_7783a64a.png). Formulir langsung terkunci permanen (read-only): seluruh opsi radio capaian terkunci, badge status mandiri terkunci, tombol submit menghilang dan digantikan panel konfirmasi penutupan hari serta navigasi ke riwayat (media_1794188430654_30d5df4f.jpg, media_1794188457652_3df81dab.png). Pengujian muat ulang halaman (F5) membuktikan formulir tetap terkunci rapi (read-only) dan tidak kembali ke formulir aktif/dapat diedit. Defect DEF-002 resmi teratasi tuntas 100%. Catatan penyempurnaan UI form terkunci dicatat ke backlog IMP-045.
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 2026-10-30
-- **Defect ID:** DEF-002
-- **Retest Result:** 
-- **Catatan:** Memicu tiket cacat DEF-002 karena melanggar penguncian penutupan hari kerja FR-26.
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Lolos retest penuh Cycle 2. Penguncian penutupan hari kerja FR-26 dan persistensi F5 (DEF-002) terverifikasi kokoh 100%. Usulan tampilan kartu ringkasan resmi dicatat ke IMP-045.
 
 ---
 

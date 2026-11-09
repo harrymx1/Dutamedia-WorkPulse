@@ -269,7 +269,7 @@ export class DailyService {
     if (inputWorkDate < todayStr) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_BACKDATING_FORBIDDEN,
-        message: `Pengisian komitmen pagi tidak boleh menggunakan tanggal masa lampau (${inputWorkDate} < ${todayStr}) sesuai DEC-008.`,
+        message: `Pengisian komitmen pagi tidak boleh menggunakan tanggal masa lampau (${inputWorkDate} < ${todayStr}).`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
@@ -316,26 +316,26 @@ export class DailyService {
     if (currentTimeStr > (timingConfig.morningLockCutoff || '09:30')) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_CUTOFF_LOCKED,
-        message: `Batas waktu pengisian Morning Commitment telah terlewati (${timingConfig.morningLockCutoff || '09:30'} WIB) dan formulir terkunci (DEC-002). Silakan ajukan permohonan koreksi jika diperlukan.`,
+        message: `Batas waktu pengisian Morning Commitment telah terlewati (${timingConfig.morningLockCutoff || '09:30'} WIB) dan formulir terkunci. Silakan ajukan permohonan koreksi jika diperlukan.`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
 
-    // Validasi jumlah komitmen (0 hingga 3) - DEC-004
+    // Validasi jumlah komitmen (0 hingga 3)
     if (!dto.commitments || dto.commitments.length > 3) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
-        message: 'Jumlah komitmen harian harus berada di antara 0 hingga 3 tugas (DEC-004).',
+        message: 'Jumlah komitmen harian harus berada di antara 0 hingga 3 tugas.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
 
-    // Kasus 0 Komitmen (DEC-004)
+    // Kasus 0 Komitmen
     if (dto.commitments.length === 0) {
       if (!dto.zeroCommitmentReason || dto.zeroCommitmentReason.trim().length < 10) {
         throw new AppException({
           code: ErrorCode.VALIDATION_FAILED,
-          message: 'Pengisian 0 komitmen WAJIB menyertakan alasan sah minimal 10 karakter (DEC-004).',
+          message: 'Pengisian 0 komitmen WAJIB menyertakan alasan sah minimal 10 karakter.',
           statusCode: HttpStatus.BAD_REQUEST,
         });
       }
@@ -782,7 +782,7 @@ export class DailyService {
     if (record.eodSubmittedAt != null) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-        message: 'EOD Outcome hari ini telah diserahkan dan terkunci (DEC-002). Perubahan data wajib melalui alur permohonan koreksi resmi.',
+        message: 'EOD Outcome hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
@@ -807,7 +807,7 @@ export class DailyService {
     if (currentTimeStr > (timingConfig.eodLockCutoff || '21:00')) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_CUTOFF_LOCKED,
-        message: `Batas waktu pengisian EOD Outcome telah terlewati (${timingConfig.eodLockCutoff || '21:00'} WIB) dan formulir terkunci (DEC-002).`,
+        message: `Batas waktu pengisian EOD Outcome telah terlewati (${timingConfig.eodLockCutoff || '21:00'} WIB) dan formulir terkunci.`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }

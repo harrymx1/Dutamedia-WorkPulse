@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 44 Calon Perbaikan (IMP-001 s.d. IMP-044)
+> **Total Temuan:** 45 Calon Perbaikan (IMP-001 s.d. IMP-045)
 
 ---
 
@@ -90,6 +90,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-042** | Eliminasi Tombol 'Lihat Antrean Blocker Aktif' dari Formulir Pelaporan Blocker Karyawan | RBAC & Access Control | `/raise-blockers` | `TC-BLKR-001`, `TC-AUTH-005` | Medium | Implemented (Pending UAT) |
 | **IMP-043** | Penyeragaman Topbar Blocker: Breadcrumb 'Workspace / Blocker', Avatar Inisial & Lonceng Notifikasi | Navigation & Visual Consistency | `/raise-blockers` | `TC-BLKR-001` | Medium | Implemented (Pending UAT) |
 | **IMP-044** | Pembersihan Footer Form Pelaporan Blocker: Penyesuaian Tombol Aksi Bersihkan & Kirim | Copywriting & Visual Cleanliness | `/raise-blockers` | `TC-BLKR-001` | Low | Implemented (Pending UAT) |
+| **IMP-045** | Restrukturisasi Tampilan EOD Terkunci Menjadi Panel Ringkasan Evaluasi Ringkas (Read-Only Summary View) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Open / Proposed |
 
 ---
 
@@ -940,6 +941,24 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Implementation Reference:** Commit ab649cb, cc899cc (Change Register: CHG-013)
 - **Implementation Note:** Membersihkan dan menyelaraskan bar aksi bawah formulir pelaporan blocker: mengeliminasi teks kode internal `(Audit Trail DEC-008)`, memperbarui teks petunjuk menjadi ramah bisnis (*"Pastikan fakta kendala akurat dan objektif untuk mempercepat penanganan oleh atasan."*), mengganti tombol Batal menjadi tombol sekunder *"Bersihkan Formulir"* (mereset seluruh isian form, error, dan notifikasi), serta mengubah label submit menjadi *"Kirim Laporan Blocker"*. Bar aksi diformat secara `fixed` menempel di dasar layar (`bottom: 0`) dan membentang penuh 100% selebar main body dari sisi kanan sidebar (`left: 232px`) hingga tepi kanan layar (`right: 0`) selaras dengan Prototipe 05.
 - **Closure & Verification Note:** Implementasi telah selesai, remediasi visual fixed full-width footer pada Vercel Preview telah diverifikasi dan diterima Product Owner, seluruh Acceptance Criteria terkait telah terpenuhi berdasarkan hasil verifikasi, dan Group 4 (SOL-BLKR-FORM) telah resmi ditutup.
+
+---
+
+### [IMP-045] Restrukturisasi Tampilan Formulir EOD Outcome Terkunci Menjadi Panel Ringkasan Evaluasi Ringkas (Read-Only Summary View)
+- **Finding ID:** IMP-045
+- **Title:** Restrukturisasi Tampilan Formulir EOD Outcome Terkunci Menjadi Panel Ringkasan Evaluasi Ringkas (Read-Only Summary View)
+- **Category:** Layout & Visual Polish / UX Polish
+- **Page / Module:** Halaman Evaluasi Sore (`/daily/eod`) dalam Status Terkunci (`hasSubmittedEod = true` / `isFormLocked = true`)
+- **Related Test Case:** `TC-DLYE-001`
+- **Current Condition:** Saat form evaluasi EOD terkunci pasca diserahkan, antarmuka tetap menampilkan tata letak formulir masukan interaktif lengkap dalam keadaan dinonaktifkan (`disabled`): 4 tombol opsi radio (`Selesai`, `Sebagian`, `Belum Selesai`, `Dibatalkan`) per tugas tetap tampil penuh, 3 kartu pemilih status harian (`GREEN`, `AMBER`, `RED`) tetap tampil sebagai pemilih radio, dan kolom refleksi/prioritas esok hari tetap tampil dalam kotak textarea besar abu-abu. Tampilan terasa berat dan berkesan seperti formulir yang masih meminta input alih-alih laporan ringkasan evaluasi resmi.
+- **Proposed Improvement:** Terapkan mode transformasi tampilan ringkasan resmi (*Read-Only Summary View*) serupa dengan implementasi pada formulir Komitmen Pagi (`MorningCommitmentView.vue`):
+  1. Gantikan 4 tombol radio dengan satu badge status capaian ringkas (misal badge hijau `Selesai` atau badge kuning `Sebagian`) tepat di samping judul komitmen/pekerjaan tambahan.
+  2. Gantikan 3 kartu pemilih status harian dengan satu kartu ringkasan status akhir terpilih (misal kartu hijau `Status Akhir Hari: GREEN — Target hari ini tercapai memuaskan atau terkendali mandiri`).
+  3. Tampilkan catatan refleksi dan prioritas esok hari dalam kontainer kartu baca (*read-only callout card*) bersih tanpa border textarea masukan.
+- **Rationale / Expected Benefit:** Memberikan rasa kepastian penutupan hari yang tuntas dan tenang (*closure*), menyelaraskan bahasa visual antar modul harian (Morning Commitment & EOD Outcome), serta menghilangkan kebingungan pengguna seolah form masih perlu diisi.
+- **Priority:** Medium
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794188430654_30d5df4f.jpg`, `media_1794188457652_3df81dab.png`.
+- **Status:** Open / Proposed (Backlog Pasca-UAT)
 
 ---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*
