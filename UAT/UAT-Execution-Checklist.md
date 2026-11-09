@@ -191,7 +191,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-BLKR-001` | Pelaporan Hambatan Baru Tingkat Kritis dengan SLA 2 Jam | | |
+| [x] | `TC-BLKR-001` | Pelaporan Hambatan Baru Tingkat Kritis dengan SLA 2 Jam | Pass | Tiket #e101c2e3 terbit status OPEN, badge CRITICAL, dampak PROJECT, countdown SLA 2 jam aktif (2j 0m) |
 | [ ] | `TC-BLKR-002` | Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge) | | |
 | [ ] | `TC-BLKR-003` | Resolusi Blocker dengan Catatan Solusi Tuntas >= 10 Karakter | | |
 | [ ] | `TC-BLKR-004` | Pemantauan Radar Eskalasi Blocker Melewati Batas SLA | | |

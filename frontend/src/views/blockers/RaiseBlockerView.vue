@@ -485,18 +485,7 @@ async function submitBlocker() {
   submitting.value = true;
   try {
     // Tentukan target assignedOwnerId jika user memilih 'sistem menentukan otomatis'
-    let targetOwnerId = assignedOwnerId.value || undefined;
-    if (!targetOwnerId) {
-      if (authorityContext.value === 'PROJECT_AUTHORITY' && projectCode.value) {
-        targetOwnerId =
-          eligibleOwners.value.projectLeads[0]?.id ||
-          eligibleOwners.value.projectSponsors[0]?.id;
-      } else {
-        targetOwnerId =
-          eligibleOwners.value.directManagers[0]?.id ||
-          eligibleOwners.value.departmentHeads[0]?.id;
-      }
-    }
+    const targetOwnerId = assignedOwnerId.value || suggestedOwner.value?.id || undefined;
 
     const payload = {
       type: blockerType.value,

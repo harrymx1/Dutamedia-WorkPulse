@@ -1327,13 +1327,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Blocker kritis tersimpan dengan status OPEN, SLA 2 jam terpasang deterministik, dan siap ditindaklanjuti oleh atasan.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot detail blocker di antrean dengan badge KRITIS dan SLA 2 Jam.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Tiket blocker kritis (#e101c2e3) "Akses VPN Staging & Server Redis Gateway Terputus Total" berhasil diterbitkan dengan status OPEN (Menunggu Respons Penanggung Jawab), badge Tingkat CRITICAL, Dampak PROJECT, kategori INFRA, dan timer countdown SLA aktif terpasang deterministik 2 Jam (Sisa SLA 2j 0m). Tiket siap ditindaklanjuti di antrean blocker.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** -
+- **Retest Result:** -
+- **Catatan:** Formula dan countdown SLA aktif deterministik 2 jam (120 menit). Form raise blocker disempurnakan dengan pemisahan direktori wewenang, opsi kelompok 'Lainnya', dan label default netral (IMP-046).
 
 ---
 
