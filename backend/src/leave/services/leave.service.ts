@@ -112,7 +112,7 @@ export class LeaveService {
   async getApprovalQueue(reviewerUserId?: string, status?: LeaveStatus) {
     const list = await this.prisma.leaveRequest.findMany({
       where: {
-        ...(status && { status }),
+        ...(status ? { status } : { status: { not: LeaveStatus.CANCELLED } }),
       },
       include: {
         user: { select: { id: true, fullName: true, email: true } },

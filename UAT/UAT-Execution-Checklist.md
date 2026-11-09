@@ -242,7 +242,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [x] | `TC-LEAV-001` | Pengajuan Cuti Tahunan Mandiri oleh Karyawan | Pass | Cuti tahunan 24-25 Nov 2026 berstatus PENDING terbit dengan toast hijau |
 | [ ] | `TC-LEAV-002` | Persetujuan Permohonan Cuti oleh Atasan Langsung | | |
 | [ ] | `TC-LEAV-003` | Rekonsiliasi Cuti Otomatis Pasca Cut-Off (DEC-008) | | |
-| [ ] | `TC-LEAV-004` | Validasi Tumpang Tindih Tanggal Cuti & Pembatalan Mandiri Pending | Not Run | Cuti bertabrakan ditolak HTTP 409 Conflict; pembatalan cuti pending sukses |
+| [x] | `TC-LEAV-004` | Validasi Tumpang Tindih Tanggal Cuti & Pembatalan Mandiri Pending | Pass | Cuti bertabrakan ditolak HTTP 409 Conflict; pembatalan cuti pending sukses (Leave Cancelled) |
 
 ---
 

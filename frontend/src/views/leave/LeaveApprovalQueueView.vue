@@ -327,22 +327,25 @@ onMounted(() => {
                 </td>
                 <td>
                   <div v-if="item.status === 'PENDING'" class="actions-line">
-                    <button
-                      type="button"
-                      class="btn-action approve"
-                      @click="openReviewModal(item, 'APPROVED')"
-                    >
-                      <Check :size="14" />
-                      <span>Setujui</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="btn-action reject"
-                      @click="openReviewModal(item, 'REJECTED')"
-                    >
-                      <X :size="14" />
-                      <span>Tolak</span>
-                    </button>
+                    <span class="pill yellow" style="margin-bottom: 6px; align-self: flex-start;">Menunggu Review</span>
+                    <div style="display: flex; gap: 8px;">
+                      <button
+                        type="button"
+                        class="btn-action approve"
+                        @click="openReviewModal(item, 'APPROVED')"
+                      >
+                        <Check :size="14" />
+                        <span>Setujui</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-action reject"
+                        @click="openReviewModal(item, 'REJECTED')"
+                      >
+                        <X :size="14" />
+                        <span>Tolak</span>
+                      </button>
+                    </div>
                   </div>
                   <div v-else class="status-badge-wrap">
                     <span v-if="item.status === 'APPROVED'" class="pill green">Disetujui</span>
@@ -783,6 +786,12 @@ h1 {
   background: #DCFCE7;
   color: #166534;
   border-color: #86EFAC;
+}
+
+.pill.yellow {
+  background: #FEF9C3;
+  color: #854D0E;
+  border-color: #FDE047;
 }
 
 .pill.red {

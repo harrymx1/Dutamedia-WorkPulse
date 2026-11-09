@@ -2064,13 +2064,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Sistem secara kokoh mencegah pengajuan cuti bertanggal tumpang tindih dan mendukung siklus pembatalan mandiri cuti pending.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar pesan penolakan tumpang tindih 409 dan status cuti berubah menjadi CANCELLED.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Uji coba tumpang tindih tanggal cuti (25-27 Nov dengan 24-25 Nov aktif) berhasil ditolak mutlak oleh backend dengan status HTTP 409 Conflict dan toast/banner merah ("Terdapat permohonan cuti aktif pada rentang tanggal yang dipilih."). Uji pembatalan mandiri cuti berstatus PENDING (cuti sementara 1 Des 2026) sukses dieksekusi via tombol Batalkan di kolom Aksi, dialog konfirmasi browser disetujui, toast hijau muncul, dan status cuti berubah menjadi Leave (Cancelled) dengan subketerangan "Dibatalkan mandiri".
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
-- **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** None
+- **Catatan:** Bukti tangkapan layar media_1794211376516_3e143939.jpg (penolakan HTTP 409) dan media_1794211885572_211d0f70.jpg (pembatalan berhasil dan status Leave Cancelled). Permohonan cuti utama 24-25 Nov tetap aman berstatus PENDING.
 
 ---
 
