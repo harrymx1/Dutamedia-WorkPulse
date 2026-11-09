@@ -1115,4 +1115,22 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend Hotfixed)
 
 ---
+
+### [IMP-053] Sinkronisasi Properti reviewNote & Peremajaan Visual Catatan Reviewer Cuti
+- **Finding ID:** IMP-053
+- **Title:** Sinkronisasi Properti reviewNote & Peremajaan Visual Catatan Reviewer Cuti
+- **Category:** Frontend Data Binding & UI Polish
+- **Page / Module:** Riwayat Pengajuan Cuti (`/leave/my`) & Antrean Persetujuan Cuti (`/leave/queue`)
+- **Related Test Case:** `TC-LEAV-003`, `TC-LEAV-002`
+- **Current Condition:** Basis data Prisma mengembalikan field singular `reviewNote`, sementara komponen frontend mengecek `req.reviewNotes` (plural). Akibatnya, catatan persetujuan/penolakan dari atasan tidak muncul pada baris riwayat cuti karyawan maupun antrean atasan.
+- **Proposed Improvement:** 
+  1. Perbarui antarmuka `LeaveRequestItem` dan template binding agar mendukung kedua format secara fallback: `req.reviewNote || req.reviewNotes`.
+  2. Tambahkan info identitas peninjau: `req.reviewedBy?.fullName`.
+  3. Perbarui gaya visual `.review-note` dengan kotak beraksen hijau lembut (atau merah untuk penolakan) dan tipografi terstruktur.
+- **Rationale / Expected Benefit:** Menampilkan umpan balik resmi dan arahan kerja dari atasan secara jelas kepada karyawan pemohon cuti.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794215383561_519ab09a.jpg`.
+- **Status:** Resolved / Implemented (Frontend Hotfixed)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

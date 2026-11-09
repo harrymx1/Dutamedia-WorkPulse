@@ -1980,13 +1980,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Permohonan cuti disetujui resmi, status bertransisi ke APPROVED, dan kuota cuti terpotong secara akurat.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot pengajuan di tab Disetujui dengan badge APPROVED dan catatan supervisor.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Permohonan cuti tahunan Aditya Nugroho (24-25 Nov 2026, 2 hari kerja) berhasil disetujui oleh Head of Engineering Arif Budiman via modal review terpoles (IMP-052). Notifikasi toast hijau "Permohonan cuti berhasil di-setujui." muncul, metrik antrean Menunggu Review berkurang 2 -> 1, metrik Telah Disetujui bertambah 0 -> 1, dan status baris pengajuan bertransisi menjadi badge hijau "Disetujui".
+- **Execution Status:** Pass
+- **Tester:** Harry (Acceptance Owner & Lead Manual UAT Tester)
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** None
+- **Catatan:** Modal review telah disempurnakan (IMP-052) dengan layout kartu grid rapi, ikon SVG proporsional tanpa squashing, microcopy bersih bahasa Indonesia, dan peniadaan kode rekayasa internal DEC-007. Bukti: media_1794214680642_1d37a546.jpg.
 
 ---
 

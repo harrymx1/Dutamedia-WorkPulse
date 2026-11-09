@@ -23,6 +23,7 @@ interface LeaveQueueItem {
   reconciled?: boolean;
   reconciliationNote?: string;
   reviewedAt?: string;
+  reviewNote?: string;
   reviewNotes?: string;
   createdAt: string;
   user: {
@@ -321,8 +322,8 @@ onMounted(() => {
                   <div v-if="item.reconciled || item.reconciliationNote" class="reconcile-chip">
                     {{ item.reconciliationNote || 'Direkonsiliasi retroaktif (Superseded by Approved Leave)' }}
                   </div>
-                  <div v-if="item.reviewNotes" class="review-notes-chip">
-                    Catatan: {{ item.reviewNotes }}
+                  <div v-if="item.reviewNote || item.reviewNotes" class="review-notes-chip">
+                    Catatan: {{ item.reviewNote || item.reviewNotes }}
                   </div>
                 </td>
                 <td class="col-status">

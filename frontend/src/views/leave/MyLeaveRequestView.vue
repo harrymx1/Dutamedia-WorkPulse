@@ -25,7 +25,12 @@ interface LeaveRequestItem {
   reconciled?: boolean;
   reconciliationNote?: string;
   reviewedAt?: string;
+  reviewNote?: string;
   reviewNotes?: string;
+  reviewedBy?: {
+    id: string;
+    fullName: string;
+  };
   createdAt: string;
 }
 
@@ -423,8 +428,9 @@ onMounted(() => {
                     <div v-if="req.reconciled || req.reconciliationNote" class="reconcile-note">
                       <strong>Rekonsiliasi Otomatis:</strong> {{ req.reconciliationNote || 'Tercatat No Submission pagi direkonsiliasi otomatis menjadi Approved Leave pasca persetujuan.' }}
                     </div>
-                    <div v-if="req.reviewNotes" class="review-note">
-                      Catatan Reviewer: {{ req.reviewNotes }}
+                    <div v-if="req.reviewNote || req.reviewNotes" class="review-note" :class="{ rejected: req.status === 'REJECTED' }">
+                      <span class="review-note-label">Catatan Reviewer{{ req.reviewedBy?.fullName ? ` (${req.reviewedBy.fullName})` : '' }}:</span>
+                      <span class="review-note-body">"{{ req.reviewNote || req.reviewNotes }}"</span>
                     </div>
                   </td>
                   <td class="status-cell">
@@ -858,9 +864,30 @@ h1 {
 }
 
 .review-note {
-  margin-top: 4px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #F0FDF4;
+  border-left: 3px solid #16A34A;
+  border-radius: 4px;
   font-size: 12px;
-  color: #92400E;
+  color: #14532D;
+  line-height: 1.4;
+}
+
+.review-note.rejected {
+  background: #FEF2F2;
+  border-left-color: #DC2626;
+  color: #991B1B;
+}
+
+.review-note-label {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.review-note-body {
+  font-style: italic;
 }
 
 .status-cell {
