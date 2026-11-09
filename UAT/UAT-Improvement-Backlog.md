@@ -973,16 +973,20 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** 
   1. Filter daftar pengguna agar **hanya menampilkan personil yang memegang peran/kewenangan penyelesaian** (Tech Lead, Head of Department, Project Manager, Direktur/Eksekutif).
   2. Keluarkan akun pengguna yang sedang login (pelapor) dari daftar agar terhindar dari bias menugaskan kendala ke diri sendiri.
-  3. Kelompokkan opsi pilihan menggunakan tag HTML `<optgroup>` berdasarkan hierarki otoritas yang jelas:
-     - `<optgroup label="Atasan Langsung (Direct Supervisor)">` — Misal: `Bambang Pratama (Tech Lead)`
-     - `<optgroup label="Pimpinan Divisi (Department Heads)">` — Misal: `Arif Budiman (Head of Eng)`, `Gunawan Setiawan (Head of Ops)`, `Dharma Putra (Head of Delivery)`
-     - `<optgroup label="Manajemen Proyek (Project Managers)">` — Misal: `Dimas Prakoso (PM Core)`
-     - `<optgroup label="Direksi Eksekutif (Leadership)">` — Misal: `Hendra Wijaya (Direktur)`
-  4. Bila Atasan Langsung merangkap sebagai Pimpinan Divisi, tampilkan badge khusus atau utamakan di grup Atasan Langsung agar pelapor memiliki kepastian penanganan Level 1.
+  3. Pisahkan direktori secara tegas dan dinamis berdasarkan radio button jalur kewenangan:
+     - **Saat Organizational Authority (Struktural) dipilih:** Menampilkan optgroup murni hierarki organisasi perusahaan:
+       - `<optgroup label="── Atasan Langsung (Direct Supervisor) ──">` — e.g. `Bambang Pratama — Technical Lead 1 [Atasan Langsung]`
+       - `<optgroup label="── Penanggung Jawab Divisi Terkait (Department Heads) ──">` — e.g. `Arif Budiman`, `Gunawan Setiawan`, `Dharma Putra`, `Lukman Hakim`, `Dewi Lestari`
+       - `<optgroup label="── Direksi Eksekutif (Leadership) ──">` — `Hendra Wijaya — Chief Executive Officer`
+       *(Project Manager tidak ditampilkan di jalur struktural ini kecuali merangkap sebagai atasan langsung).*
+     - **Saat Project Authority (Kewenangan Proyek) dipilih:** Opsi dropdown terkunci jika belum memilih proyek. Begitu proyek dipilih (misal `PRJ-PORTAL`), dropdown khusus menampilkan otoritas proyek tersebut:
+       - `<optgroup label="── Pimpinan Proyek (Project Lead / PM: [Proyek]) ──">` — e.g. `Dimas Prakoso — Project Manager 1`
+       - `<optgroup label="── Pengarah Proyek (Project Sponsor / Reviewer: [Proyek]) ──">` — e.g. `Dharma Putra — Head of Delivery`
+  4. Bila Atasan Langsung merangkap sebagai Pimpinan Divisi, personil tersebut diprioritaskan di grup Atasan Langsung dengan jabatan lengkapnya dan otomatis disingkirkan dari grup Kepala Divisi untuk mencegah duplikasi.
 - **Rationale / Expected Benefit:** Menghilangkan kebingungan pelapor, mencegah salah sasaran penugasan tiket blocker, memperjelas rantai komando penanganan kendala, dan menjaga disiplin SLA eskalasi organisasi.
-- **Priority:** Medium
+- **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794192476939_c3ccef5b.jpg`.
-- **Status:** Open / Proposed (Backlog Pasca-UAT)
+- **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

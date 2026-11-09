@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrganizationService } from '../services/organization.service';
+import { ProjectAuthorityService } from '../services/project-authority.service';
 import { AssignOrgDto } from '../dto/assign-org.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
@@ -20,7 +21,10 @@ import { CanonicalFunction, CanonicalRole } from '@prisma/client';
 @Controller('api/v1')
 @UseGuards(AuthGuard, CsrfGuard)
 export class OrganizationController {
-  constructor(private readonly orgService: OrganizationService) {}
+  constructor(
+    private readonly orgService: OrganizationService,
+    private readonly projectAuthService: ProjectAuthorityService,
+  ) {}
 
   @Get('organization/my-assignment')
   async getMyAssignment(@CurrentUser('id') userId: string) {
@@ -30,6 +34,11 @@ export class OrganizationController {
   @Get('organization/users')
   async listActiveUsers() {
     return await this.orgService.listActiveUsers();
+  }
+
+  @Get('organization/project-authorities')
+  async listActiveProjectAuthorities() {
+    return await this.projectAuthService.listProjectAuthorities({ activeOnly: true, limit: 100 });
   }
 
   @Get('admin/organization/assignments')

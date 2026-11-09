@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
@@ -48,14 +48,42 @@ export interface GroupedUser extends AvailableUser {
   isDirectManager?: boolean;
 }
 
+export interface ProjectAuthorityInfo {
+  projectCode: string;
+  projectName: string;
+  projectManagerId?: string;
+  escalationReviewerId?: string;
+  projectManager?: { id: string; fullName: string; email: string };
+  escalationReviewer?: { id: string; fullName: string; email: string };
+}
+
 // Options & Reference Data
 const todayCommitments = ref<Array<{ id: string; taskText: string; sequenceNumber: number }>>([]);
 const availableProjects = ref([
   { code: 'PRJ-PORTAL', name: 'Website Customer Portal & Client Billing' },
   { code: 'PRJ-CORE', name: 'Enterprise Core Engine & Identity Sync' },
   { code: 'PRJ-MOBILE', name: 'WorkPulse Mobile Apps — iOS & Android' },
+  { code: 'WP-CORE', name: 'WorkPulse Platform Core 2026' },
 ]);
 const availableUsers = ref<AvailableUser[]>([]);
+const projectAuthorities = ref<ProjectAuthorityInfo[]>([
+  {
+    projectCode: 'WP-CORE',
+    projectName: 'WorkPulse Platform Core 2026',
+  },
+  {
+    projectCode: 'PRJ-CORE',
+    projectName: 'Enterprise Core Engine & Identity Sync',
+  },
+  {
+    projectCode: 'PRJ-PORTAL',
+    projectName: 'Website Customer Portal & Client Billing',
+  },
+  {
+    projectCode: 'PRJ-MOBILE',
+    projectName: 'WorkPulse Mobile Apps — iOS & Android',
+  },
+]);
 
 // State
 const loading = ref(false);
@@ -64,14 +92,25 @@ const submittedTicket = ref<any>(null);
 const errorMessage = ref<string | null>(null);
 const toastMessage = ref<string | null>(null);
 
-// Pengelompokan Hierarkis Penanggung Jawab Khusus (IMP-046)
-const categorizedOwners = computed(() => {
+// Reset penanggung jawab khusus saat berganti jalur wewenang atau berganti proyek
+watch(authorityContext, () => {
+  assignedOwnerId.value = '';
+});
+
+watch(projectCode, () => {
+  if (authorityContext.value === 'PROJECT_AUTHORITY') {
+    assignedOwnerId.value = '';
+  }
+});
+
+// Pemisahan Tegas Direktori Penanggung Jawab Berdasarkan Konteks Wewenang (DEC-002, IMP-046)
+const eligibleOwners = computed(() => {
   const currentUserId = authStore.user?.id;
   const currentManagerName = authStore.user?.managerName;
   const currentDirectManagerId = (authStore.user as any)?.directManagerId;
 
-  // 1. Filter: singkirkan akun diri sendiri, SYSTEM_ADMIN, dan calon karyawan/non-aktif
-  const eligible = availableUsers.value.filter(
+  // 1. Filter dasar: singkirkan akun diri sendiri, SYSTEM_ADMIN, dan calon karyawan/non-aktif
+  const cleanUsers = availableUsers.value.filter(
     (u) =>
       u.id !== currentUserId &&
       u.role !== 'SYSTEM_ADMIN' &&
@@ -79,60 +118,133 @@ const categorizedOwners = computed(() => {
       !u.email.includes('calon.karyawan@')
   );
 
-  const directManagers: GroupedUser[] = [];
-  const departmentHeads: GroupedUser[] = [];
-  const projectManagers: GroupedUser[] = [];
-  const directors: GroupedUser[] = [];
-  const others: GroupedUser[] = [];
+  // KASUS A: ORGANIZATIONAL AUTHORITY (STRUKTURAL)
+  // Hanya menampilkan hirarki struktural perusahaan: Atasan Langsung, Kepala Divisi, dan Direksi Eksekutif.
+  // Project Manager yang bukan atasan langsung dilarang masuk ke sini!
+  if (authorityContext.value === 'ORGANIZATIONAL_AUTHORITY') {
+    const directManagers: GroupedUser[] = [];
+    const departmentHeads: GroupedUser[] = [];
+    const directors: GroupedUser[] = [];
 
-  for (const u of eligible) {
-    // Deteksi apakah personil ini adalah Atasan Langsung pelapor
-    const isDirectManager =
-      (currentDirectManagerId && u.id === currentDirectManagerId) ||
-      (currentManagerName && u.fullName.toLowerCase().trim() === currentManagerName.toLowerCase().trim()) ||
-      (authStore.user?.email.includes('dev.frontend') && u.email.includes('lead.tech')) ||
-      (authStore.user?.email.includes('dev.backend') && u.email.includes('head.eng'));
+    // Deteksi Atasan Langsung (Direct Supervisor)
+    for (const u of cleanUsers) {
+      const isDirectManager =
+        (currentDirectManagerId && u.id === currentDirectManagerId) ||
+        (currentManagerName && u.fullName.toLowerCase().trim() === currentManagerName.toLowerCase().trim()) ||
+        (authStore.user?.email.includes('dev.frontend') && u.email.includes('lead.tech')) ||
+        (authStore.user?.email.includes('dev.backend') && u.email.includes('head.eng'));
 
-    if (isDirectManager) {
-      directManagers.push({ ...u, isDirectManager: true });
-      continue;
+      if (isDirectManager) {
+        directManagers.push({ ...u, isDirectManager: true });
+      }
     }
 
-    if (
-      u.role === 'CEO_MANAGEMENT' ||
-      u.role === 'DIRECTOR' ||
-      u.jobTitle?.includes('CEO') ||
-      u.email.includes('direktur')
-    ) {
-      directors.push(u);
-    } else if (
-      u.role === 'HEAD' ||
-      u.jobTitle?.startsWith('Head') ||
-      u.email.includes('head.') ||
-      u.email.includes('hrga@')
-    ) {
-      departmentHeads.push(u);
-    } else if (
-      u.role === 'PROJECT_MANAGER' ||
-      u.role === 'SUPERVISOR' ||
-      u.jobTitle?.includes('Lead') ||
-      u.jobTitle?.includes('Project Manager') ||
-      u.email.includes('lead.') ||
-      u.email.includes('pm@')
-    ) {
-      projectManagers.push(u);
-    } else if (u.role !== 'EMPLOYEE') {
-      others.push(u);
+    const directManagerIds = new Set(directManagers.map((m) => m.id));
+
+    // Deteksi Kepala Divisi & Direksi (Eksklusif: jika sudah menjadi Atasan Langsung, jangan duplikasi!)
+    for (const u of cleanUsers) {
+      if (directManagerIds.has(u.id)) continue;
+
+      if (
+        u.role === 'CEO_MANAGEMENT' ||
+        u.role === 'DIRECTOR' ||
+        u.jobTitle?.includes('CEO') ||
+        u.email.includes('direktur')
+      ) {
+        directors.push(u);
+      } else if (
+        u.role === 'HEAD' ||
+        u.jobTitle?.startsWith('Head') ||
+        u.email.includes('head.') ||
+        u.email.includes('hrga@') ||
+        u.email.includes('finance@')
+      ) {
+        departmentHeads.push(u);
+      }
+    }
+
+    return {
+      directManagers,
+      departmentHeads,
+      directors,
+      projectLeads: [] as GroupedUser[],
+      projectSponsors: [] as GroupedUser[],
+    };
+  }
+
+  // KASUS B: PROJECT AUTHORITY (KEWENANGAN PROYEK)
+  // Berdasarkan proyek yang dipilih (projectCode). Menampilkan Pimpinan Proyek (PM/Lead) dan Pengarah Proyek (Sponsor).
+  if (!projectCode.value) {
+    return {
+      directManagers: [] as GroupedUser[],
+      departmentHeads: [] as GroupedUser[],
+      directors: [] as GroupedUser[],
+      projectLeads: [] as GroupedUser[],
+      projectSponsors: [] as GroupedUser[],
+    };
+  }
+
+  const code = projectCode.value.toUpperCase();
+  const mapping = projectAuthorities.value.find((p) => p.projectCode.toUpperCase() === code);
+
+  const projectLeads: GroupedUser[] = [];
+  const projectSponsors: GroupedUser[] = [];
+
+  let pm = cleanUsers.find(
+    (u) =>
+      (mapping?.projectManagerId && u.id === mapping.projectManagerId) ||
+      (mapping?.projectManager?.id && u.id === mapping.projectManager.id)
+  );
+
+  let reviewer = cleanUsers.find(
+    (u) =>
+      (mapping?.escalationReviewerId && u.id === mapping.escalationReviewerId) ||
+      (mapping?.escalationReviewer?.id && u.id === mapping.escalationReviewer.id)
+  );
+
+  // Fallback deterministik sesuai katalog wewenang proyek Dutamedia
+  if (!pm) {
+    if (code.includes('CORE')) {
+      pm = cleanUsers.find((u) => u.email.includes('lead.tech') || u.fullName.includes('Bambang'));
+    } else {
+      pm = cleanUsers.find((u) => u.email.includes('pm@') || u.fullName.includes('Dimas'));
     }
   }
 
+  if (!reviewer) {
+    if (code.includes('CORE')) {
+      reviewer = cleanUsers.find((u) => u.email.includes('head.eng') || u.fullName.includes('Arif'));
+    } else {
+      reviewer = cleanUsers.find((u) => u.email.includes('head.delivery') || u.fullName.includes('Dharma'));
+    }
+  }
+
+  if (pm) projectLeads.push(pm);
+  if (reviewer && reviewer.id !== pm?.id) projectSponsors.push(reviewer);
+
   return {
-    directManagers,
-    departmentHeads,
-    projectManagers,
-    directors,
-    others,
+    directManagers: [] as GroupedUser[],
+    departmentHeads: [] as GroupedUser[],
+    directors: [] as GroupedUser[],
+    projectLeads,
+    projectSponsors,
   };
+});
+
+const selectedOwnerDetails = computed(() => {
+  if (!assignedOwnerId.value) return null;
+  return availableUsers.value.find((u) => u.id === assignedOwnerId.value) || null;
+});
+
+const defaultSupervisorName = computed(() => {
+  return eligibleOwners.value.directManagers[0]?.fullName || 'Bambang Pratama';
+});
+
+const defaultProjectLeadName = computed(() => {
+  return (
+    eligibleOwners.value.projectLeads[0]?.fullName ||
+    (projectCode.value.includes('CORE') ? 'Bambang Pratama' : 'Dimas Prakoso')
+  );
 });
 
 // My Blockers State
@@ -243,6 +355,16 @@ async function loadInitialData() {
       // Jangan set otomatis ke pengguna pertama; biarkan kosong agar sistem menentukan otomatis
       assignedOwnerId.value = '';
     }
+
+    // Ambil pemetaan wewenang proyek aktif dari backend
+    try {
+      const projAuthRes = await apiClient<{ data: ProjectAuthorityInfo[] }>('/v1/organization/project-authorities');
+      if (projAuthRes.data?.data && Array.isArray(projAuthRes.data.data)) {
+        projectAuthorities.value = projAuthRes.data.data;
+      }
+    } catch {
+      // Fallback tetap menggunakan catalog awal jika endpoint belum tersedia
+    }
   } catch (err: any) {
     console.error('Failed to load initial data:', err);
   } finally {
@@ -294,10 +416,13 @@ async function submitBlocker() {
     let targetOwnerId = assignedOwnerId.value || undefined;
     if (!targetOwnerId) {
       if (authorityContext.value === 'PROJECT_AUTHORITY' && projectCode.value) {
-        const pm = availableUsers.value.find((u) => u.email.includes('pm@') || u.role === 'PROJECT_MANAGER');
-        targetOwnerId = pm?.id || categorizedOwners.value.directManagers[0]?.id || categorizedOwners.value.departmentHeads[0]?.id;
+        targetOwnerId =
+          eligibleOwners.value.projectLeads[0]?.id ||
+          eligibleOwners.value.projectSponsors[0]?.id;
       } else {
-        targetOwnerId = categorizedOwners.value.directManagers[0]?.id || categorizedOwners.value.departmentHeads[0]?.id;
+        targetOwnerId =
+          eligibleOwners.value.directManagers[0]?.id ||
+          eligibleOwners.value.departmentHeads[0]?.id;
       }
     }
 
@@ -748,79 +873,96 @@ onMounted(() => {
                 </select>
               </div>
 
-              <!-- Pemilihan Orang Tertentu (IMP-046: Pengelompokan Hierarkis Otoritas) -->
+              <!-- Pemilihan Orang Tertentu (IMP-046: Pengelompokan Hierarkis Otoritas Berdasarkan Jalur) -->
               <div class="form-group" style="margin-top: 16px;">
                 <label for="assignedOwner">Penanggung Jawab Khusus <span class="opt">(opsional)</span></label>
-                <select id="assignedOwner" v-model="assignedOwnerId">
-                  <option value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis) —</option>
+                <select
+                  id="assignedOwner"
+                  v-model="assignedOwnerId"
+                  :disabled="authorityContext === 'PROJECT_AUTHORITY' && !projectCode"
+                >
+                  <!-- 1. JALUR ORGANIZATIONAL AUTHORITY (STRUKTURAL) -->
+                  <template v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
+                    <option value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis: Atasan Langsung) —</option>
 
-                  <optgroup
-                    v-if="categorizedOwners.directManagers.length > 0"
-                    label="── Atasan Langsung (Direct Supervisor) ──"
-                  >
-                    <option
-                      v-for="u in categorizedOwners.directManagers"
-                      :key="u.id"
-                      :value="u.id"
+                    <optgroup
+                      v-if="eligibleOwners.directManagers.length > 0"
+                      label="── Atasan Langsung (Direct Supervisor) ──"
                     >
-                      {{ u.fullName }} — {{ u.jobTitle || 'Technical Lead' }} [Atasan Langsung]
-                    </option>
-                  </optgroup>
+                      <option
+                        v-for="u in eligibleOwners.directManagers"
+                        :key="u.id"
+                        :value="u.id"
+                      >
+                        {{ u.fullName }} — {{ u.jobTitle || 'Technical Lead' }} [Atasan Langsung]
+                      </option>
+                    </optgroup>
 
-                  <optgroup
-                    v-if="categorizedOwners.departmentHeads.length > 0"
-                    label="── Pimpinan Divisi (Department Heads) ──"
-                  >
-                    <option
-                      v-for="u in categorizedOwners.departmentHeads"
-                      :key="u.id"
-                      :value="u.id"
+                    <optgroup
+                      v-if="eligibleOwners.departmentHeads.length > 0"
+                      label="── Penanggung Jawab Divisi Terkait (Department Heads) ──"
                     >
-                      {{ u.fullName }} — {{ u.jobTitle || 'Head of Department' }} ({{ u.email }})
-                    </option>
-                  </optgroup>
+                      <option
+                        v-for="u in eligibleOwners.departmentHeads"
+                        :key="u.id"
+                        :value="u.id"
+                      >
+                        {{ u.fullName }} — {{ u.jobTitle || 'Head of Department' }}
+                      </option>
+                    </optgroup>
 
-                  <optgroup
-                    v-if="categorizedOwners.projectManagers.length > 0"
-                    label="── Manajemen Proyek & Keahlian (Project Managers & Leads) ──"
-                  >
-                    <option
-                      v-for="u in categorizedOwners.projectManagers"
-                      :key="u.id"
-                      :value="u.id"
+                    <optgroup
+                      v-if="eligibleOwners.directors.length > 0"
+                      label="── Direksi Eksekutif (Leadership) ──"
                     >
-                      {{ u.fullName }} — {{ u.jobTitle || 'Lead / Manager' }} ({{ u.email }})
-                    </option>
-                  </optgroup>
+                      <option
+                        v-for="u in eligibleOwners.directors"
+                        :key="u.id"
+                        :value="u.id"
+                      >
+                        {{ u.fullName }} — {{ u.jobTitle || 'Chief Executive Officer' }}
+                      </option>
+                    </optgroup>
+                  </template>
 
-                  <optgroup
-                    v-if="categorizedOwners.directors.length > 0"
-                    label="── Direksi Eksekutif (Leadership) ──"
-                  >
-                    <option
-                      v-for="u in categorizedOwners.directors"
-                      :key="u.id"
-                      :value="u.id"
-                    >
-                      {{ u.fullName }} — {{ u.jobTitle || 'Chief Executive Officer' }} ({{ u.email }})
-                    </option>
-                  </optgroup>
+                  <!-- 2. JALUR PROJECT AUTHORITY (KEWENANGAN PROYEK) -->
+                  <template v-else>
+                    <option v-if="!projectCode" value="">— Pilih Proyek Terdaftar terlebih dahulu —</option>
+                    <option v-else value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis: Project Lead) —</option>
 
-                  <optgroup
-                    v-if="categorizedOwners.others.length > 0"
-                    label="── Personil Berwenang Lainnya ──"
-                  >
-                    <option
-                      v-for="u in categorizedOwners.others"
-                      :key="u.id"
-                      :value="u.id"
+                    <optgroup
+                      v-if="eligibleOwners.projectLeads.length > 0"
+                      :label="`── Pimpinan Proyek (Project Lead / PM: ${projectCode}) ──`"
                     >
-                      {{ u.fullName }} — {{ u.jobTitle || 'Staff' }} ({{ u.email }})
-                    </option>
-                  </optgroup>
+                      <option
+                        v-for="u in eligibleOwners.projectLeads"
+                        :key="u.id"
+                        :value="u.id"
+                      >
+                        {{ u.fullName }} — {{ u.jobTitle || 'Project Lead' }} [Pimpinan Proyek]
+                      </option>
+                    </optgroup>
+
+                    <optgroup
+                      v-if="eligibleOwners.projectSponsors.length > 0"
+                      :label="`── Pengarah Proyek (Project Sponsor / Reviewer: ${projectCode}) ──`"
+                    >
+                      <option
+                        v-for="u in eligibleOwners.projectSponsors"
+                        :key="u.id"
+                        :value="u.id"
+                      >
+                        {{ u.fullName }} — {{ u.jobTitle || 'Project Sponsor' }} [Pengarah Proyek]
+                      </option>
+                    </optgroup>
+                  </template>
                 </select>
                 <span class="field-help" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
-                  Biarkan opsi default agar sistem menugaskan otomatis ke Atasan Langsung (Level 1) atau Project Lead sesuai jalur kewenangan yang dipilih.
+                  {{
+                    authorityContext === 'ORGANIZATIONAL_AUTHORITY'
+                      ? 'Biarkan opsi default agar sistem menugaskan otomatis ke Atasan Langsung (Level 1) dalam bagan organisasi.'
+                      : 'Biarkan opsi default agar sistem menugaskan otomatis ke Pimpinan Proyek yang berwenang atas proyek ini.'
+                  }}
                 </span>
               </div>
 
@@ -828,12 +970,18 @@ onMounted(() => {
               <div class="route-preview">
                 <Clock :size="20" class="route-icon" />
                 <div>
-                  <strong>Jalur Penanganan Otomatis:</strong>
-                  <p v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                    Tiket akan langsung diteruskan ke Atasan Langsung Anda. Batas waktu respons mulai dihitung mundur sejak tiket terbit.
+                  <strong>Jalur Penanganan {{ assignedOwnerId ? 'Khusus' : 'Otomatis' }}:</strong>
+                  <p v-if="selectedOwnerDetails">
+                    Penanggung jawab ditunjuk spesifik: <strong>{{ selectedOwnerDetails.fullName }}</strong> ({{ selectedOwnerDetails.jobTitle || selectedOwnerDetails.role }}). Notifikasi darurat dan eskalasi langsung diarahkan ke yang bersangkutan.
+                  </p>
+                  <p v-else-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
+                    Tiket akan langsung diteruskan otomatis ke Atasan Langsung Anda<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>. Batas waktu respons mulai dihitung mundur sejak tiket terbit.
+                  </p>
+                  <p v-else-if="!projectCode">
+                    Silakan pilih Proyek Terdaftar terlebih dahulu untuk menentukan Pimpinan Proyek yang berwenang menerima eskalasi kendala ini.
                   </p>
                   <p v-else>
-                    Tiket akan langsung diteruskan ke Project Lead untuk ditindaklanjuti.
+                    Tiket akan langsung diteruskan otomatis ke Pimpinan Proyek {{ projectCode }}<span v-if="defaultProjectLeadName">: <strong>{{ defaultProjectLeadName }}</strong></span> untuk ditindaklanjuti.
                   </p>
                 </div>
               </div>
