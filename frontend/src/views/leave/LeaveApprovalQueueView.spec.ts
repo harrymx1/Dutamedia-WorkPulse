@@ -93,7 +93,7 @@ describe('LeaveApprovalQueueView.vue (Prototipe 21 / EP10 - Antrean Approval Cut
 
     expect(wrapper.find('.modal-card').exists()).toBe(true);
     expect(wrapper.text()).toContain('Tinjau Permohonan Cuti');
-    expect(wrapper.text()).toContain('Kebijakan Rekonsiliasi DEC-007');
+    expect(wrapper.text()).toContain('Kebijakan Rekonsiliasi Kehadiran');
   });
 });
 

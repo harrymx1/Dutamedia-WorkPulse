@@ -10,7 +10,6 @@ import {
   Search,
   Check,
   X,
-  FileText,
   Info,
 } from 'lucide-vue-next';
 
@@ -363,70 +362,100 @@ onMounted(() => {
       </section>
 
       <!-- Review Modal -->
-      <div v-if="isReviewModalOpen && selectedRequest" class="modal-backdrop">
+      <div v-if="isReviewModalOpen && selectedRequest" class="modal-backdrop" @click.self="closeReviewModal">
         <div class="modal-card">
           <div class="modal-header">
-            <h3>Tinjau Permohonan Cuti</h3>
-            <button type="button" class="close-btn" @click="closeReviewModal">
+            <div>
+              <h3>Tinjau Permohonan Cuti</h3>
+              <p class="modal-subtitle">Tentukan keputusan persetujuan untuk pengajuan cuti anggota tim.</p>
+            </div>
+            <button type="button" class="close-btn" aria-label="Tutup modal" @click="closeReviewModal">
               <X :size="18" />
             </button>
           </div>
 
           <div class="modal-body">
-            <div class="detail-box">
-              <div class="detail-row">
-                <span class="detail-label">Pemohon:</span>
-                <strong>{{ selectedRequest.user?.fullName }}</strong>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Rentang Cuti:</span>
-                <span>{{ formatDateRange(selectedRequest.startDate, selectedRequest.endDate) }} ({{ calculateDuration(selectedRequest.startDate, selectedRequest.endDate) }} hari)</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Alasan:</span>
-                <span>{{ selectedRequest.reason || '-' }}</span>
+            <!-- Ringkasan Pengajuan Cuti -->
+            <div class="detail-card">
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Pemohon</span>
+                  <div class="detail-val-user">
+                    <strong>{{ selectedRequest.user?.fullName }}</strong>
+                    <span class="user-role-badge">{{ selectedRequest.user?.role || 'Karyawan' }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-item">
+                  <span class="detail-label">Jenis Cuti</span>
+                  <span class="leave-type-chip">{{ selectedRequest.leaveType || 'Cuti Tahunan' }}</span>
+                </div>
+
+                <div class="detail-item">
+                  <span class="detail-label">Rentang Tanggal</span>
+                  <div class="detail-val-date">
+                    <CalendarDays :size="14" class="date-icon" />
+                    <span>{{ formatDateRange(selectedRequest.startDate, selectedRequest.endDate) }}</span>
+                    <span class="duration-badge">{{ calculateDuration(selectedRequest.startDate, selectedRequest.endDate) }} hari kerja</span>
+                  </div>
+                </div>
+
+                <div class="detail-item detail-item-full">
+                  <span class="detail-label">Alasan Cuti</span>
+                  <p class="detail-reason">{{ selectedRequest.reason || '-' }}</p>
+                </div>
               </div>
             </div>
 
-            <div class="decision-toggle">
-              <button
-                type="button"
-                class="decision-btn"
-                :class="{ active: reviewDecision === 'APPROVED', green: reviewDecision === 'APPROVED' }"
-                @click="reviewDecision = 'APPROVED'"
-              >
-                <Check :size="16" />
-                <span>Setujui (Approve)</span>
-              </button>
-              <button
-                type="button"
-                class="decision-btn"
-                :class="{ active: reviewDecision === 'REJECTED', red: reviewDecision === 'REJECTED' }"
-                @click="reviewDecision = 'REJECTED'"
-              >
-                <X :size="16" />
-                <span>Tolak (Reject)</span>
-              </button>
+            <!-- Segmented Decision Control -->
+            <div class="decision-selector">
+              <label class="selector-label">Keputusan Persetujuan <span class="req">*</span></label>
+              <div class="decision-toggle">
+                <button
+                  type="button"
+                  class="decision-btn"
+                  :class="{ active: reviewDecision === 'APPROVED', green: reviewDecision === 'APPROVED' }"
+                  @click="reviewDecision = 'APPROVED'"
+                >
+                  <Check :size="16" />
+                  <span>Setujui Permohonan</span>
+                </button>
+                <button
+                  type="button"
+                  class="decision-btn"
+                  :class="{ active: reviewDecision === 'REJECTED', red: reviewDecision === 'REJECTED' }"
+                  @click="reviewDecision = 'REJECTED'"
+                >
+                  <X :size="16" />
+                  <span>Tolak Permohonan</span>
+                </button>
+              </div>
             </div>
 
-            <!-- DEC-007 Info Note -->
+            <!-- Banner Info Rekonsiliasi Otomatis (Saat Setujui) -->
             <div v-if="reviewDecision === 'APPROVED'" class="info-note">
               <Info :size="18" class="info-icon" />
-              <div>
-                <strong>Kebijakan Rekonsiliasi DEC-007:</strong> Menyetujui cuti ini akan secara otomatis memperbarui status kehadiran personil dan merekonsiliasi catatan ketidakhadiran (No Submission) yang mungkin telah terbentuk pasca-cut off 09:30 WIB.
+              <div class="info-text">
+                <strong>Kebijakan Rekonsiliasi Kehadiran:</strong> Menyetujui cuti ini akan secara otomatis memperbarui status kehadiran personil dan merekonsiliasi catatan ketidakhadiran (No Submission) yang mungkin telah terbentuk pasca-cut off 09:30 WIB.
               </div>
             </div>
 
+            <!-- Form Catatan Reviewer -->
             <div class="field">
-              <label for="reviewNotes">
-                Catatan Reviewer {{ reviewDecision === 'REJECTED' ? '(Wajib Diisi)' : '(Opsional)' }}
-              </label>
+              <div class="field-label-row">
+                <label for="reviewNotes">
+                  Catatan Reviewer
+                </label>
+                <span class="field-hint" :class="{ required: reviewDecision === 'REJECTED' }">
+                  {{ reviewDecision === 'REJECTED' ? 'Wajib diisi untuk penolakan' : 'Opsional' }}
+                </span>
+              </div>
               <textarea
                 id="reviewNotes"
                 v-model="reviewNotes"
                 class="textarea"
                 rows="3"
-                placeholder="Tuliskan catatan persetujuan atau alasan penolakan..."
+                :placeholder="reviewDecision === 'APPROVED' ? 'Tuliskan arahan tugas atau catatan persetujuan untuk pemohon (opsional)...' : 'Tuliskan alasan penolakan secara jelas agar pemohon dapat mengetahuinya (wajib)...'"
               ></textarea>
             </div>
           </div>
@@ -442,8 +471,9 @@ onMounted(() => {
               :disabled="submittingReview"
               @click="submitReview"
             >
-              <FileText :size="15" />
-              <span>{{ submittingReview ? 'Memproses...' : (reviewDecision === 'APPROVED' ? 'Konfirmasi Setujui' : 'Konfirmasi Tolak') }}</span>
+              <Check v-if="reviewDecision === 'APPROVED'" :size="15" />
+              <X v-else :size="15" />
+              <span>{{ submittingReview ? 'Memproses...' : (reviewDecision === 'APPROVED' ? 'Setujui Permohonan' : 'Tolak Permohonan') }}</span>
             </button>
           </div>
         </div>
@@ -841,6 +871,7 @@ h1 {
   position: fixed;
   inset: 0;
   background: rgba(14, 33, 27, 0.45);
+  backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
   z-index: 999;
@@ -850,23 +881,32 @@ h1 {
 .modal-card {
   background: #FFFFFF;
   border-radius: 12px;
-  max-width: 500px;
+  max-width: 520px;
   width: 100%;
   box-shadow: 0 16px 36px rgba(14, 33, 27, 0.16);
+  border: 1px solid var(--color-border-subtle, #DCE7E2);
   overflow: hidden;
 }
 
 .modal-header {
-  padding: 16px 20px;
+  padding: 18px 24px 14px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
 }
 
 .modal-header h3 {
   font-size: 16px;
   font-weight: 800;
+  color: var(--color-text-primary, #0E211B);
+  margin: 0 0 4px;
+}
+
+.modal-subtitle {
+  font-size: 12.5px;
+  color: var(--color-text-secondary, #5C6E68);
+  margin: 0;
 }
 
 .close-btn {
@@ -874,81 +914,225 @@ h1 {
   border: none;
   cursor: pointer;
   color: var(--color-text-secondary, #5C6E68);
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.close-btn:hover {
+  background: #F0F4F2;
+  color: var(--color-text-primary, #0E211B);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 20px 24px;
 }
 
-.detail-box {
+/* Detail Card */
+.detail-card {
   background: #F8FAF9;
   border: 1px solid var(--color-border-subtle, #DCE7E2);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-  font-size: 13px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
 }
 
-.detail-row {
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.detail-item {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.detail-row:last-child {
-  margin-bottom: 0;
+.detail-item-full {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-border-subtle, #DCE7E2);
 }
 
 .detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-secondary, #5C6E68);
+}
+
+.detail-val-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--color-text-primary, #0E211B);
+}
+
+.user-role-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #E5E7EB;
+  color: #374151;
+}
+
+.leave-type-chip {
+  align-self: flex-start;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #E6F4EA;
+  color: #137333;
+}
+
+.detail-val-date {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-primary, #0E211B);
+  font-weight: 600;
+}
+
+.date-icon {
+  color: var(--color-brand-primary, #00674D);
+  flex-shrink: 0;
+}
+
+.duration-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+
+.detail-reason {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-primary, #0E211B);
+}
+
+/* Decision Selector */
+.decision-selector {
+  margin-bottom: 16px;
+}
+
+.selector-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0E211B);
+  margin-bottom: 8px;
 }
 
 .decision-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 16px;
 }
 
 .decision-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px;
+  gap: 8px;
+  padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   background: #FFFFFF;
+  color: var(--color-text-secondary, #5C6E68);
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.decision-btn:hover {
+  background: #F8FAF9;
+  border-color: var(--color-border-strong, #A9C7BC);
+  color: var(--color-text-primary, #0E211B);
 }
 
 .decision-btn.active.green {
-  background: #DCFCE7;
-  color: #166534;
-  border-color: #86EFAC;
+  background: #ECFDF5;
+  color: #065F46;
+  border-color: #6EE7B7;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
 }
 
 .decision-btn.active.red {
-  background: #FEE2E2;
-  color: #991B1B;
-  border-color: #FCA5A5;
+  background: #FFF1F2;
+  color: #9F1239;
+  border-color: #FDA4AF;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.15);
 }
 
+/* Info Note */
 .info-note {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  background: #E0F2FE;
-  border: 1px solid #7DD3FC;
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
   border-radius: 8px;
-  padding: 12px;
+  padding: 12px 14px;
   font-size: 12px;
-  color: #075985;
-  line-height: 1.45;
+  color: #0369A1;
+  line-height: 1.5;
   margin-bottom: 16px;
+}
+
+.info-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  color: #0284C7;
+  margin-top: 1px;
+}
+
+.info-text {
+  flex: 1;
+}
+
+/* Field */
+.field {
+  margin-bottom: 0;
+}
+
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.field-label-row label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0E211B);
+}
+
+.field-hint {
+  font-size: 11.5px;
+  color: var(--color-text-secondary, #5C6E68);
+}
+
+.field-hint.required {
+  color: #DC2626;
+  font-weight: 600;
 }
 
 .textarea {
@@ -957,11 +1141,22 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 8px;
   font-size: 13px;
-  margin-top: 6px;
+  line-height: 1.5;
+  color: var(--color-text-primary, #0E211B);
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.15s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-primary, #00674D);
+  box-shadow: 0 0 0 3px rgba(0, 103, 77, 0.12);
 }
 
 .modal-actions {
-  padding: 14px 20px;
+  padding: 14px 24px;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
@@ -973,12 +1168,13 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
+  transition: all 0.15s ease;
 }
 
 .btn-secondary {
@@ -987,14 +1183,31 @@ h1 {
   color: var(--color-text-primary, #0E211B);
 }
 
+.btn-secondary:hover {
+  background: #F0F4F2;
+}
+
 .btn-primary {
   background: var(--color-brand-primary, #00674D);
   color: #FFFFFF;
 }
 
+.btn-primary:hover {
+  background: #00523D;
+}
+
 .btn-danger {
   background: #DC2626;
   color: #FFFFFF;
+}
+
+.btn-danger:hover {
+  background: #B91C1C;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .toast-popup {

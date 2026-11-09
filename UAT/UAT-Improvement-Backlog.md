@@ -1089,4 +1089,30 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend Hotfixed)
 
 ---
+
+### [IMP-052] Redesain Modal Persetujuan Cuti (Leave Review Modal Layout, Microcopy & SVG Icon Alignment)
+- **Finding ID:** IMP-052
+- **Title:** Redesain Modal Persetujuan Cuti (Leave Review Modal Layout, Microcopy & SVG Icon Alignment)
+- **Category:** UI / Visual Design & Enterprise Modal Polish
+- **Page / Module:** Modal Tinjau Permohonan Cuti (`/leave/queue`)
+- **Related Test Case:** `TC-LEAV-002`
+- **Current Condition:** 
+  1. Teks banner info menampilkan identifikasi teknis arsitektur rekayasa `Kebijakan Rekonsiliasi DEC-007:` yang membingungkan pengguna akhir.
+  2. Ikon SVG `<Info>` terhimpit/gepeng (*squashed*) secara horizontal akibat ketiadaan `flex-shrink: 0;` dan dimensi eksplisit.
+  3. Ringkasan pengajuan cuti (`detail-box`) menggunakan perataan `space-between` yang renggang dan tidak sejajar; teks alasan panjang membungkus tepat di sebelah label sehingga terkesan berantakan (*ragged*).
+  4. Microcopy dwibahasa canggung pada tombol opsi: `Setujui (Approve)` dan `Tolak (Reject)`.
+  5. Tombol konfirmasi akhir menggunakan ikon dokumen generic `<FileText>` alih-alih ikon aksi kontekstual (`<Check>` / `<X>`).
+- **Proposed Improvement:** 
+  1. Hapus kode internal `DEC-007` dari teks banner informasi; gunakan frasa bisnis alami `Kebijakan Rekonsiliasi Kehadiran:`.
+  2. Perbaiki gaya ikon SVG info dengan `flex-shrink: 0; width: 18px; height: 18px; min-width: 18px; color: #0284C7;`.
+  3. Rombak ringkasan detail menjadi kartu terstruktur berbasis CSS Grid (`detail-grid` 2 kolom) yang rapi dengan badge peran pemohon, chip jenis cuti, ikon kalender tanggal dan durasi kerja, serta baris khusus alasan cuti penuh.
+  4. Sempurnakan microcopy tombol pilihan menjadi bahasa Indonesia formal yang bersih: `Setujui Permohonan` dan `Tolak Permohonan`.
+  5. Selaraskan ikon dan label tombol konfirmasi dengan keputusan yang aktif (`<Check>` + `Setujui Permohonan` untuk persetujuan; `<X>` + `Tolak Permohonan` untuk penolakan).
+  6. Berikan petunjuk dinamis pada placeholder textarea catatan reviewer sesuai mode keputusan.
+- **Rationale / Expected Benefit:** Menghadirkan modal persetujuan yang elegan, ergonomis, berbobot enterprise, serta bebas dari kebocoran artefak rekayasa internal sistem.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794213810808_163318dd.png`.
+- **Status:** Resolved / Implemented (Frontend Hotfixed)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*
