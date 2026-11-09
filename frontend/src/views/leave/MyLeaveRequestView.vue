@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// WorkPulse - MyLeaveRequestView (with self-service cancellation)
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';

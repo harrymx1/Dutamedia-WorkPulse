@@ -1932,13 +1932,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Pengajuan cuti tersimpan berstatus PENDING, kalkulasi durasi hari kerja tepat, dan notifikasi terkirim ke atasan langsung.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot riwayat cuti mandiri dengan status PENDING dan sisa kuota.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Formulir pengajuan cuti tahunan mandiri 2 hari kerja (24 Nov - 25 Nov 2026) berhasil dikirimkan dengan alasan "Keperluan keluarga dan renovasi rumah tinggal di luar kota". Notifikasi toast hijau ("Permohonan cuti berhasil diajukan.") muncul, form ter-reset, dan permohonan tercatat di panel Riwayat Leave Request dengan ID #9f45df50-7bb0-4a66-91c0-dfc85fb1fa3b berstatus Leave (Pending).
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-09
+- **Defect ID:** None
+- **Retest Result:** None
+- **Catatan:** Bukti tangkapan layar media_1794211141927_f8aafcce.jpg dan media_1794211152183_1905da85.jpg.
 
 ---
 

@@ -37,7 +37,7 @@ TC-CORR-005,SCN-CORR-05,FR-43,Penerbitan Dispensasi Kepatuhan Resmi (Exemption) 
 TC-HRGA-001,SCN-HRGA-01,FR-42,Tindak Lanjut Peristiwa Kepatuhan via Penautan Catatan Pembinaan HRGA,HRGA,High,Pass,Harry,2026-11-09,None,Penautan catatan pembinaan manajerial sukses mentransisikan insiden Siti Rahma ke ADDRESSED dan mengurangi counter kasus aktif,None,None
 TC-HRGA-002,SCN-HRGA-02,FR-46,Pemberian Dispensasi Resmi Terikat Waktu & Validasi Formulir HRGA,HRGA,High,Pass,Harry,2026-11-09,None,Validasi tanggal selesai lebih awal dari tanggal mulai ditolak merah dan pengajuan dinas luar terikat waktu 15-20 Nov sukses terbit hijau,None,None
 TC-CORR-006,SCN-CORR-06,UAT-REQ-EODCORR-001,Pengajuan Permohonan Koreksi Realisasi EOD Pasca Cut-Off,EMPLOYEE,High,Pass,Harry,2026-11-09,None,Permohonan koreksi material EOD berhasil diajukan dengan outcome baru DONE dan tercatat PENDING pada nilai batas 10 karakter,None,None
-TC-LEAV-001,SCN-LEAV-01,FR-45,Pengajuan Cuti Tahunan Mandiri oleh Karyawan,EMPLOYEE,High,Not Run,,,,,,,
+TC-LEAV-001,SCN-LEAV-01,FR-45,Pengajuan Cuti Tahunan Mandiri oleh Karyawan,EMPLOYEE,High,Pass,Harry,2026-11-09,None,Permohonan cuti tahunan mandiri 2 hari kerja (24-25 Nov 2026) berhasil diajukan dengan toast sukses hijau dan tercatat PENDING di riwayat pengajuan,None,None
 TC-LEAV-002,SCN-LEAV-02,FR-46,Persetujuan Permohonan Cuti oleh Atasan Langsung,SUPERVISOR,High,Not Run,,,,,,,
 TC-LEAV-003,SCN-LEAV-03,FR-47,Rekonsiliasi Cuti Otomatis Pasca Cut-Off (Superseded by Leave),HRGA,Critical,Not Run,,,,,,,
 TC-COAC-001,SCN-COAC-01,FR-49,Pemberian Catatan Bimbingan Manajer (Manager Coaching Note),SUPERVISOR,Medium,Not Run,,,,,,,
