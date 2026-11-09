@@ -985,7 +985,7 @@ onMounted(() => {
                   <!-- 3. REKAN / PIHAK LAIN: pilihan bebas pelapor di luar jalur kewenangan -->
                   <optgroup
                     v-if="otherOwners.length > 0 && !(authorityContext === 'PROJECT_AUTHORITY' && !projectCode)"
-                    label="── Rekan / Pihak Lain (Pilihan Pelapor) ──"
+                    label="── Lainnya ──"
                   >
                     <option v-for="u in otherOwners" :key="u.id" :value="u.id">
                       {{ u.fullName }} — {{ u.jobTitle || 'Staf' }}
