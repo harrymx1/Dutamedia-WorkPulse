@@ -233,6 +233,7 @@ function isDelegationNotification(type?: string): boolean {
 
 function getDelegationHeading(type?: string): string {
   if (!type) return 'Mandat Wewenang & Tata Kelola Delegasi Reviewer';
+  if (type.includes('TEAM_NOTICE')) return 'Rincian Pelimpahan Wewenang Atasan Tim Anda';
   if (type.includes('ASSIGNED')) return 'Rincian Mandat Penugasan Reviewer Sementara';
   if (type.includes('DELEGATED')) return 'Rincian Mandat Pelimpahan Wewenang Peninjauan';
   if (type.includes('UPDATED')) return 'Rincian Pembaruan Ketentuan Pendelegasian';
@@ -260,11 +261,13 @@ function parseDelegationContent(message: string): DelegationParsedContent {
   // 1. Jika pesan sudah berformat newline (format baru terstruktur)
   if (message.includes('\n')) {
     const rawLines = message.split('\n').map(l => l.trim()).filter(Boolean);
-    for (const line of rawLines) {
+    for (let lineIdx = 0; lineIdx < rawLines.length; lineIdx++) {
+      const line = rawLines[lineIdx];
       const colonIdx = line.indexOf(':');
-      // Jika baris adalah narasi personal pengantar
+      // Jika baris adalah narasi personal pengantar (baris pertama berupa kalimat utuh berakhiran titik)
       if (
         colonIdx === -1 ||
+        (lineIdx === 0 && line.endsWith('.')) ||
         line.startsWith('Anda telah') ||
         line.startsWith('Wewenang peninjauan Anda') ||
         line.startsWith('Ketentuan pelimpahan') ||

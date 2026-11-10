@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 59 Calon Perbaikan (IMP-001 s.d. IMP-059)
+> **Total Temuan:** 60 Calon Perbaikan (IMP-001 s.d. IMP-060)
 
 ---
 
@@ -105,6 +105,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-057** | Penayangan Rincian Isi Catatan Pembinaan pada Notifikasi & Pencegahan Navigasi 403 bagi Karyawan | UX Ergonomics & Navigation Guard | `/notifications` & `CoachingService` | `TC-COAC-002` | High | Resolved / Implemented |
 | **IMP-058** | Restrukturisasi Alur Delegasi Reviewer: Orientasi Pejabat Berhalangan, Jabatan Riil, dan Notifikasi 2 Arah | Business Logic & Organizational Governance | `/admin/temporary-reviewers` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
 | **IMP-059** | Tata Kelola Siklus Hidup Pendelegasian Wewenang (Edit & Cabut Akses) serta Notifikasi Dua Arah Komprehensif | Lifecycle Management & Notification Transparency | `/admin/temporary-reviewers` & `/notifications` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
+| **IMP-060** | Notifikasi Transparansi Pelimpahan Wewenang kepada Seluruh Anggota Tim (Bawahan) | Notification Transparency & Stakeholder Communication | `/notifications` & `TemporaryReviewerService` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
 
 ---
 
@@ -1293,4 +1294,21 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
+### [IMP-060] Notifikasi Transparansi Pelimpahan Wewenang kepada Seluruh Anggota Tim (Bawahan)
+- **Finding ID:** IMP-060
+- **Category:** Notification Transparency & Stakeholder Communication
+- **Page / Module:** Pusat Notifikasi (`/notifications`) & Backend `TemporaryReviewerService`
+- **Related Test Case:** `TC-ADMN-001`, `TC-HRGA-003`
+- **Current Condition:** Notifikasi delegasi hanya dikirim ke 2 pihak (pejabat pengganti dan pejabat yang digantikan). Anggota tim tidak tahu atasannya berhalangan dan siapa yang meninjau permohonan mereka, sehingga berisiko salah eskalasi dan meragukan legitimasi keputusan.
+- **Proposed Improvement:**
+  1. Saat delegasi diterbitkan, diperbarui, atau dicabut, sistem mengirim notifikasi `TEMPORARY_REVIEWER_TEAM_NOTICE` ke seluruh anggota aktif divisi target (cakupan sama dengan cakupan wewenang reviewer sementara pada `ScopeResolverService`).
+  2. Dikecualikan: pejabat pengganti, pejabat yang digantikan (sudah menerima notifikasi khusus), penerbit delegasi, akun System Administrator, serta pengguna nonaktif.
+  3. Privasi: alasan delegasi TIDAK disertakan pada notifikasi tim karena dapat memuat informasi sensitif pejabat berhalangan.
+  4. Tanpa tombol aksi (murni informatif). Kegagalan kirim tidak menggagalkan proses delegasi.
+- **Rationale / Expected Benefit:** Menghindari kebingungan eskalasi, menjaga legitimasi keputusan pejabat pengganti, dan memberi kepastian kapan wewenang kembali normal.
+- **Priority:** High
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+---
+
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

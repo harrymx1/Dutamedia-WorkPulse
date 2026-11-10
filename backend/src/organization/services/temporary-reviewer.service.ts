@@ -7,11 +7,67 @@ import {
 } from '../dto/temporary-reviewer.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
-import { CanonicalFunction, NotificationChannel } from '@prisma/client';
+import {
+  CanonicalFunction,
+  CanonicalRole,
+  NotificationChannel,
+  UserStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class TemporaryReviewerService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Mengirim notifikasi transparansi kepada seluruh anggota tim (bawahan) pada divisi target.
+   * Cakupan penerima sengaja disamakan dengan cakupan wewenang reviewer sementara
+   * (seluruh anggota aktif divisi target), kecuali pihak yang sudah diberi notifikasi khusus,
+   * penerbit delegasi, dan akun System Administrator.
+   * Alasan delegasi sengaja TIDAK disertakan demi menjaga privasi pejabat yang berhalangan.
+   * Kegagalan pengiriman tidak boleh menggagalkan proses delegasi utama.
+   */
+  private async notifyTeamMembers(params: {
+    targetFunction: CanonicalFunction;
+    excludeUserIds: Array<string | null | undefined>;
+    triggerType: string;
+    title: string;
+    message: string;
+    assignmentId: string;
+  }): Promise<void> {
+    try {
+      const today = new Date();
+      const excluded = params.excludeUserIds.filter((id): id is string => Boolean(id));
+
+      const members = await this.prisma.organizationalAssignment.findMany({
+        where: {
+          function: params.targetFunction,
+          role: { not: CanonicalRole.SYSTEM_ADMIN },
+          effectiveDate: { lte: today },
+          OR: [{ endDate: null }, { endDate: { gte: today } }],
+          userId: { notIn: excluded },
+          user: { status: UserStatus.ACTIVE },
+        },
+        select: { userId: true },
+        distinct: ['userId'],
+      });
+
+      if (members.length === 0) return;
+
+      await this.prisma.notification.createMany({
+        data: members.map((m) => ({
+          recipientUserId: m.userId,
+          triggerType: params.triggerType,
+          channel: NotificationChannel.IN_APP_CENTER,
+          title: params.title,
+          message: params.message,
+          relatedEntityType: 'temporary_reviewer_assignments',
+          relatedEntityId: params.assignmentId,
+        })),
+      });
+    } catch (err) {
+      console.error('Gagal mengirim notifikasi transparansi ke anggota tim:', err);
+    }
+  }
 
   async createTemporaryReviewer(
     dto: CreateTemporaryReviewerDto,
@@ -159,6 +215,24 @@ export class TemporaryReviewerService {
           },
         });
       }
+
+      // 3. Notifikasi Transparansi untuk Seluruh Anggota Tim (Bawahan) pada Divisi Target
+      await this.notifyTeamMembers({
+        targetFunction: dto.targetFunction,
+        excludeUserIds: [dto.delegateUserId, replacedUser?.id, adminUserId],
+        triggerType: 'TEMPORARY_REVIEWER_TEAM_NOTICE',
+        title: 'Pelimpahan Wewenang Peninjauan Atasan Tim Anda',
+        message: [
+          `Selama atasan Anda ${replacedName ?? `Divisi ${dto.targetFunction}`} berhalangan, wewenang peninjauan dan persetujuan dialihkan sementara kepada ${delegateName}. Permohonan cuti dan koreksi komitmen Anda pada periode ini akan ditinjau oleh ${delegateName}.`,
+          'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+          `Divisi Wewenang: ${dto.targetFunction}`,
+          replacedName ? `Atasan Berhalangan: ${replacedName}` : null,
+          `Pejabat Pengganti: ${delegateName}`,
+          `Periode Pelimpahan: ${effStr} s/d ${expStr}`,
+          `Diterbitkan Oleh: ${issuerName}`,
+        ].filter(Boolean).join('\n'),
+        assignmentId: assignment.id,
+      });
     } catch (notifErr) {
       // Logging error notifikasi tanpa menggagalkan transaksi delegasi utama
       console.error('Gagal mengirimkan notifikasi pendelegasian wewenang:', notifErr);
@@ -286,6 +360,24 @@ export class TemporaryReviewerService {
           },
         });
       }
+
+      // 3. Notifikasi Transparansi untuk Seluruh Anggota Tim (Bawahan)
+      await this.notifyTeamMembers({
+        targetFunction: assignment.targetFunction,
+        excludeUserIds: [assignment.delegateUserId, replacedUser?.id, adminUserId],
+        triggerType: 'TEMPORARY_REVIEWER_TEAM_NOTICE',
+        title: 'Pembaruan Masa Pelimpahan Wewenang Atasan Tim Anda',
+        message: [
+          `Masa pelimpahan wewenang peninjauan atasan Anda (${replacedName}) kepada ${delegateName} telah diperbarui. Permohonan cuti dan koreksi komitmen Anda tetap ditinjau oleh ${delegateName} selama periode berikut.`,
+          'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+          `Divisi Wewenang: ${assignment.targetFunction}`,
+          `Atasan Berhalangan: ${replacedName}`,
+          `Pejabat Pengganti: ${delegateName}`,
+          `Periode Berlaku Baru: ${effStr} s/d ${expStr}`,
+          `Diperbarui Oleh: ${issuerName}`,
+        ].join('\n'),
+        assignmentId: assignment.id,
+      });
     } catch (err) {
       console.error('Gagal mengirim notifikasi pembaruan delegasi:', err);
     }
@@ -385,6 +477,23 @@ export class TemporaryReviewerService {
           },
         });
       }
+
+      // 3. Notifikasi Transparansi untuk Seluruh Anggota Tim (Bawahan)
+      await this.notifyTeamMembers({
+        targetFunction: assignment.targetFunction,
+        excludeUserIds: [assignment.delegateUserId, replacedUser?.id, adminUserId],
+        triggerType: 'TEMPORARY_REVIEWER_TEAM_NOTICE',
+        title: 'Pelimpahan Wewenang Atasan Tim Anda Telah Berakhir',
+        message: [
+          `Pelimpahan wewenang peninjauan atasan Anda (${replacedName}) kepada ${delegateName} telah resmi berakhir. Permohonan cuti dan koreksi komitmen Anda kini kembali ditinjau langsung oleh atasan Anda.`,
+          'Status Wewenang: Kembali kepada atasan definitif',
+          `Divisi Wewenang: ${assignment.targetFunction}`,
+          `Atasan Definitif: ${replacedName}`,
+          `Pejabat Pengganti Sebelumnya: ${delegateName}`,
+          `Diproses Oleh: ${issuerName}`,
+        ].join('\n'),
+        assignmentId: assignment.id,
+      });
     } catch (err) {
       console.error('Gagal mengirim notifikasi pencabutan delegasi:', err);
     }
