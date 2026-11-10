@@ -1285,9 +1285,11 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
      - Modal Cabut Wewenang dengan banner peringatan resiko, ringkasan pejabat yang terdampak, dan kolom alasan pencabutan wajib.
      - Endpoint `@Delete(':id')` di backend yang menghapus assignment secara aman dari database untuk membatalkan wewenang secara seketika (*immediate revocation*).
      - Otomatis kirim notifikasi `TEMPORARY_REVIEWER_REVOKED` ke kedua pihak: konfirmasi pencabutan wewenang ke pejabat pengganti dan konfirmasi pemulihan wewenang mandiri penuh ke atasan definitif.
-- **Rationale / Expected Benefit:** Menyempurnakan tata kelola *enterprise delegation lifecycle*, mencegah celah wewenang ilegal (*dangling privilege*), dan memberikan transparansi komunikasi mutlak bagi seluruh pejabat terkait.
+  4. Pembersihan Antarmuka Tabel Administrasi:
+     - Mengeliminasi badge kuning redundan *"Pejabat Berhalangan"* pada kolom **MENGGANTIKAN SIAPA** di `/admin/temporary-reviewers`. Kolom kini menampilkan nama dan jabatan resmi pejabat secara bersih, elegan, dan bebas dari kerancuan status.
+- **Rationale / Expected Benefit:** Menyempurnakan tata kelola *enterprise delegation lifecycle*, mencegah celah wewenang ilegal (*dangling privilege*), menghilangkan polusi visual, dan memberikan transparansi komunikasi mutlak bagi seluruh pejabat terkait.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png`, `media_1794289233720_1d4f064d.png`, `media_1794292519681_08f4782f.png`, `media_1794292564394_737ab6e6.jpg`, & `media_1794294557721_35e519d5.png`.
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png`, `media_1794289233720_1d4f064d.png`, `media_1794292519681_08f4782f.png`, `media_1794292564394_737ab6e6.jpg`, `media_1794294557721_35e519d5.png`, & `media_1794295671864_a1a7a9c4.png`.
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---

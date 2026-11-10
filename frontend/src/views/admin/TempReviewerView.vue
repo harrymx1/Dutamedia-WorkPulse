@@ -501,7 +501,6 @@ function showToast(msg: string) {
               </td>
               <td>
                 <strong class="replaced-name">{{ parseReplacedOfficial(d.delegationReason, d.targetFunction) }}</strong>
-                <span class="badge-role">Pejabat Berhalangan</span>
               </td>
               <td>
                 <span class="func-pill">{{ d.targetFunction }}</span>
@@ -890,17 +889,6 @@ function showToast(msg: string) {
   font-size: 13px;
   color: #0E211B;
   font-weight: 700;
-}
-
-.badge-role {
-  font-size: 10.5px;
-  background: #FEF3C7;
-  color: #92400E;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 600;
-  display: inline-block;
-  margin-top: 3px;
 }
 
 .auth-scope-text {
