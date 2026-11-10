@@ -273,6 +273,7 @@ async function handleCreateDelegation() {
       method: 'POST',
       body: JSON.stringify({
         delegateUserId: form.value.delegateUserId,
+        replacedUserId: form.value.replacedUserId,
         targetFunction: form.value.targetFunction,
         delegationReason: fullReason,
         effectiveDate: form.value.effectiveDate,

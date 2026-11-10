@@ -1247,6 +1247,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
   4. Penegakan integritas periode delegasi: Batas tanggal kedaluwarsa harus sama dengan atau setelah tanggal efektif mulai (`expiryDate >= effectiveDate`), didukung pembatasan kalender native `:min="form.effectiveDate"` dan reactive auto-sync.
   5. Di tabel riwayat delegasi, tambahkan kolom **MENGGANTIKAN SIAPA** dan tampilkan jabatan asal personil pengganti di bawah nama.
   6. Format catatan audit otomatis menyematkan metadata `[Menggantikan Nama (Jabatan)]` agar audit trail kepegawaian tersimpan permanen di database tanpa perlu alter skema.
+  7. Otomatisasi pengiriman notifikasi In-App dua arah (*Two-Way In-App Notifications*): Memberikan notifikasi resmi kepada Pejabat Penerima Delegasi (dengan rincian divisi, nama atasan yang digantikan, periode waktu, dan tautan langsung ke antrean persetujuan) serta kepada Pejabat yang Digantikan (konfirmasi resmi bahwa wewenang peninjauannya telah dialihkan kepada siapa selama masa cuti/izin).
 - **Rationale / Expected Benefit:** Menyelaraskan alur pendelegasian dengan tata kelola organisasi nyata (Delegation of Authority), menghilangkan kebingungan pengguna, mencegah salah pilih divisi, dan menjamin transparansi audit kepegawaian.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): Diskusi kritis evaluasi tata kelola delegasi reviewer `TC-ADMN-001`.
