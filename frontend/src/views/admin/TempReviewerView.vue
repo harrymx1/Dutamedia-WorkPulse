@@ -63,18 +63,88 @@ const form = ref({
   expiryDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
 });
 
-const managerialRoles = ['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER', 'HRGA', 'CEO_MANAGEMENT'];
-
-const eligibleManagers = computed(() => {
-  const managers = availableUsers.value.filter(
-    (u) => u.currentRole && managerialRoles.includes(u.currentRole),
+const groupedManagers = computed(() => {
+  const heads = availableUsers.value.filter((u) => u.currentRole === 'HEAD');
+  const supervisors = availableUsers.value.filter(
+    (u) => u.currentRole === 'SUPERVISOR' || u.currentRole === 'PROJECT_MANAGER',
   );
-  return managers.length > 0 ? managers : availableUsers.value;
+  const executives = availableUsers.value.filter(
+    (u) => ['CEO_MANAGEMENT', 'HRGA'].includes(u.currentRole || ''),
+  );
+  const others = availableUsers.value.filter(
+    (u) =>
+      !['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER', 'CEO_MANAGEMENT', 'HRGA'].includes(
+        u.currentRole || '',
+      ),
+  );
+
+  return [
+    { label: '── Kepala Divisi (Department Heads) ──', users: heads },
+    { label: '── Supervisor & Project Leads ──', users: supervisors },
+    { label: '── Direksi & Manajemen HRGA ──', users: executives },
+    { label: '── Pejabat / Staf Lainnya ──', users: others },
+  ].filter((g) => g.users.length > 0);
 });
 
-const eligibleDelegates = computed(() => {
-  // Pejabat pengganti tidak boleh orang yang sama dengan yang digantikan
-  return availableUsers.value.filter((u) => u.id !== form.value.replacedUserId);
+const groupedDelegates = computed(() => {
+  const replacedId = form.value.replacedUserId;
+  const targetFunc = form.value.targetFunction;
+
+  // 100% Seluruh karyawan terjamin tampil tanpa terkecuali, kecuali pejabat yang sedang digantikan
+  const allExceptReplaced = availableUsers.value.filter((u) => u.id !== replacedId);
+
+  // 1. Pimpinan / Lead di divisi yang sama (Prioritas Utama)
+  const internalLeads = allExceptReplaced.filter(
+    (u) =>
+      u.currentFunction === targetFunc &&
+      ['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER'].includes(u.currentRole || ''),
+  );
+
+  // 2. Pimpinan / Lead dari divisi lain (Lintas Divisi)
+  const externalLeads = allExceptReplaced.filter(
+    (u) =>
+      u.currentFunction !== targetFunc &&
+      ['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER', 'HRGA', 'CEO_MANAGEMENT'].includes(
+        u.currentRole || '',
+      ),
+  );
+
+  // 3. Staf / Anggota Tim di divisi yang sama
+  const internalStaff = allExceptReplaced.filter(
+    (u) =>
+      u.currentFunction === targetFunc &&
+      !['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER', 'HRGA', 'CEO_MANAGEMENT'].includes(
+        u.currentRole || '',
+      ),
+  );
+
+  // 4. Seluruh Karyawan Lainnya (Seluruh Perusahaan)
+  const externalStaff = allExceptReplaced.filter(
+    (u) =>
+      u.currentFunction !== targetFunc &&
+      !['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER', 'HRGA', 'CEO_MANAGEMENT'].includes(
+        u.currentRole || '',
+      ),
+  );
+
+  return [
+    {
+      label: `── Pimpinan / Lead Internal Divisi ${targetFunc} (Prioritas Utama) ──`,
+      users: internalLeads,
+    },
+    {
+      label: '── Pimpinan / Lead Divisi Lain (Lintas Divisi) ──',
+      users: externalLeads,
+    },
+    {
+      label: `── Staf / Anggota Tim Divisi ${targetFunc} ──`,
+      users: internalStaff,
+    },
+    {
+      label: '── Seluruh Karyawan Lainnya (Seluruh Perusahaan) ──',
+      users: externalStaff,
+    },
+  ].filter((g) => g.users.length > 0);
 });
 
 function onReplacedUserChange() {
@@ -85,14 +155,22 @@ function onReplacedUserChange() {
     }
     // Set default delegate jika belum dipilih atau bentrok
     if (!form.value.delegateUserId || form.value.delegateUserId === manager.id) {
+      const allDelegates = availableUsers.value.filter((u) => u.id !== manager.id);
       const candidate =
-        eligibleDelegates.value.find(
+        allDelegates.find(
           (u) => u.currentFunction === manager.currentFunction && u.id !== manager.id,
-        ) || eligibleDelegates.value[0];
+        ) || allDelegates[0];
       if (candidate) {
         form.value.delegateUserId = candidate.id;
       }
     }
+  }
+}
+
+function onEffectiveDateChange() {
+  // Jika tanggal kedaluwarsa mendahului tanggal efektif, sinkronkan otomatis
+  if (new Date(form.value.expiryDate) < new Date(form.value.effectiveDate)) {
+    form.value.expiryDate = form.value.effectiveDate;
   }
 }
 
@@ -102,7 +180,7 @@ async function loadData() {
   try {
     const [delRes, usersRes] = await Promise.all([
       apiClient<{ data: TemporaryReviewerRow[] }>('/v1/admin/temporary-reviewers'),
-      apiClient<{ data: SimpleUser[] }>('/v1/admin/users?limit=100'),
+      apiClient<{ data: SimpleUser[] }>('/v1/admin/users?limit=500'),
     ]);
     delegations.value = delRes.data.data || (delRes.data as any) || [];
     availableUsers.value = usersRes.data.data || (usersRes.data as any) || [];
@@ -134,7 +212,7 @@ function handleKeydown(e: KeyboardEvent) {
 function openModal() {
   modalError.value = null;
   const defaultManager =
-    eligibleManagers.value.find((u) => u.currentRole === 'HEAD') || eligibleManagers.value[0];
+    availableUsers.value.find((u) => u.currentRole === 'HEAD') || availableUsers.value[0];
   const managerId = defaultManager?.id || '';
   const targetFunc = defaultManager?.currentFunction || 'Engineering';
 
@@ -169,7 +247,7 @@ async function handleCreateDelegation() {
   }
 
   if (new Date(form.value.expiryDate) < new Date(form.value.effectiveDate)) {
-    modalError.value = 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif.';
+    modalError.value = 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif mulai.';
     return;
   }
 
@@ -358,9 +436,15 @@ function showToast(msg: string) {
           <div class="form-group">
             <label for="del-replaced">1. Pejabat yang Berhalangan (Yang Digantikan) *</label>
             <select id="del-replaced" v-model="form.replacedUserId" required @change="onReplacedUserChange">
-              <option v-for="u in eligibleManagers" :key="u.id" :value="u.id">
-                {{ u.fullName }} — {{ u.currentJobTitle || u.currentRole }} (Divisi {{ u.currentFunction || 'Umum' }})
-              </option>
+              <optgroup
+                v-for="group in groupedManagers"
+                :key="group.label"
+                :label="group.label"
+              >
+                <option v-for="u in group.users" :key="u.id" :value="u.id">
+                  {{ u.fullName }} — {{ u.currentJobTitle || u.currentRole }} (Divisi {{ u.currentFunction || 'Umum' }})
+                </option>
+              </optgroup>
             </select>
             <span class="field-hint">Pilih Atasan atau Kepala Divisi yang sedang cuti atau berhalangan hadir.</span>
           </div>
@@ -378,9 +462,15 @@ function showToast(msg: string) {
           <div class="form-group">
             <label for="del-user">3. Pejabat Pengganti Sementara (Penerima Delegasi) *</label>
             <select id="del-user" v-model="form.delegateUserId" required>
-              <option v-for="u in eligibleDelegates" :key="u.id" :value="u.id">
-                {{ u.fullName }} — {{ u.currentJobTitle || u.currentRole }} (Divisi {{ u.currentFunction || 'Umum' }})
-              </option>
+              <optgroup
+                v-for="group in groupedDelegates"
+                :key="group.label"
+                :label="group.label"
+              >
+                <option v-for="u in group.users" :key="u.id" :value="u.id">
+                  {{ u.fullName }} — {{ u.currentJobTitle || u.currentRole }} (Divisi {{ u.currentFunction || 'Umum' }})
+                </option>
+              </optgroup>
             </select>
             <span class="field-hint">Pilih personil yang mengambil alih wewenang persetujuan di divisi tersebut.</span>
           </div>
@@ -389,11 +479,23 @@ function showToast(msg: string) {
           <div class="form-row">
             <div class="form-group">
               <label for="del-eff">Tanggal Efektif Mulai *</label>
-              <input id="del-eff" v-model="form.effectiveDate" type="date" required />
+              <input
+                id="del-eff"
+                v-model="form.effectiveDate"
+                type="date"
+                required
+                @change="onEffectiveDateChange"
+              />
             </div>
             <div class="form-group">
               <label for="del-exp">Batas Tanggal Kedaluwarsa *</label>
-              <input id="del-exp" v-model="form.expiryDate" type="date" required />
+              <input
+                id="del-exp"
+                v-model="form.expiryDate"
+                type="date"
+                :min="form.effectiveDate"
+                required
+              />
             </div>
           </div>
 
@@ -726,6 +828,24 @@ input, select, textarea {
   background: #FFFFFF;
   font-size: 13.5px;
   color: var(--color-text-primary, #0E211B);
+}
+
+select {
+  text-overflow: ellipsis;
+}
+
+optgroup {
+  font-weight: 800;
+  color: var(--color-brand-primary, #00674D);
+  background: #F1F6F4;
+  padding: 4px 0;
+}
+
+optgroup option {
+  font-weight: normal;
+  color: var(--color-text-primary, #0E211B);
+  background: #FFFFFF;
+  padding: 6px 10px;
 }
 
 input:focus, select:focus, textarea:focus {

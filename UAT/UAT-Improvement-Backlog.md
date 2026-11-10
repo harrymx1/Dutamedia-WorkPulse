@@ -1243,8 +1243,10 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Proposed Improvement:** 
   1. Restrukturisasi formulir delegasi: Langkah 1 memilih **Pejabat yang Berhalangan / Digantikan** (misal: *Arif Budiman — Head of Engineering*), divisi wewenang otomatis diselaraskan dengan divisi atasan tersebut, lalu Langkah 2 memilih **Pejabat Pengganti Sementara** (misal: *Bambang Pratama — Technical Lead 1*).
   2. Dropdown menampilkan format kaya: `Nama Lengkap — Jabatan (Divisi)` untuk seluruh manajer dan personil terkait.
-  3. Di tabel riwayat delegasi, tambahkan kolom **MENGGANTIKAN SIAPA** dan tampilkan jabatan asal personil pengganti di bawah nama.
-  4. Format catatan audit otomatis menyematkan metadata `[Menggantikan Nama (Jabatan)]` agar audit trail kepegawaian tersimpan permanen di database tanpa perlu alter skema.
+  3. Menjamin keterlihatan 100% seluruh karyawan aktif tanpa terkecuali (limit query diperbesar menjadi 500) dengan pengelompokan hierarkis `<optgroup>` (Pimpinan Internal Divisi Prioritas, Pimpinan Lintas Divisi, Staf Internal Divisi, Seluruh Karyawan Lainnya) seperti pada Penanggung Jawab Blocker.
+  4. Penegakan integritas periode delegasi: Batas tanggal kedaluwarsa harus sama dengan atau setelah tanggal efektif mulai (`expiryDate >= effectiveDate`), didukung pembatasan kalender native `:min="form.effectiveDate"` dan reactive auto-sync.
+  5. Di tabel riwayat delegasi, tambahkan kolom **MENGGANTIKAN SIAPA** dan tampilkan jabatan asal personil pengganti di bawah nama.
+  6. Format catatan audit otomatis menyematkan metadata `[Menggantikan Nama (Jabatan)]` agar audit trail kepegawaian tersimpan permanen di database tanpa perlu alter skema.
 - **Rationale / Expected Benefit:** Menyelaraskan alur pendelegasian dengan tata kelola organisasi nyata (Delegation of Authority), menghilangkan kebingungan pengguna, mencegah salah pilih divisi, dan menjamin transparansi audit kepegawaian.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): Diskusi kritis evaluasi tata kelola delegasi reviewer `TC-ADMN-001`.
