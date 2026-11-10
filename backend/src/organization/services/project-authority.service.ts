@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProjectAuthorityDto } from '../dto/project-authority.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
 @Injectable()
 export class ProjectAuthorityService {
@@ -99,7 +100,7 @@ export class ProjectAuthorityService {
     }
 
     if (options.activeOnly) {
-      const today = new Date();
+      const today = toJakartaDateOnly();
       where.effectiveDate = { lte: today };
       where.OR = [{ endDate: null }, { endDate: { gte: today } }];
     }
@@ -144,7 +145,7 @@ export class ProjectAuthorityService {
       });
     }
 
-    const today = new Date();
+    const today = toJakartaDateOnly();
     return await this.prisma.projectAuthorityMapping.update({
       where: { id },
       data: {
@@ -155,11 +156,12 @@ export class ProjectAuthorityService {
   }
 
   async getAuthorityForProject(projectCode: string, targetDate = new Date()) {
+    const dateOnly = toJakartaDateOnly(targetDate);
     return await this.prisma.projectAuthorityMapping.findFirst({
       where: {
         projectCode: projectCode.toUpperCase(),
-        effectiveDate: { lte: targetDate },
-        OR: [{ endDate: null }, { endDate: { gte: targetDate } }],
+        effectiveDate: { lte: dateOnly },
+        OR: [{ endDate: null }, { endDate: { gte: dateOnly } }],
       },
       orderBy: { effectiveDate: 'desc' },
       include: {

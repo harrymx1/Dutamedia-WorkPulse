@@ -35,11 +35,13 @@ export class CorrectionController {
     @Req() req: any,
     @Query('status') status?: CorrectionStatus,
     @Query('requesterId') requesterId?: string,
+    @Query('mode') mode?: 'mine' | 'review',
   ) {
     return this.correctionService.getCorrectionRequests(
       {
         status,
         requesterId,
+        mode,
       },
       req?.user?.id,
     );

@@ -1311,4 +1311,30 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 ---
 
+### [IMP-061] Penguatan 6 Lapis Keamanan & Tata Kelola Wewenang (Anti Self-Approval, Cakupan Delegasi Ketat, Akurasi Hari Terakhir WIB, Guard API, & Notifikasi Pengganti)
+- **Finding ID:** IMP-061
+- **Title:** Penguatan 6 Lapis Keamanan & Tata Kelola Wewenang (Anti Self-Approval, Cakupan Delegasi Ketat, Akurasi Hari Terakhir WIB, Guard API, & Notifikasi Pengganti)
+- **Category:** Security, RBAC & Temporal Governance Hardening
+- **Page / Module:** `ScopeResolverService`, `LeaveService`, `CorrectionService`, `TemporaryReviewerService`, `CoachingService`, `ComplianceController`, `BlockerService`, `AuthGuard`, `AuthService`, & `TempReviewerView.vue`
+- **Related Test Case:** `TC-ADMN-001`, `TC-HRGA-003`, `TC-LEAV-002`, `TC-CORR-003`
+- **Current Condition:**
+  1. `canAccessUser` mengizinkan `callerId === targetUserId`, sehingga pejabat atau reviewer sementara berpotensi melihat dan menyetujui permohonan cuti atau koreksi komitmen miliknya sendiri (*Self-Approval Vulnerability*).
+  2. Cakupan delegasi reviewer sementara di `ScopeResolverService` sebelumnya mencakup seluruh anggota divisi tanpa mengecualikan atasan/pejabat yang sedang digantikannya atau pejabat setingkat `HEAD` / `CEO_MANAGEMENT`.
+  3. Perbandingan kolom `@db.Date` (`effectiveDate`, `expiryDate`, `endDate`) terhadap timestamp `new Date()` di PostgreSQL dan frontend menyebabkan delegasi otomatis dianggap kedaluwarsa lebih cepat pada hari terakhir (mulai pukul 07:00 WIB).
+  4. Endpoint API `ComplianceController`, `CoachingService`, dan `BlockerService` memerlukan penegakan batas wewenang eksplisit di sisi server (backend) agar tidak dapat ditembus di luar UI sidebar.
+  5. Pembuatan delegasi memerlukan validasi status pengguna aktif, pencegahan menunjuk diri sendiri sebagai pengganti, serta pencegahan duplikasi mandat yang tumpang tindih pada divisi dan periode yang sama.
+  6. Saat karyawan mengajukan permohonan cuti atau koreksi komitmen material di tengah masa delegasi, notifikasi pengajuan baru hanya terkirim ke atasan definitif dan belum dikirimkan ke Reviewer Sementara aktif.
+- **Proposed Improvement:**
+  1. **Larangan Mutlak Self-Approval (`canReviewUser` & `enforceReviewerScope`):** Memblokir 100% upaya meninjau/menyetujui permohonan cuti maupun koreksi milik sendiri (baik di antrean tampilan maupun di API eksekusi dengan HTTP `403 AUTH_FORBIDDEN_SCOPE`), serta memisahkan mode riwayat pribadi (`?mode=mine`) dari mode antrean review (`?mode=review`).
+  2. **Pembatasan Cakupan Target Reviewer Sementara (`isEligibleDelegationTarget`):** Menjamin reviewer sementara hanya dapat meninjau bawahan di divisi target dan dilarang meninjau pejabat yang digantikannya maupun pejabat setingkat `HEAD`, `CEO_MANAGEMENT`, atau `SYSTEM_ADMIN`.
+  3. **Normalisasi Penanggalan Kalender WIB (`toJakartaDateOnly`):** Menormalisasi seluruh evaluasi tanggal `@db.Date` ke tanggal kalender `Asia/Jakarta` (`YYYY-MM-DDT00:00:00.000Z`) di backend (`AuthGuard`, `AuthService`, `TemporaryReviewerService`, `OrganizationService`, `ProjectAuthorityService`) dan frontend (`TempReviewerView.vue`) sehingga masa berlaku delegasi aktif penuh hingga pukul `23:59:59 WIB` di hari terakhir.
+  4. **Kunci Pengaman API Backend (`ComplianceController`, `CoachingService`, `BlockerService`):** Menambahkan `@Roles(SYSTEM_ADMIN, HRGA, CEO_MANAGEMENT)` pada `ComplianceController`, memverifikasi rantai atasan struktural pada `CoachingService` (mengecualikan reviewer sementara dari akses catatan coaching rahasia), serta memverifikasi otoritas penanggung jawab/manajerial pada `BlockerService`.
+  5. **Validasi Ketat Penerbitan & Pembaruan Delegasi:** Memastikan penerima delegasi berstatus `ACTIVE`, bukan orang yang sama dengan pejabat yang digantikan, dan bebas dari tumpang tindih mandat aktif pada divisi yang sama.
+  6. **Notifikasi Pengajuan Baru ke Reviewer Sementara Aktif:** Mengirimkan notifikasi `LEAVE_REQUESTED` dan `CORRECTION_REQUESTED` secara otomatis kepada Reviewer Sementara yang sedang aktif di divisi pemohon.
+- **Rationale / Expected Benefit:** Menutup seluruh celah keamanan otorisasi dan waktu di lapisan database, backend API, dan antarmuka pengguna sesuai standar audit enterprise.
+- **Priority:** Critical / High
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+---
+
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

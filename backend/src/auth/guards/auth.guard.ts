@@ -10,6 +10,7 @@ import { TokenService } from '../services/token.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -80,7 +81,7 @@ export class AuthGuard implements CanActivate {
     }
 
     let activeOrg: any = null;
-    const today = new Date();
+    const today = toJakartaDateOnly();
     if (this.prisma.organizationalAssignment?.findFirst) {
       activeOrg = await this.prisma.organizationalAssignment.findFirst({
         where: {

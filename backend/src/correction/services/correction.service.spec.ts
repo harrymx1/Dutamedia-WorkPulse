@@ -203,6 +203,21 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
       );
     });
 
+    it('rejects self-approval of correction request with AUTH_FORBIDDEN_SCOPE', async () => {
+      mockPrisma.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-self',
+        requestedByUserId: 'mgr-tech',
+        status: CorrectionStatus.PENDING,
+      });
+
+      await expect(
+        service.reviewCorrectionRequest('mgr-tech', 'cr-self', {
+          decision: 'APPROVE',
+          reviewNote: 'Coba setujui koreksi sendiri',
+        }),
+      ).rejects.toThrowError(AppException);
+    });
+
     it('filters correction requests to only include accessible subordinates', async () => {
       mockPrisma.correctionRequest.findMany.mockResolvedValue([
         { id: 'cr-1', requestedByUserId: 'usr-subordinate-eng' },

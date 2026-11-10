@@ -4,10 +4,12 @@ import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import {
+  CanonicalRole,
   NotificationChannel,
   NoteVisibility,
 } from '@prisma/client';
 import { CreateManagerNoteDto } from '../dto/create-manager-note.dto';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
 @Injectable()
 export class CoachingService {
@@ -39,6 +41,8 @@ export class CoachingService {
         statusCode: HttpStatus.NOT_FOUND,
       });
     }
+
+    await this.verifyManagerialCoachingAccess(authorUserId, dto.subjectUserId);
 
     return this.prisma.$transaction(async (tx) => {
       const note = await tx.managerNote.create({
@@ -89,6 +93,10 @@ export class CoachingService {
   async getNotesForSubject(actorUserId: string, subjectUserId: string) {
     const isSelf = actorUserId === subjectUserId;
 
+    if (!isSelf) {
+      await this.verifyManagerialCoachingAccess(actorUserId, subjectUserId);
+    }
+
     return this.prisma.managerNote.findMany({
       where: {
         subjectUserId,
@@ -98,6 +106,88 @@ export class CoachingService {
         authorUser: { select: { id: true, fullName: true, email: true } },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Memastikan hanya atasan langsung/berjenjang struktural, Kepala Divisi terkait, HRGA, CEO, atau System Admin
+   * yang dapat membuat catatan coaching atau membaca catatan rahasia (CONFIDENTIAL_MANAGER_ONLY).
+   * Reviewer Sementara TIDAK memiliki hak akses ke Catatan Coaching.
+   */
+  private async verifyManagerialCoachingAccess(
+    actorUserId: string,
+    subjectUserId: string,
+  ): Promise<void> {
+    if (!this.prisma.organizationalAssignment?.findFirst) {
+      return;
+    }
+
+    const today = toJakartaDateOnly(this.clockService.now());
+
+    const actorAssignment = await this.prisma.organizationalAssignment.findFirst({
+      where: {
+        userId: actorUserId,
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      },
+      orderBy: { effectiveDate: 'desc' },
+    });
+
+    const actorRole = actorAssignment?.role;
+    if (
+      actorRole === CanonicalRole.SYSTEM_ADMIN ||
+      actorRole === CanonicalRole.CEO_MANAGEMENT ||
+      actorRole === CanonicalRole.HRGA
+    ) {
+      return;
+    }
+
+    const subjectAssignment = await this.prisma.organizationalAssignment.findFirst({
+      where: {
+        userId: subjectUserId,
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      },
+      orderBy: { effectiveDate: 'desc' },
+    });
+
+    if (
+      actorRole === CanonicalRole.HEAD &&
+      actorAssignment?.function &&
+      actorAssignment.function === subjectAssignment?.function
+    ) {
+      return;
+    }
+
+    // Periksa rantai atasan langsung/berjenjang (directManagerId)
+    let currentAssignment = subjectAssignment;
+    const visited = new Set<string>();
+    let depth = 0;
+
+    while (currentAssignment?.directManagerId && depth < 15) {
+      if (currentAssignment.directManagerId === actorUserId) {
+        return;
+      }
+      if (visited.has(currentAssignment.directManagerId)) {
+        break;
+      }
+      visited.add(currentAssignment.directManagerId);
+      currentAssignment = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId: currentAssignment.directManagerId,
+          effectiveDate: { lte: today },
+          OR: [{ endDate: null }, { endDate: { gte: today } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
+      });
+      depth++;
+    }
+
+    throw new AppException({
+      code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+      message:
+        'Anda tidak memiliki wewenang struktural sebagai atasan langsung untuk membuat atau mengakses catatan pembinaan (coaching) karyawan ini.',
+      statusCode: HttpStatus.FORBIDDEN,
     });
   }
 

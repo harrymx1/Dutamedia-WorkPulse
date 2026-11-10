@@ -6,6 +6,7 @@ import { ScopeResolverService } from '../../organization/services/scope-resolver
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import {
+  CanonicalRole,
   CommitmentOutcome,
   ContinuationStatus,
   CorrectionClassification,
@@ -13,6 +14,7 @@ import {
   CorrectionStatus,
   NotificationChannel,
 } from '@prisma/client';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import {
   CreateCorrectionRequestDto,
   ReviewCorrectionRequestDto,
@@ -185,6 +187,45 @@ export class CorrectionService {
         });
       }
 
+      // Kirim notifikasi juga kepada Reviewer Sementara aktif untuk divisi pemohon (jika ada)
+      if (
+        assignment?.function &&
+        assignment.role !== CanonicalRole.HEAD &&
+        assignment.role !== CanonicalRole.CEO_MANAGEMENT &&
+        tx.temporaryReviewerAssignment?.findMany
+      ) {
+        const todayDateOnly = toJakartaDateOnly(now);
+        const activeDelegations = await tx.temporaryReviewerAssignment.findMany({
+          where: {
+            targetFunction: assignment.function,
+            effectiveDate: { lte: todayDateOnly },
+            expiryDate: { gte: todayDateOnly },
+          },
+          select: { delegateUserId: true },
+          distinct: ['delegateUserId'],
+        });
+
+        for (const del of activeDelegations) {
+          if (
+            del.delegateUserId !== requesterUserId &&
+            del.delegateUserId !== assignment.directManagerId
+          ) {
+            await tx.notification.create({
+              data: {
+                recipientUserId: del.delegateUserId,
+                triggerType: 'CORRECTION_REQUESTED',
+                channel: NotificationChannel.IN_APP_CENTER,
+                title: `Permohonan Koreksi Material (${dto.scopeType}) — Delegasi Reviewer`,
+                message: `Karyawan mengajukan koreksi material pada komitmen #${commitment.sequenceNo}. Jendela keberatan aktif 24 jam.`,
+                actionUrl: '/corrections/review',
+                relatedEntityType: 'correction_requests',
+                relatedEntityId: req.id,
+              },
+            });
+          }
+        }
+      }
+
       return req;
     });
   }
@@ -196,13 +237,19 @@ export class CorrectionService {
     filters?: {
       status?: CorrectionStatus;
       requesterId?: string;
+      mode?: 'mine' | 'review';
     },
     reviewerUserId?: string,
   ) {
+    const effectiveRequesterId =
+      filters?.mode === 'mine' && reviewerUserId
+        ? reviewerUserId
+        : filters?.requesterId;
+
     const list = await this.prisma.correctionRequest.findMany({
       where: {
         ...(filters?.status && { status: filters.status }),
-        ...(filters?.requesterId && { requestedByUserId: filters.requesterId }),
+        ...(effectiveRequesterId && { requestedByUserId: effectiveRequesterId }),
       },
       include: {
         targetCommitment: {
@@ -218,13 +265,25 @@ export class CorrectionService {
       return list;
     }
 
+    if (effectiveRequesterId && effectiveRequesterId === reviewerUserId) {
+      return list;
+    }
+
     const accessible: typeof list = [];
     for (const item of list) {
-      const canAccess = await this.scopeResolverService.canAccessUser(
-        reviewerUserId,
-        item.requestedByUserId,
-      );
-      if (canAccess) {
+      if (item.requestedByUserId === reviewerUserId) {
+        continue;
+      }
+      const canReview = this.scopeResolverService.canReviewUser
+        ? await this.scopeResolverService.canReviewUser(
+            reviewerUserId,
+            item.requestedByUserId,
+          )
+        : await this.scopeResolverService.canAccessUser(
+            reviewerUserId,
+            item.requestedByUserId,
+          );
+      if (canReview) {
         accessible.push(item);
       }
     }
@@ -252,11 +311,27 @@ export class CorrectionService {
       });
     }
 
+    if (reviewerUserId === req.requestedByUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Pelanggaran tata kelola: Anda tidak diperkenankan meninjau atau menyetujui permohonan koreksi milik Anda sendiri.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
     // Penegakan batas wewenang hierarki manajerial 3-Lapis (WP-EP03-TK006 / SAD IV.4 & DEC-010)
-    await this.scopeResolverService.enforceUserScope(
-      reviewerUserId,
-      req.requestedByUserId,
-    );
+    if (this.scopeResolverService.enforceReviewerScope) {
+      await this.scopeResolverService.enforceReviewerScope(
+        reviewerUserId,
+        req.requestedByUserId,
+      );
+    } else {
+      await this.scopeResolverService.enforceUserScope(
+        reviewerUserId,
+        req.requestedByUserId,
+      );
+    }
 
     if (req.status !== CorrectionStatus.PENDING) {
       throw new AppException({

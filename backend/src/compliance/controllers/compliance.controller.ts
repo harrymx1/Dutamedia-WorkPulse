@@ -13,10 +13,13 @@ import { ExemptionService } from '../services/exemption.service';
 import { CreateBoundedExemptionDto } from '../dto/create-exemption.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
-import { ComplianceEventStage } from '@prisma/client';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { CanonicalRole, ComplianceEventStage } from '@prisma/client';
 
 @Controller(['compliance', 'api/compliance'])
-@UseGuards(AuthGuard, CsrfGuard)
+@UseGuards(AuthGuard, CsrfGuard, RolesGuard)
+@Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
 export class ComplianceController {
   constructor(
     private readonly complianceService: ComplianceService,

@@ -83,11 +83,99 @@ export class ScopeResolverService {
 
     for (const delegation of activeDelegations) {
       if (delegation.targetFunction === targetAssignment.function) {
-        return true;
+        if (this.isEligibleDelegationTarget(delegation, targetAssignment)) {
+          return true;
+        }
       }
     }
 
     return false;
+  }
+
+  /**
+   * Menentukan apakah seorang peninjau (reviewer) berwenang meninjau/menyetujui permohonan
+   * (cuti atau koreksi komitmen) milik targetUserId.
+   * Menegakkan aturan Anti Self-Approval (tidak boleh menyetujui milik sendiri) dan
+   * melarang peninjau sementara meninjau atasan/pejabat yang sedang digantikannya.
+   */
+  async canReviewUser(
+    reviewerId: string,
+    targetUserId: string,
+    targetDate = new Date(),
+  ): Promise<boolean> {
+    // Aturan Mutlak Anti Self-Approval: Tidak seorang pun boleh meninjau/menyetujui permohonannya sendiri
+    if (reviewerId === targetUserId) {
+      return false;
+    }
+
+    return this.canAccessUser(reviewerId, targetUserId, targetDate);
+  }
+
+  /**
+   * Menegakkan batasan wewenang peninjauan/persetujuan (Anti Self-Approval + Scope + Temporal)
+   */
+  async enforceReviewerScope(
+    reviewerId: string,
+    targetUserId: string,
+    targetDate = new Date(),
+  ): Promise<void> {
+    if (reviewerId === targetUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Pelanggaran tata kelola: Anda tidak diperkenankan meninjau atau menyetujui permohonan milik Anda sendiri.',
+        statusCode: HttpStatus.FORBIDDEN,
+        details: [
+          {
+            field: 'reviewerId',
+            issue: 'Self-approval is strictly prohibited by governance policy',
+          },
+        ],
+      });
+    }
+
+    const isAllowed = await this.canReviewUser(reviewerId, targetUserId, targetDate);
+    if (!isAllowed) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Anda tidak memiliki kewenangan untuk mengakses atau meninjau rekaman di luar fungsi/squad Anda.',
+        statusCode: HttpStatus.FORBIDDEN,
+        details: [
+          {
+            field: 'scope',
+            issue: `Reviewer ${reviewerId} is outside review authority of target user ${targetUserId}`,
+          },
+        ],
+      });
+    }
+  }
+
+  /**
+   * Memastikan bahwa peninjau sementara hanya dapat meninjau bawahan di divisi target,
+   * serta TIDAK dapat meninjau pejabat yang digantikannya maupun pejabat setingkat HEAD / CEO_MANAGEMENT.
+   */
+  private isEligibleDelegationTarget(delegation: any, targetAssignment: any): boolean {
+    const targetRole: string | undefined = targetAssignment?.role;
+    if (
+      targetRole === CanonicalRole.HEAD ||
+      targetRole === CanonicalRole.CEO_MANAGEMENT ||
+      targetRole === CanonicalRole.SYSTEM_ADMIN
+    ) {
+      return false;
+    }
+
+    const reason: string = delegation?.delegationReason || '';
+    const match = reason.match(/\[Menggantikan\s+([^(^\]]+)/i);
+    if (match && match[1]) {
+      const replacedName = match[1].trim().toLowerCase();
+      const targetName = (targetAssignment?.user?.fullName || '').trim().toLowerCase();
+      if (replacedName && targetName && targetName === replacedName) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**

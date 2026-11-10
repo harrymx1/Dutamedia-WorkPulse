@@ -8,6 +8,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { AppException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
 import { CanonicalRole } from '@prisma/client';
+import { toJakartaDateOnly } from '../common/time/date-only.util';
 
 export interface LoginResult {
   accessToken: string;
@@ -95,7 +96,7 @@ export class AuthService {
     }
 
     // Resolusi Peran Aktif Pengguna dari Penugasan Organisasi Aktif
-    const today = new Date();
+    const today = toJakartaDateOnly();
     const activeOrg = await this.prisma.organizationalAssignment.findFirst({
       where: {
         userId: user.id,

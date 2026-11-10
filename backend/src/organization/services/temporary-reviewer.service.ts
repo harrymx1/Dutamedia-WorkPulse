@@ -13,6 +13,7 @@ import {
   NotificationChannel,
   UserStatus,
 } from '@prisma/client';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
 @Injectable()
 export class TemporaryReviewerService {
@@ -35,13 +36,19 @@ export class TemporaryReviewerService {
     assignmentId: string;
   }): Promise<void> {
     try {
-      const today = new Date();
+      const today = toJakartaDateOnly();
       const excluded = params.excludeUserIds.filter((id): id is string => Boolean(id));
 
       const members = await this.prisma.organizationalAssignment.findMany({
         where: {
           function: params.targetFunction,
-          role: { not: CanonicalRole.SYSTEM_ADMIN },
+          role: {
+            notIn: [
+              CanonicalRole.SYSTEM_ADMIN,
+              CanonicalRole.CEO_MANAGEMENT,
+              CanonicalRole.HEAD,
+            ],
+          },
           effectiveDate: { lte: today },
           OR: [{ endDate: null }, { endDate: { gte: today } }],
           userId: { notIn: excluded },
@@ -73,11 +80,12 @@ export class TemporaryReviewerService {
     dto: CreateTemporaryReviewerDto,
     adminUserId: string,
   ) {
+    const today = toJakartaDateOnly();
     const user = await this.prisma.user.findUnique({
       where: { id: dto.delegateUserId },
       include: {
         orgAssignments: {
-          where: { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+          where: { OR: [{ endDate: null }, { endDate: { gte: today } }] },
           orderBy: { effectiveDate: 'desc' },
           take: 1,
         },
@@ -89,6 +97,24 @@ export class TemporaryReviewerService {
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'Pengguna penerima delegasi reviewer tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (user.status && user.status !== UserStatus.ACTIVE) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Hanya pengguna berstatus AKTIF yang dapat ditunjuk sebagai penerima delegasi reviewer sementara.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    if (dto.replacedUserId && dto.replacedUserId === dto.delegateUserId) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Pejabat yang berhalangan tidak dapat mendelegasikan wewenang peninjauan kepada dirinya sendiri.',
+        statusCode: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -113,6 +139,25 @@ export class TemporaryReviewerService {
         message: 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
+    }
+
+    if (this.prisma.temporaryReviewerAssignment?.findFirst) {
+      const overlapping = await this.prisma.temporaryReviewerAssignment.findFirst({
+        where: {
+          delegateUserId: dto.delegateUserId,
+          targetFunction: dto.targetFunction,
+          effectiveDate: { lte: expiryDate },
+          expiryDate: { gte: effectiveDate },
+        },
+      });
+
+      if (overlapping) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message: `Pejabat pengganti ini sudah memiliki mandat reviewer sementara yang bersinggungan untuk Divisi ${dto.targetFunction} pada rentang tanggal tersebut. Silakan gunakan tombol Edit pada delegasi yang sudah ada.`,
+          statusCode: HttpStatus.CONFLICT,
+        });
+      }
     }
 
     const assignment = await this.prisma.temporaryReviewerAssignment.create({
@@ -277,6 +322,26 @@ export class TemporaryReviewerService {
         message: 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif mulai.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
+    }
+
+    if (this.prisma.temporaryReviewerAssignment?.findFirst) {
+      const overlapping = await this.prisma.temporaryReviewerAssignment.findFirst({
+        where: {
+          id: { not: id },
+          delegateUserId: assignment.delegateUserId,
+          targetFunction: assignment.targetFunction,
+          effectiveDate: { lte: expiryDate },
+          expiryDate: { gte: effectiveDate },
+        },
+      });
+
+      if (overlapping) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message: `Rentang tanggal baru bersinggungan dengan mandat reviewer sementara lain milik pejabat pengganti ini di Divisi ${assignment.targetFunction}.`,
+          statusCode: HttpStatus.CONFLICT,
+        });
+      }
     }
 
     const baseReason = assignment.delegationReason.replace(/\s*\[Revisi:[^\]]*\]/g, '').trim();
@@ -510,9 +575,9 @@ export class TemporaryReviewerService {
     const limit = Math.max(1, Math.min(100, Number(options.limit) || 20));
     const skip = (page - 1) * limit;
 
+    const today = toJakartaDateOnly();
     const where: any = {};
     if (options.activeOnly) {
-      const today = new Date();
       where.effectiveDate = { lte: today };
       where.expiryDate = { gte: today };
     }
@@ -531,7 +596,7 @@ export class TemporaryReviewerService {
               fullName: true,
               email: true,
               orgAssignments: {
-                where: { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+                where: { OR: [{ endDate: null }, { endDate: { gte: today } }] },
                 orderBy: { effectiveDate: 'desc' },
                 take: 1,
                 select: { role: true, function: true, jobTitle: true },
@@ -560,11 +625,12 @@ export class TemporaryReviewerService {
     targetFunction: CanonicalFunction,
     targetDate = new Date(),
   ) {
+    const dateOnly = toJakartaDateOnly(targetDate);
     return await this.prisma.temporaryReviewerAssignment.findMany({
       where: {
         targetFunction,
-        effectiveDate: { lte: targetDate },
-        expiryDate: { gte: targetDate },
+        effectiveDate: { lte: dateOnly },
+        expiryDate: { gte: dateOnly },
       },
       include: {
         delegateUser: true,
@@ -573,11 +639,12 @@ export class TemporaryReviewerService {
   }
 
   async getActiveDelegationsForUser(userId: string, targetDate = new Date()) {
+    const dateOnly = toJakartaDateOnly(targetDate);
     return await this.prisma.temporaryReviewerAssignment.findMany({
       where: {
         delegateUserId: userId,
-        effectiveDate: { lte: targetDate },
-        expiryDate: { gte: targetDate },
+        effectiveDate: { lte: dateOnly },
+        expiryDate: { gte: dateOnly },
       },
     });
   }

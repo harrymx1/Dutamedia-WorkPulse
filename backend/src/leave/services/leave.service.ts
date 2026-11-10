@@ -4,7 +4,8 @@ import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
-import { LeaveStatus, NotificationChannel } from '@prisma/client';
+import { CanonicalRole, LeaveStatus, NotificationChannel } from '@prisma/client';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import {
   CreateLeaveRequestDto,
   ReviewLeaveRequestDto,
@@ -89,6 +90,45 @@ export class LeaveService {
         });
       }
 
+      // Kirim notifikasi juga kepada Reviewer Sementara aktif untuk divisi pemohon (jika ada)
+      if (
+        assignment?.function &&
+        assignment.role !== CanonicalRole.HEAD &&
+        assignment.role !== CanonicalRole.CEO_MANAGEMENT &&
+        tx.temporaryReviewerAssignment?.findMany
+      ) {
+        const todayDateOnly = toJakartaDateOnly(now);
+        const activeDelegations = await tx.temporaryReviewerAssignment.findMany({
+          where: {
+            targetFunction: assignment.function,
+            effectiveDate: { lte: todayDateOnly },
+            expiryDate: { gte: todayDateOnly },
+          },
+          select: { delegateUserId: true },
+          distinct: ['delegateUserId'],
+        });
+
+        for (const del of activeDelegations) {
+          if (
+            del.delegateUserId !== userId &&
+            del.delegateUserId !== assignment.directManagerId
+          ) {
+            await tx.notification.create({
+              data: {
+                recipientUserId: del.delegateUserId,
+                triggerType: 'LEAVE_REQUESTED',
+                channel: NotificationChannel.IN_APP_CENTER,
+                title: 'Pengajuan Cuti Karyawan Baru (Delegasi Reviewer)',
+                message: `${leave.user.fullName} mengajukan cuti ${dto.leaveType} (${dto.startDate} s/d ${dto.endDate}).`,
+                actionUrl: '/leave/queue',
+                relatedEntityType: 'leave_requests',
+                relatedEntityId: leave.id,
+              },
+            });
+          }
+        }
+      }
+
       return leave;
     });
   }
@@ -127,11 +167,13 @@ export class LeaveService {
 
     const accessible: typeof list = [];
     for (const item of list) {
-      const canAccess = await this.scopeResolverService.canAccessUser(
-        reviewerUserId,
-        item.userId,
-      );
-      if (canAccess) {
+      if (item.userId === reviewerUserId) {
+        continue;
+      }
+      const canReview = this.scopeResolverService.canReviewUser
+        ? await this.scopeResolverService.canReviewUser(reviewerUserId, item.userId)
+        : await this.scopeResolverService.canAccessUser(reviewerUserId, item.userId);
+      if (canReview) {
         accessible.push(item);
       }
     }
@@ -159,8 +201,21 @@ export class LeaveService {
       });
     }
 
+    if (reviewerUserId === leave.userId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Pelanggaran tata kelola: Anda tidak diperkenankan meninjau atau menyetujui permohonan cuti milik Anda sendiri.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
     // Penegakan batas wewenang hierarki manajerial 3-Lapis (WP-EP03-TK006 / SAD IV.4 & DEC-010)
-    await this.scopeResolverService.enforceUserScope(reviewerUserId, leave.userId);
+    if (this.scopeResolverService.enforceReviewerScope) {
+      await this.scopeResolverService.enforceReviewerScope(reviewerUserId, leave.userId);
+    } else {
+      await this.scopeResolverService.enforceUserScope(reviewerUserId, leave.userId);
+    }
 
     if (leave.status !== LeaveStatus.PENDING) {
       throw new AppException({

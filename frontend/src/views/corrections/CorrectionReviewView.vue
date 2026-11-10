@@ -58,7 +58,7 @@ function showToast(msg: string, isError = false) {
 async function loadRequests() {
   loading.value = true;
   try {
-    let url = '/correction-requests?';
+    let url = '/correction-requests?mode=review&';
     if (statusFilter.value !== 'ALL') url += `status=${statusFilter.value}&`;
 
     const res = await apiClient<CorrectionRequestItem[]>(url);

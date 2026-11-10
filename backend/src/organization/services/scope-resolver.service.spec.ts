@@ -112,5 +112,39 @@ describe('ScopeResolverService (WP-EP03-TK006 / SAD IV.4 3-Layer Authorization)'
     const isAllowed = await scopeResolver.canAccessUser('usr-delegate', 'usr-qa-emp');
     expect(isAllowed).toBe(true);
   });
+
+  it('canReviewUser and enforceReviewerScope strictly prohibit self-approval for all users', async () => {
+    const canSelfReview = await scopeResolver.canReviewUser('usr-self', 'usr-self');
+    expect(canSelfReview).toBe(false);
+
+    await expect(
+      scopeResolver.enforceReviewerScope('usr-self', 'usr-self'),
+    ).rejects.toThrowError(AppException);
+  });
+
+  it('Temporary Reviewer cannot review the replaced official or a HEAD', async () => {
+    mockOrgService.getUserActiveAssignment
+      .mockResolvedValueOnce({
+        role: CanonicalRole.SUPERVISOR,
+        function: CanonicalFunction.Engineering,
+      }) // Caller (Delegate)
+      .mockResolvedValueOnce({
+        role: CanonicalRole.HEAD,
+        function: CanonicalFunction.Engineering,
+        user: { fullName: 'Arif Budiman' },
+      }); // Target (Replaced Head)
+
+    mockTempReviewerService.getActiveDelegationsForUser.mockResolvedValue([
+      {
+        targetFunction: CanonicalFunction.Engineering,
+        delegationReason: '[Menggantikan Arif Budiman (Head of Engineering)] Dinas luar kota',
+        effectiveDate: new Date('2026-11-01'),
+        expiryDate: new Date('2026-11-30'),
+      },
+    ]);
+
+    const canReviewBoss = await scopeResolver.canReviewUser('usr-delegate', 'usr-head');
+    expect(canReviewBoss).toBe(false);
+  });
 });
 

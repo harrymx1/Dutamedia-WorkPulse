@@ -62,9 +62,31 @@ const form = ref({
   delegateUserId: '',
   targetFunction: 'Engineering',
   delegationReason: '',
-  effectiveDate: new Date().toISOString().split('T')[0],
+  effectiveDate: getTodayDateString(),
   expiryDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
 });
+
+function getTodayDateString(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function toDateOnlyString(val: string | Date): string {
+  if (!val) return '';
+  const d = typeof val === 'string' ? new Date(val) : val;
+  return d.toISOString().slice(0, 10);
+}
+
+function isDelegationActive(d: TemporaryReviewerRow): boolean {
+  const today = getTodayDateString();
+  const eff = toDateOnlyString(d.effectiveDate);
+  const exp = toDateOnlyString(d.expiryDate);
+  return eff <= today && exp >= today;
+}
 
 // Karyawan lini operasional yang berhak didelegasikan atau digantikan (mengecualikan SYSTEM_ADMIN untuk Separation of Duties)
 const operationalUsers = computed(() => {
@@ -233,7 +255,7 @@ function openModal() {
     delegateUserId: '',
     targetFunction: targetFunc,
     delegationReason: 'Cuti tahunan dan pelimpahan wewenang peninjauan sementara',
-    effectiveDate: new Date().toISOString().split('T')[0],
+    effectiveDate: getTodayDateString(),
     expiryDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
   };
 
@@ -517,16 +539,10 @@ function showToast(msg: string) {
                 <span
                   :class="[
                     'status-badge',
-                    new Date(d.effectiveDate) <= new Date() && new Date(d.expiryDate) >= new Date()
-                      ? 'active'
-                      : 'expired',
+                    isDelegationActive(d) ? 'active' : 'expired',
                   ]"
                 >
-                  {{
-                    new Date(d.effectiveDate) <= new Date() && new Date(d.expiryDate) >= new Date()
-                      ? 'Aktif'
-                      : 'Kedaluwarsa'
-                  }}
+                  {{ isDelegationActive(d) ? 'Aktif' : 'Kedaluwarsa' }}
                 </span>
               </td>
               <td>

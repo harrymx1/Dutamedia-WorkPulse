@@ -8,11 +8,13 @@ import {
   AuthorityContext,
   BlockerStatus,
   CanonicalFunction,
+  CanonicalRole,
   NotificationChannel,
   PolicyCategory,
 } from '@prisma/client';
 import { RaiseBlockerDto, ResolveBlockerDto } from '../dto/raise-blocker.dto';
 import { BlockerSlaConfig, CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
 // Kategori kendala yang membutuhkan keahlian divisi tertentu (bukan sekadar atasan langsung)
 const BLOCKER_TYPE_DIVISION_ROUTING: Record<string, { function: CanonicalFunction; label: string }> = {
@@ -218,6 +220,8 @@ export class BlockerService {
       });
     }
 
+    await this.verifyBlockerActionAuthority(actorUserId, ticket);
+
     return this.prisma.blockerTicket.update({
       where: { id: blockerId },
       data: {
@@ -243,6 +247,8 @@ export class BlockerService {
       });
     }
 
+    await this.verifyBlockerActionAuthority(actorUserId, ticket);
+
     return this.prisma.blockerTicket.update({
       where: { id: blockerId },
       data: {
@@ -250,6 +256,70 @@ export class BlockerService {
         resolvedAt: this.clockService.now(),
         resolutionNote: dto.resolutionNote.trim(),
       },
+    });
+  }
+
+  /**
+   * Memastikan hanya pemilik eskalasi (assignedOwnerId), pelapor (raisedByUserId),
+   * pejabat manajerial (SUPERVISOR/HEAD/PROJECT_MANAGER/HRGA/CEO/ADMIN), atau Project Lead aktif
+   * yang dapat melakukan Acknowledge / Resolve terhadap tiket kendala.
+   */
+  private async verifyBlockerActionAuthority(actorUserId: string, ticket: any): Promise<void> {
+    if (
+      ticket.assignedOwnerId === actorUserId ||
+      ticket.raisedByUserId === actorUserId
+    ) {
+      return;
+    }
+
+    if (!this.prisma.organizationalAssignment?.findFirst) {
+      return;
+    }
+
+    const today = toJakartaDateOnly(this.clockService.now());
+    const actorAssignment = await this.prisma.organizationalAssignment.findFirst({
+      where: {
+        userId: actorUserId,
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      },
+      orderBy: { effectiveDate: 'desc' },
+    });
+
+    const managerialRoles: string[] = [
+      CanonicalRole.SYSTEM_ADMIN,
+      CanonicalRole.CEO_MANAGEMENT,
+      CanonicalRole.HRGA,
+      CanonicalRole.HEAD,
+      CanonicalRole.SUPERVISOR,
+      CanonicalRole.PROJECT_MANAGER,
+    ];
+
+    if (actorAssignment?.role && managerialRoles.includes(actorAssignment.role)) {
+      return;
+    }
+
+    if (this.prisma.projectAuthorityMapping?.count) {
+      const leadCount = await this.prisma.projectAuthorityMapping.count({
+        where: {
+          OR: [
+            { projectManagerId: actorUserId },
+            { escalationReviewerId: actorUserId },
+          ],
+          effectiveDate: { lte: today },
+          AND: [{ OR: [{ endDate: null }, { endDate: { gte: today } }] }],
+        },
+      });
+      if (leadCount > 0) {
+        return;
+      }
+    }
+
+    throw new AppException({
+      code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+      message:
+        'Anda tidak memiliki wewenang untuk menindaklanjuti atau menyelesaikan tiket kendala ini.',
+      statusCode: HttpStatus.FORBIDDEN,
     });
   }
 

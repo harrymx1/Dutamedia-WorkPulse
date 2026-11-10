@@ -77,7 +77,7 @@ async function loadData() {
   try {
     const [todayRes, historyRes] = await Promise.all([
       apiClient<{ record?: { commitments?: CommitmentItem[] } }>('/daily/today'),
-      apiClient<CorrectionHistoryItem[]>('/correction-requests'),
+      apiClient<CorrectionHistoryItem[]>('/correction-requests?mode=mine'),
     ]);
 
     if (todayRes.data?.record?.commitments) {

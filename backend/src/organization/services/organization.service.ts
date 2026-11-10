@@ -5,6 +5,7 @@ import { HierarchyCycleDetector } from '../utils/hierarchy-cycle.detector';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { CanonicalFunction, CanonicalRole } from '@prisma/client';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
 @Injectable()
 export class OrganizationService {
@@ -124,11 +125,12 @@ export class OrganizationService {
   }
 
   async getUserActiveAssignment(userId: string, targetDate = new Date()) {
+    const dateOnly = toJakartaDateOnly(targetDate);
     return await this.prisma.organizationalAssignment.findFirst({
       where: {
         userId,
-        effectiveDate: { lte: targetDate },
-        OR: [{ endDate: null }, { endDate: { gte: targetDate } }],
+        effectiveDate: { lte: dateOnly },
+        OR: [{ endDate: null }, { endDate: { gte: dateOnly } }],
       },
       orderBy: { effectiveDate: 'desc' },
       include: {
@@ -153,7 +155,7 @@ export class OrganizationService {
     if (options.function) where.function = options.function;
     if (options.role) where.role = options.role;
     if (options.activeOnly) {
-      const today = new Date();
+      const today = toJakartaDateOnly();
       where.effectiveDate = { lte: today };
       where.OR = [{ endDate: null }, { endDate: { gte: today } }];
     }

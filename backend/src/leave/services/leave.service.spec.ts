@@ -146,6 +146,20 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
       );
     });
 
+    it('rejects self-approval of leave request with AUTH_FORBIDDEN_SCOPE', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-self',
+        userId: 'mgr-tech',
+        status: LeaveStatus.PENDING,
+      });
+
+      await expect(
+        service.reviewLeaveRequest('mgr-tech', 'lv-self', {
+          decision: 'APPROVE',
+        }),
+      ).rejects.toThrowError(AppException);
+    });
+
     it('filters approval queue to only include accessible subordinates', async () => {
       mockPrisma.leaveRequest.findMany.mockResolvedValue([
         { id: 'lv-1', userId: 'usr-subordinate-eng' },
