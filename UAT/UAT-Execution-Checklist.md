@@ -260,7 +260,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [x] | `TC-COAC-001` | Pemberian Catatan Bimbingan Manajer (Coaching Note) | Pass | Catatan bimbingan untuk Aditya Nugroho berhasil disimpan, toast hijau muncul, formulir tereset, counter kartu 0->1, dan kartu catatan terbit di feed dengan badge Bimbingan & Dibagikan (IMP-056) |
 | [x] | `TC-DASH-001` | Pemantauan Dasbor Operasional Tim Proyek (`Tim (Proyek)`) oleh Project Lead / Supervisor | Pass | Tab `Tim (Proyek)` aktif default & terisolasi tanpa tab Divisi/Perusahaan, filter proyek [WP-CORE, PRJ-CORE] aktif, 4 KPI dinamis terisi akurat, panel kendala & feed reaktif (media_1794281153189_ac7738a8.jpg) |
-| [ ] | `TC-DASH-002` | Pemantauan Radar Risiko Proyek & Inisiatif Strategis | | |
+| [x] | `TC-DASH-002` | Pemantauan Radar Risiko Proyek & Inisiatif Strategis | Pass | 5 filter risiko portofolio aktif, 4 inisiatif terdaftar, modal rincian WP-CORE tampil utuh (Health Score 50/100, 2 blocker aktif, kendala utama OOM, tombol antrean aktif) via media_1794281877276_ef35e561.png & media_1794281983959_d2390d3c.png |
 | [x] | `TC-COAC-002` | Validasi Kerahasiaan Catatan Bimbingan & Larangan Catatan Diri Sendiri | Pass | Catatan diri ditolak; catatan konfidensial terbit dengan lencana Rahasia Manajemen; staf diblokir 403 dari /coaching; notifikasi staf terisolasi & dilengkapi penayangan isi bimbingan (IMP-057) |
 | [ ] | `TC-NOTF-001` | Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca | Not Run | Lencana TopBar sinkron reaktif; tandai terbaca mereset counter lencana |
 
