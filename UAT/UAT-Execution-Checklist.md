@@ -262,7 +262,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [x] | `TC-DASH-001` | Pemantauan Dasbor Operasional Tim Proyek (`Tim (Proyek)`) oleh Project Lead / Supervisor | Pass | Tab `Tim (Proyek)` aktif default & terisolasi tanpa tab Divisi/Perusahaan, filter proyek [WP-CORE, PRJ-CORE] aktif, 4 KPI dinamis terisi akurat, panel kendala & feed reaktif (media_1794281153189_ac7738a8.jpg) |
 | [x] | `TC-DASH-002` | Pemantauan Radar Risiko Proyek & Inisiatif Strategis | Pass | 5 filter risiko portofolio aktif, 4 inisiatif terdaftar, modal rincian WP-CORE tampil utuh (Health Score 50/100, 2 blocker aktif, kendala utama OOM, tombol antrean aktif) via media_1794281877276_ef35e561.png & media_1794281983959_d2390d3c.png |
 | [x] | `TC-COAC-002` | Validasi Kerahasiaan Catatan Bimbingan & Larangan Catatan Diri Sendiri | Pass | Catatan diri ditolak; catatan konfidensial terbit dengan lencana Rahasia Manajemen; staf diblokir 403 dari /coaching; notifikasi staf terisolasi & dilengkapi penayangan isi bimbingan (IMP-057) |
-| [ ] | `TC-NOTF-001` | Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca | Not Run | Lencana TopBar sinkron reaktif; tandai terbaca mereset counter lencana |
+| [x] | `TC-NOTF-001` | Pusat Notifikasi, Pembaruan Lencana TopBar, & Penandaan Terbaca | Pass | Notifikasi masuk kronologis, baca 1 item mereduksi counter 4->3, 'Tandai semua dibaca' mereset counter ke 0 & hilangkan titik belum dibaca (media_1794282387793_0d3f4b47.png, media_1794282407910_9a20694d.png, media_1794282415722_edc323e1.png) |
 
 ---
 

@@ -2430,13 +2430,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Siklus notifikasi in-app sinkron sempurna antara halaman notifikasi dan indikator lencana TopBar.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar TopBar dengan lencana angka sebelum dan sesudah aksi "Tandai Semua Terbaca".
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Halaman `/notifications` diakses oleh Aditya Nugroho (`dev.frontend@dutamedia.com`). Menampilkan 5 total notifikasi dengan indikator awal 4 notifikasi belum dibaca (lencana pill "4 belum dibaca", kartu metrik "Belum Dibaca: 4", dan tab "Daftar Notifikasi [4]"). Membuka rincian 1 notifikasi cuti disetujui secara otomatis menandainya sebagai terbaca, titik indikator hijau hilang, dan counter reaktif berkurang 4 -> 3. Mengeklik tombol "Tandai semua dibaca" berhasil memicu toast hijau konfirmasi "Seluruh notifikasi telah ditandai dibaca.", seluruh titik indikator belum dibaca hilang, counter beralih ke "0 belum dibaca", dan kartu metrik terbarui menjadi 0. Bukti: media_1794282387793_0d3f4b47.png, media_1794282407910_9a20694d.png, dan media_1794282415722_edc323e1.png.
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-10
 - **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Retest Result:** PASS
+- **Catatan:** Alur notifikasi in-app, penandaan terbaca tunggal, dan penandaan massal berfungsi 100% sinkron dan reaktif. Tahap 8 (Kelompok 11) resmi selesai 100% LULUS.
 
 ---
 
