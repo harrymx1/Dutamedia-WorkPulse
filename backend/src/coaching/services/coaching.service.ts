@@ -59,14 +59,20 @@ export class CoachingService {
 
       // Jika dibagikan ke karyawan, kirimkan notifikasi
       if (dto.visibility === NoteVisibility.SHARED_WITH_EMPLOYEE) {
+        let typeLabel = 'Bimbingan';
+        if (dto.noteType === 'RECOGNITION') typeLabel = 'Apresiasi';
+        if (dto.noteType === 'CORRECTIVE') typeLabel = 'Tindakan Korektif';
+
+        const authorName = note.authorUser?.fullName || 'Atasan Langsung';
+
         await tx.notification.create({
           data: {
             recipientUserId: dto.subjectUserId,
             triggerType: 'MANAGER_NOTE_SHARED',
             channel: NotificationChannel.IN_APP_CENTER,
-            title: `Catatan Manajerial Baru (${dto.noteType})`,
-            message: `Atasan Anda telah membagikan catatan pembinaan/umpan balik baru kepada Anda.`,
-            actionUrl: '/coaching',
+            title: `Catatan ${typeLabel} Baru dari Atasan`,
+            message: `${authorName} membagikan catatan ${typeLabel.toLowerCase()}: "${dto.content.trim()}"`,
+            actionUrl: '/notifications',
             relatedEntityType: 'manager_notes',
             relatedEntityId: note.id,
           },

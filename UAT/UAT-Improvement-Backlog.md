@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 56 Calon Perbaikan (IMP-001 s.d. IMP-056)
+> **Total Temuan:** 57 Calon Perbaikan (IMP-001 s.d. IMP-057)
 
 ---
 
@@ -102,6 +102,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-054** | Alokasi Lebar Kolom Aksi dan Stabilisasi Layout Tabel Riwayat Cuti | UI / Visual Layout | `/leave/my` | `TC-LEAV-003`, `TC-LEAV-004` | Medium | Resolved / Implemented |
 | **IMP-055** | Standardisasi Terminologi Bahasa Indonesia Bisnis & Eliminasi Jargon Teknis 'Superseded by Approved Leave' pada Modul Cuti | Copywriting & Microcopy | `/leave/my`, `/leave/queue` & `/daily/morning` | `TC-LEAV-003` | High | Resolved / Implemented |
 | **IMP-056** | Standardisasi Bahasa Indonesia Bisnis, Format Stage Kepatuhan & Eliminasi Jargon pada Modul Coaching | Copywriting & Microcopy | `/coaching` | `TC-COAC-001` | High | Resolved / Implemented |
+| **IMP-057** | Penayangan Rincian Isi Catatan Pembinaan pada Notifikasi & Pencegahan Navigasi 403 bagi Karyawan | UX Ergonomics & Navigation Guard | `/notifications` & `CoachingService` | `TC-COAC-002` | High | Resolved / Implemented |
 
 ---
 
@@ -1205,6 +1206,27 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794277170672_a819f455.jpg`.
 - **Status:** Resolved / Implemented (Frontend Hotfixed)
+
+---
+
+### [IMP-057] Penayangan Rincian Isi Catatan Pembinaan pada Notifikasi & Pencegahan Navigasi 403 bagi Karyawan
+- **Finding ID:** IMP-057
+- **Title:** Penayangan Rincian Isi Catatan Pembinaan pada Notifikasi & Pencegahan Navigasi 403 bagi Karyawan
+- **Category:** UX Ergonomics & Navigation Guard
+- **Page / Module:** Pusat Notifikasi (`/notifications`) & Backend `CoachingService`
+- **Related Test Case:** `TC-COAC-002`, `TC-NOTF-001`
+- **Current Condition:** 
+  1. Saat atasan menerbitkan catatan bimbingan yang dibagikan (`SHARED_WITH_EMPLOYEE`), backend menetapkan `actionUrl: '/coaching'`.
+  2. Ketika karyawan (Aditya Nugroho) membuka rincian notifikasi di `/notifications` dan menekan tombol *"Buka Halaman Terkait"*, sistem mengarahkannya ke `/coaching`. Karena rute `/coaching` dilindungi wewenang manajerial (`requiresSubordinates: true`), karyawan langsung ditolak dengan halaman `403 — Akses Dibatasi`.
+  3. Modal rincian notifikasi hanya memuat kalimat umum (*"Atasan Anda telah membagikan catatan pembinaan..."*) tanpa menyajikan teks isi catatan bimbingan itu sendiri.
+- **Proposed Improvement:** 
+  1. Di `NotificationCenterView.vue`, tambahkan proteksi pengecekan hak akses `canUserAccess(url)` menggunakan `canAccessRoute()`. Sembunyikan tombol *"Buka Halaman Terkait"* jika pengguna tidak memiliki wewenang mengakses halaman tujuan (seperti staf tanpa bawahan yang diarahkan ke `/coaching`).
+  2. Saat modal notifikasi bertipe `MANAGER_NOTE_SHARED` dibuka, muat dan tampilkan kotak sorotan khusus (`.coaching-note-callout`) yang menyajikan judul bimbingan, nama atasan, dan kutipan teks catatan lengkap agar karyawan dapat membaca bimbingan secara langsung.
+  3. Pada `CoachingService.ts`, perbarui notifikasi baru agar menyertakan nama atasan dan kutipan teks catatan di dalam pesan notifikasi, serta menetapkan `actionUrl: '/notifications'` yang aman diakses staf.
+- **Rationale / Expected Benefit:** Menghilangkan jalan buntu navigasi (dead-end 403 error), menjamin staf dapat langsung membaca arahan atau apresiasi atasan secara transparan di Pusat Notifikasi, dan mempertahankan keamanan hak akses manajerial secara utuh.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794278981050_ad2bb972.png`, `media_1794279003712_2a5ea742.png`.
+- **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

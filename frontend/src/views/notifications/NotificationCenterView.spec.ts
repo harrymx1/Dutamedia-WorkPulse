@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import NotificationCenterView from './NotificationCenterView.vue';
+import { useAuthStore } from '../../stores/auth';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -100,6 +101,87 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(wrapper.text()).toContain('0 belum dibaca');
+  });
+
+  it('hides forbidden actionUrl and displays coaching note callout when viewing shared coaching notification (IMP-057)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-aditya',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      if (url.includes('/coaching/users/usr-aditya')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'note-101',
+                noteType: 'COACHING',
+                content: 'Pertahankan efisiensi query database pada modul baru.',
+                authorUser: { fullName: 'Arif Budiman' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-coaching-1',
+              title: 'Catatan Bimbingan Baru dari Atasan',
+              message: 'Arif Budiman membagikan catatan bimbingan.',
+              type: 'MANAGER_NOTE_SHARED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/coaching',
+              relatedEntityId: 'note-101',
+              createdAt: '2026-11-10T09:43:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true },
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Open detail of notification
+    const card = wrapper.find('.notif-item');
+    expect(card.exists()).toBe(true);
+    await card.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    // Modal should be open
+    expect(wrapper.find('.modal-card').exists()).toBe(true);
+    // Callout box should display the actual note content
+    expect(wrapper.text()).toContain('Pertahankan efisiensi query database pada modul baru.');
+    expect(wrapper.text()).toContain('Arif Budiman');
+
+    // Forbidden button "Buka Halaman Terkait" to /coaching MUST NOT exist for employee without subordinates
+    expect(wrapper.text()).not.toContain('Buka Halaman Terkait');
   });
 });
 

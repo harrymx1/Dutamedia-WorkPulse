@@ -2116,13 +2116,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Catatan bimbingan tersimpan rapi, memenuhi syarat minimal 10 karakter, dan dapat diakses oleh kedua belah pihak.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot timeline coaching note yang memuat catatan konstruktif supervisor.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Terverifikasi 100% pada staging production oleh Harry pada 10 November 2026 menggunakan akun head.eng@dutamedia.com (Arif Budiman). Tombol simpan dinonaktifkan saat karakter < 10; pengisian narasi konstruktif >= 10 karakter untuk Aditya Nugroho berhasil disimpan, notifikasi toast sukses muncul, form tereset, counter kartu Aditya bertambah 0 -> 1 Catatan, dan kartu catatan terbit di feed riwayat dengan label Bimbingan & Dibagikan (media_1794278648075_7052b953.png). Microcopy antarmuka disempurnakan via IMP-056.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-10
+- **Defect ID:** -
+- **Retest Result:** Pass
+- **Catatan:** Validasi batas 10 karakter dan alur penerbitan bimbingan DEC-010 terverifikasi sempurna.
 
 ---
 
@@ -2531,13 +2531,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Sistem secara sempurna menegakkan larangan pembuatan catatan diri sendiri dan menjaga kerahasiaan catatan manajerial konfidensial dari penglihatan staf.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar feed catatan pada akun Head of Engineering (memperlihatkan badge rahasia) dan tangkapan layar feed pada akun Employee (memperlihatkan catatan rahasia tersembunyi).
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Terverifikasi 100% pada staging production oleh Harry pada 10 November 2026. Nama Arif Budiman tersaring dari pemilih subjek dan API menolak pembuatan catatan diri sendiri; Arif Budiman berhasil menerbitkan catatan Tindakan Korektif berstatus CONFIDENTIAL_MANAGER_ONLY untuk Aditya Nugroho dengan lencana merah Rahasia Manajemen (media_1794278915393_aac8c3de.jpg); staf Aditya Nugroho tidak memiliki menu Catatan Coaching dan akses langsung ke /coaching diblokir 403 Akses Dibatasi (media_1794278981050_ad2bb972.png); serta pusat notifikasi Aditya hanya menerima notifikasi catatan bimbingan bersama tanpa kebocoran catatan rahasia (media_1794279003712_2a5ea742.png). Rincian teks catatan bimbingan kini langsung disajikan pada modal notifikasi dan link 403 disembunyikan via IMP-057.
+- **Execution Status:** Pass
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-10
 - **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Retest Result:** Pass
+- **Catatan:** Kerahasiaan manajerial dan penegakan wewenang berjenjang terverifikasi kokoh.
 
 ---
 

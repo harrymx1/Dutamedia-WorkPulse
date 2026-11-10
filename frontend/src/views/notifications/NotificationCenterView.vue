@@ -3,6 +3,8 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { useAuthStore } from '../../stores/auth';
+import { canAccessRoute } from '../../router/navigation';
 import {
   Bell,
   CheckCheck,
@@ -16,6 +18,7 @@ import {
   Smartphone,
   Info,
   ExternalLink,
+  Sparkles,
 } from 'lucide-vue-next';
 
 interface NotificationItem {
@@ -45,7 +48,10 @@ const pushPermission = ref<string>('default');
 const pushRegistering = ref(false);
 
 // Detail Modal
+const authStore = useAuthStore();
 const selectedNotification = ref<NotificationItem | null>(null);
+const sharedNoteDetail = ref<any | null>(null);
+const loadingNoteDetail = ref(false);
 
 // Toasts
 const toastMessage = ref('');
@@ -114,13 +120,61 @@ async function handleMarkAsRead(notif: NotificationItem) {
   }
 }
 
-function openDetail(notif: NotificationItem) {
+async function openDetail(notif: NotificationItem) {
   selectedNotification.value = notif;
+  sharedNoteDetail.value = null;
   handleMarkAsRead(notif);
+
+  // Jika notifikasi adalah catatan pembinaan (MANAGER_NOTE_SHARED), muat rincian isi catatan agar karyawan dapat membaca langsung
+  if (
+    (notif.type === 'MANAGER_NOTE_SHARED' ||
+      notif.type.includes('COACHING') ||
+      notif.title.includes('Catatan Manajerial') ||
+      notif.title.includes('Catatan Bimbingan') ||
+      notif.title.includes('Catatan Apresiasi') ||
+      notif.title.includes('Catatan Tindakan Korektif')) &&
+    authStore.user?.id
+  ) {
+    loadingNoteDetail.value = true;
+    try {
+      const res = await apiClient<any[]>(`/coaching/users/${authStore.user.id}`);
+      const notes = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      if (notes.length > 0) {
+        const match = (notif as any).relatedEntityId
+          ? notes.find((n: any) => n.id === (notif as any).relatedEntityId)
+          : notes[0];
+        sharedNoteDetail.value = match || notes[0];
+      }
+    } catch {
+      // Abaikan bila gagal memuat rincian
+    } finally {
+      loadingNoteDetail.value = false;
+    }
+  }
 }
 
 function closeDetail() {
   selectedNotification.value = null;
+  sharedNoteDetail.value = null;
+}
+
+function canUserAccess(url?: string): boolean {
+  if (!url) return false;
+  if (url === '/notifications' || url === '#') return false;
+  return canAccessRoute(url, authStore.user);
+}
+
+function formatNoteTypeLabel(type?: string): string {
+  switch (type) {
+    case 'COACHING':
+      return 'Bimbingan';
+    case 'RECOGNITION':
+      return 'Apresiasi';
+    case 'CORRECTIVE':
+      return 'Tindakan Korektif';
+    default:
+      return type || 'Catatan Pembinaan';
+  }
 }
 
 const filteredNotifications = computed(() => {
@@ -421,6 +475,16 @@ onMounted(() => {
           <div class="modal-body">
             <h4 class="modal-title">{{ selectedNotification.title }}</h4>
             <p class="modal-desc">{{ selectedNotification.message }}</p>
+
+            <!-- Box Rincian Khusus Catatan Pembinaan jika tipe MANAGER_NOTE_SHARED -->
+            <div v-if="sharedNoteDetail" class="coaching-note-callout">
+              <div class="callout-head">
+                <Sparkles :size="16" class="callout-icon" />
+                <strong>{{ formatNoteTypeLabel(sharedNoteDetail.noteType) }} dari {{ sharedNoteDetail.authorUser?.fullName || 'Atasan' }}</strong>
+              </div>
+              <p class="callout-body">"{{ sharedNoteDetail.content }}"</p>
+            </div>
+
             <div class="modal-detail-box">
               <div class="detail-row">
                 <span>Tipe Event:</span>
@@ -432,7 +496,8 @@ onMounted(() => {
               </div>
             </div>
 
-            <div v-if="selectedNotification.actionUrl" class="action-link-wrap">
+            <!-- Tombol Buka Halaman Terkait hanya tampil jika pengguna memiliki hak akses ke rute tersebut -->
+            <div v-if="selectedNotification.actionUrl && canUserAccess(selectedNotification.actionUrl)" class="action-link-wrap">
               <AccessLink :to="selectedNotification.actionUrl" class="btn btn-primary">
                 <ExternalLink :size="15" />
                 <span>Buka Halaman Terkait</span>
@@ -1007,6 +1072,37 @@ h1 {
 
 .spin {
   animation: spin 1s linear infinite;
+}
+
+.coaching-note-callout {
+  margin: 14px 0 16px;
+  padding: 14px 16px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-left: 4px solid #16A34A;
+  border-radius: 8px;
+}
+
+.coaching-note-callout .callout-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.coaching-note-callout .callout-icon {
+  color: #16A34A;
+}
+
+.coaching-note-callout .callout-body {
+  margin: 0;
+  color: #1E293B;
+  font-size: 14px;
+  line-height: 1.5;
+  font-style: italic;
 }
 
 @keyframes spin {
