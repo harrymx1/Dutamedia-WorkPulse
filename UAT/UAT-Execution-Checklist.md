@@ -241,7 +241,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [x] | `TC-LEAV-001` | Pengajuan Cuti Tahunan Mandiri oleh Karyawan | Pass | Cuti tahunan 24-25 Nov 2026 berstatus PENDING terbit dengan toast hijau |
 | [x] | `TC-LEAV-002` | Persetujuan Permohonan Cuti oleh Atasan Langsung | Pass | Modal review tampil proporsional (IMP-052); persetujuan sukses dengan toast hijau dan status bertransisi ke Disetujui |
-| [ ] | `TC-LEAV-003` | Rekonsiliasi Cuti Otomatis Pasca Cut-Off (DEC-008) | | |
+| [x] | `TC-LEAV-003` | Rekonsiliasi Cuti Otomatis Pasca Cut-Off (DEC-008) | Pass | Cuti hari berjalan 10 Nov diajukan pasca cut-off, disetujui atasan di /leave/queue, status beralih ke Disetujui di /leave/my, dan diverifikasi HRGA dikecualikan dari antrean pelanggaran /compliance (IMP-055) |
 | [x] | `TC-LEAV-004` | Validasi Tumpang Tindih Tanggal Cuti & Pembatalan Mandiri Pending | Pass | Cuti bertabrakan ditolak HTTP 409 Conflict; pembatalan cuti pending sukses (Leave Cancelled) |
 
 ---

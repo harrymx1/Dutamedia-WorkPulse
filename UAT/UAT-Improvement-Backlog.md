@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 55 Calon Perbaikan (IMP-001 s.d. IMP-055)
+> **Total Temuan:** 56 Calon Perbaikan (IMP-001 s.d. IMP-056)
 
 ---
 
@@ -101,6 +101,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-053** | Sinkronisasi Properti reviewNote & Peremajaan Visual Catatan Reviewer Cuti | Frontend Data Binding & UI Polish | `/leave/my` & `/leave/queue` | `TC-LEAV-003`, `TC-LEAV-002` | High | Resolved / Implemented |
 | **IMP-054** | Alokasi Lebar Kolom Aksi dan Stabilisasi Layout Tabel Riwayat Cuti | UI / Visual Layout | `/leave/my` | `TC-LEAV-003`, `TC-LEAV-004` | Medium | Resolved / Implemented |
 | **IMP-055** | Standardisasi Terminologi Bahasa Indonesia Bisnis & Eliminasi Jargon Teknis 'Superseded by Approved Leave' pada Modul Cuti | Copywriting & Microcopy | `/leave/my`, `/leave/queue` & `/daily/morning` | `TC-LEAV-003` | High | Resolved / Implemented |
+| **IMP-056** | Standardisasi Bahasa Indonesia Bisnis, Format Stage Kepatuhan & Eliminasi Jargon pada Modul Coaching | Copywriting & Microcopy | `/coaching` | `TC-COAC-001` | High | Resolved / Implemented |
 
 ---
 
@@ -1178,6 +1179,31 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghadirkan komunikasi antarmuka yang manusiawi, konsisten berbahasa Indonesia bisnis, serta bebas dari kebocoran istilah spesifikasi rekayasa internal.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794272969864_a8773750.jpg`, `media_1794273208642_085a65f7.jpg`, `media_1794273244491_e6a37632.jpg`, `media_1794273272592_80a77b85.jpg`.
+- **Status:** Resolved / Implemented (Frontend Hotfixed)
+
+---
+
+### [IMP-056] Standardisasi Bahasa Indonesia Bisnis, Format Stage Kepatuhan & Eliminasi Jargon pada Modul Coaching
+- **Finding ID:** IMP-056
+- **Title:** Standardisasi Bahasa Indonesia Bisnis, Format Stage Kepatuhan & Eliminasi Jargon pada Modul Coaching
+- **Category:** Copywriting & Microcopy
+- **Page / Module:** Catatan Pembinaan Tim (`/coaching`)
+- **Related Test Case:** `TC-COAC-001`, `TC-COAC-002`
+- **Current Condition:** 
+  1. Lencana jenjang kepatuhan pada kartu anggota tim (Siti Rahma) menampilkan kode enum basis data mentah `PATTERN_FLAG_3X`.
+  2. Label formulir memuat imbuhan bahasa Inggris `Jenis Catatan (Type) *` dan pilihan jenis catatan menggunakan kata mentah bahasa Inggris `Coaching`, `Recognition`, `Corrective`.
+  3. Pilihan visibilitas memuat bahasa Inggris `Rahasia (Manager Only)` dan deskripsi memuat istilah pengembang `notifikasi in-app`.
+  4. Panel riwayat kanan memuat jargon pengembang / forum medsos `Thread pembinaan aktif untuk anggota tim terpilih` dan teks status kosong memuat `rekaman coaching atau umpan balik`.
+  5. Lencana tipe catatan pada feed riwayat mencetak kode enum kapital mentah `COACHING`, `RECOGNITION`, `CORRECTIVE`.
+- **Proposed Improvement:** 
+  1. Tambahkan fungsi `formatComplianceStage()` untuk memetakan enum database menjadi bahasa bisnis ramah pengguna (`Pola Terlambat 3x`, `Kepatuhan Baik`, `Surat Peringatan`, `Eskalasi Direksi`).
+  2. Bersihkan label menjadi `Jenis Catatan *` dan ubah opsi pilihan jenis catatan menjadi bahasa Indonesia bisnis formal pilihan Harry: `Bimbingan`, `Apresiasi`, dan `Tindakan Korektif`.
+  3. Perbarui opsi visibilitas menjadi `Rahasia (Khusus Manajemen)` dan ganti `notifikasi in-app` menjadi `notifikasi aplikasi`.
+  4. Sempurnakan subjudul riwayat menjadi `Daftar riwayat pembinaan dan apresiasi untuk anggota tim terpilih` dan status kosong menjadi `Belum ada catatan bimbingan atau apresiasi yang dibuat untuk anggota tim ini`.
+  5. Tambahkan fungsi `formatNoteType()` untuk memetakan lencana feed menjadi `Bimbingan`, `Apresiasi`, dan `Tindakan Korektif` serta visibilitas menjadi `Dibagikan` / `Rahasia Manajemen`.
+- **Rationale / Expected Benefit:** Menghadirkan antarmuka pembinaan manajerial yang profesional, bermartabat, dan sepenuhnya berbahasa Indonesia bisnis tanpa kebocoran kode teknis database maupun istilah asing.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794277170672_a819f455.jpg`.
 - **Status:** Resolved / Implemented (Frontend Hotfixed)
 
 ---

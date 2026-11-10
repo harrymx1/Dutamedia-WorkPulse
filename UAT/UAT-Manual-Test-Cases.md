@@ -2022,13 +2022,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Rekonsiliasi cuti bekerja otomatis sesuai DEC-008, bebas dari false positive penalti, dan status audit log terjaga akurat.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot riwayat harian karyawan pada tanggal cuti yang menampilkan status Superseded by Approved Leave.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Terverifikasi 100% pada staging production oleh Harry pada 10 November 2026. Aditya Nugroho mengajukan cuti mendadak untuk hari berjalan (10 Nov 2026) pasca cut-off pagi (media_1794272969864_a8773750.jpg); permohonan disetujui Atasan Langsung Arif Budiman di /leave/queue (media_1794273208642_085a65f7.jpg, media_1794273244491_e6a37632.jpg); status cuti bertransisi ke Disetujui (media_1794273272592_80a77b85.jpg, media_1794274222748_ab201067.jpg); dan pengawasan HRGA Dewi Lestari di /compliance (media_1794273459303_6f1b405f.jpg) mengonfirmasi Aditya Nugroho otomatis dikecualikan dari antrean pelanggaran kepatuhan (rekonsiliasi DEC-008 sukses). Standardisasi istilah Bahasa Indonesia bisnis dan eliminasi jargon teknis disempurnakan via IMP-055.
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-10
+- **Defect ID:** -
+- **Retest Result:** Pass
+- **Catatan:** Rekonsiliasi otomatis DEC-008 dan pembersihan microcopy IMP-055 terverifikasi tuntas.
 
 ---
 

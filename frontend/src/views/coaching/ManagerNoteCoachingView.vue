@@ -126,7 +126,7 @@ function applyTemplate(templateType: 'coaching' | 'recognition' | 'corrective') 
   } else {
     formNoteType.value = 'CORRECTIVE';
     formContent.value =
-`[Pelanggaran / Deviasi]: Keterlambatan check-in pagi tanpa justifikasi izin resmi (DEC-002).
+`[Pelanggaran / Deviasi]: Keterlambatan check-in pagi tanpa justifikasi izin resmi.
 [Fakta]: Terlewat batas waktu cut-off 09:30 WIB sebanyak 2 kali dalam minggu ini.
 [Langkah Korektif]: Wajib menyampaikan permohonan dispensasi resmi jika terjadi keadaan kahar.`;
   }
@@ -169,6 +169,36 @@ async function submitNote() {
   }
 }
 
+function formatComplianceStage(stage?: string): string {
+  switch (stage) {
+    case 'CLEAN':
+      return 'Kepatuhan Baik';
+    case 'PATTERN_FLAG_3X':
+      return 'Pola Terlambat 3x';
+    case 'RECORDED_WARNING':
+      return 'Surat Peringatan';
+    case 'FORMAL_HR_ESCALATION':
+      return 'Eskalasi Direksi';
+    case 'NO_SUBMISSION':
+      return 'Tidak Check-in';
+    default:
+      return stage ? stage.replace(/_/g, ' ') : 'Kepatuhan Baik';
+  }
+}
+
+function formatNoteType(type?: string): string {
+  switch (type) {
+    case 'COACHING':
+      return 'Bimbingan';
+    case 'RECOGNITION':
+      return 'Apresiasi';
+    case 'CORRECTIVE':
+      return 'Tindakan Korektif';
+    default:
+      return type || 'Catatan';
+  }
+}
+
 onMounted(() => {
   loadTeamData();
 });
@@ -208,7 +238,7 @@ onMounted(() => {
           :key="member.user.id"
           class="member-card"
           :class="{ selected: selectedSubjectId === member.user.id }"
-          @click="selectedSubjectId = member.user.id; handleFilterChange()"
+          @click="selectedSubjectId = member.user.id; formSubjectId = member.user.id; handleFilterChange()"
         >
           <div class="member-top">
             <div class="member-avatar">
@@ -230,7 +260,7 @@ onMounted(() => {
                 'stage-alert': member.lastComplianceStage !== 'CLEAN'
               }"
             >
-              {{ member.lastComplianceStage === 'CLEAN' ? 'Kepatuhan Baik' : member.lastComplianceStage }}
+              {{ formatComplianceStage(member.lastComplianceStage) }}
             </span>
           </div>
         </div>
@@ -262,25 +292,25 @@ onMounted(() => {
             <!-- Jenis Catatan (NoteType) -->
             <div class="form-group">
               <div class="label-row">
-                <label>Jenis Catatan (Type) <span class="req">*</span></label>
+                <label>Jenis Catatan <span class="req">*</span></label>
               </div>
               <div class="type-selector-grid">
                 <label class="type-option coaching" :class="{ selected: formNoteType === 'COACHING' }">
                   <input type="radio" v-model="formNoteType" value="COACHING" />
                   <Sparkles :size="16" />
-                  <span>Coaching</span>
+                  <span>Bimbingan</span>
                 </label>
 
                 <label class="type-option recognition" :class="{ selected: formNoteType === 'RECOGNITION' }">
                   <input type="radio" v-model="formNoteType" value="RECOGNITION" />
                   <Award :size="16" />
-                  <span>Recognition</span>
+                  <span>Apresiasi</span>
                 </label>
 
                 <label class="type-option corrective" :class="{ selected: formNoteType === 'CORRECTIVE' }">
                   <input type="radio" v-model="formNoteType" value="CORRECTIVE" />
                   <ShieldAlert :size="16" />
-                  <span>Corrective</span>
+                  <span>Tindakan Korektif</span>
                 </label>
               </div>
             </div>
@@ -294,7 +324,7 @@ onMounted(() => {
                   <div class="vis-icon"><Eye :size="18" /></div>
                   <div>
                     <strong>Dibagikan ke Karyawan</strong>
-                    <small>Karyawan dapat membaca catatan ini di laman profil &amp; menerima notifikasi in-app.</small>
+                    <small>Karyawan dapat membaca catatan ini di laman profil &amp; menerima notifikasi aplikasi.</small>
                   </div>
                 </label>
 
@@ -302,7 +332,7 @@ onMounted(() => {
                   <input type="radio" v-model="formVisibility" value="CONFIDENTIAL_MANAGER_ONLY" />
                   <div class="vis-icon"><EyeOff :size="18" /></div>
                   <div>
-                    <strong>Rahasia (Manager Only)</strong>
+                    <strong>Rahasia (Khusus Manajemen)</strong>
                     <small>Hanya dapat diakses oleh Anda dan jajaran manajemen eksekutif.</small>
                   </div>
                 </label>
@@ -313,8 +343,8 @@ onMounted(() => {
             <div class="template-actions">
               <span class="template-label">Template Cepat:</span>
               <button type="button" class="btn-template" @click="applyTemplate('coaching')">Bimbingan 1-on-1</button>
-              <button type="button" class="btn-template" @click="applyTemplate('recognition')">Apresiasi Blocker</button>
-              <button type="button" class="btn-template" @click="applyTemplate('corrective')">Koreksi Kepatuhan</button>
+              <button type="button" class="btn-template" @click="applyTemplate('recognition')">Apresiasi Kinerja</button>
+              <button type="button" class="btn-template" @click="applyTemplate('corrective')">Tindakan Korektif</button>
             </div>
 
             <!-- Isi Catatan -->
@@ -346,7 +376,7 @@ onMounted(() => {
           <div class="panel-head">
             <div>
               <h2>Riwayat Catatan Evaluasi &amp; Pembinaan</h2>
-              <p class="panel-desc">Thread pembinaan aktif untuk anggota tim terpilih.</p>
+              <p class="panel-desc">Daftar riwayat pembinaan dan apresiasi untuk anggota tim terpilih.</p>
             </div>
             <div class="filter-subject">
               <select v-model="selectedSubjectId" @change="handleFilterChange">
@@ -361,7 +391,7 @@ onMounted(() => {
             <div v-if="notesFeed.length === 0" class="empty-feed">
               <BookOpen :size="32" class="empty-icon" />
               <h3>Belum Ada Catatan Pembinaan</h3>
-              <p>Belum ada rekaman coaching atau umpan balik yang dicatat untuk anggota tim ini.</p>
+              <p>Belum ada catatan bimbingan atau apresiasi yang dibuat untuk anggota tim ini.</p>
             </div>
 
             <div v-else class="feed-list">
@@ -374,13 +404,13 @@ onMounted(() => {
                 <div class="note-head">
                   <div class="note-type-cluster">
                     <span class="note-type-badge" :class="note.noteType.toLowerCase()">
-                      {{ note.noteType }}
+                      {{ formatNoteType(note.noteType) }}
                     </span>
                     <span
                       class="vis-pill"
                       :class="note.visibility === 'SHARED_WITH_EMPLOYEE' ? 'vis-shared' : 'vis-confidential'"
                     >
-                      {{ note.visibility === 'SHARED_WITH_EMPLOYEE' ? 'Dibagikan' : 'Rahasia Manajer' }}
+                      {{ note.visibility === 'SHARED_WITH_EMPLOYEE' ? 'Dibagikan' : 'Rahasia Manajemen' }}
                     </span>
                   </div>
                   <div class="note-date">
