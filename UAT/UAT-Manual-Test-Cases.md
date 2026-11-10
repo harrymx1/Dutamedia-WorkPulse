@@ -2174,13 +2174,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Dasbor `Tim (Proyek)` menyajikan visibilitas operasional proyek secara real-time dan akurat sesuai CR-013.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot halaman penuh Dashboard `Tim (Proyek)`.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Login sebagai Bambang Pratama (`lead.tech@dutamedia.com` - Supervisor / Project Lead) berhasil mendarat langsung di `/dashboard`. Tab cakupan aktif default adalah `Tim (Proyek)` (lengkap dengan badge `Project Lead` dan tagar lingkup unit `Proyek: WP-CORE, PRJ-CORE`), sedangkan tab Divisi Saya dan Seluruh Perusahaan terbukti tersembunyi secara ketat sesuai batasan wewenang CR-013. Dropdown filter proyek menyajikan opsi "Semua Proyek Saya" dan filter periode "Hari Ini". Keempat kartu metrik operasional terisi data dinamis riil: Belum Mengisi Komitmen (16 Orang, Partisipasi 0/16 0%), Komitmen Waspada (0 Tugas), Komitmen Kritis (0 Tugas Macet), dan Blocker Belum Direspon (3 Blocker dengan tautan navigasi Buka Antrean Blocker). Panel Personil Butuh Bantuan Hari Ini menampilkan status terkendali yang bersih (tidak ada tugas berisiko), dan panel Feed Dukungan Lintas Fungsi menampilkan pesan kosong yang ramah tanpa kebocoran layout. Bukti: media_1794281153189_ac7738a8.jpg.
+- **Execution Status:** PASS
+- **Tester:** Harry
+- **Execution Date:** 2026-11-10
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Dasbor operasional Tim Proyek terbukti 100% dinamis, reaktif, dan aman dari kebocoran data manajerial tingkat atas. Selaras penuh dengan spesifikasi arsitektur 3-Scope CR-013. 
 
 ---
 
