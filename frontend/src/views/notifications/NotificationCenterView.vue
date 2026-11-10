@@ -19,6 +19,7 @@ import {
   Info,
   ExternalLink,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-vue-next';
 
 interface NotificationItem {
@@ -483,6 +484,15 @@ onMounted(() => {
                 <strong>{{ formatNoteTypeLabel(sharedNoteDetail.noteType) }} dari {{ sharedNoteDetail.authorUser?.fullName || 'Atasan' }}</strong>
               </div>
               <p class="callout-body">"{{ sharedNoteDetail.content }}"</p>
+            </div>
+
+            <!-- Box Rincian Khusus Pendelegasian Wewenang jika tipe TEMPORARY_REVIEWER -->
+            <div v-if="selectedNotification.type && selectedNotification.type.includes('TEMPORARY_REVIEWER')" class="delegation-note-callout">
+              <div class="callout-head">
+                <ShieldCheck :size="16" class="callout-icon" />
+                <strong>Mandat Wewenang & Tata Kelola Delegasi Reviewer</strong>
+              </div>
+              <p class="callout-body">{{ selectedNotification.message }}</p>
             </div>
 
             <div class="modal-detail-box">
@@ -1103,6 +1113,37 @@ h1 {
   font-size: 14px;
   line-height: 1.5;
   font-style: italic;
+}
+
+.delegation-note-callout {
+  margin: 14px 0 16px;
+  padding: 14px 16px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-left: 4px solid var(--color-brand-primary, #00674D);
+  border-radius: 8px;
+}
+
+.delegation-note-callout .callout-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-brand-primary, #00674D);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.delegation-note-callout .callout-icon {
+  color: var(--color-brand-primary, #00674D);
+}
+
+.delegation-note-callout .callout-body {
+  margin: 0;
+  color: #1E293B;
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
 }
 
 @keyframes spin {

@@ -1,15 +1,22 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { TemporaryReviewerService } from '../services/temporary-reviewer.service';
-import { CreateTemporaryReviewerDto } from '../dto/temporary-reviewer.dto';
+import {
+  CreateTemporaryReviewerDto,
+  UpdateTemporaryReviewerDto,
+  RevokeTemporaryReviewerDto,
+} from '../dto/temporary-reviewer.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -44,6 +51,26 @@ export class TemporaryReviewerController {
     @CurrentUser('id') adminUserId: string,
   ) {
     return await this.tempReviewerService.createTemporaryReviewer(dto, adminUserId);
+  }
+
+  @Patch(':id')
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
+  async updateTemporaryReviewer(
+    @Param('id') id: string,
+    @Body() dto: UpdateTemporaryReviewerDto,
+    @CurrentUser('id') adminUserId: string,
+  ) {
+    return await this.tempReviewerService.updateTemporaryReviewer(id, dto, adminUserId);
+  }
+
+  @Delete(':id')
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
+  async revokeTemporaryReviewer(
+    @Param('id') id: string,
+    @Body() dto: RevokeTemporaryReviewerDto,
+    @CurrentUser('id') adminUserId: string,
+  ) {
+    return await this.tempReviewerService.revokeTemporaryReviewer(id, dto, adminUserId);
   }
 }
 

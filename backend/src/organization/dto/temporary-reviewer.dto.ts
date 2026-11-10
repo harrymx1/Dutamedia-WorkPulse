@@ -32,3 +32,21 @@ export class CreateTemporaryReviewerDto {
   expiryDate!: string;
 }
 
+export class UpdateTemporaryReviewerDto {
+  @IsDateString({}, { message: 'Format tanggal efektif harus YYYY-MM-DD' })
+  @IsOptional()
+  effectiveDate?: string;
+
+  @IsDateString({}, { message: 'Format batas tanggal kedaluwarsa harus YYYY-MM-DD' })
+  @IsOptional()
+  expiryDate?: string;
+
+  @IsNotEmpty({ message: 'Alasan perubahan delegasi wajib diisi' })
+  updateReason!: string;
+}
+
+export class RevokeTemporaryReviewerDto {
+  @IsNotEmpty({ message: 'Alasan pencabutan delegasi wajib diisi' })
+  revokeReason!: string;
+}
+

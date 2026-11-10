@@ -9,6 +9,9 @@ import {
   AlertCircle,
   X,
   Clock,
+  Pencil,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-vue-next';
 
 interface TemporaryReviewerRow {
@@ -211,8 +214,10 @@ onUnmounted(() => {
 });
 
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && isModalOpen.value) {
-    isModalOpen.value = false;
+  if (e.key === 'Escape') {
+    if (isModalOpen.value) isModalOpen.value = false;
+    if (isEditModalOpen.value) isEditModalOpen.value = false;
+    if (isRevokeModalOpen.value) isRevokeModalOpen.value = false;
   }
 }
 
@@ -287,6 +292,120 @@ async function handleCreateDelegation() {
     modalError.value = err.message || 'Gagal menerbitkan delegasi reviewer sementara.';
   } finally {
     isSubmitting.value = false;
+  }
+}
+
+// Edit Modal state & handlers
+const isEditModalOpen = ref(false);
+const isEditSubmitting = ref(false);
+const editModalError = ref<string | null>(null);
+const editForm = ref({
+  id: '',
+  replacedOfficial: '',
+  delegateName: '',
+  targetFunction: '',
+  effectiveDate: '',
+  expiryDate: '',
+  updateReason: '',
+});
+
+function openEditModal(d: TemporaryReviewerRow) {
+  editModalError.value = null;
+  editForm.value = {
+    id: d.id,
+    replacedOfficial: parseReplacedOfficial(d.delegationReason, d.targetFunction),
+    delegateName: d.delegateUser?.fullName || 'Pejabat Pengganti',
+    targetFunction: d.targetFunction,
+    effectiveDate: new Date(d.effectiveDate).toISOString().split('T')[0],
+    expiryDate: new Date(d.expiryDate).toISOString().split('T')[0],
+    updateReason: '',
+  };
+  isEditModalOpen.value = true;
+}
+
+function onEditEffectiveDateChange() {
+  if (new Date(editForm.value.expiryDate) < new Date(editForm.value.effectiveDate)) {
+    editForm.value.expiryDate = editForm.value.effectiveDate;
+  }
+}
+
+async function handleUpdateDelegation() {
+  editModalError.value = null;
+  if (!editForm.value.updateReason.trim()) {
+    editModalError.value = 'Alasan perubahan delegasi wajib diisi untuk kebutuhan jejak audit.';
+    return;
+  }
+  if (new Date(editForm.value.expiryDate) < new Date(editForm.value.effectiveDate)) {
+    editModalError.value = 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif mulai.';
+    return;
+  }
+
+  isEditSubmitting.value = true;
+  try {
+    await apiClient(`/v1/admin/temporary-reviewers/${editForm.value.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        effectiveDate: editForm.value.effectiveDate,
+        expiryDate: editForm.value.expiryDate,
+        updateReason: editForm.value.updateReason.trim(),
+      }),
+    });
+    isEditModalOpen.value = false;
+    showToast('Ketentuan delegasi reviewer sementara berhasil diperbarui!');
+    await loadData();
+  } catch (err: any) {
+    editModalError.value = err.message || 'Gagal memperbarui delegasi reviewer sementara.';
+  } finally {
+    isEditSubmitting.value = false;
+  }
+}
+
+// Revoke Modal state & handlers
+const isRevokeModalOpen = ref(false);
+const isRevokeSubmitting = ref(false);
+const revokeModalError = ref<string | null>(null);
+const revokeForm = ref({
+  id: '',
+  replacedOfficial: '',
+  delegateName: '',
+  targetFunction: '',
+  revokeReason: '',
+});
+
+function openRevokeModal(d: TemporaryReviewerRow) {
+  revokeModalError.value = null;
+  revokeForm.value = {
+    id: d.id,
+    replacedOfficial: parseReplacedOfficial(d.delegationReason, d.targetFunction),
+    delegateName: d.delegateUser?.fullName || 'Pejabat Pengganti',
+    targetFunction: d.targetFunction,
+    revokeReason: '',
+  };
+  isRevokeModalOpen.value = true;
+}
+
+async function handleRevokeDelegation() {
+  revokeModalError.value = null;
+  if (!revokeForm.value.revokeReason.trim()) {
+    revokeModalError.value = 'Alasan pencabutan wewenang wajib diisi untuk kebutuhan jejak audit kepatuhan.';
+    return;
+  }
+
+  isRevokeSubmitting.value = true;
+  try {
+    await apiClient(`/v1/admin/temporary-reviewers/${revokeForm.value.id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({
+        revokeReason: revokeForm.value.revokeReason.trim(),
+      }),
+    });
+    isRevokeModalOpen.value = false;
+    showToast('Pendelegasian wewenang reviewer sementara berhasil dicabut!');
+    await loadData();
+  } catch (err: any) {
+    revokeModalError.value = err.message || 'Gagal mencabut delegasi reviewer sementara.';
+  } finally {
+    isRevokeSubmitting.value = false;
   }
 }
 
@@ -371,6 +490,7 @@ function showToast(msg: string) {
               <th>STATUS</th>
               <th>DITERBITKAN OLEH</th>
               <th>ALASAN DELEGASI</th>
+              <th>AKSI</th>
             </tr>
           </thead>
           <tbody>
@@ -415,6 +535,26 @@ function showToast(msg: string) {
               </td>
               <td>
                 <span class="reason-text">{{ cleanReason(d.delegationReason) }}</span>
+              </td>
+              <td class="actions-cell">
+                <button
+                  type="button"
+                  class="btn-icon btn-edit"
+                  title="Edit Periode & Alasan Delegasi"
+                  @click="openEditModal(d)"
+                >
+                  <Pencil :size="13" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-icon btn-revoke"
+                  title="Cabut Wewenang Delegasi Lebih Awal"
+                  @click="openRevokeModal(d)"
+                >
+                  <Trash2 :size="13" />
+                  <span>Cabut</span>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -523,6 +663,144 @@ function showToast(msg: string) {
             <button type="button" class="btn btn-secondary" @click="isModalOpen = false">Batal</button>
             <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
               {{ isSubmitting ? 'Menerbitkan...' : 'Terbitkan Delegasi' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Edit Delegasi -->
+    <div v-if="isEditModalOpen" class="modal-backdrop" @click.self="isEditModalOpen = false">
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <h3>Edit Ketentuan Delegasi Reviewer</h3>
+            <p class="modal-subtitle">
+              Sesuaikan periode berlaku dan catat alasan perubahan pendelegasian wewenang.
+            </p>
+          </div>
+          <button class="close-btn" @click="isEditModalOpen = false"><X :size="20" /></button>
+        </div>
+        <form @submit.prevent="handleUpdateDelegation">
+          <div v-if="editModalError" class="alert-banner error">
+            <AlertCircle :size="18" />
+            <span>{{ editModalError }}</span>
+          </div>
+
+          <div class="readonly-summary-card">
+            <div class="summary-line">
+              <span class="label">Pejabat Pengganti:</span>
+              <strong>{{ editForm.delegateName }}</strong>
+            </div>
+            <div class="summary-line">
+              <span class="label">Menggantikan:</span>
+              <strong>{{ editForm.replacedOfficial }}</strong>
+            </div>
+            <div class="summary-line">
+              <span class="label">Divisi / Wewenang:</span>
+              <span class="func-pill">{{ editForm.targetFunction }}</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-eff">Tanggal Efektif Mulai *</label>
+              <input
+                id="edit-eff"
+                v-model="editForm.effectiveDate"
+                type="date"
+                required
+                @change="onEditEffectiveDateChange"
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-exp">Batas Tanggal Kedaluwarsa *</label>
+              <input
+                id="edit-exp"
+                v-model="editForm.expiryDate"
+                type="date"
+                :min="editForm.effectiveDate"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-reason">Alasan Perubahan / Revisi Delegasi *</label>
+            <textarea
+              id="edit-reason"
+              v-model="editForm.updateReason"
+              rows="2"
+              placeholder="Contoh: Perpanjangan cuti tahunan atasan selama 3 hari kerja tambahan..."
+              required
+            ></textarea>
+            <span class="field-hint">Kedua belah pihak akan otomatis menerima notifikasi pembaruan ketentuan ini.</span>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="isEditModalOpen = false">Batal</button>
+            <button type="submit" class="btn btn-primary" :disabled="isEditSubmitting">
+              {{ isEditSubmitting ? 'Menyimpan...' : 'Simpan Perubahan' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Cabut / Hapus Delegasi -->
+    <div v-if="isRevokeModalOpen" class="modal-backdrop" @click.self="isRevokeModalOpen = false">
+      <div class="modal-box modal-box-danger" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <h3 class="danger-title">Cabut Wewenang Reviewer Sementara</h3>
+            <p class="modal-subtitle">
+              Akhiri pelimpahan wewenang peninjauan lebih awal dan kembalikan hak akses ke atasan asal.
+            </p>
+          </div>
+          <button class="close-btn" @click="isRevokeModalOpen = false"><X :size="20" /></button>
+        </div>
+        <form @submit.prevent="handleRevokeDelegation">
+          <div v-if="revokeModalError" class="alert-banner error">
+            <AlertCircle :size="18" />
+            <span>{{ revokeModalError }}</span>
+          </div>
+
+          <div class="alert-banner warning">
+            <AlertTriangle :size="18" />
+            <span>Tindakan ini akan langsung menghentikan hak akses persetujuan cuti &amp; koreksi pejabat pengganti seketika.</span>
+          </div>
+
+          <div class="readonly-summary-card">
+            <div class="summary-line">
+              <span class="label">Pejabat yang Dicabut:</span>
+              <strong>{{ revokeForm.delegateName }}</strong>
+            </div>
+            <div class="summary-line">
+              <span class="label">Wewenang Kembali Ke:</span>
+              <strong>{{ revokeForm.replacedOfficial }}</strong>
+            </div>
+            <div class="summary-line">
+              <span class="label">Divisi:</span>
+              <span class="func-pill">{{ revokeForm.targetFunction }}</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="revoke-reason">Alasan Pencabutan Wewenang *</label>
+            <textarea
+              id="revoke-reason"
+              v-model="revokeForm.revokeReason"
+              rows="2"
+              placeholder="Contoh: Atasan definitif telah kembali aktif bekerja lebih awal dari cuti..."
+              required
+            ></textarea>
+            <span class="field-hint">Kedua belah pihak akan otomatis menerima notifikasi pencabutan/pemulihan wewenang ini.</span>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="isRevokeModalOpen = false">Batal</button>
+            <button type="submit" class="btn btn-danger" :disabled="isRevokeSubmitting">
+              {{ isRevokeSubmitting ? 'Memproses...' : 'Cabut Wewenang Sekarang' }}
             </button>
           </div>
         </form>
@@ -883,5 +1161,96 @@ input:focus, select:focus, textarea:focus {
   background: #FEE2E2;
   border: 1px solid #FCA5A5;
   color: #991B1B;
+}
+
+.alert-banner.warning {
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+}
+
+/* Actions in Table */
+.actions-cell {
+  white-space: nowrap;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+  margin-right: 6px;
+}
+
+.btn-edit {
+  background: #F1F6F4;
+  color: var(--color-brand-primary, #00674D);
+  border-color: #C3DFD6;
+}
+
+.btn-edit:hover {
+  background: #E0EFEA;
+  border-color: #00674D;
+}
+
+.btn-revoke {
+  background: #FEF2F2;
+  color: #991B1B;
+  border-color: #FECACA;
+}
+
+.btn-revoke:hover {
+  background: #FEE2E2;
+  border-color: #DC2626;
+}
+
+/* Readonly Summary Card in Modal */
+.readonly-summary-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-sm, 6px);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-line .label {
+  color: var(--color-text-secondary, #5C6E68);
+  font-size: 12px;
+}
+
+/* Danger Modal */
+.modal-box-danger {
+  border-top: 4px solid #DC2626;
+}
+
+.danger-title {
+  color: #991B1B !important;
+}
+
+.btn-danger {
+  background: #DC2626;
+  color: #FFFFFF;
+  border: 1px solid #B91C1C;
+  font-weight: 700;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #B91C1C;
 }
 </style>

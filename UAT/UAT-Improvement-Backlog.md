@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 57 Calon Perbaikan (IMP-001 s.d. IMP-057)
+> **Total Temuan:** 59 Calon Perbaikan (IMP-001 s.d. IMP-059)
 
 ---
 
@@ -103,6 +103,8 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-055** | Standardisasi Terminologi Bahasa Indonesia Bisnis & Eliminasi Jargon Teknis 'Superseded by Approved Leave' pada Modul Cuti | Copywriting & Microcopy | `/leave/my`, `/leave/queue` & `/daily/morning` | `TC-LEAV-003` | High | Resolved / Implemented |
 | **IMP-056** | Standardisasi Bahasa Indonesia Bisnis, Format Stage Kepatuhan & Eliminasi Jargon pada Modul Coaching | Copywriting & Microcopy | `/coaching` | `TC-COAC-001` | High | Resolved / Implemented |
 | **IMP-057** | Penayangan Rincian Isi Catatan Pembinaan pada Notifikasi & Pencegahan Navigasi 403 bagi Karyawan | UX Ergonomics & Navigation Guard | `/notifications` & `CoachingService` | `TC-COAC-002` | High | Resolved / Implemented |
+| **IMP-058** | Restrukturisasi Alur Delegasi Reviewer: Orientasi Pejabat Berhalangan, Jabatan Riil, dan Notifikasi 2 Arah | Business Logic & Organizational Governance | `/admin/temporary-reviewers` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
+| **IMP-059** | Tata Kelola Siklus Hidup Pendelegasian Wewenang (Edit & Cabut Akses) serta Notifikasi Dua Arah Komprehensif | Lifecycle Management & Notification Transparency | `/admin/temporary-reviewers` & `/notifications` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
 
 ---
 
@@ -1251,6 +1253,38 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menyelaraskan alur pendelegasian dengan tata kelola organisasi nyata (Delegation of Authority), menghilangkan kebingungan pengguna, mencegah salah pilih divisi, dan menjamin transparansi audit kepegawaian.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): Diskusi kritis evaluasi tata kelola delegasi reviewer `TC-ADMN-001`.
+- **Status:** Resolved / Implemented (Frontend & Backend Synced)
+
+---
+
+### [IMP-059] Tata Kelola Siklus Hidup Pendelegasian Wewenang (Edit & Cabut Akses) serta Notifikasi Dua Arah Komprehensif
+- **Finding ID:** IMP-059
+- **Title:** Tata Kelola Siklus Hidup Pendelegasian Wewenang (Edit & Cabut Akses) serta Notifikasi Dua Arah Komprehensif
+- **Category:** Lifecycle Management & Notification Transparency
+- **Page / Module:** Reviewer Sementara (`/admin/temporary-reviewers`), Pusat Notifikasi (`/notifications`), & Backend `TemporaryReviewerService`
+- **Related Test Case:** `TC-ADMN-001`, `TC-HRGA-003`
+- **Current Condition:** 
+  1. Notifikasi awal pendelegasian belum memuat rincian mandat wewenang spesifik (persetujuan cuti dan review koreksi komitmen tim), alasan kedinasan yang jelas, dan identitas pejabat penerbit (Admin/HRGA).
+  2. Data pendelegasian wewenang sebelumnya bersifat statis sekali buat; Admin dan HRGA tidak memiliki sarana untuk mengedit periode/alasan jika jadwal cuti bergeser, maupun mencabut (*revoke*) wewenang lebih awal jika atasan telah aktif bekerja kembali.
+  3. Ketiadaan fitur pencabutan wewenang berisiko menimbulkan *dangling privilege* (pejabat pengganti tetap memiliki akses persetujuan manajerial padahal atasan definitif sudah kembali).
+  4. Belum ada notifikasi otomatis saat terjadi perubahan ketentuan maupun pencabutan delegasi wewenang.
+- **Proposed Improvement:** 
+  1. Rincian Notifikasi Dua Arah Komprehensif:
+     - Notifikasi pembuatan (`TEMPORARY_REVIEWER_ASSIGNED` & `TEMPORARY_REVIEWER_DELEGATED`) memuat lengkap: wewenang spesifik (persetujuan cuti & review koreksi komitmen tim), nama pihak yang digantikan/menggantikan, alasan kedinasan resmi, periode tanggal, dan identitas penerbit (Admin/HRGA).
+     - Di Pusat Notifikasi (`NotificationCenterView.vue`), tambahkan kotak sorotan khusus (`.delegation-note-callout`) ber-ikon `ShieldCheck` dengan tema hijau WorkPulse saat rincian notifikasi dibuka.
+  2. Fitur Edit Delegasi Reviewer Sementara:
+     - Tambahkan tombol aksi Edit (ikon pensil) di tabel daftar pendelegasian.
+     - Modal Edit Delegasi untuk memperbarui tanggal efektif, tanggal kedaluwarsa, dan catatan alasan perubahan wajib.
+     - Endpoint `@Patch(':id')` di backend yang memvalidasi integritas rentang tanggal dan menyimpan revisi audit trail `[Revisi: ...]`.
+     - Otomatis kirim notifikasi `TEMPORARY_REVIEWER_UPDATED` ke kedua belah pihak dengan rincian masa berlaku baru, catatan perubahan, dan pihak pembaru.
+  3. Fitur Cabut Wewenang / Pengakhiran Delegasi:
+     - Tambahkan tombol aksi Cabut (ikon tempat sampah merah) di tabel daftar pendelegasian.
+     - Modal Cabut Wewenang dengan banner peringatan resiko, ringkasan pejabat yang terdampak, dan kolom alasan pencabutan wajib.
+     - Endpoint `@Delete(':id')` di backend yang menghapus assignment secara aman dari database untuk membatalkan wewenang secara seketika (*immediate revocation*).
+     - Otomatis kirim notifikasi `TEMPORARY_REVIEWER_REVOKED` ke kedua pihak: konfirmasi pencabutan wewenang ke pejabat pengganti dan konfirmasi pemulihan wewenang mandiri penuh ke atasan definitif.
+- **Rationale / Expected Benefit:** Menyempurnakan tata kelola *enterprise delegation lifecycle*, mencegah celah wewenang ilegal (*dangling privilege*), dan memberikan transparansi komunikasi mutlak bagi seluruh pejabat terkait.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png` & `media_1794289233720_1d4f064d.png`.
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
