@@ -246,28 +246,62 @@ interface DelegationLineItem {
   isHighlight?: boolean;
 }
 
-function formatDelegationLines(message: string): DelegationLineItem[] {
-  if (!message) return [];
+interface DelegationParsedContent {
+  introText: string;
+  items: DelegationLineItem[];
+}
 
-  // 1. Jika pesan sudah berformat baris baru (newline)
+function parseDelegationContent(message: string): DelegationParsedContent {
+  if (!message) return { introText: '', items: [] };
+
+  let introText = '';
+  const items: DelegationLineItem[] = [];
+
+  // 1. Jika pesan sudah berformat newline (format baru terstruktur)
   if (message.includes('\n')) {
     const rawLines = message.split('\n').map(l => l.trim()).filter(Boolean);
-    return rawLines.map(line => {
+    for (const line of rawLines) {
       const colonIdx = line.indexOf(':');
+      // Jika baris adalah narasi personal pengantar
+      if (
+        colonIdx === -1 ||
+        line.startsWith('Anda telah') ||
+        line.startsWith('Wewenang peninjauan Anda') ||
+        line.startsWith('Ketentuan pelimpahan') ||
+        line.startsWith('Pelimpahan wewenang')
+      ) {
+        if (!introText) {
+          introText = line;
+          continue;
+        }
+      }
+
       if (colonIdx !== -1) {
         const label = line.substring(0, colonIdx).trim();
         const value = line.substring(colonIdx + 1).trim();
-        const isHighlight = ['Mandat', 'Wewenang', 'Status', 'Periode Berlaku', 'Periode Baru'].some(h =>
-          label.toLowerCase().includes(h.toLowerCase())
-        );
-        return { label, value, isHighlight };
+        const isHighlight = [
+          'Mandat',
+          'Wewenang',
+          'Status',
+          'Periode Berlaku',
+          'Periode Pelimpahan',
+          'Periode Baru',
+          'Pejabat Pengganti',
+          'Menggantikan',
+        ].some(h => label.toLowerCase().includes(h.toLowerCase()));
+        items.push({ label, value, isHighlight });
+      } else {
+        items.push({ label: 'Keterangan', value: line, isHighlight: false });
       }
-      return { label: 'Keterangan', value: line, isHighlight: false };
-    });
+    }
+    return { introText, items };
   }
 
-  // 2. Fallback untuk pesan lama (satu paragraf) agar tetap terpecah rapi per baris
-  const items: DelegationLineItem[] = [];
+  // 2. Fallback untuk pesan lama (satu paragraf) agar tetap terpecah rapi
+  const firstSentenceMatch = message.match(/^([^.]+?\.)/);
+  if (firstSentenceMatch) {
+    introText = firstSentenceMatch[1].trim();
+  }
 
   // Ekstrak wewenang
   if (message.includes('Wewenang mencakup')) {
@@ -311,7 +345,7 @@ function formatDelegationLines(message: string): DelegationLineItem[] {
   // Ekstrak Alasan
   const reasonMatch = message.match(/Alasan[^:]*:\s*"([^"]+)"/i);
   if (reasonMatch && reasonMatch[1]) {
-    items.push({ label: 'Alasan Kedinasan', value: reasonMatch[1].trim(), isHighlight: false });
+    items.push({ label: 'Alasan Pelimpahan', value: reasonMatch[1].trim(), isHighlight: false });
   }
 
   // Ekstrak Penerbit / Pemroses
@@ -320,16 +354,7 @@ function formatDelegationLines(message: string): DelegationLineItem[] {
     items.push({ label: 'Penanggung Jawab', value: issuerMatch[1].trim(), isHighlight: false });
   }
 
-  if (items.length === 0) {
-    const sentences = message.split(/(?<=[.!?])\s+/).filter(Boolean);
-    return sentences.map((s, idx) => ({
-      label: `Poin ${idx + 1}`,
-      value: s,
-      isHighlight: false,
-    }));
-  }
-
-  return items;
+  return { introText, items };
 }
 
 onMounted(() => {
@@ -594,15 +619,24 @@ onMounted(() => {
               <p class="callout-body">"{{ sharedNoteDetail.content }}"</p>
             </div>
 
-            <!-- Box Rincian Khusus Pendelegasian Wewenang jika tipe TEMPORARY_REVIEWER (TERSTRUKTUR PER BARIS) -->
+            <!-- Box Rincian Khusus Pendelegasian Wewenang jika tipe TEMPORARY_REVIEWER -->
             <div v-if="isDelegationNotification(selectedNotification.type)" class="delegation-note-callout">
               <div class="callout-head">
                 <ShieldCheck :size="18" class="callout-icon" />
                 <strong>{{ getDelegationHeading(selectedNotification.type) }}</strong>
               </div>
+
+              <!-- Kalimat Pengantar Personal Spesifik -->
+              <p
+                v-if="parseDelegationContent(selectedNotification.message).introText"
+                class="delegation-intro-text"
+              >
+                {{ parseDelegationContent(selectedNotification.message).introText }}
+              </p>
+
               <div class="delegation-grid">
                 <div
-                  v-for="(row, idx) in formatDelegationLines(selectedNotification.message)"
+                  v-for="(row, idx) in parseDelegationContent(selectedNotification.message).items"
                   :key="idx"
                   class="delegation-row"
                 >
@@ -623,11 +657,14 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- Tombol Buka Halaman Terkait hanya tampil jika pengguna memiliki hak akses ke rute tersebut -->
-            <div v-if="selectedNotification.actionUrl && canUserAccess(selectedNotification.actionUrl)" class="action-link-wrap">
+            <!-- Tombol Buka Antrean / Halaman Terkait hanya tampil jika actionUrl valid, bukan ke /notifications, dan pengguna punya izin -->
+            <div
+              v-if="selectedNotification.actionUrl && selectedNotification.actionUrl !== '/notifications' && canUserAccess(selectedNotification.actionUrl)"
+              class="action-link-wrap"
+            >
               <AccessLink :to="selectedNotification.actionUrl" class="btn btn-primary">
                 <ExternalLink :size="15" />
-                <span>Buka Halaman Terkait</span>
+                <span>{{ selectedNotification.actionUrl === '/leave/queue' ? 'Buka Antrean Persetujuan Cuti' : 'Buka Halaman Terkait' }}</span>
               </AccessLink>
             </div>
           </div>
@@ -1257,6 +1294,16 @@ h1 {
 .delegation-note-callout .callout-icon {
   color: var(--color-brand-primary, #00674D);
   flex-shrink: 0;
+}
+
+.delegation-intro-text {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #0E211B;
+  font-weight: 500;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #BBF7D0;
 }
 
 .delegation-grid {

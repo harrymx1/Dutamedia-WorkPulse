@@ -1269,10 +1269,12 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
   3. Ketiadaan fitur pencabutan wewenang berisiko menimbulkan *dangling privilege* (pejabat pengganti tetap memiliki akses persetujuan manajerial padahal atasan definitif sudah kembali).
   4. Belum ada notifikasi otomatis saat terjadi perubahan ketentuan maupun pencabutan delegasi wewenang.
 - **Proposed Improvement:** 
-  1. Rincian Notifikasi Dua Arah Komprehensif & Terstruktur Per Baris:
-     - Notifikasi pembuatan (`TEMPORARY_REVIEWER_ASSIGNED` & `TEMPORARY_REVIEWER_DELEGATED`) memuat lengkap dan terpisah per baris: wewenang spesifik (persetujuan cuti & review koreksi komitmen tim), nama pihak yang digantikan/menggantikan, alasan kedinasan resmi, periode tanggal, dan identitas penerbit (Admin/HRGA).
-     - Di Pusat Notifikasi (`NotificationCenterView.vue`), eliminasi duplikasi teks: teks umum paragraf berlatar putih disembunyikan khusus notifikasi delegasi (`!isDelegationNotification`).
-     - Tampilkan kotak sorotan hijau berbingkai (`.delegation-note-callout`) dengan tata letak grid baris berlabel tebal (`.delegation-row`, `.row-label`, `.row-value`) sehingga informasi mudah dibaca dan sangat rapi.
+  1. Rincian Notifikasi Dua Arah Komprehensif, Terstruktur & Bernarasi Personal:
+     - Notifikasi pembuatan, pembaruan, dan pencabutan wewenang menggunakan kalimat pembuka personal (*second-person perspective* "Anda") yang secara gamblang membedakan peran kedua belah pihak:
+       - Pihak 1 (Penerima Delegasi): *"Anda telah resmi diberikan pelimpahan wewenang sebagai Reviewer Sementara..."* / *"Pelimpahan wewenang yang sebelumnya diberikan kepada Anda telah resmi diakhiri/dicabut..."*
+       - Pihak 2 (Pejabat yang Digantikan): *"Wewenang peninjauan Anda telah resmi dialihkan sementara kepada..."* / *"Pelimpahan wewenang peninjauan Anda telah resmi berakhir dan wewenang peninjauan aktif kembali secara penuh..."*
+     - Di Pusat Notifikasi (`NotificationCenterView.vue`), eliminasi duplikasi teks dan tampilkan kalimat pembuka personal di atas grid baris rincian berlabel tebal (`.delegation-intro-text`, `.delegation-grid`, `.delegation-row`).
+     - Eliminasi tombol aksi membingungkan: Tombol *"Buka Halaman Terkait"* dihilangkan pada notifikasi pemulihan/pengakhiran wewenang karena murni bersifat pemberitahuan informatif, dan dilabeli secara spesifik *"Buka Antrean Persetujuan Cuti"* hanya pada saat penugasan aktif (Pihak 1).
   2. Fitur Edit Delegasi Reviewer Sementara:
      - Tambahkan tombol aksi Edit (ikon pensil) di tabel daftar pendelegasian.
      - Modal Edit Delegasi untuk memperbarui tanggal efektif, tanggal kedaluwarsa, dan catatan alasan perubahan wajib.
@@ -1285,7 +1287,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
      - Otomatis kirim notifikasi `TEMPORARY_REVIEWER_REVOKED` ke kedua pihak: konfirmasi pencabutan wewenang ke pejabat pengganti dan konfirmasi pemulihan wewenang mandiri penuh ke atasan definitif.
 - **Rationale / Expected Benefit:** Menyempurnakan tata kelola *enterprise delegation lifecycle*, mencegah celah wewenang ilegal (*dangling privilege*), dan memberikan transparansi komunikasi mutlak bagi seluruh pejabat terkait.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png`, `media_1794289233720_1d4f064d.png`, `media_1794292519681_08f4782f.png`, & `media_1794292564394_737ab6e6.jpg`.
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png`, `media_1794289233720_1d4f064d.png`, `media_1794292519681_08f4782f.png`, `media_1794292564394_737ab6e6.jpg`, & `media_1794294557721_35e519d5.png`.
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---

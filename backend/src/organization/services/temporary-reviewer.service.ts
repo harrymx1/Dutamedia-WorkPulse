@@ -111,11 +111,14 @@ export class TemporaryReviewerService {
 
       // 1. Notifikasi In-App untuk Pejabat Penerima Delegasi (Pejabat Pengganti)
       const delegateMessage = [
-        'Mandat: Penugasan Reviewer Sementara (Persetujuan Cuti & Review Koreksi)',
-        `Divisi Target: ${dto.targetFunction}`,
+        replacedName
+          ? `Anda telah resmi diberikan pelimpahan wewenang sebagai Reviewer Sementara untuk Divisi ${dto.targetFunction} menggantikan ${replacedName}.`
+          : `Anda telah resmi diberikan pelimpahan wewenang sebagai Reviewer Sementara untuk Divisi ${dto.targetFunction}.`,
+        'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+        `Divisi Wewenang: ${dto.targetFunction}`,
         replacedName ? `Menggantikan: ${replacedName}` : null,
         `Periode Berlaku: ${effStr} s/d ${expStr}`,
-        `Alasan Kedinasan: "${cleanReason}"`,
+        `Alasan Pelimpahan: "${cleanReason}"`,
         `Diterbitkan Oleh: ${issuerName}`,
       ].filter(Boolean).join('\n');
 
@@ -135,11 +138,12 @@ export class TemporaryReviewerService {
       // 2. Notifikasi In-App untuk Pejabat yang Digantikan
       if (replacedUser && replacedUser.id !== dto.delegateUserId) {
         const replacedMessage = [
-          'Mandat: Pelimpahan Wewenang Peninjauan Sementara (Persetujuan Cuti & Review Koreksi)',
-          `Divisi Target: ${dto.targetFunction}`,
+          `Wewenang peninjauan Anda untuk Divisi ${dto.targetFunction} telah resmi dialihkan sementara kepada ${delegateName} selama masa berhalangan hadir.`,
+          'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+          `Divisi Wewenang: ${dto.targetFunction}`,
           `Pejabat Pengganti: ${delegateName}`,
-          `Periode Berlaku: ${effStr} s/d ${expStr}`,
-          `Alasan Kedinasan: "${cleanReason}"`,
+          `Periode Pelimpahan: ${effStr} s/d ${expStr}`,
+          `Alasan Pelimpahan: "${cleanReason}"`,
           `Diterbitkan Oleh: ${issuerName}`,
         ].join('\n');
 
@@ -150,7 +154,6 @@ export class TemporaryReviewerService {
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Pemberitahuan Pelimpahan Wewenang Peninjauan',
             message: replacedMessage,
-            actionUrl: '/notifications',
             relatedEntityType: 'temporary_reviewer_assignments',
             relatedEntityId: assignment.id,
           },
@@ -238,11 +241,12 @@ export class TemporaryReviewerService {
 
       // 1. Notifikasi ke Pengganti
       const updateDelegateMessage = [
-        'Status: Pembaruan Ketentuan Penugasan Reviewer Sementara',
-        `Divisi Target: ${assignment.targetFunction}`,
+        `Ketentuan pelimpahan wewenang peninjauan yang diberikan kepada Anda untuk Divisi ${assignment.targetFunction} (menggantikan ${replacedName}) telah diperbarui oleh pihak manajemen.`,
+        'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+        `Divisi Wewenang: ${assignment.targetFunction}`,
         `Menggantikan: ${replacedName}`,
         `Periode Berlaku Baru: ${effStr} s/d ${expStr}`,
-        `Catatan Alasan Perubahan: "${dto.updateReason.trim()}"`,
+        `Alasan Perubahan: "${dto.updateReason.trim()}"`,
         `Diperbarui Oleh: ${issuerName}`,
       ].join('\n');
 
@@ -253,7 +257,6 @@ export class TemporaryReviewerService {
           channel: NotificationChannel.IN_APP_CENTER,
           title: 'Pembaruan Ketentuan Delegasi Reviewer Sementara',
           message: updateDelegateMessage,
-          actionUrl: '/leave/queue',
           relatedEntityType: 'temporary_reviewer_assignments',
           relatedEntityId: assignment.id,
         },
@@ -262,11 +265,12 @@ export class TemporaryReviewerService {
       // 2. Notifikasi ke Atasan yang Digantikan
       if (replacedUser && replacedUser.id !== assignment.delegateUserId) {
         const updateReplacedMessage = [
-          'Status: Pembaruan Ketentuan Pelimpahan Wewenang Peninjauan',
-          `Divisi Target: ${assignment.targetFunction}`,
+          `Ketentuan pelimpahan wewenang peninjauan Anda untuk Divisi ${assignment.targetFunction} kepada ${delegateName} telah diperbarui oleh pihak manajemen.`,
+          'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+          `Divisi Wewenang: ${assignment.targetFunction}`,
           `Pejabat Pengganti: ${delegateName}`,
           `Periode Berlaku Baru: ${effStr} s/d ${expStr}`,
-          `Catatan Alasan Perubahan: "${dto.updateReason.trim()}"`,
+          `Alasan Perubahan: "${dto.updateReason.trim()}"`,
           `Diperbarui Oleh: ${issuerName}`,
         ].join('\n');
 
@@ -277,7 +281,6 @@ export class TemporaryReviewerService {
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Pembaruan Ketentuan Pelimpahan Wewenang Peninjauan',
             message: updateReplacedMessage,
-            actionUrl: '/notifications',
             relatedEntityType: 'temporary_reviewer_assignments',
             relatedEntityId: assignment.id,
           },
@@ -339,11 +342,11 @@ export class TemporaryReviewerService {
 
       // 1. Notifikasi ke Pengganti (Wewenang Dicabut)
       const revokeDelegateMessage = [
-        'Status: Wewenang Reviewer Sementara Resmi DICABUT / DIAKHIRI',
-        `Divisi Target: ${assignment.targetFunction}`,
-        `Menggantikan: ${replacedName}`,
-        'Catatan Akses: Hak persetujuan cuti dan review koreksi komitmen telah dinonaktifkan',
-        `Alasan Pencabutan: "${dto.revokeReason.trim()}"`,
+        `Pelimpahan wewenang peninjauan untuk Divisi ${assignment.targetFunction} (menggantikan ${replacedName}) yang sebelumnya diberikan kepada Anda telah resmi diakhiri/dicabut. Hak akses persetujuan cuti dan review koreksi komitmen telah dinonaktifkan.`,
+        'Status Wewenang: Resmi Dicabut / Diakhiri (Akses Dinonaktifkan)',
+        `Divisi Wewenang: ${assignment.targetFunction}`,
+        `Pejabat Asli: ${replacedName}`,
+        `Alasan Pengakhiran: "${dto.revokeReason.trim()}"`,
         `Diproses Oleh: ${issuerName}`,
       ].join('\n');
 
@@ -352,9 +355,8 @@ export class TemporaryReviewerService {
           recipientUserId: assignment.delegateUserId,
           triggerType: 'TEMPORARY_REVIEWER_REVOKED',
           channel: NotificationChannel.IN_APP_CENTER,
-          title: 'Pencabutan / Pengakhiran Wewenang Reviewer Sementara',
+          title: 'Pengakhiran Wewenang Reviewer Sementara',
           message: revokeDelegateMessage,
-          actionUrl: '/notifications',
           relatedEntityType: 'temporary_reviewer_assignments',
           relatedEntityId: assignment.id,
         },
@@ -363,11 +365,11 @@ export class TemporaryReviewerService {
       // 2. Notifikasi ke Atasan yang Digantikan (Wewenang Dikembalikan)
       if (replacedUser && replacedUser.id !== assignment.delegateUserId) {
         const revokeReplacedMessage = [
-          'Status: Pemulihan Wewenang Peninjauan Mandiri Secara Penuh',
-          `Divisi Target: ${assignment.targetFunction}`,
+          `Pelimpahan wewenang peninjauan Anda untuk Divisi ${assignment.targetFunction} yang sebelumnya diberikan kepada ${delegateName} telah resmi berakhir. Seluruh wewenang persetujuan cuti dan review koreksi tim kini telah aktif kembali kepada Anda secara penuh.`,
+          'Status Wewenang: Dipulihkan Mandiri Secara Penuh',
+          `Divisi Wewenang: ${assignment.targetFunction}`,
           `Pejabat Pengganti Sebelumnya: ${delegateName}`,
-          'Catatan Akses: Wewenang persetujuan cuti dan review koreksi tim aktif kembali secara mandiri',
-          `Alasan Pengakhiran: "${dto.revokeReason.trim()}"`,
+          `Alasan Pemulihan: "${dto.revokeReason.trim()}"`,
           `Diproses Oleh: ${issuerName}`,
         ].join('\n');
 
@@ -378,7 +380,6 @@ export class TemporaryReviewerService {
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Pemulihan Wewenang Peninjauan Mandiri',
             message: revokeReplacedMessage,
-            actionUrl: '/leave/queue',
             relatedEntityType: 'temporary_reviewer_assignments',
             relatedEntityId: assignment.id,
           },
