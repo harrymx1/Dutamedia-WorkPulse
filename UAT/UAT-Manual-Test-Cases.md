@@ -2765,13 +2765,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Mekanisme peninjau sementara terbukti berjalan mulus dari penetapan oleh HRGA hingga perluasan wewenang akses sah pada sisi pejabat terdelegasi.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar tabel pendelegasian reviewer sementara di HRGA dan tangkapan layar akun Bambang berhasil mengakses data fungsi Creative.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** HRGA (Dewi Lestari) berhasil menerbitkan pendelegasian wewenang reviewer sementara untuk Dharma Putra (Head of Delivery) yang digantikan oleh Bambang Pratama (Technical Lead 1) berstatus Aktif untuk divisi Delivery. Login sebagai Bambang Pratama membuktikan menu Persetujuan Cuti (/leave/queue) dan Review Koreksi & Cuti muncul aktif di sidebar grup Management dan halaman /leave/queue dapat diakses lancar tanpa kendala 403.
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 
-- **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Execution Date:** 2026-11-10
+- **Defect ID:** None
+- **Retest Result:** PASS
+- **Catatan:** Terverifikasi empiris via screenshot media_1794288122809_9bc33a80.jpg (penerbitan oleh HRGA) dan media_1794288199664_6b8e44fe.png (akses sah /leave/queue oleh Bambang Pratama sebagai pejabat terdelegasi DEC-010).
 
 ---
 

@@ -279,7 +279,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | :---: | :--- | :--- | :---: | :--- |
 | [x] | `TC-ADMN-001` | Penugasan Reviewer Sementara (Temporary Reviewer) | PASS | Delegasi Lukman Hakim -> Rian Kurniawan terbit aktif di /admin/temporary-reviewers via media_1794287769729_f4384fb2.png (DEC-009, IMP-058) |
 | [P] | `TC-ADMN-002` | Konfigurasi Kebijakan Operasional Sistem (Policy Settings) | PASS | Parameter Jam Cut-off Pagi berhasil diperbarui ke 23:59 WIB, tersimpan dengan audit trail baru, dan terverifikasi persisten pasca-F5 |
-| [ ] | `TC-HRGA-003` | Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) HRGA | Not Run | Penugasan reviewer sementara aktif dan wewenang fungsi sasaran sah |
+| [x] | `TC-HRGA-003` | Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) HRGA | PASS | HRGA menerbitkan delegasi Dharma Putra -> Bambang Pratama (media_1794288122809_9bc33a80.jpg), Bambang dapat mengakses /leave/queue tanpa 403 (media_1794288199664_6b8e44fe.png) |
 | [ ] | `TC-ADMN-004` | Konfigurasi Parameter Cut-Off & Jam SLA Blocker dengan Jejak Audit | Not Run | Parameter cut-off dinamis terbarui dan baris jejak audit tersimpan |
 | [ ] | `TC-ADMN-005` | Konfigurasi & Pengujian Pengiriman Saluran Notifikasi Integrasi | Not Run | Uji pengiriman email/webhook berhasil disimulasikan tanpa galat |
 
