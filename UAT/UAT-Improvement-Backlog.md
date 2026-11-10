@@ -1269,9 +1269,10 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
   3. Ketiadaan fitur pencabutan wewenang berisiko menimbulkan *dangling privilege* (pejabat pengganti tetap memiliki akses persetujuan manajerial padahal atasan definitif sudah kembali).
   4. Belum ada notifikasi otomatis saat terjadi perubahan ketentuan maupun pencabutan delegasi wewenang.
 - **Proposed Improvement:** 
-  1. Rincian Notifikasi Dua Arah Komprehensif:
-     - Notifikasi pembuatan (`TEMPORARY_REVIEWER_ASSIGNED` & `TEMPORARY_REVIEWER_DELEGATED`) memuat lengkap: wewenang spesifik (persetujuan cuti & review koreksi komitmen tim), nama pihak yang digantikan/menggantikan, alasan kedinasan resmi, periode tanggal, dan identitas penerbit (Admin/HRGA).
-     - Di Pusat Notifikasi (`NotificationCenterView.vue`), tambahkan kotak sorotan khusus (`.delegation-note-callout`) ber-ikon `ShieldCheck` dengan tema hijau WorkPulse saat rincian notifikasi dibuka.
+  1. Rincian Notifikasi Dua Arah Komprehensif & Terstruktur Per Baris:
+     - Notifikasi pembuatan (`TEMPORARY_REVIEWER_ASSIGNED` & `TEMPORARY_REVIEWER_DELEGATED`) memuat lengkap dan terpisah per baris: wewenang spesifik (persetujuan cuti & review koreksi komitmen tim), nama pihak yang digantikan/menggantikan, alasan kedinasan resmi, periode tanggal, dan identitas penerbit (Admin/HRGA).
+     - Di Pusat Notifikasi (`NotificationCenterView.vue`), eliminasi duplikasi teks: teks umum paragraf berlatar putih disembunyikan khusus notifikasi delegasi (`!isDelegationNotification`).
+     - Tampilkan kotak sorotan hijau berbingkai (`.delegation-note-callout`) dengan tata letak grid baris berlabel tebal (`.delegation-row`, `.row-label`, `.row-value`) sehingga informasi mudah dibaca dan sangat rapi.
   2. Fitur Edit Delegasi Reviewer Sementara:
      - Tambahkan tombol aksi Edit (ikon pensil) di tabel daftar pendelegasian.
      - Modal Edit Delegasi untuk memperbarui tanggal efektif, tanggal kedaluwarsa, dan catatan alasan perubahan wajib.
@@ -1284,7 +1285,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
      - Otomatis kirim notifikasi `TEMPORARY_REVIEWER_REVOKED` ke kedua pihak: konfirmasi pencabutan wewenang ke pejabat pengganti dan konfirmasi pemulihan wewenang mandiri penuh ke atasan definitif.
 - **Rationale / Expected Benefit:** Menyempurnakan tata kelola *enterprise delegation lifecycle*, mencegah celah wewenang ilegal (*dangling privilege*), dan memberikan transparansi komunikasi mutlak bagi seluruh pejabat terkait.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png` & `media_1794289233720_1d4f064d.png`.
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794289170862_4bcd93d1.png`, `media_1794289233720_1d4f064d.png`, `media_1794292519681_08f4782f.png`, & `media_1794292564394_737ab6e6.jpg`.
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---

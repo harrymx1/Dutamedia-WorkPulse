@@ -110,15 +110,22 @@ export class TemporaryReviewerService {
       const cleanReason = dto.delegationReason.replace(/\[Menggantikan\s+[^\]]+\]\s*/i, '').trim() || dto.delegationReason;
 
       // 1. Notifikasi In-App untuk Pejabat Penerima Delegasi (Pejabat Pengganti)
+      const delegateMessage = [
+        'Mandat: Penugasan Reviewer Sementara (Persetujuan Cuti & Review Koreksi)',
+        `Divisi Target: ${dto.targetFunction}`,
+        replacedName ? `Menggantikan: ${replacedName}` : null,
+        `Periode Berlaku: ${effStr} s/d ${expStr}`,
+        `Alasan Kedinasan: "${cleanReason}"`,
+        `Diterbitkan Oleh: ${issuerName}`,
+      ].filter(Boolean).join('\n');
+
       await this.prisma.notification.create({
         data: {
           recipientUserId: dto.delegateUserId,
           triggerType: 'TEMPORARY_REVIEWER_ASSIGNED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: 'Penugasan Reviewer Sementara Baru',
-          message: replacedName
-            ? `Anda telah resmi ditugaskan sebagai Reviewer Sementara untuk Divisi ${dto.targetFunction} menggantikan ${replacedName} pada periode ${effStr} s/d ${expStr}. Wewenang mencakup persetujuan cuti dan review koreksi komitmen tim. Alasan penugasan: "${cleanReason}". Diterbitkan oleh: ${issuerName}.`
-            : `Anda telah resmi ditugaskan sebagai Reviewer Sementara untuk Divisi ${dto.targetFunction} pada periode ${effStr} s/d ${expStr}. Wewenang mencakup persetujuan cuti dan review koreksi komitmen tim. Alasan penugasan: "${cleanReason}". Diterbitkan oleh: ${issuerName}.`,
+          message: delegateMessage,
           actionUrl: '/leave/queue',
           relatedEntityType: 'temporary_reviewer_assignments',
           relatedEntityId: assignment.id,
@@ -127,13 +134,22 @@ export class TemporaryReviewerService {
 
       // 2. Notifikasi In-App untuk Pejabat yang Digantikan
       if (replacedUser && replacedUser.id !== dto.delegateUserId) {
+        const replacedMessage = [
+          'Mandat: Pelimpahan Wewenang Peninjauan Sementara (Persetujuan Cuti & Review Koreksi)',
+          `Divisi Target: ${dto.targetFunction}`,
+          `Pejabat Pengganti: ${delegateName}`,
+          `Periode Berlaku: ${effStr} s/d ${expStr}`,
+          `Alasan Kedinasan: "${cleanReason}"`,
+          `Diterbitkan Oleh: ${issuerName}`,
+        ].join('\n');
+
         await this.prisma.notification.create({
           data: {
             recipientUserId: replacedUser.id,
             triggerType: 'TEMPORARY_REVIEWER_DELEGATED',
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Pemberitahuan Pelimpahan Wewenang Peninjauan',
-            message: `Wewenang peninjauan Anda untuk Divisi ${dto.targetFunction} telah resmi didelegasikan sementara kepada ${delegateName} pada periode ${effStr} s/d ${expStr}. Wewenang mencakup persetujuan cuti dan review koreksi komitmen tim. Alasan pelimpahan: "${cleanReason}". Diterbitkan oleh: ${issuerName}.`,
+            message: replacedMessage,
             actionUrl: '/notifications',
             relatedEntityType: 'temporary_reviewer_assignments',
             relatedEntityId: assignment.id,
@@ -221,13 +237,22 @@ export class TemporaryReviewerService {
       const delegateName = assignment.delegateUser?.fullName || 'Pejabat Pengganti';
 
       // 1. Notifikasi ke Pengganti
+      const updateDelegateMessage = [
+        'Status: Pembaruan Ketentuan Penugasan Reviewer Sementara',
+        `Divisi Target: ${assignment.targetFunction}`,
+        `Menggantikan: ${replacedName}`,
+        `Periode Berlaku Baru: ${effStr} s/d ${expStr}`,
+        `Catatan Alasan Perubahan: "${dto.updateReason.trim()}"`,
+        `Diperbarui Oleh: ${issuerName}`,
+      ].join('\n');
+
       await this.prisma.notification.create({
         data: {
           recipientUserId: assignment.delegateUserId,
           triggerType: 'TEMPORARY_REVIEWER_UPDATED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: 'Pembaruan Ketentuan Delegasi Reviewer Sementara',
-          message: `Terdapat pembaruan ketentuan penugasan Reviewer Sementara Anda untuk Divisi ${assignment.targetFunction} (menggantikan ${replacedName}). Periode berlaku kini menjadi ${effStr} s/d ${expStr}. Catatan pembaruan: "${dto.updateReason.trim()}". Diperbarui oleh: ${issuerName}.`,
+          message: updateDelegateMessage,
           actionUrl: '/leave/queue',
           relatedEntityType: 'temporary_reviewer_assignments',
           relatedEntityId: assignment.id,
@@ -236,13 +261,22 @@ export class TemporaryReviewerService {
 
       // 2. Notifikasi ke Atasan yang Digantikan
       if (replacedUser && replacedUser.id !== assignment.delegateUserId) {
+        const updateReplacedMessage = [
+          'Status: Pembaruan Ketentuan Pelimpahan Wewenang Peninjauan',
+          `Divisi Target: ${assignment.targetFunction}`,
+          `Pejabat Pengganti: ${delegateName}`,
+          `Periode Berlaku Baru: ${effStr} s/d ${expStr}`,
+          `Catatan Alasan Perubahan: "${dto.updateReason.trim()}"`,
+          `Diperbarui Oleh: ${issuerName}`,
+        ].join('\n');
+
         await this.prisma.notification.create({
           data: {
             recipientUserId: replacedUser.id,
             triggerType: 'TEMPORARY_REVIEWER_UPDATED',
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Pembaruan Ketentuan Pelimpahan Wewenang Peninjauan',
-            message: `Terdapat pembaruan ketentuan pelimpahan wewenang peninjauan Anda untuk Divisi ${assignment.targetFunction} kepada ${delegateName}. Periode berlaku kini menjadi ${effStr} s/d ${expStr}. Catatan pembaruan: "${dto.updateReason.trim()}". Diperbarui oleh: ${issuerName}.`,
+            message: updateReplacedMessage,
             actionUrl: '/notifications',
             relatedEntityType: 'temporary_reviewer_assignments',
             relatedEntityId: assignment.id,
@@ -304,13 +338,22 @@ export class TemporaryReviewerService {
       const delegateName = assignment.delegateUser?.fullName || 'Pejabat Pengganti';
 
       // 1. Notifikasi ke Pengganti (Wewenang Dicabut)
+      const revokeDelegateMessage = [
+        'Status: Wewenang Reviewer Sementara Resmi DICABUT / DIAKHIRI',
+        `Divisi Target: ${assignment.targetFunction}`,
+        `Menggantikan: ${replacedName}`,
+        'Catatan Akses: Hak persetujuan cuti dan review koreksi komitmen telah dinonaktifkan',
+        `Alasan Pencabutan: "${dto.revokeReason.trim()}"`,
+        `Diproses Oleh: ${issuerName}`,
+      ].join('\n');
+
       await this.prisma.notification.create({
         data: {
           recipientUserId: assignment.delegateUserId,
           triggerType: 'TEMPORARY_REVIEWER_REVOKED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: 'Pencabutan / Pengakhiran Wewenang Reviewer Sementara',
-          message: `Wewenang Reviewer Sementara Anda untuk Divisi ${assignment.targetFunction} (menggantikan ${replacedName}) telah resmi DICABUT / DIAKHIRI. Anda tidak lagi memiliki hak persetujuan cuti dan review koreksi pada divisi tersebut. Alasan pencabutan: "${dto.revokeReason.trim()}". Diproses oleh: ${issuerName}.`,
+          message: revokeDelegateMessage,
           actionUrl: '/notifications',
           relatedEntityType: 'temporary_reviewer_assignments',
           relatedEntityId: assignment.id,
@@ -319,13 +362,22 @@ export class TemporaryReviewerService {
 
       // 2. Notifikasi ke Atasan yang Digantikan (Wewenang Dikembalikan)
       if (replacedUser && replacedUser.id !== assignment.delegateUserId) {
+        const revokeReplacedMessage = [
+          'Status: Pemulihan Wewenang Peninjauan Mandiri Secara Penuh',
+          `Divisi Target: ${assignment.targetFunction}`,
+          `Pejabat Pengganti Sebelumnya: ${delegateName}`,
+          'Catatan Akses: Wewenang persetujuan cuti dan review koreksi tim aktif kembali secara mandiri',
+          `Alasan Pengakhiran: "${dto.revokeReason.trim()}"`,
+          `Diproses Oleh: ${issuerName}`,
+        ].join('\n');
+
         await this.prisma.notification.create({
           data: {
             recipientUserId: replacedUser.id,
             triggerType: 'TEMPORARY_REVIEWER_REVOKED',
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Pemulihan Wewenang Peninjauan Mandiri',
-            message: `Pelimpahan wewenang peninjauan Anda untuk Divisi ${assignment.targetFunction} kepada ${delegateName} telah resmi DICABUT / DIAKHIRI. Wewenang persetujuan penuh kini telah kembali kepada Anda. Alasan pengakhiran: "${dto.revokeReason.trim()}". Diproses oleh: ${issuerName}.`,
+            message: revokeReplacedMessage,
             actionUrl: '/leave/queue',
             relatedEntityType: 'temporary_reviewer_assignments',
             relatedEntityId: assignment.id,

@@ -227,6 +227,111 @@ function formatTime(isoStr: string) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
 }
 
+function isDelegationNotification(type?: string): boolean {
+  return Boolean(type && type.includes('TEMPORARY_REVIEWER'));
+}
+
+function getDelegationHeading(type?: string): string {
+  if (!type) return 'Mandat Wewenang & Tata Kelola Delegasi Reviewer';
+  if (type.includes('ASSIGNED')) return 'Rincian Mandat Penugasan Reviewer Sementara';
+  if (type.includes('DELEGATED')) return 'Rincian Mandat Pelimpahan Wewenang Peninjauan';
+  if (type.includes('UPDATED')) return 'Rincian Pembaruan Ketentuan Pendelegasian';
+  if (type.includes('REVOKED')) return 'Rincian Pengakhiran & Pemulihan Wewenang Peninjauan';
+  return 'Mandat Wewenang & Tata Kelola Delegasi Reviewer';
+}
+
+interface DelegationLineItem {
+  label: string;
+  value: string;
+  isHighlight?: boolean;
+}
+
+function formatDelegationLines(message: string): DelegationLineItem[] {
+  if (!message) return [];
+
+  // 1. Jika pesan sudah berformat baris baru (newline)
+  if (message.includes('\n')) {
+    const rawLines = message.split('\n').map(l => l.trim()).filter(Boolean);
+    return rawLines.map(line => {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx !== -1) {
+        const label = line.substring(0, colonIdx).trim();
+        const value = line.substring(colonIdx + 1).trim();
+        const isHighlight = ['Mandat', 'Wewenang', 'Status', 'Periode Berlaku', 'Periode Baru'].some(h =>
+          label.toLowerCase().includes(h.toLowerCase())
+        );
+        return { label, value, isHighlight };
+      }
+      return { label: 'Keterangan', value: line, isHighlight: false };
+    });
+  }
+
+  // 2. Fallback untuk pesan lama (satu paragraf) agar tetap terpecah rapi per baris
+  const items: DelegationLineItem[] = [];
+
+  // Ekstrak wewenang
+  if (message.includes('Wewenang mencakup')) {
+    const authMatch = message.match(/Wewenang mencakup\s+([^\.]+?)(?=\.\s*Alasan|$)/i);
+    if (authMatch && authMatch[1]) {
+      items.push({ label: 'Cakupan Wewenang', value: authMatch[1].trim(), isHighlight: true });
+    }
+  } else {
+    items.push({
+      label: 'Cakupan Wewenang',
+      value: 'Persetujuan cuti dan review koreksi komitmen tim',
+      isHighlight: true,
+    });
+  }
+
+  // Ekstrak Divisi
+  const divMatch = message.match(/Divisi\s+([A-Za-z0-9_]+)/i);
+  if (divMatch && divMatch[1]) {
+    items.push({ label: 'Divisi Target', value: divMatch[1].trim(), isHighlight: false });
+  }
+
+  // Ekstrak Siapa yang digantikan / Pengganti
+  if (message.includes('menggantikan')) {
+    const match = message.match(/menggantikan\s+([^pada]+?)\s+pada/i);
+    if (match && match[1]) {
+      items.push({ label: 'Menggantikan', value: match[1].trim(), isHighlight: true });
+    }
+  } else if (message.includes('didelegasikan sementara kepada')) {
+    const match = message.match(/didelegasikan sementara kepada\s+([^pada]+?)\s+pada/i);
+    if (match && match[1]) {
+      items.push({ label: 'Pejabat Pengganti', value: match[1].trim(), isHighlight: true });
+    }
+  }
+
+  // Ekstrak Periode
+  const periodMatch = message.match(/periode\s+([^\.]+?)(?=\.\s*Wewenang|\.\s*Catatan|\.|$)/i);
+  if (periodMatch && periodMatch[1]) {
+    items.push({ label: 'Periode Berlaku', value: periodMatch[1].trim(), isHighlight: true });
+  }
+
+  // Ekstrak Alasan
+  const reasonMatch = message.match(/Alasan[^:]*:\s*"([^"]+)"/i);
+  if (reasonMatch && reasonMatch[1]) {
+    items.push({ label: 'Alasan Kedinasan', value: reasonMatch[1].trim(), isHighlight: false });
+  }
+
+  // Ekstrak Penerbit / Pemroses
+  const issuerMatch = message.match(/(?:Diterbitkan|Diperbarui|Diproses)\s+oleh:\s*([^.]+)/i);
+  if (issuerMatch && issuerMatch[1]) {
+    items.push({ label: 'Penanggung Jawab', value: issuerMatch[1].trim(), isHighlight: false });
+  }
+
+  if (items.length === 0) {
+    const sentences = message.split(/(?<=[.!?])\s+/).filter(Boolean);
+    return sentences.map((s, idx) => ({
+      label: `Poin ${idx + 1}`,
+      value: s,
+      isHighlight: false,
+    }));
+  }
+
+  return items;
+}
+
 onMounted(() => {
   if (typeof window !== 'undefined' && 'Notification' in window) {
     pushPermission.value = Notification.permission;
@@ -475,7 +580,10 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <h4 class="modal-title">{{ selectedNotification.title }}</h4>
-            <p class="modal-desc">{{ selectedNotification.message }}</p>
+            <!-- Teks deskripsi umum HANYA jika bukan notifikasi delegasi reviewer -->
+            <p v-if="!isDelegationNotification(selectedNotification.type)" class="modal-desc">
+              {{ selectedNotification.message }}
+            </p>
 
             <!-- Box Rincian Khusus Catatan Pembinaan jika tipe MANAGER_NOTE_SHARED -->
             <div v-if="sharedNoteDetail" class="coaching-note-callout">
@@ -486,13 +594,22 @@ onMounted(() => {
               <p class="callout-body">"{{ sharedNoteDetail.content }}"</p>
             </div>
 
-            <!-- Box Rincian Khusus Pendelegasian Wewenang jika tipe TEMPORARY_REVIEWER -->
-            <div v-if="selectedNotification.type && selectedNotification.type.includes('TEMPORARY_REVIEWER')" class="delegation-note-callout">
+            <!-- Box Rincian Khusus Pendelegasian Wewenang jika tipe TEMPORARY_REVIEWER (TERSTRUKTUR PER BARIS) -->
+            <div v-if="isDelegationNotification(selectedNotification.type)" class="delegation-note-callout">
               <div class="callout-head">
-                <ShieldCheck :size="16" class="callout-icon" />
-                <strong>Mandat Wewenang & Tata Kelola Delegasi Reviewer</strong>
+                <ShieldCheck :size="18" class="callout-icon" />
+                <strong>{{ getDelegationHeading(selectedNotification.type) }}</strong>
               </div>
-              <p class="callout-body">{{ selectedNotification.message }}</p>
+              <div class="delegation-grid">
+                <div
+                  v-for="(row, idx) in formatDelegationLines(selectedNotification.message)"
+                  :key="idx"
+                  class="delegation-row"
+                >
+                  <span class="row-label">{{ row.label }}:</span>
+                  <span class="row-value" :class="{ highlight: row.isHighlight }">{{ row.value }}</span>
+                </div>
+              </div>
             </div>
 
             <div class="modal-detail-box">
@@ -860,6 +977,7 @@ h1 {
   color: #3F524A;
   margin: 0;
   line-height: 1.45;
+  white-space: pre-line;
 }
 
 .item-meta {
@@ -1129,21 +1247,59 @@ h1 {
   align-items: center;
   gap: 8px;
   color: var(--color-brand-primary, #00674D);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #BBF7D0;
 }
 
 .delegation-note-callout .callout-icon {
   color: var(--color-brand-primary, #00674D);
+  flex-shrink: 0;
 }
 
-.delegation-note-callout .callout-body {
-  margin: 0;
-  color: #1E293B;
-  font-size: 13.5px;
-  line-height: 1.55;
-  font-weight: 500;
+.delegation-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delegation-row {
+  display: flex;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.delegation-row .row-label {
+  width: 155px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #374151;
+}
+
+.delegation-row .row-value {
+  flex: 1;
+  color: #111827;
+  word-break: break-word;
+}
+
+.delegation-row .row-value.highlight {
+  font-weight: 600;
+  color: var(--color-brand-primary, #00674D);
+}
+
+@media (max-width: 640px) {
+  .delegation-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .delegation-row .row-label {
+    width: 100%;
+    color: #6B7280;
+    font-size: 12px;
+  }
 }
 
 @keyframes spin {
