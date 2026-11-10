@@ -277,7 +277,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
-| [ ] | `TC-ADMN-001` | Penugasan Reviewer Sementara (Temporary Reviewer) | | |
+| [x] | `TC-ADMN-001` | Penugasan Reviewer Sementara (Temporary Reviewer) | PASS | Delegasi Lukman Hakim -> Rian Kurniawan terbit aktif di /admin/temporary-reviewers via media_1794287769729_f4384fb2.png (DEC-009, IMP-058) |
 | [P] | `TC-ADMN-002` | Konfigurasi Kebijakan Operasional Sistem (Policy Settings) | PASS | Parameter Jam Cut-off Pagi berhasil diperbarui ke 23:59 WIB, tersimpan dengan audit trail baru, dan terverifikasi persisten pasca-F5 |
 | [ ] | `TC-HRGA-003` | Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) HRGA | Not Run | Penugasan reviewer sementara aktif dan wewenang fungsi sasaran sah |
 | [ ] | `TC-ADMN-004` | Konfigurasi Parameter Cut-Off & Jam SLA Blocker dengan Jejak Audit | Not Run | Parameter cut-off dinamis terbarui dan baris jejak audit tersimpan |

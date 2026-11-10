@@ -2322,13 +2322,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Aturan DEC-009 terbukti berfungsi; alur persetujuan tetap berjalan lancar saat atasan berhalangan.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot tabel delegasi di admin dan screenshot antrean review saat login sebagai reviewer pengganti.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Delegasi reviewer sementara berhasil diterbitkan dengan toast hijau sukses. Tabel riwayat pendelegasian menampilkan baris aktif: Pejabat Pengganti Rian Kurniawan (Operations Supervisor), Menggantikan Lukman Hakim (Head of Sales Enablement & Presales) dengan lencana Pejabat Berhalangan, Divisi SalesEnablementPresales, Periode 10/11/2026 s/d 24/11/2026, Status Aktif, Diterbitkan Oleh Sistem Administrator, dan Alasan audit trail tersimpan rapi.
+- **Execution Status:** PASS
+- **Tester:** Harry
+- **Execution Date:** 2026-11-10
+- **Defect ID:** None
+- **Retest Result:** PASS
+- **Catatan:** Terverifikasi empiris via screenshot media_1794287769729_f4384fb2.png pada implementasi restrukturisasi alur pendelegasian pejabat berhalangan, pengelompokan hierarki 4 optgroup, serta penegakan Separation of Duties (IMP-058).
 
 ---
 
