@@ -113,6 +113,11 @@ function formatLeaveType(type?: string): string {
   }
 }
 
+function formatReason(text?: string): string {
+  if (!text) return '(Tanpa alasan khusus)';
+  return text.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim();
+}
+
 function calculateDuration(start: string, end: string): number {
   if (!start || !end) return 0;
   const d1 = new Date(start);
@@ -209,7 +214,7 @@ onMounted(() => {
 <template>
   <div class="leave-layout">
     <!-- Topbar -->
-    <TopBar breadcrumb="Workspace / My Leave" />
+    <TopBar breadcrumb="Workspace / Cuti Saya" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">
@@ -225,9 +230,9 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <span class="eyebrow">Manajemen Kehadiran &amp; Ketidakhadiran Sah</span>
-          <h1>My Leave Request</h1>
+          <h1>Pengajuan &amp; Riwayat Cuti</h1>
           <p class="subtitle">
-            Ajukan permohonan cuti dan pantau status persetujuan serta rekonsiliasi kehadiran harian Anda di satu tempat.
+            Ajukan permohonan cuti dan pantau status persetujuan serta penyesuaian kehadiran harian Anda di satu tempat.
           </p>
         </div>
         <span class="pill neutral"><span class="dot-sm"></span>Pengajuan Milik Saya</span>
@@ -238,7 +243,7 @@ onMounted(() => {
         <section class="panel form-panel" aria-labelledby="form-title">
           <div class="panel-head">
             <div>
-              <h2 id="form-title">Ajukan Leave Request</h2>
+              <h2 id="form-title">Ajukan Permohonan Cuti</h2>
               <p class="panel-subtitle">Tentukan rentang tanggal cuti yang diajukan.</p>
             </div>
           </div>
@@ -306,12 +311,12 @@ onMounted(() => {
                 ></textarea>
               </div>
 
-              <!-- Note Info Blue: Rekonsiliasi Cuti Pasca-Cut-Off (DEC-007) -->
+              <!-- Note Info Blue: Penyesuaian Cuti Pasca-Cut-Off -->
               <div class="info-note">
                 <Info :size="18" class="info-icon" />
                 <div>
-                  <strong>Ketentuan Status Leave (Pending):</strong> Tanggal yang masih berstatus
-                  <strong>Leave (Pending)</strong> belum mengecualikan kewajiban check-in harian hingga disetujui (<strong>Approved</strong>). Apabila cuti mendadak disetujui setelah jam Cut-Off pagi (09:30 WIB), catatan <em>No Submission</em> hari tersebut akan direkonsiliasi otomatis menjadi <strong>Approved Leave (Superseded by Approved Leave)</strong>.
+                  <strong>Ketentuan Pengajuan Cuti:</strong> Tanggal yang masih berstatus
+                  <strong>Menunggu Review</strong> belum membebaskan kewajiban check-in harian hingga disetujui oleh atasan. Apabila cuti darurat/mendadak baru disetujui setelah batas waktu pagi (09:30 WIB), status belum mengisi komitmen pada hari tersebut otomatis <strong>diputihkan menjadi Cuti Disetujui</strong> (bebas dari catatan ketidakpatuhan).
                 </div>
               </div>
 
@@ -337,9 +342,9 @@ onMounted(() => {
         <section class="panel" aria-labelledby="history-title">
           <div class="panel-head">
             <div>
-              <h2 id="history-title">Riwayat Leave Request</h2>
+              <h2 id="history-title">Riwayat Permohonan Cuti</h2>
               <p class="panel-subtitle">
-                Pantau status setiap permohonan cuti dan jejak rekonsiliasi pasca-Cut-Off yang Anda ajukan.
+                Pantau status persetujuan dan jejak penyesuaian kehadiran untuk setiap cuti yang Anda ajukan.
               </p>
             </div>
             <span class="pill neutral">{{ filteredRequests.length }} permohonan</span>
@@ -372,7 +377,7 @@ onMounted(() => {
                 :class="{ active: activeFilter === 'PENDING' }"
                 @click="activeFilter = 'PENDING'"
               >
-                Pending
+                Menunggu
               </button>
               <button
                 type="button"
@@ -380,7 +385,7 @@ onMounted(() => {
                 :class="{ active: activeFilter === 'APPROVED' }"
                 @click="activeFilter = 'APPROVED'"
               >
-                Approved
+                Disetujui
               </button>
               <button
                 type="button"
@@ -388,7 +393,7 @@ onMounted(() => {
                 :class="{ active: activeFilter === 'REJECTED' }"
                 @click="activeFilter = 'REJECTED'"
               >
-                Rejected
+                Ditolak
               </button>
             </div>
           </div>
@@ -409,7 +414,7 @@ onMounted(() => {
                 <tr>
                   <th scope="col" class="col-date">Tanggal Cuti</th>
                   <th scope="col" class="col-reason">Alasan &amp; Jejak Pengajuan</th>
-                  <th scope="col" class="col-status">Status &amp; Rekonsiliasi</th>
+                  <th scope="col" class="col-status">Status Persetujuan</th>
                   <th scope="col" class="col-action">Aksi</th>
                 </tr>
               </thead>
@@ -421,12 +426,12 @@ onMounted(() => {
                     <div class="date-sub">{{ calculateDuration(req.startDate, req.endDate) }} hari kerja</div>
                   </td>
                   <td>
-                    <div class="reason-text">{{ req.reason || '(Tanpa alasan khusus)' }}</div>
+                    <div class="reason-text">{{ formatReason(req.reason) }}</div>
                     <div class="request-id">
                       #{{ req.id }} · Diajukan {{ new Date(req.createdAt).toLocaleDateString('id-ID') }}
                     </div>
                     <div v-if="req.reconciled || req.reconciliationNote" class="reconcile-note">
-                      <strong>Rekonsiliasi Otomatis:</strong> {{ req.reconciliationNote || 'Tercatat No Submission pagi direkonsiliasi otomatis menjadi Approved Leave pasca persetujuan.' }}
+                      <strong>Pemutihan Kehadiran Otomatis:</strong> {{ req.reconciliationNote || 'Catatan belum check-in pagi otomatis diputihkan menjadi Cuti Disetujui.' }}
                     </div>
                     <div v-if="req.reviewNote || req.reviewNotes" class="review-note" :class="{ rejected: req.status === 'REJECTED' }">
                       <span class="review-note-label">Catatan Reviewer{{ req.reviewedBy?.fullName ? ` (${req.reviewedBy.fullName})` : '' }}:</span>
@@ -435,16 +440,16 @@ onMounted(() => {
                   </td>
                   <td class="status-cell">
                     <div class="status-line">
-                      <span v-if="req.status === 'PENDING'" class="pill blue">Leave (Pending)</span>
-                      <span v-else-if="req.status === 'APPROVED'" class="pill green">Leave (Approved)</span>
-                      <span v-else-if="req.status === 'REJECTED'" class="pill red">Leave (Rejected)</span>
-                      <span v-else-if="req.status === 'CANCELLED'" class="pill neutral">Leave (Cancelled)</span>
+                      <span v-if="req.status === 'PENDING'" class="pill blue">Menunggu Review</span>
+                      <span v-else-if="req.status === 'APPROVED'" class="pill green">Disetujui</span>
+                      <span v-else-if="req.status === 'REJECTED'" class="pill red">Ditolak</span>
+                      <span v-else-if="req.status === 'CANCELLED'" class="pill neutral">Dibatalkan</span>
                       <span v-else class="pill neutral">{{ req.status }}</span>
 
-                      <span v-if="req.reconciled" class="pill neutral">Superseded by Approved Leave</span>
+                      <span v-if="req.reconciled" class="pill neutral">Cuti Disetujui (Bebas Check-In)</span>
                     </div>
                     <span v-if="req.status === 'PENDING'" class="status-sub">
-                      Menunggu keputusan approver
+                      Menunggu keputusan atasan
                     </span>
                     <span v-else-if="req.status === 'APPROVED'" class="status-sub">
                       Disetujui · Check-in harian dikecualikan

@@ -68,10 +68,10 @@ describe('MyLeaveRequestView.vue (Prototipe 20 / EP10 - Pengajuan Cuti Mandiri)'
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('My Leave Request');
+    expect(wrapper.find('h1').text()).toBe('Pengajuan & Riwayat Cuti');
     expect(wrapper.text()).toContain('Urusan keluarga luar kota');
-    expect(wrapper.text()).toContain('Leave (Pending)');
-    expect(wrapper.text()).toContain('Superseded by Approved Leave');
+    expect(wrapper.text()).toContain('Menunggu Review');
+    expect(wrapper.text()).toContain('Cuti Disetujui');
   });
 
   it('validates date range when end date is earlier than start date', async () => {

@@ -613,10 +613,10 @@ onMounted(() => {
             <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
           </div>
           <p class="submitted-banner-desc">
-            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini (Superseded by Approved Leave).
+            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.
           </p>
           <div v-if="activeLeave.reason" class="leave-banner-reason">
-            Keterangan: {{ activeLeave.reason }}
+            Keterangan: {{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}
           </div>
           <div class="submitted-banner-actions">
             <AccessLink to="/leave/my" class="btn btn-secondary btn-sm">
@@ -670,12 +670,12 @@ onMounted(() => {
           <div class="leave-notice-text">
             <h3>Hari Bebas Komitmen Kerja (Cuti Disetujui)</h3>
             <p>
-              Sistem mencatat kehadiran Anda sebagai <strong>Superseded by Approved Leave</strong>. Anda tidak perlu menetapkan target komitmen harian, mencatat pekerjaan tambahan, maupun melaporkan evaluasi sore hari ini.
+              Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Disetujui (Bebas Kewajiban Check-In)</strong>. Anda tidak perlu menetapkan target komitmen harian, mencatat pekerjaan tambahan, maupun melaporkan evaluasi sore hari ini.
             </p>
             <div class="leave-notice-meta">
               <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
               <span>Periode: <strong>{{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</strong></span>
-              <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason }}"</em></span>
+              <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}"</em></span>
             </div>
           </div>
         </div>

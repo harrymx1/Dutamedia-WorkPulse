@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 46 Calon Perbaikan (IMP-001 s.d. IMP-046)
+> **Total Temuan:** 55 Calon Perbaikan (IMP-001 s.d. IMP-055)
 
 ---
 
@@ -91,7 +91,16 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-043** | Penyeragaman Topbar Blocker: Breadcrumb 'Workspace / Blocker', Avatar Inisial & Lonceng Notifikasi | Navigation & Visual Consistency | `/raise-blockers` | `TC-BLKR-001` | Medium | Implemented (Pending UAT) |
 | **IMP-044** | Pembersihan Footer Form Pelaporan Blocker: Penyesuaian Tombol Aksi Bersihkan & Kirim | Copywriting & Visual Cleanliness | `/raise-blockers` | `TC-BLKR-001` | Low | Implemented (Pending UAT) |
 | **IMP-045** | Restrukturisasi Tampilan EOD Terkunci Menjadi Panel Ringkasan Evaluasi Ringkas (Read-Only Summary View) | Layout & Visual Polish | `/daily/eod` | `TC-DLYE-001` | Medium | Open / Proposed |
-| **IMP-046** | Pengelompokan Hierarkis (optgroup) & Filter Otoritas pada Dropdown Penanggung Jawab Khusus Blocker | Information Architecture & UX | `/raise-blockers` | `TC-BLKR-001` | Medium | Open / Proposed |
+| **IMP-046** | Pengelompokan Hierarkis (optgroup) & Filter Otoritas pada Dropdown Penanggung Jawab Khusus Blocker | Information Architecture & UX | `/raise-blockers` | `TC-BLKR-001` | High | Resolved / Implemented |
+| **IMP-047** | Penyempurnaan Tata Letak (Layout) & Penambahan Live Character Counter pada Modal Dialog Resolusi Blocker | UI Polish & Form Usability | `/blockers` | `TC-BLKR-003` | Medium | Resolved / Implemented |
+| **IMP-048** | Sinkronisasi Skema Respon API Risiko Proyek & Integrasi Proyek WP-CORE pada Project Risk Radar | Backend API & Frontend Data Contract | `/projects/risk` & `/blockers` | `TC-BLKR-005`, `TC-PM-001` | High | Resolved / Implemented |
+| **IMP-049** | Penyelarasan Pemenuhan Database Constraint chk_blocker_note_required & Pemetaan Enum Outcome/Continuation | Backend Database Integrity | `/corrections/review` & `/corrections/morning` | `TC-CORR-001`, `TC-CORR-002` | Critical | Resolved / Implemented |
+| **IMP-050** | Inisialisasi Otomatis Antrean Kepatuhan HRGA & Fleksibilitas Penautan Catatan Pembinaan Manajerial | Backend Compliance Seeding | `/compliance` | `TC-CORR-004`, `TC-HRGA-001` | High | Resolved / Implemented |
+| **IMP-051** | Pemisahan Kolom Status dan Aksi pada Tabel Antrean Persetujuan Cuti (Leave Approval Queue) | UI / Visual Layout | `/leave/queue` | `TC-LEAV-002` | Medium | Resolved / Implemented |
+| **IMP-052** | Redesain Modal Persetujuan Cuti (Leave Review Modal Layout, Microcopy & SVG Icon Alignment) | UI / Visual Design & Modal Polish | `/leave/queue` | `TC-LEAV-002` | High | Resolved / Implemented |
+| **IMP-053** | Sinkronisasi Properti reviewNote & Peremajaan Visual Catatan Reviewer Cuti | Frontend Data Binding & UI Polish | `/leave/my` & `/leave/queue` | `TC-LEAV-003`, `TC-LEAV-002` | High | Resolved / Implemented |
+| **IMP-054** | Alokasi Lebar Kolom Aksi dan Stabilisasi Layout Tabel Riwayat Cuti | UI / Visual Layout | `/leave/my` | `TC-LEAV-003`, `TC-LEAV-004` | Medium | Resolved / Implemented |
+| **IMP-055** | Standardisasi Terminologi Bahasa Indonesia Bisnis & Eliminasi Jargon Teknis 'Superseded by Approved Leave' pada Modul Cuti | Copywriting & Microcopy | `/leave/my`, `/leave/queue` & `/daily/morning` | `TC-LEAV-003` | High | Resolved / Implemented |
 
 ---
 
@@ -1148,6 +1157,27 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan estetika tabel yang kokoh, stabil, konsisten di seluruh status pengajuan, serta mencegah *horizontal scroll* yang tidak perlu pada resolusi standar.
 - **Priority:** Medium
 - **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (09 Nov 2026, Harry): `media_1794215736960_0ed54016.jpg`.
+- **Status:** Resolved / Implemented (Frontend Hotfixed)
+
+---
+
+### [IMP-055] Standardisasi Terminologi Bahasa Indonesia Bisnis & Eliminasi Jargon Teknis 'Superseded by Approved Leave' pada Modul Cuti
+- **Finding ID:** IMP-055
+- **Title:** Standardisasi Terminologi Bahasa Indonesia Bisnis & Eliminasi Jargon Teknis 'Superseded by Approved Leave' pada Modul Cuti
+- **Category:** Copywriting & Microcopy
+- **Page / Module:** Halaman Cuti Saya (`/leave/my`), Antrean Persetujuan Cuti (`/leave/queue`), dan Komitmen Pagi (`/daily/morning`)
+- **Related Test Case:** `TC-LEAV-003`
+- **Current Condition:** 
+  1. Halaman `/leave/my` dan `/daily/morning` mencampurkan istilah spesifikasi teknis internal berbahasa Inggris `Superseded by Approved Leave`, judul campuran `My Leave Request`, `Ajukan Leave Request`, `Riwayat Leave Request`, tab filter `Pending | Approved | Rejected`, serta badge `Leave (Pending) | Leave (Approved) | Leave (Rejected) | Leave (Cancelled)`.
+  2. Halaman `/leave/queue` menampilkan judul bahasa Inggris `Leave Approval Queue`, catatan rekonsiliasi `'Direkonsiliasi retroaktif (Superseded by Approved Leave)'`, dan pesan toast dengan tanda hubung yang tidak baku (`"berhasil di-setujui."`).
+  3. Data uji pada alasan pengajuan cuti tanggal 10 Nov 2026 memuat catatan instruksi teknis `(uji rekonsiliasi Superseded by Approved Leave)` yang tidak wajar dibaca oleh pengguna bisnis.
+- **Proposed Improvement:** 
+  1. Standardisasikan seluruh judul, subjudul, tab filter (`Semua | Menunggu | Disetujui | Ditolak`), dan badge status (`Menunggu Review | Disetujui | Ditolak | Dibatalkan`) pada `/leave/my` dan `/leave/queue` (`Antrean Persetujuan Cuti`) ke dalam Bahasa Indonesia bisnis yang lugas dan mudah dipahami.
+  2. Ganti kalimat teknis `Superseded by Approved Leave` pada kotak panduan `/leave/my`, chip rekonsiliasi `/leave/queue`, dan banner bebas komitmen `/daily/morning` menjadi penjelasan bisnis alami: *"Apabila cuti mendadak untuk hari ini disetujui setelah batas waktu pagi (09:30 WIB), catatan ketidakhadiran (belum check-in) pada hari tersebut akan otomatis diputihkan menjadi Cuti Resmi."*
+  3. Perbaiki ejaan toast pada `/leave/queue` menjadi `"Permohonan cuti berhasil disetujui."` / `"ditolak."` serta bersihkan catatan teknis `(uji rekonsiliasi Superseded by Approved Leave)` dari tampilan teks alasan cuti.
+- **Rationale / Expected Benefit:** Menghadirkan komunikasi antarmuka yang manusiawi, konsisten berbahasa Indonesia bisnis, serta bebas dari kebocoran istilah spesifikasi rekayasa internal.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794272969864_a8773750.jpg`, `media_1794273208642_085a65f7.jpg`, `media_1794273244491_e6a37632.jpg`, `media_1794273272592_80a77b85.jpg`.
 - **Status:** Resolved / Implemented (Frontend Hotfixed)
 
 ---

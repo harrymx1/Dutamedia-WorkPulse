@@ -117,6 +117,11 @@ function formatLeaveType(type?: string): string {
   }
 }
 
+function formatReason(reason?: string): string {
+  if (!reason) return '(Tanpa keterangan alasan)';
+  return reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim();
+}
+
 function calculateDuration(start: string, end: string): number {
   if (!start || !end) return 0;
   const d1 = new Date(start);
@@ -167,7 +172,7 @@ async function submitReview() {
         reviewNote: reviewNotes.value.trim() || undefined,
       }),
     });
-    showToast(`Permohonan cuti berhasil di-${reviewDecision.value === 'APPROVED' ? 'setujui' : 'tolak'}.`);
+    showToast(`Permohonan cuti berhasil ${reviewDecision.value === 'APPROVED' ? 'disetujui' : 'ditolak'}.`);
     closeReviewModal();
     await loadQueue();
   } catch (err: any) {
@@ -200,10 +205,10 @@ onMounted(() => {
     <main class="main-content">
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Pusat Persetujuan Operasional &amp; Rekonsiliasi</span>
-          <h1>Leave Approval Queue</h1>
+          <span class="eyebrow">Pusat Persetujuan Operasional &amp; Kehadiran</span>
+          <h1>Antrean Persetujuan Cuti</h1>
           <p class="subtitle">
-            Tinjau permohonan cuti anggota tim dan HRGA. Persetujuan cuti yang melewati cut-off pagi (09:30 WIB) akan otomatis menjalankan rekonsiliasi retroaktif.
+            Tinjau permohonan cuti anggota tim dan HRGA. Persetujuan cuti untuk hari berjalan setelah batas waktu pagi (09:30 WIB) akan otomatis memutihkan catatan ketidakhadiran hari tersebut.
           </p>
         </div>
       </div>
@@ -315,12 +320,12 @@ onMounted(() => {
                   <div class="date-sub">{{ calculateDuration(item.startDate, item.endDate) }} hari kerja</div>
                 </td>
                 <td>
-                  <div class="reason-text">{{ item.reason || '(Tanpa alasan khusus)' }}</div>
+                  <div class="reason-text">{{ formatReason(item.reason) }}</div>
                   <div class="ticket-id">
                     #{{ item.id }} · Diajukan {{ new Date(item.createdAt).toLocaleDateString('id-ID') }}
                   </div>
                   <div v-if="item.reconciled || item.reconciliationNote" class="reconcile-chip">
-                    {{ item.reconciliationNote || 'Direkonsiliasi retroaktif (Superseded by Approved Leave)' }}
+                    {{ item.reconciliationNote || 'Kehadiran diputihkan otomatis (Cuti Disetujui)' }}
                   </div>
                   <div v-if="item.reviewNote || item.reviewNotes" class="review-notes-chip">
                     Catatan: {{ item.reviewNote || item.reviewNotes }}
@@ -403,7 +408,7 @@ onMounted(() => {
 
                 <div class="detail-item detail-item-full">
                   <span class="detail-label">Alasan Cuti</span>
-                  <p class="detail-reason">{{ selectedRequest.reason || '-' }}</p>
+                  <p class="detail-reason">{{ formatReason(selectedRequest.reason) }}</p>
                 </div>
               </div>
             </div>

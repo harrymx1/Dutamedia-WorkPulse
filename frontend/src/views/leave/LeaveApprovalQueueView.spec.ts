@@ -67,7 +67,7 @@ describe('LeaveApprovalQueueView.vue (Prototipe 21 / EP10 - Antrean Approval Cut
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('Leave Approval Queue');
+    expect(wrapper.find('h1').text()).toBe('Antrean Persetujuan Cuti');
     expect(wrapper.text()).toContain('Siti Staff');
     expect(wrapper.text()).toContain('Cuti tahunan keperluan keluarga');
     expect(wrapper.text()).toContain('Setujui');
