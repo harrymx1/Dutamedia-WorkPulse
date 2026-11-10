@@ -15,6 +15,13 @@ export class TemporaryReviewerService {
   ) {
     const user = await this.prisma.user.findUnique({
       where: { id: dto.delegateUserId },
+      include: {
+        orgAssignments: {
+          where: { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+          orderBy: { effectiveDate: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     if (!user) {
@@ -22,6 +29,18 @@ export class TemporaryReviewerService {
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'Pengguna penerima delegasi reviewer tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (
+      user.email === 'admin@dutamedia.com' ||
+      user.orgAssignments?.[0]?.role === 'SYSTEM_ADMIN'
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Akun System Administrator tidak dapat ditunjuk sebagai reviewer operasional (Prinsip Separation of Duties).',
+        statusCode: HttpStatus.BAD_REQUEST,
       });
     }
 

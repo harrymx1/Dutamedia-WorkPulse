@@ -74,6 +74,14 @@ describe('TempReviewerView.vue (WP-EP03-TK007 / Prototipe 17 & IMP-058)', () => 
                 currentFunction: 'Engineering',
                 currentJobTitle: 'Technical Lead 1',
               },
+              {
+                id: 'admin-1',
+                fullName: 'System Administrator',
+                email: 'admin@dutamedia.com',
+                currentRole: 'SYSTEM_ADMIN',
+                currentFunction: 'OperationsInfrastructure',
+                currentJobTitle: 'Infrastructure & System Administrator',
+              },
             ],
           }),
         });
@@ -145,5 +153,29 @@ describe('TempReviewerView.vue (WP-EP03-TK007 / Prototipe 17 & IMP-058)', () => 
     expect(wrapper.text()).toContain('3. Pejabat Pengganti Sementara (Penerima Delegasi)');
     expect(wrapper.find('#del-replaced').exists()).toBe(true);
     expect(wrapper.find('#del-user').exists()).toBe(true);
+  });
+
+  it('excludes SYSTEM_ADMIN from both replaced and delegate dropdowns (Separation of Duties)', async () => {
+    const wrapper = mount(TempReviewerView, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await new Promise((r) => setTimeout(r, 50));
+    await wrapper.find('.page-header .btn-primary').trigger('click');
+
+    const replacedHtml = wrapper.find('#del-replaced').html();
+    const delegateHtml = wrapper.find('#del-user').html();
+
+    // System Administrator must never appear in either dropdown
+    expect(replacedHtml).not.toContain('admin-1');
+    expect(replacedHtml).not.toContain('System Administrator');
+    expect(delegateHtml).not.toContain('admin-1');
+    expect(delegateHtml).not.toContain('System Administrator');
+
+    // Operational roles must be present
+    expect(replacedHtml).toContain('usr-arif');
+    expect(delegateHtml).toContain('usr-bambang');
   });
 });

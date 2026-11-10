@@ -63,15 +63,22 @@ const form = ref({
   expiryDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
 });
 
+// Karyawan lini operasional yang berhak didelegasikan atau digantikan (mengecualikan SYSTEM_ADMIN untuk Separation of Duties)
+const operationalUsers = computed(() => {
+  return availableUsers.value.filter(
+    (u) => u.currentRole !== 'SYSTEM_ADMIN' && u.email !== 'admin@dutamedia.com',
+  );
+});
+
 const groupedManagers = computed(() => {
-  const heads = availableUsers.value.filter((u) => u.currentRole === 'HEAD');
-  const supervisors = availableUsers.value.filter(
+  const heads = operationalUsers.value.filter((u) => u.currentRole === 'HEAD');
+  const supervisors = operationalUsers.value.filter(
     (u) => u.currentRole === 'SUPERVISOR' || u.currentRole === 'PROJECT_MANAGER',
   );
-  const executives = availableUsers.value.filter(
+  const executives = operationalUsers.value.filter(
     (u) => ['CEO_MANAGEMENT', 'HRGA'].includes(u.currentRole || ''),
   );
-  const others = availableUsers.value.filter(
+  const others = operationalUsers.value.filter(
     (u) =>
       !['HEAD', 'SUPERVISOR', 'PROJECT_MANAGER', 'CEO_MANAGEMENT', 'HRGA'].includes(
         u.currentRole || '',
@@ -90,8 +97,8 @@ const groupedDelegates = computed(() => {
   const replacedId = form.value.replacedUserId;
   const targetFunc = form.value.targetFunction;
 
-  // 100% Seluruh karyawan terjamin tampil tanpa terkecuali, kecuali pejabat yang sedang digantikan
-  const allExceptReplaced = availableUsers.value.filter((u) => u.id !== replacedId);
+  // 100% Seluruh karyawan operasional terjamin tampil, KECUALI pejabat yang sedang digantikan
+  const allExceptReplaced = operationalUsers.value.filter((u) => u.id !== replacedId);
 
   // 1. Pimpinan / Lead di divisi yang sama (Prioritas Utama)
   const internalLeads = allExceptReplaced.filter(
@@ -148,14 +155,14 @@ const groupedDelegates = computed(() => {
 });
 
 function onReplacedUserChange() {
-  const manager = availableUsers.value.find((u) => u.id === form.value.replacedUserId);
+  const manager = operationalUsers.value.find((u) => u.id === form.value.replacedUserId);
   if (manager) {
     if (manager.currentFunction) {
       form.value.targetFunction = manager.currentFunction;
     }
     // Set default delegate jika belum dipilih atau bentrok
     if (!form.value.delegateUserId || form.value.delegateUserId === manager.id) {
-      const allDelegates = availableUsers.value.filter((u) => u.id !== manager.id);
+      const allDelegates = operationalUsers.value.filter((u) => u.id !== manager.id);
       const candidate =
         allDelegates.find(
           (u) => u.currentFunction === manager.currentFunction && u.id !== manager.id,
@@ -212,7 +219,7 @@ function handleKeydown(e: KeyboardEvent) {
 function openModal() {
   modalError.value = null;
   const defaultManager =
-    availableUsers.value.find((u) => u.currentRole === 'HEAD') || availableUsers.value[0];
+    operationalUsers.value.find((u) => u.currentRole === 'HEAD') || operationalUsers.value[0];
   const managerId = defaultManager?.id || '';
   const targetFunc = defaultManager?.currentFunction || 'Engineering';
 
@@ -226,11 +233,11 @@ function openModal() {
   };
 
   const defaultDelegate =
-    availableUsers.value.find(
+    operationalUsers.value.find(
       (u) =>
         u.id !== managerId &&
         (u.currentFunction === targetFunc || u.currentRole === 'SUPERVISOR'),
-    ) || availableUsers.value.find((u) => u.id !== managerId);
+    ) || operationalUsers.value.find((u) => u.id !== managerId);
 
   if (defaultDelegate) {
     form.value.delegateUserId = defaultDelegate.id;
