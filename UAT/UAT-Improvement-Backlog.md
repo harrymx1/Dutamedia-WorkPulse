@@ -1337,4 +1337,29 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 ---
 
+### [IMP-062] Tata Kelola UI & Perbaikan Tampilan Modul Kebijakan Sistem (Pencegahan Teks Terpotong, Format Jejak Audit Ramah Pengguna, Penyelarasan Keterangan Dinamis, dan Eliminasi Kode Arsitektur Internal)
+- **Finding ID:** IMP-062
+- **Title:** Tata Kelola UI & Perbaikan Tampilan Modul Kebijakan Sistem (Pencegahan Teks Terpotong, Format Jejak Audit Ramah Pengguna, Penyelarasan Keterangan Dinamis, dan Eliminasi Kode Arsitektur Internal)
+- **Category:** UI/UX, Information Architecture & Usability
+- **Page / Module:** Halaman Pengaturan Kebijakan Sistem (`/admin/policies`)
+- **Related Test Case:** `TC-ADMN-004`
+- **Current Condition:**
+  1. Kartu jam operasional SLA memuat teks "09:00 - 17:00" yang turun ke baris baru ("09:00 -" dan "17:00") karena ukuran font mono 26px terlalu lebar untuk ruang kolom grid.
+  2. Tabel Jejak Audit menampilkan data mentah developer: kolom "Mulai Berlaku" menampilkan raw UTC ISO string (`2026-11-09T00:00:00.000Z`), kolom "Kategori Kebijakan" menampilkan raw enum (`CHECKIN_TIMING`), dan kolom "Aksi" menampilkan badge statis berulang `POLICY_VERSION_CREATED` yang tidak informatif bagi admin.
+  3. Kode-kode internal arsitektur (`DEC-002`, `DEC-003`, `DEC-004`, `DEC-008`, `DEC-011`, `#075985`) dan tombol "Seed Ilustratif (DEC-011)" bocor ke pengguna akhir/administrator.
+  4. Deskripsi cut-off pagi memuat teks hardcoded "Toleransi 30 menit" dan EOD memuat "Melewati 21:00 WIB", padahal jam cut-off bersifat dinamis dan dapat diubah admin kapan saja (misal: saat cut-off diubah ke 23:59 WIB, teks toleransi 30m menjadi tidak sinkron).
+  5. Modal pembuatan versi kebijakan baru tidak tersinkronisasi otomatis dengan nilai aktif saat ini di kategori yang dipilih.
+- **Proposed Improvement:**
+  1. **Tata Letak SLA Operasional:** Menambahkan kelas CSS `.param-value.compact` (`font-size: 19px; white-space: nowrap;`) agar rentang jam operasional tampil rapi dalam satu baris horizontal tanpa terpotong.
+  2. **Penyempurnaan Jejak Audit:** Kolom "Mulai Berlaku" diformat tanggal Indonesia (`formatDateDisplay`), "Kategori Kebijakan" menggunakan label ramah bisnis (`formatCategoryLabel`), dan kolom aksi digantikan kolom "Perubahan Parameter" (`formatAuditChanges`) yang membandingkan nilai sebelum dan sesudah secara transparan (contoh: "Cut-Off Pagi: 09:30 → 23:59 WIB"). Fungsi ekspor CSV juga diperbarui mengikuti format ramah ini.
+  3. **Pembersihan Kode Arsitektur & Jargon Teknis:** Menghilangkan tombol seed ilustratif, menghapus kode `DEC-xxx` dan kode warna heksadesimal dari judul seksi, badge, dan callout, serta menyelaraskan bahasa teknis Inggris ("JUSTIFICATION REQUIRED", "MANDATORY RATIONALE", "effectiveDate >= today") ke bahasa operasional profesional Indonesia yang elegan.
+  4. **Penyelarasan Keterangan Cut-Off Dinamis:** Menghapus teks hardcoded toleransi menit / jam tertentu dan menggantikannya dengan narasi dinamis yang selalu akurat untuk konfigurasi nilai berapa pun.
+  5. **Sinkronisasi Otomatis Modal Form:** Mengintegrasikan `syncFormWithActivePolicy()` saat modal dibuka dan saat kategori diganti (`@change`), sehingga input formulir otomatis terisi parameter aktif terkini dari sistem.
+- **Rationale / Expected Benefit:** Menghilangkan kerancuan, mencegah polusi visual teknis, meningkatkan keterbacaan data jejak audit versi, dan menghadirkan antarmuka administrasi enterprise yang bersih, rapi, dan profesional.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): `media_1794301919433_fc0570b8.jpg`, `media_1794301931067_bfe43308.jpg`, `media_1794301937188_5b485926.jpg`, & `media_1794301943841_875311fc.jpg`.
+- **Status:** Resolved / Implemented (Frontend Synced)
+
+---
+
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

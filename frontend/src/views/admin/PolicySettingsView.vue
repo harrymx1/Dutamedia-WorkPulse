@@ -109,7 +109,36 @@ async function loadData() {
   }
 }
 
+function syncFormWithActivePolicy() {
+  const timing = policyMap.value.CHECKIN_TIMING?.configurationValues;
+  if (timing) {
+    formMorningOntime.value = timing.morningOnTimeCutoff || '09:00';
+    formMorningCutoff.value = timing.morningLockCutoff || '09:30';
+    formEodOntime.value = timing.eodOnTimeCutoff || '17:00';
+    formEodCutoff.value = timing.eodLockCutoff || '21:00';
+  }
+
+  const sla = policyMap.value.BLOCKER_SLA?.configurationValues;
+  if (sla) {
+    formSlaL1Hours.value = sla.level1Hours ?? 4;
+    formSlaL2Hours.value = sla.level2Hours ?? 8;
+    formAutoEscalateHours.value = sla.autoEscalateAfterHours ?? 4;
+  }
+
+  const comp = policyMap.value.COMPLIANCE_THRESHOLD?.configurationValues;
+  if (comp) {
+    formCarryOverAmberDays.value = comp.carryOverAmberDays ?? 3;
+    formAllowGreenWithCarryOver.value = comp.allowGreenWithCarryOver ?? true;
+  }
+
+  const corr = policyMap.value.CORRECTION_WINDOW?.configurationValues;
+  if (corr) {
+    formMaxCorrectionDays.value = corr.maxCorrectionDays ?? 7;
+  }
+}
+
 function openCreateModal(defaultCategory?: string) {
+  syncFormWithActivePolicy();
   if (defaultCategory) {
     formCategory.value = defaultCategory;
   }
@@ -138,7 +167,7 @@ async function submitNewVersion() {
   }
 
   if (formEffectiveDate.value < todayStr.value) {
-    modalError.value = 'Tanggal mulai berlaku tidak boleh di masa lampau (DEC-008: Dilarang Backdating).';
+    modalError.value = 'Tanggal mulai berlaku tidak boleh di masa lampau (Dilarang Backdating / Ubah Surut).';
     return;
   }
 
@@ -210,14 +239,132 @@ async function submitNewVersion() {
   }
 }
 
-async function triggerIllustrativeSeed() {
+function formatDateDisplay(val?: string | null): string {
+  if (!val) return '-';
   try {
-    await apiClient('/policies/seed', { method: 'POST' });
-    showToast('Parameter ilustratif kanonikal (DEC-011) berhasil di-seed.');
-    await loadData();
-  } catch (err: any) {
-    showToast(err.message || 'Gagal melakukan seed parameter.', true);
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return val;
   }
+}
+
+function formatTimestampDisplay(val: string): string {
+  try {
+    const d = new Date(val);
+    return d.toLocaleString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return val;
+  }
+}
+
+function formatCategoryLabel(cat?: string): string {
+  switch (cat) {
+    case 'CHECKIN_TIMING':
+      return 'Jam Kerja & Cut-Off';
+    case 'BLOCKER_SLA':
+      return 'SLA Penanganan Kendala';
+    case 'COMPLIANCE_THRESHOLD':
+      return 'Ambang Batas Carry-Over';
+    case 'CORRECTION_WINDOW':
+      return 'Jendela Pengajuan Koreksi';
+    case 'NOTIFICATION_REMINDER_THRESHOLD':
+      return 'Ambang Notifikasi & Pengingat';
+    default:
+      return cat || 'Umum';
+  }
+}
+
+function formatAuditChanges(log: AuditLogItem): string {
+  const after = log.valueAfter;
+  const before = log.valueBefore;
+  if (!after) return 'Versi Baru Diterapkan';
+
+  if (log.category === 'CHECKIN_TIMING') {
+    const parts: string[] = [];
+    if (after.morningLockCutoff) {
+      if (before?.morningLockCutoff && before.morningLockCutoff !== after.morningLockCutoff) {
+        parts.push(`Cut-Off Pagi: ${before.morningLockCutoff} → ${after.morningLockCutoff} WIB`);
+      } else {
+        parts.push(`Cut-Off Pagi: ${after.morningLockCutoff} WIB`);
+      }
+    }
+    if (after.morningOnTimeCutoff) {
+      if (before?.morningOnTimeCutoff && before.morningOnTimeCutoff !== after.morningOnTimeCutoff) {
+        parts.push(`On-Time Pagi: ${before.morningOnTimeCutoff} → ${after.morningOnTimeCutoff} WIB`);
+      } else {
+        parts.push(`On-Time Pagi: ${after.morningOnTimeCutoff} WIB`);
+      }
+    }
+    if (after.eodLockCutoff) {
+      if (before?.eodLockCutoff && before.eodLockCutoff !== after.eodLockCutoff) {
+        parts.push(`Cut-Off EOD: ${before.eodLockCutoff} → ${after.eodLockCutoff} WIB`);
+      } else {
+        parts.push(`Cut-Off EOD: ${after.eodLockCutoff} WIB`);
+      }
+    }
+    if (after.eodOnTimeCutoff) {
+      if (before?.eodOnTimeCutoff && before.eodOnTimeCutoff !== after.eodOnTimeCutoff) {
+        parts.push(`On-Time EOD: ${before.eodOnTimeCutoff} → ${after.eodOnTimeCutoff} WIB`);
+      }
+    }
+    return parts.join(' · ') || 'Parameter Cut-Off Diperbarui';
+  }
+
+  if (log.category === 'BLOCKER_SLA') {
+    const parts: string[] = [];
+    if (after.level1Hours !== undefined) {
+      if (before?.level1Hours !== undefined && before.level1Hours !== after.level1Hours) {
+        parts.push(`L1: ${before.level1Hours}j → ${after.level1Hours}j`);
+      } else {
+        parts.push(`L1: ${after.level1Hours}j Kerja`);
+      }
+    }
+    if (after.level2Hours !== undefined) {
+      if (before?.level2Hours !== undefined && before.level2Hours !== after.level2Hours) {
+        parts.push(`L2: ${before.level2Hours}j → ${after.level2Hours}j`);
+      } else {
+        parts.push(`L2: ${after.level2Hours}j Kerja`);
+      }
+    }
+    if (after.autoEscalateAfterHours !== undefined) {
+      if (before?.autoEscalateAfterHours !== undefined && before.autoEscalateAfterHours !== after.autoEscalateAfterHours) {
+        parts.push(`Eskalasi: ${before.autoEscalateAfterHours}j → ${after.autoEscalateAfterHours}j`);
+      } else {
+        parts.push(`Eskalasi: ${after.autoEscalateAfterHours}j`);
+      }
+    }
+    return parts.join(' · ') || 'SLA Blocker Diperbarui';
+  }
+
+  if (log.category === 'COMPLIANCE_THRESHOLD') {
+    const parts: string[] = [];
+    if (after.carryOverAmberDays !== undefined) {
+      if (before?.carryOverAmberDays !== undefined && before.carryOverAmberDays !== after.carryOverAmberDays) {
+        parts.push(`Ambang Carry-Over: ${before.carryOverAmberDays} → ${after.carryOverAmberDays} Hari`);
+      } else {
+        parts.push(`Ambang Carry-Over: ${after.carryOverAmberDays} Hari`);
+      }
+    }
+    return parts.join(' · ') || 'Ambang Batas Kepatuhan Diperbarui';
+  }
+
+  if (log.category === 'CORRECTION_WINDOW') {
+    return `Maks Koreksi: ${after.maxCorrectionDays ?? 7} Hari`;
+  }
+
+  return 'Versi Kebijakan Diterapkan';
 }
 
 function exportAuditCSV() {
@@ -226,15 +373,16 @@ function exportAuditCSV() {
     return;
   }
 
-  const headers = ['ID', 'Waktu', 'Pengubah', 'Email', 'Kategori', 'Tanggal Efektif', 'Alasan Perubahan'];
+  const headers = ['ID', 'Waktu', 'Pengubah', 'Email', 'Kategori', 'Tanggal Efektif', 'Alasan Perubahan', 'Perubahan Parameter'];
   const rows = auditLogs.value.map((log) => [
     log.id,
     new Date(log.timestamp).toLocaleString('id-ID'),
     log.actor?.fullName || 'System',
     log.actor?.email || '-',
-    log.category,
-    log.effectiveDate || '-',
+    formatCategoryLabel(log.category),
+    formatDateDisplay(log.effectiveDate),
     `"${(log.changeJustification || '').replace(/"/g, '""')}"`,
+    `"${formatAuditChanges(log).replace(/"/g, '""')}"`,
   ]);
 
   const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
@@ -292,13 +440,10 @@ onUnmounted(() => {
           </div>
           <h1>Pengaturan Kebijakan Sistem (Policy Settings)</h1>
           <p class="subtitle">
-            Konfigurasi parameter operasional organisasi: jam kerja dan penguncian cut-off (DEC-002), SLA kendala berjenjang, ambang carry-over berulang tanpa penguncian status (DEC-003), kebijakan komitmen nol (DEC-004), serta penegakan tanggal efektif wajib di masa depan tanpa backdating (DEC-008).
+            Konfigurasi parameter operasional organisasi: jam kerja dan batas penguncian formulir (cut-off), target SLA penanganan kendala berjenjang, ambang batas tugas berlanjut (carry-over), kebijakan hari bebas komitmen, serta penegakan tanggal berlaku efektif tanpa perubahan surut.
           </p>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary" type="button" @click="triggerIllustrativeSeed" title="Seed default parameter ilustratif (DEC-011)">
-            <span>Seed Ilustratif (DEC-011)</span>
-          </button>
           <button class="btn btn-primary" type="button" @click="openCreateModal()">
             <Plus :size="18" />
             <span>+ Buat Versi Kebijakan Baru</span>
@@ -311,33 +456,33 @@ onUnmounted(() => {
         <article class="metric-card">
           <div class="metric-top">
             <span class="metric-label">Morning Cut-Off</span>
-            <span class="badge badge-info">DEC-002</span>
+            <span class="badge badge-info">Komitmen Pagi</span>
           </div>
           <div class="metric-value">
             {{ policyMap.CHECKIN_TIMING?.configurationValues?.morningLockCutoff || '09:30' }} WIB
           </div>
           <div class="metric-sub">
-            On-Time Deadline: {{ policyMap.CHECKIN_TIMING?.configurationValues?.morningOnTimeCutoff || '09:00' }} WIB (Toleransi 30m)
+            On-Time Deadline: {{ policyMap.CHECKIN_TIMING?.configurationValues?.morningOnTimeCutoff || '09:00' }} WIB
           </div>
         </article>
 
         <article class="metric-card">
           <div class="metric-top">
             <span class="metric-label">EOD Cut-Off</span>
-            <span class="badge badge-info">DEC-002</span>
+            <span class="badge badge-info">Evaluasi Sore</span>
           </div>
           <div class="metric-value">
             {{ policyMap.CHECKIN_TIMING?.configurationValues?.eodLockCutoff || '21:00' }} WIB
           </div>
           <div class="metric-sub">
-            On-Time Deadline: {{ policyMap.CHECKIN_TIMING?.configurationValues?.eodOnTimeCutoff || '17:00' }} WIB (Locked pasca-21:00)
+            On-Time Deadline: {{ policyMap.CHECKIN_TIMING?.configurationValues?.eodOnTimeCutoff || '17:00' }} WIB
           </div>
         </article>
 
         <article class="metric-card">
           <div class="metric-top">
             <span class="metric-label">SLA Blocker L1 / L2</span>
-            <span class="badge badge-active">Active SLA</span>
+            <span class="badge badge-active">Target SLA</span>
           </div>
           <div class="metric-value">
             {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }}j / {{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }}j Kerja
@@ -350,7 +495,7 @@ onUnmounted(() => {
         <article class="metric-card">
           <div class="metric-top">
             <span class="metric-label">Versi Audit Tercatat</span>
-            <span class="badge badge-neutral">DEC-008</span>
+            <span class="badge badge-neutral">Jejak Audit</span>
           </div>
           <div class="metric-value">{{ auditLogs.length }} Versi</div>
           <div class="metric-sub">Riwayat versi tersimpan aman tanpa overwrite</div>
@@ -361,26 +506,26 @@ onUnmounted(() => {
       <div class="callout">
         <Info class="callout-icon" :size="20" />
         <div class="callout-content">
-          <div class="callout-title">Prinsip Tata Kelola Kebijakan Terpadu</div>
+          <div class="callout-title">Prinsip Tata Kelola Kebijakan Organisasi</div>
           <p>
-            Perubahan nilai kebijakan tidak pernah menimpa (overwrite) rekaman historis secara langsung. Setiap modifikasi parameter akan menerbitkan <strong>Versi Kebijakan Baru</strong> dengan tanggal berlaku efektif (<code>effectiveDate >= today</code>) sesuai <strong>DEC-008</strong>. Penegakan status locked pasca-cut-off dijalankan secara otomatis oleh scheduler sistem (<strong>DEC-002</strong>).
+            Perubahan nilai kebijakan tidak pernah menimpa (overwrite) rekaman historis secara langsung. Setiap modifikasi parameter akan menerbitkan <strong>Versi Kebijakan Baru</strong> dengan tanggal berlaku efektif mulai hari ini atau masa depan. Penegakan status penguncian formulir otomatis dijalankan secara konsisten oleh sistem guna menjaga integritas dan akuntabilitas kerja.
           </p>
         </div>
       </div>
 
-      <!-- SECTION 1: Jam Kerja & Batas Pengiriman (DEC-002) -->
+      <!-- SECTION 1: Jam Kerja & Batas Pengiriman -->
       <section class="policy-section">
         <div class="policy-head">
           <div class="policy-head-info">
             <h2>
               <Clock :size="18" />
-              <span>1. Jam Kerja, Batas Pengiriman & Penguncian Cut-Off (DEC-002)</span>
+              <span>1. Jam Kerja, Batas Pengiriman & Penguncian Cut-Off</span>
             </h2>
             <p>Menetapkan jadwal kerja operasional, batas on-time check-in, dan jendela cut-off penguncian formulir otomatis.</p>
           </div>
           <div class="head-badges">
             <span v-if="policyMap.CHECKIN_TIMING?.isIllustrative" class="badge badge-illustrative">
-              Ilustratif (DEC-011)
+              Nilai Awal
             </span>
             <span class="badge badge-active">Sedang Berlaku</span>
           </div>
@@ -399,24 +544,24 @@ onUnmounted(() => {
               <div class="param-desc">Batas waktu pengiriman Morning Commitment agar berstatus On-Time. Pengingat otomatis dikirim 60 menit sebelumnya.</div>
               <div class="param-status-rule">
                 <span class="badge badge-ontime">On-Time</span>
-                <span class="status-note">Pengiriman sebelum jam deadline dihitung On-Time (Biru #075985)</span>
+                <span class="status-note">Pengiriman sebelum jam deadline dihitung tepat waktu</span>
               </div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Morning Cut-Off & Locking Threshold</span>
+                <span class="param-title">Morning Cut-Off & Penguncian Formulir</span>
                 <span class="badge badge-cutoff">Cut-Off</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.CHECKIN_TIMING?.configurationValues?.morningLockCutoff || '09:30' }}</span>
                 <span class="param-unit">WIB</span>
               </div>
-              <div class="param-desc">Toleransi 30 menit. Pengiriman antara deadline & cutoff berstatus LATE. Melewati batas ini form <strong>LOCKED</strong>.</div>
+              <div class="param-desc">Batas akhir pengisian komitmen pagi. Pengiriman antara deadline & cutoff berstatus LATE. Melewati batas ini form <strong>LOCKED</strong>.</div>
               <div class="param-status-rule">
                 <span class="badge badge-late">Late</span>
                 <span class="badge badge-neutral">Locked</span>
-                <span class="status-note">Setelah cutoff otomatis No Submission</span>
+                <span class="status-note">Setelah cutoff otomatis tercatat No Submission</span>
               </div>
             </div>
 
@@ -438,22 +583,22 @@ onUnmounted(() => {
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">EOD Cut-Off & Overnight Lock</span>
+                <span class="param-title">EOD Cut-Off & Penguncian Malam Hari</span>
                 <span class="badge badge-cutoff">Cut-Off</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.CHECKIN_TIMING?.configurationValues?.eodLockCutoff || '21:00' }}</span>
                 <span class="param-unit">WIB</span>
               </div>
-              <div class="param-desc">Toleransi lembur fleksibel. Melewati 21:00 WIB, hari dinyatakan selesai dan form EOD <strong>LOCKED</strong>.</div>
+              <div class="param-desc">Batas toleransi evaluasi kerja harian. Melewati batas cut-off sore, hari dinyatakan selesai dan form EOD <strong>LOCKED</strong>.</div>
               <div class="param-status-rule">
                 <span class="badge badge-neutral">Locked</span>
-                <span class="status-note">Koreksi pasca-cut-off hanya lewat alur koreksi</span>
+                <span class="status-note">Koreksi pasca-cut-off hanya lewat alur koreksi resmi</span>
               </div>
             </div>
           </div>
           <div class="policy-guidance">
-            <strong>Penjelasan Penegakan DEC-002:</strong> Status Locked mencegah manipulasi pengisian retroaktif di luar jam kerja. Anggota tim yang melewatkan jam cut-off tidak dapat lagi mengisi form secara reguler; sistem otomatis mencatat status <code>No Submission</code> pada hari kerja tersebut dan memerlukan pengajuan <em>Correction Request</em> bertahap.
+            <strong>Prinsip Penguncian Formulir:</strong> Status Locked mencegah manipulasi pengisian retroaktif di luar jam kerja. Anggota tim yang melewatkan jam cut-off tidak dapat lagi mengisi form secara reguler; sistem otomatis mencatat status <code>No Submission</code> pada hari kerja tersebut dan memerlukan pengajuan <em>Correction Request</em> bertahap.
           </div>
         </div>
       </section>
@@ -470,7 +615,7 @@ onUnmounted(() => {
           </div>
           <div class="head-badges">
             <span v-if="policyMap.BLOCKER_SLA?.isIllustrative" class="badge badge-illustrative">
-              Ilustratif (DEC-011)
+              Nilai Awal
             </span>
             <span class="badge badge-active">Sedang Berlaku</span>
           </div>
@@ -519,7 +664,7 @@ onUnmounted(() => {
                 <span class="badge badge-info">Senin - Jumat</span>
               </div>
               <div class="param-value-box">
-                <span class="param-value">09:00 - 17:00</span>
+                <span class="param-value compact">09:00 - 17:00</span>
                 <span class="param-unit">WIB</span>
               </div>
               <div class="param-desc">Penghitungan durasi aging SLA dijeda pada malam hari dan akhir pekan / hari libur nasional resmi.</div>
@@ -528,19 +673,19 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <!-- SECTION 3: Carry-Over Threshold (DEC-003) -->
+      <!-- SECTION 3: Carry-Over Threshold -->
       <section class="policy-section">
         <div class="policy-head">
           <div class="policy-head-info">
             <h2>
               <Layers :size="18" />
-              <span>3. Ambang Batas Carry-Over Berulang & Larangan Lock GREEN (DEC-003)</span>
+              <span>3. Ambang Batas Carry-Over Berulang & Larangan Kunci GREEN</span>
             </h2>
             <p>Aturan deteksi tugas berlanjut tanpa menghukum atau mengunci hak refleksi mandiri karyawan.</p>
           </div>
           <div class="head-badges">
             <span v-if="policyMap.COMPLIANCE_THRESHOLD?.isIllustrative" class="badge badge-illustrative">
-              Ilustratif (DEC-011)
+              Nilai Awal
             </span>
             <span class="badge badge-active">Sedang Berlaku</span>
           </div>
@@ -561,28 +706,28 @@ onUnmounted(() => {
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Proteksi Hak Opsi GREEN (DEC-003)</span>
-                <span class="badge badge-active">Dilarang Di-Lock</span>
+                <span class="param-title">Proteksi Hak Opsi GREEN</span>
+                <span class="badge badge-active">Hak Karyawan</span>
               </div>
               <div class="param-value-box">
-                <span class="param-value text-green">UNLOCKED (TIDAK BOLEH DIKUNCI)</span>
+                <span class="param-value text-green">Bebas Dipilih (Tidak Terkunci)</span>
               </div>
-              <div class="param-desc">Opsi GREEN pada Morning maupun EOD <strong>TIDAK BOLEH PERNAH DI-DISABLE</strong>. Karyawan tetap berhak memilih GREEN dengan konfirmasi refleksi mandiri.</div>
+              <div class="param-desc">Opsi GREEN pada Morning maupun EOD dapat dipilih secara bebas oleh karyawan dengan konfirmasi refleksi mandiri.</div>
             </div>
           </div>
           <div class="policy-guidance">
-            <strong>Ketetapan Arsitektur DEC-003:</strong> Sistem WorkPulse menolak pola antarmuka punitif. Deteksi carry-over berulang dihadirkan melalui badge carry-over (#2, #3+) dan dialog refleksi persuasif, bukan dengan merampas hak anggota tim.
+            <strong>Prinsip Kepatuhan Transparan:</strong> Sistem WorkPulse menolak pola antarmuka punitif. Deteksi carry-over berulang dihadirkan melalui penanda tugas berlanjut dan dialog refleksi persuasif, guna membangun transparansi tanpa merampas hak anggota tim.
           </div>
         </div>
       </section>
 
-      <!-- SECTION 4: Zero-Commitment Policy (DEC-004) -->
+      <!-- SECTION 4: Zero-Commitment Policy -->
       <section class="policy-section">
         <div class="policy-head">
           <div class="policy-head-info">
             <h2>
               <CheckCircle2 :size="18" />
-              <span>4. Kebijakan Komitmen Nol / Zero-Commitment (DEC-004)</span>
+              <span>4. Kebijakan Hari Bebas Komitmen (Zero-Commitment)</span>
             </h2>
             <p>Pengaturan toleransi hari kerja tanpa komitmen terencana untuk skenario pelatihan atau penugasan khusus.</p>
           </div>
@@ -608,24 +753,24 @@ onUnmounted(() => {
                 <span class="badge badge-neutral">Wajib Alasan</span>
               </div>
               <div class="param-value-box">
-                <span class="param-value text-bold">JUSTIFICATION REQUIRED</span>
+                <span class="param-value text-bold">Wajib Mengisi Alasan</span>
               </div>
-              <div class="param-desc">Jika 0 komitmen dipilih, kolom alasan wajib diisi (misal: pelatihan seharian). Status otomatis menjadi <code>NOT_APPLICABLE — NO_COMMITMENT</code>.</div>
+              <div class="param-desc">Jika 0 komitmen dipilih, kolom alasan wajib diisi (misal: agenda pelatihan seharian). Status otomatis menjadi <code>Bebas Komitmen (Disetujui)</code>.</div>
             </div>
           </div>
           <div class="policy-guidance">
-            <strong>Makna Status NOT_APPLICABLE — NO_COMMITMENT:</strong> Status ini merupakan fakta sah non-operasional dan secara tegas <strong>bukan merupakan status GREEN dan bukan No Submission</strong>.
+            <strong>Makna Status Bebas Komitmen:</strong> Status ini merupakan fakta sah non-operasional dan secara transparan dicatat tersendiri (bukan status GREEN dan bukan No Submission).
           </div>
         </div>
       </section>
 
-      <!-- SECTION 5: Effective Date & Anti-Backdating (DEC-008) -->
+      <!-- SECTION 5: Effective Date & Anti-Backdating -->
       <section class="policy-section">
         <div class="policy-head">
           <div class="policy-head-info">
             <h2>
               <ShieldAlert :size="18" />
-              <span>5. Penegakan Tanggal Efektif & Larangan Backdating (DEC-008)</span>
+              <span>5. Penegakan Tanggal Efektif & Larangan Ubah Surut (Anti-Backdating)</span>
             </h2>
             <p>Aturan integritas data legal agar histori performa masa lampau tidak dapat diubah surut.</p>
           </div>
@@ -635,11 +780,11 @@ onUnmounted(() => {
           <div class="params-grid">
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Validasi Effective Date</span>
-                <span class="badge badge-danger">DEC-008</span>
+                <span class="param-title">Validasi Tanggal Berlaku Efektif</span>
+                <span class="badge badge-info">Integritas Data</span>
               </div>
               <div class="param-value-box">
-                <span class="param-value text-green">effectiveDate &gt;= today</span>
+                <span class="param-value text-green">Hari Ini / Masa Depan</span>
               </div>
               <div class="param-desc">Tanggal mulai berlaku kebijakan baru WAJIB hari ini atau masa depan. Input tanggal lampau otomatis ditolak sistem.</div>
             </div>
@@ -650,7 +795,7 @@ onUnmounted(() => {
                 <span class="badge badge-info">Wajib Diisi</span>
               </div>
               <div class="param-value-box">
-                <span class="param-value text-primary">MANDATORY RATIONALE</span>
+                <span class="param-value text-primary">Justifikasi Bisnis Wajib</span>
               </div>
               <div class="param-desc">Setiap penerbitan versi baru wajib menyertakan minimal 15 karakter alasan bisnis untuk kebutuhan jejak audit ISO/HRGA.</div>
             </div>
@@ -680,7 +825,7 @@ onUnmounted(() => {
                 <th>Mulai Berlaku</th>
                 <th>Diubah Oleh</th>
                 <th>Alasan Perubahan</th>
-                <th>Aksi</th>
+                <th>Perubahan Parameter</th>
               </tr>
             </thead>
             <tbody>
@@ -690,11 +835,11 @@ onUnmounted(() => {
                 </td>
               </tr>
               <tr v-for="log in auditLogs" :key="log.id">
-                <td class="mono-text">{{ new Date(log.timestamp).toLocaleString('id-ID') }}</td>
+                <td class="mono-text">{{ formatTimestampDisplay(log.timestamp) }}</td>
                 <td>
-                  <span class="badge badge-info">{{ log.category }}</span>
+                  <span class="badge badge-info">{{ formatCategoryLabel(log.category) }}</span>
                 </td>
-                <td class="mono-text">{{ log.effectiveDate || '-' }}</td>
+                <td class="mono-text">{{ formatDateDisplay(log.effectiveDate) }}</td>
                 <td>
                   <div class="user-meta">
                     <span class="user-name">{{ log.actor?.fullName || 'System' }}</span>
@@ -702,8 +847,8 @@ onUnmounted(() => {
                   </div>
                 </td>
                 <td class="rationale-cell">{{ log.changeJustification || '-' }}</td>
-                <td>
-                  <span class="badge badge-active">{{ log.actionCode }}</span>
+                <td class="changes-cell">
+                  <span class="change-detail-text">{{ formatAuditChanges(log) }}</span>
                 </td>
               </tr>
             </tbody>
@@ -718,7 +863,7 @@ onUnmounted(() => {
         <div class="modal-header">
           <div>
             <h3 id="modalTitle">Buat Versi Kebijakan Baru</h3>
-            <p class="modal-subtitle">Nilai lama akan diarsipkan otomatis sebagai riwayat audit tanpa ditimpa (DEC-008).</p>
+            <p class="modal-subtitle">Nilai lama akan diarsipkan otomatis sebagai riwayat audit tanpa ditimpa (Versioned Audit Trail).</p>
           </div>
           <button class="icon-btn" type="button" @click="closeModal" aria-label="Tutup dialog">
             <X :size="20" />
@@ -733,7 +878,7 @@ onUnmounted(() => {
         <form @submit.prevent="submitNewVersion" class="modal-form">
           <div class="form-group">
             <label for="select-cat">Kategori Kebijakan *</label>
-            <select id="select-cat" v-model="formCategory" class="input-control" required>
+            <select id="select-cat" v-model="formCategory" @change="syncFormWithActivePolicy" class="input-control" required>
               <option value="CHECKIN_TIMING">Jam Kerja & Batas Pengiriman (Cut-Off)</option>
               <option value="BLOCKER_SLA">SLA Penanganan Kendala (Blocker SLA)</option>
               <option value="COMPLIANCE_THRESHOLD">Ambang Batas Carry-Over Berulang</option>
@@ -783,8 +928,8 @@ onUnmounted(() => {
               <input id="input-carryover-days" v-model="formCarryOverAmberDays" type="number" min="1" max="10" class="input-control" required />
             </div>
             <div class="form-group">
-              <label>Proteksi Hak Hijau (DEC-003)</label>
-              <div class="readonly-badge">UNLOCKED (DILARANG LOCK GREEN)</div>
+              <label>Proteksi Hak Hijau</label>
+              <div class="readonly-badge">Bebas Dipilih (Tidak Terkunci)</div>
             </div>
           </div>
 
@@ -799,7 +944,7 @@ onUnmounted(() => {
                 class="input-control"
                 required
               />
-              <span class="field-help">Harus hari ini atau masa depan (DEC-008: Dilarang Backdating).</span>
+              <span class="field-help">Harus hari ini atau masa depan (Dilarang Backdating / Ubah Surut).</span>
             </div>
             <div class="form-group">
               <label for="input-end-date">Tanggal Berakhir (Opsional)</label>
@@ -1146,6 +1291,11 @@ h1 {
   color: var(--color-text-primary);
 }
 
+.param-value.compact {
+  font-size: 19px;
+  white-space: nowrap;
+}
+
 .param-unit {
   font-size: 12px;
   font-weight: 600;
@@ -1256,6 +1406,22 @@ h1 {
 .rationale-cell {
   max-width: 300px;
   color: var(--color-text-secondary);
+}
+
+.changes-cell {
+  max-width: 340px;
+}
+
+.change-detail-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-brand-primary);
+  background: var(--color-surface-subtle);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  line-height: 1.45;
+  border: 1px solid var(--color-border-subtle);
 }
 
 /* Badges */

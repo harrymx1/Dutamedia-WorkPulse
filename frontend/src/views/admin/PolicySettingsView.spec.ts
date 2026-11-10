@@ -65,18 +65,22 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     expect(wrapper.text()).toContain('+ Buat Versi Kebijakan Baru');
   });
 
-  it('renders 5 canonical policy sections (DEC-002, Blocker SLA, DEC-003, DEC-004, DEC-008)', () => {
+  it('renders 5 canonical policy sections with clean business wording without internal DEC codes', () => {
     const wrapper = mount(PolicySettingsView, {
       global: {
         plugins: [router],
       },
     });
 
-    expect(wrapper.text()).toContain('1. Jam Kerja, Batas Pengiriman & Penguncian Cut-Off (DEC-002)');
+    expect(wrapper.text()).toContain('1. Jam Kerja, Batas Pengiriman & Penguncian Cut-Off');
     expect(wrapper.text()).toContain('2. SLA Penanganan Kendala (Blocker SLA & Auto-Escalation)');
-    expect(wrapper.text()).toContain('3. Ambang Batas Carry-Over Berulang & Larangan Lock GREEN (DEC-003)');
-    expect(wrapper.text()).toContain('4. Kebijakan Komitmen Nol / Zero-Commitment (DEC-004)');
-    expect(wrapper.text()).toContain('5. Penegakan Tanggal Efektif & Larangan Backdating (DEC-008)');
+    expect(wrapper.text()).toContain('3. Ambang Batas Carry-Over Berulang & Larangan Kunci GREEN');
+    expect(wrapper.text()).toContain('4. Kebijakan Hari Bebas Komitmen (Zero-Commitment)');
+    expect(wrapper.text()).toContain('5. Penegakan Tanggal Efektif & Larangan Ubah Surut (Anti-Backdating)');
+    expect(wrapper.text()).not.toContain('DEC-002');
+    expect(wrapper.text()).not.toContain('DEC-003');
+    expect(wrapper.text()).not.toContain('DEC-004');
+    expect(wrapper.text()).not.toContain('DEC-008');
   });
 
   it('opens and closes modal on button click and escape key', async () => {
