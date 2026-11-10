@@ -1229,4 +1229,26 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Status:** Resolved / Implemented (Frontend & Backend Synced)
 
 ---
+
+### [IMP-058] Restrukturisasi Alur Delegasi Reviewer: Orientasi Pejabat yang Berhalangan, Jabatan Riil, dan Transparansi Audit
+- **Finding ID:** IMP-058
+- **Title:** Restrukturisasi Alur Delegasi Reviewer: Orientasi Pejabat yang Berhalangan, Jabatan Riil, dan Transparansi Audit
+- **Category:** Business Logic & Organizational Governance
+- **Page / Module:** Reviewer Sementara (`/admin/temporary-reviewers`) & Backend `TemporaryReviewerService`
+- **Related Test Case:** `TC-ADMN-001`, `TC-HRGA-003`
+- **Current Condition:** 
+  1. Konsep pendelegasian sebelumnya dimulai dari *"Pilih siapa penerima wewenang $\rightarrow$ Pilih divisi target"*, yang menyerupai mutasi/pemindahan jabatan orang secara sepihak alih-alih pendelegasian wewenang riil.
+  2. Dropdown hanya menampilkan nama dan email tanpa jabatan dan divisi asal, sehingga admin tidak mengetahui apakah orang yang ditunjuk kompeten dan memiliki kedudukan yang tepat.
+  3. Formulir dan tabel tidak mencatat siapa pejabat/atasan asli yang sedang berhalangan/cuti yang wewenangnya digantikan.
+- **Proposed Improvement:** 
+  1. Restrukturisasi formulir delegasi: Langkah 1 memilih **Pejabat yang Berhalangan / Digantikan** (misal: *Arif Budiman — Head of Engineering*), divisi wewenang otomatis diselaraskan dengan divisi atasan tersebut, lalu Langkah 2 memilih **Pejabat Pengganti Sementara** (misal: *Bambang Pratama — Technical Lead 1*).
+  2. Dropdown menampilkan format kaya: `Nama Lengkap — Jabatan (Divisi)` untuk seluruh manajer dan personil terkait.
+  3. Di tabel riwayat delegasi, tambahkan kolom **MENGGANTIKAN SIAPA** dan tampilkan jabatan asal personil pengganti di bawah nama.
+  4. Format catatan audit otomatis menyematkan metadata `[Menggantikan Nama (Jabatan)]` agar audit trail kepegawaian tersimpan permanen di database tanpa perlu alter skema.
+- **Rationale / Expected Benefit:** Menyelaraskan alur pendelegasian dengan tata kelola organisasi nyata (Delegation of Authority), menghilangkan kebingungan pengguna, mencegah salah pilih divisi, dan menjamin transparansi audit kepegawaian.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Manual UAT Cycle 2 (10 Nov 2026, Harry): Diskusi kritis evaluasi tata kelola delegasi reviewer `TC-ADMN-001`.
+- **Status:** Resolved / Implemented (Frontend & Backend Synced)
+
+---
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

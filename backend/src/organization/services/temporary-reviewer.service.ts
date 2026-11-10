@@ -75,7 +75,19 @@ export class TemporaryReviewerService {
         take: limit,
         orderBy: { effectiveDate: 'desc' },
         include: {
-          delegateUser: { select: { id: true, fullName: true, email: true } },
+          delegateUser: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              orgAssignments: {
+                where: { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+                orderBy: { effectiveDate: 'desc' },
+                take: 1,
+                select: { role: true, function: true, jobTitle: true },
+              },
+            },
+          },
           createdBy: { select: { id: true, fullName: true, email: true } },
         },
       }),
