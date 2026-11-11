@@ -220,6 +220,20 @@ async function submitNewVersion() {
     };
   }
 
+  const activePol = policyMap.value[formCategory.value];
+  if (activePol && !activePol.isIllustrative && activePol.configurationValues) {
+    const prev = activePol.configurationValues;
+    const isSame = Object.keys(configurationValues).every(
+      (k) => String(prev[k]) === String(configurationValues[k]),
+    );
+    if (isSame) {
+      modalError.value =
+        'Tidak ada perubahan nilai parameter dibandingkan kebijakan yang sedang berlaku saat ini. Silakan ubah minimal satu parameter sebelum menyimpan.';
+      modalSubmitting.value = false;
+      return;
+    }
+  }
+
   try {
     await apiClient('/policies', {
       method: 'POST',
@@ -330,23 +344,23 @@ function formatAuditChanges(log: AuditLogItem): string {
     const parts: string[] = [];
     if (after.level1Hours !== undefined) {
       if (before?.level1Hours !== undefined && before.level1Hours !== after.level1Hours) {
-        parts.push(`Respon Atasan: ${before.level1Hours}j → ${after.level1Hours}j`);
+        parts.push(`Respon Jenjang 1: ${before.level1Hours}j → ${after.level1Hours}j`);
       } else {
-        parts.push(`Respon Atasan: ${after.level1Hours}j Kerja`);
+        parts.push(`Respon Jenjang 1: ${after.level1Hours}j Kerja`);
       }
     }
     if (after.level2Hours !== undefined) {
       if (before?.level2Hours !== undefined && before.level2Hours !== after.level2Hours) {
-        parts.push(`Respon Kepala Divisi: ${before.level2Hours}j → ${after.level2Hours}j`);
+        parts.push(`Penanganan Jenjang Lanjutan: ${before.level2Hours}j → ${after.level2Hours}j`);
       } else {
-        parts.push(`Respon Kepala Divisi: ${after.level2Hours}j Kerja`);
+        parts.push(`Penanganan Jenjang Lanjutan: ${after.level2Hours}j Kerja`);
       }
     }
     if (after.autoEscalateAfterHours !== undefined) {
       if (before?.autoEscalateAfterHours !== undefined && before.autoEscalateAfterHours !== after.autoEscalateAfterHours) {
-        parts.push(`Batas Eskalasi: ${before.autoEscalateAfterHours}j → ${after.autoEscalateAfterHours}j`);
+        parts.push(`Batas Naik Jenjang: ${before.autoEscalateAfterHours}j → ${after.autoEscalateAfterHours}j`);
       } else {
-        parts.push(`Batas Eskalasi: ${after.autoEscalateAfterHours}j`);
+        parts.push(`Batas Naik Jenjang: ${after.autoEscalateAfterHours}j`);
       }
     }
     return parts.join(' · ') || 'Target Waktu Kendala Diperbarui';
@@ -613,9 +627,9 @@ onUnmounted(() => {
           <div class="policy-head-info">
             <h2>
               <AlertTriangle :size="18" />
-              <span>2. Target Waktu Penanganan Kendala (Acuan Respon &amp; Eskalasi)</span>
+              <span>2. Target Waktu Respon &amp; Eskalasi Berjenjang Kendala</span>
             </h2>
-            <p>Target waktu = batas lama sebuah kendala (blocker) boleh dibiarkan tanpa tanggapan sebelum perlu dinaikkan ke atasan berikutnya.</p>
+            <p>Aturan batas waktu bagi penanggung jawab untuk menanggapi kendala di setiap jenjang wewenang sebelum dinaikkan ke pimpinan di atasnya.</p>
           </div>
           <div class="head-badges">
             <span v-if="policyMap.BLOCKER_SLA?.isIllustrative" class="badge badge-illustrative">
@@ -628,54 +642,54 @@ onUnmounted(() => {
           <div class="params-grid">
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Batas Respon Atasan Langsung</span>
-                <span class="badge badge-active">Tahap 1</span>
+                <span class="param-title">Batas Respon Jenjang Pertama</span>
+                <span class="badge badge-active">Penanggung Jawab Awal</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }}</span>
                 <span class="param-unit">Jam Kerja</span>
               </div>
-              <div class="param-desc">Kendala yang dilaporkan karyawan harus ditanggapi atasan langsung (Supervisor / Project Lead) dalam {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }} jam kerja untuk mencatat langkah penanganan awal.</div>
+              <div class="param-desc">Batas waktu bagi penanggung jawab pertama (Atasan Langsung, Ketua Proyek, atau PIC terkait) untuk menanggapi laporan kendala dalam {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }} jam kerja dan memulai penanganan awal.</div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Batas Respon Kepala Divisi</span>
-                <span class="badge badge-warning">Tahap 2</span>
+                <span class="param-title">Batas Penanganan Jenjang Lanjutan</span>
+                <span class="badge badge-warning">Pimpinan di Atasnya</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }}</span>
                 <span class="param-unit">Jam Kerja</span>
               </div>
-              <div class="param-desc">Target waktu bagi Kepala Divisi (Head of Department) dalam menyelesaikan kendala berat atau mengurai hambatan lintas divisi dalam {{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }} jam kerja.</div>
+              <div class="param-desc">Batas waktu penanganan setelah kendala naik ke pimpinan satu tingkat di atasnya (Kepala Divisi, Pengarah Proyek, atau Direksi) selama {{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }} jam kerja. Jika melewati batas ini belum tuntas, kendala naik lagi hingga tingkat Direksi dan berstatus Lewat Batas Waktu.</div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Batas Naik ke Atasan Berikutnya</span>
-                <span class="badge badge-danger">Acuan Eskalasi</span>
+                <span class="param-title">Batas Waktu Naik ke Atasan Berikutnya</span>
+                <span class="badge badge-danger">Naik Otomatis</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }}</span>
                 <span class="param-unit">jam kerja tanpa ditanggapi</span>
               </div>
-              <div class="param-desc">Batas waktu acuan bagi kendala yang belum ditanggapi atasan langsung selama {{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }} jam kerja agar segera diteruskan ke pimpinan yang lebih tinggi.</div>
+              <div class="param-desc">Jika kendala belum ditanggapi sama sekali selama {{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }} jam kerja, sistem meneruskan kendala satu tingkat ke atasan di atasnya secara berjenjang.</div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Jam Hitung Target Waktu</span>
+                <span class="param-title">Jam Kerja Perhitungan Waktu</span>
                 <span class="badge badge-info">Senin - Jumat</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value compact">09:00 - 17:00</span>
                 <span class="param-unit">WIB</span>
               </div>
-              <div class="param-desc">Jam kerja dihitung Senin–Jumat pukul 09:00–17:00 WIB, serta dijeda pada malam hari, akhir pekan, dan hari libur nasional resmi.</div>
+              <div class="param-desc">Perhitungan waktu berjalan pada jam kerja aktif Senin–Jumat pukul 09:00–17:00 WIB, serta dijeda pada malam hari, akhir pekan, dan hari libur nasional resmi.</div>
             </div>
           </div>
           <div class="policy-guidance">
-            <strong>Panduan &amp; Makna Target Waktu (Acuan):</strong> Parameter di atas menjadi standar acuan resmi perusahaan untuk memantau kecepatan tanggapan atasan terhadap kendala tim. Contoh: jika batas respon atasan langsung diatur {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }} jam kerja, maka kendala yang dilaporkan pukul 09:00 WIB ditargetkan sudah ditanggapi sebelum pukul {{ 9 + Number(policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4) }}:00 WIB.
+            <strong>Panduan Alur Eskalasi Berjenjang &amp; Perbedaannya dengan Tingkat Keparahan (Severity):</strong> (1) <strong>Rantai Wewenang Dinamis:</strong> Jenjang mengikuti posisi pelapor secara otomatis (N+1 → N+2 → Direksi); jika yang melapor adalah Supervisor atau Kepala Divisi, maka jenjang pertamanya langsung atasan di atasnya hingga bermuara di Direktur/CEO, dan jika penanggung jawab sedang cuti/memiliki Reviewer Sementara aktif, kendala otomatis dialihkan. (2) <strong>Berdampingan dengan Severity Kendala:</strong> Parameter di atas mengatur batas waktu tanggap di setiap jenjang jabatan, sedangkan target waktu penyelesaian masalah secara keseluruhan mengikuti tingkat keparahan kendala saat dilaporkan (<em>Critical</em> 2 jam, <em>High</em> 4 jam, <em>Medium</em> 8 jam, <em>Low</em> 24 jam). Khusus kendala <em>Critical</em>, pemberitahuan eskalasi darurat dikirim seketika ke pimpinan tanpa menunggu batas waktu normal.
           </div>
         </div>
       </section>
@@ -916,15 +930,15 @@ onUnmounted(() => {
 
           <div v-else-if="formCategory === 'BLOCKER_SLA'" class="form-row">
             <div class="form-group">
-              <label for="input-sla-l1">Batas Respon Atasan Langsung (Jam Kerja) *</label>
+              <label for="input-sla-l1">Batas Respon Jenjang Pertama (Jam Kerja) *</label>
               <input id="input-sla-l1" v-model="formSlaL1Hours" type="number" min="1" max="24" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-sla-l2">Batas Respon Kepala Divisi (Jam Kerja) *</label>
+              <label for="input-sla-l2">Batas Penanganan Jenjang Lanjutan (Jam Kerja) *</label>
               <input id="input-sla-l2" v-model="formSlaL2Hours" type="number" min="1" max="48" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-sla-auto">Batas Naik ke Atasan Berikutnya (Jam Kerja) *</label>
+              <label for="input-sla-auto">Batas Waktu Naik ke Atasan Berikutnya (Jam Kerja) *</label>
               <input id="input-sla-auto" v-model="formAutoEscalateHours" type="number" min="1" max="24" class="input-control" required />
             </div>
           </div>

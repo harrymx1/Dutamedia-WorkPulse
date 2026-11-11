@@ -73,11 +73,11 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     });
 
     expect(wrapper.text()).toContain('1. Jam Kerja, Batas Pengiriman & Penguncian Cut-Off');
-    expect(wrapper.text()).toContain('2. Target Waktu Penanganan Kendala (Acuan Respon & Eskalasi)');
-    expect(wrapper.text()).toContain('Batas Respon Atasan Langsung');
-    expect(wrapper.text()).toContain('Batas Respon Kepala Divisi');
-    expect(wrapper.text()).toContain('Batas Naik ke Atasan Berikutnya');
-    expect(wrapper.text()).toContain('Jam Hitung Target Waktu');
+    expect(wrapper.text()).toContain('2. Target Waktu Respon & Eskalasi Berjenjang Kendala');
+    expect(wrapper.text()).toContain('Batas Respon Jenjang Pertama');
+    expect(wrapper.text()).toContain('Batas Penanganan Jenjang Lanjutan');
+    expect(wrapper.text()).toContain('Batas Waktu Naik ke Atasan Berikutnya');
+    expect(wrapper.text()).toContain('Jam Kerja Perhitungan Waktu');
     expect(wrapper.text()).toContain('3. Ambang Batas Carry-Over Berulang & Larangan Kunci GREEN');
     expect(wrapper.text()).toContain('4. Kebijakan Hari Bebas Komitmen (Zero-Commitment)');
     expect(wrapper.text()).toContain('5. Penegakan Tanggal Efektif & Larangan Ubah Surut (Anti-Backdating)');

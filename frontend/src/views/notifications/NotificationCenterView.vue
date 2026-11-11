@@ -227,14 +227,60 @@ function formatTime(isoStr: string) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
 }
 
-function isDelegationNotification(type?: string): boolean {
-  return Boolean(type && (type.includes('TEMPORARY_REVIEWER') || type.includes('POLICY')));
+function isDelegationNotification(notifOrType?: NotificationItem | string | null): boolean {
+  if (!notifOrType) return false;
+  if (typeof notifOrType === 'string') {
+    return notifOrType.includes('TEMPORARY_REVIEWER') || notifOrType.includes('POLICY');
+  }
+  const t = notifOrType.type || '';
+  const title = notifOrType.title || '';
+  const msg = notifOrType.message || '';
+  return (
+    t.includes('TEMPORARY_REVIEWER') ||
+    t.includes('POLICY') ||
+    title.includes('Kebijakan') ||
+    msg.includes('\n') ||
+    msg.includes('Kategori Kebijakan:')
+  );
+}
+
+function normalizeStructuredMessage(raw: string): string {
+  if (!raw) return '';
+  let text = raw.replace(/\r\n/g, '\n');
+  if (!text.includes('\n') && text.includes('Kategori Kebijakan:')) {
+    const splitKeys = [
+      'Kategori Kebijakan:',
+      'Mulai Berlaku:',
+      'Batas Tepat Waktu Pagi:',
+      'Batas Kunci Formulir Pagi (Cut-Off):',
+      'Batas Tepat Waktu Sore (EOD):',
+      'Batas Kunci Formulir Sore (EOD Cut-Off):',
+      'Batas Respon Jenjang Pertama:',
+      'Batas Penanganan Jenjang Lanjutan:',
+      'Batas Waktu Naik ke Atasan Berikutnya:',
+      'Batas Respon Atasan Langsung:',
+      'Batas Respon Kepala Divisi:',
+      'Batas Naik ke Atasan Berikutnya:',
+      'Ambang Peringatan Saran AMBER:',
+      'Proteksi Hak Opsi GREEN:',
+      'Batas Maksimal Pengajuan Koreksi:',
+      'Waktu Pengingat:',
+      'Artinya bagi Anda:',
+      'Alasan Perubahan:',
+      'Diubah Oleh:',
+    ];
+    for (const key of splitKeys) {
+      text = text.replace(new RegExp(`\\s+(?=${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g'), '\n');
+    }
+  }
+  return text;
 }
 
 function getNotificationPreview(message: string): string {
   if (!message) return '';
-  if (message.includes('\n')) {
-    const lines = message.split('\n').map((l) => l.trim()).filter(Boolean);
+  const normalized = normalizeStructuredMessage(message);
+  if (normalized.includes('\n')) {
+    const lines = normalized.split('\n').map((l) => l.trim()).filter(Boolean);
     const intro = lines[0] || '';
     const impactLine = lines.find((l) => l.startsWith('Artinya bagi Anda:'));
     if (impactLine) {
@@ -251,9 +297,11 @@ function getActionButtonLabel(actionUrl?: string): string {
   return 'Buka Halaman Terkait';
 }
 
-function getDelegationHeading(type?: string): string {
+function getDelegationHeading(notifOrType?: NotificationItem | string | null): string {
+  const type = typeof notifOrType === 'string' ? notifOrType : (notifOrType?.type || '');
+  const title = typeof notifOrType === 'object' && notifOrType ? (notifOrType.title || '') : '';
+  if (type.includes('POLICY') || title.includes('Kebijakan')) return 'Rincian Perubahan Kebijakan Operasional';
   if (!type) return 'Mandat Wewenang & Tata Kelola Delegasi Reviewer';
-  if (type.includes('POLICY')) return 'Rincian Perubahan Kebijakan Operasional';
   if (type.includes('TEAM_NOTICE')) return 'Rincian Pelimpahan Wewenang Atasan Tim Anda';
   if (type.includes('ASSIGNED')) return 'Rincian Mandat Penugasan Reviewer Sementara';
   if (type.includes('DELEGATED')) return 'Rincian Mandat Pelimpahan Wewenang Peninjauan';
@@ -278,10 +326,11 @@ function parseDelegationContent(message: string): DelegationParsedContent {
 
   let introText = '';
   const items: DelegationLineItem[] = [];
+  const normalized = normalizeStructuredMessage(message);
 
   // 1. Jika pesan sudah berformat newline (format baru terstruktur)
-  if (message.includes('\n')) {
-    const rawLines = message.split('\n').map(l => l.trim()).filter(Boolean);
+  if (normalized.includes('\n')) {
+    const rawLines = normalized.split('\n').map(l => l.trim()).filter(Boolean);
     for (let lineIdx = 0; lineIdx < rawLines.length; lineIdx++) {
       const line = rawLines[lineIdx];
       const colonIdx = line.indexOf(':');
@@ -302,8 +351,15 @@ function parseDelegationContent(message: string): DelegationParsedContent {
       }
 
       if (colonIdx !== -1) {
-        const label = line.substring(0, colonIdx).trim();
-        const value = line.substring(colonIdx + 1).trim();
+        let label = line.substring(0, colonIdx).trim();
+        let value = line.substring(colonIdx + 1).trim();
+
+        // Normalisasi label lama dan bersihkan awalan "Tetap " agar tampilan selalu rapi
+        if (label === 'Batas Respon Atasan Langsung') label = 'Batas Respon Jenjang Pertama';
+        if (label === 'Batas Respon Kepala Divisi') label = 'Batas Penanganan Jenjang Lanjutan';
+        if (label === 'Batas Naik ke Atasan Berikutnya') label = 'Batas Waktu Naik ke Atasan Berikutnya';
+        value = value.replace(/^Tetap\s+/i, '');
+
         const isHighlight = [
           'Mandat',
           'Wewenang',
@@ -317,6 +373,8 @@ function parseDelegationContent(message: string): DelegationParsedContent {
           'Batas Tepat Waktu',
           'Batas Kunci',
           'Batas Respon',
+          'Batas Penanganan',
+          'Batas Waktu Naik',
           'Batas Naik',
           'Ambang Peringatan',
           'Batas Maksimal',
@@ -638,8 +696,8 @@ onMounted(() => {
           </div>
           <div class="modal-body">
             <h4 class="modal-title">{{ selectedNotification.title }}</h4>
-            <!-- Teks deskripsi umum HANYA jika bukan notifikasi delegasi reviewer -->
-            <p v-if="!isDelegationNotification(selectedNotification.type)" class="modal-desc">
+            <!-- Teks deskripsi umum HANYA jika bukan notifikasi terstruktur -->
+            <p v-if="!isDelegationNotification(selectedNotification)" class="modal-desc">
               {{ selectedNotification.message }}
             </p>
 
@@ -652,11 +710,11 @@ onMounted(() => {
               <p class="callout-body">"{{ sharedNoteDetail.content }}"</p>
             </div>
 
-            <!-- Box Rincian Khusus Pendelegasian Wewenang jika tipe TEMPORARY_REVIEWER -->
-            <div v-if="isDelegationNotification(selectedNotification.type)" class="delegation-note-callout">
+            <!-- Box Rincian Khusus Pendelegasian Wewenang & Perubahan Kebijakan -->
+            <div v-if="isDelegationNotification(selectedNotification)" class="delegation-note-callout">
               <div class="callout-head">
                 <ShieldCheck :size="18" class="callout-icon" />
-                <strong>{{ getDelegationHeading(selectedNotification.type) }}</strong>
+                <strong>{{ getDelegationHeading(selectedNotification) }}</strong>
               </div>
 
               <!-- Kalimat Pengantar Personal Spesifik -->
@@ -1162,6 +1220,7 @@ h1 {
   color: #3F524A;
   line-height: 1.5;
   margin-bottom: 14px;
+  white-space: pre-line;
 }
 
 .modal-detail-box {

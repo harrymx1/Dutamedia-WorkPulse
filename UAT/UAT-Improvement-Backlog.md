@@ -1362,65 +1362,70 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 ---
 
-### [IMP-063] Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`)
+### [IMP-063] Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`) & Validasi Anti-Duplikasi Parameter
 - **Finding ID:** IMP-063
-- **Title:** Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`)
+- **Title:** Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`) & Validasi Anti-Duplikasi Parameter
 - **Category:** Notification Transparency & Stakeholder Communication
-- **Page / Module:** Backend `PolicyService.createPolicyVersion` & Frontend Pusat Notifikasi (`NotificationCenterView.vue`)
+- **Page / Module:** Backend `PolicyService.createPolicyVersion` & Frontend Pusat Notifikasi (`NotificationCenterView.vue`), `PolicySettingsView.vue`
 - **Related Test Case:** `TC-ADMN-004`, `TC-NOTF-001`
-- **Current Condition:** Perubahan parameter kebijakan operasional (seperti jam cut-off komitmen pagi/sore atau target waktu penanganan kendala) hanya menampilkan toast sukses pada layar pembuat kebijakan (Admin), tanpa mengirimkan pemberitahuan In-App kepada karyawan dan manajer yang terdampak langsung.
+- **Current Condition:**
+  1. Perubahan parameter kebijakan operasional (seperti jam cut-off komitmen pagi/sore atau target waktu penanganan kendala) hanya menampilkan toast sukses pada layar pembuat kebijakan (Admin), tanpa mengirimkan pemberitahuan In-App kepada karyawan dan manajer yang terdampak langsung.
+  2. Jika Admin menyimpan ulang nilai parameter yang sama persis dengan kebijakan aktif saat ini, sistem tetap membuat versi duplikat dan menampilkan tulisan `"Tetap ..."` di seluruh baris rincian.
+  3. Di Pusat Notifikasi, pesan yang dimuat sebelum penyegaran atau dalam satu paragraf dapat tampil menyatu tanpa pemisahan baris yang rapi.
 - **Proposed Improvement:**
   1. Setiap kali versi kebijakan baru berhasil diterbitkan melalui `PolicyService.createPolicyVersion`, sistem mengirimkan notifikasi `POLICY_UPDATED` secara otomatis (`prisma.notification.createMany`) kepada seluruh pengguna berstatus `ACTIVE`, kecuali pembuat perubahan dan akun `SYSTEM_ADMIN`.
-  2. Isi notifikasi disusun terstruktur per kategori kebijakan, mencakup kalimat pengantar waktu berlaku ("berlaku mulai sekarang" jika tanggal efektif hari ini, atau tanggal spesifik jika masa depan), perbandingan nilai sebelum dan sesudah (`09:00 → 09:30 WIB`), panduan dampak praktis (`Artinya bagi Anda: ...`), alasan perubahan, serta nama pejabat pengubah.
-  3. Di `NotificationCenterView.vue`, notifikasi `POLICY_UPDATED` dirender dalam kartu rincian terstruktur (`Rincian Perubahan Kebijakan Operasional`) dengan tombol aksi kontekstual **`Buka Morning Commitment`** khusus untuk perubahan jadwal cut-off (`CHECKIN_TIMING`).
-  4. Pengiriman notifikasi dibungkus blok `try/catch` terisolasi agar tidak pernah menggagalkan transaksi penyimpanan kebijakan utama.
-- **Rationale / Expected Benefit:** Menjamin seluruh anggota organisasi langsung mengetahui perubahan aturan jam kerja dan batas pengisian tanpa risiko terlewatnya batas waktu akibat ketidaktahuan.
+  2. Menambahkan validasi anti-duplikasi (*No-Op Validation*) di frontend (`PolicySettingsView.vue`) dan backend (`PolicyService.createPolicyVersion`) yang menolak penyimpanan versi baru apabila seluruh nilai parameter sama persis dengan kebijakan non-ilustratif yang sedang berlaku.
+  3. Menyempurnakan `buildPolicyNotificationPayload` agar hanya menampilkan baris parameter yang benar-benar berubah (`Nilai Lama → Nilai Baru`) tanpa kata `"Tetap ..."`.
+  4. Di `NotificationCenterView.vue`, memperluas pendeteksi kartu terstruktur (`isDelegationNotification` & `normalizeStructuredMessage`) agar mendukung seluruh notifikasi kebijakan (termasuk pemecahan otomatis teks satu paragraf menjadi tabel `Label : Nilai` yang rapi dan penambahan `white-space: pre-line` pada `.modal-desc`) serta tombol aksi kontekstual **`Buka Morning Commitment`** untuk `CHECKIN_TIMING`.
+- **Rationale / Expected Benefit:** Menjamin seluruh anggota organisasi langsung mengetahui perubahan aturan jam kerja dan batas pengisian dengan tampilan rincian yang bersih, terstruktur, dan bebas duplikasi.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** Masukan Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026).
+- **Evidence / Screenshot Reference:** Masukan Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026): `media_1794369069180_c9a62839.jpg`.
 - **Status:** Resolved / Implemented (Backend & Frontend Synced)
 
 ---
 
-### [IMP-064] Penyederhanaan Istilah "Target Waktu Penanganan Kendala" & Penyelarasan Deskripsi Acuan Tanpa Klaim Semu (Opsi A)
+### [IMP-064] Penyelarasan Konsep "Target Waktu Respon & Eskalasi Berjenjang Kendala" (Bebas Bias Jabatan, Pemisahan dari Severity, & Smart Routing Kondisi Khusus)
 - **Finding ID:** IMP-064
-- **Title:** Penyederhanaan Istilah "Target Waktu Penanganan Kendala" & Penyelarasan Deskripsi Acuan Tanpa Klaim Semu (Opsi A)
-- **Category:** Copywriting, Clarity & Functional Honesty
-- **Page / Module:** Halaman Pengaturan Kebijakan Sistem (`/admin/policies` — `PolicySettingsView.vue`)
-- **Related Test Case:** `TC-ADMN-004`
+- **Title:** Penyelarasan Konsep "Target Waktu Respon & Eskalasi Berjenjang Kendala" (Bebas Bias Jabatan, Pemisahan dari Severity, & Smart Routing Kondisi Khusus)
+- **Category:** Copywriting, Clarity & Governance Logic Enhancement
+- **Page / Module:** Halaman Pengaturan Kebijakan Sistem (`/admin/policies` — `PolicySettingsView.vue`) & `BlockerService` (`blocker.service.ts`)
+- **Related Test Case:** `TC-ADMN-004`, `TC-BLKR-001`
 - **Current Condition:**
-  1. Penggunaan singkatan teknis "SLA Blocker L1 / L2", "Auto-Escalation Threshold", dan "Jam Kerja Tanpa Ack" kurang ramah dan sulit dipahami maknanya secara instan oleh pengguna non-teknis.
-  2. Teks kartu ke-3 menyatakan seolah sistem melakukan penaikan status eskalasi otomatis berdasarkan parameter jam kerja tersebut, padahal di kode backend saat ini parameter `level1Hours`, `level2Hours`, dan `autoEscalateAfterHours` baru berfungsi sebagai standar acuan target respon.
+  1. Penggunaan singkatan teknis "SLA Blocker L1 / L2", "Auto-Escalation Threshold", dan "Jam Kerja Tanpa Ack" kurang ramah bagi pengguna non-teknis.
+  2. Penamaan kaku berbasis jabatan ("Atasan Langsung / Supervisor" vs "Kepala Divisi") menimbulkan ambiguitas ketika pelapor adalah Supervisor, Kepala Divisi, atau berada di divisi pipih tanpa Supervisor, serta menimbulkan kesan keliru seolah kendala dijamin pasti selesai di tingkat Kepala Divisi.
+  3. Saat atasan langsung sedang cuti resmi (`APPROVED` Leave) atau memiliki *Reviewer Sementara* aktif, penugasan otomatis kendala belum mengalihkan kepemilikan awal secara cerdas; dan kendala `CRITICAL` belum mengirimkan eskalasi darurat paralel ke jenjang pimpinan di atasnya.
 - **Proposed Improvement:**
-  1. Mengganti istilah teknis SLA dengan bahasa Indonesia yang lugas dan konkret:
-     - `SLA Penanganan Kendala (Blocker SLA)` → **`Target Waktu Penanganan Kendala`**
-     - `SLA Level 1 (Supervisor)` → **`Batas Respon Atasan Langsung`**
-     - `SLA Level 2 (Head of Department)` → **`Batas Respon Kepala Divisi`**
-     - `Auto-Escalation Threshold` → **`Batas Naik ke Atasan Berikutnya`**
-     - `Jam Kerja Tanpa Ack` → **`jam kerja tanpa ditanggapi`**
-     - `Kalkulasi Jam Operasional SLA` → **`Jam Hitung Target Waktu`**
-  2. Menambahkan definisi pembuka yang jelas di Seksi 2 (*"Target waktu = batas lama sebuah kendala (blocker) boleh dibiarkan tanpa tanggapan sebelum perlu dinaikkan ke atasan berikutnya"*) beserta kotak panduan contoh nyata (Opsi A) yang jujur menjelaskan fungsinya sebagai standar acuan respon.
-  3. Menormalisasi perhitungan `todayStr` pada modal kebijakan menggunakan zona waktu `Asia/Jakarta` agar pemilihan tanggal efektif antara pukul 00:00–07:00 WIB selalu sinkron dengan server.
-- **Rationale / Expected Benefit:** Membuat halaman kebijakan langsung mudah dipahami siapa saja dan menjaga kejujuran informasi antarmuka terhadap perilaku aktual sistem.
+  1. Menggunakan penamaan jenjang wewenang yang jelas, universal (`N+1 → N+2 → Direksi`), dan bebas bias jabatan di `/admin/policies`:
+     - **`2. Target Waktu Respon & Eskalasi Berjenjang Kendala`**
+     - Kartu 1: **`Batas Respon Jenjang Pertama`** *(Penanggung Jawab Awal)*
+     - Kartu 2: **`Batas Penanganan Jenjang Lanjutan`** *(Pimpinan di Atasnya — jika melewati batas ini belum tuntas, naik hingga Direksi dan berstatus Lewat Batas Waktu)*
+     - Kartu 3: **`Batas Waktu Naik ke Atasan Berikutnya`** *(Naik Otomatis — `jam kerja tanpa ditanggapi`)*
+     - Kartu 4: **`Jam Kerja Perhitungan Waktu`** *(`09:00 - 17:00 WIB`, Senin–Jumat)*
+  2. Menambahkan kotak panduan yang menjelaskan secara tegas perbedaan antara **Waktu Tahapan Eskalasi Berjenjang** (disiplin tanggap rantai komando) dan **Waktu Berdasarkan Tingkat Keparahan / *Severity*** (*Critical* 2 jam, *High* 4 jam, *Medium* 8 jam, *Low* 24 jam).
+  3. Menyuntikkan 3 kecerdasan penanganan kondisi khusus di `BlockerService` (`blocker.service.ts`):
+     - **Otomatis Alihkan Saat Cuti / Reviewer Sementara Aktif:** Jika atasan langsung memiliki *Reviewer Sementara* aktif, arahkan ke Reviewer Sementara; jika sedang cuti resmi (`APPROVED` Leave) tanpa delegasi, otomatis lompati (*bypass*) ke atasan satu tingkat di atasnya (`N+1 → N+2 → CEO`). Memberikan juga wewenang tindakan blocker kepada *Reviewer Sementara* aktif di `verifyBlockerActionAuthority`.
+     - **Rantai Atasan Dinamis Sampai Direksi/CEO:** Mendukung pelapor dari semua jenjang (termasuk Supervisor, Kepala Divisi, atau struktur pipih) hingga bermuara di `CEO_MANAGEMENT`.
+     - **Eskalasi Paralel Seketika untuk Kendala `CRITICAL`:** Mengirimkan notifikasi darurat `BLOCKER_CRITICAL_ESCALATION` secara paralel ke pimpinan jenjang berikutnya pada detik laporan dibuat tanpa menunggu batas waktu normal.
+- **Rationale / Expected Benefit:** Menghadirkan tata kelola eskalasi kendala yang logis, tahan terhadap kondisi organisasi tak terduga di dunia nyata, dan mudah dipahami seluruh pengguna.
 - **Priority:** High
-- **Evidence / Screenshot Reference:** Masukan Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026): `media_1794362828261_68abc049.png`, `media_1794362845321_3fac81f0.png`.
-- **Status:** Resolved / Implemented (Frontend Synced)
+- **Evidence / Screenshot Reference:** Diskusi Kritis & Masukan Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026): `media_1794362828261_68abc049.png`, `media_1794362845321_3fac81f0.png`.
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
 
 ---
 
-### [IMP-065] Integrasi Mesin Auto-Eskalasi Blocker Berjenjang (Tahap 1 ke Tahap 2) Berdasarkan Parameter Jam Kerja Kebijakan (Opsi B — Post-UAT Roadmap)
+### [IMP-065] Mesin Cron Penjadwalan Jeda Jam Kerja Operasional & Pemindahan Otomatis *Acknowledge-and-Stall* (Opsi B — Post-UAT Roadmap)
 - **Finding ID:** IMP-065
-- **Title:** Integrasi Mesin Auto-Eskalasi Blocker Berjenjang (Tahap 1 ke Tahap 2) Berdasarkan Parameter Jam Kerja Kebijakan (Opsi B — Post-UAT Roadmap)
-- **Category:** Backend Business Logic & Background Scheduler Enhancement
+- **Title:** Mesin Cron Penjadwalan Jeda Jam Kerja Operasional & Pemindahan Otomatis *Acknowledge-and-Stall* (Opsi B — Post-UAT Roadmap)
+- **Category:** Backend Background Scheduler & Database Schema Evolution
 - **Page / Module:** `BlockerService`, `PolicyService`, & Background Cron/Worker Eskalasi
 - **Related Test Case:** `TC-ADMN-004`, `TC-BLKR-004`
-- **Current Condition:** Parameter kebijakan `BLOCKER_SLA` (`level1Hours`, `level2Hours`, `autoEscalateAfterHours`, `operatingHoursStart`, `operatingHoursEnd`, `countWeekends`) telah tersimpan secara berversi di database dan tampil sebagai acuan di UI (Opsi A via `IMP-064`), namun kalkulasi penuaan blocker di `BlockerService` saat ini baru membaca `severityMinutes` dan belum menjalankan penaikan eskalasi otomatis dari Atasan Langsung (Tahap 1) ke Kepala Divisi (Tahap 2) berdasarkan jam operasional kerja (`09:00–17:00 WIB` Senin–Jumat).
+- **Current Condition:** Penugasan awal cerdas (pengalihan otomatis saat cuti/Reviewer Sementara, rantai dinamis hingga CEO, dan eskalasi paralel instan untuk kendala `CRITICAL`) telah diimplementasikan melalui `IMP-064`. Namun, pemindahan kepemilikan tiket secara otomatis di latar belakang (*background cron worker*) saat tiket mengalami *Acknowledge-and-Stall* (sudah ditanggapi tapi macet melewati batas jam kerja efektif) serta kalkulator jeda jam kerja malam/akhir pekan/hari libur nasional menit-demi-menit membutuhkan worker terjadwal dan kolom riwayat perpindahan tangan di database.
 - **Proposed Improvement:**
-  1. Menghubungkan `BlockerService` dan scheduler eskalasi dengan parameter aktif `BLOCKER_SLA` (`level1Hours`, `level2Hours`, `autoEscalateAfterHours`).
-  2. Menghitung durasi jam kerja efektif (*operating hours calculator* Senin–Jumat `09:00–17:00 WIB`, menjeda perhitungan di malam hari dan akhir pekan/libur nasional).
-  3. Menaikkan status eskalasi blocker secara otomatis ke Kepala Divisi / Escalation Reviewer (`BLOCKER_ESCALATED_L2`) apabila kendala belum ditanggapi (`acknowledged`) melewati `autoEscalateAfterHours` jam kerja.
-- **Rationale / Expected Benefit:** Mewujudkan otomatisasi eskalasi kendala berjenjang secara penuh sesuai parameter kebijakan dinamis pasca-penyelesaian UAT.
+  1. Membangun *Operating Hours Calculator* yang menjeda argo waktu eskalasi di luar jam `09:00–17:00 WIB` Senin–Jumat serta pada tanggal yang terdaftar di `CompanyHoliday`.
+  2. Membangun *Background Escalation Worker* yang secara berkala memeriksa tiket berstatus `OPEN` (melewati `autoEscalateAfterHours` jam kerja) maupun `ACKNOWLEDGED / IN_PROGRESS` yang macet (melewati `level1Hours` / `level2Hours` jam kerja tanpa penyelesaian), lalu menaikkan `autoEscalationLevel` dan memindahkan/menambahkan tanggung jawab ke pimpinan jenjang berikutnya hingga `CEO_MANAGEMENT`.
+- **Rationale / Expected Benefit:** Mewujudkan otomatisasi penuh penegakan waktu eskalasi berjenjang di latar belakang pasca-penyelesaian UAT tanpa membahayakan kestabilan skema database UAT berjalan.
 - **Priority:** Medium (Post-UAT Roadmap)
-- **Evidence / Screenshot Reference:** Keputusan Arsitektur Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026 — Opsi B dicatat resmi agar tidak terlupakan ke depannya).
+- **Evidence / Screenshot Reference:** Keputusan Arsitektur Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026).
 - **Status:** Candidate Improvement (Post-UAT Roadmap)
 
 ---

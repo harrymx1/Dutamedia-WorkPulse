@@ -105,6 +105,79 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
 
       expect(result.id).toBe('blk-1');
     });
+
+    it('sends immediate parallel escalation notification to next authority when severity is CRITICAL', async () => {
+      const dto = {
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.CRITICAL,
+        impact: BlockerImpact.PRODUCTION,
+        description: 'Database produksi tidak dapat diakses oleh seluruh layanan',
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        assignedOwnerId: 'sup-1',
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'sup-1', fullName: 'Bambang Supervisor' });
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue({
+          userId: 'sup-1',
+          role: 'SUPERVISOR',
+          directManagerId: 'head-1',
+        }),
+      };
+      mockPrisma.blockerTicket.create.mockResolvedValue({
+        id: 'blk-crit-1',
+        status: BlockerStatus.OPEN,
+        ...dto,
+      });
+
+      await service.raiseBlocker('usr-1', dto as any);
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'head-1',
+            triggerType: 'BLOCKER_CRITICAL_ESCALATION',
+          }),
+        }),
+      );
+    });
+
+    it('routes suggested owner to next manager up the chain when direct manager is on APPROVED leave', async () => {
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({
+            userId: 'emp-1',
+            function: 'EngineeringProduct',
+            directManagerId: 'sup-on-leave',
+          })
+          .mockResolvedValueOnce({
+            userId: 'sup-on-leave',
+            function: 'EngineeringProduct',
+            directManagerId: 'head-active',
+          }),
+      };
+      mockPrisma.leaveRequest = {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ id: 'lv-1', userId: 'sup-on-leave', status: 'APPROVED' })
+          .mockResolvedValueOnce(null),
+      };
+      mockPrisma.user.findFirst = vi.fn().mockResolvedValue({
+        id: 'head-active',
+        fullName: 'Arif Budiman',
+        orgAssignments: [{ jobTitle: 'Head of Engineering' }],
+      });
+
+      const suggestion = await service.resolveSuggestedOwner('emp-1', {
+        type: 'TECHNICAL',
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      });
+
+      expect(suggestion.owner?.id).toBe('head-active');
+      expect(suggestion.reason).toBe('DIRECT_MANAGER');
+    });
   });
 
   describe('acknowledge and resolve', () => {

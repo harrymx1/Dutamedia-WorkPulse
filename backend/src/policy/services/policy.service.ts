@@ -145,6 +145,24 @@ export class PolicyService {
         orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
       });
 
+      if (currentActive && !currentActive.isIllustrative) {
+        const prevCfg = (currentActive.configurationValues as Record<string, any>) || {};
+        const nextCfg = (dto.configurationValues as Record<string, any>) || {};
+        const nextKeys = Object.keys(nextCfg);
+        const isIdentical =
+          nextKeys.length > 0 &&
+          nextKeys.every((k) => String(prevCfg[k]) === String(nextCfg[k]));
+
+        if (isIdentical) {
+          throw new AppException({
+            code: ErrorCode.VALIDATION_FAILED,
+            message:
+              'Tidak ada perubahan nilai parameter dibandingkan kebijakan yang sedang berlaku saat ini.',
+            statusCode: HttpStatus.BAD_REQUEST,
+          });
+        }
+      }
+
       if (currentActive && currentActive.effectiveDate < effectiveDate) {
         // Tutup kebijakan sebelumnya pada hari sebelum tanggal efektif baru
         const previousEndDate = new Date(effectiveDate);
@@ -307,12 +325,25 @@ export class PolicyService {
       ? `${effDateLabel} (Berlaku Mulai Sekarang)`
       : `Mulai ${effDateLabel}`;
 
-    const diffVal = (oldVal: any, newVal: any, unit = '') => {
-      const sfx = unit ? ` ${unit}` : '';
-      if (oldVal !== undefined && oldVal !== null && String(oldVal) !== String(newVal)) {
-        return `${oldVal} → ${newVal}${sfx}`;
+    const buildChangedLines = (
+      fields: Array<{ label: string; oldVal: any; newVal: any; unit?: string }>,
+    ): string[] => {
+      const changed = fields
+        .filter((f) => f.oldVal !== undefined && f.oldVal !== null && String(f.oldVal) !== String(f.newVal))
+        .map((f) => {
+          const sfx = f.unit ? ` ${f.unit}` : '';
+          return `${f.label}: ${f.oldVal} → ${f.newVal}${sfx}`;
+        });
+
+      if (changed.length > 0) {
+        return changed;
       }
-      return `Tetap ${newVal}${sfx}`;
+
+      // Fallback bila konfirmasi perdana dari nilai awal: tampilkan nilai aktif tanpa kata "Tetap"
+      return fields.map((f) => {
+        const sfx = f.unit ? ` ${f.unit}` : '';
+        return `${f.label}: ${f.newVal}${sfx}`;
+      });
     };
 
     if (category === PolicyCategory.CHECKIN_TIMING) {
@@ -325,14 +356,18 @@ export class PolicyService {
         ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), jam batas pengisian komitmen pagi dan evaluasi sore telah diperbarui.`
         : `Mulai ${effDateLabel}, jam batas pengisian komitmen pagi dan evaluasi sore akan disesuaikan dengan jadwal baru.`;
 
+      const paramLines = buildChangedLines([
+        { label: 'Batas Tepat Waktu Pagi', oldVal: before.morningOnTimeCutoff, newVal: mOnTime, unit: 'WIB' },
+        { label: 'Batas Kunci Formulir Pagi (Cut-Off)', oldVal: before.morningLockCutoff, newVal: mCutoff, unit: 'WIB' },
+        { label: 'Batas Tepat Waktu Sore (EOD)', oldVal: before.eodOnTimeCutoff, newVal: eOnTime, unit: 'WIB' },
+        { label: 'Batas Kunci Formulir Sore (EOD Cut-Off)', oldVal: before.eodLockCutoff, newVal: eCutoff, unit: 'WIB' },
+      ]);
+
       const message = [
         intro,
         'Kategori Kebijakan: Jam Kerja & Batas Pengiriman (Cut-Off)',
         `Mulai Berlaku: ${effectiveDisplay}`,
-        `Batas Tepat Waktu Pagi: ${diffVal(before.morningOnTimeCutoff, mOnTime, 'WIB')}`,
-        `Batas Kunci Formulir Pagi (Cut-Off): ${diffVal(before.morningLockCutoff, mCutoff, 'WIB')}`,
-        `Batas Tepat Waktu Sore (EOD): ${diffVal(before.eodOnTimeCutoff, eOnTime, 'WIB')}`,
-        `Batas Kunci Formulir Sore (EOD Cut-Off): ${diffVal(before.eodLockCutoff, eCutoff, 'WIB')}`,
+        ...paramLines,
         `Artinya bagi Anda: Isi Morning Commitment sebelum pukul ${mOnTime} WIB agar tercatat tepat waktu (formulir terkunci pukul ${mCutoff} WIB), serta EOD Outcome sebelum pukul ${eOnTime} WIB.`,
         `Alasan Perubahan: "${changeJustification}"`,
         `Diubah Oleh: ${issuerName}`,
@@ -351,17 +386,21 @@ export class PolicyService {
       const esc = after.autoEscalateAfterHours ?? 4;
 
       const intro = isEffectiveToday
-        ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), acuan Target Waktu Penanganan Kendala (Blocker) telah diperbarui.`
-        : `Mulai ${effDateLabel}, acuan Target Waktu Penanganan Kendala (Blocker) akan disesuaikan.`;
+        ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), aturan Target Waktu Respon & Eskalasi Berjenjang Kendala (Blocker) telah diperbarui.`
+        : `Mulai ${effDateLabel}, aturan Target Waktu Respon & Eskalasi Berjenjang Kendala (Blocker) akan disesuaikan.`;
+
+      const paramLines = buildChangedLines([
+        { label: 'Batas Respon Jenjang Pertama', oldVal: before.level1Hours, newVal: l1, unit: 'Jam Kerja' },
+        { label: 'Batas Penanganan Jenjang Lanjutan', oldVal: before.level2Hours, newVal: l2, unit: 'Jam Kerja' },
+        { label: 'Batas Waktu Naik ke Atasan Berikutnya', oldVal: before.autoEscalateAfterHours, newVal: esc, unit: 'Jam Kerja tanpa ditanggapi' },
+      ]);
 
       const message = [
         intro,
         'Kategori Kebijakan: Target Waktu Penanganan Kendala',
         `Mulai Berlaku: ${effectiveDisplay}`,
-        `Batas Respon Atasan Langsung: ${diffVal(before.level1Hours, l1, 'Jam Kerja')}`,
-        `Batas Respon Kepala Divisi: ${diffVal(before.level2Hours, l2, 'Jam Kerja')}`,
-        `Batas Naik ke Atasan Berikutnya: ${diffVal(before.autoEscalateAfterHours, esc, 'Jam Kerja tanpa ditanggapi')}`,
-        `Artinya bagi Anda: Kendala yang dilaporkan ditargetkan mendapat tanggapan awal atasan langsung dalam ${l1} jam kerja dan penyelesaian tingkat divisi dalam ${l2} jam kerja (dihitung Senin–Jumat pukul 09:00–17:00 WIB).`,
+        ...paramLines,
+        `Artinya bagi Anda: Kendala yang dilaporkan wajib mulai ditanggapi penanggung jawab pertama dalam ${l1} jam kerja (jika tidak ditanggapi dalam ${esc} jam kerja otomatis naik ke atasan di atasnya), dengan batas penanganan jenjang lanjutan ${l2} jam kerja (dihitung Senin–Jumat pukul 09:00–17:00 WIB).`,
         `Alasan Perubahan: "${changeJustification}"`,
         `Diubah Oleh: ${issuerName}`,
       ].join('\n');
@@ -379,11 +418,15 @@ export class PolicyService {
         ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), aturan Ambang Batas Tugas Berlanjut (Carry-Over) telah diperbarui.`
         : `Mulai ${effDateLabel}, aturan Ambang Batas Tugas Berlanjut (Carry-Over) akan disesuaikan.`;
 
+      const paramLines = buildChangedLines([
+        { label: 'Ambang Peringatan Saran AMBER', oldVal: before.carryOverAmberDays, newVal: days, unit: 'Hari Berturut-turut' },
+      ]);
+
       const message = [
         intro,
         'Kategori Kebijakan: Ambang Batas Carry-Over Berulang',
         `Mulai Berlaku: ${effectiveDisplay}`,
-        `Ambang Peringatan Saran AMBER: ${diffVal(before.carryOverAmberDays, days, 'Hari Berturut-turut')}`,
+        ...paramLines,
         'Proteksi Hak Opsi GREEN: Bebas Dipilih (Tidak Terkunci)',
         `Artinya bagi Anda: Tugas yang berlanjut (Continue) selama ${days} hari berturut-turut akan memunculkan saran status AMBER sebagai bahan refleksi mandiri.`,
         `Alasan Perubahan: "${changeJustification}"`,
@@ -403,11 +446,15 @@ export class PolicyService {
         ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), batas waktu pengajuan koreksi komitmen dan evaluasi telah diperbarui.`
         : `Mulai ${effDateLabel}, batas waktu pengajuan koreksi komitmen dan evaluasi akan disesuaikan.`;
 
+      const paramLines = buildChangedLines([
+        { label: 'Batas Maksimal Pengajuan Koreksi', oldVal: before.maxCorrectionDays, newVal: maxDays, unit: 'Hari Kerja' },
+      ]);
+
       const message = [
         intro,
         'Kategori Kebijakan: Jendela Pengajuan Koreksi',
         `Mulai Berlaku: ${effectiveDisplay}`,
-        `Batas Maksimal Pengajuan Koreksi: ${diffVal(before.maxCorrectionDays, maxDays, 'Hari Kerja')}`,
+        ...paramLines,
         `Artinya bagi Anda: Permohonan koreksi komitmen pagi atau evaluasi sore dapat diajukan maksimal ${maxDays} hari sejak tanggal kerja terkait.`,
         `Alasan Perubahan: "${changeJustification}"`,
         `Diubah Oleh: ${issuerName}`,

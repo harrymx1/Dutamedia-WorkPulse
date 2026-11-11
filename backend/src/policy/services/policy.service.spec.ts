@@ -207,6 +207,39 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
           }),
         ]),
       });
+
+      const createdNotifData = mockPrisma.notification.createMany.mock.calls[0][0].data[0];
+      expect(createdNotifData.message).not.toContain('Tetap ');
+    });
+
+    it('rejects policy update when no parameter values changed compared to active non-illustrative policy', async () => {
+      const dto = {
+        category: PolicyCategory.BLOCKER_SLA,
+        configurationValues: {
+          level1Hours: 4,
+          level2Hours: 8,
+          autoEscalateAfterHours: 4,
+        },
+        effectiveDate: '2026-10-28',
+        changeJustification: 'Menyimpan ulang nilai kebijakan yang sama persis',
+      };
+
+      mockPrisma.policy.findFirst.mockResolvedValue({
+        id: 'active-sla-1',
+        category: PolicyCategory.BLOCKER_SLA,
+        configurationValues: {
+          level1Hours: 4,
+          level2Hours: 8,
+          autoEscalateAfterHours: 4,
+        },
+        isIllustrative: false,
+        effectiveDate: new Date('2026-10-01'),
+        endDate: null,
+      });
+
+      await expect(
+        service.createPolicyVersion('usr-admin', dto),
+      ).rejects.toThrowError(AppException);
     });
   });
 });
