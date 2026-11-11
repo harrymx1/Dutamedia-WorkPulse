@@ -61,6 +61,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
         { path: '/notifications', component: NotificationCenterView },
         { path: '/admin/notifications', component: { template: '<div>Admin Notif</div>' } },
         { path: '/daily/morning', component: { template: '<div>Morning</div>' } },
+        { path: '/blockers', component: { template: '<div>Blocker Queue</div>' } },
       ],
     });
   });
@@ -310,6 +311,60 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
 
     await wrapper.find('.modal-backdrop').trigger('click');
     expect(wrapper.find('.modal-card').exists()).toBe(false);
+  });
+
+  it('renders "Buka Antrean Eskalasi Blocker" button inside modal for EMPLOYEE with active Temporary Reviewer delegation', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-siti',
+      fullName: 'Siti Rahma',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+      isTemporaryReviewer: true,
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-blocker-siti',
+              title: 'Kendala Baru Dialokasikan: HIGH Impact TASK',
+              message:
+                '[Blocker #7c32ef7b] Aditya Nugroho melaporkan kendala TECHNICAL (Severity: HIGH): "[UAT-C2] Kendala Integrasi Redis Cache saat Atasan Cuti". Mohon segera lakukan peninjauan (Acknowledge) sesuai target waktu penanganan.',
+              type: 'BLOCKER_RAISED',
+              channel: 'IN_APP_CENTER',
+              read: false,
+              actionUrl: '/blockers',
+              createdAt: '2026-11-11T07:36:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wrapper.find('.notif-item').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.modal-card').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Buka Antrean Eskalasi Blocker');
   });
 });
 

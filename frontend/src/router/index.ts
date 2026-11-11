@@ -129,13 +129,13 @@ const routes: RouteRecordRaw[] = [
     path: '/blockers',
     name: 'blockers-queue',
     component: BlockerQueueView,
-    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true },
   },
   {
     path: '/blockers/aging',
     name: 'blockers-aging',
     component: EscalationAgingView,
-    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true },
+    meta: { requiresAuth: true, roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true },
   },
   {
     path: '/coaching',

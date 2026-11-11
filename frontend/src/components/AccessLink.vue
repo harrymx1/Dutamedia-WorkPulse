@@ -15,6 +15,7 @@ import { computed } from 'vue';
 import { useRouter, type RouteLocationRaw } from 'vue-router';
 import { getActivePinia } from 'pinia';
 import { useAuthStore } from '../stores/auth';
+import { canAccessRoute } from '../router/navigation';
 
 defineOptions({ inheritAttrs: false });
 
@@ -39,9 +40,12 @@ const allowed = computed(() => {
   if (!resolved.matched.length) return false;
   const last = resolved.matched[resolved.matched.length - 1];
   if (last.meta?.errorKind === 'not-found') return false;
+  if (authUser) {
+    return canAccessRoute(resolved.path, authUser);
+  }
   const roles = resolved.meta.roles as string[] | undefined;
   if (!roles) return true;
-  return !!authUser?.role && roles.includes(authUser.role);
+  return false;
 });
 </script>
 

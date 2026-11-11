@@ -110,9 +110,9 @@ export interface ProjectAuthorityInfo {
 // Options & Reference Data
 const todayCommitments = ref<Array<{ id: string; taskText: string; sequenceNumber: number }>>([]);
 const availableProjects = ref([
-  { code: 'PRJ-PORTAL', name: 'Website Customer Portal & Client Billing' },
-  { code: 'PRJ-CORE', name: 'Enterprise Core Engine & Identity Sync' },
-  { code: 'PRJ-MOBILE', name: 'WorkPulse Mobile Apps — iOS & Android' },
+  { code: 'PRJ-PORTAL', name: 'Dutamedia Client Portal v2.4' },
+  { code: 'PRJ-CORE', name: 'Core Banking Settlement Engine' },
+  { code: 'PRJ-MOBILE', name: 'Customer SuperApp Mobile' },
   { code: 'WP-CORE', name: 'WorkPulse Platform Core 2026' },
 ]);
 const availableUsers = ref<AvailableUser[]>([]);
@@ -123,15 +123,15 @@ const projectAuthorities = ref<ProjectAuthorityInfo[]>([
   },
   {
     projectCode: 'PRJ-CORE',
-    projectName: 'Enterprise Core Engine & Identity Sync',
+    projectName: 'Core Banking Settlement Engine',
   },
   {
     projectCode: 'PRJ-PORTAL',
-    projectName: 'Website Customer Portal & Client Billing',
+    projectName: 'Dutamedia Client Portal v2.4',
   },
   {
     projectCode: 'PRJ-MOBILE',
-    projectName: 'WorkPulse Mobile Apps — iOS & Android',
+    projectName: 'Customer SuperApp Mobile',
   },
 ]);
 
@@ -433,8 +433,25 @@ async function loadInitialData() {
     // Ambil pemetaan wewenang proyek aktif dari backend
     try {
       const projAuthRes = await apiClient<{ data: ProjectAuthorityInfo[] }>('/v1/organization/project-authorities');
-      if (projAuthRes.data?.data && Array.isArray(projAuthRes.data.data)) {
-        projectAuthorities.value = projAuthRes.data.data;
+      const rawList = Array.isArray(projAuthRes.data)
+        ? projAuthRes.data
+        : projAuthRes.data?.data;
+      if (Array.isArray(rawList) && rawList.length > 0) {
+        projectAuthorities.value = rawList;
+        const seen = new Set<string>();
+        const syncedProjects: Array<{ code: string; name: string }> = [];
+        for (const pa of rawList) {
+          if (pa.projectCode && !seen.has(pa.projectCode)) {
+            seen.add(pa.projectCode);
+            syncedProjects.push({
+              code: pa.projectCode,
+              name: pa.projectName || pa.projectCode,
+            });
+          }
+        }
+        if (syncedProjects.length > 0) {
+          availableProjects.value = syncedProjects;
+        }
       }
     } catch {
       // Fallback tetap menggunakan catalog awal jika endpoint belum tersedia
