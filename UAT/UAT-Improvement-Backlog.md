@@ -1362,4 +1362,67 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 ---
 
+### [IMP-063] Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`)
+- **Finding ID:** IMP-063
+- **Title:** Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`)
+- **Category:** Notification Transparency & Stakeholder Communication
+- **Page / Module:** Backend `PolicyService.createPolicyVersion` & Frontend Pusat Notifikasi (`NotificationCenterView.vue`)
+- **Related Test Case:** `TC-ADMN-004`, `TC-NOTF-001`
+- **Current Condition:** Perubahan parameter kebijakan operasional (seperti jam cut-off komitmen pagi/sore atau target waktu penanganan kendala) hanya menampilkan toast sukses pada layar pembuat kebijakan (Admin), tanpa mengirimkan pemberitahuan In-App kepada karyawan dan manajer yang terdampak langsung.
+- **Proposed Improvement:**
+  1. Setiap kali versi kebijakan baru berhasil diterbitkan melalui `PolicyService.createPolicyVersion`, sistem mengirimkan notifikasi `POLICY_UPDATED` secara otomatis (`prisma.notification.createMany`) kepada seluruh pengguna berstatus `ACTIVE`, kecuali pembuat perubahan dan akun `SYSTEM_ADMIN`.
+  2. Isi notifikasi disusun terstruktur per kategori kebijakan, mencakup kalimat pengantar waktu berlaku ("berlaku mulai sekarang" jika tanggal efektif hari ini, atau tanggal spesifik jika masa depan), perbandingan nilai sebelum dan sesudah (`09:00 → 09:30 WIB`), panduan dampak praktis (`Artinya bagi Anda: ...`), alasan perubahan, serta nama pejabat pengubah.
+  3. Di `NotificationCenterView.vue`, notifikasi `POLICY_UPDATED` dirender dalam kartu rincian terstruktur (`Rincian Perubahan Kebijakan Operasional`) dengan tombol aksi kontekstual **`Buka Morning Commitment`** khusus untuk perubahan jadwal cut-off (`CHECKIN_TIMING`).
+  4. Pengiriman notifikasi dibungkus blok `try/catch` terisolasi agar tidak pernah menggagalkan transaksi penyimpanan kebijakan utama.
+- **Rationale / Expected Benefit:** Menjamin seluruh anggota organisasi langsung mengetahui perubahan aturan jam kerja dan batas pengisian tanpa risiko terlewatnya batas waktu akibat ketidaktahuan.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Masukan Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026).
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+---
+
+### [IMP-064] Penyederhanaan Istilah "Target Waktu Penanganan Kendala" & Penyelarasan Deskripsi Acuan Tanpa Klaim Semu (Opsi A)
+- **Finding ID:** IMP-064
+- **Title:** Penyederhanaan Istilah "Target Waktu Penanganan Kendala" & Penyelarasan Deskripsi Acuan Tanpa Klaim Semu (Opsi A)
+- **Category:** Copywriting, Clarity & Functional Honesty
+- **Page / Module:** Halaman Pengaturan Kebijakan Sistem (`/admin/policies` — `PolicySettingsView.vue`)
+- **Related Test Case:** `TC-ADMN-004`
+- **Current Condition:**
+  1. Penggunaan singkatan teknis "SLA Blocker L1 / L2", "Auto-Escalation Threshold", dan "Jam Kerja Tanpa Ack" kurang ramah dan sulit dipahami maknanya secara instan oleh pengguna non-teknis.
+  2. Teks kartu ke-3 menyatakan seolah sistem melakukan penaikan status eskalasi otomatis berdasarkan parameter jam kerja tersebut, padahal di kode backend saat ini parameter `level1Hours`, `level2Hours`, dan `autoEscalateAfterHours` baru berfungsi sebagai standar acuan target respon.
+- **Proposed Improvement:**
+  1. Mengganti istilah teknis SLA dengan bahasa Indonesia yang lugas dan konkret:
+     - `SLA Penanganan Kendala (Blocker SLA)` → **`Target Waktu Penanganan Kendala`**
+     - `SLA Level 1 (Supervisor)` → **`Batas Respon Atasan Langsung`**
+     - `SLA Level 2 (Head of Department)` → **`Batas Respon Kepala Divisi`**
+     - `Auto-Escalation Threshold` → **`Batas Naik ke Atasan Berikutnya`**
+     - `Jam Kerja Tanpa Ack` → **`jam kerja tanpa ditanggapi`**
+     - `Kalkulasi Jam Operasional SLA` → **`Jam Hitung Target Waktu`**
+  2. Menambahkan definisi pembuka yang jelas di Seksi 2 (*"Target waktu = batas lama sebuah kendala (blocker) boleh dibiarkan tanpa tanggapan sebelum perlu dinaikkan ke atasan berikutnya"*) beserta kotak panduan contoh nyata (Opsi A) yang jujur menjelaskan fungsinya sebagai standar acuan respon.
+  3. Menormalisasi perhitungan `todayStr` pada modal kebijakan menggunakan zona waktu `Asia/Jakarta` agar pemilihan tanggal efektif antara pukul 00:00–07:00 WIB selalu sinkron dengan server.
+- **Rationale / Expected Benefit:** Membuat halaman kebijakan langsung mudah dipahami siapa saja dan menjaga kejujuran informasi antarmuka terhadap perilaku aktual sistem.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Masukan Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026): `media_1794362828261_68abc049.png`, `media_1794362845321_3fac81f0.png`.
+- **Status:** Resolved / Implemented (Frontend Synced)
+
+---
+
+### [IMP-065] Integrasi Mesin Auto-Eskalasi Blocker Berjenjang (Tahap 1 ke Tahap 2) Berdasarkan Parameter Jam Kerja Kebijakan (Opsi B — Post-UAT Roadmap)
+- **Finding ID:** IMP-065
+- **Title:** Integrasi Mesin Auto-Eskalasi Blocker Berjenjang (Tahap 1 ke Tahap 2) Berdasarkan Parameter Jam Kerja Kebijakan (Opsi B — Post-UAT Roadmap)
+- **Category:** Backend Business Logic & Background Scheduler Enhancement
+- **Page / Module:** `BlockerService`, `PolicyService`, & Background Cron/Worker Eskalasi
+- **Related Test Case:** `TC-ADMN-004`, `TC-BLKR-004`
+- **Current Condition:** Parameter kebijakan `BLOCKER_SLA` (`level1Hours`, `level2Hours`, `autoEscalateAfterHours`, `operatingHoursStart`, `operatingHoursEnd`, `countWeekends`) telah tersimpan secara berversi di database dan tampil sebagai acuan di UI (Opsi A via `IMP-064`), namun kalkulasi penuaan blocker di `BlockerService` saat ini baru membaca `severityMinutes` dan belum menjalankan penaikan eskalasi otomatis dari Atasan Langsung (Tahap 1) ke Kepala Divisi (Tahap 2) berdasarkan jam operasional kerja (`09:00–17:00 WIB` Senin–Jumat).
+- **Proposed Improvement:**
+  1. Menghubungkan `BlockerService` dan scheduler eskalasi dengan parameter aktif `BLOCKER_SLA` (`level1Hours`, `level2Hours`, `autoEscalateAfterHours`).
+  2. Menghitung durasi jam kerja efektif (*operating hours calculator* Senin–Jumat `09:00–17:00 WIB`, menjeda perhitungan di malam hari dan akhir pekan/libur nasional).
+  3. Menaikkan status eskalasi blocker secara otomatis ke Kepala Divisi / Escalation Reviewer (`BLOCKER_ESCALATED_L2`) apabila kendala belum ditanggapi (`acknowledged`) melewati `autoEscalateAfterHours` jam kerja.
+- **Rationale / Expected Benefit:** Mewujudkan otomatisasi eskalasi kendala berjenjang secara penuh sesuai parameter kebijakan dinamis pasca-penyelesaian UAT.
+- **Priority:** Medium (Post-UAT Roadmap)
+- **Evidence / Screenshot Reference:** Keputusan Arsitektur Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-004` (11 Nov 2026 — Opsi B dicatat resmi agar tidak terlupakan ke depannya).
+- **Status:** Candidate Improvement (Post-UAT Roadmap)
+
+---
+
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

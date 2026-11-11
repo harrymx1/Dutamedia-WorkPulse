@@ -79,8 +79,12 @@ const formAllowGreenWithCarryOver = ref(true);
 const formMaxCorrectionDays = ref(7);
 
 const todayStr = computed(() => {
-  const d = new Date();
-  return d.toISOString().split('T')[0];
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+  } catch {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }
 });
 
 // Policies dictionary by category
@@ -274,7 +278,7 @@ function formatCategoryLabel(cat?: string): string {
     case 'CHECKIN_TIMING':
       return 'Jam Kerja & Cut-Off';
     case 'BLOCKER_SLA':
-      return 'SLA Penanganan Kendala';
+      return 'Target Waktu Penanganan Kendala';
     case 'COMPLIANCE_THRESHOLD':
       return 'Ambang Batas Carry-Over';
     case 'CORRECTION_WINDOW':
@@ -326,26 +330,26 @@ function formatAuditChanges(log: AuditLogItem): string {
     const parts: string[] = [];
     if (after.level1Hours !== undefined) {
       if (before?.level1Hours !== undefined && before.level1Hours !== after.level1Hours) {
-        parts.push(`L1: ${before.level1Hours}j → ${after.level1Hours}j`);
+        parts.push(`Respon Atasan: ${before.level1Hours}j → ${after.level1Hours}j`);
       } else {
-        parts.push(`L1: ${after.level1Hours}j Kerja`);
+        parts.push(`Respon Atasan: ${after.level1Hours}j Kerja`);
       }
     }
     if (after.level2Hours !== undefined) {
       if (before?.level2Hours !== undefined && before.level2Hours !== after.level2Hours) {
-        parts.push(`L2: ${before.level2Hours}j → ${after.level2Hours}j`);
+        parts.push(`Respon Kepala Divisi: ${before.level2Hours}j → ${after.level2Hours}j`);
       } else {
-        parts.push(`L2: ${after.level2Hours}j Kerja`);
+        parts.push(`Respon Kepala Divisi: ${after.level2Hours}j Kerja`);
       }
     }
     if (after.autoEscalateAfterHours !== undefined) {
       if (before?.autoEscalateAfterHours !== undefined && before.autoEscalateAfterHours !== after.autoEscalateAfterHours) {
-        parts.push(`Eskalasi: ${before.autoEscalateAfterHours}j → ${after.autoEscalateAfterHours}j`);
+        parts.push(`Batas Eskalasi: ${before.autoEscalateAfterHours}j → ${after.autoEscalateAfterHours}j`);
       } else {
-        parts.push(`Eskalasi: ${after.autoEscalateAfterHours}j`);
+        parts.push(`Batas Eskalasi: ${after.autoEscalateAfterHours}j`);
       }
     }
-    return parts.join(' · ') || 'SLA Blocker Diperbarui';
+    return parts.join(' · ') || 'Target Waktu Kendala Diperbarui';
   }
 
   if (log.category === 'COMPLIANCE_THRESHOLD') {
@@ -440,7 +444,7 @@ onUnmounted(() => {
           </div>
           <h1>Pengaturan Kebijakan Sistem (Policy Settings)</h1>
           <p class="subtitle">
-            Konfigurasi parameter operasional organisasi: jam kerja dan batas penguncian formulir (cut-off), target SLA penanganan kendala berjenjang, ambang batas tugas berlanjut (carry-over), kebijakan hari bebas komitmen, serta penegakan tanggal berlaku efektif tanpa perubahan surut.
+            Konfigurasi parameter operasional organisasi: jam kerja dan batas penguncian formulir (cut-off), target waktu penanganan kendala berjenjang, ambang batas tugas berlanjut (carry-over), kebijakan hari bebas komitmen, serta penegakan tanggal berlaku efektif tanpa perubahan surut.
           </p>
         </div>
         <div class="header-actions">
@@ -481,14 +485,14 @@ onUnmounted(() => {
 
         <article class="metric-card">
           <div class="metric-top">
-            <span class="metric-label">SLA Blocker L1 / L2</span>
-            <span class="badge badge-active">Target SLA</span>
+            <span class="metric-label">Target Waktu Penanganan Kendala</span>
+            <span class="badge badge-active">Acuan Respon</span>
           </div>
           <div class="metric-value">
             {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }}j / {{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }}j Kerja
           </div>
           <div class="metric-sub">
-            Auto-escalation threshold: {{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }} jam tanpa ack
+            Batas naik ke atasan berikutnya: {{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }} jam tanpa ditanggapi
           </div>
         </article>
 
@@ -603,15 +607,15 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <!-- SECTION 2: Blocker SLA & Escalation -->
+      <!-- SECTION 2: Target Waktu Penanganan Kendala -->
       <section class="policy-section">
         <div class="policy-head">
           <div class="policy-head-info">
             <h2>
               <AlertTriangle :size="18" />
-              <span>2. SLA Penanganan Kendala (Blocker SLA & Auto-Escalation)</span>
+              <span>2. Target Waktu Penanganan Kendala (Acuan Respon &amp; Eskalasi)</span>
             </h2>
-            <p>Target waktu respon dan penyelesaian kendala agar tidak menghambat deliverable sprint.</p>
+            <p>Target waktu = batas lama sebuah kendala (blocker) boleh dibiarkan tanpa tanggapan sebelum perlu dinaikkan ke atasan berikutnya.</p>
           </div>
           <div class="head-badges">
             <span v-if="policyMap.BLOCKER_SLA?.isIllustrative" class="badge badge-illustrative">
@@ -624,51 +628,54 @@ onUnmounted(() => {
           <div class="params-grid">
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">SLA Level 1 (Supervisor / Pejabat L1)</span>
-                <span class="badge badge-active">Level 1</span>
+                <span class="param-title">Batas Respon Atasan Langsung</span>
+                <span class="badge badge-active">Tahap 1</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }}</span>
                 <span class="param-unit">Jam Kerja</span>
               </div>
-              <div class="param-desc">Batas waktu bagi atasan langsung untuk acknowledgement resmi dan mencatat mitigasi awal.</div>
+              <div class="param-desc">Kendala yang dilaporkan karyawan harus ditanggapi atasan langsung (Supervisor / Project Lead) dalam {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }} jam kerja untuk mencatat langkah penanganan awal.</div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">SLA Level 2 (Head of Department)</span>
-                <span class="badge badge-warning">Level 2</span>
+                <span class="param-title">Batas Respon Kepala Divisi</span>
+                <span class="badge badge-warning">Tahap 2</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }}</span>
                 <span class="param-unit">Jam Kerja</span>
               </div>
-              <div class="param-desc">Target penyelesaian menyeluruh atau penguraian dependensi lintas divisi oleh pimpinan fungsi.</div>
+              <div class="param-desc">Target waktu bagi Kepala Divisi (Head of Department) dalam menyelesaikan kendala berat atau mengurai hambatan lintas divisi dalam {{ policyMap.BLOCKER_SLA?.configurationValues?.level2Hours || 8 }} jam kerja.</div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Auto-Escalation Threshold</span>
-                <span class="badge badge-danger">Otomatis L2</span>
+                <span class="param-title">Batas Naik ke Atasan Berikutnya</span>
+                <span class="badge badge-danger">Acuan Eskalasi</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }}</span>
-                <span class="param-unit">Jam Kerja Tanpa Ack</span>
+                <span class="param-unit">jam kerja tanpa ditanggapi</span>
               </div>
-              <div class="param-desc">Jika blocker belum di-acknowledge dalam durasi ini, sistem otomatis menaikkan status eskalasi ke L2.</div>
+              <div class="param-desc">Batas waktu acuan bagi kendala yang belum ditanggapi atasan langsung selama {{ policyMap.BLOCKER_SLA?.configurationValues?.autoEscalateAfterHours || 4 }} jam kerja agar segera diteruskan ke pimpinan yang lebih tinggi.</div>
             </div>
 
             <div class="param-item">
               <div class="param-item-header">
-                <span class="param-title">Kalkulasi Jam Operasional SLA</span>
+                <span class="param-title">Jam Hitung Target Waktu</span>
                 <span class="badge badge-info">Senin - Jumat</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value compact">09:00 - 17:00</span>
                 <span class="param-unit">WIB</span>
               </div>
-              <div class="param-desc">Penghitungan durasi aging SLA dijeda pada malam hari dan akhir pekan / hari libur nasional resmi.</div>
+              <div class="param-desc">Jam kerja dihitung Senin–Jumat pukul 09:00–17:00 WIB, serta dijeda pada malam hari, akhir pekan, dan hari libur nasional resmi.</div>
             </div>
+          </div>
+          <div class="policy-guidance">
+            <strong>Panduan &amp; Makna Target Waktu (Acuan):</strong> Parameter di atas menjadi standar acuan resmi perusahaan untuk memantau kecepatan tanggapan atasan terhadap kendala tim. Contoh: jika batas respon atasan langsung diatur {{ policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4 }} jam kerja, maka kendala yang dilaporkan pukul 09:00 WIB ditargetkan sudah ditanggapi sebelum pukul {{ 9 + Number(policyMap.BLOCKER_SLA?.configurationValues?.level1Hours || 4) }}:00 WIB.
           </div>
         </div>
       </section>
@@ -879,11 +886,11 @@ onUnmounted(() => {
           <div class="form-group">
             <label for="select-cat">Kategori Kebijakan *</label>
             <select id="select-cat" v-model="formCategory" @change="syncFormWithActivePolicy" class="input-control" required>
-              <option value="CHECKIN_TIMING">Jam Kerja & Batas Pengiriman (Cut-Off)</option>
-              <option value="BLOCKER_SLA">SLA Penanganan Kendala (Blocker SLA)</option>
+              <option value="CHECKIN_TIMING">Jam Kerja &amp; Batas Pengiriman (Cut-Off)</option>
+              <option value="BLOCKER_SLA">Target Waktu Penanganan Kendala</option>
               <option value="COMPLIANCE_THRESHOLD">Ambang Batas Carry-Over Berulang</option>
               <option value="CORRECTION_WINDOW">Jendela Pengajuan Koreksi</option>
-              <option value="NOTIFICATION_REMINDER_THRESHOLD">Ambang Notifikasi & Pengingat</option>
+              <option value="NOTIFICATION_REMINDER_THRESHOLD">Ambang Notifikasi &amp; Pengingat</option>
             </select>
           </div>
 
@@ -909,15 +916,15 @@ onUnmounted(() => {
 
           <div v-else-if="formCategory === 'BLOCKER_SLA'" class="form-row">
             <div class="form-group">
-              <label for="input-sla-l1">SLA Level 1 (Jam Kerja) *</label>
+              <label for="input-sla-l1">Batas Respon Atasan Langsung (Jam Kerja) *</label>
               <input id="input-sla-l1" v-model="formSlaL1Hours" type="number" min="1" max="24" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-sla-l2">SLA Level 2 (Jam Kerja) *</label>
+              <label for="input-sla-l2">Batas Respon Kepala Divisi (Jam Kerja) *</label>
               <input id="input-sla-l2" v-model="formSlaL2Hours" type="number" min="1" max="48" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-sla-auto">Auto-Escalate (Jam Kerja) *</label>
+              <label for="input-sla-auto">Batas Naik ke Atasan Berikutnya (Jam Kerja) *</label>
               <input id="input-sla-auto" v-model="formAutoEscalateHours" type="number" min="1" max="24" class="input-control" required />
             </div>
           </div>

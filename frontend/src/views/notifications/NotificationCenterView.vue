@@ -182,7 +182,7 @@ const filteredNotifications = computed(() => {
   return notifications.value.filter((n) => {
     if (activeFilter.value === 'UNREAD' && n.read) return false;
     if (activeFilter.value === 'BLOCKER' && !n.type.includes('BLOCKER')) return false;
-    if (activeFilter.value === 'DAILY' && !(n.type.includes('COMMITMENT') || n.type.includes('REMINDER'))) return false;
+    if (activeFilter.value === 'DAILY' && !(n.type.includes('COMMITMENT') || n.type.includes('REMINDER') || n.type.includes('POLICY'))) return false;
 
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase();
@@ -228,11 +228,32 @@ function formatTime(isoStr: string) {
 }
 
 function isDelegationNotification(type?: string): boolean {
-  return Boolean(type && type.includes('TEMPORARY_REVIEWER'));
+  return Boolean(type && (type.includes('TEMPORARY_REVIEWER') || type.includes('POLICY')));
+}
+
+function getNotificationPreview(message: string): string {
+  if (!message) return '';
+  if (message.includes('\n')) {
+    const lines = message.split('\n').map((l) => l.trim()).filter(Boolean);
+    const intro = lines[0] || '';
+    const impactLine = lines.find((l) => l.startsWith('Artinya bagi Anda:'));
+    if (impactLine) {
+      return `${intro} ${impactLine}`;
+    }
+    return intro;
+  }
+  return message;
+}
+
+function getActionButtonLabel(actionUrl?: string): string {
+  if (actionUrl === '/leave/queue') return 'Buka Antrean Persetujuan Cuti';
+  if (actionUrl === '/daily/morning') return 'Buka Morning Commitment';
+  return 'Buka Halaman Terkait';
 }
 
 function getDelegationHeading(type?: string): string {
   if (!type) return 'Mandat Wewenang & Tata Kelola Delegasi Reviewer';
+  if (type.includes('POLICY')) return 'Rincian Perubahan Kebijakan Operasional';
   if (type.includes('TEAM_NOTICE')) return 'Rincian Pelimpahan Wewenang Atasan Tim Anda';
   if (type.includes('ASSIGNED')) return 'Rincian Mandat Penugasan Reviewer Sementara';
   if (type.includes('DELEGATED')) return 'Rincian Mandat Pelimpahan Wewenang Peninjauan';
@@ -271,7 +292,8 @@ function parseDelegationContent(message: string): DelegationParsedContent {
         line.startsWith('Anda telah') ||
         line.startsWith('Wewenang peninjauan Anda') ||
         line.startsWith('Ketentuan pelimpahan') ||
-        line.startsWith('Pelimpahan wewenang')
+        line.startsWith('Pelimpahan wewenang') ||
+        line.startsWith('Mulai ')
       ) {
         if (!introText) {
           introText = line;
@@ -291,6 +313,14 @@ function parseDelegationContent(message: string): DelegationParsedContent {
           'Periode Baru',
           'Pejabat Pengganti',
           'Menggantikan',
+          'Mulai Berlaku',
+          'Batas Tepat Waktu',
+          'Batas Kunci',
+          'Batas Respon',
+          'Batas Naik',
+          'Ambang Peringatan',
+          'Batas Maksimal',
+          'Artinya bagi Anda',
         ].some(h => label.toLowerCase().includes(h.toLowerCase()));
         items.push({ label, value, isHighlight });
       } else {
@@ -546,7 +576,7 @@ onMounted(() => {
                   <span v-if="!item.read" class="unread-dot"></span>
                   <strong class="item-title">{{ item.title }}</strong>
                 </div>
-                <p class="item-desc">{{ item.message }}</p>
+                <p class="item-desc">{{ getNotificationPreview(item.message) }}</p>
                 <div class="item-meta">
                   <span class="context-chip">{{ item.type }}</span>
                   <span class="item-time">{{ formatTime(item.createdAt) }}</span>
@@ -667,7 +697,7 @@ onMounted(() => {
             >
               <AccessLink :to="selectedNotification.actionUrl" class="btn btn-primary">
                 <ExternalLink :size="15" />
-                <span>{{ selectedNotification.actionUrl === '/leave/queue' ? 'Buka Antrean Persetujuan Cuti' : 'Buka Halaman Terkait' }}</span>
+                <span>{{ getActionButtonLabel(selectedNotification.actionUrl) }}</span>
               </AccessLink>
             </div>
           </div>

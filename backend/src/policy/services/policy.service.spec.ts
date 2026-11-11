@@ -27,6 +27,15 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
         create: vi.fn(),
         findMany: vi.fn().mockResolvedValue([]),
       },
+      user: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'usr-emp-1' },
+          { id: 'usr-emp-2' },
+        ]),
+      },
+      notification: {
+        createMany: vi.fn().mockResolvedValue({ count: 2 }),
+      },
       $transaction: vi.fn(async (cb) => cb(mockPrisma)),
     };
 
@@ -140,6 +149,64 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       );
 
       expect(result.id).toBe('new-pol-2');
+      expect(mockPrisma.notification.createMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('broadcasts structured POLICY_UPDATED notification to active non-admin users with before/after diff (IMP-063)', async () => {
+      const dto = {
+        category: PolicyCategory.CHECKIN_TIMING,
+        configurationValues: {
+          morningOnTimeCutoff: '09:30',
+          morningLockCutoff: '10:00',
+          eodOnTimeCutoff: '17:00',
+          eodLockCutoff: '21:00',
+        },
+        effectiveDate: '2026-10-28',
+        changeJustification: 'Penyesuaian jam kerja bulan Ramadhan 2026',
+      };
+
+      mockPrisma.policy.findFirst.mockResolvedValue({
+        id: 'old-pol-1',
+        category: PolicyCategory.CHECKIN_TIMING,
+        configurationValues: {
+          morningOnTimeCutoff: '09:00',
+          morningLockCutoff: '23:59',
+          eodOnTimeCutoff: '17:00',
+          eodLockCutoff: '21:00',
+        },
+        effectiveDate: new Date('2026-10-01'),
+        endDate: null,
+      });
+
+      mockPrisma.policy.create.mockResolvedValue({
+        id: 'new-pol-ramadhan',
+        ...dto,
+        effectiveDate: new Date('2026-10-28'),
+        createdBy: { id: 'usr-admin', fullName: 'Sistem Administrator', email: 'admin@dutamedia.com' },
+      });
+
+      await service.createPolicyVersion('usr-admin', dto);
+
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: { not: 'usr-admin' },
+            email: { not: 'admin@dutamedia.com' },
+          }),
+        }),
+      );
+
+      expect(mockPrisma.notification.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            recipientUserId: 'usr-emp-1',
+            triggerType: 'POLICY_UPDATED',
+            title: 'Perubahan Kebijakan Jam Batas Pengisian (Cut-Off)',
+            actionUrl: '/daily/morning',
+            message: expect.stringContaining('09:00 → 09:30 WIB'),
+          }),
+        ]),
+      });
     });
   });
 });

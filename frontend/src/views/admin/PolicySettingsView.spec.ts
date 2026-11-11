@@ -61,11 +61,11 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     expect(wrapper.text()).toContain('Administration · Policy Governance & Versioned Audit');
     expect(wrapper.text()).toContain('Morning Cut-Off');
     expect(wrapper.text()).toContain('EOD Cut-Off');
-    expect(wrapper.text()).toContain('SLA Blocker L1 / L2');
+    expect(wrapper.text()).toContain('Target Waktu Penanganan Kendala');
     expect(wrapper.text()).toContain('+ Buat Versi Kebijakan Baru');
   });
 
-  it('renders 5 canonical policy sections with clean business wording without internal DEC codes', () => {
+  it('renders 5 canonical policy sections with clean business wording without internal DEC codes or confusing SLA jargon (IMP-062, IMP-064)', () => {
     const wrapper = mount(PolicySettingsView, {
       global: {
         plugins: [router],
@@ -73,7 +73,11 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     });
 
     expect(wrapper.text()).toContain('1. Jam Kerja, Batas Pengiriman & Penguncian Cut-Off');
-    expect(wrapper.text()).toContain('2. SLA Penanganan Kendala (Blocker SLA & Auto-Escalation)');
+    expect(wrapper.text()).toContain('2. Target Waktu Penanganan Kendala (Acuan Respon & Eskalasi)');
+    expect(wrapper.text()).toContain('Batas Respon Atasan Langsung');
+    expect(wrapper.text()).toContain('Batas Respon Kepala Divisi');
+    expect(wrapper.text()).toContain('Batas Naik ke Atasan Berikutnya');
+    expect(wrapper.text()).toContain('Jam Hitung Target Waktu');
     expect(wrapper.text()).toContain('3. Ambang Batas Carry-Over Berulang & Larangan Kunci GREEN');
     expect(wrapper.text()).toContain('4. Kebijakan Hari Bebas Komitmen (Zero-Commitment)');
     expect(wrapper.text()).toContain('5. Penegakan Tanggal Efektif & Larangan Ubah Surut (Anti-Backdating)');

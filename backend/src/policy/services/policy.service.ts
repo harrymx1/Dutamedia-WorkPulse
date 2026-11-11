@@ -3,7 +3,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
-import { PolicyCategory } from '@prisma/client';
+import {
+  CanonicalRole,
+  NotificationChannel,
+  PolicyCategory,
+  UserStatus,
+} from '@prisma/client';
 import { CreatePolicyVersionDto } from '../dto/create-policy-version.dto';
 import { AssignPolicyOwnerDto } from '../dto/assign-policy-owner.dto';
 import { CANONICAL_POLICY_FALLBACKS } from '../policy.constants';
@@ -126,7 +131,7 @@ export class PolicyService {
       });
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const { created, previousValues } = await this.prisma.$transaction(async (tx) => {
       // 1. Cari kebijakan aktif sebelumnya untuk menutup masa berlakunya
       const currentActive = await tx.policy.findFirst({
         where: {
@@ -152,7 +157,7 @@ export class PolicyService {
       }
 
       // 2. Buat versi kebijakan baru
-      const created = await tx.policy.create({
+      const createdPolicy = await tx.policy.create({
         data: {
           category: dto.category,
           configurationValues: dto.configurationValues,
@@ -168,19 +173,23 @@ export class PolicyService {
         },
       });
 
+      const prevVals = currentActive
+        ? (currentActive.configurationValues as Record<string, any>)
+        : undefined;
+
       // 3. Catat di AuditLog
       await tx.auditLog.create({
         data: {
           actorUserId,
           actionCode: 'POLICY_VERSION_CREATED',
           relatedEntityType: 'policies',
-          relatedEntityId: created.id,
-          valueBefore: currentActive ? (currentActive.configurationValues as any) : undefined,
+          relatedEntityId: createdPolicy.id,
+          valueBefore: prevVals as any,
           valueAfter: {
-            category: created.category,
-            configurationValues: created.configurationValues,
-            isIllustrative: created.isIllustrative,
-            effectiveDate: created.effectiveDate,
+            category: createdPolicy.category,
+            configurationValues: createdPolicy.configurationValues,
+            isIllustrative: createdPolicy.isIllustrative,
+            effectiveDate: createdPolicy.effectiveDate,
             changeJustification: dto.changeJustification,
           },
           ipAddress: meta?.ipAddress,
@@ -188,8 +197,246 @@ export class PolicyService {
         },
       });
 
-      return created;
+      return { created: createdPolicy, previousValues: prevVals };
     });
+
+    // 4. Kirim notifikasi siaran ke seluruh pengguna aktif (IMP-063)
+    await this.broadcastPolicyChangeNotification({
+      created,
+      previousValues: previousValues || CANONICAL_POLICY_FALLBACKS[dto.category],
+      changeJustification: dto.changeJustification,
+      actorUserId,
+      todayStr,
+      inputEffectiveStr,
+    });
+
+    return created;
+  }
+
+  /**
+   * Menyusun dan mengirimkan notifikasi perubahan kebijakan ke seluruh pengguna aktif
+   * kecuali pembuat kebijakan dan akun System Administrator (IMP-063).
+   */
+  private async broadcastPolicyChangeNotification(params: {
+    created: {
+      id: string;
+      category: PolicyCategory;
+      configurationValues: any;
+      effectiveDate: Date;
+      createdBy?: { id: string; fullName: string; email: string } | null;
+    };
+    previousValues?: Record<string, any>;
+    changeJustification: string;
+    actorUserId: string;
+    todayStr: string;
+    inputEffectiveStr: string;
+  }): Promise<void> {
+    try {
+      if (!this.prisma.user?.findMany || !this.prisma.notification?.createMany) {
+        return;
+      }
+
+      const { created, previousValues, changeJustification, actorUserId, todayStr, inputEffectiveStr } = params;
+      const effectiveDate = created.effectiveDate;
+
+      const recipients = await this.prisma.user.findMany({
+        where: {
+          status: UserStatus.ACTIVE,
+          id: { not: actorUserId },
+          email: { not: 'admin@dutamedia.com' },
+          NOT: {
+            orgAssignments: {
+              some: {
+                role: CanonicalRole.SYSTEM_ADMIN,
+                OR: [{ endDate: null }, { endDate: { gte: effectiveDate } }],
+              },
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!recipients || recipients.length === 0) return;
+
+      const issuerName = created.createdBy?.fullName || 'Sistem Administrator';
+      const payload = this.buildPolicyNotificationPayload({
+        category: created.category,
+        before: previousValues || {},
+        after: (created.configurationValues as Record<string, any>) || {},
+        effectiveDate,
+        isEffectiveToday: inputEffectiveStr <= todayStr,
+        changeJustification: changeJustification.trim(),
+        issuerName,
+      });
+
+      await this.prisma.notification.createMany({
+        data: recipients.map((r: { id: string }) => ({
+          recipientUserId: r.id,
+          triggerType: 'POLICY_UPDATED',
+          channel: NotificationChannel.IN_APP_CENTER,
+          title: payload.title,
+          message: payload.message,
+          actionUrl: payload.actionUrl,
+          relatedEntityType: 'policies',
+          relatedEntityId: created.id,
+        })),
+      });
+    } catch (err) {
+      console.error('Gagal mengirim notifikasi perubahan kebijakan:', err);
+    }
+  }
+
+  private buildPolicyNotificationPayload(params: {
+    category: PolicyCategory;
+    before: Record<string, any>;
+    after: Record<string, any>;
+    effectiveDate: Date;
+    isEffectiveToday: boolean;
+    changeJustification: string;
+    issuerName: string;
+  }): { title: string; message: string; actionUrl: string | null } {
+    const { category, before, after, effectiveDate, isEffectiveToday, changeJustification, issuerName } = params;
+
+    const effDateLabel = effectiveDate.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const effectiveDisplay = isEffectiveToday
+      ? `${effDateLabel} (Berlaku Mulai Sekarang)`
+      : `Mulai ${effDateLabel}`;
+
+    const diffVal = (oldVal: any, newVal: any, unit = '') => {
+      const sfx = unit ? ` ${unit}` : '';
+      if (oldVal !== undefined && oldVal !== null && String(oldVal) !== String(newVal)) {
+        return `${oldVal} → ${newVal}${sfx}`;
+      }
+      return `Tetap ${newVal}${sfx}`;
+    };
+
+    if (category === PolicyCategory.CHECKIN_TIMING) {
+      const mOnTime = after.morningOnTimeCutoff || '09:00';
+      const mCutoff = after.morningLockCutoff || '09:30';
+      const eOnTime = after.eodOnTimeCutoff || '17:00';
+      const eCutoff = after.eodLockCutoff || '21:00';
+
+      const intro = isEffectiveToday
+        ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), jam batas pengisian komitmen pagi dan evaluasi sore telah diperbarui.`
+        : `Mulai ${effDateLabel}, jam batas pengisian komitmen pagi dan evaluasi sore akan disesuaikan dengan jadwal baru.`;
+
+      const message = [
+        intro,
+        'Kategori Kebijakan: Jam Kerja & Batas Pengiriman (Cut-Off)',
+        `Mulai Berlaku: ${effectiveDisplay}`,
+        `Batas Tepat Waktu Pagi: ${diffVal(before.morningOnTimeCutoff, mOnTime, 'WIB')}`,
+        `Batas Kunci Formulir Pagi (Cut-Off): ${diffVal(before.morningLockCutoff, mCutoff, 'WIB')}`,
+        `Batas Tepat Waktu Sore (EOD): ${diffVal(before.eodOnTimeCutoff, eOnTime, 'WIB')}`,
+        `Batas Kunci Formulir Sore (EOD Cut-Off): ${diffVal(before.eodLockCutoff, eCutoff, 'WIB')}`,
+        `Artinya bagi Anda: Isi Morning Commitment sebelum pukul ${mOnTime} WIB agar tercatat tepat waktu (formulir terkunci pukul ${mCutoff} WIB), serta EOD Outcome sebelum pukul ${eOnTime} WIB.`,
+        `Alasan Perubahan: "${changeJustification}"`,
+        `Diubah Oleh: ${issuerName}`,
+      ].join('\n');
+
+      return {
+        title: 'Perubahan Kebijakan Jam Batas Pengisian (Cut-Off)',
+        message,
+        actionUrl: '/daily/morning',
+      };
+    }
+
+    if (category === PolicyCategory.BLOCKER_SLA) {
+      const l1 = after.level1Hours ?? 4;
+      const l2 = after.level2Hours ?? 8;
+      const esc = after.autoEscalateAfterHours ?? 4;
+
+      const intro = isEffectiveToday
+        ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), acuan Target Waktu Penanganan Kendala (Blocker) telah diperbarui.`
+        : `Mulai ${effDateLabel}, acuan Target Waktu Penanganan Kendala (Blocker) akan disesuaikan.`;
+
+      const message = [
+        intro,
+        'Kategori Kebijakan: Target Waktu Penanganan Kendala',
+        `Mulai Berlaku: ${effectiveDisplay}`,
+        `Batas Respon Atasan Langsung: ${diffVal(before.level1Hours, l1, 'Jam Kerja')}`,
+        `Batas Respon Kepala Divisi: ${diffVal(before.level2Hours, l2, 'Jam Kerja')}`,
+        `Batas Naik ke Atasan Berikutnya: ${diffVal(before.autoEscalateAfterHours, esc, 'Jam Kerja tanpa ditanggapi')}`,
+        `Artinya bagi Anda: Kendala yang dilaporkan ditargetkan mendapat tanggapan awal atasan langsung dalam ${l1} jam kerja dan penyelesaian tingkat divisi dalam ${l2} jam kerja (dihitung Senin–Jumat pukul 09:00–17:00 WIB).`,
+        `Alasan Perubahan: "${changeJustification}"`,
+        `Diubah Oleh: ${issuerName}`,
+      ].join('\n');
+
+      return {
+        title: 'Perubahan Kebijakan Target Waktu Penanganan Kendala',
+        message,
+        actionUrl: null,
+      };
+    }
+
+    if (category === PolicyCategory.COMPLIANCE_THRESHOLD) {
+      const days = after.carryOverAmberDays ?? 3;
+      const intro = isEffectiveToday
+        ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), aturan Ambang Batas Tugas Berlanjut (Carry-Over) telah diperbarui.`
+        : `Mulai ${effDateLabel}, aturan Ambang Batas Tugas Berlanjut (Carry-Over) akan disesuaikan.`;
+
+      const message = [
+        intro,
+        'Kategori Kebijakan: Ambang Batas Carry-Over Berulang',
+        `Mulai Berlaku: ${effectiveDisplay}`,
+        `Ambang Peringatan Saran AMBER: ${diffVal(before.carryOverAmberDays, days, 'Hari Berturut-turut')}`,
+        'Proteksi Hak Opsi GREEN: Bebas Dipilih (Tidak Terkunci)',
+        `Artinya bagi Anda: Tugas yang berlanjut (Continue) selama ${days} hari berturut-turut akan memunculkan saran status AMBER sebagai bahan refleksi mandiri.`,
+        `Alasan Perubahan: "${changeJustification}"`,
+        `Diubah Oleh: ${issuerName}`,
+      ].join('\n');
+
+      return {
+        title: 'Perubahan Kebijakan Ambang Batas Tugas Berlanjut',
+        message,
+        actionUrl: null,
+      };
+    }
+
+    if (category === PolicyCategory.CORRECTION_WINDOW) {
+      const maxDays = after.maxCorrectionDays ?? 7;
+      const intro = isEffectiveToday
+        ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), batas waktu pengajuan koreksi komitmen dan evaluasi telah diperbarui.`
+        : `Mulai ${effDateLabel}, batas waktu pengajuan koreksi komitmen dan evaluasi akan disesuaikan.`;
+
+      const message = [
+        intro,
+        'Kategori Kebijakan: Jendela Pengajuan Koreksi',
+        `Mulai Berlaku: ${effectiveDisplay}`,
+        `Batas Maksimal Pengajuan Koreksi: ${diffVal(before.maxCorrectionDays, maxDays, 'Hari Kerja')}`,
+        `Artinya bagi Anda: Permohonan koreksi komitmen pagi atau evaluasi sore dapat diajukan maksimal ${maxDays} hari sejak tanggal kerja terkait.`,
+        `Alasan Perubahan: "${changeJustification}"`,
+        `Diubah Oleh: ${issuerName}`,
+      ].join('\n');
+
+      return {
+        title: 'Perubahan Kebijakan Jendela Pengajuan Koreksi',
+        message,
+        actionUrl: null,
+      };
+    }
+
+    const intro = isEffectiveToday
+      ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), pengaturan pengingat otomatis sistem telah diperbarui.`
+      : `Mulai ${effDateLabel}, pengaturan pengingat otomatis sistem akan disesuaikan.`;
+
+    return {
+      title: 'Perubahan Kebijakan Pengingat Otomatis',
+      message: [
+        intro,
+        'Kategori Kebijakan: Ambang Notifikasi & Pengingat',
+        `Mulai Berlaku: ${effectiveDisplay}`,
+        `Waktu Pengingat: ${after.morningReminderMinutesBefore ?? 60} menit sebelum batas waktu`,
+        `Artinya bagi Anda: Sistem akan mengirimkan pengingat sebelum batas waktu pengisian komitmen harian berakhir.`,
+        `Alasan Perubahan: "${changeJustification}"`,
+        `Diubah Oleh: ${issuerName}`,
+      ].join('\n'),
+      actionUrl: null,
+    };
   }
 
   /**

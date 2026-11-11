@@ -60,6 +60,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
         { path: '/', component: { template: '<div>Home</div>' } },
         { path: '/notifications', component: NotificationCenterView },
         { path: '/admin/notifications', component: { template: '<div>Admin Notif</div>' } },
+        { path: '/daily/morning', component: { template: '<div>Morning</div>' } },
       ],
     });
   });
@@ -162,7 +163,6 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     const wrapper = mount(NotificationCenterView, {
       global: {
         plugins: [router],
-        stubs: { RouterLink: true },
       },
     });
 
@@ -182,6 +182,73 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
 
     // Forbidden button "Buka Halaman Terkait" to /coaching MUST NOT exist for employee without subordinates
     expect(wrapper.text()).not.toContain('Buka Halaman Terkait');
+  });
+
+  it('renders structured policy update notification with before/after parameters and Buka Morning Commitment action button (IMP-063)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-aditya',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-policy-1',
+              title: 'Perubahan Kebijakan Jam Batas Pengisian (Cut-Off)',
+              message: [
+                'Mulai hari ini (Rabu, 11 November 2026, berlaku mulai sekarang), jam batas pengisian komitmen pagi dan evaluasi sore telah diperbarui.',
+                'Kategori Kebijakan: Jam Kerja & Batas Pengiriman (Cut-Off)',
+                'Mulai Berlaku: Rabu, 11 November 2026 (Berlaku Mulai Sekarang)',
+                'Batas Tepat Waktu Pagi: 09:00 → 09:30 WIB',
+                'Batas Kunci Formulir Pagi (Cut-Off): 23:59 → 10:00 WIB',
+                'Artinya bagi Anda: Isi Morning Commitment sebelum pukul 09:30 WIB agar tercatat tepat waktu.',
+                'Alasan Perubahan: "Penyesuaian jam kerja bulan Ramadhan 2026"',
+                'Diubah Oleh: Sistem Administrator',
+              ].join('\n'),
+              type: 'POLICY_UPDATED',
+              channel: 'IN_APP_CENTER',
+              read: false,
+              actionUrl: '/daily/morning',
+              createdAt: '2026-11-11T09:05:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const card = wrapper.find('.notif-item');
+    expect(card.exists()).toBe(true);
+    await card.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.modal-card').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Rincian Perubahan Kebijakan Operasional');
+    expect(wrapper.text()).toContain('09:00 → 09:30 WIB');
+    expect(wrapper.text()).toContain('23:59 → 10:00 WIB');
+    expect(wrapper.text()).toContain('Buka Morning Commitment');
   });
 });
 
