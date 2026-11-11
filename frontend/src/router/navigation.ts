@@ -103,10 +103,10 @@ export const navGroups: NavGroup[] = [
     title: 'Management',
     items: [
       { label: 'Pulse Dashboard', to: '/dashboard', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'Activity' },
-      { label: 'Antrean Blocker', to: '/blockers', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'ShieldAlert' },
+      { label: 'Antrean Blocker', to: '/blockers', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, iconName: 'ShieldAlert' },
       { label: 'Catatan Coaching', to: '/coaching', requiresSubordinates: true, iconName: 'MessagesSquare' },
       { label: 'Radar Risiko Proyek', to: '/projects/risk', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'FolderGit2' },
-      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'Clock' },
+      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, iconName: 'Clock' },
       { label: 'Persetujuan Cuti', to: '/leave/queue', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'CheckSquare' },
       { label: 'Review Koreksi & Cuti', to: '/corrections/review', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'FileCheck' },
       { label: 'Laporan Eksekutif', to: '/reports', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'], iconName: 'BarChart3' },

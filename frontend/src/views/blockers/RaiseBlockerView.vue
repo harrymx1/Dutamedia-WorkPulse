@@ -39,6 +39,7 @@ const slaMinutes = ref<Record<string, number>>({ CRITICAL: 120, HIGH: 240, MEDIU
 const suggestedOwner = ref<{ id: string; fullName: string; jobTitle?: string | null } | null>(null);
 const suggestionReason = ref<'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE'>('NONE');
 const suggestionDivision = ref('');
+const suggestionNote = ref('');
 const nowTick = ref(Date.now());
 let tickTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -62,6 +63,7 @@ async function loadRoutingPreview() {
       suggestedOwner.value = res.data.suggestedOwner || null;
       suggestionReason.value = res.data.reason || 'NONE';
       suggestionDivision.value = res.data.divisionLabel || '';
+      suggestionNote.value = res.data.routingNote || '';
     }
   } catch {
     // Preview bersifat informatif; pengiriman tiket tetap ditentukan backend
@@ -484,8 +486,8 @@ async function submitBlocker() {
 
   submitting.value = true;
   try {
-    // Tentukan target assignedOwnerId jika user memilih 'sistem menentukan otomatis'
-    const targetOwnerId = assignedOwnerId.value || suggestedOwner.value?.id || undefined;
+    // Jika pelapor memilih mode otomatis (kosong), biarkan undefined agar backend mengevaluasi aturan cuti/delegasi/rantai terkini saat submit
+    const targetOwnerId = assignedOwnerId.value || undefined;
 
     const payload = {
       type: blockerType.value,
@@ -1050,7 +1052,10 @@ onBeforeUnmount(() => {
                     Penanggung jawab ditunjuk spesifik: <strong>{{ selectedOwnerDetails.fullName }}</strong> ({{ selectedOwnerDetails.jobTitle || selectedOwnerDetails.role }}). Notifikasi darurat dan eskalasi langsung diarahkan ke yang bersangkutan.
                   </p>
                   <p v-else-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                    <template v-if="suggestionReason === 'DIVISION_HEAD'">
+                    <template v-if="suggestionNote">
+                      {{ suggestionNote }} Penanggung jawab otomatis saat ini<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
+                    </template>
+                    <template v-else-if="suggestionReason === 'DIVISION_HEAD'">
                       Karena kategori kendala ini membutuhkan keahlian divisi {{ suggestionDivision }}, tiket otomatis diteruskan ke pimpinan divisi tersebut<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
                     </template>
                     <template v-else>
@@ -1062,7 +1067,12 @@ onBeforeUnmount(() => {
                     Silakan pilih Proyek Terdaftar terlebih dahulu untuk menentukan Pimpinan Proyek yang berwenang menerima eskalasi kendala ini.
                   </p>
                   <p v-else>
-                    Tiket akan langsung diteruskan otomatis ke Pimpinan Proyek {{ projectCode }}<span v-if="defaultProjectLeadName">: <strong>{{ defaultProjectLeadName }}</strong></span> untuk ditindaklanjuti.
+                    <template v-if="suggestionNote">
+                      {{ suggestionNote }} Tiket Proyek {{ projectCode }} diteruskan otomatis ke<span v-if="defaultProjectLeadName">: <strong>{{ defaultProjectLeadName }}</strong></span>.
+                    </template>
+                    <template v-else>
+                      Tiket akan langsung diteruskan otomatis ke Pimpinan Proyek {{ projectCode }}<span v-if="defaultProjectLeadName">: <strong>{{ defaultProjectLeadName }}</strong></span> untuk ditindaklanjuti.
+                    </template>
                   </p>
                 </div>
               </div>

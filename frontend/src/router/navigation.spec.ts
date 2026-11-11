@@ -93,11 +93,12 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
       }
     }
 
-    // Siapapun (misal SUPERVISOR atau EMPLOYEE) yang ditunjuk sebagai Reviewer Sementara aktif langsung melihat & bisa mengakses!
+    // Siapapun (misal SUPERVISOR atau EMPLOYEE) yang ditunjuk sebagai Reviewer Sementara aktif langsung melihat & bisa mengakses
+    // antrean kepegawaian DAN antrean eskalasi blocker yang dilimpahkan!
     for (const role of ['SUPERVISOR', 'EMPLOYEE', 'PROJECT_MANAGER']) {
       const delegatedCtx = { role, isTemporaryReviewer: true };
       const links = flatten(delegatedCtx);
-      for (const p of hrPaths) {
+      for (const p of [...hrPaths, '/blockers', '/blockers/aging']) {
         expect(links, `${role} dengan isTemporaryReviewer=true wajib melihat ${p}`).toContain(p);
         expect(canAccessRoute(p, delegatedCtx)).toBe(true);
       }

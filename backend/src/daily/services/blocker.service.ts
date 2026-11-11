@@ -147,44 +147,168 @@ export class BlockerService {
     });
   }
 
+  private activeDateWhere(today: Date) {
+    return {
+      effectiveDate: { lte: today },
+      OR: [{ endDate: null }, { endDate: { gte: today } }],
+    };
+  }
+
+  private async isUserActive(userId: string): Promise<boolean> {
+    if (!this.prisma.user?.findFirst) {
+      return true;
+    }
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: { id: userId, status: 'ACTIVE' },
+        select: { id: true },
+      });
+      return Boolean(user);
+    } catch {
+      return false;
+    }
+  }
+
+  private async isUserOnApprovedLeave(userId: string, today: Date): Promise<boolean> {
+    if (!this.prisma.leaveRequest?.findFirst) {
+      return false;
+    }
+    try {
+      const activeLeave = await this.prisma.leaveRequest.findFirst({
+        where: {
+          userId,
+          status: 'APPROVED',
+          startDate: { lte: today },
+          endDate: { gte: today },
+        },
+      });
+      return Boolean(activeLeave);
+    } catch {
+      return false;
+    }
+  }
+
+  private async findActiveTemporaryDelegate(
+    targetFunction: CanonicalFunction,
+    excludeUserIds: string[],
+    today: Date,
+  ): Promise<string | null> {
+    const repo = this.prisma.temporaryReviewerAssignment;
+    if (!repo) {
+      return null;
+    }
+
+    try {
+      const candidates = repo.findMany
+        ? await repo.findMany({
+            where: {
+              targetFunction,
+              effectiveDate: { lte: today },
+              expiryDate: { gte: today },
+              delegateUserId: { notIn: excludeUserIds },
+            },
+            orderBy: { createdAt: 'desc' },
+          })
+        : repo.findFirst
+          ? [
+              await repo.findFirst({
+                where: {
+                  targetFunction,
+                  effectiveDate: { lte: today },
+                  expiryDate: { gte: today },
+                  delegateUserId: { notIn: excludeUserIds },
+                },
+                orderBy: { createdAt: 'desc' },
+              }),
+            ].filter(Boolean)
+          : [];
+
+      for (const item of candidates) {
+        const delegateId = item?.delegateUserId;
+        if (!delegateId || excludeUserIds.includes(delegateId)) continue;
+        if (!(await this.isUserActive(delegateId))) continue;
+        if (await this.isUserOnApprovedLeave(delegateId, today)) continue;
+        return delegateId;
+      }
+    } catch {
+      // Lanjut ke jalur normal
+    }
+    return null;
+  }
+
   /**
-   * Menentukan pejabat eskalasi satu tingkat di atas penanggung jawab saat ini (N+1 -> N+2 -> Direksi).
+   * Menentukan pejabat eskalasi satu tingkat di atas penanggung jawab saat ini (N+1 -> N+2 -> Direksi),
+   * serta otomatis melewati pejabat yang sedang cuti resmi.
    */
   private async resolveNextEscalationAuthority(
     currentOwnerId: string,
     ownerNeededType?: AuthorityContext,
     projectCode?: string | null,
   ): Promise<string | null> {
+    const today = toJakartaDateOnly(this.clockService.now());
+
     try {
-      if (ownerNeededType === AuthorityContext.PROJECT_AUTHORITY && projectCode?.trim() && this.prisma.projectAuthorityMapping?.findFirst) {
+      if (
+        ownerNeededType === AuthorityContext.PROJECT_AUTHORITY &&
+        projectCode?.trim() &&
+        this.prisma.projectAuthorityMapping?.findFirst
+      ) {
         const mapping = await this.prisma.projectAuthorityMapping.findFirst({
-          where: { projectCode: projectCode.trim() },
+          where: {
+            projectCode: projectCode.trim(),
+            ...this.activeDateWhere(today),
+          },
+          orderBy: { createdAt: 'desc' },
         });
         if (mapping?.escalationReviewerId && mapping.escalationReviewerId !== currentOwnerId) {
-          return mapping.escalationReviewerId;
+          const resolved = await this.resolveAvailableManagerChain(
+            mapping.escalationReviewerId,
+            currentOwnerId,
+            mapping.involvedFunction,
+            { skipTempDelegation: true, excludeUserIds: [currentOwnerId] },
+          );
+          if (resolved.userId && resolved.userId !== currentOwnerId) {
+            return resolved.userId;
+          }
         }
       }
 
       if (this.prisma.organizationalAssignment?.findFirst) {
         const ownerAssign = await this.prisma.organizationalAssignment.findFirst({
-          where: { userId: currentOwnerId, endDate: null },
-          orderBy: { createdAt: 'desc' },
+          where: {
+            userId: currentOwnerId,
+            ...this.activeDateWhere(today),
+          },
+          orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
         });
         if (ownerAssign?.directManagerId && ownerAssign.directManagerId !== currentOwnerId) {
-          return ownerAssign.directManagerId;
+          const resolved = await this.resolveAvailableManagerChain(
+            ownerAssign.directManagerId,
+            currentOwnerId,
+            ownerAssign.function,
+            { skipTempDelegation: true, excludeUserIds: [currentOwnerId] },
+          );
+          if (resolved.userId && resolved.userId !== currentOwnerId) {
+            return resolved.userId;
+          }
         }
 
-        // Jika penanggung jawab saat ini sudah Kepala Divisi tanpa directManagerId, naik ke CEO / Direksi
+        // Jika penanggung jawab saat ini bukan CEO, naik ke CEO / Direksi aktif yang tidak sedang cuti
         if (ownerAssign?.role !== CanonicalRole.CEO_MANAGEMENT) {
           const ceoAssign = await this.prisma.organizationalAssignment.findFirst({
             where: {
               role: CanonicalRole.CEO_MANAGEMENT,
-              endDate: null,
+              ...this.activeDateWhere(today),
+              userId: { not: currentOwnerId },
               user: { status: 'ACTIVE' },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
           });
-          if (ceoAssign?.userId && ceoAssign.userId !== currentOwnerId) {
+          if (
+            ceoAssign?.userId &&
+            ceoAssign.userId !== currentOwnerId &&
+            !(await this.isUserOnApprovedLeave(ceoAssign.userId, today))
+          ) {
             return ceoAssign.userId;
           }
         }
@@ -197,91 +321,89 @@ export class BlockerService {
 
   /**
    * Memeriksa apakah kandidat penanggung jawab sedang cuti resmi (APPROVED Leave) atau memiliki
-   * Reviewer Sementara aktif hari ini. Jika ada Reviewer Sementara aktif, alihkan ke Reviewer Sementara;
-   * jika sedang cuti tanpa delegasi, naik otomatis 1 tingkat ke atasan di atasnya (N+1 -> N+2 -> CEO).
+   * Reviewer Sementara aktif hari ini. Jika ada Reviewer Sementara aktif pada divisi terkait, alihkan ke
+   * Reviewer Sementara (kecuali pelapor sudah setingkat HEAD/CEO); jika sedang cuti tanpa delegasi, naik
+   * otomatis 1 tingkat ke atasan di atasnya (N+1 -> N+2 -> CEO).
    */
   private async resolveAvailableManagerChain(
     initialManagerId: string | null | undefined,
     reporterUserId: string,
     reporterFunction?: CanonicalFunction | null,
-  ): Promise<string | null> {
+    options?: {
+      reporterRole?: CanonicalRole | string | null;
+      skipTempDelegation?: boolean;
+      excludeUserIds?: string[];
+    },
+  ): Promise<{ userId: string | null; routingNote?: string }> {
     const today = toJakartaDateOnly(this.clockService.now());
+    const excludeIds = Array.from(new Set([reporterUserId, ...(options?.excludeUserIds || [])]));
 
-    // 1. Jika ada Reviewer Sementara aktif yang diterbitkan oleh atasan tersebut pada divisi pelapor, prioritaskan
-    if (initialManagerId && reporterFunction && this.prisma.temporaryReviewerAssignment?.findFirst) {
-      try {
-        const activeDelegation = await this.prisma.temporaryReviewerAssignment.findFirst({
-          where: {
-            targetFunction: reporterFunction,
-            createdByUserId: initialManagerId,
-            effectiveDate: { lte: today },
-            expiryDate: { gte: today },
-            delegateUserId: { not: reporterUserId },
-          },
-          orderBy: { createdAt: 'desc' },
-        });
-        if (activeDelegation?.delegateUserId) {
-          return activeDelegation.delegateUserId;
-        }
-      } catch {
-        // Lanjut ke pemeriksaan normal
+    // 1. Jika ada Reviewer Sementara aktif pada divisi pelapor (dan pelapor bukan HEAD/CEO yang naik ke Direksi), prioritaskan
+    const canUseDivisionDelegation =
+      !options?.skipTempDelegation &&
+      Boolean(initialManagerId) &&
+      Boolean(reporterFunction) &&
+      options?.reporterRole !== CanonicalRole.HEAD &&
+      options?.reporterRole !== CanonicalRole.CEO_MANAGEMENT;
+
+    if (canUseDivisionDelegation && reporterFunction) {
+      const activeDelegateId = await this.findActiveTemporaryDelegate(reporterFunction, excludeIds, today);
+      if (activeDelegateId) {
+        return {
+          userId: activeDelegateId,
+          routingNote: 'Dialihkan otomatis ke Reviewer Sementara aktif untuk fungsi terkait.',
+        };
       }
     }
 
     // 2. Telusuri rantai atasan (maksimal 4 tingkat hingga CEO) jika kandidat sedang cuti resmi
     let currentCandidateId = initialManagerId || null;
     const visited = new Set<string>();
+    let bypassedDueToLeave = false;
 
     for (let depth = 0; depth < 4 && currentCandidateId; depth++) {
       if (visited.has(currentCandidateId)) break;
       visited.add(currentCandidateId);
 
-      let isOnLeave = false;
-      if (this.prisma.leaveRequest?.findFirst) {
-        try {
-          const activeLeave = await this.prisma.leaveRequest.findFirst({
-            where: {
-              userId: currentCandidateId,
-              status: 'APPROVED',
-              startDate: { lte: today },
-              endDate: { gte: today },
-            },
-          });
-          isOnLeave = Boolean(activeLeave);
-        } catch {
-          isOnLeave = false;
-        }
+      const onLeave = await this.isUserOnApprovedLeave(currentCandidateId, today);
+
+      if (!onLeave && !excludeIds.includes(currentCandidateId)) {
+        return {
+          userId: currentCandidateId,
+          routingNote: bypassedDueToLeave
+            ? 'Penanggung jawab utama sedang cuti resmi, sehingga dialihkan otomatis ke pejabat tersedia pada jenjang berikutnya.'
+            : undefined,
+        };
       }
 
-      if (!isOnLeave) {
-        return currentCandidateId;
+      if (onLeave) {
+        bypassedDueToLeave = true;
       }
 
-      // Jika sedang cuti, cek apakah ada Reviewer Sementara aktif di divisinya
-      if (reporterFunction && this.prisma.temporaryReviewerAssignment?.findFirst) {
-        try {
-          const fallbackDelegation = await this.prisma.temporaryReviewerAssignment.findFirst({
-            where: {
-              targetFunction: reporterFunction,
-              effectiveDate: { lte: today },
-              expiryDate: { gte: today },
-              delegateUserId: { notIn: [reporterUserId, currentCandidateId] },
-            },
-            orderBy: { createdAt: 'desc' },
-          });
-          if (fallbackDelegation?.delegateUserId) {
-            return fallbackDelegation.delegateUserId;
-          }
-        } catch {
-          // Lanjut naik ke atasan berikutnya
+      // Jika sedang cuti, cek apakah ada Reviewer Sementara aktif di fungsi terkait
+      if (!options?.skipTempDelegation && reporterFunction) {
+        const fallbackDelegateId = await this.findActiveTemporaryDelegate(
+          reporterFunction,
+          [...excludeIds, currentCandidateId],
+          today,
+        );
+        if (fallbackDelegateId) {
+          return {
+            userId: fallbackDelegateId,
+            routingNote:
+              'Penanggung jawab utama sedang cuti resmi, sehingga dialihkan otomatis ke Reviewer Sementara aktif.',
+          };
         }
       }
 
       // Naik 1 tingkat ke atasan di atasnya (N+1 -> N+2 -> CEO)
       if (this.prisma.organizationalAssignment?.findFirst) {
         const nextAssign = await this.prisma.organizationalAssignment.findFirst({
-          where: { userId: currentCandidateId, endDate: null },
-          orderBy: { createdAt: 'desc' },
+          where: {
+            userId: currentCandidateId,
+            ...this.activeDateWhere(today),
+          },
+          orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
         });
         currentCandidateId = nextAssign?.directManagerId || null;
       } else {
@@ -289,7 +411,20 @@ export class BlockerService {
       }
     }
 
-    return currentCandidateId || initialManagerId || null;
+    const fallbackId =
+      currentCandidateId && !excludeIds.includes(currentCandidateId)
+        ? currentCandidateId
+        : !bypassedDueToLeave
+          ? initialManagerId || null
+          : null;
+
+    return {
+      userId: fallbackId,
+      routingNote:
+        bypassedDueToLeave && fallbackId
+          ? 'Penanggung jawab utama sedang cuti resmi, sehingga dialihkan otomatis ke pejabat tersedia pada jenjang berikutnya.'
+          : undefined,
+    };
   }
 
   /**
@@ -308,9 +443,9 @@ export class BlockerService {
 
   /**
    * Menentukan penanggung jawab yang paling tepat ketika pelapor tidak menunjuk siapa pun.
-   * - Kewenangan Proyek: Pimpinan Proyek, lalu Pengarah Proyek.
-   * - Kewenangan Struktural: berdasarkan kategori kendala. Kendala yang butuh keahlian divisi lain
-   *   (INFRA, FINANCE, LEGAL) diarahkan ke pimpinan divisi terkait; selain itu ke Atasan Langsung.
+   * - Kewenangan Proyek: Pimpinan Proyek -> Reviewer Sementara / Pengarah Proyek -> rantai atasan hingga CEO (melewati yang cuti).
+   * - Kewenangan Struktural: kendala lintas fungsi (INFRA, FINANCE, LEGAL) ke fungsi terkait (dengan cek cuti/delegasi/chain);
+   *   selain itu ke Atasan Langsung / Reviewer Sementara / rantai atasan hingga CEO.
    */
   async resolveSuggestedOwner(
     userId: string,
@@ -319,7 +454,10 @@ export class BlockerService {
     owner: { id: string; fullName: string; jobTitle: string | null } | null;
     reason: 'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE';
     divisionLabel?: string;
+    routingNote?: string;
   }> {
+    const today = toJakartaDateOnly(this.clockService.now());
+
     const pick = async (id?: string | null) => {
       if (!id) return null;
       const u = await this.prisma.user.findFirst({
@@ -327,7 +465,12 @@ export class BlockerService {
         select: {
           id: true,
           fullName: true,
-          orgAssignments: { where: { endDate: null }, orderBy: { createdAt: 'desc' }, take: 1, select: { jobTitle: true } },
+          orgAssignments: {
+            where: this.activeDateWhere(today),
+            orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+            take: 1,
+            select: { jobTitle: true },
+          },
         },
       });
       return u ? { id: u.id, fullName: u.fullName, jobTitle: u.orgAssignments?.[0]?.jobTitle || null } : null;
@@ -335,19 +478,82 @@ export class BlockerService {
 
     if (input.ownerNeededType === AuthorityContext.PROJECT_AUTHORITY && input.projectCode?.trim()) {
       const mapping = await this.prisma.projectAuthorityMapping.findFirst({
-        where: { projectCode: input.projectCode.trim() },
+        where: {
+          projectCode: input.projectCode.trim(),
+          ...this.activeDateWhere(today),
+        },
+        orderBy: { createdAt: 'desc' },
       });
-      const owner = (await pick(mapping?.projectManagerId)) || (await pick(mapping?.escalationReviewerId));
-      if (owner) return { owner, reason: 'PROJECT_LEAD' };
+
+      if (mapping) {
+        if (mapping.projectManagerId && mapping.projectManagerId !== userId) {
+          const pmOnLeave = await this.isUserOnApprovedLeave(mapping.projectManagerId, today);
+          if (!pmOnLeave) {
+            const pmOwner = await pick(mapping.projectManagerId);
+            if (pmOwner) return { owner: pmOwner, reason: 'PROJECT_LEAD' };
+          }
+        }
+
+        if (mapping.involvedFunction) {
+          const tempDelegateId = await this.findActiveTemporaryDelegate(
+            mapping.involvedFunction,
+            [userId, mapping.projectManagerId].filter(Boolean) as string[],
+            today,
+          );
+          if (tempDelegateId) {
+            const delegateOwner = await pick(tempDelegateId);
+            if (delegateOwner) {
+              return {
+                owner: delegateOwner,
+                reason: 'PROJECT_LEAD',
+                routingNote:
+                  'Pimpinan proyek utama sedang cuti/tidak tersedia, sehingga dialihkan otomatis ke Reviewer Sementara aktif.',
+              };
+            }
+          }
+        }
+
+        const escChain = await this.resolveAvailableManagerChain(
+          mapping.escalationReviewerId,
+          userId,
+          mapping.involvedFunction,
+          { skipTempDelegation: true },
+        );
+        const escOwner = await pick(escChain.userId);
+        if (escOwner) {
+          return {
+            owner: escOwner,
+            reason: 'PROJECT_LEAD',
+            routingNote:
+              escChain.routingNote ||
+              (mapping.projectManagerId
+                ? 'Pimpinan proyek utama sedang cuti/tidak tersedia, sehingga diteruskan otomatis ke pengarah proyek yang tersedia.'
+                : undefined),
+          };
+        }
+      }
     }
 
     if (input.ownerNeededType !== AuthorityContext.PROJECT_AUTHORITY) {
       const target = BLOCKER_TYPE_DIVISION_ROUTING[input.type || ''];
       if (target) {
+        const divisionDelegateId = await this.findActiveTemporaryDelegate(target.function, [userId], today);
+        if (divisionDelegateId) {
+          const delegateOwner = await pick(divisionDelegateId);
+          if (delegateOwner) {
+            return {
+              owner: delegateOwner,
+              reason: 'DIVISION_HEAD',
+              divisionLabel: target.label,
+              routingNote: `Dialihkan otomatis ke Reviewer Sementara aktif untuk divisi ${target.label}.`,
+            };
+          }
+        }
+
         const candidates = await this.prisma.organizationalAssignment.findMany({
           where: {
             function: target.function,
-            endDate: null,
+            ...this.activeDateWhere(today),
             userId: { not: userId },
             role: { not: 'SYSTEM_ADMIN' },
             user: { status: 'ACTIVE' },
@@ -360,38 +566,104 @@ export class BlockerService {
           const rb = rank.indexOf(b.role);
           return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
         });
-        const owner = await pick(candidates[0]?.userId);
-        if (owner) return { owner, reason: 'DIVISION_HEAD', divisionLabel: target.label };
+
+        let sawPrimaryOnLeave = false;
+        for (const candidate of candidates) {
+          const onLeave = await this.isUserOnApprovedLeave(candidate.userId, today);
+          if (!onLeave) {
+            const owner = await pick(candidate.userId);
+            if (owner) {
+              return {
+                owner,
+                reason: 'DIVISION_HEAD',
+                divisionLabel: target.label,
+                routingNote: sawPrimaryOnLeave
+                  ? `Pimpinan utama divisi ${target.label} sedang cuti resmi, sehingga dialihkan otomatis ke pejabat divisi yang tersedia.`
+                  : undefined,
+              };
+            }
+          } else {
+            sawPrimaryOnLeave = true;
+          }
+        }
+
+        // Jika seluruh pejabat pada fungsi terkait sedang cuti, naikkan melalui rantai atasan (hingga CEO)
+        if (candidates[0]?.userId) {
+          const chainResult = await this.resolveAvailableManagerChain(
+            candidates[0].userId,
+            userId,
+            target.function,
+            { skipTempDelegation: true },
+          );
+          const chainOwner = await pick(chainResult.userId);
+          if (chainOwner) {
+            return {
+              owner: chainOwner,
+              reason: 'DIVISION_HEAD',
+              divisionLabel: target.label,
+              routingNote:
+                chainResult.routingNote ||
+                `Seluruh pejabat divisi ${target.label} sedang cuti resmi, sehingga diteruskan otomatis ke pimpinan jenjang berikutnya.`,
+            };
+          }
+        }
       }
     }
 
     const orgAssign = await this.prisma.organizationalAssignment.findFirst({
-      where: { userId, endDate: null },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        userId,
+        ...this.activeDateWhere(today),
+      },
+      orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
     });
 
-    const effectiveManagerId = await this.resolveAvailableManagerChain(
+    const effective = await this.resolveAvailableManagerChain(
       orgAssign?.directManagerId,
       userId,
       orgAssign?.function,
+      { reporterRole: orgAssign?.role },
     );
-    const manager = await pick(effectiveManagerId);
-    if (manager) return { owner: manager, reason: 'DIRECT_MANAGER' };
+    const manager = await pick(effective.userId);
+    if (manager) {
+      return {
+        owner: manager,
+        reason: 'DIRECT_MANAGER',
+        routingNote: effective.routingNote,
+      };
+    }
 
     // Fallback untuk kondisi struktur pipih (tanpa directManagerId) atau pelapor tingkat tinggi (Head/CEO):
-    // cari pimpinan fungsi atau CEO aktif
+    // cari pimpinan fungsi atau CEO aktif yang tidak sedang cuti
     if (this.prisma.organizationalAssignment?.findFirst) {
-      const executiveAssign = await this.prisma.organizationalAssignment.findFirst({
-        where: {
-          role: { in: [CanonicalRole.CEO_MANAGEMENT, CanonicalRole.HEAD] },
-          endDate: null,
-          userId: { not: userId },
-          user: { status: 'ACTIVE' },
-        },
-        orderBy: { createdAt: 'asc' },
-      });
-      const execOwner = await pick(executiveAssign?.userId);
-      if (execOwner) return { owner: execOwner, reason: 'DIRECT_MANAGER' };
+      const execCandidates = this.prisma.organizationalAssignment.findMany
+        ? await this.prisma.organizationalAssignment.findMany({
+            where: {
+              role: { in: [CanonicalRole.CEO_MANAGEMENT, CanonicalRole.HEAD] },
+              ...this.activeDateWhere(today),
+              userId: { not: userId },
+              user: { status: 'ACTIVE' },
+            },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [
+            await this.prisma.organizationalAssignment.findFirst({
+              where: {
+                role: { in: [CanonicalRole.CEO_MANAGEMENT, CanonicalRole.HEAD] },
+                ...this.activeDateWhere(today),
+                userId: { not: userId },
+                user: { status: 'ACTIVE' },
+              },
+              orderBy: { createdAt: 'asc' },
+            }),
+          ].filter(Boolean);
+
+      for (const exec of execCandidates) {
+        if (!exec?.userId) continue;
+        if (await this.isUserOnApprovedLeave(exec.userId, today)) continue;
+        const execOwner = await pick(exec.userId);
+        if (execOwner) return { owner: execOwner, reason: 'DIRECT_MANAGER' };
+      }
     }
 
     return { owner: null, reason: 'NONE' };

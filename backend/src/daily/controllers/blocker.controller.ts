@@ -35,7 +35,13 @@ export class BlockerController {
       this.blockerService.getSlaMinutesMap(),
       this.blockerService.resolveSuggestedOwner(req.user.id, { type, ownerNeededType, projectCode }),
     ]);
-    return { slaMinutes, suggestedOwner: suggestion.owner, reason: suggestion.reason, divisionLabel: suggestion.divisionLabel };
+    return {
+      slaMinutes,
+      suggestedOwner: suggestion.owner,
+      reason: suggestion.reason,
+      divisionLabel: suggestion.divisionLabel,
+      routingNote: suggestion.routingNote,
+    };
   }
 
   @Get('aging')

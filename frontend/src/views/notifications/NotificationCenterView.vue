@@ -293,6 +293,7 @@ function getNotificationPreview(message: string): string {
 
 function getActionButtonLabel(actionUrl?: string): string {
   if (actionUrl === '/leave/queue') return 'Buka Antrean Persetujuan Cuti';
+  if (actionUrl === '/blockers') return 'Buka Antrean Eskalasi Blocker';
   if (actionUrl === '/daily/morning') return 'Buka Morning Commitment';
   return 'Buka Halaman Terkait';
 }
