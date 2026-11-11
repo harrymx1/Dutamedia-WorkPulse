@@ -249,6 +249,67 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('09:00 → 09:30 WIB');
     expect(wrapper.text()).toContain('23:59 → 10:00 WIB');
     expect(wrapper.text()).toContain('Buka Morning Commitment');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.modal-card').exists()).toBe(false);
+  });
+
+  it('normalizes legacy policy notification with "Tetap " and closes modal on backdrop click', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-aditya',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-policy-legacy',
+              title: 'Perubahan Kebijakan Target Waktu Penanganan Kendala',
+              message:
+                'Mulai hari ini (Rabu, 11 November 2026, berlaku mulai sekarang), acuan Target Waktu Penanganan Kendala (Blocker) telah diperbarui. Kategori Kebijakan: Target Waktu Penanganan Kendala Batas Respon Atasan Langsung: Tetap 4 Jam Kerja Diubah Oleh: Sistem Administrator',
+              type: 'POLICY_UPDATED',
+              channel: 'IN_APP_CENTER',
+              read: false,
+              createdAt: '2026-11-11T10:50:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wrapper.find('.notif-item').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.delegation-note-callout').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Batas Respon Jenjang Pertama:');
+    expect(wrapper.text()).toContain('4 Jam Kerja');
+    expect(wrapper.text()).not.toContain('Tetap 4 Jam Kerja');
+
+    await wrapper.find('.modal-backdrop').trigger('click');
+    expect(wrapper.find('.modal-card').exists()).toBe(false);
   });
 });
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { canAccessRoute } from '../../router/navigation';
@@ -448,11 +448,26 @@ function parseDelegationContent(message: string): DelegationParsedContent {
   return { introText, items };
 }
 
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && selectedNotification.value) {
+    closeDetail();
+  }
+}
+
 onMounted(() => {
-  if (typeof window !== 'undefined' && 'Notification' in window) {
-    pushPermission.value = Notification.permission;
+  if (typeof window !== 'undefined') {
+    if ('Notification' in window) {
+      pushPermission.value = Notification.permission;
+    }
+    window.addEventListener('keydown', handleKeydown);
   }
   loadNotifications();
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleKeydown);
+  }
 });
 </script>
 
@@ -688,11 +703,18 @@ onMounted(() => {
       </div>
 
       <!-- Detail Modal -->
-      <div v-if="selectedNotification" class="modal-backdrop">
+      <div
+        v-if="selectedNotification"
+        class="modal-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Rincian Pemberitahuan"
+        @click.self="closeDetail"
+      >
         <div class="modal-card">
           <div class="modal-header">
             <h3>Rincian Pemberitahuan</h3>
-            <button type="button" class="close-btn" @click="closeDetail">✕</button>
+            <button type="button" class="close-btn" aria-label="Tutup rincian" @click="closeDetail">✕</button>
           </div>
           <div class="modal-body">
             <h4 class="modal-title">{{ selectedNotification.title }}</h4>
@@ -1170,8 +1192,9 @@ h1 {
   position: fixed;
   inset: 0;
   background: rgba(14, 33, 27, 0.45);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 999;
   padding: 16px;
 }
@@ -1179,17 +1202,21 @@ h1 {
 .modal-card {
   background: #FFFFFF;
   border-radius: 12px;
-  max-width: 480px;
+  max-width: 640px;
   width: 100%;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 16px 36px rgba(14, 33, 27, 0.16);
   overflow: hidden;
 }
 
 .modal-header {
-  padding: 14px 20px;
+  padding: 12px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
 }
 
@@ -1203,10 +1230,21 @@ h1 {
   border: none;
   cursor: pointer;
   font-size: 16px;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 6px;
+  color: var(--color-text-secondary, #5C6E68);
+}
+
+.close-btn:hover {
+  background: #F1F5F9;
+  color: #0E211B;
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-title {
@@ -1219,7 +1257,7 @@ h1 {
   font-size: 13.5px;
   color: #3F524A;
   line-height: 1.5;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   white-space: pre-line;
 }
 
@@ -1227,9 +1265,13 @@ h1 {
   background: #F8FAF9;
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px 12px;
   font-size: 12.5px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+.modal-detail-box .detail-row:last-child {
+  margin-bottom: 0;
 }
 
 .detail-row {
@@ -1363,8 +1405,8 @@ h1 {
 }
 
 .delegation-note-callout {
-  margin: 14px 0 16px;
-  padding: 14px 16px;
+  margin: 10px 0 12px;
+  padding: 12px 14px;
   background: #F0FDF4;
   border: 1px solid #BBF7D0;
   border-left: 4px solid var(--color-brand-primary, #00674D);
@@ -1376,10 +1418,10 @@ h1 {
   align-items: center;
   gap: 8px;
   color: var(--color-brand-primary, #00674D);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px dashed #BBF7D0;
 }
 
@@ -1389,30 +1431,31 @@ h1 {
 }
 
 .delegation-intro-text {
-  margin: 0 0 12px;
-  font-size: 13.5px;
-  line-height: 1.55;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
   color: #0E211B;
   font-weight: 500;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px dashed #BBF7D0;
 }
 
 .delegation-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .delegation-row {
   display: flex;
   align-items: flex-start;
-  font-size: 13px;
-  line-height: 1.5;
+  gap: 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
 }
 
 .delegation-row .row-label {
-  width: 155px;
+  width: 195px;
   flex-shrink: 0;
   font-weight: 600;
   color: #374151;

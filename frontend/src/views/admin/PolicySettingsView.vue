@@ -879,7 +879,14 @@ onUnmounted(() => {
     </main>
 
     <!-- Modal Buat Versi Kebijakan Baru -->
-    <div v-if="isModalOpen" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div
+      v-if="isModalOpen"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+      @click.self="closeModal"
+    >
       <div class="modal-box">
         <div class="modal-header">
           <div>
@@ -1544,17 +1551,21 @@ h1 {
   background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 620px;
+  max-width: 640px;
   width: 100%;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
 .modal-header {
-  padding: 20px 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -1577,7 +1588,7 @@ h1 {
 }
 
 .modal-error-alert {
-  margin: 16px 24px 0;
+  margin: 12px 24px 0;
   padding: 10px 14px;
   background: var(--color-status-red-bg);
   border: 1px solid var(--color-status-red-border);
@@ -1587,13 +1598,16 @@ h1 {
   gap: 8px;
   align-items: center;
   font-size: 13px;
+  flex-shrink: 0;
 }
 
 .modal-form {
-  padding: 20px 24px 24px;
+  padding: 18px 24px 22px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .form-group {
