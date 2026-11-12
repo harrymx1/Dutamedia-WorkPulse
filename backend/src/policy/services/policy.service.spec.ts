@@ -20,8 +20,14 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       policyOwnerAssignment: {
         findMany: vi.fn().mockResolvedValue([]),
         findFirst: vi.fn(),
+        findUnique: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
+        delete: vi.fn(),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      organizationalAssignment: {
+        findMany: vi.fn().mockResolvedValue([{ role: 'CEO_MANAGEMENT' }]),
       },
       auditLog: {
         create: vi.fn(),
@@ -240,6 +246,112 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       await expect(
         service.createPolicyVersion('usr-admin', dto),
       ).rejects.toThrowError(AppException);
+    });
+
+    it('rejects policy creation when caller is not an active policy owner (BR-15, FR-34)', async () => {
+      const dto = {
+        category: PolicyCategory.CHECKIN_TIMING,
+        configurationValues: { morningLockCutoff: '10:00' },
+        effectiveDate: '2026-10-29',
+        changeJustification: 'Perubahan jam masuk kantor oleh bukan pemilik',
+      };
+
+      // Simulasikan ada pemilik lain di database, tetapi bukan user pemanggil
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.policyOwnerAssignment.count.mockResolvedValue(1);
+
+      await expect(
+        service.createPolicyVersion('usr-unauthorized', dto),
+      ).rejects.toThrowError(AppException);
+
+      try {
+        await service.createPolicyVersion('usr-unauthorized', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.AUTH_FORBIDDEN_ROLE);
+        expect(err.getStatus()).toBe(403);
+      }
+    });
+  });
+
+  describe('Policy Owners Governance (Multi-Owner & Revocation)', () => {
+    it('allows assigning multiple active owners to the same policy category concurrently without deleting previous owners', async () => {
+      const dto1 = {
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+        userId: 'usr-dewi',
+        effectiveDate: '2026-10-28',
+      };
+      const dto2 = {
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+        userId: 'usr-hendra',
+        effectiveDate: '2026-10-28',
+      };
+
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.policyOwnerAssignment.create.mockImplementation(({ data }: any) => ({
+        id: `poa-${data.userId}`,
+        ...data,
+        user: { id: data.userId, fullName: data.userId === 'usr-dewi' ? 'Dewi Lestari' : 'Hendra Wijaya', email: 'test@dm.com' },
+      }));
+
+      const res1 = await service.assignPolicyOwner('usr-actor', dto1);
+      const res2 = await service.assignPolicyOwner('usr-actor', dto2);
+
+      expect(res1.userId).toBe('usr-dewi');
+      expect(res2.userId).toBe('usr-hendra');
+      // Verifikasi bahwa policyOwnerAssignment.delete dan update TIDAK dipanggil saat menambahkan owner lain
+      expect(mockPrisma.policyOwnerAssignment.delete).not.toHaveBeenCalled();
+      expect(mockPrisma.policyOwnerAssignment.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('rejects duplicate assignment for the same user on the same category with 409 Conflict', async () => {
+      const dto = {
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+        userId: 'usr-dewi',
+        effectiveDate: '2026-10-28',
+      };
+
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValue({
+        id: 'poa-existing',
+        userId: 'usr-dewi',
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+      });
+
+      await expect(
+        service.assignPolicyOwner('usr-actor', dto),
+      ).rejects.toThrowError(AppException);
+
+      try {
+        await service.assignPolicyOwner('usr-actor', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.RESOURCE_CONFLICT);
+        expect(err.getStatus()).toBe(409);
+      }
+    });
+
+    it('revokes an individual owner assignment and logs audit trail without affecting others', async () => {
+      mockPrisma.policyOwnerAssignment.findUnique.mockResolvedValue({
+        id: 'poa-to-revoke',
+        userId: 'usr-dewi',
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+        effectiveDate: new Date('2026-10-28'),
+        user: { id: 'usr-dewi', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+      });
+
+      const res = await service.revokePolicyOwner('usr-actor', 'poa-to-revoke');
+
+      expect(res.success).toBe(true);
+      expect(mockPrisma.policyOwnerAssignment.delete).toHaveBeenCalledWith({
+        where: { id: 'poa-to-revoke' },
+      });
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'POLICY_OWNER_REVOKED',
+            relatedEntityType: 'policy_owner_assignments',
+            relatedEntityId: 'poa-to-revoke',
+          }),
+        }),
+      );
     });
   });
 });

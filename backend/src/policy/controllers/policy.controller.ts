@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   Query,
   Req,
@@ -18,29 +20,55 @@ import { CanonicalRole, PolicyCategory } from '@prisma/client';
 
 @Controller(['policies', 'api/policies', 'api/v1/policies', 'v1/policies'])
 @UseGuards(AuthGuard, CsrfGuard, RolesGuard)
-@Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Get()
+  @Roles(
+    CanonicalRole.SYSTEM_ADMIN,
+    CanonicalRole.HRGA,
+    CanonicalRole.CEO_MANAGEMENT,
+    CanonicalRole.HEAD,
+    CanonicalRole.PROJECT_MANAGER,
+  )
   async getAllActivePolicies(@Query('date') date?: string) {
     const targetDate = date ? new Date(date) : undefined;
     return this.policyService.getAllActivePolicies(targetDate);
   }
 
   @Get('audit')
+  @Roles(
+    CanonicalRole.SYSTEM_ADMIN,
+    CanonicalRole.HRGA,
+    CanonicalRole.CEO_MANAGEMENT,
+    CanonicalRole.HEAD,
+    CanonicalRole.PROJECT_MANAGER,
+  )
   async getAuditTrail(@Query('category') category?: PolicyCategory) {
     return this.policyService.getAuditTrail(category);
   }
 
   @Get('owners')
+  @Roles(
+    CanonicalRole.SYSTEM_ADMIN,
+    CanonicalRole.HRGA,
+    CanonicalRole.CEO_MANAGEMENT,
+    CanonicalRole.HEAD,
+    CanonicalRole.PROJECT_MANAGER,
+  )
   async getPolicyOwners() {
     return this.policyService.getPolicyOwners();
   }
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
+  @Roles(
+    CanonicalRole.SYSTEM_ADMIN,
+    CanonicalRole.HRGA,
+    CanonicalRole.CEO_MANAGEMENT,
+    CanonicalRole.HEAD,
+    CanonicalRole.PROJECT_MANAGER,
+  )
   async createPolicyVersion(
     @Body() dto: CreatePolicyVersionDto,
     @Req() req: any,
@@ -55,7 +83,7 @@ export class PolicyController {
 
   @Post('owners')
   @UseGuards(RolesGuard)
-  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.HRGA, CanonicalRole.CEO_MANAGEMENT)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT)
   async assignPolicyOwner(
     @Body() dto: AssignPolicyOwnerDto,
     @Req() req: any,
@@ -66,6 +94,36 @@ export class PolicyController {
       userAgent: req.headers['user-agent'],
     };
     return this.policyService.assignPolicyOwner(actorUserId, dto, meta);
+  }
+
+  @Delete('owners/:id')
+  @UseGuards(RolesGuard)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT)
+  async revokePolicyOwner(
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const actorUserId = req.user.id;
+    const meta = {
+      ipAddress: req.ip || req.connection?.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    };
+    return this.policyService.revokePolicyOwner(actorUserId, id, meta);
+  }
+
+  @Post('owners/:id/revoke')
+  @UseGuards(RolesGuard)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT)
+  async revokePolicyOwnerPost(
+    @Param('id') id: string,
+    @Req() req: any,
+  ) {
+    const actorUserId = req.user.id;
+    const meta = {
+      ipAddress: req.ip || req.connection?.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    };
+    return this.policyService.revokePolicyOwner(actorUserId, id, meta);
   }
 
   @Post('seed')

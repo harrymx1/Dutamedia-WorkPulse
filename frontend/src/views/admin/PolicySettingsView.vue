@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { useAuthStore } from '@/stores/auth';
 import {
   ShieldAlert,
   Clock,
@@ -15,7 +16,7 @@ import {
   Info,
   ShieldCheck,
   UserCheck,
-  Pencil,
+  Trash2,
 } from 'lucide-vue-next';
 
 interface PolicyItem {
@@ -46,7 +47,17 @@ interface PolicyOwner {
   id: string;
   policyCategory: string;
   effectiveDate?: string;
-  user: { id: string; fullName: string; email: string };
+  endDate?: string | null;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    orgAssignments?: Array<{
+      role?: string;
+      jobTitle?: string | null;
+      division?: { id: string; name: string } | null;
+    }>;
+  };
 }
 
 interface SimpleUser {
@@ -175,12 +186,61 @@ async function loadData() {
   }
 }
 
-function getOwnerForCategory(category: string): PolicyOwner | undefined {
-  return policyOwners.value.find((o) => o.policyCategory === category);
+const authStore = useAuthStore();
+
+const isSuperAdminOrCeo = computed(() => {
+  const r = authStore.user?.role;
+  return r === 'CEO_MANAGEMENT' || r === 'SYSTEM_ADMIN';
+});
+
+// Kategori di mana pengguna saat ini aktif terdaftar sebagai Pemilik Kebijakan
+const userOwnedCategories = computed(() => {
+  const currentUserId = authStore.user?.id;
+  if (!currentUserId) return [];
+  return policyOwners.value
+    .filter((o) => o.user?.id === currentUserId)
+    .map((o) => o.policyCategory);
+});
+
+function getOwnersForCategory(category: string): PolicyOwner[] {
+  return policyOwners.value.filter((o) => o.policyCategory === category);
+}
+
+// Validasi wewenang perubahan kebijakan (BR-15 & FR-34)
+function canEditCategory(cat: string): boolean {
+  if (userOwnedCategories.value.includes(cat)) return true;
+  // Jika kategori ini belum memiliki satupun penugasan pemilik di sistem, Direksi/Admin dapat mengelola
+  const categoryOwners = getOwnersForCategory(cat);
+  if (categoryOwners.length === 0 && isSuperAdminOrCeo.value) return true;
+  return false;
+}
+
+function getCategoryLabel(categoryVal: string): string {
+  const found = policyCategoryOptions.find((c) => c.value === categoryVal);
+  return found ? found.label : categoryVal;
+}
+
+function getInitials(name?: string): string {
+  if (!name) return 'PIC';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function isUserAlreadyOwnerOfCategory(userId: string, category: string): boolean {
+  return getOwnersForCategory(category).some((o) => o.user?.id === userId);
 }
 
 function getUserSubtext(userId?: string): string {
   if (!userId) return '-';
+  const owner = policyOwners.value.find((o) => o.user?.id === userId);
+  const org = owner?.user?.orgAssignments?.[0];
+  if (org) {
+    const roleTitle = org.jobTitle || org.role;
+    const divName = org.division?.name;
+    return divName ? `${roleTitle} · ${divName}` : `${roleTitle}`;
+  }
+
   const found = availableUsers.value.find((u) => u.id === userId);
   if (found?.jobTitle) {
     return `${found.jobTitle}${found.function ? ` · ${found.function}` : ''}`;
@@ -194,11 +254,14 @@ function getUserSubtext(userId?: string): string {
 function openOwnerModal(category?: string) {
   ownerModalError.value = null;
   const initialCategory = category || 'CHECKIN_TIMING';
-  const existingOwner = getOwnerForCategory(initialCategory);
+  
+  // Pilih default user yang belum aktif ditugaskan pada kategori ini
+  const existingUserIds = getOwnersForCategory(initialCategory).map((o) => o.user?.id);
+  const candidateUser = availableUsers.value.find((u) => !existingUserIds.includes(u.id)) || availableUsers.value[0];
 
   ownerForm.value = {
     policyCategory: initialCategory,
-    userId: existingOwner?.user?.id || availableUsers.value[0]?.id || '',
+    userId: candidateUser?.id || '',
     effectiveDate: todayStr.value,
   };
   isOwnerModalOpen.value = true;
@@ -237,6 +300,42 @@ async function submitOwnerAssignment() {
     ownerModalError.value = err.message || 'Gagal menyimpan penugasan pemilik kebijakan.';
   } finally {
     ownerModalSubmitting.value = false;
+  }
+}
+
+// State & metode untuk pencabutan penugasan pemilik kebijakan (Revoke)
+const ownerToRevoke = ref<PolicyOwner | null>(null);
+const isRevokeModalOpen = ref(false);
+const revokeModalSubmitting = ref(false);
+const revokeModalError = ref<string | null>(null);
+
+function confirmRevokeOwner(owner: PolicyOwner) {
+  ownerToRevoke.value = owner;
+  revokeModalError.value = null;
+  isRevokeModalOpen.value = true;
+}
+
+function closeRevokeModal() {
+  isRevokeModalOpen.value = false;
+  ownerToRevoke.value = null;
+  revokeModalError.value = null;
+}
+
+async function executeRevokeOwner() {
+  if (!ownerToRevoke.value) return;
+  revokeModalSubmitting.value = true;
+  revokeModalError.value = null;
+  try {
+    await apiClient(`/policies/owners/${ownerToRevoke.value.id}`, {
+      method: 'DELETE',
+    });
+    showToast(`Wewenang ${ownerToRevoke.value.user?.fullName} untuk kategori ${getCategoryLabel(ownerToRevoke.value.policyCategory)} berhasil dicabut.`);
+    closeRevokeModal();
+    await loadData();
+  } catch (err: any) {
+    revokeModalError.value = err.message || 'Gagal mencabut wewenang pemilik kebijakan.';
+  } finally {
+    revokeModalSubmitting.value = false;
   }
 }
 
@@ -289,6 +388,7 @@ function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     if (isModalOpen.value) closeModal();
     if (isOwnerModalOpen.value) closeOwnerModal();
+    if (isRevokeModalOpen.value) closeRevokeModal();
   }
 }
 
@@ -300,6 +400,12 @@ async function submitNewVersion() {
 
   if (formEffectiveDate.value < todayStr.value) {
     modalError.value = 'Tanggal mulai berlaku tidak boleh di masa lampau (Dilarang Backdating / Ubah Surut).';
+    return;
+  }
+
+  // Penegakan wewenang BR-15 & FR-34 di sisi antarmuka
+  if (!canEditCategory(formCategory.value)) {
+    modalError.value = `Akses Ditolak: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori "${getCategoryLabel(formCategory.value)}". Sesuai tata kelola BR-15 & FR-34, wewenang penerbitan versi baru hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.`;
     return;
   }
 
@@ -983,48 +1089,73 @@ onUnmounted(() => {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Kategori Kebijakan</th>
-                <th>Penanggung Jawab (Pemilik)</th>
-                <th>Jabatan / Divisi</th>
-                <th>Mulai Berlaku</th>
-                <th>Status</th>
-                <th>Aksi</th>
+                <th style="width: 28%;">Kategori Kebijakan</th>
+                <th style="width: 54%;">Pejabat Penanggung Jawab Aktif (Multi-Owner PIC)</th>
+                <th style="width: 18%; text-align: right;">Aksi Tata Kelola</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="cat in policyCategoryOptions" :key="cat.value">
-                <td>
+                <td style="vertical-align: top;">
                   <strong>{{ cat.label }}</strong>
                   <div class="param-desc">{{ cat.description }}</div>
-                </td>
-                <td>
-                  <div v-if="getOwnerForCategory(cat.value)" class="user-meta">
-                    <span class="user-name">{{ getOwnerForCategory(cat.value)?.user?.fullName }}</span>
-                    <span class="user-email">{{ getOwnerForCategory(cat.value)?.user?.email }}</span>
+                  <div class="category-owner-count mt-2">
+                    <span v-if="getOwnersForCategory(cat.value).length > 0" class="badge badge-active badge-xs">
+                      {{ getOwnersForCategory(cat.value).length }} Pemilik Aktif
+                    </span>
+                    <span v-else class="badge badge-warning badge-xs">
+                      Belum Ada Pemilik
+                    </span>
                   </div>
-                  <span v-else class="text-muted">Belum ditetapkan</span>
                 </td>
                 <td>
-                  <span v-if="getOwnerForCategory(cat.value)">
-                    {{ getUserSubtext(getOwnerForCategory(cat.value)?.user?.id) }}
-                  </span>
-                  <span v-else class="text-muted">-</span>
+                  <div v-if="getOwnersForCategory(cat.value).length > 0" class="owner-chips-grid">
+                    <div
+                      v-for="owner in getOwnersForCategory(cat.value)"
+                      :key="owner.id"
+                      class="owner-chip-card"
+                    >
+                      <div class="owner-chip-avatar">
+                        <span class="avatar-text">{{ getInitials(owner.user?.fullName) }}</span>
+                      </div>
+                      <div class="owner-chip-body">
+                        <div class="owner-chip-top">
+                          <span class="owner-chip-name">{{ owner.user?.fullName }}</span>
+                          <span class="badge badge-active badge-xs">Aktif</span>
+                        </div>
+                        <div class="owner-chip-email">{{ owner.user?.email }}</div>
+                        <div class="owner-chip-role">
+                          {{ getUserSubtext(owner.user?.id) }}
+                        </div>
+                        <div class="owner-chip-date">
+                          Mulai: {{ formatDateDisplay(owner.effectiveDate) }}
+                        </div>
+                      </div>
+                      <div class="owner-chip-action">
+                        <button
+                          class="btn-revoke-owner"
+                          type="button"
+                          :title="`Cabut wewenang ${owner.user?.fullName}`"
+                          @click="confirmRevokeOwner(owner)"
+                        >
+                          <Trash2 :size="13" />
+                          <span>Cabut</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="empty-owners-box">
+                    <span class="text-muted">Belum ada pejabat penanggung jawab ditetapkan untuk kategori ini.</span>
+                  </div>
                 </td>
-                <td class="mono-text">
-                  {{ getOwnerForCategory(cat.value)?.effectiveDate ? formatDateDisplay(getOwnerForCategory(cat.value)!.effectiveDate) : '-' }}
-                </td>
-                <td>
-                  <span v-if="getOwnerForCategory(cat.value)" class="badge badge-active">Aktif</span>
-                  <span v-else class="badge badge-warning">Belum Ada</span>
-                </td>
-                <td>
+                <td style="text-align: right; vertical-align: top;">
                   <button
                     class="btn btn-secondary btn-sm"
                     type="button"
                     @click="openOwnerModal(cat.value)"
                   >
-                    <Pencil :size="14" />
-                    <span>{{ getOwnerForCategory(cat.value) ? 'Ubah' : 'Tetapkan' }}</span>
+                    <Plus :size="14" />
+                    <span>Tambah Pemilik</span>
                   </button>
                 </td>
               </tr>
@@ -1116,12 +1247,26 @@ onUnmounted(() => {
           <div class="form-group">
             <label for="select-cat">Kategori Kebijakan *</label>
             <select id="select-cat" v-model="formCategory" @change="syncFormWithActivePolicy" class="input-control" required>
-              <option value="CHECKIN_TIMING">Jam Kerja &amp; Batas Pengiriman (Cut-Off)</option>
-              <option value="BLOCKER_SLA">Target Waktu Penanganan Kendala</option>
-              <option value="COMPLIANCE_THRESHOLD">Ambang Batas Carry-Over Berulang</option>
-              <option value="CORRECTION_WINDOW">Jendela Pengajuan Koreksi</option>
-              <option value="NOTIFICATION_REMINDER_THRESHOLD">Ambang Notifikasi &amp; Pengingat</option>
+              <option value="CHECKIN_TIMING">
+                Jam Kerja &amp; Batas Pengiriman (Cut-Off) {{ canEditCategory('CHECKIN_TIMING') ? '— [Wewenang Anda Aktif]' : '— [Terkunci: Bukan Pemilik]' }}
+              </option>
+              <option value="BLOCKER_SLA">
+                Target Waktu Penanganan Kendala {{ canEditCategory('BLOCKER_SLA') ? '— [Wewenang Anda Aktif]' : '— [Terkunci: Bukan Pemilik]' }}
+              </option>
+              <option value="COMPLIANCE_THRESHOLD">
+                Ambang Batas Carry-Over Berulang {{ canEditCategory('COMPLIANCE_THRESHOLD') ? '— [Wewenang Anda Aktif]' : '— [Terkunci: Bukan Pemilik]' }}
+              </option>
+              <option value="CORRECTION_WINDOW">
+                Jendela Pengajuan Koreksi {{ canEditCategory('CORRECTION_WINDOW') ? '— [Wewenang Anda Aktif]' : '— [Terkunci: Bukan Pemilik]' }}
+              </option>
+              <option value="NOTIFICATION_REMINDER_THRESHOLD">
+                Ambang Notifikasi &amp; Pengingat {{ canEditCategory('NOTIFICATION_REMINDER_THRESHOLD') ? '— [Wewenang Anda Aktif]' : '— [Terkunci: Bukan Pemilik]' }}
+              </option>
             </select>
+            <div v-if="!canEditCategory(formCategory)" class="category-wewenang-alert mt-2">
+              <AlertTriangle :size="16" />
+              <span>Perhatian (BR-15 &amp; FR-34): Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori ini. Wewenang perubahan hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.</span>
+            </div>
           </div>
 
           <!-- Dynamic inputs based on category -->
@@ -1259,8 +1404,14 @@ onUnmounted(() => {
             <label for="owner-user">Pejabat Penanggung Jawab (Pemilik Kebijakan) *</label>
             <select id="owner-user" v-model="ownerForm.userId" class="input-control" required>
               <option value="" disabled>-- Pilih Pejabat / Staf Penanggung Jawab --</option>
-              <option v-for="u in availableUsers" :key="u.id" :value="u.id">
+              <option
+                v-for="u in availableUsers"
+                :key="u.id"
+                :value="u.id"
+                :disabled="isUserAlreadyOwnerOfCategory(u.id, ownerForm.policyCategory)"
+              >
                 {{ u.fullName }} — {{ u.jobTitle || u.role || 'Staf' }} ({{ u.email }})
+                {{ isUserAlreadyOwnerOfCategory(u.id, ownerForm.policyCategory) ? '— [Sudah Aktif Ditugaskan]' : '' }}
               </option>
             </select>
           </div>
@@ -1289,6 +1440,60 @@ onUnmounted(() => {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Cabut Wewenang Pemilik Kebijakan (Revoke) -->
+    <div
+      v-if="isRevokeModalOpen"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="revokeModalTitle"
+      @click.self="closeRevokeModal"
+    >
+      <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+          <div class="modal-title-with-icon">
+            <AlertTriangle :size="20" class="text-danger" />
+            <h3 id="revokeModalTitle">Cabut Wewenang Pemilik Kebijakan</h3>
+          </div>
+          <button class="icon-btn" type="button" @click="closeRevokeModal" aria-label="Tutup dialog">
+            <X :size="20" />
+          </button>
+        </div>
+
+        <div v-if="revokeModalError" class="modal-error-alert" role="alert">
+          <AlertCircle :size="16" />
+          <span>{{ revokeModalError }}</span>
+        </div>
+
+        <div class="modal-body-content">
+          <p class="modal-lead-text">
+            Apakah Anda yakin ingin mencabut wewenang tata kelola kebijakan dari personil berikut?
+          </p>
+
+          <div class="revoke-target-card">
+            <div class="revoke-target-name">{{ ownerToRevoke?.user?.fullName }}</div>
+            <div class="revoke-target-email">{{ ownerToRevoke?.user?.email }}</div>
+            <div class="revoke-target-cat">
+              Kategori Kebijakan: <strong>{{ getCategoryLabel(ownerToRevoke?.policyCategory || '') }}</strong>
+            </div>
+          </div>
+
+          <p class="helper-text mt-3">
+            Pencabutan ini akan menonaktifkan hak akses personil tersebut untuk menerbitkan versi baru pada kategori kebijakan ini (BR-15 &amp; FR-34). Tindakan ini akan dicatat dalam Jejak Audit resmi.
+          </p>
+
+          <div class="modal-actions mt-4">
+            <button class="btn btn-secondary" type="button" @click="closeRevokeModal" :disabled="revokeModalSubmitting">
+              Batal
+            </button>
+            <button class="btn btn-danger" type="button" @click="executeRevokeOwner" :disabled="revokeModalSubmitting">
+              <span>{{ revokeModalSubmitting ? 'Mencabut...' : 'Ya, Cabut Wewenang' }}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1985,5 +2190,188 @@ h1 {
   color: var(--color-text-secondary);
   font-style: italic;
   font-size: 12px;
+}
+
+/* Policy Owners Multi-PIC Styling */
+.owner-chips-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-chip-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  transition: all 0.15s ease;
+}
+
+.owner-chip-card:hover {
+  border-color: var(--color-border-default, #cbd5e1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.owner-chip-avatar .avatar-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-brand-subtle, #ecfdf5);
+  color: var(--color-brand-primary, #047857);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.owner-chip-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.owner-chip-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-chip-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.owner-chip-email {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+
+.owner-chip-role {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 1px;
+}
+
+.owner-chip-date {
+  font-size: 10.5px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.owner-chip-action {
+  flex-shrink: 0;
+}
+
+.btn-revoke-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: var(--radius-xs, 4px);
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-revoke-owner:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #dc2626;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.badge-xs {
+  font-size: 10px;
+  padding: 1px 6px;
+}
+
+.modal-box-sm {
+  max-width: 480px;
+}
+
+.modal-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-body-content {
+  padding: 18px 24px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-lead-text {
+  font-size: 13.5px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.revoke-target-card {
+  background: var(--color-surface-subtle, #f8fafc);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.revoke-target-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.revoke-target-email {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.revoke-target-cat {
+  font-size: 12px;
+  color: var(--color-text-primary);
+  margin-top: 6px;
+}
+
+.category-wewenang-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #b45309;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.text-danger {
+  color: #dc2626;
+}
+
+.empty-owners-box {
+  padding: 12px;
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border-subtle);
 }
 </style>

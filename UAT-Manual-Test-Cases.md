@@ -2804,22 +2804,22 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Data:** Periode: `2026-11` (Bulan berjalan).
    - **Hasil yang diharapkan:** Backend memproses endpoint `/api/v1/reports/export?period=2026-11`. Peramban secara otomatis memulai pengunduhan berkas lampiran dengan header `Content-Disposition: attachment; filename="audit-report-2026-11.csv"`. Berkas terunduh secara utuh dan memuat rekapitulasi komitmen, kendala, dan kepatuhan karyawan.
    - **Verifikasi:** Berkas terunduh di folder Downloads peramban dengan ukuran $> 0$ bytes dan format kolom valid.
-3. **Langkah 3 (Penetapan Pemilik Kebijakan / Policy Owner Assignment)**
-   - **Aksi:** Buka menu "Kebijakan & Cut-off" pada rute `/admin/policies`. Gulir ke bagian "Penugasan Pemilik Kebijakan (Policy Owners)". Klik tombol "Tetapkan Pemilik", pilih kategori `CHECKIN_TIMING`, dan pilih nama Dewi Lestari (HRGA) sebagai penanggung jawab kebijakan. Klik "Simpan Penugasan".
-   - **Lokasi:** Bagian Policy Owners di `/admin/policies`.
-   - **Data:** Kategori: `CHECKIN_TIMING`, Pemilik: Dewi Lestari.
-   - **Hasil yang diharapkan:** Permintaan POST ke `/policies/owners` berhasil diproses berkat peran `@Roles(CanonicalRole.CEO_MANAGEMENT)`. Pemilik kebijakan terbarui di antarmuka dan tercatat pada log audit sistem.
-   - **Verifikasi:** Nama Dewi Lestari tertera sebagai pemilik resmi kategori kebijakan waktu komitmen.
+3. **Langkah 3 (Penetapan & Tata Kelola Pemilik Kebijakan / Policy Owner Multi-PIC & Wewenang Sistem)**
+   - **Aksi:** Buka menu "Kebijakan & Cut-off" pada rute `/admin/policies`. Gulir ke bagian "Penugasan Pemilik Kebijakan (Policy Owners)". Klik tombol "Tetapkan Pemilik" atau "+ Tambah Pemilik", pilih kategori `CHECKIN_TIMING`, dan pilih nama Dewi Lestari (HRGA) atau pejabat terkait. Simpan penugasan. Verifikasi bahwa tabel dapat menampung banyak penanggung jawab (Multi-Owner) secara simultan tanpa saling menimpa, tombol "Cabut" dapat mencabut wewenang personil tertentu, dan sistem secara konsisten menyinkronkan wewenang penerbitan versi kebijakan baru ke pejabat yang tercatat pada tabel ini sesuai BR-15 & FR-34.
+   - **Lokasi:** Bagian Policy Owners dan Dialog Versi Kebijakan Baru di `/admin/policies`.
+   - **Data:** Kategori: `CHECKIN_TIMING`, Pemilik: Dewi Lestari, Hendra Wijaya, dll.
+   - **Hasil yang diharapkan:** Permintaan POST ke `/policies/owners` berhasil diproses. Tabel antarmuka menampilkan seluruh pemilik aktif dalam format kartu multi-owner lengkap dengan jabatan, tanggal berlaku, dan aksi cabut. Hanya pengguna yang terdaftar di tabel ini yang memiliki wewenang untuk menerbitkan versi kebijakan baru (BR-15 & FR-34).
+   - **Verifikasi:** Daftar pemilik kebijakan aktif tampil sinkron dan terintegrasi penuh dengan penegakan wewenang di backend dan frontend.
 
-- **Expected Final Result:** Direksi memiliki kendali pengawasan eksekutif universal tanpa batas, dapat mengekspor data audit kepatuhan resmi, dan menetapkan pemilik kebijakan operasional.
-- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar ringkasan Laporan Eksekutif, tangkapan layar berkas ekspor audit yang berhasil diunduh, dan kartu penetapan pemilik kebijakan.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Expected Final Result:** Direksi memiliki kendali pengawasan eksekutif universal tanpa batas, dapat mengekspor data audit kepatuhan resmi, serta menetapkan dan mengelola multi-pemilik kebijakan operasional yang terintegrasi langsung dengan hak wewenang sistem.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar ringkasan Laporan Eksekutif, berkas ekspor audit yang berhasil diunduh, dan kartu penugasan multi-pemilik kebijakan di `/admin/policies`.
+- **Actual Result:** Langkah 1 dan 2 teruji sukses. Langkah 3 telah disempurnakan secara menyeluruh: (1) Tabel penugasan mendukung Multi-Owner (banyak penanggung jawab per kategori tanpa saling menimpa); (2) Tombol aksi pencabutan wewenang (Revoke) tersedia untuk menghapus penugasan spesifik; (3) Sinkronisasi aturan wewenang sistem BR-15 & FR-34 ditegakkan di backend dan frontend, di mana hanya personil yang terdaftar pada tabel ini yang berhak menerbitkan versi kebijakan baru untuk kategori tersebut (IMP-069, CR-017). Menunggu pengujian ulang dan verifikasi langsung oleh Harry.
+- **Execution Status:** PENDING VERIFIKASI
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-12
 - **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Retest Result:** PENDING VERIFIKASI (Disempurnakan via IMP-067, IMP-068, IMP-069 / CR-015, CR-016, CR-017)
+- **Catatan:** Telah disiapkan untuk verifikasi pengujian langsung oleh Harry.
 
 ---
 

@@ -297,7 +297,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [x] | `TC-DASH-003` | Tinjauan Laporan Eksekutif & Pengujian Fitur Unduh Data | PASS | Halaman Laporan Eksekutif (/reports) menampilkan metrik akuntabilitas, filter waktu aktif, dan pengunduhan Direct In-App Blob CSV berhasil terunduh ke komputer lokal (IMP-067, CR-015) |
-| [ ] | `TC-CEO-001` | Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Kebijakan CEO | Not Run (Updated CR-013) | Tab `Seluruh Perusahaan`, Filter Divisi & Proyek dinamis, unduh berkas audit CSV, & Policy Owner |
+| [ ] | `TC-CEO-001` | Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Kebijakan CEO | PENDING VERIFIKASI | Tab `Seluruh Perusahaan`, interseksi filter Divisi & Proyek (IMP-068), unduh berkas audit CSV (IMP-067), dan penugasan Policy Owner Multi-PIC & sinkronisasi wewenang BR-15/FR-34 telah siap diuji (IMP-069, CR-017) |
 
 ---
 

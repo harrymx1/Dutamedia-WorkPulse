@@ -131,5 +131,50 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     expect(wrapper.find('#ownerModalTitle').exists()).toBe(true);
     expect(wrapper.find('#ownerModalTitle').text()).toContain('Tetapkan Pemilik Kebijakan (Policy Owner)');
   });
+
+  it('renders multiple active policy owners for the same category and opens revoke modal on click', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          policies: [],
+          owners: [
+            {
+              id: 'poa-1',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+            },
+            {
+              id: 'poa-2',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u2', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Dewi Lestari');
+    expect(wrapper.text()).toContain('Hendra Wijaya');
+    expect(wrapper.text()).toContain('2 Pemilik Aktif');
+
+    const revokeButtons = wrapper.findAll('.btn-revoke-owner');
+    expect(revokeButtons.length).toBeGreaterThanOrEqual(2);
+
+    await revokeButtons[0].trigger('click');
+    expect(wrapper.find('#revokeModalTitle').exists()).toBe(true);
+    expect(wrapper.find('#revokeModalTitle').text()).toContain('Cabut Wewenang Pemilik Kebijakan');
+  });
 });
 

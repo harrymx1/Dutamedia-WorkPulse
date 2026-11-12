@@ -517,6 +517,48 @@ async function main() {
   }
 
   // =========================================================================
+  // 3b. SEED POLICY OWNER ASSIGNMENTS (Baseline Authorized Policy Owners BR-15 & FR-34)
+  // =========================================================================
+  console.log('🛡️ [3b/6] Menugaskan Pemilik Kebijakan Resmi (Policy Owners Multi-PIC)...');
+  const policyOwnersData = [
+    // CHECKIN_TIMING: Dewi Lestari (HRGA) & Hendra Wijaya (Direktur)
+    { userId: hrgaUser.id, policyCategory: PolicyCategory.CHECKIN_TIMING },
+    { userId: direkturUser.id, policyCategory: PolicyCategory.CHECKIN_TIMING },
+
+    // BLOCKER_SLA: Arif Budiman (Head Eng) & Hendra Wijaya (Direktur)
+    { userId: headEngUser.id, policyCategory: PolicyCategory.BLOCKER_SLA },
+    { userId: direkturUser.id, policyCategory: PolicyCategory.BLOCKER_SLA },
+
+    // COMPLIANCE_THRESHOLD: Dewi Lestari (HRGA) & Hendra Wijaya (Direktur)
+    { userId: hrgaUser.id, policyCategory: PolicyCategory.COMPLIANCE_THRESHOLD },
+    { userId: direkturUser.id, policyCategory: PolicyCategory.COMPLIANCE_THRESHOLD },
+
+    // CORRECTION_WINDOW: Dewi Lestari (HRGA) & Hendra Wijaya (Direktur)
+    { userId: hrgaUser.id, policyCategory: PolicyCategory.CORRECTION_WINDOW },
+    { userId: direkturUser.id, policyCategory: PolicyCategory.CORRECTION_WINDOW },
+  ];
+
+  for (const po of policyOwnersData) {
+    const existing = await prisma.policyOwnerAssignment.findFirst({
+      where: {
+        userId: po.userId,
+        policyCategory: po.policyCategory,
+        OR: [{ endDate: null }, { endDate: { gte: todayDate } }],
+      },
+    });
+    if (!existing) {
+      await prisma.policyOwnerAssignment.create({
+        data: {
+          userId: po.userId,
+          policyCategory: po.policyCategory,
+          effectiveDate: todayDate,
+          createdByUserId: direkturUser.id,
+        },
+      });
+    }
+  }
+
+  // =========================================================================
   // 4. SEED COMPANY HOLIDAYS 2026 (Baseline Hari Libur Nasional)
   // =========================================================================
   console.log('📅 [4/6] Seeding Kalender Libur Nasional 2026...');

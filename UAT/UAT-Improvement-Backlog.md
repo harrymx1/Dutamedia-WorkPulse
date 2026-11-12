@@ -1491,22 +1491,25 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` (12 Nov 2026): `media_1794464372127_c4bd2a59.jpg`, `media_1794464661694_3f041042.png`, `media_1794464668028_c08da280.png`.
 - **Status:** Resolved / Implemented (Backend & Frontend Synced)
 
-### [IMP-069] Implementasi Panel UI & Dialog Modal Penugasan Pemilik Kebijakan (Policy Owners) pada Halaman Pengaturan Kebijakan
+### [IMP-069] Implementasi Tata Kelola Multi-Owner Pemilik Kebijakan & Sinkronisasi Sistematis Wewenang Perubahan Kebijakan (BR-15 & FR-34)
 - **Finding ID:** IMP-069
-- **Title:** Implementasi Panel UI & Dialog Modal Penugasan Pemilik Kebijakan (Policy Owners) pada Halaman Pengaturan Kebijakan
-- **Category:** UI Panel, Modal Form & Policy Governance
-- **Page / Module:** `PolicySettingsView.vue`, `policy.controller.ts`, `policy.service.ts`, `PolicySettingsView.spec.ts`
+- **Title:** Implementasi Tata Kelola Multi-Owner Pemilik Kebijakan & Sinkronisasi Sistematis Wewenang Perubahan Kebijakan (BR-15 & FR-34)
+- **Category:** UI Panel, Modal Form, Multi-PIC Architecture & RBAC Policy Governance
+- **Page / Module:** `PolicySettingsView.vue`, `policy.controller.ts`, `policy.service.ts`, `seed.ts`, `PolicySettingsView.spec.ts`, `policy.service.spec.ts`
 - **Related Test Case:** `TC-CEO-001`, `TC-ADMN-003`
-- **Current Condition:** Pada rute `/admin/policies`, pengujian Langkah 3 `TC-CEO-001` menginstruksikan penetapan penanggung jawab kebijakan (*Policy Owner Assignment*). Meskipun backend telah menyediakan endpoint `GET /policies/owners` dan `POST /policies/owners` serta state `policyOwners` telah dimuat pada frontend, panel antarmuka visual tabel *"Penugasan Pemilik Kebijakan (Policy Owners)"* dan dialog modal *"Tetapkan Pemilik"* belum diintegrasikan ke dalam template `PolicySettingsView.vue`. Pengguna tidak dapat menemukan bagian penugasan ini saat menelusuri halaman.
+- **Current Condition:** Sebelumnya, penugasan pemilik kebijakan hanya berupa tabel dekoratif terisolasi yang hanya dapat menampung satu orang pemilik (menimpa/menghapus pemilik sebelumnya) dan tidak tersinkronisasi dengan aturan wewenang sistem di backend/frontend (siapapun yang memiliki global role tetap bisa mengubah kebijakan tanpa terdaftar pada tabel, sedangkan personil non-global admin yang ditugaskan di tabel tidak memiliki kemampuan teknis).
 - **Proposed Improvement:**
-  1. Menambahkan seksi tabel *"Penugasan Pemilik Kebijakan (Policy Owners)"* yang memuat 4 kategori kebijakan operasional (`CHECKIN_TIMING`, `BLOCKER_SLA`, `COMPLIANCE_THRESHOLD`, `CORRECTION_WINDOW`), penanggung jawab aktif, email kontak, jabatan/divisi, tanggal mulai berlaku, status keaktifan, dan tombol aksi "Tetapkan / Ubah".
-  2. Menambahkan dialog modal *"Tetapkan Pemilik Kebijakan (Policy Owner)"* dengan pilihan kategori kebijakan, dropdown pejabat/karyawan aktif (`availableUsers`), pemilihan tanggal efektif (minimal hari ini, menolak *backdating*), tombol aksi Batal dan Simpan Penugasan, serta toast sukses.
-  3. Menambahkan alias rute `@Controller(['policies', 'api/policies', 'api/v1/policies', 'v1/policies'])` pada backend `PolicyController` agar pemanggilan endpoint selalu valid.
-  4. Menangani pencatatan jejak audit `POLICY_OWNER_ASSIGNED` dengan menampilkan nama pejabat terpilih pada tabel *Policy Audit Trail*.
-- **Rationale / Expected Benefit:** Menyelesaikan kriteria pengujian Langkah 3 `TC-CEO-001`, memberikan instrumen tata kelola penugasan PIC kebijakan yang jelas bagi Direksi/Admin, dan menjaga transparansi akuntabilitas organisasi.
+  1. **Multi-Owner Support per Kategori (Multi-PIC):** Menghapus logika auto-terminate pada `assignPolicyOwner` agar tabel dan backend dapat menampung banyak penanggung jawab aktif (co-owners) untuk kategori yang sama secara simultan (misal: Dewi Lestari dan Hendra Wijaya bersama-sama memegang wewenang `CHECKIN_TIMING`).
+  2. **Aksi Pencabutan Wewenang (Revoke):** Menyediakan aksi cabut wewenang per personil (`DELETE /policies/owners/:id` dan dialog konfirmasi) yang mencatat log audit `POLICY_OWNER_REVOKED` tanpa memengaruhi penugasan pemilik lainnya.
+  3. **Penegakan Wewenang Sistematis (BR-15 & FR-34):**
+     - Pada backend (`createPolicyVersion`): Secara ketat memvalidasi bahwa pemanggil (`actorUserId`) adalah Pemilik Kebijakan aktif yang tercatat pada tabel `policy_owner_assignments` untuk kategori terkait. Jika tidak terdaftar, permintaan ditolak dengan HTTP 403 `AUTH_FORBIDDEN_ROLE`.
+     - Pada frontend (`PolicySettingsView.vue`): Menampilkan status wewenang aktif pada dropdown pemilihan kategori di modal "+ Buat Versi Kebijakan Baru", menampilkan kartu peringatan jika kategori terkunci karena pengguna bukan pemilik, serta mencegah pengiriman form tanpa wewenang resmi.
+  4. **Baseline Seeding:** Menyinkronkan penugasan pemilik kebijakan resmi ke dalam `seed.ts` dan runtime baseline auto-seeder agar seluruh pejabat berwenang (Dewi Lestari, Hendra Wijaya, Arif Budiman) langsung terdaftar dan aktif di tabel sejak awal.
+  5. **Notifikasi Terintegrasi:** Memastikan seluruh pemilik kebijakan aktif menerima siaran notifikasi `POLICY_UPDATED` saat ada perubahan pada kategori yang mereka miliki.
+- **Rationale / Expected Benefit:** Menjadikan tabel Penugasan Pemilik Kebijakan sebagai sumber kebenaran tunggal (*single source of truth*) yang tersinkronisasi dan terintegrasi penuh dengan seluruh aturan wewenang sistem WorkPulse, serta mendukung tata kelola korporat yang fleksibel dengan banyak penanggung jawab (Multi-Owner).
 - **Priority:** High
-- **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` Langkah 3 (12 Nov 2026): `media_1794466740383_efd19ca7.jpg`.
-- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+- **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` (12 Nov 2026): `media_1794466740383_efd19ca7.jpg`, `media_1794468651217_4361407d.jpg`.
+- **Status:** Resolved / Implemented (Backend & Frontend Synced, Pending User Verification)
 
 ---
 
