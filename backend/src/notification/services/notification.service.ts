@@ -130,11 +130,17 @@ export class NotificationService {
   /**
    * Simulasi pengujian pengiriman kanal notifikasi (Prototipe 19).
    */
-  async testChannelDelivery(channel: NotificationChannel, testRecipient: string) {
+  async testChannelDelivery(
+    channel: NotificationChannel,
+    testRecipient: string,
+    eventType?: string,
+  ) {
     return {
       success: true,
       channel,
       recipient: testRecipient,
+      eventType: eventType || 'TEST_SIMULATION',
+      message: `Simulasi pengiriman notifikasi berhasil dikirim ke saluran ${channel} (${testRecipient}).`,
       deliveredAt: this.clockService.now().toISOString(),
       latencyMs: 142,
     };

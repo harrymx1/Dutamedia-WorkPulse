@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { useAuthStore } from '../../stores/auth';
 import {
   Bell,
   Mail,
@@ -17,6 +18,7 @@ interface ChannelStatus {
   inApp: { status: string; enabled: boolean };
 }
 
+const auth = useAuthStore();
 const loading = ref(false);
 const channels = ref<ChannelStatus>({
   email: { provider: 'Brevo SMTP / API', status: 'READY', enabled: true },
@@ -26,7 +28,7 @@ const channels = ref<ChannelStatus>({
 
 // Test delivery modal / state
 const testChannel = ref<'EMAIL' | 'PUSH' | 'IN_APP'>('EMAIL');
-const testRecipient = ref('harry@dutamedia.com');
+const testRecipient = ref(auth.user?.email || 'admin@dutamedia.com');
 const testEventType = ref('BLOCKER_CRITICAL_ALERT');
 const testSending = ref(false);
 const testResult = ref<{ success: boolean; message: string; channel: string } | null>(null);
@@ -52,7 +54,7 @@ function showToast(msg: string, isError = false) {
 async function loadChannels() {
   loading.value = true;
   try {
-    const res = await apiClient<ChannelStatus>('/notifications/channels');
+    const res = await apiClient<any>('/notifications/channels');
     const data = res?.data || res;
     if (data && data.email) {
       channels.value = data;
@@ -67,19 +69,33 @@ async function loadChannels() {
 async function handleTestDelivery() {
   testSending.value = true;
   testResult.value = null;
+  const recipientEmail = testRecipient.value.trim() || auth.user?.email || 'admin@dutamedia.com';
   try {
-    const res = await apiClient<{ success: boolean; message: string; channel: string }>(
+    const res = await apiClient<{
+      success: boolean;
+      message?: string;
+      channel: string;
+      recipient?: string;
+      latencyMs?: number;
+    }>(
       '/notifications/test-delivery',
       {
         method: 'POST',
         body: JSON.stringify({
           channel: testChannel.value,
-          recipient: testRecipient.value.trim(),
+          recipient: recipientEmail,
           eventType: testEventType.value,
         }),
       },
     );
-    testResult.value = res?.data || res;
+    const data = res?.data || res;
+    testResult.value = {
+      success: data?.success ?? true,
+      message:
+        data?.message ||
+        `Simulasi pengiriman notifikasi berhasil dikirim ke saluran ${data?.channel || testChannel.value} (${data?.recipient || recipientEmail}) dengan estimasi latensi ${data?.latencyMs || 142} ms.`,
+      channel: data?.channel || testChannel.value,
+    };
     showToast('Simulasi pengiriman uji coba berhasil dikirim.');
   } catch (err: any) {
     testResult.value = {
@@ -94,6 +110,9 @@ async function handleTestDelivery() {
 }
 
 onMounted(() => {
+  if (auth.user?.email && (!testRecipient.value || testRecipient.value === 'harry@dutamedia.com')) {
+    testRecipient.value = auth.user.email;
+  }
   loadChannels();
 });
 </script>
@@ -139,7 +158,7 @@ onMounted(() => {
           <span class="metric-label">Matriks Routing Event</span>
           <div class="metric-row">
             <span class="metric-value">5 Skenario</span>
-            <span class="pill blue">Auto-Route</span>
+            <span class="pill blue">Rute Otomatis</span>
           </div>
         </div>
 
@@ -147,7 +166,7 @@ onMounted(() => {
           <span class="metric-label">Status Kesiapan Sistem</span>
           <div class="metric-row">
             <span class="metric-value">Siap 100%</span>
-            <span class="pill green">Operational</span>
+            <span class="pill green">Operasional</span>
           </div>
         </div>
       </div>
@@ -192,7 +211,7 @@ onMounted(() => {
           </div>
           <div class="channel-body">
             <div class="detail-row">
-              <span>Provider:</span>
+              <span>Penyedia (Provider):</span>
               <strong>{{ channels.email.provider }}</strong>
             </div>
             <div class="detail-row">
@@ -239,7 +258,7 @@ onMounted(() => {
           <table class="matrix-table">
             <thead>
               <tr>
-                <th scope="col">Trigger Event</th>
+                <th scope="col">Peristiwa Pemicu (Trigger Event)</th>
                 <th scope="col">Peran Penerima</th>
                 <th scope="col" class="text-center">In-App</th>
                 <th scope="col" class="text-center">Browser Push</th>
@@ -249,7 +268,7 @@ onMounted(() => {
             <tbody>
               <tr>
                 <td>
-                  <strong>Pengingat Morning Check-in</strong>
+                  <strong>Pengingat Komitmen Pagi (Morning Check-in)</strong>
                   <div class="event-desc">Pukul 09:00 WIB menjelang batas cut-off</div>
                 </td>
                 <td>Seluruh Karyawan Aktif</td>
@@ -260,7 +279,7 @@ onMounted(() => {
               <tr>
                 <td>
                   <strong>Eskalasi Blocker Kritis (P0)</strong>
-                  <div class="event-desc">Tiket kendala dengan severitas CRITICAL</div>
+                  <div class="event-desc">Tiket kendala dengan tingkat keparahan Kritis (CRITICAL P0)</div>
                 </td>
                 <td>Supervisor, PM, Lead Terkait</td>
                 <td class="text-center"><span class="check-pill">Aktif</span></td>
@@ -325,9 +344,11 @@ onMounted(() => {
               <div class="field">
                 <label for="testEventType">Skenario Event</label>
                 <select id="testEventType" v-model="testEventType" class="select">
-                  <option value="BLOCKER_CRITICAL_ALERT">Eskalasi Blocker Kritis</option>
+                  <option value="BLOCKER_CRITICAL_ALERT">Eskalasi Blocker Kritis (P0)</option>
                   <option value="MORNING_REMINDER">Pengingat Komitmen Pagi</option>
-                  <option value="LEAVE_RECONCILED">Rekonsiliasi Cuti Pasca-Cut-Off</option>
+                  <option value="CORRECTION_SUBMITTED">Pengajuan Koreksi Material</option>
+                  <option value="LEAVE_RECONCILED">Persetujuan &amp; Rekonsiliasi Cuti</option>
+                  <option value="COMPLIANCE_PATTERN_ALERT">Peringatan Pola Kepatuhan 3x</option>
                 </select>
               </div>
 
@@ -338,6 +359,7 @@ onMounted(() => {
                   v-model="testRecipient"
                   type="text"
                   class="input"
+                  placeholder="admin@dutamedia.com"
                   required
                 />
               </div>

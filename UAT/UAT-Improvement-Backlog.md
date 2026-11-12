@@ -1430,4 +1430,23 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 ---
 
+### [IMP-066] Penyelarasan Istilah Bahasa, Target Penerima Dinamis, dan Respons Hasil Uji Coba pada Pengaturan Saluran Notifikasi (`/admin/notifications`)
+- **Finding ID:** IMP-066
+- **Title:** Penyelarasan Istilah Bahasa, Target Penerima Dinamis, dan Respons Hasil Uji Coba pada Pengaturan Saluran Notifikasi (`/admin/notifications`)
+- **Category:** UI/UX Terminology, Localization & Test Delivery Simulation
+- **Page / Module:** `NotificationChannelSetupView.vue`, `notification.controller.ts`, `notification.service.ts`
+- **Related Test Case:** `TC-ADMN-005`
+- **Current Condition:** Pada rute `/admin/notifications`, terdapat percampuran istilah bahasa Inggris dan Indonesia (badge `Auto-Route` dan `Operational`, header `TRIGGER EVENT`, deskripsi `severitas CRITICAL`), target penerima uji coba masih terisi hardcode `harry@dutamedia.com` alih-alih email akun yang sedang login, dropdown simulator baru memuat 3 dari 5 skenario di matriks routing, serta respons hasil pengujian dari backend belum menyertakan teks deskripsi pesan (`message`) sehingga memicu baris kosong pada tampilan hasil pengujian.
+- **Proposed Improvement:**
+  1. Menyelaraskan istilah ke bahasa baku yang konsisten: badge `Rute Otomatis` dan `Operasional`, header tabel `Peristiwa Pemicu (Trigger Event)`, istilah `Pengingat Komitmen Pagi (Morning Check-in)`, serta deskripsi `Tingkat keparahan Kritis (CRITICAL P0)`.
+  2. Mengganti target penerima default formulir simulator agar dinamis mengikuti email pengguna yang login (`auth.user?.email || 'admin@dutamedia.com'`).
+  3. Melengkapi dropdown simulator pengujian agar memuat seluruh 5 skenario peristiwa yang tertera pada tabel matriks routing.
+  4. Menambahkan properti `message` resmi pada backend `testChannelDelivery` beserta fallback deskriptif di frontend agar kotak hasil pengujian selalu menyajikan rincian transmisi dan estimasi latensi secara profesional.
+- **Rationale / Expected Benefit:** Memberikan pengalaman pengguna yang konsisten, mudah dipahami staf lokal, bebas kesan data dummy pribadi, dan menyajikan umpan balik pengujian yang meyakinkan.
+- **Priority:** Medium
+- **Evidence / Screenshot Reference:** Temuan Audit Acceptance Owner (Harry) pada Sesi UAT `TC-ADMN-005` (12 Nov 2026): `media_1794453106296_05b98bea.png`, `media_1794453114802_2a274a8b.png`, `media_1794453123949_c071911f.png`.
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+---
+
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

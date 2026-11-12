@@ -54,10 +54,12 @@ export class NotificationController {
   async testChannelDelivery(
     @Body('channel') channel: NotificationChannel,
     @Body('recipient') recipient: string,
+    @Body('eventType') eventType?: string,
   ) {
     return this.notificationService.testChannelDelivery(
       channel,
       recipient || 'test@dutamedia.com',
+      eventType,
     );
   }
 

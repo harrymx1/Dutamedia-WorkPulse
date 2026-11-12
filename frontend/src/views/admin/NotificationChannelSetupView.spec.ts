@@ -6,9 +6,11 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 describe('NotificationChannelSetupView.vue (Prototipe 19 / EP11 - Pengaturan Kanal Notifikasi)', () => {
   let router: any;
+  let pinia: any;
 
   beforeEach(() => {
-    setActivePinia(createPinia());
+    pinia = createPinia();
+    setActivePinia(pinia);
     vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
       if (url.includes('/notifications/channels')) {
         return Promise.resolve({
@@ -58,7 +60,7 @@ describe('NotificationChannelSetupView.vue (Prototipe 19 / EP11 - Pengaturan Kan
   it('renders channel cards and routing matrix table', async () => {
     const wrapper = mount(NotificationChannelSetupView, {
       global: {
-        plugins: [router],
+        plugins: [router, pinia],
         stubs: {
           RouterLink: true,
         },
@@ -72,12 +74,14 @@ describe('NotificationChannelSetupView.vue (Prototipe 19 / EP11 - Pengaturan Kan
     expect(wrapper.text()).toContain('Email Transaksional (Brevo)');
     expect(wrapper.text()).toContain('Browser Push (VAPID RFC 8292)');
     expect(wrapper.text()).toContain('Matriks Routing Kanal Per Trigger Event');
+    expect(wrapper.text()).toContain('Rute Otomatis');
+    expect(wrapper.text()).toContain('Operasional');
   });
 
   it('triggers test notification simulation successfully', async () => {
     const wrapper = mount(NotificationChannelSetupView, {
       global: {
-        plugins: [router],
+        plugins: [router, pinia],
         stubs: {
           RouterLink: true,
         },
