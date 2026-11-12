@@ -497,7 +497,7 @@ async function submitBlocker() {
     return;
   }
   if (authorityContext.value === 'PROJECT_AUTHORITY' && !projectCode.value.trim()) {
-    errorMessage.value = 'Kode proyek wajib diisi jika menggunakan Project Authority (DEC-002).';
+    errorMessage.value = 'Kode proyek wajib dipilih jika menggunakan Kewenangan Proyek (Project Authority).';
     return;
   }
 

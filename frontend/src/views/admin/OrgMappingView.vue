@@ -482,7 +482,7 @@ function showToast(msg: string, isError = false) {
           <div class="form-group">
             <label for="asg-date">Tanggal Efektif Penugasan</label>
             <input id="asg-date" v-model="orgForm.effectiveDate" type="date" required />
-            <span class="field-hint">Backdating tanggal lampau ditolak oleh trigger basis data (DEC-008).</span>
+            <span class="field-hint">Penetapan tanggal lampau tidak diizinkan oleh sistem.</span>
           </div>
 
           <div class="form-group">

@@ -299,7 +299,7 @@ onMounted(() => {
               <tr>
                 <td>
                   <strong>Persetujuan &amp; Rekonsiliasi Cuti</strong>
-                  <div class="event-desc">Status cuti disetujui (DEC-007)</div>
+                  <div class="event-desc">Status permohonan cuti resmi disetujui</div>
                 </td>
                 <td>Pemohon Cuti &amp; HRGA</td>
                 <td class="text-center"><span class="check-pill">Aktif</span></td>
