@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 68 Calon Perbaikan (IMP-001 s.d. IMP-068)
+> **Total Temuan:** 69 Calon Perbaikan (IMP-001 s.d. IMP-069)
 
 ---
 
@@ -114,6 +114,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-066** | Penyelarasan Istilah Bahasa, Target Penerima Dinamis, dan Respons Hasil Uji Coba pada Pengaturan Saluran Notifikasi (`/admin/notifications`) | UI/UX Terminology & Test Delivery Simulation | `/admin/notifications`, `notification.service.ts` | `TC-ADMN-005` | Medium | Resolved / Implemented |
 | **IMP-067** | Perbaikan Resolusi Rute Controller & Mekanisme Pengunduhan Berkas Audit CSV pada Laporan Eksekutif (`/reports`) | Backend Routing & Frontend Blob Download | `/reports`, `reports.controller.ts` | `TC-DASH-003`, `TC-CEO-001` | High | Resolved / Implemented |
 | **IMP-068** | Presisi Interseksi Matematis Filter Divisi-Proyek & Integrasi Tiket Kendala Aktif ke Widget Personil Butuh Bantuan | Backend Aggregation & Dashboard UI Integration | `/dashboard`, `dashboard.service.ts`, `PulseDashboardView.vue` | `TC-CEO-001` | High | Resolved / Implemented |
+| **IMP-069** | Implementasi Panel UI & Dialog Modal Penugasan Pemilik Kebijakan (Policy Owners) pada Halaman Pengaturan Kebijakan | UI Panel, Modal Form & Policy Governance | `/admin/policies`, `PolicySettingsView.vue` | `TC-CEO-001`, `TC-ADMN-003` | High | Resolved / Implemented |
 
 ---
 
@@ -1488,6 +1489,23 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Memberikan data analitik eksekutif yang akurat, konsisten, dan matematis tanpa anomali logika filter, serta menyajikan daftar eskalasi kendala riil yang membutuhkan intervensi langsung pimpinan.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` (12 Nov 2026): `media_1794464372127_c4bd2a59.jpg`, `media_1794464661694_3f041042.png`, `media_1794464668028_c08da280.png`.
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+### [IMP-069] Implementasi Panel UI & Dialog Modal Penugasan Pemilik Kebijakan (Policy Owners) pada Halaman Pengaturan Kebijakan
+- **Finding ID:** IMP-069
+- **Title:** Implementasi Panel UI & Dialog Modal Penugasan Pemilik Kebijakan (Policy Owners) pada Halaman Pengaturan Kebijakan
+- **Category:** UI Panel, Modal Form & Policy Governance
+- **Page / Module:** `PolicySettingsView.vue`, `policy.controller.ts`, `policy.service.ts`, `PolicySettingsView.spec.ts`
+- **Related Test Case:** `TC-CEO-001`, `TC-ADMN-003`
+- **Current Condition:** Pada rute `/admin/policies`, pengujian Langkah 3 `TC-CEO-001` menginstruksikan penetapan penanggung jawab kebijakan (*Policy Owner Assignment*). Meskipun backend telah menyediakan endpoint `GET /policies/owners` dan `POST /policies/owners` serta state `policyOwners` telah dimuat pada frontend, panel antarmuka visual tabel *"Penugasan Pemilik Kebijakan (Policy Owners)"* dan dialog modal *"Tetapkan Pemilik"* belum diintegrasikan ke dalam template `PolicySettingsView.vue`. Pengguna tidak dapat menemukan bagian penugasan ini saat menelusuri halaman.
+- **Proposed Improvement:**
+  1. Menambahkan seksi tabel *"Penugasan Pemilik Kebijakan (Policy Owners)"* yang memuat 4 kategori kebijakan operasional (`CHECKIN_TIMING`, `BLOCKER_SLA`, `COMPLIANCE_THRESHOLD`, `CORRECTION_WINDOW`), penanggung jawab aktif, email kontak, jabatan/divisi, tanggal mulai berlaku, status keaktifan, dan tombol aksi "Tetapkan / Ubah".
+  2. Menambahkan dialog modal *"Tetapkan Pemilik Kebijakan (Policy Owner)"* dengan pilihan kategori kebijakan, dropdown pejabat/karyawan aktif (`availableUsers`), pemilihan tanggal efektif (minimal hari ini, menolak *backdating*), tombol aksi Batal dan Simpan Penugasan, serta toast sukses.
+  3. Menambahkan alias rute `@Controller(['policies', 'api/policies', 'api/v1/policies', 'v1/policies'])` pada backend `PolicyController` agar pemanggilan endpoint selalu valid.
+  4. Menangani pencatatan jejak audit `POLICY_OWNER_ASSIGNED` dengan menampilkan nama pejabat terpilih pada tabel *Policy Audit Trail*.
+- **Rationale / Expected Benefit:** Menyelesaikan kriteria pengujian Langkah 3 `TC-CEO-001`, memberikan instrumen tata kelola penugasan PIC kebijakan yang jelas bagi Direksi/Admin, dan menjaga transparansi akuntabilitas organisasi.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` Langkah 3 (12 Nov 2026): `media_1794466740383_efd19ca7.jpg`.
 - **Status:** Resolved / Implemented (Backend & Frontend Synced)
 
 ---

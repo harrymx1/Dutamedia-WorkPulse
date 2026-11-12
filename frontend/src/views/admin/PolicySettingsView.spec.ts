@@ -110,5 +110,26 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
 
     expect(wrapper.find('.modal-backdrop').exists()).toBe(false);
   });
+
+  it('renders Policy Owners panel and opens owner assignment dialog (TC-CEO-001 / IMP-069)', async () => {
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Penugasan Pemilik Kebijakan (Policy Owners)');
+    expect(wrapper.text()).toContain('Jam Kerja & Waktu Komitmen (Check-in Timing)');
+    expect(wrapper.text()).toContain('Target Waktu Respon & Penanganan Kendala (Blocker SLA)');
+
+    const ownerBtn = wrapper.findAll('button').find(b => b.text().includes('Tetapkan Pemilik'));
+    expect(ownerBtn).toBeDefined();
+    await ownerBtn?.trigger('click');
+
+    expect(wrapper.find('#ownerModalTitle').exists()).toBe(true);
+    expect(wrapper.find('#ownerModalTitle').text()).toContain('Tetapkan Pemilik Kebijakan (Policy Owner)');
+  });
 });
 

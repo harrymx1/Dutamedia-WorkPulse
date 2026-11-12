@@ -541,14 +541,20 @@ export class PolicyService {
         orderBy: [{ effectiveDate: 'desc' }],
       });
 
-      if (currentActive && currentActive.effectiveDate < effectiveDate) {
-        const previousEndDate = new Date(effectiveDate);
-        previousEndDate.setDate(previousEndDate.getDate() - 1);
+      if (currentActive) {
+        if (currentActive.effectiveDate < effectiveDate) {
+          const previousEndDate = new Date(effectiveDate);
+          previousEndDate.setDate(previousEndDate.getDate() - 1);
 
-        await tx.policyOwnerAssignment.update({
-          where: { id: currentActive.id },
-          data: { endDate: previousEndDate },
-        });
+          await tx.policyOwnerAssignment.update({
+            where: { id: currentActive.id },
+            data: { endDate: previousEndDate },
+          });
+        } else {
+          await tx.policyOwnerAssignment.delete({
+            where: { id: currentActive.id },
+          });
+        }
       }
 
       const created = await tx.policyOwnerAssignment.create({

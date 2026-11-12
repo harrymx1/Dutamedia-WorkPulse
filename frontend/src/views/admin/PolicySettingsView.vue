@@ -13,6 +13,9 @@ import {
   FileSpreadsheet,
   AlertTriangle,
   Info,
+  ShieldCheck,
+  UserCheck,
+  Pencil,
 } from 'lucide-vue-next';
 
 interface PolicyItem {
@@ -42,7 +45,17 @@ interface AuditLogItem {
 interface PolicyOwner {
   id: string;
   policyCategory: string;
+  effectiveDate?: string;
   user: { id: string; fullName: string; email: string };
+}
+
+interface SimpleUser {
+  id: string;
+  fullName: string;
+  email: string;
+  jobTitle?: string | null;
+  role?: string | null;
+  function?: string | null;
 }
 
 // State
@@ -50,6 +63,7 @@ const loading = ref(false);
 const policies = ref<PolicyItem[]>([]);
 const auditLogs = ref<AuditLogItem[]>([]);
 const policyOwners = ref<PolicyOwner[]>([]);
+const availableUsers = ref<SimpleUser[]>([]);
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
@@ -57,6 +71,40 @@ const errorMessage = ref<string | null>(null);
 const isModalOpen = ref(false);
 const modalSubmitting = ref(false);
 const modalError = ref<string | null>(null);
+
+// Policy owner modal state
+const isOwnerModalOpen = ref(false);
+const ownerModalSubmitting = ref(false);
+const ownerModalError = ref<string | null>(null);
+
+const ownerForm = ref({
+  policyCategory: 'CHECKIN_TIMING',
+  userId: '',
+  effectiveDate: '',
+});
+
+const policyCategoryOptions = [
+  {
+    value: 'CHECKIN_TIMING',
+    label: 'Jam Kerja & Waktu Komitmen (Check-in Timing)',
+    description: 'Jadwal morning check-in, batas on-time 09:00 WIB, dan penguncian formulir cut-off 09:30 WIB.',
+  },
+  {
+    value: 'BLOCKER_SLA',
+    label: 'Target Waktu Respon & Penanganan Kendala (Blocker SLA)',
+    description: 'Target respon jenjang pertama, batas penanganan eskalasi, dan rute eskalasi kritis pimpinan.',
+  },
+  {
+    value: 'COMPLIANCE_THRESHOLD',
+    label: 'Ambang Batas Kepatuhan & Disiplin Kerja (Compliance Threshold)',
+    description: 'Batas tugas berlanjut (carry-over), ambang eskalasi pola ketidakpatuhan, dan pembinaan HRGA.',
+  },
+  {
+    value: 'CORRECTION_WINDOW',
+    label: 'Jendela Waktu Koreksi Mandiri (Correction Window)',
+    description: 'Batas waktu pengajuan sanggahan/koreksi komitmen pagi (24 jam) dan evaluasi sore EOD (48 jam).',
+  },
+];
 
 const formCategory = ref('CHECKIN_TIMING');
 const formEffectiveDate = ref('');
@@ -106,10 +154,89 @@ async function loadData() {
 
     const auditRes = await apiClient<AuditLogItem[]>('/policies/audit');
     auditLogs.value = auditRes.data || [];
+
+    try {
+      const usersRes = await apiClient<any>('/v1/organization/users');
+      const uList = usersRes.data || [];
+      if (Array.isArray(uList) && uList.length > 0) {
+        availableUsers.value = uList;
+      }
+    } catch {
+      try {
+        const adminUsersRes = await apiClient<any>('/v1/admin/users?limit=500');
+        const raw = adminUsersRes.data?.data || adminUsersRes.data || [];
+        if (Array.isArray(raw)) availableUsers.value = raw;
+      } catch {}
+    }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat pengaturan kebijakan.', true);
   } finally {
     loading.value = false;
+  }
+}
+
+function getOwnerForCategory(category: string): PolicyOwner | undefined {
+  return policyOwners.value.find((o) => o.policyCategory === category);
+}
+
+function getUserSubtext(userId?: string): string {
+  if (!userId) return '-';
+  const found = availableUsers.value.find((u) => u.id === userId);
+  if (found?.jobTitle) {
+    return `${found.jobTitle}${found.function ? ` · ${found.function}` : ''}`;
+  }
+  if (found?.role) {
+    return found.role;
+  }
+  return '-';
+}
+
+function openOwnerModal(category?: string) {
+  ownerModalError.value = null;
+  const initialCategory = category || 'CHECKIN_TIMING';
+  const existingOwner = getOwnerForCategory(initialCategory);
+
+  ownerForm.value = {
+    policyCategory: initialCategory,
+    userId: existingOwner?.user?.id || availableUsers.value[0]?.id || '',
+    effectiveDate: todayStr.value,
+  };
+  isOwnerModalOpen.value = true;
+}
+
+function closeOwnerModal() {
+  isOwnerModalOpen.value = false;
+  ownerModalError.value = null;
+}
+
+async function submitOwnerAssignment() {
+  if (!ownerForm.value.userId) {
+    ownerModalError.value = 'Silakan pilih pejabat penanggung jawab kebijakan.';
+    return;
+  }
+  if (!ownerForm.value.effectiveDate) {
+    ownerModalError.value = 'Silakan tentukan tanggal berlaku efektif.';
+    return;
+  }
+
+  ownerModalSubmitting.value = true;
+  ownerModalError.value = null;
+  try {
+    await apiClient('/policies/owners', {
+      method: 'POST',
+      body: JSON.stringify({
+        policyCategory: ownerForm.value.policyCategory,
+        userId: ownerForm.value.userId,
+        effectiveDate: ownerForm.value.effectiveDate,
+      }),
+    });
+    showToast('Penugasan pemilik kebijakan berhasil disimpan.');
+    closeOwnerModal();
+    await loadData();
+  } catch (err: any) {
+    ownerModalError.value = err.message || 'Gagal menyimpan penugasan pemilik kebijakan.';
+  } finally {
+    ownerModalSubmitting.value = false;
   }
 }
 
@@ -159,8 +286,9 @@ function closeModal() {
 }
 
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && isModalOpen.value) {
-    closeModal();
+  if (e.key === 'Escape') {
+    if (isModalOpen.value) closeModal();
+    if (isOwnerModalOpen.value) closeOwnerModal();
   }
 }
 
@@ -308,6 +436,12 @@ function formatAuditChanges(log: AuditLogItem): string {
   const after = log.valueAfter;
   const before = log.valueBefore;
   if (!after) return 'Versi Baru Diterapkan';
+
+  if (log.actionCode === 'POLICY_OWNER_ASSIGNED') {
+    const targetUser = availableUsers.value.find((u) => u.id === after.userId);
+    const userName = targetUser?.fullName || after.userId || 'Pejabat Terpilih';
+    return `Penugasan Pemilik: ${userName} (${formatCategoryLabel(after.category || log.category)})`;
+  }
 
   if (log.category === 'CHECKIN_TIMING') {
     const parts: string[] = [];
@@ -824,6 +958,81 @@ onUnmounted(() => {
         </div>
       </section>
 
+      <!-- 6. Penugasan Pemilik Kebijakan (Policy Owners) -->
+      <section class="policy-section policy-owners-section" aria-label="Penugasan Pemilik Kebijakan (Policy Owners)">
+        <div class="policy-head">
+          <div class="policy-head-info">
+            <div class="policy-title-row">
+              <ShieldCheck :size="20" class="policy-icon" />
+              <h2>Penugasan Pemilik Kebijakan (Policy Owners)</h2>
+              <span class="badge badge-active">Tata Kelola &amp; Akuntabilitas</span>
+            </div>
+            <p class="policy-desc">
+              Penetapan pejabat penanggung jawab resmi (PIC) untuk setiap kategori kebijakan operasional perusahaan guna memastikan kepemilikan dan akuntabilitas tata kelola.
+            </p>
+          </div>
+          <div class="policy-head-actions">
+            <button class="btn btn-primary" type="button" @click="openOwnerModal()">
+              <UserCheck :size="16" />
+              <span>Tetapkan Pemilik</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Kategori Kebijakan</th>
+                <th>Penanggung Jawab (Pemilik)</th>
+                <th>Jabatan / Divisi</th>
+                <th>Mulai Berlaku</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="cat in policyCategoryOptions" :key="cat.value">
+                <td>
+                  <strong>{{ cat.label }}</strong>
+                  <div class="param-desc">{{ cat.description }}</div>
+                </td>
+                <td>
+                  <div v-if="getOwnerForCategory(cat.value)" class="user-meta">
+                    <span class="user-name">{{ getOwnerForCategory(cat.value)?.user?.fullName }}</span>
+                    <span class="user-email">{{ getOwnerForCategory(cat.value)?.user?.email }}</span>
+                  </div>
+                  <span v-else class="text-muted">Belum ditetapkan</span>
+                </td>
+                <td>
+                  <span v-if="getOwnerForCategory(cat.value)">
+                    {{ getUserSubtext(getOwnerForCategory(cat.value)?.user?.id) }}
+                  </span>
+                  <span v-else class="text-muted">-</span>
+                </td>
+                <td class="mono-text">
+                  {{ getOwnerForCategory(cat.value)?.effectiveDate ? formatDateDisplay(getOwnerForCategory(cat.value)!.effectiveDate) : '-' }}
+                </td>
+                <td>
+                  <span v-if="getOwnerForCategory(cat.value)" class="badge badge-active">Aktif</span>
+                  <span v-else class="badge badge-warning">Belum Ada</span>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-secondary btn-sm"
+                    type="button"
+                    @click="openOwnerModal(cat.value)"
+                  >
+                    <Pencil :size="14" />
+                    <span>{{ getOwnerForCategory(cat.value) ? 'Ubah' : 'Tetapkan' }}</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Audit Trail Table -->
       <section class="audit-section" aria-label="Jejak Audit Perubahan Kebijakan">
         <div class="audit-head">
@@ -1005,6 +1214,78 @@ onUnmounted(() => {
             <button class="btn btn-secondary" type="button" @click="closeModal">Batal</button>
             <button class="btn btn-primary" type="submit" :disabled="modalSubmitting">
               <span>{{ modalSubmitting ? 'Menyimpan...' : 'Simpan & Terapkan Versi Baru' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Tetapkan Pemilik Kebijakan (Policy Owner Assignment) -->
+    <div
+      v-if="isOwnerModalOpen"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ownerModalTitle"
+      @click.self="closeOwnerModal"
+    >
+      <div class="modal-box">
+        <div class="modal-header">
+          <div>
+            <h3 id="ownerModalTitle">Tetapkan Pemilik Kebijakan (Policy Owner)</h3>
+            <p class="modal-subtitle">Tunjuk pejabat penanggung jawab resmi yang berwenang atas tata kelola dan evaluasi kategori kebijakan ini.</p>
+          </div>
+          <button class="icon-btn" type="button" @click="closeOwnerModal" aria-label="Tutup dialog">
+            <X :size="20" />
+          </button>
+        </div>
+
+        <div v-if="ownerModalError" class="modal-error-alert" role="alert">
+          <AlertCircle :size="16" />
+          <span>{{ ownerModalError }}</span>
+        </div>
+
+        <form @submit.prevent="submitOwnerAssignment" class="modal-form">
+          <div class="form-group">
+            <label for="owner-cat">Kategori Kebijakan *</label>
+            <select id="owner-cat" v-model="ownerForm.policyCategory" class="input-control" required>
+              <option v-for="cat in policyCategoryOptions" :key="cat.value" :value="cat.value">
+                {{ cat.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="owner-user">Pejabat Penanggung Jawab (Pemilik Kebijakan) *</label>
+            <select id="owner-user" v-model="ownerForm.userId" class="input-control" required>
+              <option value="" disabled>-- Pilih Pejabat / Staf Penanggung Jawab --</option>
+              <option v-for="u in availableUsers" :key="u.id" :value="u.id">
+                {{ u.fullName }} — {{ u.jobTitle || u.role || 'Staf' }} ({{ u.email }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="owner-effective">Mulai Berlaku Efektif *</label>
+            <input
+              id="owner-effective"
+              v-model="ownerForm.effectiveDate"
+              type="date"
+              class="input-control"
+              :min="todayStr"
+              required
+            />
+            <small class="helper-text">
+              Penetapan penanggung jawab berlaku efektif mulai tanggal yang ditentukan dan dicatat dalam Jejak Audit.
+            </small>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" @click="closeOwnerModal" :disabled="ownerModalSubmitting">
+              Batal
+            </button>
+            <button class="btn btn-primary" type="submit" :disabled="ownerModalSubmitting">
+              <span>{{ ownerModalSubmitting ? 'Menyimpan...' : 'Simpan Penugasan' }}</span>
             </button>
           </div>
         </form>
@@ -1681,5 +1962,28 @@ h1 {
   background: var(--color-status-red-bg);
   color: var(--color-status-red-fg);
   border: 1px solid var(--color-status-red-border);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12.5px;
+  gap: 6px;
+}
+
+.policy-icon {
+  color: var(--color-brand-primary);
+}
+
+.helper-text {
+  display: block;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.text-muted {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: 12px;
 }
 </style>
