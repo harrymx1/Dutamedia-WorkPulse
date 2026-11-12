@@ -371,7 +371,7 @@ export class BlockerService {
         return {
           userId: currentCandidateId,
           routingNote: bypassedDueToLeave
-            ? 'Penanggung jawab utama sedang cuti resmi, sehingga dialihkan otomatis ke pejabat tersedia pada jenjang berikutnya.'
+            ? 'Penanggung jawab utama sedang cuti resmi dan belum memiliki Reviewer Sementara aktif, sehingga diteruskan otomatis ke atasan struktural di atasnya.'
             : undefined,
         };
       }
@@ -422,7 +422,7 @@ export class BlockerService {
       userId: fallbackId,
       routingNote:
         bypassedDueToLeave && fallbackId
-          ? 'Penanggung jawab utama sedang cuti resmi, sehingga dialihkan otomatis ke pejabat tersedia pada jenjang berikutnya.'
+          ? 'Penanggung jawab utama sedang cuti resmi dan belum memiliki Reviewer Sementara aktif, sehingga diteruskan otomatis ke atasan struktural di atasnya.'
           : undefined,
     };
   }
@@ -527,7 +527,7 @@ export class BlockerService {
             routingNote:
               escChain.routingNote ||
               (mapping.projectManagerId
-                ? 'Pimpinan proyek utama sedang cuti/tidak tersedia, sehingga diteruskan otomatis ke pengarah proyek yang tersedia.'
+                ? 'Pimpinan proyek utama sedang cuti resmi dan belum memiliki Reviewer Sementara aktif, sehingga diteruskan otomatis ke pengarah proyek (atasan pengesah cuti).'
                 : undefined),
           };
         }
@@ -537,6 +537,7 @@ export class BlockerService {
     if (input.ownerNeededType !== AuthorityContext.PROJECT_AUTHORITY) {
       const target = BLOCKER_TYPE_DIVISION_ROUTING[input.type || ''];
       if (target) {
+        // 1. Prioritaskan Reviewer Sementara resmi jika telah diterbitkan mandat aktif (DEC-014)
         const divisionDelegateId = await this.findActiveTemporaryDelegate(target.function, [userId], today);
         if (divisionDelegateId) {
           const delegateOwner = await pick(divisionDelegateId);
@@ -550,60 +551,72 @@ export class BlockerService {
           }
         }
 
-        const candidates = await this.prisma.organizationalAssignment.findMany({
+        // 2. Cari HANYA Pimpinan Utama Divisi (HEAD / HRGA). Dilarang keras menunjuk bawahan (SUPERVISOR / EMPLOYEE)
+        //    secara otomatis tanpa mandat Reviewer Sementara (DEC-014).
+        const divisionHeads = await this.prisma.organizationalAssignment.findMany({
           where: {
             function: target.function,
             ...this.activeDateWhere(today),
             userId: { not: userId },
-            role: { not: 'SYSTEM_ADMIN' },
+            role: { in: [CanonicalRole.HEAD, CanonicalRole.HRGA] },
             user: { status: 'ACTIVE' },
           },
-          select: { userId: true, role: true },
+          select: { userId: true, role: true, directManagerId: true },
         });
-        const rank = ['HEAD', 'HRGA', 'SUPERVISOR'];
-        candidates.sort((a, b) => {
+        const rank = ['HEAD', 'HRGA'];
+        divisionHeads.sort((a, b) => {
           const ra = rank.indexOf(a.role);
           const rb = rank.indexOf(b.role);
           return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
         });
 
-        let sawPrimaryOnLeave = false;
-        for (const candidate of candidates) {
-          const onLeave = await this.isUserOnApprovedLeave(candidate.userId, today);
+        let primaryHeadOnLeaveId: string | null = null;
+        for (const headCandidate of divisionHeads) {
+          const onLeave = await this.isUserOnApprovedLeave(headCandidate.userId, today);
           if (!onLeave) {
-            const owner = await pick(candidate.userId);
+            const owner = await pick(headCandidate.userId);
             if (owner) {
               return {
                 owner,
                 reason: 'DIVISION_HEAD',
                 divisionLabel: target.label,
-                routingNote: sawPrimaryOnLeave
-                  ? `Pimpinan utama divisi ${target.label} sedang cuti resmi, sehingga dialihkan otomatis ke pejabat divisi yang tersedia.`
-                  : undefined,
               };
             }
-          } else {
-            sawPrimaryOnLeave = true;
+          } else if (!primaryHeadOnLeaveId) {
+            primaryHeadOnLeaveId = headCandidate.userId;
           }
         }
 
-        // Jika seluruh pejabat pada fungsi terkait sedang cuti, naikkan melalui rantai atasan (hingga CEO)
-        if (candidates[0]?.userId) {
+        // 3. Jika Pimpinan Utama Divisi sedang cuti resmi tanpa Reviewer Sementara, tanggung jawab HANYA naik vertikal
+        //    ke atasan struktural di atasnya / pengesah cuti (N+1 -> CEO), tidak pernah turun ke bawahan (DEC-014).
+        if (primaryHeadOnLeaveId) {
           const chainResult = await this.resolveAvailableManagerChain(
-            candidates[0].userId,
+            primaryHeadOnLeaveId,
             userId,
             target.function,
             { skipTempDelegation: true },
           );
-          const chainOwner = await pick(chainResult.userId);
+          let chainOwner = await pick(chainResult.userId);
+          if (!chainOwner && this.prisma.organizationalAssignment?.findFirst) {
+            const ceoAssign = await this.prisma.organizationalAssignment.findFirst({
+              where: {
+                role: CanonicalRole.CEO_MANAGEMENT,
+                ...this.activeDateWhere(today),
+                userId: { notIn: [userId, primaryHeadOnLeaveId] },
+                user: { status: 'ACTIVE' },
+              },
+              orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+            });
+            if (ceoAssign?.userId && !(await this.isUserOnApprovedLeave(ceoAssign.userId, today))) {
+              chainOwner = await pick(ceoAssign.userId);
+            }
+          }
           if (chainOwner) {
             return {
               owner: chainOwner,
               reason: 'DIVISION_HEAD',
               divisionLabel: target.label,
-              routingNote:
-                chainResult.routingNote ||
-                `Seluruh pejabat divisi ${target.label} sedang cuti resmi, sehingga diteruskan otomatis ke pimpinan jenjang berikutnya.`,
+              routingNote: `Pimpinan utama divisi ${target.label} sedang cuti resmi dan belum memiliki Reviewer Sementara aktif, sehingga diteruskan otomatis ke atasan struktural di atasnya.`,
             };
           }
         }
@@ -633,14 +646,20 @@ export class BlockerService {
       };
     }
 
-    // Fallback untuk kondisi struktur pipih (tanpa directManagerId) atau pelapor tingkat tinggi (Head/CEO):
-    // cari pimpinan fungsi atau CEO aktif yang tidak sedang cuti
+    // Fallback vertikal untuk kondisi struktur pipih (tanpa directManagerId) atau ketika atasan di rantai sedang cuti:
+    // hanya naik ke HEAD di divisi pelapor sendiri atau CEO_MANAGEMENT (tidak pernah ke HEAD divisi lain atau bawahan) (DEC-014)
     if (this.prisma.organizationalAssignment?.findFirst) {
+      const allowedOr: any[] = [{ role: CanonicalRole.CEO_MANAGEMENT }];
+      if (orgAssign?.function) {
+        allowedOr.push({ role: CanonicalRole.HEAD, function: orgAssign.function });
+      }
       const execCandidates = this.prisma.organizationalAssignment.findMany
         ? await this.prisma.organizationalAssignment.findMany({
             where: {
-              role: { in: [CanonicalRole.CEO_MANAGEMENT, CanonicalRole.HEAD] },
-              ...this.activeDateWhere(today),
+              AND: [
+                this.activeDateWhere(today),
+                { OR: allowedOr },
+              ],
               userId: { not: userId },
               user: { status: 'ACTIVE' },
             },
@@ -662,7 +681,13 @@ export class BlockerService {
         if (!exec?.userId) continue;
         if (await this.isUserOnApprovedLeave(exec.userId, today)) continue;
         const execOwner = await pick(exec.userId);
-        if (execOwner) return { owner: execOwner, reason: 'DIRECT_MANAGER' };
+        if (execOwner) {
+          return {
+            owner: execOwner,
+            reason: 'DIRECT_MANAGER',
+            routingNote: effective.routingNote,
+          };
+        }
       }
     }
 

@@ -251,3 +251,19 @@
   3. **Otorisasi Pembukaan Phase 4 (UAT Package Impact Analysis & Evolution):**
      - Memberikan mandat kepada tim teknis untuk memulai Phase 4 guna menyelaraskan seluruh paket dokumen pengujian UAT (`UAT-Manual-Test-Cases.md`, `UAT-Requirement-Traceability-Matrix.csv`, `UAT-Test-Data-Matrix.csv`, dll.) dari baseline `v1.0.1-uat-pkg` menjadi `v1.1.0-uat-pkg`.
      - Penyelarasan dokumen wajib mencerminkan kondisi aplikasi terkini (rute kanonikal `/raise-blockers`, penghapusan kode internal prototipe/arsitektur, tata letak 3 seksi profil, bahasa bisnis opsi evaluasi harian, dan mitigasi keamanan login).
+
+---
+
+### [DEC-011-UAT / DEC-014] Penetapan Aturan Bisnis Pengalihan Wewenang Saat Cuti Resmi vs Mandat Reviewer Sementara (Strict Mandate & Upward-Only Fallback)
+- **Decision ID:** `DEC-011-UAT` (Referensi Arsitektur: `DEC-014`)
+- **Tanggal:** 12/11/2026 — 08:07 WIB
+- **Pengambil Keputusan (Decision Maker):** Harry (Acceptance Owner)
+- **Konteks:** Evaluasi kritis terhadap mekanisme pengalihan otomatis penanggung jawab kendala (*Blocker Routing*) ketika pejabat utama (`HEAD`, `PROJECT_MANAGER`, `SUPERVISOR`) sedang menjalani Cuti Resmi (`APPROVED` Leave). Ditemukan bahwa penunjukan bawahan (`SUPERVISOR` / `EMPLOYEE`) atau rekan sejawat secara otomatis oleh algoritma sistem tanpa mandat resmi melanggar prinsip tata kelola (*Zero Contextual Wisdom* atas beban kerja/kompetensi dan ketiadaan *Consent* dari pihak yang ditunjuk).
+- **Opsi yang Dipertimbangkan:**
+  1. *Opsi 1 (Murni Otomatis ke Rekan/Bawahan):* Sistem memilih otomatis personel nomor dua di divisi terkait saat pimpinan cuti. (Ditolak karena membebankan akuntabilitas SLA secara sepihak tanpa persetujuan dan tanpa penilaian kesiapan manusia).
+  2. *Opsi 2 (Form Handover di Pengajuan Cuti):* Menambahkan pemilihan pengganti di form `/leave/my`. (Ditolak karena menduplikasi fungsi modul resmi `Reviewer Sementara` `/admin/temporary-reviewers` dan membebani form cuti staf umum).
+  3. *Opsi 3 (Strict Mandate for Peer/Subordinate Delegation + Upward-Only Fallback on Approved Leave):* Pengalihan ke rekan sejawat atau bawahan **hanya** terjadi jika ada mandat resmi yang aktif di modul `Reviewer Sementara` (`/admin/temporary-reviewers`); sedangkan jika pejabat sedang Cuti Resmi (`APPROVED` Leave) **tanpa** `Reviewer Sementara` aktif, tanggung jawab otomatis **hanya naik secara vertikal ke Atasan Struktural / Pengarah Proyek di atasnya (`N+1 -> N+2 -> CEO_MANAGEMENT`)** yang menyetujui cuti tersebut.
+- **Keputusan Resmi yang Mengikat:** Memilih **Opsi 3 (`DEC-014`)**:
+  1. **Wajib Mandat Resmi untuk Rekan/Bawahan:** Sistem dilarang keras menunjuk bawahan (`SUPERVISOR` / `EMPLOYEE`) atau rekan sejawat secara otomatis tanpa adanya penugasan aktif di `TemporaryReviewerAssignment` (`/admin/temporary-reviewers`).
+  2. **Fallback Vertikal ke Atasan Pengesah Cuti (`N+1`):** Apabila pejabat utama berstatus Cuti Resmi (`APPROVED` Leave) dan belum memiliki `Reviewer Sementara` aktif, penugasan otomatis kendala (*Blocker*) baik pada jalur Struktural, Lintas Divisi (`INFRA`, `FINANCE`, `LEGAL`), maupun Kewenangan Proyek (`PROJECT_AUTHORITY`) hanya boleh naik vertikal ke atasan struktural / pengarah proyek di atasnya (`N+1 -> N+2 -> CEO_MANAGEMENT`).
+- **Dampak Implementasi:** Pembaruan logika resolusi pada `backend/src/daily/services/blocker.service.ts` dan pengujian unit pada `backend/src/daily/services/blocker.service.spec.ts`.

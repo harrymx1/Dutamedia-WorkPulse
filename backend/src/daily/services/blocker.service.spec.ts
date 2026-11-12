@@ -250,23 +250,29 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       expect(mockPrisma.temporaryReviewerAssignment.findMany).not.toHaveBeenCalled();
     });
 
-    it('bypasses on-leave INFRA division head to available division supervisor or chain', async () => {
+    it('does NOT route downward to division SUPERVISOR when INFRA division HEAD is on APPROVED leave without Temporary Reviewer; escalates upward to CEO instead (DEC-014)', async () => {
       mockPrisma.organizationalAssignment = {
         findMany: vi.fn().mockResolvedValue([
-          { userId: 'ops-head-leave', role: 'HEAD' },
-          { userId: 'ops-sup-active', role: 'SUPERVISOR' },
+          { userId: 'ops-head-leave', role: 'HEAD', directManagerId: 'ceo-1' },
         ]),
+        findFirst: vi.fn().mockResolvedValue({
+          userId: 'ops-head-leave',
+          role: 'HEAD',
+          function: 'OperationsInfrastructure',
+          directManagerId: 'ceo-1',
+        }),
       };
       mockPrisma.leaveRequest = {
         findFirst: vi
           .fn()
           .mockResolvedValueOnce({ id: 'lv-ops', userId: 'ops-head-leave', status: 'APPROVED' })
+          .mockResolvedValueOnce({ id: 'lv-ops', userId: 'ops-head-leave', status: 'APPROVED' })
           .mockResolvedValueOnce(null),
       };
       mockPrisma.user.findFirst = vi.fn().mockResolvedValue({
-        id: 'ops-sup-active',
-        fullName: 'Operations Supervisor',
-        orgAssignments: [{ jobTitle: 'Operations Supervisor' }],
+        id: 'ceo-1',
+        fullName: 'Hendra Wijaya',
+        orgAssignments: [{ jobTitle: 'Chief Executive Officer' }],
       });
 
       const suggestion = await service.resolveSuggestedOwner('emp-1', {
@@ -274,9 +280,44 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
       });
 
-      expect(suggestion.owner?.id).toBe('ops-sup-active');
+      expect(suggestion.owner?.id).toBe('ceo-1');
+      expect(suggestion.owner?.fullName).toBe('Hendra Wijaya');
       expect(suggestion.reason).toBe('DIVISION_HEAD');
-      expect(suggestion.routingNote).toContain('cuti resmi');
+      expect(suggestion.routingNote).toContain('atasan struktural di atasnya');
+    });
+
+    it('routes INFRA blocker to division SUPERVISOR ONLY when explicitly mandated as active Temporary Reviewer (DEC-014)', async () => {
+      mockPrisma.temporaryReviewerAssignment = {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'tmp-ops-1',
+            targetFunction: 'OperationsInfrastructure',
+            delegateUserId: 'ops-sup-delegate',
+            createdByUserId: 'admin-1',
+          },
+        ]),
+      };
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.user.findFirst = vi.fn().mockImplementation((args: any) => {
+        if (args?.select?.orgAssignments) {
+          return Promise.resolve({
+            id: 'ops-sup-delegate',
+            fullName: 'Rian Kurniawan',
+            orgAssignments: [{ jobTitle: 'Operations Supervisor' }],
+          });
+        }
+        return Promise.resolve({ id: 'ops-sup-delegate' });
+      });
+
+      const suggestion = await service.resolveSuggestedOwner('emp-1', {
+        type: 'INFRA',
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      });
+
+      expect(suggestion.owner?.id).toBe('ops-sup-delegate');
+      expect(suggestion.owner?.fullName).toBe('Rian Kurniawan');
+      expect(suggestion.reason).toBe('DIVISION_HEAD');
+      expect(suggestion.routingNote).toContain('Reviewer Sementara aktif');
     });
 
     it('bypasses on-leave PROJECT_AUTHORITY project manager to available escalation reviewer', async () => {
