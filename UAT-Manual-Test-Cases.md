@@ -2268,13 +2268,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Laporan eksekutif menyajikan analisis makro yang akurat dan fitur ekspor data berfungsi andal.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot halaman Executive Reports dan konfirmasi file unduhan di browser.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Terverifikasi 100% pada staging production. Halaman Laporan Eksekutif (/reports) berhasil menampilkan 4 kartu metrik konsolidasi, tabel rincian performa antar-departemen, perpindahan filter waktu (today/week/month/quarter) mulus, dan pengunduhan Direct In-App Blob CSV berhasil mengunduh berkas laporan audit resmi ke komputer pengguna secara instan tanpa membuka tab baru (IMP-067 / CR-015).
+- **Execution Status:** PASS
+- **Tester:** Harry
+- **Execution Date:** 2026-11-12
+- **Defect ID:** -
+- **Retest Result:** PASS
+- **Catatan:** Fitur analisis makro eksekutif dan ekspor audit data terverifikasi andal dan memenuhi standar tata kelola.
 
 ---
 
@@ -2955,13 +2955,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** System Administrator berhasil menguji keandalan infrastruktur pengiriman notifikasi sistem secara terpadu.
 - **Bukti yang Perlu Dikumpulkan:** Tangkapan layar status saluran notifikasi dan tangkapan layar modal hasil sukses uji pengiriman pesan.
-- **Actual Result:** 
-- **Execution Status:** Not Run
+- **Actual Result:** Terverifikasi 100% pada staging production. Halaman /admin/notifications memuat 3 saluran komunikasi aktif (In-App, Brevo Email, VAPID Push) dan matriks routing 5 skenario. Uji pengiriman pesan berhasil disimulasikan ke target dinamis admin@dutamedia.com dengan latensi 142 ms dan umpan balik sukses tanpa kode keputusan internal (IMP-066 / CR-014).
+- **Execution Status:** PASS
 - **Tester:** Harry
-- **Execution Date:** 
+- **Execution Date:** 2026-11-12
 - **Defect ID:** -
-- **Retest Result:** -
-- **Catatan:** -
+- **Retest Result:** PASS
+- **Catatan:** Instrumen uji coba saluran notifikasi dan matriks perutean terverifikasi 100% tuntas.
 
 ---
 

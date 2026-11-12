@@ -134,4 +134,118 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
     expect(leadPulse.ledProjects).toHaveLength(1);
     expect(leadPulse.ledProjects[0].projectCode).toBe('WP-CORE');
   });
+
+  it('populates active open blockers into attentionItems and deduplicates with linked commitments (IMP-068)', async () => {
+    mockPrisma.user.count.mockResolvedValue(5);
+    mockPrisma.organizationalAssignment = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          userId: 'user-dev-01',
+          function: 'Engineering',
+          jobTitle: 'Frontend Developer',
+          user: { fullName: 'Aditya Nugroho' },
+        },
+      ]),
+    };
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([
+      {
+        id: 'rec-1',
+        userId: 'user-dev-01',
+        isMorningSubmitted: true,
+        commitments: [
+          {
+            id: 'comm-1',
+            sequenceNo: 1,
+            taskText: 'Menyelesaikan UI navigasi',
+            initialRisk: CommitmentRisk.GREEN,
+          },
+          {
+            id: 'comm-2',
+            sequenceNo: 2,
+            taskText: 'Investigasi memory leak',
+            initialRisk: CommitmentRisk.AMBER,
+            knownBlockerNote: 'OOM pipeline runner',
+          },
+        ],
+      },
+    ]);
+    mockPrisma.blockerTicket.findMany.mockResolvedValue([
+      {
+        id: 'blocker-1',
+        raisedByUserId: 'user-dev-01',
+        linkedCommitmentId: 'comm-2',
+        projectCodeReference: 'WP-CORE',
+        severity: BlockerSeverity.CRITICAL,
+        status: BlockerStatus.OPEN,
+        description: 'CI runner mengalami OOM saat bundle',
+        raisedBy: { id: 'user-dev-01', fullName: 'Aditya Nugroho' },
+      },
+    ]);
+
+    const pulse = await service.getPulseMetrics();
+    expect(pulse.attentionItems).toBeDefined();
+    // Harus ada 1 item dari tiket blocker, dan komitmen comm-2 tidak diduplikasi
+    expect(pulse.attentionItems).toHaveLength(1);
+    expect(pulse.attentionItems[0].id).toBe('blocker-blocker-1');
+    expect(pulse.attentionItems[0].userName).toBe('Aditya Nugroho');
+    expect(pulse.attentionItems[0].level).toBe('RED');
+    expect(pulse.attentionItems[0].badgeLabel).toBe('Blocker Kritis (P0)');
+    expect(pulse.attentionItems[0].projectCode).toBe('WP-CORE');
+    expect(pulse.attentionItems[0].actionUrl).toBe('/blockers');
+  });
+
+  it('correctly intersects division and project filters preventing cross-division leakage (IMP-068)', async () => {
+    mockPrisma.user.count.mockResolvedValue(10);
+    mockPrisma.organizationalAssignment = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          userId: 'user-eng-1',
+          function: 'Engineering',
+          jobTitle: 'Frontend Developer',
+          user: { fullName: 'Aditya Nugroho' },
+        },
+        {
+          userId: 'user-deliv-1',
+          function: 'Delivery',
+          jobTitle: 'Project Manager',
+          user: { fullName: 'Dimas Prakoso' },
+        },
+      ]),
+    };
+    mockPrisma.projectAuthorityMapping = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          projectCode: 'PRJ-PORTAL',
+          projectName: 'Customer Portal',
+          involvedFunction: 'Delivery',
+          projectManagerId: 'user-deliv-1',
+        },
+      ]),
+    };
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
+    mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+
+    // Skenario Harry: Divisi Business Development + Proyek PRJ-PORTAL (yang fungsinya Delivery)
+    // Seharusnya totalEmployees = 0 karena tidak ada personil Business Development di PRJ-PORTAL!
+    const filteredPulse = await service.getPulseMetrics({
+      scope: 'management',
+      filterFunction: 'BusinessDevelopment',
+      projectCode: 'PRJ-PORTAL',
+    });
+
+    expect(filteredPulse.totalEmployees).toBe(0);
+    expect(filteredPulse.checkedInCount).toBe(0);
+    expect(filteredPulse.noSubmissionCount).toBe(0);
+    expect(filteredPulse.participationRate).toBe(0);
+
+    // Skenario Divisi Delivery + Proyek PRJ-PORTAL
+    // Seharusnya totalEmployees = 1 (Dimas Prakoso)
+    const deliveryPulse = await service.getPulseMetrics({
+      scope: 'management',
+      filterFunction: 'Delivery',
+      projectCode: 'PRJ-PORTAL',
+    });
+
+    expect(deliveryPulse.totalEmployees).toBe(1);
+  });
 });

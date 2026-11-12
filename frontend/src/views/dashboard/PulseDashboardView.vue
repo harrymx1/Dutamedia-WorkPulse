@@ -510,7 +510,7 @@ onMounted(() => {
               data-testid="empty-attention-items"
             >
               <CheckCircle2 :size="32" class="empty-icon" />
-              <p>Seluruh personel dalam lingkup ini berjalan terkendali hari ini (Tidak ada komitmen Amber/Merah).</p>
+              <p>Seluruh personel dalam lingkup ini berjalan terkendali hari ini (Tidak ada kendala aktif atau komitmen Amber/Merah).</p>
             </div>
             <div v-else class="action-items-list">
               <div

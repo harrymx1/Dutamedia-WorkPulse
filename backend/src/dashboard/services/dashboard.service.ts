@@ -134,6 +134,9 @@ export class DashboardService {
       where: {
         status: { in: [BlockerStatus.OPEN, BlockerStatus.ACKNOWLEDGED, BlockerStatus.IN_PROGRESS] },
       },
+      include: {
+        raisedBy: { select: { id: true, fullName: true } },
+      },
     });
 
     // Filter berdasarkan Scope / Divisi / Proyek bila konteks organisasi tersedia
@@ -154,98 +157,155 @@ export class DashboardService {
     const targetProject =
       options?.projectCode && options.projectCode !== 'ALL' ? options.projectCode : null;
 
-    if (activeAssignments.length > 0 && (targetDivision || options?.scope === 'team' || targetProject)) {
-      const userFunctionMap = new Map<string, { function: string; jobTitle: string; fullName: string }>();
-      for (const a of activeAssignments) {
-        userFunctionMap.set(a.userId, {
-          function: a.function,
-          jobTitle: a.jobTitle,
-          fullName: a.user?.fullName || 'Karyawan',
-        });
-      }
-
-      if (targetDivision) {
-        const normalizedTarget = targetDivision.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const divisionUserIds = new Set(
-          activeAssignments
-            .filter((a) => {
-              if (!a.function) return false;
-              if (a.function === targetDivision) return true;
-              const normFunc = String(a.function).toLowerCase().replace(/[^a-z0-9]/g, '');
-              return (
-                normFunc === normalizedTarget ||
-                normFunc.includes(normalizedTarget) ||
-                normalizedTarget.includes(normFunc)
-              );
-            })
-            .map((a) => a.userId),
-        );
-        totalEmployees = divisionUserIds.size;
-        todayRecords = todayRecords.filter((r: any) => divisionUserIds.has(r.userId));
-        openBlockers = openBlockers.filter(
-          (b: any) => divisionUserIds.has(b.raisedByUserId) || divisionUserIds.has(b.assignedOwnerId),
-        );
-      }
-
-      if (options?.scope === 'team' || targetProject) {
-        const activeProjectCodes = targetProject
-          ? new Set([targetProject])
-          : callerLedMappings.length > 0
-            ? new Set(callerLedMappings.map((m) => m.projectCode))
-            : new Set(availableProjects.map((p) => p.projectCode));
-
-        const involvedFunctions = new Set(
-          projectMappings
-            .filter((m) => activeProjectCodes.has(m.projectCode))
-            .map((m) => m.involvedFunction),
-        );
-
-        // Filter records yang memiliki komitmen pada proyek terkait atau berada di fungsi yang terlibat
-        todayRecords = todayRecords
-          .map((r: any) => {
-            const snap = (r.orgContextSnapshot as any) || {};
-            const cMeta = snap.commitmentMeta || {};
-            const filteredCommitments = (r.commitments || []).filter((c: any) => {
-              const pCode = cMeta[String(c.sequenceNo)]?.projectCode || null;
-              if (pCode) return activeProjectCodes.has(pCode);
-              if (targetProject) {
-                return (
-                  c.referenceLink &&
-                  String(c.referenceLink).toUpperCase().includes(targetProject.toUpperCase())
-                );
-              }
-              return true;
-            });
-            return {
-              ...r,
-              commitments: filteredCommitments,
-            };
-          })
-          .filter((r: any) => {
-            if (targetProject) {
-              return r.commitments.length > 0;
-            }
-            const uFunc = userFunctionMap.get(r.userId)?.function;
-            return r.commitments.length > 0 || (uFunc && involvedFunctions.has(uFunc));
-          });
-
-        openBlockers = openBlockers.filter((b: any) =>
-          b.projectCodeReference ? activeProjectCodes.has(b.projectCodeReference) : !targetProject,
-        );
-
-        if (targetProject) {
-          const projectUserIds = new Set(todayRecords.map((r: any) => r.userId));
-          const involvedUserIds = new Set(
-            activeAssignments.filter((a) => involvedFunctions.has(a.function)).map((a) => a.userId),
-          );
-          totalEmployees = Math.max(projectUserIds.size, involvedUserIds.size);
-        }
-      }
+    // Inisialisasi peta profil penugasan aktif
+    const userFunctionMap = new Map<string, { function: string; jobTitle: string; fullName: string }>();
+    for (const a of activeAssignments) {
+      userFunctionMap.set(a.userId, {
+        function: a.function,
+        jobTitle: a.jobTitle,
+        fullName: a.user?.fullName || 'Karyawan',
+      });
     }
 
-    const checkedInCount = todayRecords.filter(
-      (r: any) => r.isMorningSubmitted || Boolean(r.morningSubmittedAt),
-    ).length;
+    // 1. Tentukan himpunan userId berdasarkan filter Divisi (jika ada)
+    let divisionUserIds: Set<string> | null = null;
+    if (targetDivision) {
+      const normalizedTarget = targetDivision.toLowerCase().replace(/[^a-z0-9]/g, '');
+      divisionUserIds = new Set(
+        activeAssignments
+          .filter((a) => {
+            if (!a.function) return false;
+            if (a.function === targetDivision) return true;
+            const normFunc = String(a.function).toLowerCase().replace(/[^a-z0-9]/g, '');
+            return (
+              normFunc === normalizedTarget ||
+              normFunc.includes(normalizedTarget) ||
+              normalizedTarget.includes(normFunc)
+            );
+          })
+          .map((a) => a.userId),
+      );
+    }
+
+    // 2. Tentukan himpunan userId berdasarkan filter Proyek / Cakupan Tim (jika ada)
+    let projectUserIds: Set<string> | null = null;
+    const isTeamScope = options?.scope === 'team';
+    if (isTeamScope || targetProject) {
+      const activeProjectCodes = targetProject
+        ? new Set([targetProject.toUpperCase()])
+        : callerLedMappings.length > 0
+          ? new Set(callerLedMappings.map((m) => m.projectCode.toUpperCase()))
+          : new Set(availableProjects.map((p) => p.projectCode.toUpperCase()));
+
+      const involvedFunctions = new Set(
+        projectMappings
+          .filter((m) => activeProjectCodes.has(m.projectCode.toUpperCase()))
+          .map((m) => m.involvedFunction),
+      );
+
+      const pUsers = new Set<string>();
+
+      for (const a of activeAssignments) {
+        if (a.function && involvedFunctions.has(a.function)) {
+          pUsers.add(a.userId);
+        }
+      }
+
+      for (const m of projectMappings) {
+        if (activeProjectCodes.has(m.projectCode.toUpperCase())) {
+          if (m.projectManagerId) pUsers.add(m.projectManagerId);
+          if (m.escalationReviewerId) pUsers.add(m.escalationReviewerId);
+        }
+      }
+
+      for (const r of todayRecords) {
+        const snap = (r.orgContextSnapshot as any) || {};
+        const cMeta = snap.commitmentMeta || {};
+        const hasProjectCommitment = (r.commitments || []).some((c: any) => {
+          const pCode = cMeta[String(c.sequenceNo)]?.projectCode || null;
+          if (pCode && activeProjectCodes.has(pCode.toUpperCase())) return true;
+          if (c.referenceLink) {
+            return Array.from(activeProjectCodes).some((code) =>
+              String(c.referenceLink).toUpperCase().includes(code),
+            );
+          }
+          return false;
+        });
+        if (hasProjectCommitment) {
+          pUsers.add(r.userId);
+        }
+      }
+
+      for (const b of openBlockers) {
+        if (
+          b.projectCodeReference &&
+          activeProjectCodes.has(b.projectCodeReference.toUpperCase())
+        ) {
+          if (b.raisedByUserId) pUsers.add(b.raisedByUserId);
+          if (b.assignedOwnerId) pUsers.add(b.assignedOwnerId);
+        }
+      }
+
+      projectUserIds = pUsers;
+    }
+
+    // 3. Set Intersection: Gabungkan kriteria filter secara matematis presisi
+    let effectiveUserIds: Set<string> | null = null;
+    if (divisionUserIds !== null && projectUserIds !== null) {
+      effectiveUserIds = new Set(
+        [...divisionUserIds].filter((id) => projectUserIds!.has(id)),
+      );
+    } else if (divisionUserIds !== null) {
+      effectiveUserIds = divisionUserIds;
+    } else if (projectUserIds !== null) {
+      effectiveUserIds = projectUserIds;
+    }
+
+    if (effectiveUserIds !== null) {
+      totalEmployees = effectiveUserIds.size;
+      todayRecords = todayRecords.filter((r: any) => effectiveUserIds!.has(r.userId));
+      openBlockers = openBlockers.filter(
+        (b: any) =>
+          effectiveUserIds!.has(b.raisedByUserId) || effectiveUserIds!.has(b.assignedOwnerId),
+      );
+    }
+
+    // 4. Jika filter proyek spesifik dipilih, lakukan penyaringan granular komitmen & blocker
+    if (targetProject) {
+      const pCodeUpper = targetProject.toUpperCase();
+      todayRecords = todayRecords
+        .map((r: any) => {
+          const snap = (r.orgContextSnapshot as any) || {};
+          const cMeta = snap.commitmentMeta || {};
+          const filteredCommitments = (r.commitments || []).filter((c: any) => {
+            const pCode = cMeta[String(c.sequenceNo)]?.projectCode || null;
+            if (pCode) return pCode.toUpperCase() === pCodeUpper;
+            if (c.referenceLink) {
+              return String(c.referenceLink).toUpperCase().includes(pCodeUpper);
+            }
+            return false;
+          });
+          return {
+            ...r,
+            commitments: filteredCommitments,
+          };
+        });
+
+      openBlockers = openBlockers.filter(
+        (b: any) =>
+          b.projectCodeReference &&
+          b.projectCodeReference.toUpperCase() === pCodeUpper,
+      );
+    }
+
+    const checkedInCount = todayRecords.filter((r: any) => {
+      const isSubmitted = r.isMorningSubmitted || Boolean(r.morningSubmittedAt);
+      if (!isSubmitted) return false;
+      if (targetProject) {
+        return (r.commitments || []).length > 0;
+      }
+      return true;
+    }).length;
     const eodSubmittedCount = todayRecords.filter(
       (r: any) => r.isEodSubmitted || Boolean(r.eodSubmittedAt),
     ).length;
@@ -305,6 +365,43 @@ export class DashboardService {
       actionLabel: string;
     }> = [];
 
+    // 1. Masukkan tiket kendala aktif (blockers) yang sedang berjalan
+    for (const b of openBlockers as any[]) {
+      const uInfo = userJobMap.get(b.raisedByUserId);
+      const userName = b.raisedBy?.fullName || uInfo?.fullName || 'Anggota Tim';
+      const jobTitle = uInfo?.jobTitle || 'Staf';
+      const funcName = uInfo?.function || 'ENGINEERING';
+      const isRed =
+        b.severity === BlockerSeverity.CRITICAL || b.severity === BlockerSeverity.HIGH;
+
+      attentionItems.push({
+        id: `blocker-${b.id}`,
+        userName,
+        jobTitle,
+        function: funcName,
+        projectCode: b.projectCodeReference || null,
+        level: isRed ? 'RED' : 'AMBER',
+        badgeLabel:
+          b.severity === BlockerSeverity.CRITICAL
+            ? 'Blocker Kritis (P0)'
+            : b.severity === BlockerSeverity.HIGH
+              ? 'Blocker Tinggi (P1)'
+              : 'Kendala Aktif',
+        description: b.description,
+        supportNote:
+          b.status === BlockerStatus.OPEN
+            ? 'Kendala aktif belum direspon — butuh tindakan pimpinan'
+            : `Kendala dalam penanganan (${b.status})`,
+        actionUrl: '/blockers',
+        actionLabel: 'Bantu Unblock',
+      });
+    }
+
+    // 2. Masukkan komitmen harian yang berisiko Amber atau Merah (hindari duplikasi jika sudah terdaftar di blocker di atas)
+    const linkedCommitmentIdsFromBlockers = new Set(
+      openBlockers.map((b: any) => b.linkedCommitmentId).filter(Boolean),
+    );
+
     for (const r of todayRecords as any[]) {
       const uInfo = userJobMap.get(r.userId);
       const userName = r.user?.fullName || uInfo?.fullName || 'Anggota Tim';
@@ -313,6 +410,10 @@ export class DashboardService {
       const cMeta = (r.orgContextSnapshot as any)?.commitmentMeta || {};
 
       for (const c of r.commitments || []) {
+        if (c.id && linkedCommitmentIdsFromBlockers.has(c.id)) {
+          continue;
+        }
+
         if (c.initialRisk === CommitmentRisk.RED || c.initialRisk === CommitmentRisk.AMBER) {
           const pCode = cMeta[String(c.sequenceNo)]?.projectCode || null;
           attentionItems.push({
@@ -323,7 +424,7 @@ export class DashboardService {
             projectCode: pCode,
             level: c.initialRisk === CommitmentRisk.RED ? 'RED' : 'AMBER',
             badgeLabel:
-              c.initialRisk === CommitmentRisk.RED ? 'Komitmen Merah (Kritis)' : 'Komitmen Amber',
+              c.initialRisk === CommitmentRisk.RED ? 'Komitmen Merah (Kritis)' : 'Komitmen Amber (Waspada)',
             description: c.knownBlockerNote || c.taskText,
             supportNote: c.supportNeeded || `Tugas: ${c.taskText}`,
             actionUrl: c.initialRisk === CommitmentRisk.RED ? '/blockers' : '/coaching',

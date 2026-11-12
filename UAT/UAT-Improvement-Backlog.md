@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 60 Calon Perbaikan (IMP-001 s.d. IMP-060)
+> **Total Temuan:** 68 Calon Perbaikan (IMP-001 s.d. IMP-068)
 
 ---
 
@@ -106,6 +106,14 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-058** | Restrukturisasi Alur Delegasi Reviewer: Orientasi Pejabat Berhalangan, Jabatan Riil, dan Notifikasi 2 Arah | Business Logic & Organizational Governance | `/admin/temporary-reviewers` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
 | **IMP-059** | Tata Kelola Siklus Hidup Pendelegasian Wewenang (Edit & Cabut Akses) serta Notifikasi Dua Arah Komprehensif | Lifecycle Management & Notification Transparency | `/admin/temporary-reviewers` & `/notifications` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
 | **IMP-060** | Notifikasi Transparansi Pelimpahan Wewenang kepada Seluruh Anggota Tim (Bawahan) | Notification Transparency & Stakeholder Communication | `/notifications` & `TemporaryReviewerService` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
+| **IMP-061** | Penguatan 6 Lapis Keamanan & Tata Kelola Wewenang (Anti Self-Approval, Cakupan Delegasi Ketat, Akurasi Hari Terakhir WIB, Guard API, & Notifikasi Pengganti) | Security, RBAC & Temporal Accuracy | `/admin/temporary-reviewers` | `TC-ADMN-001`, `TC-HRGA-003` | High | Resolved / Implemented |
+| **IMP-062** | Tata Kelola UI & Perbaikan Tampilan Modul Kebijakan Sistem (Pencegahan Teks Terpotong, Format Jejak Audit Ramah Pengguna, Penyelarasan Keterangan Dinamis, dan Eliminasi Kode Arsitektur Internal) | UI / Layout & Microcopy | `/admin/policies` | `TC-ADMN-003` | Medium | Resolved / Implemented |
+| **IMP-063** | Notifikasi Siaran Otomatis Perubahan Kebijakan ke Seluruh Pengguna Aktif (`POLICY_UPDATED`) & Validasi Anti-Duplikasi Parameter | System Notification & Validation Guard | `/admin/policies` & `policy.service.ts` | `TC-ADMN-003` | High | Resolved / Implemented |
+| **IMP-064** | Penyelarasan Konsep "Target Waktu Respon & Eskalasi Berjenjang Kendala" (Bebas Bias Jabatan, Pemisahan dari Severity, & Smart Routing Kondisi Khusus) | Business Architecture & Incident SLA Governance | `/admin/policies` & `blocker.service.ts` | `TC-ADMN-004` | High | Resolved / Implemented |
+| **IMP-065** | Mesin Cron Penjadwalan Jeda Jam Kerja Operasional & Pemindahan Otomatis *Acknowledge-and-Stall* (Opsi B — Post-UAT Roadmap) | Backend Background Scheduler | `BlockerService`, `PolicyService` | `TC-ADMN-004`, `TC-BLKR-004` | Medium | Candidate (Post-UAT) |
+| **IMP-066** | Penyelarasan Istilah Bahasa, Target Penerima Dinamis, dan Respons Hasil Uji Coba pada Pengaturan Saluran Notifikasi (`/admin/notifications`) | UI/UX Terminology & Test Delivery Simulation | `/admin/notifications`, `notification.service.ts` | `TC-ADMN-005` | Medium | Resolved / Implemented |
+| **IMP-067** | Perbaikan Resolusi Rute Controller & Mekanisme Pengunduhan Berkas Audit CSV pada Laporan Eksekutif (`/reports`) | Backend Routing & Frontend Blob Download | `/reports`, `reports.controller.ts` | `TC-DASH-003`, `TC-CEO-001` | High | Resolved / Implemented |
+| **IMP-068** | Presisi Interseksi Matematis Filter Divisi-Proyek & Integrasi Tiket Kendala Aktif ke Widget Personil Butuh Bantuan | Backend Aggregation & Dashboard UI Integration | `/dashboard`, `dashboard.service.ts`, `PulseDashboardView.vue` | `TC-CEO-001` | High | Resolved / Implemented |
 
 ---
 
@@ -1462,6 +1470,24 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Rationale / Expected Benefit:** Menghilangkan kegagalan 404 pada fitur ekspor eksekutif dan menyajikan alur pengunduhan data audit yang mulus dan profesional.
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-DASH-003` (12 Nov 2026): `media_1794457244976_bd9235f5.png`.
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+### [IMP-068] Presisi Interseksi Matematis Filter Divisi-Proyek & Integrasi Tiket Kendala Aktif ke Widget Personil Butuh Bantuan
+- **Finding ID:** IMP-068
+- **Title:** Presisi Interseksi Matematis Filter Divisi-Proyek & Integrasi Tiket Kendala Aktif ke Widget Personil Butuh Bantuan
+- **Category:** Backend Aggregation, Filter Integrity & Dashboard UI Integration
+- **Page / Module:** `PulseDashboardView.vue`, `DashboardService` (`dashboard.service.ts`), `dashboard.service.spec.ts`
+- **Related Test Case:** `TC-CEO-001`
+- **Current Condition:** Pada Management Pulse Dashboard (`/dashboard`):
+  1. Widget *"Personil Butuh Bantuan Hari Ini"* menampilkan status kosong (*"Seluruh personel dalam lingkup ini berjalan terkendali hari ini (Tidak ada komitmen Amber/Merah)"*) meskipun kartu ringkasan KPI di atasnya menyatakan terdapat kendala aktif (*"Blocker Belum Direspon: 3 Blocker"*). Hal ini terjadi karena backend selama ini hanya menyeleksi komitmen harian berkategori Amber/Red, dan mengabaikan tiket blocker aktif (`OPEN / ACKNOWLEDGED / IN_PROGRESS`).
+  2. Kombinasi filter Divisi dan Proyek mengalami kebocoran data (*cross-division leakage*). Saat pimpinan memilih Divisi `Business Development` dengan `Semua Proyek`, metrik menampilkan `0 Orang (0/0)`. Namun saat dikombinasikan dengan proyek tertentu seperti `[PRJ-PORTAL]`, metrik justru melonjak menjadi `3 Orang (0/3)` karena algoritma backend menimpa `totalEmployees` menggunakan seluruh penugasan divisi yang terlibat dalam proyek (`Delivery`), mengabaikan fakta bahwa filter divisi yang dipilih adalah `Business Development`.
+- **Proposed Improvement:**
+  1. Mengintegrasikan seluruh tiket kendala aktif (`openBlockers`) ke dalam daftar `attentionItems` dengan tingkat urgensi `RED` (Kritis/Tinggi) atau `AMBER` (Aktif), badge keparahan yang informatif, rincian kendala, status respon, serta tautan langsung `Bantu Unblock` (`/blockers`). Komitmen yang telah terwakili oleh tiket kendala aktif dideduplikasi secara otomatis.
+  2. Menerapkan operasi interseksi himpunan (*set intersection*: `effectiveUserIds = divisionUserIds ∩ projectUserIds`) secara ketat. Bila suatu divisi tidak memiliki personil pada proyek yang dipilih, total personil dan statistik partisipasi konsisten menunjukkan `0 Orang (0/0)`, mengeliminasi kebocoran personil lintas divisi.
+  3. Memperbarui microcopy status kosong widget di frontend menjadi: *"Seluruh personel dalam lingkup ini berjalan terkendali hari ini (Tidak ada kendala aktif atau komitmen Amber/Merah)."*
+- **Rationale / Expected Benefit:** Memberikan data analitik eksekutif yang akurat, konsisten, dan matematis tanpa anomali logika filter, serta menyajikan daftar eskalasi kendala riil yang membutuhkan intervensi langsung pimpinan.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` (12 Nov 2026): `media_1794464372127_c4bd2a59.jpg`, `media_1794464661694_3f041042.png`, `media_1794464668028_c08da280.png`.
 - **Status:** Resolved / Implemented (Backend & Frontend Synced)
 
 ---
