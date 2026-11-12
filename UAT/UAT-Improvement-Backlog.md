@@ -1449,4 +1449,21 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 
 ---
 
+### [IMP-067] Perbaikan Resolusi Rute Controller & Mekanisme Pengunduhan Berkas Audit CSV pada Laporan Eksekutif (`/reports`)
+- **Finding ID:** IMP-067
+- **Title:** Perbaikan Resolusi Rute Controller & Mekanisme Pengunduhan Berkas Audit CSV pada Laporan Eksekutif (`/reports`)
+- **Category:** Backend Routing, Frontend Blob Download & Defect Resolution
+- **Page / Module:** `ExecutiveReportsView.vue`, `ReportsController` (`reports.controller.ts`)
+- **Related Test Case:** `TC-DASH-003`, `TC-CEO-001`
+- **Current Condition:** Saat pengguna mengeklik tombol "Export Data (CSV)" pada `/reports`, sistem memanggil `window.open` ke rute `/api/reports/export?period=...` (tanpa prefix `/v1`). Karena backend `ReportsController` hanya mendaftarkan rute tunggal `@Controller('api/v1/reports')`, server merespons dengan HTTP 404 Not Found (`RESOURCE_NOT_FOUND: Cannot GET /api/reports/export`), dan browser membuka tab kosong baru yang menampilkan pesan JSON galat.
+- **Proposed Improvement:**
+  1. Mendaftarkan alias rute lengkap pada `ReportsController`: `@Controller(['reports', 'api/reports', 'api/v1/reports', 'v1/reports'])` agar seluruh variasi URL ekspor dan laporan eksekutif selalu dikenali tanpa galat 404.
+  2. Mengganti metode `window.open` pada `ExecutiveReportsView.vue` dengan mekanisme *Direct In-App Blob Download* menggunakan fetch terautentikasi (`credentials: 'include'`). Berkas `.csv` otomatis terunduh ke komputer pengguna tanpa membuka tab baru yang mengganggu, disertai toast konfirmasi sukses.
+- **Rationale / Expected Benefit:** Menghilangkan kegagalan 404 pada fitur ekspor eksekutif dan menyajikan alur pengunduhan data audit yang mulus dan profesional.
+- **Priority:** High
+- **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-DASH-003` (12 Nov 2026): `media_1794457244976_bd9235f5.png`.
+- **Status:** Resolved / Implemented (Backend & Frontend Synced)
+
+---
+
 *Seluruh temuan di atas resmi terdaftar sebagai Candidate Improvement untuk ditinjau pasca-pelaksanaan Manual UAT WorkPulse.*

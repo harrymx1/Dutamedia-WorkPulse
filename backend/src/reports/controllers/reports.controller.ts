@@ -6,7 +6,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CanonicalRole } from '@prisma/client';
 
-@Controller('api/v1/reports')
+@Controller(['reports', 'api/reports', 'api/v1/reports', 'v1/reports'])
 @UseGuards(AuthGuard, RolesGuard)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}

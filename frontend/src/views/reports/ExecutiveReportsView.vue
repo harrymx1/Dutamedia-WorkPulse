@@ -93,12 +93,30 @@ function handlePeriodChange(p: string) {
 
 async function handleExport() {
   try {
+    showToast('Menyiapkan dan mengunduh berkas laporan CSV...');
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    const exportUrl = `${baseUrl}/reports/export?period=${activePeriod.value}`;
-    window.open(exportUrl, '_blank');
-    showToast('Mengunduh berkas laporan CSV...');
+    const exportUrl = `${baseUrl}/v1/reports/export?period=${activePeriod.value}`;
+    const res = await fetch(exportUrl, {
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null);
+      throw new Error(errJson?.error?.message || errJson?.message || 'Gagal mengunduh berkas laporan CSV.');
+    }
+    const blob = typeof res.blob === 'function' ? await res.blob() : new Blob([await res.text()], { type: 'text/csv' });
+    if (typeof window !== 'undefined' && typeof window.URL?.createObjectURL === 'function') {
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `workpulse-report-${activePeriod.value}-${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    }
+    showToast('Berkas laporan CSV berhasil diunduh.');
   } catch (err: any) {
-    showToast('Gagal mengekspor laporan.', true);
+    showToast(err.message || 'Gagal mengekspor laporan.', true);
   }
 }
 
