@@ -62,3 +62,82 @@ export function sortBlockersByNewest<T extends { raisedAt?: string | Date | null
   });
 }
 
+export type BlockerHistoryEntryType = 'PEER_SUPPORT' | 'REPORTER_REOPEN';
+
+export interface BlockerHistoryEntryLike {
+  entryType?: string | null;
+  actionTaken?: string | null;
+  resultNote?: string | null;
+}
+
+export interface BlockerHistoryPresentation {
+  entryType: BlockerHistoryEntryType;
+  variant: 'support' | 'reopen';
+  badgeLabel: string;
+  primaryLabel: string | null;
+  primaryText: string | null;
+  secondaryLabel: string;
+  secondaryText: string;
+}
+
+export const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
+
+const BLOCKER_HISTORY_ENTRY_CONFIG: Record<
+  BlockerHistoryEntryType,
+  {
+    variant: 'support' | 'reopen';
+    badgeLabel: string;
+    includePrimaryLine: boolean;
+    primaryLabel: string | null;
+    secondaryLabel: string;
+  }
+> = {
+  PEER_SUPPORT: {
+    variant: 'support',
+    badgeLabel: 'Kontribusi Bantuan',
+    includePrimaryLine: true,
+    primaryLabel: 'Tindakan',
+    secondaryLabel: 'Hasil / Solusi',
+  },
+  REPORTER_REOPEN: {
+    variant: 'reopen',
+    badgeLabel: 'Dikembalikan Pelapor (Belum Memadai)',
+    includePrimaryLine: false,
+    primaryLabel: null,
+    secondaryLabel: 'Alasan Pengembalian',
+  },
+};
+
+export function resolveBlockerHistoryEntryType(
+  entry: BlockerHistoryEntryLike,
+): BlockerHistoryEntryType {
+  if (entry.entryType === 'REPORTER_REOPEN') return 'REPORTER_REOPEN';
+  if (entry.entryType === 'PEER_SUPPORT') return 'PEER_SUPPORT';
+  return entry.actionTaken?.trim() === REPORTER_REOPEN_ACTION_LABEL
+    ? 'REPORTER_REOPEN'
+    : 'PEER_SUPPORT';
+}
+
+export function countPeerSupportContributions(
+  entries?: readonly BlockerHistoryEntryLike[] | null,
+): number {
+  if (!entries?.length) return 0;
+  return entries.filter((item) => resolveBlockerHistoryEntryType(item) === 'PEER_SUPPORT').length;
+}
+
+export function formatBlockerHistoryEntry(
+  entry: BlockerHistoryEntryLike,
+): BlockerHistoryPresentation {
+  const entryType = resolveBlockerHistoryEntryType(entry);
+  const cfg = BLOCKER_HISTORY_ENTRY_CONFIG[entryType];
+  return {
+    entryType,
+    variant: cfg.variant,
+    badgeLabel: cfg.badgeLabel,
+    primaryLabel: cfg.primaryLabel,
+    primaryText: cfg.includePrimaryLine ? entry.actionTaken || '-' : null,
+    secondaryLabel: cfg.secondaryLabel,
+    secondaryText: entry.resultNote || '-',
+  };
+}
+

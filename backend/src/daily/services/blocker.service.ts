@@ -28,6 +28,15 @@ const BLOCKER_TYPE_DIVISION_ROUTING: Record<string, { function: CanonicalFunctio
   LEGAL: { function: CanonicalFunction.HRGA, label: 'HRGA & Legal' },
 };
 
+const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
+export type BlockerHistoryEntryType = 'PEER_SUPPORT' | 'REPORTER_REOPEN';
+
+function resolveContributionEntryType(actionTaken?: string | null): BlockerHistoryEntryType {
+  return actionTaken?.trim() === REPORTER_REOPEN_ACTION_LABEL
+    ? 'REPORTER_REOPEN'
+    : 'PEER_SUPPORT';
+}
+
 @Injectable()
 export class BlockerService {
   constructor(
@@ -929,7 +938,7 @@ export class BlockerService {
         data: {
           blockerId,
           supporterUserId: actorUserId,
-          actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+          actionTaken: REPORTER_REOPEN_ACTION_LABEL,
           resultNote: trimmedReason,
         },
       });
@@ -1076,7 +1085,7 @@ export class BlockerService {
     assignedOwnerId?: string;
     raisedByUserId?: string;
   }) {
-    return this.prisma.blockerTicket.findMany({
+    const tickets = await this.prisma.blockerTicket.findMany({
       where: {
         ...(filters?.status && { status: filters.status }),
         ...(filters?.assignedOwnerId && { assignedOwnerId: filters.assignedOwnerId }),
@@ -1087,6 +1096,7 @@ export class BlockerService {
         assignedOwner: { select: { id: true, fullName: true, email: true } },
         linkedCommitment: true,
         supportContributions: {
+          orderBy: { createdAt: 'asc' },
           include: { supporter: { select: { id: true, fullName: true, email: true } } },
         },
       },
@@ -1095,6 +1105,16 @@ export class BlockerService {
         { id: 'desc' },
       ],
     });
+
+    return tickets.map((ticket: any) => ({
+      ...ticket,
+      supportContributions: Array.isArray(ticket.supportContributions)
+        ? ticket.supportContributions.map((entry: any) => ({
+            ...entry,
+            entryType: resolveContributionEntryType(entry.actionTaken),
+          }))
+        : [],
+    }));
   }
 
   /**
@@ -1118,7 +1138,7 @@ export class BlockerService {
       });
     }
 
-    return this.prisma.supportContribution.create({
+    const created = await this.prisma.supportContribution.create({
       data: {
         blockerId,
         supporterUserId,
@@ -1129,6 +1149,11 @@ export class BlockerService {
         supporter: { select: { id: true, fullName: true, email: true } },
       },
     });
+
+    return {
+      ...created,
+      entryType: 'PEER_SUPPORT' as const,
+    };
   }
 
   /**

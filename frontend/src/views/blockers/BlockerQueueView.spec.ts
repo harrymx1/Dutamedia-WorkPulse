@@ -227,4 +227,106 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('renders flexible history cards distinguishing reporter reopen reasons from peer support contributions', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-reopened-only',
+              description: '[Token Vault 403] Ditolak 403 saat start',
+              type: 'APPROVAL',
+              severity: 'HIGH',
+              impact: 'MILESTONE',
+              status: 'ACKNOWLEDGED',
+              raisedAt: '2026-11-13T09:18:00.000Z',
+              targetResolutionAt: '2026-11-13T13:18:00.000Z',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              supportContributions: [
+                {
+                  id: 'sup-reopen-1',
+                  entryType: 'REPORTER_REOPEN',
+                  supporter: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+                  actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+                  resultNote: 'Token baru masih merespons 403 karena role policy belum aktif.',
+                  createdAt: '2026-11-13T09:37:00.000Z',
+                },
+              ],
+            },
+            {
+              id: 'blk-mixed',
+              description: '[Timeout Staging] Masih error setelah support',
+              type: 'INFRA',
+              severity: 'CRITICAL',
+              impact: 'PRODUCTION',
+              status: 'ACKNOWLEDGED',
+              raisedAt: '2026-11-13T08:00:00.000Z',
+              targetResolutionAt: '2026-11-13T10:00:00.000Z',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              supportContributions: [
+                {
+                  id: 'sup-peer-1',
+                  supporter: { id: 'u2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
+                  actionTaken: 'Pengecekan routing subnet staging',
+                  resultNote: 'Rute subnet node-02 diperbaiki',
+                  createdAt: '2026-11-13T08:30:00.000Z',
+                },
+                {
+                  id: 'sup-reopen-2',
+                  supporter: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+                  actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+                  resultNote: 'Healthcheck masih timeout di endpoint /payments',
+                  createdAt: '2026-11-13T08:45:00.000Z',
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // Tiket pertama hanya punya reopen tanpa bantuan rekan -> badge X Bantuan tidak boleh muncul palsu
+    const firstCard = wrapper.find('[data-testid="ticket-card-blk-reopened-only"]');
+    expect(firstCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
+
+    // Tiket kedua punya 1 bantuan rekan + 1 reopen -> hanya menghitung 1 Bantuan
+    const secondCard = wrapper.find('[data-testid="ticket-card-blk-mixed"]');
+    expect(secondCard.find('[data-testid="card-support-count"]').text()).toContain('1 Bantuan');
+
+    // Detail tiket pertama memakai judul & label alasan pengembalian yang tepat
+    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (1)');
+    const reopenCard = wrapper.find('[data-testid="history-item-sup-reopen-1"]');
+    expect(reopenCard.classes()).toContain('variant-reopen');
+    expect(reopenCard.text()).toContain('Dikembalikan Pelapor (Belum Memadai)');
+    expect(reopenCard.text()).toContain('Alasan Pengembalian:');
+    expect(reopenCard.text()).toContain('Token baru masih merespons 403');
+    expect(reopenCard.text()).not.toContain('Tindakan:');
+    expect(reopenCard.text()).not.toContain('Hasil / Solusi:');
+
+    // Pilih tiket kedua dan pastikan format peer support vs reopen berdampingan rapi
+    await secondCard.trigger('click');
+    await flushPromises();
+
+    const peerItem = wrapper.find('[data-testid="history-item-sup-peer-1"]');
+    expect(peerItem.classes()).toContain('variant-support');
+    expect(peerItem.text()).toContain('Kontribusi Bantuan');
+    expect(peerItem.text()).toContain('Tindakan:');
+    expect(peerItem.text()).toContain('Hasil / Solusi:');
+
+    const mixedReopenItem = wrapper.find('[data-testid="history-item-sup-reopen-2"]');
+    expect(mixedReopenItem.classes()).toContain('variant-reopen');
+    expect(mixedReopenItem.text()).toContain('Alasan Pengembalian:');
+
+    vi.unstubAllGlobals();
+  });
 });

@@ -608,10 +608,28 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       expect(metrics.blockers[1].isBreached).toBe(false);
     });
 
-    it('orders blocker queue by newest raisedAt descending regardless of severity', async () => {
-      mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+    it('orders blocker queue by newest raisedAt descending and tags entryType on contributions', async () => {
+      mockPrisma.blockerTicket.findMany.mockResolvedValue([
+        {
+          id: 'blk-q1',
+          supportContributions: [
+            {
+              id: 'sc-peer',
+              actionTaken: 'Cek routing subnet',
+              resultNote: 'Ditemukan failover terputus',
+              createdAt: new Date('2026-11-13T08:00:00.000Z'),
+            },
+            {
+              id: 'sc-reopen',
+              actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+              resultNote: 'Endpoint /secrets/staging masih merespons 403.',
+              createdAt: new Date('2026-11-13T09:00:00.000Z'),
+            },
+          ],
+        },
+      ]);
 
-      await service.getBlockerQueue({ raisedByUserId: 'emp-1' });
+      const queue = await service.getBlockerQueue({ raisedByUserId: 'emp-1' });
 
       expect(mockPrisma.blockerTicket.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -619,6 +637,10 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
           orderBy: [{ raisedAt: 'desc' }, { id: 'desc' }],
         }),
       );
+      expect(queue[0].supportContributions.map((s: any) => s.entryType)).toEqual([
+        'PEER_SUPPORT',
+        'REPORTER_REOPEN',
+      ]);
     });
   });
 });

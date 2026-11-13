@@ -6,9 +6,12 @@ import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
   BLOCKER_STATUS_FILTER_OPTIONS,
+  countPeerSupportContributions,
+  formatBlockerHistoryEntry,
   getBlockerStatusLabel,
   isActiveBlockerStatus,
   sortBlockersByNewest,
+  type BlockerHistoryEntryType,
   type BlockerTicketStatus,
 } from '../../utils/blockerStatus';
 import {
@@ -51,6 +54,7 @@ interface BlockerTicketItem {
   assignedOwner?: { id: string; fullName: string; email: string };
   supportContributions?: Array<{
     id: string;
+    entryType?: BlockerHistoryEntryType;
     supporter: { id: string; fullName: string; email: string };
     actionTaken: string;
     resultNote: string;
@@ -209,6 +213,15 @@ const filteredBlockers = computed(() => {
     }),
   );
 });
+
+const selectedTicketHistory = computed(() =>
+  (selectedTicket.value?.supportContributions || []).map((entry) => ({
+    id: entry.id,
+    actorName: entry.supporter?.fullName || '-',
+    createdAt: entry.createdAt,
+    ...formatBlockerHistoryEntry(entry),
+  })),
+);
 
 async function selectTicket(ticket: BlockerTicketItem) {
   selectedTicket.value = ticket;
@@ -565,8 +578,12 @@ onMounted(() => {
                 <span class="meta-time">{{ formatRelativeTime(ticket.raisedAt) }}</span>
               </div>
               <div class="ticket-side-info">
-                <span v-if="ticket.supportContributions && ticket.supportContributions.length > 0" class="support-count">
-                  <HeartHandshake :size="13" /> {{ ticket.supportContributions.length }} Bantuan
+                <span
+                  v-if="countPeerSupportContributions(ticket.supportContributions) > 0"
+                  class="support-count"
+                  data-testid="card-support-count"
+                >
+                  <HeartHandshake :size="13" /> {{ countPeerSupportContributions(ticket.supportContributions) }} Bantuan
                 </span>
                 <ChevronRight :size="16" class="arrow-icon" />
               </div>
@@ -794,25 +811,40 @@ onMounted(() => {
                 </div>
               </div>
 
-              <!-- Support Contributions Feed -->
+              <!-- Ticket Activity & Support Contributions Feed -->
               <div class="support-section">
                 <div class="sec-head">
                   <HeartHandshake :size="18" />
-                  <h3>Riwayat Kontribusi Bantuan ({{ selectedTicket.supportContributions?.length || 0 }})</h3>
+                  <h3>Riwayat Penanganan &amp; Kontribusi ({{ selectedTicketHistory.length }})</h3>
                 </div>
 
-                <div v-if="!selectedTicket.supportContributions || selectedTicket.supportContributions.length === 0" class="no-support">
-                  Belum ada bantuan tercatat untuk tiket ini. Klik "Beri Bantuan" untuk mencatat kontribusi peer-support.
+                <div v-if="selectedTicketHistory.length === 0" class="no-support">
+                  Belum ada riwayat penanganan atau bantuan tercatat untuk tiket ini. Klik "Beri Bantuan" untuk mencatat kontribusi peer-support.
                 </div>
 
                 <div v-else class="support-list">
-                  <div v-for="sup in selectedTicket.supportContributions" :key="sup.id" class="support-item">
+                  <div
+                    v-for="entry in selectedTicketHistory"
+                    :key="entry.id"
+                    class="support-item"
+                    :class="`variant-${entry.variant}`"
+                    :data-testid="`history-item-${entry.id}`"
+                  >
                     <div class="sup-meta">
-                      <strong>{{ sup.supporter.fullName }}</strong>
-                      <span>{{ new Date(sup.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</span>
+                      <div class="sup-actor-group">
+                        <strong>{{ entry.actorName }}</strong>
+                        <span class="sup-type-badge" :class="`variant-${entry.variant}`">
+                          {{ entry.badgeLabel }}
+                        </span>
+                      </div>
+                      <span class="sup-time">{{ new Date(entry.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</span>
                     </div>
-                    <div class="sup-action"><strong>Tindakan:</strong> {{ sup.actionTaken }}</div>
-                    <div class="sup-result"><strong>Hasil / Solusi:</strong> {{ sup.resultNote }}</div>
+                    <div v-if="entry.primaryLabel" class="sup-action">
+                      <strong>{{ entry.primaryLabel }}:</strong> {{ entry.primaryText }}
+                    </div>
+                    <div class="sup-result">
+                      <strong>{{ entry.secondaryLabel }}:</strong> {{ entry.secondaryText }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1697,13 +1729,59 @@ h1 {
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.support-item.variant-reopen {
+  background: #FFFBEB;
+  border-color: #FDE68A;
 }
 
 .sup-meta {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 4px;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
   color: #00674D;
+}
+
+.support-item.variant-reopen .sup-meta {
+  color: #92400E;
+}
+
+.sup-actor-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sup-type-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.sup-type-badge.variant-support {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.sup-type-badge.variant-reopen {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+
+.sup-time {
+  white-space: nowrap;
 }
 
 .modal-backdrop {
