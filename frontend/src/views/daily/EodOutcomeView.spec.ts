@@ -528,12 +528,13 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(wrapper.text()).toContain('Evaluasi EOD Telah Terkunci (EOD Closed)');
     expect(wrapper.text()).toContain('SUBMITTED (Terkunci)');
 
-    // 2. Seluruh input outcome dan radio refleksi disabled
-    const outcomeRadio = wrapper.find('input[name="outcome-c-1"]');
-    expect(outcomeRadio.attributes('disabled')).toBeDefined();
-
-    const greenRadio = wrapper.find('input[type="radio"][value="GREEN"]');
-    expect(greenRadio.attributes('disabled')).toBeDefined();
+    // 2. Tampilan berubah menjadi Read-Only Summary View (input radio/textarea form tidak lagi dirender)
+    expect(wrapper.find('input[name="outcome-c-1"]').exists()).toBe(false);
+    expect(wrapper.find('input[type="radio"][value="GREEN"]').exists()).toBe(false);
+    expect(wrapper.find('#tomorrow-priority-input').exists()).toBe(false);
+    expect(wrapper.findAll('.eod-summary-card').length).toBe(1);
+    expect(wrapper.find('.final-status-summary-card').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Selesai Penuh');
 
     // 3. Action footer dan tombol submit disembunyikan
     const submitBtn = wrapper.findAll('button').find(b => b.text().includes('Kirim Evaluasi EOD'));
@@ -586,7 +587,8 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(wrapper.text()).toContain('SUBMITTED (Terkunci)');
-    expect(wrapper.find('input[name="outcome-c-persisted-1"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('input[name="outcome-c-persisted-1"]').exists()).toBe(false);
+    expect(wrapper.findAll('.eod-summary-card').length).toBe(1);
     expect(wrapper.findAll('button').find(b => b.text().includes('Kirim Evaluasi EOD'))).toBeUndefined();
 
     // Simulasikan reload halaman
@@ -595,11 +597,13 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     });
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // Form tetap terkunci persisten dari data database
+    // Form tetap terkunci persisten dari data database dalam bentuk Read-Only Summary View
     expect(fetchMock).toHaveBeenCalled();
     expect(refreshedWrapper.text()).toContain('SUBMITTED (Terkunci)');
     expect(refreshedWrapper.find('.alert-banner.submitted').exists()).toBe(true);
-    expect(refreshedWrapper.find('input[name="outcome-c-persisted-1"]').attributes('disabled')).toBeDefined();
+    expect(refreshedWrapper.find('input[name="outcome-c-persisted-1"]').exists()).toBe(false);
+    expect(refreshedWrapper.findAll('.eod-summary-card').length).toBe(1);
+    expect(refreshedWrapper.find('.final-status-summary-card').exists()).toBe(true);
     expect(refreshedWrapper.findAll('button').find(b => b.text().includes('Kirim Evaluasi EOD'))).toBeUndefined();
   });
 
@@ -676,5 +680,87 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(wrapper.find('.modal-backdrop').exists()).toBe(false);
     expect(wrapper.find('.modal-box').exists()).toBe(false);
     expect(wrapper.find('form.modal-form').exists()).toBe(false);
+  });
+
+  it('IMP-045: merender Read-Only Summary View lengkap (commitments, additional works, alasan CANCELLED, final status, dan tomorrowPriority) saat terkunci', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-13',
+          currentTime: '17:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+            isLate: true,
+          },
+          record: {
+            id: 'rec-imp-045',
+            eodSubmittedAt: '2026-11-13T17:15:00+07:00',
+            finalDailyStatus: 'AMBER',
+            orgContextSnapshot: {
+              tomorrowPriority: 'Fokus selesaikan integrasi webhook pagi hari.',
+            },
+            commitments: [
+              {
+                id: 'c-1',
+                sequenceNo: 1,
+                taskText: 'Slicing prototype UI',
+                initialRisk: 'GREEN',
+                carryOverDaysCount: 0,
+                outcome: 'COMPLETED',
+                outcomeReason: '',
+                continuation: 'DO_NOT_CONTINUE',
+                continuationReason: '',
+              },
+              {
+                id: 'c-2',
+                sequenceNo: 2,
+                taskText: 'Refactor modul legacy',
+                initialRisk: 'AMBER',
+                carryOverDaysCount: 1,
+                outcome: 'CANCELLED',
+                outcomeReason: 'Dialihkan ke sprint berikutnya',
+                continuation: 'DO_NOT_CONTINUE',
+                continuationReason: '',
+              },
+            ],
+            additionalWorks: [
+              {
+                id: 'w-1',
+                taskText: 'Hotfix webhook payment',
+                reason: 'OPERATIONAL_INCIDENT',
+                outcome: 'NOT_COMPLETED',
+                outcomeReason: '',
+                continuation: 'CONTINUE',
+                continuationReason: 'Menunggu kredensial sandbox',
+              },
+            ],
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Tidak ada kontrol input interaktif (radio/textarea) pada state terkunci
+    expect(wrapper.find('input[type="radio"]').exists()).toBe(false);
+    expect(wrapper.find('textarea').exists()).toBe(false);
+    expect(wrapper.findAll('.eod-summary-card').length).toBe(3);
+
+    const text = wrapper.text();
+    expect(text).toContain('Selesai Penuh');
+    expect(text).toContain('Dibatalkan');
+    expect(text).toContain('Dialihkan ke sprint berikutnya');
+    expect(text).toContain('Belum Selesai');
+    expect(text).toContain('Lanjutkan Besok (Carry-Over)');
+    expect(text).toContain('Menunggu kredensial sandbox');
+    expect(text).toContain('AMBER — Terkendala Sebagian / Butuh Penyesuaian');
+    expect(text).toContain('Fokus selesaikan integrasi webhook pagi hari.');
   });
 });

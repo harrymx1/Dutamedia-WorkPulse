@@ -65,6 +65,91 @@ function formatReason(reason: string): string {
   return map[reason] || reason;
 }
 
+function formatOutcomeLabel(outcome: CommitmentOutcomeItem['outcome'] | null | undefined): string {
+  switch (outcome) {
+    case 'COMPLETED':
+      return 'Selesai Penuh';
+    case 'PARTIALLY_COMPLETED':
+      return 'Selesai Sebagian';
+    case 'NOT_COMPLETED':
+      return 'Belum Selesai';
+    case 'CANCELLED':
+      return 'Dibatalkan';
+    default:
+      return hasSubmittedEod.value ? 'Belum Dievaluasi' : 'Terkunci (Melewati Cut-Off)';
+  }
+}
+
+function getOutcomeBadgeClass(outcome: CommitmentOutcomeItem['outcome'] | null | undefined): string {
+  switch (outcome) {
+    case 'COMPLETED':
+      return 'badge-active';
+    case 'PARTIALLY_COMPLETED':
+      return 'badge-warning';
+    case 'NOT_COMPLETED':
+      return 'badge-danger';
+    default:
+      return 'badge-neutral';
+  }
+}
+
+function getSummaryBorderClass(outcome: CommitmentOutcomeItem['outcome'] | null | undefined): string {
+  switch (outcome) {
+    case 'COMPLETED':
+      return 'summary-card-green';
+    case 'PARTIALLY_COMPLETED':
+      return 'summary-card-amber';
+    case 'NOT_COMPLETED':
+      return 'summary-card-red';
+    default:
+      return 'summary-card-neutral';
+  }
+}
+
+function formatContinuationLabel(continuation: CommitmentOutcomeItem['continuation'] | null | undefined): string {
+  switch (continuation) {
+    case 'CONTINUE':
+      return 'Lanjutkan Besok (Carry-Over)';
+    case 'DO_NOT_CONTINUE':
+      return 'Hentikan / Selesai di Sini';
+    default:
+      return '-';
+  }
+}
+
+function getFinalStatusInfo(status: 'GREEN' | 'AMBER' | 'RED' | null | undefined) {
+  switch (status) {
+    case 'GREEN':
+      return {
+        label: 'GREEN — Target Harian Tercapai / Terkendali',
+        desc: 'Mayoritas target selesai tepat waktu tanpa hambatan berarti.',
+        cardClass: 'summary-card-green',
+        badgeClass: 'badge-active',
+      };
+    case 'AMBER':
+      return {
+        label: 'AMBER — Terkendala Sebagian / Butuh Penyesuaian',
+        desc: 'Ada target tertunda atau butuh waktu lanjutan (Carry-Over).',
+        cardClass: 'summary-card-amber',
+        badgeClass: 'badge-warning',
+      };
+    case 'RED':
+      return {
+        label: 'RED — Hambatan Kritis / Gagal Target',
+        desc: 'Terhambat blocker serius atau butuh eskalasi segera.',
+        cardClass: 'summary-card-red',
+        badgeClass: 'badge-danger',
+      };
+    default:
+      return {
+        label: 'Belum Ada Refleksi Akhir Hari',
+        desc: 'Evaluasi akhir hari belum diserahkan sebelum batas waktu cut-off.',
+        cardClass: 'summary-card-neutral',
+        badgeClass: 'badge-neutral',
+      };
+  }
+}
+
 // Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-033)
 const formattedWorkDate = computed(() => {
   if (!workDate.value) return '';
@@ -385,7 +470,7 @@ onMounted(() => {
           <div v-if="commitments.length === 0" class="empty-hint">
             Tidak ada komitmen terencana yang tercatat untuk pagi hari ini (0 Komitmen).
           </div>
-          <div v-else class="eval-list">
+          <div v-else-if="!isFormLocked" class="eval-list">
             <div v-for="c in commitments" :key="c.id" class="eval-card">
               <div class="eval-header">
                 <div class="eval-title-group">
@@ -466,6 +551,50 @@ onMounted(() => {
               </div>
             </div>
           </div>
+
+          <div v-else class="summary-list">
+            <div
+              v-for="c in commitments"
+              :key="`summary-c-${c.id}`"
+              class="eod-summary-card"
+              :class="getSummaryBorderClass(c.outcome)"
+            >
+              <div class="summary-card-top">
+                <div class="eval-title-group">
+                  <span class="eval-idx">Komitmen #{{ c.sequenceNo }}</span>
+                  <span v-if="c.carryOverDaysCount > 0" class="badge badge-neutral">
+                    Carry-Over #{{ c.carryOverDaysCount }}
+                  </span>
+                </div>
+                <div class="badges-row">
+                  <span class="badge badge-neutral">Pagi: {{ c.initialRisk }}</span>
+                  <span class="badge" :class="getOutcomeBadgeClass(c.outcome)">
+                    {{ formatOutcomeLabel(c.outcome) }}
+                  </span>
+                </div>
+              </div>
+              <p class="summary-task-text">{{ c.taskText }}</p>
+              <div
+                v-if="c.outcome === 'PARTIALLY_COMPLETED' || c.outcome === 'NOT_COMPLETED' || c.outcome === 'CANCELLED'"
+                class="summary-meta-grid"
+              >
+                <template v-if="c.outcome === 'PARTIALLY_COMPLETED' || c.outcome === 'NOT_COMPLETED'">
+                  <div class="summary-meta-row">
+                    <span class="summary-meta-label">Tindak Lanjut:</span>
+                    <span class="summary-meta-val">{{ formatContinuationLabel(c.continuation) }}</span>
+                  </div>
+                  <div v-if="c.continuation === 'CONTINUE' && c.continuationReason" class="summary-meta-row">
+                    <span class="summary-meta-label">Catatan / Alasan:</span>
+                    <span class="summary-meta-val">{{ c.continuationReason }}</span>
+                  </div>
+                </template>
+                <div v-else-if="c.outcome === 'CANCELLED'" class="summary-meta-row">
+                  <span class="summary-meta-label">Alasan Pembatalan:</span>
+                  <span class="summary-meta-val">{{ c.outcomeReason || '-' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -478,7 +607,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="panel-body">
-          <div class="eval-list">
+          <div v-if="!isFormLocked" class="eval-list">
             <div v-for="w in additionalWorks" :key="w.id" class="eval-card">
               <div class="eval-header">
                 <span class="eval-task">{{ w.taskText }}</span>
@@ -548,6 +677,45 @@ onMounted(() => {
               </div>
             </div>
           </div>
+
+          <div v-else class="summary-list">
+            <div
+              v-for="(w, idx) in additionalWorks"
+              :key="`summary-w-${w.id}`"
+              class="eod-summary-card"
+              :class="getSummaryBorderClass(w.outcome)"
+            >
+              <div class="summary-card-top">
+                <div class="eval-title-group">
+                  <span class="eval-idx">Tambahan #{{ idx + 1 }}</span>
+                  <span class="badge badge-info">{{ formatReason(w.reason) }}</span>
+                </div>
+                <span class="badge" :class="getOutcomeBadgeClass(w.outcome)">
+                  {{ formatOutcomeLabel(w.outcome) }}
+                </span>
+              </div>
+              <p class="summary-task-text">{{ w.taskText }}</p>
+              <div
+                v-if="w.outcome === 'PARTIALLY_COMPLETED' || w.outcome === 'NOT_COMPLETED' || w.outcome === 'CANCELLED'"
+                class="summary-meta-grid"
+              >
+                <template v-if="w.outcome === 'PARTIALLY_COMPLETED' || w.outcome === 'NOT_COMPLETED'">
+                  <div class="summary-meta-row">
+                    <span class="summary-meta-label">Tindak Lanjut:</span>
+                    <span class="summary-meta-val">{{ formatContinuationLabel(w.continuation) }}</span>
+                  </div>
+                  <div v-if="w.continuation === 'CONTINUE' && w.continuationReason" class="summary-meta-row">
+                    <span class="summary-meta-label">Catatan / Alasan:</span>
+                    <span class="summary-meta-val">{{ w.continuationReason }}</span>
+                  </div>
+                </template>
+                <div v-else-if="w.outcome === 'CANCELLED'" class="summary-meta-row">
+                  <span class="summary-meta-label">Alasan Pembatalan:</span>
+                  <span class="summary-meta-val">{{ w.outcomeReason || '-' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -561,63 +729,94 @@ onMounted(() => {
           <span class="badge badge-active">Penilaian Otonom Karyawan</span>
         </div>
         <div class="panel-body">
-          <p class="reflection-desc">
-            Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.
-          </p>
+          <template v-if="!isFormLocked">
+            <p class="reflection-desc">
+              Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.
+            </p>
 
-          <div class="status-selection-grid">
-            <label class="status-select-card green" :class="{ selected: finalDailyStatus === 'GREEN' }">
-              <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isFormLocked" />
-              <div class="status-card-header">
-                <CheckCircle2 :size="20" class="text-green" />
-                <span class="status-name">GREEN</span>
+            <div class="status-selection-grid">
+              <label class="status-select-card green" :class="{ selected: finalDailyStatus === 'GREEN' }">
+                <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isFormLocked" />
+                <div class="status-card-header">
+                  <CheckCircle2 :size="20" class="text-green" />
+                  <span class="status-name">GREEN</span>
+                </div>
+                <p class="status-summary">
+                  Target hari ini tercapai memuaskan atau terkendali mandiri.
+                </p>
+              </label>
+
+              <label class="status-select-card amber" :class="{ selected: finalDailyStatus === 'AMBER' }">
+                <input type="radio" value="AMBER" v-model="finalDailyStatus" :disabled="isFormLocked" />
+                <div class="status-card-header">
+                  <AlertCircle :size="20" class="text-amber" />
+                  <span class="status-name">AMBER</span>
+                </div>
+                <p class="status-summary">
+                  Terdapat kendala dependensi atau carry-over berulang yang perlu atensi tim.
+                </p>
+              </label>
+
+              <label class="status-select-card red" :class="{ selected: finalDailyStatus === 'RED' }">
+                <input type="radio" value="RED" v-model="finalDailyStatus" :disabled="isFormLocked" />
+                <div class="status-card-header">
+                  <AlertTriangle :size="20" class="text-red" />
+                  <span class="status-name">RED</span>
+                </div>
+                <p class="status-summary">
+                  Kendala kritis tidak terselesaikan dan membutuhkan intervensi langsung atasan.
+                </p>
+              </label>
+            </div>
+
+            <!-- Field Tomorrow Priority (Opsional) -->
+            <div class="field-group" style="margin-top: 20px;">
+              <label class="form-label" for="tomorrow-priority-input">
+                <span>Prioritas Esok Hari (Tomorrow Priority)</span>
+                <span class="field-sub-inline" style="font-weight: normal; font-size: 12px; color: var(--color-text-secondary); margin-left: 6px;">(Opsional)</span>
+              </label>
+              <textarea
+                id="tomorrow-priority-input"
+                v-model="tomorrowPriority"
+                class="input-control"
+                rows="2"
+                placeholder="Tuliskan catatan fokus atau prioritas yang perlu langsung ditangani pada awal hari kerja berikutnya..."
+                :disabled="isFormLocked"
+              ></textarea>
+              <span class="field-sub" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
+                Catatan ini akan otomatis muncul sebagai banner pengingat konteks di bagian atas formulir Morning Commitment esok hari. Bersifat murni referensi dan tidak menjadi komitmen otomatis.
+              </span>
+            </div>
+          </template>
+
+          <template v-else>
+            <div
+              class="final-status-summary-card"
+              :class="getFinalStatusInfo(hasSubmittedEod ? finalDailyStatus : null).cardClass"
+            >
+              <div class="final-status-summary-header">
+                <span class="final-status-summary-title">
+                  {{ getFinalStatusInfo(hasSubmittedEod ? finalDailyStatus : null).label }}
+                </span>
+                <span
+                  class="badge"
+                  :class="getFinalStatusInfo(hasSubmittedEod ? finalDailyStatus : null).badgeClass"
+                >
+                  {{ hasSubmittedEod ? finalDailyStatus : 'TERKUNCI' }}
+                </span>
               </div>
-              <p class="status-summary">
-                Target hari ini tercapai memuaskan atau terkendali mandiri.
+              <p class="final-status-summary-desc">
+                {{ getFinalStatusInfo(hasSubmittedEod ? finalDailyStatus : null).desc }}
               </p>
-            </label>
+            </div>
 
-            <label class="status-select-card amber" :class="{ selected: finalDailyStatus === 'AMBER' }">
-              <input type="radio" value="AMBER" v-model="finalDailyStatus" :disabled="isFormLocked" />
-              <div class="status-card-header">
-                <AlertCircle :size="20" class="text-amber" />
-                <span class="status-name">AMBER</span>
-              </div>
-              <p class="status-summary">
-                Terdapat kendala dependensi atau carry-over berulang yang perlu atensi tim.
+            <div class="tomorrow-priority-readonly">
+              <div class="tomorrow-priority-label">Prioritas Esok Hari (Tomorrow Priority)</div>
+              <p class="tomorrow-priority-value" :class="{ muted: !tomorrowPriority.trim() }">
+                {{ tomorrowPriority.trim() || 'Tidak ada catatan prioritas esok hari yang ditambahkan.' }}
               </p>
-            </label>
-
-            <label class="status-select-card red" :class="{ selected: finalDailyStatus === 'RED' }">
-              <input type="radio" value="RED" v-model="finalDailyStatus" :disabled="isFormLocked" />
-              <div class="status-card-header">
-                <AlertTriangle :size="20" class="text-red" />
-                <span class="status-name">RED</span>
-              </div>
-              <p class="status-summary">
-                Kendala kritis tidak terselesaikan dan membutuhkan intervensi langsung atasan.
-              </p>
-            </label>
-          </div>
-
-          <!-- Field Tomorrow Priority (Opsional) -->
-          <div class="field-group" style="margin-top: 20px;">
-            <label class="form-label" for="tomorrow-priority-input">
-              <span>Prioritas Esok Hari (Tomorrow Priority)</span>
-              <span class="field-sub-inline" style="font-weight: normal; font-size: 12px; color: var(--color-text-secondary); margin-left: 6px;">(Opsional)</span>
-            </label>
-            <textarea
-              id="tomorrow-priority-input"
-              v-model="tomorrowPriority"
-              class="input-control"
-              rows="2"
-              placeholder="Tuliskan catatan fokus atau prioritas yang perlu langsung ditangani pada awal hari kerja berikutnya..."
-              :disabled="isFormLocked"
-            ></textarea>
-            <span class="field-sub" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
-              Catatan ini akan otomatis muncul sebagai banner pengingat konteks di bagian atas formulir Morning Commitment esok hari. Bersifat murni referensi dan tidak menjadi komitmen otomatis.
-            </span>
-          </div>
+            </div>
+          </template>
         </div>
       </section>
 
@@ -1330,5 +1529,145 @@ textarea.input-control {
   background: var(--color-status-red-bg);
   color: var(--color-status-red-fg);
   border: 1px solid var(--color-status-red-border);
+}
+
+/* Read-Only Summary Cards (IMP-045) */
+.summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eod-summary-card {
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-card-green {
+  border-left-color: var(--color-status-green-fg);
+}
+
+.summary-card-amber {
+  border-left-color: var(--color-status-amber-fg);
+}
+
+.summary-card-red {
+  border-left-color: var(--color-status-red-fg);
+}
+
+.summary-card-neutral {
+  border-left-color: var(--color-border-strong, var(--color-border));
+}
+
+.summary-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.summary-task-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.45;
+}
+
+.summary-meta-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-border);
+  font-size: 13px;
+}
+
+.summary-meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.summary-meta-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  min-width: 125px;
+}
+
+.summary-meta-val {
+  color: var(--color-text-primary);
+}
+
+.final-status-summary-card {
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: var(--color-surface-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.final-status-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.final-status-summary-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.final-status-summary-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.tomorrow-priority-readonly {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tomorrow-priority-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tomorrow-priority-value {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.tomorrow-priority-value.muted {
+  color: var(--color-text-secondary);
+  font-style: italic;
 }
 </style>
