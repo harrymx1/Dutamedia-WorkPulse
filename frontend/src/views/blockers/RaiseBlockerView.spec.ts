@@ -225,7 +225,7 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     await flushPromises();
 
     expect(wrapper.text()).toContain('Menunggu Konfirmasi (1)');
-    expect(wrapper.find('[data-testid="reporter-confirm-label"]').text()).toBe('Menunggu Konfirmasi Anda');
+    expect(wrapper.find('.head-right [data-testid="reporter-confirm-label"]').text()).toBe('Menunggu Konfirmasi Anda');
     expect(wrapper.text()).toContain('Gateway Timeout 504');
     expect(wrapper.text()).toContain('Ekspektasi Bantuan:');
     expect(wrapper.text()).toContain('Pengecekan routing subnet');

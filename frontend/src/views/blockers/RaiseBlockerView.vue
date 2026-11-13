@@ -1281,6 +1281,14 @@ onBeforeUnmount(() => {
                 <span class="pill pill-neutral">{{ b.type }}</span>
               </div>
               <div class="head-right">
+                <span
+                  v-if="b.status === 'RESOLVED' || b.status === 'ACCEPTED_RISK'"
+                  class="confirm-status-label"
+                  data-testid="reporter-confirm-label"
+                >
+                  <Clock :size="12" />
+                  <span>Menunggu Konfirmasi Anda</span>
+                </span>
                 <span class="pill" :class="getSeverityClass(b.severity)">Tingkat {{ b.severity }}</span>
                 <span class="date-sep"></span>
                 <span class="blocker-date">{{ formatDate(b.raisedAt) }}</span>
@@ -1339,10 +1347,6 @@ onBeforeUnmount(() => {
               v-if="b.status === 'RESOLVED' || b.status === 'ACCEPTED_RISK'"
               class="reporter-confirm-panel"
             >
-              <div class="confirm-status-label" data-testid="reporter-confirm-label">
-                <Clock :size="13" />
-                <span>Menunggu Konfirmasi Anda</span>
-              </div>
               <div class="confirm-prompt">
                 Apakah kendala sudah benar-benar teratasi atau arahan mitigasi dapat dijalankan?
               </div>
@@ -2155,7 +2159,22 @@ textarea:focus {
 .head-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
+  flex-wrap: wrap;
+}
+
+.confirm-status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .blocker-item-id {
@@ -2287,20 +2306,6 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.confirm-status-label {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  color: #92400E;
-  font-size: 11.5px;
-  font-weight: 700;
 }
 
 .confirm-prompt {
