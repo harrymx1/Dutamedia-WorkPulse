@@ -340,7 +340,7 @@ const defaultProjectLeadName = computed(() => {
 // My Blockers State
 const myBlockers = ref<any[]>([]);
 const loadingBlockers = ref(false);
-const blockerFilter = ref<'all' | 'active' | 'resolved' | 'closed'>('all');
+const blockerFilter = ref<'all' | 'open' | 'handling' | 'resolved' | 'closed'>('all');
 const closingId = ref<string | null>(null);
 const reopeningId = ref<string | null>(null);
 const reopenReasonMap = ref<Record<string, string>>({});
@@ -365,8 +365,11 @@ const activeBlockersCount = computed(() => {
 });
 
 const countAll = computed(() => myBlockers.value.length);
-const countActive = computed(
-  () => myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status)).length,
+const countPendingResponse = computed(
+  () => myBlockers.value.filter((b) => b.status === 'OPEN').length,
+);
+const countInProgress = computed(
+  () => myBlockers.value.filter((b) => ['ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status)).length,
 );
 const countResolved = computed(
   () => myBlockers.value.filter((b) => ['RESOLVED', 'ACCEPTED_RISK'].includes(b.status)).length,
@@ -376,8 +379,11 @@ const countClosed = computed(
 );
 
 const filteredBlockers = computed(() => {
-  if (blockerFilter.value === 'active') {
-    return myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status));
+  if (blockerFilter.value === 'open') {
+    return myBlockers.value.filter((b) => b.status === 'OPEN');
+  }
+  if (blockerFilter.value === 'handling') {
+    return myBlockers.value.filter((b) => ['ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status));
   }
   if (blockerFilter.value === 'resolved') {
     return myBlockers.value.filter((b) => ['RESOLVED', 'ACCEPTED_RISK'].includes(b.status));
@@ -1221,11 +1227,20 @@ onBeforeUnmount(() => {
             <button
               type="button"
               class="filter-pill"
-              :class="{ active: blockerFilter === 'active' }"
-              data-testid="filter-active"
-              @click="blockerFilter = 'active'"
+              :class="{ active: blockerFilter === 'open' }"
+              data-testid="filter-open"
+              @click="blockerFilter = 'open'"
             >
-              Aktif ({{ countActive }})
+              Menunggu Respons ({{ countPendingResponse }})
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: blockerFilter === 'handling' }"
+              data-testid="filter-handling"
+              @click="blockerFilter = 'handling'"
+            >
+              Sedang Ditangani ({{ countInProgress }})
             </button>
             <button
               type="button"

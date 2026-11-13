@@ -122,7 +122,11 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     // Filter pills exist
     expect(wrapper.find('[data-testid="filter-all"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="filter-active"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="filter-open"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="filter-handling"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="filter-resolved"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="filter-closed"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="filter-active"]').exists()).toBe(false);
   });
 
   it('provides clean business footer without internal audit code and reset button functionality (IMP-044)', async () => {
@@ -236,5 +240,67 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
       expect.stringContaining('/blockers/blk-awaiting-confirm/close'),
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+
+  it('separates Menunggu Respons (OPEN) and Sedang Ditangani (ACKNOWLEDGED) filter pills accurately', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: any) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/blockers?mine=raised')) {
+          return Promise.resolve({
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              data: [
+                {
+                  id: 'blk-open-1',
+                  description: '[Menunggu PIC] Kendala baru dilaporkan',
+                  type: 'INFRA',
+                  severity: 'HIGH',
+                  impact: 'TASK',
+                  status: 'OPEN',
+                  raisedAt: '2026-11-13T04:52:00.000Z',
+                },
+                {
+                  id: 'blk-ack-1',
+                  description: '[Sedang Diproses] Kendala sedang ditangani PIC',
+                  type: 'TECHNICAL',
+                  severity: 'MEDIUM',
+                  impact: 'TASK',
+                  status: 'ACKNOWLEDGED',
+                  raisedAt: '2026-11-13T05:00:00.000Z',
+                },
+              ],
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="filter-open"]').text()).toContain('Menunggu Respons (1)');
+    expect(wrapper.find('[data-testid="filter-handling"]').text()).toContain('Sedang Ditangani (1)');
+
+    await wrapper.find('[data-testid="filter-open"]').trigger('click');
+    expect(wrapper.text()).toContain('Menunggu PIC');
+    expect(wrapper.text()).not.toContain('Sedang Diproses');
+
+    await wrapper.find('[data-testid="filter-handling"]').trigger('click');
+    expect(wrapper.text()).toContain('Sedang Diproses');
+    expect(wrapper.text()).not.toContain('Menunggu PIC');
   });
 });
