@@ -1339,6 +1339,10 @@ onBeforeUnmount(() => {
               v-if="b.status === 'RESOLVED' || b.status === 'ACCEPTED_RISK'"
               class="reporter-confirm-panel"
             >
+              <div class="confirm-status-label" data-testid="reporter-confirm-label">
+                <Clock :size="13" />
+                <span>Menunggu Konfirmasi Anda</span>
+              </div>
               <div class="confirm-prompt">
                 Apakah kendala sudah benar-benar teratasi atau arahan mitigasi dapat dijalankan?
               </div>
@@ -2283,6 +2287,20 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.confirm-status-label {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 11.5px;
+  font-weight: 700;
 }
 
 .confirm-prompt {
