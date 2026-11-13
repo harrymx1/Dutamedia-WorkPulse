@@ -280,7 +280,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | [x] | `TC-ADMN-001` | Penugasan Reviewer Sementara (Temporary Reviewer) | PASS | Delegasi Lukman Hakim -> Rian Kurniawan terbit aktif di /admin/temporary-reviewers via media_1794287769729_f4384fb2.png (DEC-009, IMP-058) |
 | [P] | `TC-ADMN-002` | Konfigurasi Kebijakan Operasional Sistem (Policy Settings) | PASS | Parameter Jam Cut-off Pagi berhasil diperbarui ke 23:59 WIB, tersimpan dengan audit trail baru, dan terverifikasi persisten pasca-F5 |
 | [x] | `TC-HRGA-003` | Pendelegasian Wewenang Peninjau Sementara (Temporal Reviewer) HRGA | PASS | HRGA menerbitkan delegasi Dharma Putra -> Bambang Pratama (media_1794288122809_9bc33a80.jpg), Bambang dapat mengakses /leave/queue tanpa 403 (media_1794288199664_6b8e44fe.png) |
-| [x] | `TC-ADMN-004` | Konfigurasi Parameter Cut-Off & Jam SLA Blocker dengan Jejak Audit | PASS | Parameter SLA Blocker (3j->4j, 6j->8j, 3j->4j), No-Op Guard, notifikasi terstruktur, delegasi Reviewer Sementara, Smart Routing lintas fungsi/cuti/kritis (UAT-A1 s.d. UAT-C6) lulus penuh via Laporan_Pengujian_UAT_WorkPulse_(1).docx (IMP-062, IMP-063) |
+| [x] | `TC-ADMN-004` | Konfigurasi Parameter Cut-Off & Jam SLA Blocker dengan Jejak Audit | PASS | Parameter SLA Blocker (3j->4j, 6j->8j, 3j->4j), No-Op Guard, notifikasi terstruktur, delegasi Reviewer Sementara, Smart Routing lintas fungsi/cuti/kritis (UAT-A1 s.d. UAT-C6) lulus penuh via Laporan_Pengujian_UAT_WorkPulse_(1).docx, serta verifikasi lanjutan label proyek PRJ-PORTAL, tombol modal notifikasi Reviewer Sementara, dan aturan DEC-014 lulus penuh via Laporan Pengujian UAT WorkPulse (2).docx (IMP-062, IMP-063, IMP-064) |
 | [x] | `TC-ADMN-005` | Konfigurasi & Pengujian Pengiriman Saluran Notifikasi Integrasi | PASS | Uji pengiriman simulasi saluran EMAIL, VAPID Push, dan In-App berhasil disimulasikan; umpan balik hasil uji latensi dan target penerima dinamis terverifikasi sukses (IMP-066, CR-014) |
 
 ---
@@ -297,7 +297,7 @@ Sebelum membuka antarmuka aplikasi, pastikan kondisi dasar berikut telah terpenu
 | Check | Test Case ID | Deskripsi Singkat | Status Hasil | Ref Bukti / Defect ID |
 | :---: | :--- | :--- | :---: | :--- |
 | [x] | `TC-DASH-003` | Tinjauan Laporan Eksekutif & Pengujian Fitur Unduh Data | PASS | Halaman Laporan Eksekutif (/reports) menampilkan metrik akuntabilitas, filter waktu aktif, dan pengunduhan Direct In-App Blob CSV berhasil terunduh ke komputer lokal (IMP-067, CR-015) |
-| [ ] | `TC-CEO-001` | Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Kebijakan CEO | PENDING VERIFIKASI | Tab `Seluruh Perusahaan`, interseksi filter Divisi & Proyek (IMP-068), unduh berkas audit CSV (IMP-067), dan penugasan Policy Owner Multi-PIC & sinkronisasi wewenang BR-15/FR-34 telah siap diuji (IMP-069, CR-017) |
+| [x] | `TC-CEO-001` | Pengawasan Eksekutif Universal (`Seluruh Perusahaan` + Filter Divisi/Proyek), Ekspor Berkas Audit, & Kebijakan CEO | PASS | Terverifikasi penuh: tab `Seluruh Perusahaan`, interseksi filter Divisi & Proyek (IMP-068), unduh berkas audit CSV (IMP-067), serta tata kelola Multi-Owner Pemilik Kebijakan (CRUD, sinkronisasi wewenang, pengaman kategori tidak boleh kosong, konfirmasi ekstra cabut diri sendiri, pembersihan copywriting, dan notifikasi multi-baris ke Direktur/Admin/HRGA & pihak terkait) lulus uji oleh Harry pada 13 Nov 2026 (IMP-069, CR-017) |
 
 ---
 
