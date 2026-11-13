@@ -11,6 +11,7 @@ import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
+import { ensurePolicyOwnersBaselineSynced } from '../../policy/policy-owner-sync.util';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -126,6 +127,22 @@ export class AuthGuard implements CanActivate {
         })
       : 0;
 
+    await ensurePolicyOwnersBaselineSynced(this.prisma, today);
+
+    const policyOwnerRecords = this.prisma.policyOwnerAssignment?.findMany
+      ? await this.prisma.policyOwnerAssignment.findMany({
+          where: {
+            userId: session.user.id,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+          select: { policyCategory: true },
+        })
+      : [];
+    const ownedPolicyCategories = Array.from(
+      new Set((policyOwnerRecords || []).map((r: any) => String(r.policyCategory))),
+    );
+
     request.user = {
       ...payload,
       id: session.user.id,
@@ -139,6 +156,8 @@ export class AuthGuard implements CanActivate {
       hasSubordinates: subordinateCount > 0,
       isTemporaryReviewer: tempReviewerCount > 0,
       isProjectLead: projectLeadCount > 0,
+      isPolicyOwner: ownedPolicyCategories.length > 0,
+      ownedPolicyCategories,
     };
     request.sessionId = session.id;
 

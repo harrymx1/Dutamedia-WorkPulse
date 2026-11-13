@@ -4,7 +4,9 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -12,6 +14,7 @@ import {
 import { PolicyService } from '../services/policy.service';
 import { CreatePolicyVersionDto } from '../dto/create-policy-version.dto';
 import { AssignPolicyOwnerDto } from '../dto/assign-policy-owner.dto';
+import { UpdatePolicyOwnerDto } from '../dto/update-policy-owner.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -24,51 +27,22 @@ export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Get()
-  @Roles(
-    CanonicalRole.SYSTEM_ADMIN,
-    CanonicalRole.HRGA,
-    CanonicalRole.CEO_MANAGEMENT,
-    CanonicalRole.HEAD,
-    CanonicalRole.PROJECT_MANAGER,
-  )
   async getAllActivePolicies(@Query('date') date?: string) {
     const targetDate = date ? new Date(date) : undefined;
     return this.policyService.getAllActivePolicies(targetDate);
   }
 
   @Get('audit')
-  @Roles(
-    CanonicalRole.SYSTEM_ADMIN,
-    CanonicalRole.HRGA,
-    CanonicalRole.CEO_MANAGEMENT,
-    CanonicalRole.HEAD,
-    CanonicalRole.PROJECT_MANAGER,
-  )
   async getAuditTrail(@Query('category') category?: PolicyCategory) {
     return this.policyService.getAuditTrail(category);
   }
 
   @Get('owners')
-  @Roles(
-    CanonicalRole.SYSTEM_ADMIN,
-    CanonicalRole.HRGA,
-    CanonicalRole.CEO_MANAGEMENT,
-    CanonicalRole.HEAD,
-    CanonicalRole.PROJECT_MANAGER,
-  )
   async getPolicyOwners() {
     return this.policyService.getPolicyOwners();
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(
-    CanonicalRole.SYSTEM_ADMIN,
-    CanonicalRole.HRGA,
-    CanonicalRole.CEO_MANAGEMENT,
-    CanonicalRole.HEAD,
-    CanonicalRole.PROJECT_MANAGER,
-  )
   async createPolicyVersion(
     @Body() dto: CreatePolicyVersionDto,
     @Req() req: any,
@@ -94,6 +68,38 @@ export class PolicyController {
       userAgent: req.headers['user-agent'],
     };
     return this.policyService.assignPolicyOwner(actorUserId, dto, meta);
+  }
+
+  @Put('owners/:id')
+  @UseGuards(RolesGuard)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT)
+  async updatePolicyOwner(
+    @Param('id') id: string,
+    @Body() dto: UpdatePolicyOwnerDto,
+    @Req() req: any,
+  ) {
+    const actorUserId = req.user.id;
+    const meta = {
+      ipAddress: req.ip || req.connection?.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    };
+    return this.policyService.updatePolicyOwner(actorUserId, id, dto, meta);
+  }
+
+  @Patch('owners/:id')
+  @UseGuards(RolesGuard)
+  @Roles(CanonicalRole.SYSTEM_ADMIN, CanonicalRole.CEO_MANAGEMENT)
+  async updatePolicyOwnerPatch(
+    @Param('id') id: string,
+    @Body() dto: UpdatePolicyOwnerDto,
+    @Req() req: any,
+  ) {
+    const actorUserId = req.user.id;
+    const meta = {
+      ipAddress: req.ip || req.connection?.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    };
+    return this.policyService.updatePolicyOwner(actorUserId, id, dto, meta);
   }
 
   @Delete('owners/:id')

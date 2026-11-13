@@ -186,4 +186,30 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
   it('peran tidak dikenal tidak mendapat menu', () => {
     expect(navForRole(undefined)).toEqual([]);
   });
+
+  it('sinkronisasi dinamis /admin/policies: siapapun yang ditugaskan sebagai Pemilik Kebijakan dapat mengakses /admin/policies, dan HRGA kehilangan akses bila dicabut dari tabel', () => {
+    // 1. Akun HEAD/SUPERVISOR/EMPLOYEE yang ditambahkan ke tabel Policy Owners (isPolicyOwner=true) langsung mendapat menu & akses /admin/policies
+    const delegatedHead: UserAccessContext = {
+      role: 'HEAD',
+      isPolicyOwner: true,
+      ownedPolicyCategories: ['BLOCKER_SLA'],
+    };
+    expect(flatten(delegatedHead)).toContain('/admin/policies');
+    expect(canAccessRoute('/admin/policies', delegatedHead)).toBe(true);
+    // Menu admin lain tetap terkunci bagi HEAD
+    expect(canAccessRoute('/admin/users', delegatedHead)).toBe(false);
+
+    // 2. HRGA yang seluruh kepemilikan kebijakannya dicabut di tabel (isPolicyOwner=false) kehilangan akses /admin/policies
+    const revokedHrga: UserAccessContext = {
+      role: 'HRGA',
+      isPolicyOwner: false,
+      ownedPolicyCategories: [],
+    };
+    expect(flatten(revokedHrga)).not.toContain('/admin/policies');
+    expect(canAccessRoute('/admin/policies', revokedHrga)).toBe(false);
+
+    // 3. Direktur (CEO_MANAGEMENT) & Admin (SYSTEM_ADMIN) selalu dapat mengakses /admin/policies untuk mengelola tabel Policy Owners
+    expect(canAccessRoute('/admin/policies', { role: 'CEO_MANAGEMENT', isPolicyOwner: false, ownedPolicyCategories: [] })).toBe(true);
+    expect(canAccessRoute('/admin/policies', { role: 'SYSTEM_ADMIN', isPolicyOwner: false, ownedPolicyCategories: [] })).toBe(true);
+  });
 });

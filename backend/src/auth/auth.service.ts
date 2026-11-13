@@ -9,6 +9,7 @@ import { AppException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
 import { CanonicalRole } from '@prisma/client';
 import { toJakartaDateOnly } from '../common/time/date-only.util';
+import { ensurePolicyOwnersBaselineSynced } from '../policy/policy-owner-sync.util';
 
 export interface LoginResult {
   accessToken: string;
@@ -25,6 +26,8 @@ export interface LoginResult {
     hasSubordinates?: boolean;
     isTemporaryReviewer?: boolean;
     isProjectLead?: boolean;
+    isPolicyOwner?: boolean;
+    ownedPolicyCategories?: string[];
   };
   session: {
     id: string;
@@ -145,6 +148,22 @@ export class AuthService {
         })
       : 0;
 
+    await ensurePolicyOwnersBaselineSynced(this.prisma, today);
+
+    const policyOwnerRecords = this.prisma.policyOwnerAssignment?.findMany
+      ? await this.prisma.policyOwnerAssignment.findMany({
+          where: {
+            userId: user.id,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+          select: { policyCategory: true },
+        })
+      : [];
+    const ownedPolicyCategories = Array.from(
+      new Set((policyOwnerRecords || []).map((r: any) => String(r.policyCategory))),
+    );
+
     // Penerbitan Sesi Baru (24 Jam)
     const sessionTokenRaw = this.tokenService.generateRandomToken(32);
     const sessionTokenHash = this.tokenService.hashToken(sessionTokenRaw);
@@ -187,6 +206,8 @@ export class AuthService {
         hasSubordinates: subordinateCount > 0,
         isTemporaryReviewer: tempReviewerCount > 0,
         isProjectLead: projectLeadCount > 0,
+        isPolicyOwner: ownedPolicyCategories.length > 0,
+        ownedPolicyCategories,
       },
       session: {
         id: session.id,

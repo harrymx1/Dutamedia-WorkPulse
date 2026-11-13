@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import PolicySettingsView from './PolicySettingsView.vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
   let router: any;
@@ -175,6 +176,107 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     await revokeButtons[0].trigger('click');
     expect(wrapper.find('#revokeModalTitle').exists()).toBe(true);
     expect(wrapper.find('#revokeModalTitle').text()).toContain('Cabut Wewenang Pemilik Kebijakan');
+  });
+
+  it('renders all 5 policy categories in Policy Owners table and opens edit modal via Ubah button', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u2',
+      email: 'direktur@dutamedia.com',
+      fullName: 'Hendra Wijaya',
+      role: 'CEO_MANAGEMENT',
+      status: 'ACTIVE',
+    };
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          policies: [],
+          owners: [
+            {
+              id: 'poa-1',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+            },
+          ],
+          availableUsers: [
+            { id: 'u1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com', role: 'HRGA', jobTitle: 'HRGA Lead' },
+            { id: 'u2', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com', role: 'CEO_MANAGEMENT', jobTitle: 'CEO / Direktur Utama' },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Ambang Batas Pengingat & Notifikasi (Notification Reminder)');
+
+    const editButtons = wrapper.findAll('.btn-edit-owner');
+    expect(editButtons.length).toBe(1);
+
+    await editButtons[0].trigger('click');
+    expect(wrapper.find('#ownerModalTitle').exists()).toBe(true);
+    expect(wrapper.find('#ownerModalTitle').text()).toContain('Ubah Penugasan Pemilik Kebijakan');
+  });
+
+  it('hides Policy Owner CRUD buttons for HRGA/non-CEO roles and enforces strict table-based category edit lock', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u-hrga',
+      email: 'hrga@dutamedia.com',
+      fullName: 'Dewi Lestari',
+      role: 'HRGA',
+      status: 'ACTIVE',
+    };
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          policies: [],
+          owners: [
+            {
+              id: 'poa-1',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u-hrga', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // HRGA cannot add, edit, or revoke Policy Owners (only Direktur & Admin)
+    expect(wrapper.find('.btn-edit-owner').exists()).toBe(false);
+    expect(wrapper.find('.btn-revoke-owner').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Dikelola Direktur & Admin');
+
+    // Open Create Policy Version modal and check strict authority per category
+    const openBtn = wrapper.findAll('button').find((b) => b.text().includes('Buat Versi Kebijakan Baru'));
+    await openBtn?.trigger('click');
+
+    const selectCat = wrapper.find('#select-cat');
+    const options = selectCat.findAll('option');
+    expect(options[0].text()).toContain('[Wewenang Anda Aktif]');
+    expect(options[1].text()).toContain('[Terkunci: Bukan Pemilik]');
   });
 });
 

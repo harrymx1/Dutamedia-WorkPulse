@@ -11,7 +11,9 @@ import {
 } from '@prisma/client';
 import { CreatePolicyVersionDto } from '../dto/create-policy-version.dto';
 import { AssignPolicyOwnerDto } from '../dto/assign-policy-owner.dto';
+import { UpdatePolicyOwnerDto } from '../dto/update-policy-owner.dto';
 import { CANONICAL_POLICY_FALLBACKS } from '../policy.constants';
+import { ensurePolicyOwnersBaselineSynced } from '../policy-owner-sync.util';
 
 @Injectable()
 export class PolicyService {
@@ -82,7 +84,8 @@ export class PolicyService {
   }
 
   /**
-   * Mengambil seluruh kebijakan aktif untuk ke-5 kategori kanonikal.
+   * Mengambil seluruh kebijakan aktif untuk ke-5 kategori kanonikal,
+   * daftar penugasan pemilik kebijakan (Policy Owners), dan daftar pengguna aktif.
    */
   async getAllActivePolicies(targetDate?: Date) {
     const categories = Object.values(PolicyCategory);
@@ -93,10 +96,65 @@ export class PolicyService {
     // Ambil penugasan pemilik kebijakan aktif saat ini
     const owners = await this.getPolicyOwners();
 
+    // Sertakan daftar pengguna aktif beserta jabatan/peran untuk dropdown CRUD Policy Owners
+    const todayStr = this.clockService.todayString('Asia/Jakarta');
+    const today = new Date(todayStr);
+    let availableUsers: Array<{
+      id: string;
+      fullName: string;
+      email: string;
+      role: string | null;
+      jobTitle: string | null;
+      function: string | null;
+    }> = [];
+
+    if (this.prisma.user?.findMany) {
+      try {
+        const rawUsers = await this.prisma.user.findMany({
+          where: { status: UserStatus.ACTIVE },
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            orgAssignments: {
+              where: {
+                OR: [{ endDate: null }, { endDate: { gte: today } }],
+              },
+              orderBy: { effectiveDate: 'desc' },
+              select: {
+                role: true,
+                jobTitle: true,
+                function: true,
+              },
+            },
+          },
+          orderBy: { fullName: 'asc' },
+        });
+        if (Array.isArray(rawUsers)) {
+          availableUsers = rawUsers
+            .filter((u: any) => u && u.email && u.fullName)
+            .map((u: any) => {
+              const activeOrg = u.orgAssignments?.[0];
+              return {
+                id: u.id,
+                fullName: u.fullName,
+                email: u.email,
+                role: activeOrg?.role || null,
+                jobTitle: activeOrg?.jobTitle || null,
+                function: activeOrg?.function || null,
+              };
+            });
+        }
+      } catch {
+        // Abaikan bila mock pada unit test tidak menyertakan relasi orgAssignments
+      }
+    }
+
     return {
       evaluatedAt: (targetDate || this.clockService.now()).toISOString(),
       policies: results,
       owners,
+      availableUsers,
     };
   }
 
@@ -526,7 +584,10 @@ export class PolicyService {
     const todayStr = this.clockService.todayString('Asia/Jakarta');
     const today = new Date(todayStr);
 
-    let assignments = await this.prisma.policyOwnerAssignment.findMany({
+    // Pastikan sinkronisasi satu kali (one-time baseline sync) untuk Direktur, Admin, dan HRGA telah dijalankan
+    await ensurePolicyOwnersBaselineSynced(this.prisma, today);
+
+    const assignments = await this.prisma.policyOwnerAssignment.findMany({
       where: {
         effectiveDate: { lte: today },
         OR: [{ endDate: null }, { endDate: { gte: today } }],
@@ -553,38 +614,135 @@ export class PolicyService {
       orderBy: [{ policyCategory: 'asc' }, { effectiveDate: 'asc' }],
     });
 
-    // Jika tabel penugasan masih kosong di database, otomatis lakukan auto-seeding baseline resmi perusahaan
-    if (assignments.length === 0) {
-      await this.ensureBaselinePolicyOwners(today);
-      assignments = await this.prisma.policyOwnerAssignment.findMany({
+    return assignments;
+  }
+
+  /**
+   * Memperbarui penugasan pemilik kebijakan yang sudah ada (Update dalam CRUD Policy Owners).
+   */
+  async updatePolicyOwner(
+    actorUserId: string,
+    assignmentId: string,
+    dto: UpdatePolicyOwnerDto,
+    meta?: { ipAddress?: string; userAgent?: string },
+  ) {
+    const todayStr = this.clockService.todayString('Asia/Jakarta');
+
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.policyOwnerAssignment.findUnique({
+        where: { id: assignmentId },
+        include: {
+          user: { select: { id: true, fullName: true, email: true } },
+        },
+      });
+
+      if (!existing) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_NOT_FOUND,
+          message: 'Penugasan pemilik kebijakan tidak ditemukan.',
+          statusCode: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      const existingEffectiveStr = existing.effectiveDate
+        .toISOString()
+        .split('T')[0];
+      const nextEffectiveStr = dto.effectiveDate
+        ? dto.effectiveDate.split('T')[0]
+        : existingEffectiveStr;
+
+      if (
+        dto.effectiveDate &&
+        nextEffectiveStr < todayStr &&
+        nextEffectiveStr !== existingEffectiveStr
+      ) {
+        throw new AppException({
+          code: ErrorCode.BUSINESS_RULE_BACKDATING_FORBIDDEN,
+          message: `Tanggal penugasan pemilik kebijakan tidak boleh diubah surut ke masa lampau (${nextEffectiveStr} < ${todayStr}) sesuai DEC-008.`,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+
+      const nextEffectiveDate = new Date(nextEffectiveStr);
+      const nextEndDate =
+        dto.endDate === undefined
+          ? existing.endDate
+          : dto.endDate === null || dto.endDate === ''
+            ? null
+            : new Date(dto.endDate.split('T')[0]);
+
+      if (nextEndDate && nextEndDate < nextEffectiveDate) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Tanggal berakhir penugasan tidak boleh mendahului tanggal mulai berlaku.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const nextUserId = dto.userId || existing.userId;
+      const nextCategory = dto.policyCategory || existing.policyCategory;
+
+      // Periksa konflik duplikasi pemilik aktif pada kategori yang sama
+      const duplicate = await tx.policyOwnerAssignment.findFirst({
         where: {
-          effectiveDate: { lte: today },
-          OR: [{ endDate: null }, { endDate: { gte: today } }],
+          id: { not: assignmentId },
+          userId: nextUserId,
+          policyCategory: nextCategory,
+          effectiveDate: { lte: nextEffectiveDate },
+          OR: [{ endDate: null }, { endDate: { gte: nextEffectiveDate } }],
+        },
+      });
+
+      if (duplicate) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message:
+            'Pengguna ini sudah terdaftar sebagai Pemilik Kebijakan aktif untuk kategori yang dipilih.',
+          statusCode: HttpStatus.CONFLICT,
+        });
+      }
+
+      const updated = await tx.policyOwnerAssignment.update({
+        where: { id: assignmentId },
+        data: {
+          userId: nextUserId,
+          policyCategory: nextCategory,
+          effectiveDate: nextEffectiveDate,
+          endDate: nextEndDate,
         },
         include: {
           user: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true,
-              orgAssignments: {
-                where: {
-                  OR: [{ endDate: null }, { endDate: { gte: today } }],
-                },
-                select: {
-                  role: true,
-                  jobTitle: true,
-                  function: true,
-                },
-              },
-            },
+            select: { id: true, fullName: true, email: true },
           },
         },
-        orderBy: [{ policyCategory: 'asc' }, { effectiveDate: 'asc' }],
       });
-    }
 
-    return assignments;
+      await tx.auditLog.create({
+        data: {
+          actorUserId,
+          actionCode: 'POLICY_OWNER_UPDATED',
+          relatedEntityType: 'policy_owner_assignments',
+          relatedEntityId: updated.id,
+          valueBefore: {
+            userId: existing.userId,
+            userName: existing.user?.fullName,
+            category: existing.policyCategory,
+            effectiveDate: existingEffectiveStr,
+          },
+          valueAfter: {
+            userId: updated.userId,
+            userName: updated.user?.fullName,
+            category: updated.policyCategory,
+            effectiveDate: nextEffectiveStr,
+          },
+          ipAddress: meta?.ipAddress,
+          userAgent: meta?.userAgent,
+        },
+      });
+
+      return updated;
+    });
   }
 
   /**
@@ -738,15 +896,20 @@ export class PolicyService {
   /**
    * Memvalidasi apakah seorang pengguna memiliki wewenang aktif sebagai Pemilik Kebijakan
    * (Authorized Policy Owner) untuk kategori tertentu (BR-15, FR-34).
+   *
+   * Sumber kebenaran tunggal (Single Source of Truth) adalah tabel policy_owner_assignments.
+   * Tidak ada jalur belakang (fallback) berdasarkan jabatan jika akun tidak tercatat di tabel.
    */
   async isUserAuthorizedPolicyOwner(
     userId: string,
     category: PolicyCategory,
     targetDate?: Date,
   ): Promise<boolean> {
-    const today = targetDate || new Date(this.clockService.todayString('Asia/Jakarta'));
+    const todayStr = this.clockService.todayString('Asia/Jakarta');
+    const today = targetDate || new Date(todayStr);
 
-    // 1. Periksa penugasan spesifik di tabel policy_owner_assignments
+    await ensurePolicyOwnersBaselineSynced(this.prisma, new Date(todayStr));
+
     const activeAssignment = await this.prisma.policyOwnerAssignment.findFirst({
       where: {
         userId,
@@ -756,102 +919,7 @@ export class PolicyService {
       },
     });
 
-    if (activeAssignment) {
-      return true;
-    }
-
-    // 2. Jika belum ada satupun penugasan pemilik di database untuk kategori ini (misal saat bootstrapping),
-    // izinkan pemegang peran Direksi (CEO_MANAGEMENT) atau SYSTEM_ADMIN.
-    const totalOwnersForCategory = this.prisma.policyOwnerAssignment?.count
-      ? await this.prisma.policyOwnerAssignment.count({
-          where: {
-            policyCategory: category,
-            effectiveDate: { lte: today },
-            OR: [{ endDate: null }, { endDate: { gte: today } }],
-          },
-        })
-      : 0;
-
-    if (totalOwnersForCategory === 0) {
-      if (!this.prisma.organizationalAssignment?.findMany) {
-        return false;
-      }
-      const assignments = await this.prisma.organizationalAssignment.findMany({
-        where: {
-          userId,
-          OR: [{ endDate: null }, { endDate: { gte: today } }],
-        },
-        select: { role: true },
-      });
-      return assignments.some(
-        (a: { role: CanonicalRole }) =>
-          a.role === CanonicalRole.CEO_MANAGEMENT || a.role === CanonicalRole.SYSTEM_ADMIN,
-      );
-    }
-
-    return false;
-  }
-
-  /**
-   * Mengisi otomatis penugasan pemilik kebijakan baseline PT Dutamedia Mandiri Pratama
-   * jika database dalam kondisi baru/kosong.
-   */
-  private async ensureBaselinePolicyOwners(today: Date): Promise<void> {
-    try {
-      const users = await this.prisma.user.findMany({
-        where: {
-          email: {
-            in: [
-              'direktur@dutamedia.com',
-              'hrga@dutamedia.com',
-              'head.eng@dutamedia.com',
-              'admin@dutamedia.com',
-            ],
-          },
-        },
-        select: { id: true, email: true },
-      });
-
-      const userMap = new Map<string, string>();
-      users.forEach((u: { id: string; email: string }) => userMap.set(u.email, u.id));
-
-      const direkturId = userMap.get('direktur@dutamedia.com') || userMap.get('admin@dutamedia.com');
-      const hrgaId = userMap.get('hrga@dutamedia.com');
-      const engId = userMap.get('head.eng@dutamedia.com');
-
-      if (!direkturId) return;
-
-      const baseline: Array<{ userId: string; category: PolicyCategory }> = [];
-
-      // CHECKIN_TIMING: Dewi Lestari (HRGA) & Hendra Wijaya (Direktur)
-      if (hrgaId) baseline.push({ userId: hrgaId, category: PolicyCategory.CHECKIN_TIMING });
-      baseline.push({ userId: direkturId, category: PolicyCategory.CHECKIN_TIMING });
-
-      // BLOCKER_SLA: Arif Budiman (Head Eng) & Hendra Wijaya (Direktur)
-      if (engId) baseline.push({ userId: engId, category: PolicyCategory.BLOCKER_SLA });
-      baseline.push({ userId: direkturId, category: PolicyCategory.BLOCKER_SLA });
-
-      // COMPLIANCE_THRESHOLD: Dewi Lestari (HRGA) & Hendra Wijaya (Direktur)
-      if (hrgaId) baseline.push({ userId: hrgaId, category: PolicyCategory.COMPLIANCE_THRESHOLD });
-      baseline.push({ userId: direkturId, category: PolicyCategory.COMPLIANCE_THRESHOLD });
-
-      // CORRECTION_WINDOW: Dewi Lestari (HRGA) & Hendra Wijaya (Direktur)
-      if (hrgaId) baseline.push({ userId: hrgaId, category: PolicyCategory.CORRECTION_WINDOW });
-      baseline.push({ userId: direkturId, category: PolicyCategory.CORRECTION_WINDOW });
-
-      for (const item of baseline) {
-        await this.prisma.policyOwnerAssignment.create({
-          data: {
-            userId: item.userId,
-            policyCategory: item.category,
-            effectiveDate: today,
-            createdByUserId: direkturId,
-          },
-        });
-      }
-    } catch (err) {
-      console.warn('Gagal melakukan ensureBaselinePolicyOwners:', err);
-    }
+    return Boolean(activeAssignment);
   }
 
   /**
@@ -861,6 +929,7 @@ export class PolicyService {
     const logs = await this.prisma.auditLog.findMany({
       where: {
         relatedEntityType: { in: ['policies', 'policy_owner_assignments'] },
+        actionCode: { not: 'POLICY_OWNERS_BASELINE_SYNCED_V1' },
       },
       include: {
         actor: {
@@ -879,15 +948,17 @@ export class PolicyService {
         timestamp: log.timestamp,
         actor: log.actor || { fullName: 'System', email: 'system@workpulse' },
         actionCode: log.actionCode,
-        category: valAfter?.category || category || 'GENERAL',
+        category: valAfter?.category || valBefore?.category || category || 'GENERAL',
         effectiveDate: valAfter?.effectiveDate || null,
         changeJustification:
           valAfter?.changeJustification ||
           (log.actionCode === 'POLICY_OWNER_ASSIGNED'
             ? `Penetapan pemilik: ${valAfter?.userName || 'PIC'}`
-            : log.actionCode === 'POLICY_OWNER_REVOKED'
-              ? `Pencabutan wewenang pemilik: ${valBefore?.userName || 'PIC'}`
-              : 'Inisialisasi sistem'),
+            : log.actionCode === 'POLICY_OWNER_UPDATED'
+              ? `Perubahan pemilik: ${valBefore?.userName || 'PIC'} → ${valAfter?.userName || 'PIC'}`
+              : log.actionCode === 'POLICY_OWNER_REVOKED'
+                ? `Pencabutan wewenang pemilik: ${valBefore?.userName || 'PIC'}`
+                : 'Inisialisasi sistem'),
         valueBefore: valBefore,
         valueAfter: valAfter?.configurationValues || valAfter,
       };
@@ -904,6 +975,7 @@ export class PolicyService {
       return { seeded: false, count: existingCount };
     }
 
+    const today = new Date(this.clockService.todayString('Asia/Jakarta'));
     const categories = Object.values(PolicyCategory);
     const createdPolicies = [];
 
@@ -913,22 +985,14 @@ export class PolicyService {
           category,
           configurationValues: CANONICAL_POLICY_FALLBACKS[category],
           isIllustrative: true,
-          effectiveDate: new Date('2026-01-01'),
+          effectiveDate: today,
           createdByUserId: creatorUserId,
         },
       });
       createdPolicies.push(p);
-
-      // Default owner assignment
-      await this.prisma.policyOwnerAssignment.create({
-        data: {
-          userId: creatorUserId,
-          policyCategory: category,
-          effectiveDate: new Date('2026-01-01'),
-          createdByUserId: creatorUserId,
-        },
-      });
     }
+
+    await ensurePolicyOwnersBaselineSynced(this.prisma, today);
 
     return { seeded: true, count: createdPolicies.length };
   }

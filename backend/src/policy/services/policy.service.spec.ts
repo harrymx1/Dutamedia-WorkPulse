@@ -19,18 +19,23 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       },
       policyOwnerAssignment: {
         findMany: vi.fn().mockResolvedValue([]),
-        findFirst: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'poa-default',
+          userId: 'usr-1',
+          policyCategory: PolicyCategory.CHECKIN_TIMING,
+        }),
         findUnique: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
-        count: vi.fn().mockResolvedValue(0),
+        count: vi.fn().mockResolvedValue(1),
       },
       organizationalAssignment: {
         findMany: vi.fn().mockResolvedValue([{ role: 'CEO_MANAGEMENT' }]),
       },
       auditLog: {
         create: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue({ id: 'marker-1', actionCode: 'POLICY_OWNERS_BASELINE_SYNCED_V1' }),
         findMany: vi.fn().mockResolvedValue([]),
       },
       user: {
@@ -349,6 +354,80 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
             actionCode: 'POLICY_OWNER_REVOKED',
             relatedEntityType: 'policy_owner_assignments',
             relatedEntityId: 'poa-to-revoke',
+          }),
+        }),
+      );
+    });
+
+    it('updates an existing owner assignment (Update CRUD) and logs POLICY_OWNER_UPDATED', async () => {
+      mockPrisma.policyOwnerAssignment.findUnique.mockResolvedValue({
+        id: 'poa-1',
+        userId: 'usr-dewi',
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+        effectiveDate: new Date('2026-10-28'),
+        endDate: null,
+        user: { id: 'usr-dewi', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+      });
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.policyOwnerAssignment.update.mockResolvedValue({
+        id: 'poa-1',
+        userId: 'usr-arif',
+        policyCategory: PolicyCategory.CHECKIN_TIMING,
+        effectiveDate: new Date('2026-10-29'),
+        endDate: null,
+        user: { id: 'usr-arif', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+      });
+
+      const updated = await service.updatePolicyOwner('usr-direktur', 'poa-1', {
+        userId: 'usr-arif',
+        effectiveDate: '2026-10-29',
+      });
+
+      expect(updated.userId).toBe('usr-arif');
+      expect(mockPrisma.policyOwnerAssignment.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'poa-1' },
+          data: expect.objectContaining({
+            userId: 'usr-arif',
+            policyCategory: PolicyCategory.CHECKIN_TIMING,
+          }),
+        }),
+      );
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'POLICY_OWNER_UPDATED',
+            relatedEntityId: 'poa-1',
+          }),
+        }),
+      );
+    });
+
+    it('runs one-time baseline sync for Direktur, Admin, and HRGA across all 5 categories even when 1 partial row already exists', async () => {
+      // Simulasikan penanda belum ada di audit_logs, dan baru ada 1 baris (Dewi Lestari pada CHECKIN_TIMING)
+      mockPrisma.auditLog.findFirst.mockResolvedValue(null);
+      mockPrisma.organizationalAssignment.findMany.mockResolvedValue([
+        { userId: 'usr-dir', role: 'CEO_MANAGEMENT' },
+        { userId: 'usr-adm', role: 'SYSTEM_ADMIN' },
+        { userId: 'usr-hrga', role: 'HRGA' },
+      ]);
+      mockPrisma.user.findMany.mockResolvedValue([
+        { id: 'usr-dir', email: 'direktur@dutamedia.com' },
+        { id: 'usr-adm', email: 'admin@dutamedia.com' },
+        { id: 'usr-hrga', email: 'hrga@dutamedia.com' },
+      ]);
+      mockPrisma.policyOwnerAssignment.findMany.mockResolvedValue([
+        { userId: 'usr-hrga', policyCategory: PolicyCategory.CHECKIN_TIMING },
+      ]);
+
+      await service.getPolicyOwners();
+
+      // 3 pemilik x 5 kategori = 15 total; 1 sudah ada -> 14 dibuat baru
+      expect(mockPrisma.policyOwnerAssignment.create).toHaveBeenCalledTimes(14);
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'POLICY_OWNERS_BASELINE_SYNCED_V1',
           }),
         }),
       );

@@ -22,6 +22,8 @@ export interface UserAccessContext {
   hasSubordinates?: boolean;
   isTemporaryReviewer?: boolean;
   isProjectLead?: boolean;
+  isPolicyOwner?: boolean;
+  ownedPolicyCategories?: string[];
 }
 
 export interface ResolvedAccessContext {
@@ -29,6 +31,7 @@ export interface ResolvedAccessContext {
   hasSubordinates: boolean;
   isTemporaryReviewer: boolean;
   isProjectLead: boolean;
+  isPolicyOwner: boolean;
 }
 
 export interface NavItem {
@@ -39,6 +42,7 @@ export interface NavItem {
   requiresSubordinates?: boolean;
   allowTemporaryReviewer?: boolean;
   allowProjectLead?: boolean;
+  allowPolicyOwner?: boolean;
   badge?: string;
   badgeType?: 'amber' | 'red' | 'neutral' | 'green';
 }
@@ -121,7 +125,7 @@ export const navGroups: NavGroup[] = [
       { label: 'Undangan Karyawan', to: '/admin/invitations', roles: ADMIN_LEVEL, iconName: 'UserPlus' },
       { label: 'Struktur Organisasi', to: '/admin/organization', roles: ADMIN_LEVEL, iconName: 'Network' },
       { label: 'Reviewer Sementara', to: '/admin/temporary-reviewers', roles: ADMIN_LEVEL, iconName: 'UserCheck' },
-      { label: 'Kebijakan & Cut-off', to: '/admin/policies', roles: ADMIN_LEVEL, iconName: 'Sliders' },
+      { label: 'Kebijakan & Cut-off', to: '/admin/policies', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT'], allowPolicyOwner: true, iconName: 'Sliders' },
       { label: 'Saluran Notifikasi', to: '/admin/notifications', roles: ADMIN_LEVEL, iconName: 'Megaphone' },
     ],
   },
@@ -136,6 +140,7 @@ export function resolveAccessContext(
       hasSubordinates: false,
       isTemporaryReviewer: false,
       isProjectLead: false,
+      isPolicyOwner: false,
     };
   }
   if (typeof userOrRole === 'string') {
@@ -145,9 +150,14 @@ export function resolveAccessContext(
       hasSubordinates: role === 'HEAD' || role === 'CEO_MANAGEMENT',
       isTemporaryReviewer: false,
       isProjectLead: role === 'SUPERVISOR' || role === 'PROJECT_MANAGER',
+      isPolicyOwner:
+        role === 'SYSTEM_ADMIN' || role === 'CEO_MANAGEMENT' || role === 'HRGA',
     };
   }
   const role = (userOrRole.role as RoleName) || null;
+  const hasOwnedCategories =
+    Array.isArray(userOrRole.ownedPolicyCategories) &&
+    userOrRole.ownedPolicyCategories.length > 0;
   return {
     role,
     hasSubordinates:
@@ -159,6 +169,14 @@ export function resolveAccessContext(
       typeof userOrRole.isProjectLead === 'boolean'
         ? userOrRole.isProjectLead
         : role === 'SUPERVISOR' || role === 'PROJECT_MANAGER',
+    isPolicyOwner:
+      typeof userOrRole.isPolicyOwner === 'boolean'
+        ? userOrRole.isPolicyOwner
+        : Array.isArray(userOrRole.ownedPolicyCategories)
+          ? hasOwnedCategories
+          : role === 'SYSTEM_ADMIN' ||
+            role === 'CEO_MANAGEMENT' ||
+            role === 'HRGA',
   };
 }
 
@@ -177,6 +195,11 @@ export function canAccessNavItem(item: NavItem, ctx: ResolvedAccessContext): boo
 
   // Wewenang Proyek Dinamis (Project Lead)
   if (item.allowProjectLead && ctx.isProjectLead) {
+    return true;
+  }
+
+  // Wewenang Pemilik Kebijakan Dinamis (Authorized Policy Owner dari tabel policy_owner_assignments)
+  if (item.allowPolicyOwner && ctx.isPolicyOwner) {
     return true;
   }
 

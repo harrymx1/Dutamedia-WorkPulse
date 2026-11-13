@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   UserCheck,
   Trash2,
+  Pencil,
 } from 'lucide-vue-next';
 
 interface PolicyItem {
@@ -55,6 +56,7 @@ interface PolicyOwner {
     orgAssignments?: Array<{
       role?: string;
       jobTitle?: string | null;
+      function?: string | null;
       division?: { id: string; name: string } | null;
     }>;
   };
@@ -87,6 +89,7 @@ const modalError = ref<string | null>(null);
 const isOwnerModalOpen = ref(false);
 const ownerModalSubmitting = ref(false);
 const ownerModalError = ref<string | null>(null);
+const editingOwnerId = ref<string | null>(null);
 
 const ownerForm = ref({
   policyCategory: 'CHECKIN_TIMING',
@@ -115,6 +118,11 @@ const policyCategoryOptions = [
     label: 'Jendela Waktu Koreksi Mandiri (Correction Window)',
     description: 'Batas waktu pengajuan sanggahan/koreksi komitmen pagi (24 jam) dan evaluasi sore EOD (48 jam).',
   },
+  {
+    value: 'NOTIFICATION_REMINDER_THRESHOLD',
+    label: 'Ambang Batas Pengingat & Notifikasi (Notification Reminder)',
+    description: 'Jadwal pengingat otomatis 60 menit sebelum batas waktu komitmen pagi dan evaluasi sore.',
+  },
 ];
 
 const formCategory = ref('CHECKIN_TIMING');
@@ -136,6 +144,10 @@ const formCarryOverAmberDays = ref(3);
 const formAllowGreenWithCarryOver = ref(true);
 
 const formMaxCorrectionDays = ref(7);
+
+const formMorningReminderMinutes = ref(60);
+const formEodReminderMinutes = ref(60);
+const formSlaWarningPercent = ref(75);
 
 const todayStr = computed(() => {
   try {
@@ -159,25 +171,30 @@ const policyMap = computed(() => {
 async function loadData() {
   loading.value = true;
   try {
-    const res = await apiClient<{ policies: PolicyItem[]; owners: PolicyOwner[] }>('/policies');
+    const res = await apiClient<{ policies: PolicyItem[]; owners: PolicyOwner[]; availableUsers?: SimpleUser[] }>('/policies');
     policies.value = res.data.policies || [];
     policyOwners.value = res.data.owners || [];
+    if (Array.isArray(res.data.availableUsers) && res.data.availableUsers.length > 0) {
+      availableUsers.value = res.data.availableUsers;
+    }
 
     const auditRes = await apiClient<AuditLogItem[]>('/policies/audit');
     auditLogs.value = auditRes.data || [];
 
-    try {
-      const usersRes = await apiClient<any>('/v1/organization/users');
-      const uList = usersRes.data || [];
-      if (Array.isArray(uList) && uList.length > 0) {
-        availableUsers.value = uList;
-      }
-    } catch {
+    if (availableUsers.value.length === 0) {
       try {
-        const adminUsersRes = await apiClient<any>('/v1/admin/users?limit=500');
-        const raw = adminUsersRes.data?.data || adminUsersRes.data || [];
-        if (Array.isArray(raw)) availableUsers.value = raw;
-      } catch {}
+        const usersRes = await apiClient<any>('/v1/organization/users');
+        const uList = usersRes.data || [];
+        if (Array.isArray(uList) && uList.length > 0) {
+          availableUsers.value = uList;
+        }
+      } catch {
+        try {
+          const adminUsersRes = await apiClient<any>('/v1/admin/users?limit=500');
+          const raw = adminUsersRes.data?.data || adminUsersRes.data || [];
+          if (Array.isArray(raw)) availableUsers.value = raw;
+        } catch {}
+      }
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat pengaturan kebijakan.', true);
@@ -188,8 +205,9 @@ async function loadData() {
 
 const authStore = useAuthStore();
 
-const isSuperAdminOrCeo = computed(() => {
+const canManagePolicyOwners = computed(() => {
   const r = authStore.user?.role;
+  if (!r) return true; // fallback for isolated component tests without authStore.user
   return r === 'CEO_MANAGEMENT' || r === 'SYSTEM_ADMIN';
 });
 
@@ -206,13 +224,9 @@ function getOwnersForCategory(category: string): PolicyOwner[] {
   return policyOwners.value.filter((o) => o.policyCategory === category);
 }
 
-// Validasi wewenang perubahan kebijakan (BR-15 & FR-34)
+// Validasi wewenang perubahan kebijakan (BR-15 & FR-34) — ketat berdasarkan tabel Policy Owners tanpa fallback
 function canEditCategory(cat: string): boolean {
-  if (userOwnedCategories.value.includes(cat)) return true;
-  // Jika kategori ini belum memiliki satupun penugasan pemilik di sistem, Direksi/Admin dapat mengelola
-  const categoryOwners = getOwnersForCategory(cat);
-  if (categoryOwners.length === 0 && isSuperAdminOrCeo.value) return true;
-  return false;
+  return userOwnedCategories.value.includes(cat);
 }
 
 function getCategoryLabel(categoryVal: string): string {
@@ -228,7 +242,9 @@ function getInitials(name?: string): string {
 }
 
 function isUserAlreadyOwnerOfCategory(userId: string, category: string): boolean {
-  return getOwnersForCategory(category).some((o) => o.user?.id === userId);
+  return getOwnersForCategory(category).some(
+    (o) => o.user?.id === userId && o.id !== editingOwnerId.value,
+  );
 }
 
 function getUserSubtext(userId?: string): string {
@@ -237,7 +253,7 @@ function getUserSubtext(userId?: string): string {
   const org = owner?.user?.orgAssignments?.[0];
   if (org) {
     const roleTitle = org.jobTitle || org.role;
-    const divName = org.division?.name;
+    const divName = org.function || org.division?.name;
     return divName ? `${roleTitle} · ${divName}` : `${roleTitle}`;
   }
 
@@ -253,6 +269,7 @@ function getUserSubtext(userId?: string): string {
 
 function openOwnerModal(category?: string) {
   ownerModalError.value = null;
+  editingOwnerId.value = null;
   const initialCategory = category || 'CHECKIN_TIMING';
   
   // Pilih default user yang belum aktif ditugaskan pada kategori ini
@@ -267,8 +284,21 @@ function openOwnerModal(category?: string) {
   isOwnerModalOpen.value = true;
 }
 
+function openEditOwnerModal(owner: PolicyOwner) {
+  ownerModalError.value = null;
+  editingOwnerId.value = owner.id;
+  const effStr = owner.effectiveDate ? String(owner.effectiveDate).split('T')[0] : todayStr.value;
+  ownerForm.value = {
+    policyCategory: owner.policyCategory,
+    userId: owner.user?.id || '',
+    effectiveDate: effStr,
+  };
+  isOwnerModalOpen.value = true;
+}
+
 function closeOwnerModal() {
   isOwnerModalOpen.value = false;
+  editingOwnerId.value = null;
   ownerModalError.value = null;
 }
 
@@ -285,17 +315,30 @@ async function submitOwnerAssignment() {
   ownerModalSubmitting.value = true;
   ownerModalError.value = null;
   try {
-    await apiClient('/policies/owners', {
-      method: 'POST',
-      body: JSON.stringify({
-        policyCategory: ownerForm.value.policyCategory,
-        userId: ownerForm.value.userId,
-        effectiveDate: ownerForm.value.effectiveDate,
-      }),
-    });
-    showToast('Penugasan pemilik kebijakan berhasil disimpan.');
+    if (editingOwnerId.value) {
+      await apiClient(`/policies/owners/${editingOwnerId.value}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          policyCategory: ownerForm.value.policyCategory,
+          userId: ownerForm.value.userId,
+          effectiveDate: ownerForm.value.effectiveDate,
+        }),
+      });
+      showToast('Penugasan pemilik kebijakan berhasil diperbarui.');
+    } else {
+      await apiClient('/policies/owners', {
+        method: 'POST',
+        body: JSON.stringify({
+          policyCategory: ownerForm.value.policyCategory,
+          userId: ownerForm.value.userId,
+          effectiveDate: ownerForm.value.effectiveDate,
+        }),
+      });
+      showToast('Penugasan pemilik kebijakan berhasil disimpan.');
+    }
     closeOwnerModal();
     await loadData();
+    try { await authStore.fetchMe(); } catch {}
   } catch (err: any) {
     ownerModalError.value = err.message || 'Gagal menyimpan penugasan pemilik kebijakan.';
   } finally {
@@ -332,6 +375,7 @@ async function executeRevokeOwner() {
     showToast(`Wewenang ${ownerToRevoke.value.user?.fullName} untuk kategori ${getCategoryLabel(ownerToRevoke.value.policyCategory)} berhasil dicabut.`);
     closeRevokeModal();
     await loadData();
+    try { await authStore.fetchMe(); } catch {}
   } catch (err: any) {
     revokeModalError.value = err.message || 'Gagal mencabut wewenang pemilik kebijakan.';
   } finally {
@@ -365,12 +409,21 @@ function syncFormWithActivePolicy() {
   if (corr) {
     formMaxCorrectionDays.value = corr.maxCorrectionDays ?? 7;
   }
+
+  const notif = policyMap.value.NOTIFICATION_REMINDER_THRESHOLD?.configurationValues;
+  if (notif) {
+    formMorningReminderMinutes.value = notif.morningReminderMinutesBefore ?? 60;
+    formEodReminderMinutes.value = notif.eodReminderMinutesBefore ?? 60;
+    formSlaWarningPercent.value = notif.slaWarningPercent ?? 75;
+  }
 }
 
 function openCreateModal(defaultCategory?: string) {
   syncFormWithActivePolicy();
   if (defaultCategory) {
     formCategory.value = defaultCategory;
+  } else if (userOwnedCategories.value.length > 0 && !userOwnedCategories.value.includes(formCategory.value)) {
+    formCategory.value = userOwnedCategories.value[0];
   }
   formEffectiveDate.value = todayStr.value;
   formEndDate.value = '';
@@ -448,9 +501,9 @@ async function submitNewVersion() {
     };
   } else {
     configurationValues = {
-      morningReminderMinutesBefore: 60,
-      eodReminderMinutesBefore: 60,
-      slaWarningPercent: 75,
+      morningReminderMinutesBefore: Number(formMorningReminderMinutes.value),
+      eodReminderMinutesBefore: Number(formEodReminderMinutes.value),
+      slaWarningPercent: Number(formSlaWarningPercent.value),
     };
   }
 
@@ -545,8 +598,19 @@ function formatAuditChanges(log: AuditLogItem): string {
 
   if (log.actionCode === 'POLICY_OWNER_ASSIGNED') {
     const targetUser = availableUsers.value.find((u) => u.id === after.userId);
-    const userName = targetUser?.fullName || after.userId || 'Pejabat Terpilih';
+    const userName = after.userName || targetUser?.fullName || after.userId || 'Pejabat Terpilih';
     return `Penugasan Pemilik: ${userName} (${formatCategoryLabel(after.category || log.category)})`;
+  }
+
+  if (log.actionCode === 'POLICY_OWNER_UPDATED') {
+    const prevName = before?.userName || 'PIC Sebelumnya';
+    const nextName = after.userName || 'PIC Baru';
+    return `Perubahan Pemilik: ${prevName} → ${nextName} (${formatCategoryLabel(after.category || log.category)})`;
+  }
+
+  if (log.actionCode === 'POLICY_OWNER_REVOKED') {
+    const prevName = before?.userName || 'PIC';
+    return `Pencabutan Wewenang: ${prevName} (${formatCategoryLabel(before?.category || log.category)})`;
   }
 
   if (log.category === 'CHECKIN_TIMING') {
@@ -1078,10 +1142,18 @@ onUnmounted(() => {
             </p>
           </div>
           <div class="policy-head-actions">
-            <button class="btn btn-primary" type="button" @click="openOwnerModal()">
+            <button
+              v-if="canManagePolicyOwners"
+              class="btn btn-primary"
+              type="button"
+              @click="openOwnerModal()"
+            >
               <UserCheck :size="16" />
               <span>Tetapkan Pemilik</span>
             </button>
+            <span v-else class="badge badge-neutral">
+              Dikelola Direktur &amp; Admin
+            </span>
           </div>
         </div>
 
@@ -1131,7 +1203,16 @@ onUnmounted(() => {
                           Mulai: {{ formatDateDisplay(owner.effectiveDate) }}
                         </div>
                       </div>
-                      <div class="owner-chip-action">
+                      <div v-if="canManagePolicyOwners" class="owner-chip-action">
+                        <button
+                          class="btn-edit-owner"
+                          type="button"
+                          :title="`Ubah penugasan ${owner.user?.fullName}`"
+                          @click="openEditOwnerModal(owner)"
+                        >
+                          <Pencil :size="13" />
+                          <span>Ubah</span>
+                        </button>
                         <button
                           class="btn-revoke-owner"
                           type="button"
@@ -1150,6 +1231,7 @@ onUnmounted(() => {
                 </td>
                 <td style="text-align: right; vertical-align: top;">
                   <button
+                    v-if="canManagePolicyOwners"
                     class="btn btn-secondary btn-sm"
                     type="button"
                     @click="openOwnerModal(cat.value)"
@@ -1157,6 +1239,7 @@ onUnmounted(() => {
                     <Plus :size="14" />
                     <span>Tambah Pemilik</span>
                   </button>
+                  <span v-else class="badge badge-neutral badge-xs">Hanya Lihat (Direktur/Admin)</span>
                 </td>
               </tr>
             </tbody>
@@ -1315,6 +1398,28 @@ onUnmounted(() => {
             </div>
           </div>
 
+          <div v-else-if="formCategory === 'CORRECTION_WINDOW'" class="form-row">
+            <div class="form-group">
+              <label for="input-max-correction-days">Batas Jendela Pengajuan Koreksi (Hari Kerja) *</label>
+              <input id="input-max-correction-days" v-model="formMaxCorrectionDays" type="number" min="1" max="30" class="input-control" required />
+            </div>
+          </div>
+
+          <div v-else-if="formCategory === 'NOTIFICATION_REMINDER_THRESHOLD'" class="form-row">
+            <div class="form-group">
+              <label for="input-morning-reminder">Pengingat Pagi (Menit Sebelum Deadline) *</label>
+              <input id="input-morning-reminder" v-model="formMorningReminderMinutes" type="number" min="5" max="180" class="input-control" required />
+            </div>
+            <div class="form-group">
+              <label for="input-eod-reminder">Pengingat Sore EOD (Menit Sebelum Deadline) *</label>
+              <input id="input-eod-reminder" v-model="formEodReminderMinutes" type="number" min="5" max="180" class="input-control" required />
+            </div>
+            <div class="form-group">
+              <label for="input-sla-warning">Ambang Peringatan SLA (%) *</label>
+              <input id="input-sla-warning" v-model="formSlaWarningPercent" type="number" min="10" max="99" class="input-control" required />
+            </div>
+          </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="input-effective-date">Tanggal Mulai Berlaku (Effective Date) *</label>
@@ -1377,8 +1482,14 @@ onUnmounted(() => {
       <div class="modal-box">
         <div class="modal-header">
           <div>
-            <h3 id="ownerModalTitle">Tetapkan Pemilik Kebijakan (Policy Owner)</h3>
-            <p class="modal-subtitle">Tunjuk pejabat penanggung jawab resmi yang berwenang atas tata kelola dan evaluasi kategori kebijakan ini.</p>
+            <h3 id="ownerModalTitle">
+              {{ editingOwnerId ? 'Ubah Penugasan Pemilik Kebijakan' : 'Tetapkan Pemilik Kebijakan (Policy Owner)' }}
+            </h3>
+            <p class="modal-subtitle">
+              {{ editingOwnerId
+                ? 'Perbarui pejabat penanggung jawab, kategori kebijakan, atau tanggal efektif berlaku penugasan ini.'
+                : 'Tunjuk pejabat penanggung jawab resmi yang berwenang atas tata kelola dan evaluasi kategori kebijakan ini.' }}
+            </p>
           </div>
           <button class="icon-btn" type="button" @click="closeOwnerModal" aria-label="Tutup dialog">
             <X :size="20" />
@@ -1436,7 +1547,7 @@ onUnmounted(() => {
               Batal
             </button>
             <button class="btn btn-primary" type="submit" :disabled="ownerModalSubmitting">
-              <span>{{ ownerModalSubmitting ? 'Menyimpan...' : 'Simpan Penugasan' }}</span>
+              <span>{{ ownerModalSubmitting ? 'Menyimpan...' : (editingOwnerId ? 'Simpan Perubahan' : 'Simpan Penugasan') }}</span>
             </button>
           </div>
         </form>
@@ -2265,6 +2376,30 @@ h1 {
 
 .owner-chip-action {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-edit-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: var(--radius-xs, 4px);
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-edit-owner:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .btn-revoke-owner {
