@@ -428,9 +428,68 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             actionCode: 'POLICY_OWNERS_BASELINE_SYNCED_V1',
+            relatedEntityId: 'usr-dir',
           }),
         }),
       );
+    });
+
+    it('does not re-add revoked baseline owners when prior owner mutation audit logs already exist for a category', async () => {
+      // Penanda sync belum ada, tetapi sudah ada mutasi CRUD sebelumnya (mis. pencabutan)
+      mockPrisma.auditLog.findFirst
+        .mockResolvedValueOnce(null) // POLICY_OWNERS_BASELINE_SYNCED_V1 marker belum ada
+        .mockResolvedValueOnce({ id: 'mut-1', actionCode: 'POLICY_OWNER_REVOKED' }); // sudah ada mutasi
+      mockPrisma.organizationalAssignment.findMany.mockResolvedValue([
+        { userId: 'usr-dir', role: 'CEO_MANAGEMENT' },
+        { userId: 'usr-adm', role: 'SYSTEM_ADMIN' },
+        { userId: 'usr-hrga', role: 'HRGA' },
+      ]);
+      mockPrisma.user.findMany.mockResolvedValue([]);
+      // Semua 5 kategori sudah punya minimal 1 pemilik aktif (mis. Direktur dicabut dari COMPLIANCE_THRESHOLD, sisa Admin & HRGA)
+      mockPrisma.policyOwnerAssignment.findMany.mockResolvedValue([
+        { userId: 'usr-adm', policyCategory: PolicyCategory.CHECKIN_TIMING },
+        { userId: 'usr-adm', policyCategory: PolicyCategory.BLOCKER_SLA },
+        { userId: 'usr-adm', policyCategory: PolicyCategory.COMPLIANCE_THRESHOLD },
+        { userId: 'usr-adm', policyCategory: PolicyCategory.CORRECTION_WINDOW },
+        { userId: 'usr-adm', policyCategory: PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD },
+      ]);
+
+      await service.getPolicyOwners();
+
+      expect(mockPrisma.policyOwnerAssignment.create).not.toHaveBeenCalled();
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'POLICY_OWNERS_BASELINE_SYNCED_V1',
+            relatedEntityId: 'usr-dir',
+          }),
+        }),
+      );
+    });
+
+    it('rejects revoking the last active owner of a category with 422 Unprocessable Entity', async () => {
+      mockPrisma.policyOwnerAssignment.findUnique.mockResolvedValue({
+        id: 'poa-last',
+        userId: 'usr-dir',
+        policyCategory: PolicyCategory.COMPLIANCE_THRESHOLD,
+        effectiveDate: new Date('2026-10-28'),
+        user: { id: 'usr-dir', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+      });
+      mockPrisma.policyOwnerAssignment.count.mockResolvedValue(0);
+
+      await expect(
+        service.revokePolicyOwner('usr-dir', 'poa-last'),
+      ).rejects.toThrowError(AppException);
+
+      try {
+        await service.revokePolicyOwner('usr-dir', 'poa-last');
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.VALIDATION_FAILED);
+        expect(err.getStatus()).toBe(422);
+        expect(err.message).toContain('Tetapkan pemilik kebijakan pengganti terlebih dahulu');
+      }
+      expect(mockPrisma.policyOwnerAssignment.delete).not.toHaveBeenCalled();
+      expect(mockPrisma.policyOwnerAssignment.update).not.toHaveBeenCalled();
     });
 
     it('sends tailored line-separated notifications to Direktur, Admin, HRGA, and involved owners on assign, update (Arif -> Dharma), and revoke', async () => {

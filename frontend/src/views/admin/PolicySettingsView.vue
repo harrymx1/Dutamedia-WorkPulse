@@ -351,10 +351,24 @@ const ownerToRevoke = ref<PolicyOwner | null>(null);
 const isRevokeModalOpen = ref(false);
 const revokeModalSubmitting = ref(false);
 const revokeModalError = ref<string | null>(null);
+const selfRevokeConfirmed = ref(false);
+
+const isRevokingSelf = computed(() => {
+  const targetUserId = ownerToRevoke.value?.user?.id;
+  const currentUserId = authStore.user?.id;
+  return Boolean(targetUserId && currentUserId && targetUserId === currentUserId);
+});
+
+const isRevokingLastOwner = computed(() => {
+  const cat = ownerToRevoke.value?.policyCategory;
+  if (!cat) return false;
+  return getOwnersForCategory(cat).length <= 1;
+});
 
 function confirmRevokeOwner(owner: PolicyOwner) {
   ownerToRevoke.value = owner;
   revokeModalError.value = null;
+  selfRevokeConfirmed.value = false;
   isRevokeModalOpen.value = true;
 }
 
@@ -362,10 +376,21 @@ function closeRevokeModal() {
   isRevokeModalOpen.value = false;
   ownerToRevoke.value = null;
   revokeModalError.value = null;
+  selfRevokeConfirmed.value = false;
 }
 
 async function executeRevokeOwner() {
   if (!ownerToRevoke.value) return;
+  if (isRevokingLastOwner.value) {
+    revokeModalError.value =
+      'Kategori kebijakan tidak boleh kosong tanpa penanggung jawab. Tetapkan pemilik kebijakan pengganti terlebih dahulu sebelum mencabut pemilik terakhir pada kategori ini.';
+    return;
+  }
+  if (isRevokingSelf.value && !selfRevokeConfirmed.value) {
+    revokeModalError.value =
+      'Harap centang konfirmasi pencabutan wewenang diri sendiri terlebih dahulu.';
+    return;
+  }
   revokeModalSubmitting.value = true;
   revokeModalError.value = null;
   try {
@@ -1595,11 +1620,44 @@ onUnmounted(() => {
             Pencabutan ini akan menonaktifkan hak akses personil tersebut untuk menerbitkan versi baru pada kategori kebijakan ini. Tindakan ini akan dicatat dalam Jejak Audit resmi.
           </p>
 
+          <div v-if="isRevokingLastOwner" class="last-owner-warning-box mt-3" role="alert">
+            <AlertCircle :size="16" class="warning-icon" />
+            <div>
+              <strong>Tidak Dapat Mencabut Pemilik Terakhir:</strong>
+              <p>
+                Kategori kebijakan tidak boleh kosong tanpa penanggung jawab. Silakan tetapkan atau ubah ke pemilik kebijakan pengganti terlebih dahulu sebelum mencabut pemilik terakhir pada kategori ini.
+              </p>
+            </div>
+          </div>
+
+          <div v-else-if="isRevokingSelf" class="self-revoke-warning-box mt-3" role="alert">
+            <div class="self-revoke-warning-head">
+              <AlertTriangle :size="16" class="warning-icon" />
+              <strong>Peringatan: Anda Mencabut Wewenang Akun Anda Sendiri</strong>
+            </div>
+            <p class="self-revoke-warning-desc">
+              Setelah dicabut, Anda tidak akan lagi dapat menerbitkan versi kebijakan baru pada kategori ini. Perubahan ini akan dicatat dalam Jejak Audit dan diberitahukan kepada Direktur, Admin, serta HRGA.
+            </p>
+            <label class="self-revoke-confirm-check">
+              <input
+                id="confirm-self-revoke-checkbox"
+                v-model="selfRevokeConfirmed"
+                type="checkbox"
+              />
+              <span>Saya memahami konsekuensi ini dan yakin ingin mencabut wewenang kepemilikan saya sendiri pada kategori ini.</span>
+            </label>
+          </div>
+
           <div class="modal-actions mt-4">
             <button class="btn btn-secondary" type="button" @click="closeRevokeModal" :disabled="revokeModalSubmitting">
               Batal
             </button>
-            <button class="btn btn-danger" type="button" @click="executeRevokeOwner" :disabled="revokeModalSubmitting">
+            <button
+              class="btn btn-danger"
+              type="button"
+              @click="executeRevokeOwner"
+              :disabled="revokeModalSubmitting || isRevokingLastOwner || (isRevokingSelf && !selfRevokeConfirmed)"
+            >
               <span>{{ revokeModalSubmitting ? 'Mencabut...' : 'Ya, Cabut Wewenang' }}</span>
             </button>
           </div>
@@ -2507,5 +2565,61 @@ h1 {
   background: var(--color-surface-subtle);
   border-radius: var(--radius-sm);
   border: 1px dashed var(--color-border-subtle);
+}
+
+.last-owner-warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.last-owner-warning-box p {
+  margin: 4px 0 0;
+}
+
+.self-revoke-warning-box {
+  padding: 12px 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.self-revoke-warning-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.self-revoke-warning-desc {
+  margin: 6px 0 10px;
+}
+
+.self-revoke-confirm-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.self-revoke-confirm-check input[type='checkbox'] {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.warning-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 </style>

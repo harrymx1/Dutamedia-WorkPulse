@@ -300,6 +300,12 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
               effectiveDate: '2026-10-01',
               user: { id: 'u1', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
             },
+            {
+              id: 'poa-2',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u2', fullName: 'Sistem Administrator', email: 'admin@dutamedia.com' },
+            },
           ],
         },
       }),
@@ -317,6 +323,102 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     expect(wrapper.text()).toContain('Pencabutan ini akan menonaktifkan hak akses personil tersebut untuk menerbitkan versi baru pada kategori kebijakan ini. Tindakan ini akan dicatat dalam Jejak Audit resmi.');
     expect(wrapper.text()).not.toContain('BR-15');
     expect(wrapper.text()).not.toContain('FR-34');
+  });
+
+  it('prevents revoking the last active owner of a category and disables confirm button', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u-admin',
+      email: 'admin@dutamedia.com',
+      fullName: 'Sistem Administrator',
+      role: 'SYSTEM_ADMIN',
+      status: 'ACTIVE',
+    };
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          policies: [],
+          owners: [
+            {
+              id: 'poa-only',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u1', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wrapper.find('.btn-revoke-owner').trigger('click');
+    expect(wrapper.find('.last-owner-warning-box').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Tidak Dapat Mencabut Pemilik Terakhir');
+    expect(wrapper.text()).toContain('pemilik kebijakan pengganti terlebih dahulu');
+    expect((wrapper.find('.btn-danger').element as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('requires extra confirmation checkbox when revoking own policy ownership', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u1',
+      email: 'direktur@dutamedia.com',
+      fullName: 'Hendra Wijaya',
+      role: 'CEO_MANAGEMENT',
+      status: 'ACTIVE',
+    };
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          policies: [],
+          owners: [
+            {
+              id: 'poa-1',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u1', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+            },
+            {
+              id: 'poa-2',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u2', fullName: 'Sistem Administrator', email: 'admin@dutamedia.com' },
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wrapper.find('.btn-revoke-owner').trigger('click');
+
+    expect(wrapper.find('.self-revoke-warning-box').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Peringatan: Anda Mencabut Wewenang Akun Anda Sendiri');
+
+    const confirmBtn = wrapper.find('.btn-danger').element as HTMLButtonElement;
+    expect(confirmBtn.disabled).toBe(true);
+
+    const checkbox = wrapper.find('#confirm-self-revoke-checkbox');
+    await checkbox.setValue(true);
+    expect(confirmBtn.disabled).toBe(false);
   });
 });
 

@@ -683,6 +683,27 @@ export class PolicyService {
       const nextUserId = dto.userId || existing.userId;
       const nextCategory = dto.policyCategory || existing.policyCategory;
 
+      if (nextCategory !== existing.policyCategory) {
+        const today = new Date(todayStr);
+        const remainingInOriginCategory = await tx.policyOwnerAssignment.count({
+          where: {
+            id: { not: assignmentId },
+            policyCategory: existing.policyCategory,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+        });
+
+        if (remainingInOriginCategory < 1) {
+          throw new AppException({
+            code: ErrorCode.VALIDATION_FAILED,
+            message:
+              'Kategori kebijakan asal tidak boleh kosong tanpa penanggung jawab. Tetapkan pemilik kebijakan pengganti terlebih dahulu sebelum memindahkan pemilik terakhir ke kategori lain.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          });
+        }
+      }
+
       // Periksa konflik duplikasi pemilik aktif pada kategori yang sama
       const duplicate = await tx.policyOwnerAssignment.findFirst({
         where: {
@@ -882,6 +903,24 @@ export class PolicyService {
           code: ErrorCode.RESOURCE_NOT_FOUND,
           message: 'Penugasan pemilik kebijakan tidak ditemukan.',
           statusCode: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      const remainingActiveOwners = await tx.policyOwnerAssignment.count({
+        where: {
+          id: { not: assignmentId },
+          policyCategory: assignment.policyCategory,
+          effectiveDate: { lte: today },
+          OR: [{ endDate: null }, { endDate: { gte: today } }],
+        },
+      });
+
+      if (remainingActiveOwners < 1) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Kategori kebijakan tidak boleh kosong tanpa penanggung jawab. Tetapkan pemilik kebijakan pengganti terlebih dahulu sebelum mencabut pemilik terakhir pada kategori ini.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         });
       }
 

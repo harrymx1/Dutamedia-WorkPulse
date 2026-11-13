@@ -125,6 +125,23 @@ export async function ensurePolicyOwnersBaselineSynced(
         select: { userId: true, policyCategory: true },
       })) || [];
 
+    let hasPriorOwnerMutation = false;
+    if (prisma.auditLog?.findFirst) {
+      const priorMutation = await prisma.auditLog.findFirst({
+        where: {
+          actionCode: {
+            in: [
+              'POLICY_OWNER_ASSIGNED',
+              'POLICY_OWNER_UPDATED',
+              'POLICY_OWNER_REVOKED',
+            ],
+          },
+        },
+        select: { id: true },
+      });
+      hasPriorOwnerMutation = Boolean(priorMutation);
+    }
+
     const allCategories: PolicyCategory[] = [
       PolicyCategory.CHECKIN_TIMING,
       PolicyCategory.BLOCKER_SLA,
@@ -134,6 +151,12 @@ export async function ensurePolicyOwnersBaselineSynced(
     ];
 
     for (const category of allCategories) {
+      const categoryHasAnyActive = existingActive.some(
+        (e: any) => e.policyCategory === category,
+      );
+      if (hasPriorOwnerMutation && categoryHasAnyActive) {
+        continue;
+      }
       for (const userId of orderedIds) {
         const alreadyExists = existingActive.some(
           (e: any) => e.userId === userId && e.policyCategory === category,
@@ -157,6 +180,7 @@ export async function ensurePolicyOwnersBaselineSynced(
           actorUserId: creatorId,
           actionCode: 'POLICY_OWNERS_BASELINE_SYNCED_V1',
           relatedEntityType: 'policy_owner_assignments',
+          relatedEntityId: creatorId,
           valueAfter: {
             syncedAt: today.toISOString(),
             initialOwnerIds: orderedIds,
