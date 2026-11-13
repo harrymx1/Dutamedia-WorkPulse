@@ -277,6 +277,46 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     const options = selectCat.findAll('option');
     expect(options[0].text()).toContain('[Wewenang Anda Aktif]');
     expect(options[1].text()).toContain('[Terkunci: Bukan Pemilik]');
+
+    // Switch to locked category BLOCKER_SLA and verify clean warning wording (no BR-15 / FR-34)
+    await selectCat.setValue('BLOCKER_SLA');
+    expect(wrapper.find('.category-wewenang-alert').exists()).toBe(true);
+    expect(wrapper.find('.category-wewenang-alert').text()).toContain('Perhatian: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif');
+    expect(wrapper.text()).not.toContain('BR-15');
+    expect(wrapper.text()).not.toContain('FR-34');
+  });
+
+  it('shows clean revoke confirmation wording without BR-15 or FR-34 codes', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          policies: [],
+          owners: [
+            {
+              id: 'poa-1',
+              policyCategory: 'CHECKIN_TIMING',
+              effectiveDate: '2026-10-01',
+              user: { id: 'u1', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wrapper.find('.btn-revoke-owner').trigger('click');
+    expect(wrapper.find('#revokeModalTitle').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Pencabutan ini akan menonaktifkan hak akses personil tersebut untuk menerbitkan versi baru pada kategori kebijakan ini. Tindakan ini akan dicatat dalam Jejak Audit resmi.');
+    expect(wrapper.text()).not.toContain('BR-15');
+    expect(wrapper.text()).not.toContain('FR-34');
   });
 });
 

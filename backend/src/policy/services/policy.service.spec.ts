@@ -432,5 +432,103 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
         }),
       );
     });
+
+    it('sends tailored line-separated notifications to Direktur, Admin, HRGA, and involved owners on assign, update (Arif -> Dharma), and revoke', async () => {
+      mockPrisma.organizationalAssignment.findMany.mockResolvedValue([
+        { userId: 'usr-dir', jobTitle: 'CEO / Direktur Utama', user: { id: 'usr-dir', fullName: 'Hendra Wijaya' } },
+        { userId: 'usr-adm', jobTitle: 'System Administrator', user: { id: 'usr-adm', fullName: 'Sistem Administrator' } },
+        { userId: 'usr-hrga', jobTitle: 'HRGA Lead', user: { id: 'usr-hrga', fullName: 'Dewi Lestari' } },
+      ]);
+      mockPrisma.user.findMany.mockResolvedValue([
+        { id: 'usr-dir', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com', orgAssignments: [{ jobTitle: 'CEO / Direktur Utama' }] },
+        { id: 'usr-adm', fullName: 'Sistem Administrator', email: 'admin@dutamedia.com', orgAssignments: [{ jobTitle: 'System Administrator' }] },
+        { id: 'usr-hrga', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com', orgAssignments: [{ jobTitle: 'HRGA Lead' }] },
+        { id: 'usr-arif', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com', orgAssignments: [{ jobTitle: 'Head of Engineering' }] },
+        { id: 'usr-dharma', fullName: 'Dharma Putra', email: 'dharma@dutamedia.com', orgAssignments: [{ jobTitle: 'Backend Developer' }] },
+      ]);
+
+      // 1. ASSIGN Arif to BLOCKER_SLA
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValue(null);
+      mockPrisma.policyOwnerAssignment.create.mockResolvedValue({
+        id: 'poa-arif',
+        userId: 'usr-arif',
+        policyCategory: PolicyCategory.BLOCKER_SLA,
+        effectiveDate: new Date('2026-10-28'),
+        user: { id: 'usr-arif', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+      });
+
+      await service.assignPolicyOwner('usr-dir', {
+        policyCategory: PolicyCategory.BLOCKER_SLA,
+        userId: 'usr-arif',
+        effectiveDate: '2026-10-28',
+      });
+
+      const assignNotifs = mockPrisma.notification.createMany.mock.calls[0][0].data;
+      expect(assignNotifs.map((n: any) => n.recipientUserId).sort()).toEqual(
+        ['usr-adm', 'usr-arif', 'usr-dir', 'usr-hrga'].sort(),
+      );
+      const arifAssignNotif = assignNotifs.find((n: any) => n.recipientUserId === 'usr-arif');
+      const hrgaAssignNotif = assignNotifs.find((n: any) => n.recipientUserId === 'usr-hrga');
+      expect(arifAssignNotif.message).toContain('Anda telah ditetapkan sebagai Pemilik Kebijakan');
+      expect(arifAssignNotif.message).toContain('\nKategori Kebijakan:');
+      expect(hrgaAssignNotif.message).toContain('Pemilik Kebijakan Baru: Arif Budiman (Head of Engineering)');
+
+      // 2. UPDATE Arif -> Dharma on BLOCKER_SLA
+      mockPrisma.notification.createMany.mockClear();
+      mockPrisma.policyOwnerAssignment.findUnique.mockResolvedValue({
+        id: 'poa-arif',
+        userId: 'usr-arif',
+        policyCategory: PolicyCategory.BLOCKER_SLA,
+        effectiveDate: new Date('2026-10-28'),
+        endDate: null,
+        user: { id: 'usr-arif', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+      });
+      mockPrisma.policyOwnerAssignment.update.mockResolvedValue({
+        id: 'poa-arif',
+        userId: 'usr-dharma',
+        policyCategory: PolicyCategory.BLOCKER_SLA,
+        effectiveDate: new Date('2026-10-28'),
+        endDate: null,
+        user: { id: 'usr-dharma', fullName: 'Dharma Putra', email: 'dharma@dutamedia.com' },
+      });
+
+      await service.updatePolicyOwner('usr-dir', 'poa-arif', {
+        userId: 'usr-dharma',
+      });
+
+      const updateNotifs = mockPrisma.notification.createMany.mock.calls[0][0].data;
+      expect(updateNotifs.map((n: any) => n.recipientUserId).sort()).toEqual(
+        ['usr-adm', 'usr-arif', 'usr-dharma', 'usr-dir', 'usr-hrga'].sort(),
+      );
+      const arifUpdateNotif = updateNotifs.find((n: any) => n.recipientUserId === 'usr-arif');
+      const dharmaUpdateNotif = updateNotifs.find((n: any) => n.recipientUserId === 'usr-dharma');
+      const dirUpdateNotif = updateNotifs.find((n: any) => n.recipientUserId === 'usr-dir');
+      expect(arifUpdateNotif.message).toContain('telah dialihkan kepada pejabat lain');
+      expect(arifUpdateNotif.message).toContain('Dialihkan Kepada: Dharma Putra (Backend Developer)');
+      expect(dharmaUpdateNotif.message).toContain('Anda kini ditetapkan sebagai Pemilik Kebijakan menggantikan pejabat sebelumnya');
+      expect(dirUpdateNotif.message).toContain('Pemilik Sebelumnya: Arif Budiman (Head of Engineering)');
+      expect(dirUpdateNotif.message).toContain('Pemilik Baru: Dharma Putra (Backend Developer)');
+
+      // 3. REVOKE Dharma
+      mockPrisma.notification.createMany.mockClear();
+      mockPrisma.policyOwnerAssignment.findUnique.mockResolvedValue({
+        id: 'poa-arif',
+        userId: 'usr-dharma',
+        policyCategory: PolicyCategory.BLOCKER_SLA,
+        effectiveDate: new Date('2026-10-28'),
+        user: { id: 'usr-dharma', fullName: 'Dharma Putra', email: 'dharma@dutamedia.com' },
+      });
+
+      await service.revokePolicyOwner('usr-dir', 'poa-arif');
+
+      const revokeNotifs = mockPrisma.notification.createMany.mock.calls[0][0].data;
+      expect(revokeNotifs.map((n: any) => n.recipientUserId).sort()).toEqual(
+        ['usr-adm', 'usr-dharma', 'usr-dir', 'usr-hrga'].sort(),
+      );
+      const dharmaRevokeNotif = revokeNotifs.find((n: any) => n.recipientUserId === 'usr-dharma');
+      const admRevokeNotif = revokeNotifs.find((n: any) => n.recipientUserId === 'usr-adm');
+      expect(dharmaRevokeNotif.message).toContain('Wewenang Anda sebagai Pemilik Kebijakan untuk kategori berikut telah dicabut');
+      expect(admRevokeNotif.message).toContain('Personil yang Dicabut: Dharma Putra (Backend Developer)');
+    });
   });
 });

@@ -60,6 +60,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
         { path: '/', component: { template: '<div>Home</div>' } },
         { path: '/notifications', component: NotificationCenterView },
         { path: '/admin/notifications', component: { template: '<div>Admin Notif</div>' } },
+        { path: '/admin/policies', component: { template: '<div>Admin Policies</div>' } },
         { path: '/daily/morning', component: { template: '<div>Morning</div>' } },
         { path: '/blockers', component: { template: '<div>Blocker Queue</div>' } },
       ],
@@ -365,6 +366,74 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
 
     expect(wrapper.find('.modal-card').exists()).toBe(true);
     expect(wrapper.text()).toContain('Buka Antrean Eskalasi Blocker');
+  });
+
+  it('renders multi-line Policy Owner reassignment notification cleanly in list preview and detail modal', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-dharma',
+      fullName: 'Dharma Putra',
+      role: 'EMPLOYEE',
+      isPolicyOwner: true,
+      ownedPolicyCategories: ['BLOCKER_SLA'],
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-po-1',
+              title: 'Penugasan Baru sebagai Pemilik Kebijakan',
+              message: [
+                'Anda kini ditetapkan sebagai Pemilik Kebijakan menggantikan pejabat sebelumnya.',
+                'Kategori Kebijakan: Target Waktu Respon & Penanganan Kendala (Blocker SLA)',
+                'Pejabat Sebelumnya: Arif Budiman (Head of Engineering)',
+                'Status Wewenang Anda: Aktif (Dapat menerbitkan versi kebijakan baru pada kategori ini)',
+                'Mulai Berlaku: 13 November 2026',
+                'Diubah Oleh: Hendra Wijaya',
+              ].join('\n'),
+              type: 'POLICY_OWNER_UPDATED',
+              channel: 'IN_APP_CENTER',
+              read: false,
+              actionUrl: '/admin/policies',
+              createdAt: '2026-11-13T09:30:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Preview shows multiple lines separated by newlines
+    const previewEl = wrapper.find('.item-desc');
+    expect(previewEl.text()).toContain('Anda kini ditetapkan sebagai Pemilik Kebijakan menggantikan pejabat sebelumnya.');
+    expect(previewEl.text()).toContain('Kategori Kebijakan: Target Waktu Respon & Penanganan Kendala (Blocker SLA)');
+    expect(previewEl.text()).toContain('Pejabat Sebelumnya: Arif Budiman (Head of Engineering)');
+
+    await wrapper.find('.notif-item').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.modal-card').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Rincian Perubahan Pemilik Kebijakan');
+    expect(wrapper.text()).toContain('Buka Pengaturan Kebijakan');
   });
 });
 

@@ -195,7 +195,7 @@ export class PolicyService {
     if (!isAuthorized) {
       throw new AppException({
         code: ErrorCode.AUTH_FORBIDDEN_ROLE,
-        message: `Akses ditolak: Anda tidak terdaftar sebagai Pemilik Kebijakan (Authorized Policy Owner) aktif untuk kategori ${dto.category}. Sesuai prinsip tata kelola BR-15 & FR-34, wewenang penerbitan versi kebijakan hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.`,
+        message: `Akses ditolak: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori ${dto.category}. Wewenang penerbitan versi kebijakan hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.`,
         statusCode: HttpStatus.FORBIDDEN,
       });
     }
@@ -628,7 +628,7 @@ export class PolicyService {
   ) {
     const todayStr = this.clockService.todayString('Asia/Jakarta');
 
-    return this.prisma.$transaction(async (tx) => {
+    const txResult = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.policyOwnerAssignment.findUnique({
         where: { id: assignmentId },
         include: {
@@ -741,8 +741,23 @@ export class PolicyService {
         },
       });
 
-      return updated;
+      return { updated, previous: existing, effectiveDate: nextEffectiveDate };
     });
+
+    await this.notifyPolicyOwnerMutation({
+      action: 'UPDATED',
+      actorUserId,
+      assignmentId: txResult.updated.id,
+      category: txResult.updated.policyCategory,
+      previousCategory: txResult.previous.policyCategory,
+      targetUserId: txResult.updated.userId,
+      targetUserName: txResult.updated.user?.fullName,
+      previousUserId: txResult.previous.userId,
+      previousUserName: txResult.previous.user?.fullName,
+      effectiveDate: txResult.effectiveDate,
+    });
+
+    return txResult.updated;
   }
 
   /**
@@ -776,7 +791,7 @@ export class PolicyService {
       });
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async (tx) => {
       // Periksa apakah personil ini sudah aktif ditugaskan pada kategori yang sama
       const existingSameUser = await tx.policyOwnerAssignment.findFirst({
         where: {
@@ -795,7 +810,7 @@ export class PolicyService {
         });
       }
 
-      const created = await tx.policyOwnerAssignment.create({
+      const createdRecord = await tx.policyOwnerAssignment.create({
         data: {
           userId: dto.userId,
           policyCategory: dto.policyCategory,
@@ -815,11 +830,11 @@ export class PolicyService {
           actorUserId,
           actionCode: 'POLICY_OWNER_ASSIGNED',
           relatedEntityType: 'policy_owner_assignments',
-          relatedEntityId: created.id,
+          relatedEntityId: createdRecord.id,
           valueAfter: {
-            userId: created.userId,
-            userName: created.user.fullName,
-            category: created.policyCategory,
+            userId: createdRecord.userId,
+            userName: createdRecord.user.fullName,
+            category: createdRecord.policyCategory,
             effectiveDate: inputEffectiveStr,
           },
           ipAddress: meta?.ipAddress,
@@ -827,8 +842,20 @@ export class PolicyService {
         },
       });
 
-      return created;
+      return createdRecord;
     });
+
+    await this.notifyPolicyOwnerMutation({
+      action: 'ASSIGNED',
+      actorUserId,
+      assignmentId: created.id,
+      category: created.policyCategory,
+      targetUserId: created.userId,
+      targetUserName: created.user?.fullName,
+      effectiveDate,
+    });
+
+    return created;
   }
 
   /**
@@ -842,7 +869,7 @@ export class PolicyService {
     const todayStr = this.clockService.todayString('Asia/Jakarta');
     const today = new Date(todayStr);
 
-    return this.prisma.$transaction(async (tx) => {
+    const txResult = await this.prisma.$transaction(async (tx) => {
       const assignment = await tx.policyOwnerAssignment.findUnique({
         where: { id: assignmentId },
         include: {
@@ -889,8 +916,395 @@ export class PolicyService {
         },
       });
 
-      return { success: true, revokedId: assignmentId };
+      return { success: true, revokedId: assignmentId, assignment };
     });
+
+    await this.notifyPolicyOwnerMutation({
+      action: 'REVOKED',
+      actorUserId,
+      assignmentId,
+      category: txResult.assignment.policyCategory,
+      targetUserId: txResult.assignment.userId,
+      targetUserName: txResult.assignment.user?.fullName,
+      effectiveDate: today,
+    });
+
+    return { success: txResult.success, revokedId: txResult.revokedId };
+  }
+
+  private formatPolicyCategoryLabel(category: PolicyCategory): string {
+    switch (category) {
+      case PolicyCategory.CHECKIN_TIMING:
+        return 'Jam Kerja & Waktu Komitmen (Check-in Timing)';
+      case PolicyCategory.BLOCKER_SLA:
+        return 'Target Waktu Respon & Penanganan Kendala (Blocker SLA)';
+      case PolicyCategory.COMPLIANCE_THRESHOLD:
+        return 'Ambang Batas Kepatuhan & Disiplin Kerja (Compliance Threshold)';
+      case PolicyCategory.CORRECTION_WINDOW:
+        return 'Jendela Waktu Koreksi Mandiri (Correction Window)';
+      case PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD:
+        return 'Ambang Batas Pengingat & Notifikasi (Notification Reminder)';
+      default:
+        return String(category);
+    }
+  }
+
+  /**
+   * Mengirimkan notifikasi spesifik per peran (personal ke pihak terdampak dan pemberitahuan tata kelola
+   * wajib ke Direktur, Admin, serta HRGA) setiap kali terjadi perubahan pada tabel Penugasan Pemilik Kebijakan.
+   */
+  private async notifyPolicyOwnerMutation(params: {
+    action: 'ASSIGNED' | 'UPDATED' | 'REVOKED';
+    actorUserId: string;
+    assignmentId: string;
+    category: PolicyCategory;
+    previousCategory?: PolicyCategory;
+    targetUserId: string;
+    targetUserName?: string | null;
+    previousUserId?: string;
+    previousUserName?: string | null;
+    effectiveDate: Date;
+  }): Promise<void> {
+    try {
+      if (!this.prisma.notification?.createMany) {
+        return;
+      }
+
+      const todayStr = this.clockService.todayString('Asia/Jakarta');
+      const today = new Date(todayStr);
+
+      const userIdsToLookup = Array.from(
+        new Set(
+          [params.actorUserId, params.targetUserId, params.previousUserId].filter(
+            (id): id is string => Boolean(id),
+          ),
+        ),
+      );
+
+      const userDetailMap = new Map<
+        string,
+        { fullName: string; jobTitle?: string | null }
+      >();
+
+      const resolveDisplay = (userId: string, fallbackName?: string | null) => {
+        const info = userDetailMap.get(userId);
+        const name = info?.fullName || fallbackName || 'Pengguna';
+        return info?.jobTitle ? `${name} (${info.jobTitle})` : name;
+      };
+
+      const resolveName = (userId: string, fallbackName?: string | null) => {
+        return userDetailMap.get(userId)?.fullName || fallbackName || 'Pengguna';
+      };
+
+      // 1. Kumpulkan 3 akun tata kelola wajib (Direktur, Admin, HRGA) + detail nama pengguna terlibat
+      const governanceIds = new Set<string>();
+
+      if (this.prisma.organizationalAssignment?.findMany) {
+        try {
+          const orgRows = await this.prisma.organizationalAssignment.findMany({
+            where: {
+              role: {
+                in: [
+                  CanonicalRole.CEO_MANAGEMENT,
+                  CanonicalRole.SYSTEM_ADMIN,
+                  CanonicalRole.HRGA,
+                ],
+              },
+              effectiveDate: { lte: today },
+              OR: [{ endDate: null }, { endDate: { gte: today } }],
+              user: { status: UserStatus.ACTIVE },
+            },
+            select: {
+              userId: true,
+              jobTitle: true,
+              user: { select: { id: true, fullName: true } },
+            },
+          });
+          if (Array.isArray(orgRows)) {
+            for (const row of orgRows as any[]) {
+              if (row?.userId && typeof row.userId === 'string') {
+                governanceIds.add(row.userId);
+                if (row.user?.fullName) {
+                  userDetailMap.set(row.userId, {
+                    fullName: row.user.fullName,
+                    jobTitle: row.jobTitle || null,
+                  });
+                }
+              }
+            }
+          }
+        } catch {
+          // Abaikan jika mock tidak menyertakan relasi lengkap
+        }
+      }
+
+      if (this.prisma.user?.findMany) {
+        try {
+          const users = await this.prisma.user.findMany({
+            where: {
+              status: UserStatus.ACTIVE,
+              OR: [
+                { id: { in: userIdsToLookup } },
+                {
+                  email: {
+                    in: [
+                      'direktur@dutamedia.com',
+                      'admin@dutamedia.com',
+                      'hrga@dutamedia.com',
+                    ],
+                  },
+                },
+              ],
+            },
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              orgAssignments: {
+                where: {
+                  OR: [{ endDate: null }, { endDate: { gte: today } }],
+                },
+                orderBy: { effectiveDate: 'desc' },
+                select: { jobTitle: true },
+              },
+            },
+          });
+
+          if (Array.isArray(users)) {
+            for (const u of users as any[]) {
+              if (!u?.id) continue;
+              if (
+                u.email === 'direktur@dutamedia.com' ||
+                u.email === 'admin@dutamedia.com' ||
+                u.email === 'hrga@dutamedia.com'
+              ) {
+                governanceIds.add(u.id);
+              }
+              if (u.fullName) {
+                userDetailMap.set(u.id, {
+                  fullName: u.fullName,
+                  jobTitle: u.orgAssignments?.[0]?.jobTitle || null,
+                });
+              }
+            }
+          }
+        } catch {
+          // Fallback query tanpa relasi orgAssignments bila mock sederhana
+        }
+      }
+
+      const actorName = resolveName(params.actorUserId, 'Sistem Administrator');
+      const targetDisplay = resolveDisplay(
+        params.targetUserId,
+        params.targetUserName,
+      );
+      const prevDisplay = params.previousUserId
+        ? resolveDisplay(params.previousUserId, params.previousUserName)
+        : '';
+      const prevName = params.previousUserId
+        ? resolveName(params.previousUserId, params.previousUserName)
+        : '';
+
+      const categoryLabel = this.formatPolicyCategoryLabel(params.category);
+      const prevCategoryLabel = params.previousCategory
+        ? this.formatPolicyCategoryLabel(params.previousCategory)
+        : categoryLabel;
+
+      const effDateLabel = params.effectiveDate.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const notificationsToCreate: Array<{
+        recipientUserId: string;
+        triggerType: string;
+        channel: NotificationChannel;
+        title: string;
+        message: string;
+        actionUrl: string | null;
+        relatedEntityType: string;
+        relatedEntityId: string;
+      }> = [];
+
+      const notifiedUserIds = new Set<string>();
+      const pushNotif = (
+        recipientUserId: string,
+        triggerType: string,
+        title: string,
+        lines: string[],
+        actionUrl: string | null,
+      ) => {
+        if (!recipientUserId || notifiedUserIds.has(recipientUserId)) return;
+        notifiedUserIds.add(recipientUserId);
+        notificationsToCreate.push({
+          recipientUserId,
+          triggerType,
+          channel: NotificationChannel.IN_APP_CENTER,
+          title,
+          message: lines.join('\n'),
+          actionUrl,
+          relatedEntityType: 'policy_owner_assignments',
+          relatedEntityId: params.assignmentId,
+        });
+      };
+
+      if (params.action === 'ASSIGNED') {
+        pushNotif(
+          params.targetUserId,
+          'POLICY_OWNER_ASSIGNED',
+          'Penugasan Baru sebagai Pemilik Kebijakan',
+          [
+            'Anda telah ditetapkan sebagai Pemilik Kebijakan (Policy Owner) baru.',
+            `Kategori Kebijakan: ${categoryLabel}`,
+            'Status Wewenang Anda: Aktif (Dapat menerbitkan versi kebijakan baru pada kategori ini)',
+            `Mulai Berlaku: ${effDateLabel}`,
+            `Ditetapkan Oleh: ${actorName}`,
+          ],
+          '/admin/policies',
+        );
+
+        for (const govId of governanceIds) {
+          pushNotif(
+            govId,
+            'POLICY_OWNER_ASSIGNED',
+            'Penambahan Pemilik Kebijakan Baru',
+            [
+              'Penugasan Pemilik Kebijakan baru telah ditambahkan pada sistem tata kelola.',
+              `Kategori Kebijakan: ${categoryLabel}`,
+              `Pemilik Kebijakan Baru: ${targetDisplay}`,
+              'Status Wewenang: Aktif',
+              `Mulai Berlaku: ${effDateLabel}`,
+              `Ditetapkan Oleh: ${actorName}`,
+            ],
+            '/admin/policies',
+          );
+        }
+      } else if (params.action === 'UPDATED') {
+        const isReassigned =
+          Boolean(params.previousUserId) &&
+          params.previousUserId !== params.targetUserId;
+
+        if (isReassigned && params.previousUserId) {
+          pushNotif(
+            params.previousUserId,
+            'POLICY_OWNER_UPDATED',
+            'Pengalihan Wewenang Pemilik Kebijakan',
+            [
+              'Wewenang Anda sebagai Pemilik Kebijakan untuk kategori berikut telah dialihkan kepada pejabat lain.',
+              `Kategori Kebijakan: ${prevCategoryLabel}`,
+              `Pemilik Sebelumnya: ${prevName} (Anda)`,
+              `Dialihkan Kepada: ${targetDisplay}`,
+              'Status Wewenang Anda: Nonaktif pada kategori ini',
+              `Mulai Berlaku: ${effDateLabel}`,
+              `Diubah Oleh: ${actorName}`,
+            ],
+            null,
+          );
+
+          pushNotif(
+            params.targetUserId,
+            'POLICY_OWNER_UPDATED',
+            'Penugasan Baru sebagai Pemilik Kebijakan',
+            [
+              'Anda kini ditetapkan sebagai Pemilik Kebijakan menggantikan pejabat sebelumnya.',
+              `Kategori Kebijakan: ${categoryLabel}`,
+              `Pejabat Sebelumnya: ${prevDisplay}`,
+              'Status Wewenang Anda: Aktif (Dapat menerbitkan versi kebijakan baru pada kategori ini)',
+              `Mulai Berlaku: ${effDateLabel}`,
+              `Diubah Oleh: ${actorName}`,
+            ],
+            '/admin/policies',
+          );
+
+          for (const govId of governanceIds) {
+            pushNotif(
+              govId,
+              'POLICY_OWNER_UPDATED',
+              'Perubahan Penugasan Pemilik Kebijakan',
+              [
+                'Data penugasan Pemilik Kebijakan telah diperbarui pada sistem tata kelola.',
+                `Kategori Kebijakan: ${categoryLabel}`,
+                `Pemilik Sebelumnya: ${prevDisplay}`,
+                `Pemilik Baru: ${targetDisplay}`,
+                `Mulai Berlaku: ${effDateLabel}`,
+                `Diubah Oleh: ${actorName}`,
+              ],
+              '/admin/policies',
+            );
+          }
+        } else {
+          pushNotif(
+            params.targetUserId,
+            'POLICY_OWNER_UPDATED',
+            'Pembaruan Penugasan Pemilik Kebijakan Anda',
+            [
+              'Ketentuan penugasan Anda sebagai Pemilik Kebijakan telah diperbarui.',
+              `Kategori Kebijakan: ${categoryLabel}`,
+              'Status Wewenang Anda: Aktif (Dapat menerbitkan versi kebijakan baru pada kategori ini)',
+              `Mulai Berlaku: ${effDateLabel}`,
+              `Diubah Oleh: ${actorName}`,
+            ],
+            '/admin/policies',
+          );
+
+          for (const govId of governanceIds) {
+            pushNotif(
+              govId,
+              'POLICY_OWNER_UPDATED',
+              'Perubahan Penugasan Pemilik Kebijakan',
+              [
+                'Data penugasan Pemilik Kebijakan telah diperbarui pada sistem tata kelola.',
+                `Kategori Kebijakan: ${categoryLabel}`,
+                `Pemilik Kebijakan: ${targetDisplay}`,
+                `Mulai Berlaku: ${effDateLabel}`,
+                `Diubah Oleh: ${actorName}`,
+              ],
+              '/admin/policies',
+            );
+          }
+        }
+      } else if (params.action === 'REVOKED') {
+        pushNotif(
+          params.targetUserId,
+          'POLICY_OWNER_REVOKED',
+          'Pencabutan Wewenang Pemilik Kebijakan',
+          [
+            'Wewenang Anda sebagai Pemilik Kebijakan untuk kategori berikut telah dicabut.',
+            `Kategori Kebijakan: ${categoryLabel}`,
+            'Status Wewenang Anda: Nonaktif (Tidak lagi dapat menerbitkan versi kebijakan pada kategori ini)',
+            `Tanggal Pencabutan: ${effDateLabel}`,
+            `Dicabut Oleh: ${actorName}`,
+          ],
+          null,
+        );
+
+        for (const govId of governanceIds) {
+          pushNotif(
+            govId,
+            'POLICY_OWNER_REVOKED',
+            'Pencabutan Penugasan Pemilik Kebijakan',
+            [
+              'Wewenang salah satu Pemilik Kebijakan telah dicabut dari sistem tata kelola.',
+              `Kategori Kebijakan: ${categoryLabel}`,
+              `Personil yang Dicabut: ${targetDisplay}`,
+              'Status Wewenang: Nonaktif pada kategori ini',
+              `Tanggal Pencabutan: ${effDateLabel}`,
+              `Dicabut Oleh: ${actorName}`,
+            ],
+            '/admin/policies',
+          );
+        }
+      }
+
+      if (notificationsToCreate.length > 0) {
+        await this.prisma.notification.createMany({
+          data: notificationsToCreate,
+        });
+      }
+    } catch (err) {
+      console.error('Gagal mengirim notifikasi perubahan pemilik kebijakan:', err);
+    }
   }
 
   /**

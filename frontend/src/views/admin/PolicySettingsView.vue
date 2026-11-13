@@ -456,9 +456,8 @@ async function submitNewVersion() {
     return;
   }
 
-  // Penegakan wewenang BR-15 & FR-34 di sisi antarmuka
   if (!canEditCategory(formCategory.value)) {
-    modalError.value = `Akses Ditolak: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori "${getCategoryLabel(formCategory.value)}". Sesuai tata kelola BR-15 & FR-34, wewenang penerbitan versi baru hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.`;
+    modalError.value = `Akses Ditolak: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori "${getCategoryLabel(formCategory.value)}". Wewenang penerbitan versi baru hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.`;
     return;
   }
 
@@ -1348,7 +1347,7 @@ onUnmounted(() => {
             </select>
             <div v-if="!canEditCategory(formCategory)" class="category-wewenang-alert mt-2">
               <AlertTriangle :size="16" />
-              <span>Perhatian (BR-15 &amp; FR-34): Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori ini. Wewenang perubahan hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.</span>
+              <span>Perhatian: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori ini. Wewenang perubahan hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.</span>
             </div>
           </div>
 
@@ -1593,7 +1592,7 @@ onUnmounted(() => {
           </div>
 
           <p class="helper-text mt-3">
-            Pencabutan ini akan menonaktifkan hak akses personil tersebut untuk menerbitkan versi baru pada kategori kebijakan ini (BR-15 &amp; FR-34). Tindakan ini akan dicatat dalam Jejak Audit resmi.
+            Pencabutan ini akan menonaktifkan hak akses personil tersebut untuk menerbitkan versi baru pada kategori kebijakan ini. Tindakan ini akan dicatat dalam Jejak Audit resmi.
           </p>
 
           <div class="modal-actions mt-4">

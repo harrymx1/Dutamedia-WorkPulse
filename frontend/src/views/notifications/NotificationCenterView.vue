@@ -250,7 +250,16 @@ function normalizeStructuredMessage(raw: string): string {
   if (!text.includes('\n') && text.includes('Kategori Kebijakan:')) {
     const splitKeys = [
       'Kategori Kebijakan:',
+      'Pemilik Kebijakan Baru:',
+      'Pemilik Sebelumnya:',
+      'Pejabat Sebelumnya:',
+      'Dialihkan Kepada:',
+      'Pemilik Baru:',
+      'Personil yang Dicabut:',
+      'Status Wewenang Anda:',
+      'Status Wewenang:',
       'Mulai Berlaku:',
+      'Tanggal Pencabutan:',
       'Batas Tepat Waktu Pagi:',
       'Batas Kunci Formulir Pagi (Cut-Off):',
       'Batas Tepat Waktu Sore (EOD):',
@@ -268,6 +277,8 @@ function normalizeStructuredMessage(raw: string): string {
       'Artinya bagi Anda:',
       'Alasan Perubahan:',
       'Diubah Oleh:',
+      'Ditetapkan Oleh:',
+      'Dicabut Oleh:',
     ];
     for (const key of splitKeys) {
       text = text.replace(new RegExp(`\\s+(?=${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g'), '\n');
@@ -276,17 +287,38 @@ function normalizeStructuredMessage(raw: string): string {
   return text;
 }
 
+function cleanStructuredLine(line: string): { label?: string; value: string; text: string } {
+  const colonIdx = line.indexOf(':');
+  if (colonIdx === -1) {
+    return { value: line, text: line };
+  }
+  let label = line.substring(0, colonIdx).trim();
+  let value = line.substring(colonIdx + 1).trim();
+
+  // Normalisasi label lama dan bersihkan awalan "Tetap " agar tampilan selalu rapi
+  if (label === 'Batas Respon Atasan Langsung') label = 'Batas Respon Jenjang Pertama';
+  if (label === 'Batas Respon Kepala Divisi') label = 'Batas Penanganan Jenjang Lanjutan';
+  if (label === 'Batas Naik ke Atasan Berikutnya') label = 'Batas Waktu Naik ke Atasan Berikutnya';
+  value = value.replace(/^Tetap\s+/i, '');
+
+  return { label, value, text: `${label}: ${value}` };
+}
+
 function getNotificationPreview(message: string): string {
   if (!message) return '';
   const normalized = normalizeStructuredMessage(message);
   if (normalized.includes('\n')) {
-    const lines = normalized.split('\n').map((l) => l.trim()).filter(Boolean);
+    const lines = normalized
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => cleanStructuredLine(l).text);
     const intro = lines[0] || '';
     const impactLine = lines.find((l) => l.startsWith('Artinya bagi Anda:'));
     if (impactLine) {
-      return `${intro} ${impactLine}`;
+      return `${intro}\n${impactLine}`;
     }
-    return intro;
+    return lines.slice(0, 6).join('\n');
   }
   return message;
 }
@@ -295,12 +327,16 @@ function getActionButtonLabel(actionUrl?: string): string {
   if (actionUrl === '/leave/queue') return 'Buka Antrean Persetujuan Cuti';
   if (actionUrl === '/blockers') return 'Buka Antrean Eskalasi Blocker';
   if (actionUrl === '/daily/morning') return 'Buka Morning Commitment';
+  if (actionUrl === '/admin/policies') return 'Buka Pengaturan Kebijakan';
   return 'Buka Halaman Terkait';
 }
 
 function getDelegationHeading(notifOrType?: NotificationItem | string | null): string {
   const type = typeof notifOrType === 'string' ? notifOrType : (notifOrType?.type || '');
   const title = typeof notifOrType === 'object' && notifOrType ? (notifOrType.title || '') : '';
+  if (type === 'POLICY_OWNER_ASSIGNED') return 'Rincian Penetapan Pemilik Kebijakan';
+  if (type === 'POLICY_OWNER_UPDATED') return 'Rincian Perubahan Pemilik Kebijakan';
+  if (type === 'POLICY_OWNER_REVOKED') return 'Rincian Pencabutan Wewenang Pemilik Kebijakan';
   if (type.includes('POLICY') || title.includes('Kebijakan')) return 'Rincian Perubahan Kebijakan Operasional';
   if (!type) return 'Mandat Wewenang & Tata Kelola Delegasi Reviewer';
   if (type.includes('TEAM_NOTICE')) return 'Rincian Pelimpahan Wewenang Atasan Tim Anda';
@@ -352,25 +388,28 @@ function parseDelegationContent(message: string): DelegationParsedContent {
       }
 
       if (colonIdx !== -1) {
-        let label = line.substring(0, colonIdx).trim();
-        let value = line.substring(colonIdx + 1).trim();
-
-        // Normalisasi label lama dan bersihkan awalan "Tetap " agar tampilan selalu rapi
-        if (label === 'Batas Respon Atasan Langsung') label = 'Batas Respon Jenjang Pertama';
-        if (label === 'Batas Respon Kepala Divisi') label = 'Batas Penanganan Jenjang Lanjutan';
-        if (label === 'Batas Naik ke Atasan Berikutnya') label = 'Batas Waktu Naik ke Atasan Berikutnya';
-        value = value.replace(/^Tetap\s+/i, '');
+        const cleaned = cleanStructuredLine(line);
+        const label = cleaned.label || '';
+        const value = cleaned.value;
 
         const isHighlight = [
           'Mandat',
           'Wewenang',
           'Status',
+          'Kategori Kebijakan',
+          'Pemilik Kebijakan Baru',
+          'Pemilik Baru',
+          'Pemilik Sebelumnya',
+          'Pejabat Sebelumnya',
+          'Dialihkan Kepada',
+          'Personil yang Dicabut',
           'Periode Berlaku',
           'Periode Pelimpahan',
           'Periode Baru',
           'Pejabat Pengganti',
           'Menggantikan',
           'Mulai Berlaku',
+          'Tanggal Pencabutan',
           'Batas Tepat Waktu',
           'Batas Kunci',
           'Batas Respon',
