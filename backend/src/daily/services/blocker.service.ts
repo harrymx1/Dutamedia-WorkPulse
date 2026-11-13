@@ -1091,8 +1091,8 @@ export class BlockerService {
         },
       },
       orderBy: [
-        { severity: 'desc' },
         { raisedAt: 'desc' },
+        { id: 'desc' },
       ],
     });
   }

@@ -8,6 +8,7 @@ import {
   BLOCKER_STATUS_FILTER_OPTIONS,
   getBlockerStatusLabel,
   isActiveBlockerStatus,
+  sortBlockersByNewest,
   type BlockerTicketStatus,
 } from '../../utils/blockerStatus';
 import {
@@ -119,7 +120,7 @@ async function loadBlockers() {
 
     const res = await apiClient<BlockerTicketItem[]>(url);
     if (res.data) {
-      blockers.value = res.data;
+      blockers.value = sortBlockersByNewest(res.data);
       if (blockers.value.length > 0 && !selectedTicket.value) {
         selectedTicket.value = blockers.value[0];
       } else if (selectedTicket.value) {
@@ -201,10 +202,12 @@ const totalActiveCount = computed(
 );
 
 const filteredBlockers = computed(() => {
-  return blockers.value.filter((b) => {
-    if (typeFilter.value !== 'ALL' && b.type !== typeFilter.value) return false;
-    return true;
-  });
+  return sortBlockersByNewest(
+    blockers.value.filter((b) => {
+      if (typeFilter.value !== 'ALL' && b.type !== typeFilter.value) return false;
+      return true;
+    }),
+  );
 });
 
 async function selectTicket(ticket: BlockerTicketItem) {

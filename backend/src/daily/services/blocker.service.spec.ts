@@ -607,5 +607,18 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       expect(metrics.blockers[0].isBreached).toBe(true);
       expect(metrics.blockers[1].isBreached).toBe(false);
     });
+
+    it('orders blocker queue by newest raisedAt descending regardless of severity', async () => {
+      mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+
+      await service.getBlockerQueue({ raisedByUserId: 'emp-1' });
+
+      expect(mockPrisma.blockerTicket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { raisedByUserId: 'emp-1' },
+          orderBy: [{ raisedAt: 'desc' }, { id: 'desc' }],
+        }),
+      );
+    });
   });
 });

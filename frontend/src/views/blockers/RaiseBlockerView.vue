@@ -4,7 +4,11 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
-import { BLOCKER_STATUS_LABELS, getBlockerStatusLabel } from '../../utils/blockerStatus';
+import {
+  BLOCKER_STATUS_LABELS,
+  getBlockerStatusLabel,
+  sortBlockersByNewest,
+} from '../../utils/blockerStatus';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -380,19 +384,17 @@ const countClosed = computed(
 );
 
 const filteredBlockers = computed(() => {
+  let items = myBlockers.value;
   if (blockerFilter.value === 'open') {
-    return myBlockers.value.filter((b) => b.status === 'OPEN');
+    items = items.filter((b) => b.status === 'OPEN');
+  } else if (blockerFilter.value === 'handling') {
+    items = items.filter((b) => ['ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status));
+  } else if (blockerFilter.value === 'resolved') {
+    items = items.filter((b) => ['RESOLVED', 'ACCEPTED_RISK'].includes(b.status));
+  } else if (blockerFilter.value === 'closed') {
+    items = items.filter((b) => b.status === 'CLOSED');
   }
-  if (blockerFilter.value === 'handling') {
-    return myBlockers.value.filter((b) => ['ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status));
-  }
-  if (blockerFilter.value === 'resolved') {
-    return myBlockers.value.filter((b) => ['RESOLVED', 'ACCEPTED_RISK'].includes(b.status));
-  }
-  if (blockerFilter.value === 'closed') {
-    return myBlockers.value.filter((b) => b.status === 'CLOSED');
-  }
-  return myBlockers.value;
+  return sortBlockersByNewest(items);
 });
 
 function insertStructuredTemplate() {
@@ -495,7 +497,7 @@ async function loadMyBlockers() {
   try {
     const res = await apiClient<any[]>('/blockers?mine=raised');
     if (res.data) {
-      myBlockers.value = res.data;
+      myBlockers.value = sortBlockersByNewest(res.data);
     }
   } catch (err: any) {
     console.error('Failed to load my blockers:', err);

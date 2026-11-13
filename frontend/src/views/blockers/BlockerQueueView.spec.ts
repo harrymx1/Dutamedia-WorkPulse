@@ -152,4 +152,79 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('orders queue tickets newest-first across default and category-filtered views and selects newest first', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-old-crit',
+              description: '[Tiket Lama Critical] Sudah lama',
+              type: 'INFRA',
+              severity: 'CRITICAL',
+              impact: 'PRODUCTION',
+              status: 'CLOSED',
+              raisedAt: '2026-11-13T07:00:00.000Z',
+              targetResolutionAt: '2026-11-13T09:00:00.000Z',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              supportContributions: [],
+            },
+            {
+              id: 'blk-newest-high',
+              description: '[Tiket Baru High] Token vault 403',
+              type: 'APPROVAL',
+              severity: 'HIGH',
+              impact: 'MILESTONE',
+              status: 'OPEN',
+              raisedAt: '2026-11-13T09:20:00.000Z',
+              targetResolutionAt: '2026-11-13T13:20:00.000Z',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              supportContributions: [],
+            },
+            {
+              id: 'blk-mid-high',
+              description: '[Tiket Tengah Approval] Menunggu izin',
+              type: 'APPROVAL',
+              severity: 'MEDIUM',
+              impact: 'TASK',
+              status: 'OPEN',
+              raisedAt: '2026-11-13T08:10:00.000Z',
+              targetResolutionAt: '2026-11-13T16:10:00.000Z',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    const orderedCards = wrapper
+      .findAll('[data-testid^="ticket-card-"]')
+      .map((el) => el.attributes('data-testid'));
+    expect(orderedCards).toEqual([
+      'ticket-card-blk-newest-high',
+      'ticket-card-blk-mid-high',
+      'ticket-card-blk-old-crit',
+    ]);
+    expect(wrapper.find('[data-testid="ticket-detail-panel"]').text()).toContain('Token vault 403');
+
+    // Filter kategori tetap terurut dari paling baru ke paling lama
+    await wrapper.findAll('select').at(2)!.setValue('APPROVAL');
+    const filteredCards = wrapper
+      .findAll('[data-testid^="ticket-card-"]')
+      .map((el) => el.attributes('data-testid'));
+    expect(filteredCards).toEqual(['ticket-card-blk-newest-high', 'ticket-card-blk-mid-high']);
+
+    vi.unstubAllGlobals();
+  });
 });

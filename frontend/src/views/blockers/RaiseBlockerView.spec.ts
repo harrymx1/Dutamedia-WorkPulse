@@ -375,4 +375,47 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     expect(badgesText).toContain('Selesai Ditutup');
     expect(wrapper.findAll('[data-testid="reporter-confirm-label"]')).toHaveLength(2);
   });
+
+  it('sorts myBlockers newest-first regardless of severity or status across All and filter pills', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: any) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/blockers?mine=raised')) {
+          return Promise.resolve({
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              // Sengaja dikirim tidak urut (CRITICAL lama ditutup di depan, HIGH terbaru di belakang)
+              data: [
+                { id: 'old-crit', description: '[Tiket Lama Critical] Sudah ditutup', type: 'INFRA', severity: 'CRITICAL', impact: 'PRODUCTION', status: 'CLOSED', raisedAt: '2026-11-13T07:18:00Z' },
+                { id: 'mid-open', description: '[Tiket Tengah Medium] Masih open', type: 'TECHNICAL', severity: 'MEDIUM', impact: 'TASK', status: 'OPEN', raisedAt: '2026-11-13T08:00:00Z' },
+                { id: 'new-high', description: '[Tiket Baru High] Baru dilaporkan', type: 'APPROVAL', severity: 'HIGH', impact: 'MILESTONE', status: 'OPEN', raisedAt: '2026-11-13T09:20:00Z' },
+              ],
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    const allIds = wrapper.findAll('[data-ticket-id]').map((el) => el.attributes('data-ticket-id'));
+    expect(allIds).toEqual(['new-high', 'mid-open', 'old-crit']);
+
+    await wrapper.find('[data-testid="filter-open"]').trigger('click');
+    const openIds = wrapper.findAll('[data-ticket-id]').map((el) => el.attributes('data-ticket-id'));
+    expect(openIds).toEqual(['new-high', 'mid-open']);
+  });
 });

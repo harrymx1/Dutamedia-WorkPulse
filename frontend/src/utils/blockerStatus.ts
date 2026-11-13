@@ -46,3 +46,19 @@ export function getBlockerStatusLabel(status?: string | null): string {
   return BLOCKER_STATUS_LABELS[status as BlockerTicketStatus] ?? status;
 }
 
+/**
+ * Mengurutkan daftar tiket kendala dari waktu lapor paling baru ke paling lama
+ * (aman terhadap nilai tanggal kosong/invalid dan tidak memutasi array asal).
+ */
+export function sortBlockersByNewest<T extends { raisedAt?: string | Date | null }>(
+  items: readonly T[],
+): T[] {
+  return [...items].sort((a, b) => {
+    const timeA = a.raisedAt ? new Date(a.raisedAt).getTime() : 0;
+    const timeB = b.raisedAt ? new Date(b.raisedAt).getTime() : 0;
+    const safeA = Number.isNaN(timeA) ? 0 : timeA;
+    const safeB = Number.isNaN(timeB) ? 0 : timeB;
+    return safeB - safeA;
+  });
+}
+
