@@ -12,7 +12,12 @@ import {
   NotificationChannel,
   PolicyCategory,
 } from '@prisma/client';
-import { RaiseBlockerDto, ResolveBlockerDto } from '../dto/raise-blocker.dto';
+import {
+  AcceptRiskBlockerDto,
+  RaiseBlockerDto,
+  ReopenBlockerDto,
+  ResolveBlockerDto,
+} from '../dto/raise-blocker.dto';
 import { BlockerSlaConfig, CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
@@ -722,6 +727,7 @@ export class BlockerService {
 
   /**
    * Menyelesaikan tiket kendala dengan catatan mitigasi/resolusi wajib.
+   * Status menjadi RESOLVED (menunggu konfirmasi penutupan dari pelapor).
    */
   async resolveBlocker(actorUserId: string, blockerId: string, dto: ResolveBlockerDto) {
     const ticket = await this.prisma.blockerTicket.findUnique({
@@ -736,9 +742,17 @@ export class BlockerService {
       });
     }
 
+    if (ticket.status === BlockerStatus.CLOSED) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
     await this.verifyBlockerActionAuthority(actorUserId, ticket);
 
-    return this.prisma.blockerTicket.update({
+    const updated = await this.prisma.blockerTicket.update({
       where: { id: blockerId },
       data: {
         status: BlockerStatus.RESOLVED,
@@ -746,18 +760,247 @@ export class BlockerService {
         resolutionNote: dto.resolutionNote.trim(),
       },
     });
+
+    if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      await this.createBlockerNotification({
+        recipientUserId: ticket.raisedByUserId,
+        triggerType: 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
+        title: `Solusi Diberikan: ${this.extractCleanBlockerTitle(ticket.description)}`,
+        message:
+          'Penanggung jawab telah memberikan solusi pada tiket kendala Anda. Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.',
+        actionUrl: '/raise-blockers?tab=mine',
+        relatedEntityId: ticket.id,
+      });
+    }
+
+    return updated;
   }
 
   /**
-   * Memastikan hanya pemilik eskalasi (assignedOwnerId), pelapor (raisedByUserId),
-   * pejabat manajerial (SUPERVISOR/HEAD/PROJECT_MANAGER/HRGA/CEO/ADMIN), atau Project Lead aktif
-   * yang dapat melakukan Acknowledge / Resolve terhadap tiket kendala.
+   * Menetapkan keputusan Terima Risiko (Accepted Risk) pada tiket kendala
+   * dengan justifikasi & rencana mitigasi wajib. Menunggu konfirmasi pelapor.
+   */
+  async acceptRiskBlocker(actorUserId: string, blockerId: string, dto: AcceptRiskBlockerDto) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+    });
+
+    if (!ticket) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Tiket kendala tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (ticket.status === BlockerStatus.CLOSED) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    await this.verifyBlockerActionAuthority(actorUserId, ticket);
+
+    const updated = await this.prisma.blockerTicket.update({
+      where: { id: blockerId },
+      data: {
+        status: BlockerStatus.ACCEPTED_RISK,
+        resolvedAt: ticket.resolvedAt ?? this.clockService.now(),
+        riskAcceptanceJustification: dto.riskAcceptanceJustification.trim(),
+        riskMitigationPlan: dto.riskMitigationPlan.trim(),
+      },
+    });
+
+    if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      await this.createBlockerNotification({
+        recipientUserId: ticket.raisedByUserId,
+        triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
+        title: `Risiko Diterima (Mitigasi Aktif): ${this.extractCleanBlockerTitle(ticket.description)}`,
+        message:
+          'Penanggung jawab menetapkan status Terima Risiko beserta rencana mitigasi. Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.',
+        actionUrl: '/raise-blockers?tab=mine',
+        relatedEntityId: ticket.id,
+      });
+    }
+
+    return updated;
+  }
+
+  /**
+   * Menutup tiket kendala secara final (CLOSED). Hanya pelapor asli yang berhak mengonfirmasi.
+   */
+  async closeBlocker(actorUserId: string, blockerId: string) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+    });
+
+    if (!ticket) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Tiket kendala tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: 'Hanya pelapor asli tiket kendala ini yang dapat mengonfirmasi dan menutup tiket.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (
+      ticket.status !== BlockerStatus.RESOLVED &&
+      ticket.status !== BlockerStatus.ACCEPTED_RISK
+    ) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message:
+          'Tiket hanya dapat ditutup setelah penanggung jawab memberikan solusi (RESOLVED) atau menetapkan penerimaan risiko (ACCEPTED_RISK).',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    const closedAt = this.clockService.now();
+    const updated = await this.prisma.blockerTicket.update({
+      where: { id: blockerId },
+      data: {
+        status: BlockerStatus.CLOSED,
+        closedAt,
+      },
+    });
+
+    if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
+      await this.createBlockerNotification({
+        recipientUserId: ticket.assignedOwnerId,
+        triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
+        title: `Tiket Ditutup Pelapor: ${this.extractCleanBlockerTitle(ticket.description)}`,
+        message: 'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala ini.',
+        actionUrl: '/blockers',
+        relatedEntityId: ticket.id,
+      });
+    }
+
+    return updated;
+  }
+
+  /**
+   * Mengembalikan tiket kendala ke status ACKNOWLEDGED apabila pelapor menyatakan solusi/mitigasi belum memadai.
+   */
+  async reopenBlocker(actorUserId: string, blockerId: string, dto: ReopenBlockerDto) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+    });
+
+    if (!ticket) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Tiket kendala tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: 'Hanya pelapor asli tiket kendala ini yang dapat mengembalikan tiket untuk ditangani ulang.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (
+      ticket.status !== BlockerStatus.RESOLVED &&
+      ticket.status !== BlockerStatus.ACCEPTED_RISK
+    ) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message:
+          'Tiket hanya dapat dikembalikan apabila sedang berstatus RESOLVED atau ACCEPTED_RISK.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    const trimmedReason = dto.reopenReason.trim();
+    if ((this.prisma as any).supportContribution?.create) {
+      await this.prisma.supportContribution.create({
+        data: {
+          blockerId,
+          supporterUserId: actorUserId,
+          actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+          resultNote: trimmedReason,
+        },
+      });
+    }
+
+    const updated = await this.prisma.blockerTicket.update({
+      where: { id: blockerId },
+      data: {
+        status: BlockerStatus.ACKNOWLEDGED,
+        resolvedAt: null,
+      },
+    });
+
+    if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
+      await this.createBlockerNotification({
+        recipientUserId: ticket.assignedOwnerId,
+        triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
+        title: `Tiket Dikembalikan Pelapor: ${this.extractCleanBlockerTitle(ticket.description)}`,
+        message: `Pelapor menyatakan solusi/mitigasi belum memadai: "${trimmedReason}". Status tiket kembali menjadi ACKNOWLEDGED.`,
+        actionUrl: '/blockers',
+        relatedEntityId: ticket.id,
+      });
+    }
+
+    return updated;
+  }
+
+  private extractCleanBlockerTitle(rawDescription?: string | null): string {
+    const raw = (rawDescription || '').trim();
+    if (!raw) return 'Tiket Kendala';
+    const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]*\)\s*$/i, '').trim();
+    const match = withoutExpectation.match(/^\[(.+?)\]/);
+    if (match?.[1]?.trim()) {
+      return match[1].trim().slice(0, 90);
+    }
+    return withoutExpectation.slice(0, 90);
+  }
+
+  private async createBlockerNotification(params: {
+    recipientUserId: string;
+    triggerType: string;
+    title: string;
+    message: string;
+    actionUrl: string;
+    relatedEntityId: string;
+  }): Promise<void> {
+    if (!(this.prisma as any).notification?.create) {
+      return;
+    }
+    await this.prisma.notification.create({
+      data: {
+        recipientUserId: params.recipientUserId,
+        triggerType: params.triggerType,
+        channel: NotificationChannel.IN_APP_CENTER,
+        title: params.title,
+        message: params.message,
+        actionUrl: params.actionUrl,
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: params.relatedEntityId,
+      },
+    });
+  }
+
+  /**
+   * Memastikan hanya pemilik eskalasi (assignedOwnerId),
+   * pejabat manajerial (SUPERVISOR/HEAD/PROJECT_MANAGER/HRGA/CEO/ADMIN), Project Lead aktif,
+   * atau Temporary Reviewer aktif yang dapat melakukan Acknowledge / Resolve / Accept Risk.
+   * Pelapor asli tidak boleh menutup sendiri fase penanganan PIC.
    */
   private async verifyBlockerActionAuthority(actorUserId: string, ticket: any): Promise<void> {
-    if (
-      ticket.assignedOwnerId === actorUserId ||
-      ticket.raisedByUserId === actorUserId
-    ) {
+    if (ticket.assignedOwnerId === actorUserId) {
       return;
     }
 

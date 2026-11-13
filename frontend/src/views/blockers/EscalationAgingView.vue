@@ -73,6 +73,19 @@ const filteredBlockers = computed(() => {
   });
 });
 
+function formatCleanBlockerSummary(rawDescription?: string): string {
+  const raw = (rawDescription || '').trim();
+  if (!raw) return '-';
+  const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]+\)\s*$/i, '').trim();
+  const match = withoutExpectation.match(/^\[(.+?)\]\s*(.*)$/s);
+  if (match) {
+    const title = match[1].trim();
+    const body = match[2].trim();
+    return body ? `${title} — ${body}` : title;
+  }
+  return withoutExpectation;
+}
+
 onMounted(() => {
   loadAgingMetrics();
 });
@@ -100,10 +113,10 @@ onMounted(() => {
       <!-- Page Heading -->
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Pengawasan Eksekutif &amp; Peringatan SLA</span>
+          <span class="eyebrow">Pengawasan Eksekutif &amp; Peringatan Batas Waktu</span>
           <h1>Keterlambatan Penanganan Blocker</h1>
           <p class="subtitle">
-            Pantau radar penuaan kendala aktif, identifikasi hambatan yang melampaui ambang batas waktu SLA, dan dorong intervensi manajerial tepat waktu.
+            Pantau radar penuaan kendala aktif, identifikasi hambatan yang melampaui ambang batas waktu penanganan, dan dorong intervensi manajerial tepat waktu.
           </p>
         </div>
         <div class="heading-side">
@@ -122,9 +135,9 @@ onMounted(() => {
         </div>
 
         <div class="metric-card alert-breach">
-          <div class="metric-label">Terlewat SLA (Breached)</div>
+          <div class="metric-label">Lewat Batas Waktu</div>
           <div class="metric-value">{{ data?.summary.breachedCount ?? 0 }}</div>
-          <div class="metric-sub">Tiket melampaui SLA Level 1 / Level 2</div>
+          <div class="metric-sub">Tiket melampaui target batas penanganan</div>
         </div>
 
         <div class="metric-card alert-critical">
@@ -134,7 +147,7 @@ onMounted(() => {
         </div>
 
         <div class="metric-card rate-card">
-          <div class="metric-label">SLA Compliance Rate</div>
+          <div class="metric-label">Tingkat Ketepatan Waktu</div>
           <div class="metric-value">{{ data?.summary.slaComplianceRate ?? 100 }}%</div>
           <div class="metric-sub">Persentase tiket terselesaikan tepat waktu</div>
         </div>
@@ -156,7 +169,7 @@ onMounted(() => {
 
               <label class="toggle-label">
                 <input type="checkbox" v-model="breachOnlyFilter" />
-                <span>Hanya Terlewat SLA</span>
+                <span>Hanya Lewat Batas Waktu</span>
               </label>
             </div>
           </div>
@@ -170,7 +183,7 @@ onMounted(() => {
           <div v-else-if="filteredBlockers.length === 0" class="empty-state">
             <CheckCircle2 :size="36" class="empty-icon" />
             <h3>Tidak Ada Kendala Tertahan</h3>
-            <p>Seluruh kendala aktif tertangani dalam batas waktu SLA kebijakan.</p>
+            <p>Seluruh kendala aktif tertangani dalam batas waktu penanganan kebijakan.</p>
           </div>
 
           <table v-else class="aging-table">
@@ -181,7 +194,7 @@ onMounted(() => {
                 <th>Penanggung Jawab</th>
                 <th>Tingkat Keparahan</th>
                 <th>Umur Kendala</th>
-                <th>Status SLA</th>
+                <th>Status Batas Waktu</th>
                 <th>Aksi</th>
               </tr>
             </thead>
@@ -197,7 +210,7 @@ onMounted(() => {
                     <span class="type-pill">{{ item.type }}</span>
                     <span v-if="item.projectCodeReference" class="proj-pill">{{ item.projectCodeReference }}</span>
                   </div>
-                  <div class="ticket-title-desc">{{ item.description }}</div>
+                  <div class="ticket-title-desc">{{ formatCleanBlockerSummary(item.description) }}</div>
                 </td>
 
                 <!-- Kolom 2: Pelapor -->

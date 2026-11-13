@@ -3013,13 +3013,13 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 - **Expected Final Result:** Rantai siklus kerja harian 100% terintegrasi tanpa putus dari input pagi hingga tinjauan atasan sore hari.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot ringkasan EOD Employee dan screenshot dasbor Team Pulse Supervisor yang mencatat capaian bawahan.
-- **Actual Result:** 
-- **Execution Status:** 
-- **Tester:** 
-- **Execution Date:** 
-- **Defect ID:** 
-- **Retest Result:** 
-- **Catatan:** 
+- **Actual Result:** Siklus harian penuh dari Morning Commitment (2 komitmen proyek `WP-CORE`), pencatatan Additional Work (`Meeting darurat arsitektur database`), evaluasi EOD Outcome (3 item evaluasi terkunci), hingga pemantauan metrik partisipasi `Pulse Dashboard` oleh Project Lead (`Bambang Pratama`) berjalan mulus dan terintegrasi. Temuan UI EOD terkunci yang sebelumnya masih merender kontrol input `disabled` telah dirapikan menjadi Read-Only Summary View (`IMP-045`).
+- **Execution Status:** Pass
+- **Tester:** Harry
+- **Execution Date:** 2026-11-13
+- **Defect ID:** IMP-045 (UI Improvement — Resolved)
+- **Retest Result:** Passed (Unit Test + Production Build Verified)
+- **Catatan:** Bukti screenshot: `media_1794543264904_f6026a58.png`, `media_1794543305814_1d9e407e.png`, `media_1794543462768_72610dd6.png`, `media_1794543571263_54ca00b1.jpg`.
 
 ---
 
@@ -3058,12 +3058,12 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Data:** `Gateway network route telah di-reroute ke redundant subnet dan failover sukses.`
    - **Hasil yang diharapkan:** Status blocker bertransisi menjadi `RESOLVED`.
    - **Verifikasi:** Blocker ditutup dan tercatat di riwayat selesai.
-4. **Langkah 4 (Verifikasi Karyawan)**
-   - **Aksi:** Logout dan login kembali sebagai Employee. Buka riwayat blocker pribadi.
-   - **Lokasi:** `/blockers`.
+4. **Langkah 4 (Verifikasi & Penutupan oleh Karyawan)**
+   - **Aksi:** Logout dan login kembali sebagai Employee. Buka menu `Lapor Blocker` -> tab `Blocker Saya` (atau klik notifikasi `Lihat & Konfirmasi Tiket Saya`), cek catatan penyelesaian pada tiket, lalu klik **Konfirmasi & Tutup Tiket**.
+   - **Lokasi:** `/raise-blockers?tab=mine`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Karyawan melihat blocker yang dilaporkannya telah berstatus `RESOLVED` lengkap dengan deskripsi solusi dari Tech Lead.
-   - **Verifikasi:** Karyawan mendapatkan kepastian bahwa hambatannya telah diselesaikan oleh pimpinan.
+   - **Hasil yang diharapkan:** Sebelum dikonfirmasi, status tiket tampil sebagai `Solusi Diberikan · Menunggu Konfirmasi` (dan `ACCEPTED_RISK` sebagai `Risiko Diterima · Menunggu Konfirmasi` jika supervisor memilih Terima Risiko). Setelah karyawan mengklik **Konfirmasi & Tutup Tiket**, status berubah permanen menjadi `CLOSED` (`Selesai Ditutup`) dan counter `Menunggu Konfirmasi` berkurang / berpindah ke filter `Selesai / Ditutup`. Jika memilih **Belum Memadai (Kembalikan)** dengan alasan minimal 10 karakter, tiket kembali ke `ACKNOWLEDGED`.
+   - **Verifikasi:** Siklus kendala selesai secara akuntabel dengan validasi dua pihak (PIC menyelesaikan/mitigasi -> Pelapor mengonfirmasi penutupan).
 
 - **Expected Final Result:** Alur eskalasi dan resolusi hambatan berjalan mulus, kolaboratif, dan terdokumentasi rapi.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot kartu blocker berstatus RESOLVED lengkap dengan riwayat intervensi atasan.

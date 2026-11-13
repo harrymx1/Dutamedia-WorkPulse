@@ -9,7 +9,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BlockerService } from '../services/blocker.service';
-import { RaiseBlockerDto, ResolveBlockerDto } from '../dto/raise-blocker.dto';
+import {
+  AcceptRiskBlockerDto,
+  RaiseBlockerDto,
+  ReopenBlockerDto,
+  ResolveBlockerDto,
+} from '../dto/raise-blocker.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { AuthorityContext, BlockerStatus } from '@prisma/client';
@@ -75,6 +80,29 @@ export class BlockerController {
     @Body() dto: ResolveBlockerDto,
   ) {
     return this.blockerService.resolveBlocker(req.user.id, id, dto);
+  }
+
+  @Post(':id/accept-risk')
+  async acceptRiskBlocker(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: AcceptRiskBlockerDto,
+  ) {
+    return this.blockerService.acceptRiskBlocker(req.user.id, id, dto);
+  }
+
+  @Post(':id/close')
+  async closeBlocker(@Req() req: any, @Param('id') id: string) {
+    return this.blockerService.closeBlocker(req.user.id, id);
+  }
+
+  @Post(':id/reopen')
+  async reopenBlocker(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: ReopenBlockerDto,
+  ) {
+    return this.blockerService.reopenBlocker(req.user.id, id, dto);
   }
 
   @Post(':id/support')

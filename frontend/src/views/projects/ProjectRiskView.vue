@@ -199,7 +199,7 @@ onMounted(() => {
             <span class="pill red">Macet</span>
           </div>
           <div class="metric-value text-red">{{ countCritical }}</div>
-          <div class="metric-note">SLA terlanggar</div>
+          <div class="metric-note">Lewat batas waktu</div>
         </button>
       </div>
 

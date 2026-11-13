@@ -414,13 +414,132 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
     });
 
     it('resolves blocker ticket with mandatory resolution note', async () => {
-      mockPrisma.blockerTicket.findUnique.mockResolvedValue({ id: 'blk-1', status: BlockerStatus.ACKNOWLEDGED });
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-1',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Gateway 504] Timeout dari staging',
+      });
       mockPrisma.blockerTicket.update.mockResolvedValue({ id: 'blk-1', status: BlockerStatus.RESOLVED });
 
       const res = await service.resolveBlocker('owner-1', 'blk-1', {
         resolutionNote: 'Kapasitas instance diperbesar dan indeks telah ditambahkan',
       });
       expect(res.status).toBe(BlockerStatus.RESOLVED);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'emp-1',
+            triggerType: 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
+            actionUrl: '/raise-blockers?tab=mine',
+          }),
+        }),
+      );
+    });
+
+    it('rejects resolve when ticket is already CLOSED', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-closed',
+        status: BlockerStatus.CLOSED,
+        assignedOwnerId: 'owner-1',
+      });
+
+      await expect(
+        service.resolveBlocker('owner-1', 'blk-closed', {
+          resolutionNote: 'Catatan resolusi tambahan setelah ditutup',
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('accepts risk with mandatory justification and mitigation plan', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-risk',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Vendor API Terbatas] Quota API pihak ketiga habis',
+      });
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-risk',
+        status: BlockerStatus.ACCEPTED_RISK,
+      });
+
+      const res = await service.acceptRiskBlocker('owner-1', 'blk-risk', {
+        riskAcceptanceJustification: 'Penambahan kuota vendor membutuhkan persetujuan kuartal depan',
+        riskMitigationPlan: 'Gunakan data cache harian dan batasi sinkronisasi ke jam malam',
+      });
+
+      expect(res.status).toBe(BlockerStatus.ACCEPTED_RISK);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'emp-1',
+            triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
+            actionUrl: '/raise-blockers?tab=mine',
+          }),
+        }),
+      );
+    });
+
+    it('allows only original reporter to close RESOLVED/ACCEPTED_RISK ticket permanently', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-res',
+        status: BlockerStatus.RESOLVED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Gateway 504] Timeout',
+      });
+
+      await expect(service.closeBlocker('owner-1', 'blk-res')).rejects.toThrow();
+
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-res',
+        status: BlockerStatus.CLOSED,
+      });
+
+      const closed = await service.closeBlocker('emp-1', 'blk-res');
+      expect(closed.status).toBe(BlockerStatus.CLOSED);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'owner-1',
+            triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
+          }),
+        }),
+      );
+    });
+
+    it('reopens RESOLVED ticket back to ACKNOWLEDGED and logs reopen reason', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-reopen',
+        status: BlockerStatus.RESOLVED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Gateway 504] Timeout',
+      });
+      mockPrisma.supportContribution = {
+        create: vi.fn().mockResolvedValue({ id: 'sup-reopen' }),
+      };
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-reopen',
+        status: BlockerStatus.ACKNOWLEDGED,
+      });
+
+      const reopened = await service.reopenBlocker('emp-1', 'blk-reopen', {
+        reopenReason: 'Staging masih mengembalikan HTTP 504 saat load test',
+      });
+
+      expect(reopened.status).toBe(BlockerStatus.ACKNOWLEDGED);
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            blockerId: 'blk-reopen',
+            supporterUserId: 'emp-1',
+            resultNote: 'Staging masih mengembalikan HTTP 504 saat load test',
+          }),
+        }),
+      );
     });
   });
 

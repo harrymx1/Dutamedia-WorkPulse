@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import RaiseBlockerView from './RaiseBlockerView.vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
@@ -168,5 +168,73 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     await projectRadio!.setValue();
 
     expect(wrapper.find('#projectCodeSelect').exists()).toBe(true);
+  });
+
+  it('shows reporter confirmation and reopen actions for RESOLVED blockers in Blocker Saya without SLA terms', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: any) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-awaiting-confirm',
+                description: '[Gateway Timeout 504] Endpoint timeout saat hit staging (Ekspektasi: Pengecekan routing subnet)',
+                type: 'INFRA',
+                severity: 'CRITICAL',
+                impact: 'PRODUCTION',
+                status: 'RESOLVED',
+                resolutionNote: 'Gateway network route telah di-reroute dan failover sukses.',
+                raisedAt: '2026-11-13T04:52:00.000Z',
+                assignedOwner: { fullName: 'Bambang Pratama' },
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/blockers/blk-awaiting-confirm/close')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { id: 'blk-awaiting-confirm', status: 'CLOSED' } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+
+    await flushPromises();
+    expect(wrapper.text()).not.toContain('SLA');
+
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Menunggu Konfirmasi (1)');
+    expect(wrapper.text()).toContain('Gateway Timeout 504');
+    expect(wrapper.text()).toContain('Ekspektasi Bantuan:');
+    expect(wrapper.text()).toContain('Pengecekan routing subnet');
+
+    const closeBtn = wrapper.find('[data-testid="close-ticket-blk-awaiting-confirm"]');
+    expect(closeBtn.exists()).toBe(true);
+    expect(wrapper.find('[data-testid="reopen-ticket-blk-awaiting-confirm"]').exists()).toBe(true);
+
+    await closeBtn.trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-awaiting-confirm/close'),
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 });

@@ -54,3 +54,19 @@ export class ResolveBlockerDto {
   resolutionNote!: string;
 }
 
+export class AcceptRiskBlockerDto {
+  @IsString({ message: 'Justifikasi penerimaan risiko wajib diisi' })
+  @MinLength(10, { message: 'Justifikasi penerimaan risiko minimal 10 karakter' })
+  riskAcceptanceJustification!: string;
+
+  @IsString({ message: 'Rencana mitigasi risiko wajib diisi' })
+  @MinLength(10, { message: 'Rencana mitigasi risiko minimal 10 karakter' })
+  riskMitigationPlan!: string;
+}
+
+export class ReopenBlockerDto {
+  @IsString({ message: 'Alasan pembukaan kembali wajib diisi' })
+  @MinLength(10, { message: 'Alasan pembukaan kembali minimal 10 karakter' })
+  reopenReason!: string;
+}
+

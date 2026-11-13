@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
@@ -8,6 +9,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Shield,
+  ShieldAlert,
   FolderGit2,
   Clock,
   ArrowRight,
@@ -18,9 +20,10 @@ import {
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
+const route = useRoute();
 
 // Tab State
-const activeTab = ref<'create' | 'mine'>('create');
+const activeTab = ref<'create' | 'mine'>(route?.query?.tab === 'mine' ? 'mine' : 'create');
 
 // Form Data
 const title = ref('');
@@ -34,7 +37,7 @@ const authorityContext = ref<'ORGANIZATIONAL_AUTHORITY' | 'PROJECT_AUTHORITY'>('
 const projectCode = ref('');
 const assignedOwnerId = ref('');
 
-// Kebijakan SLA & rekomendasi penanggung jawab otomatis (sumber tunggal: backend)
+// Kebijakan batas waktu penanganan & rekomendasi penanggung jawab otomatis (sumber tunggal: backend)
 const slaMinutes = ref<Record<string, number>>({ CRITICAL: 120, HIGH: 240, MEDIUM: 480, LOW: 1440 });
 const suggestedOwner = ref<{ id: string; fullName: string; jobTitle?: string | null } | null>(null);
 const suggestionReason = ref<'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE'>('NONE');
@@ -74,6 +77,17 @@ watch([blockerType, authorityContext, projectCode], () => {
   loadRoutingPreview();
 });
 
+watch(
+  () => route?.query?.tab,
+  (tab) => {
+    if (tab === 'mine') {
+      activeTab.value = 'mine';
+    } else if (tab === 'create') {
+      activeTab.value = 'create';
+    }
+  },
+);
+
 function slaRemainingLabel(b: any): { text: string; overdue: boolean } | null {
   if (!b.targetResolutionAt || ['RESOLVED', 'CLOSED', 'ACCEPTED_RISK'].includes(b.status)) return null;
   const diffMin = Math.round((new Date(b.targetResolutionAt).getTime() - nowTick.value) / 60000);
@@ -81,7 +95,9 @@ function slaRemainingLabel(b: any): { text: string; overdue: boolean } | null {
   const h = Math.floor(abs / 60);
   const m = abs % 60;
   const dur = h > 0 ? `${h}j ${m}m` : `${m}m`;
-  return diffMin >= 0 ? { text: `Sisa SLA ${dur}`, overdue: false } : { text: `Lewat SLA ${dur}`, overdue: true };
+  return diffMin >= 0
+    ? { text: `Sisa Waktu ${dur}`, overdue: false }
+    : { text: `Lewat Batas Waktu ${dur}`, overdue: true };
 }
 
 export interface AvailableUser {
@@ -325,6 +341,10 @@ const defaultProjectLeadName = computed(() => {
 const myBlockers = ref<any[]>([]);
 const loadingBlockers = ref(false);
 const blockerFilter = ref<'all' | 'active' | 'resolved' | 'closed'>('all');
+const closingId = ref<string | null>(null);
+const reopeningId = ref<string | null>(null);
+const reopenReasonMap = ref<Record<string, string>>({});
+const submittingReopenId = ref<string | null>(null);
 
 const charCount = computed(() => title.value.length);
 
@@ -340,19 +360,19 @@ const isFormValid = computed(() => {
 
 const activeBlockersCount = computed(() => {
   return myBlockers.value.filter((b) =>
-    ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED'].includes(b.status)
+    ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED', 'ACCEPTED_RISK'].includes(b.status),
   ).length;
 });
 
 const countAll = computed(() => myBlockers.value.length);
 const countActive = computed(
-  () => myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status)).length
+  () => myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status)).length,
 );
 const countResolved = computed(
-  () => myBlockers.value.filter((b) => b.status === 'RESOLVED').length
+  () => myBlockers.value.filter((b) => ['RESOLVED', 'ACCEPTED_RISK'].includes(b.status)).length,
 );
 const countClosed = computed(
-  () => myBlockers.value.filter((b) => ['CLOSED', 'ACCEPTED_RISK'].includes(b.status)).length
+  () => myBlockers.value.filter((b) => b.status === 'CLOSED').length,
 );
 
 const filteredBlockers = computed(() => {
@@ -360,10 +380,10 @@ const filteredBlockers = computed(() => {
     return myBlockers.value.filter((b) => ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(b.status));
   }
   if (blockerFilter.value === 'resolved') {
-    return myBlockers.value.filter((b) => b.status === 'RESOLVED');
+    return myBlockers.value.filter((b) => ['RESOLVED', 'ACCEPTED_RISK'].includes(b.status));
   }
   if (blockerFilter.value === 'closed') {
-    return myBlockers.value.filter((b) => ['CLOSED', 'ACCEPTED_RISK'].includes(b.status));
+    return myBlockers.value.filter((b) => b.status === 'CLOSED');
   }
   return myBlockers.value;
 });
@@ -554,13 +574,12 @@ function getStatusLabel(status: string): string {
     case 'RESOLVED':
       return 'Solusi Diberikan · Menunggu Konfirmasi';
     case 'IN_PROGRESS':
-      return 'Sedang Ditangani';
     case 'ACKNOWLEDGED':
-      return 'Telah Diterima';
+      return 'Sedang Ditangani';
     case 'OPEN':
       return 'Menunggu Respons Penanggung Jawab';
     case 'ACCEPTED_RISK':
-      return 'Risiko Diterima';
+      return 'Risiko Diterima · Menunggu Konfirmasi';
     case 'CLOSED':
       return 'Selesai Ditutup';
     default:
@@ -609,7 +628,62 @@ function getTicketTitle(ticket: any): string {
 
 function getTicketDescription(ticket: any): string {
   if (!ticket.description) return '';
-  return ticket.description.replace(/^\[.*?\]\s*/, '');
+  return ticket.description
+    .replace(/\s*\(Ekspektasi:\s*[^)]+\)\s*$/i, '')
+    .replace(/^\[.*?\]\s*/, '')
+    .trim();
+}
+
+function getTicketExpectedHelp(ticket: any): string | null {
+  if (!ticket.description) return null;
+  const match = ticket.description.match(/\(Ekspektasi:\s*([^)]+)\)\s*$/i);
+  return match?.[1]?.trim() || null;
+}
+
+async function confirmAndCloseTicket(ticketId: string) {
+  closingId.value = ticketId;
+  errorMessage.value = null;
+  try {
+    await apiClient(`/blockers/${ticketId}/close`, { method: 'POST' });
+    toastMessage.value = 'Tiket kendala telah dikonfirmasi dan ditutup permanen.';
+    await loadMyBlockers();
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Gagal menutup tiket kendala.';
+  } finally {
+    closingId.value = null;
+  }
+}
+
+function openInlineReopen(ticketId: string) {
+  reopeningId.value = ticketId;
+  reopenReasonMap.value[ticketId] = '';
+}
+
+function cancelInlineReopen() {
+  reopeningId.value = null;
+}
+
+async function submitInlineReopen(ticketId: string) {
+  const reason = (reopenReasonMap.value[ticketId] || '').trim();
+  if (reason.length < 10) {
+    errorMessage.value = 'Alasan pengembalian minimal 10 karakter.';
+    return;
+  }
+  submittingReopenId.value = ticketId;
+  errorMessage.value = null;
+  try {
+    await apiClient(`/blockers/${ticketId}/reopen`, {
+      method: 'POST',
+      body: JSON.stringify({ reopenReason: reason }),
+    });
+    reopeningId.value = null;
+    toastMessage.value = 'Tiket dikembalikan ke penanggung jawab untuk penanganan ulang.';
+    await loadMyBlockers();
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Gagal mengembalikan tiket kendala.';
+  } finally {
+    submittingReopenId.value = null;
+  }
 }
 
 onMounted(() => {
@@ -806,7 +880,7 @@ onBeforeUnmount(() => {
                     <option value="PRODUCTION">Production — Mengganggu layanan live / klien aktif</option>
                     <option value="CLIENT">Client — Berdampak langsung pada kepuasan klien</option>
                     <option value="FINANCIAL">Financial — Potensi kerugian / pinalti finansial</option>
-                    <option value="COMPLIANCE">Compliance — Risiko kepatuhan hukum / kontrak SLA</option>
+                    <option value="COMPLIANCE">Compliance — Risiko kepatuhan hukum / perjanjian kontrak</option>
                   </select>
                 </div>
               </div>
@@ -815,14 +889,14 @@ onBeforeUnmount(() => {
               <div class="form-group">
                 <div class="label-row">
                   <label>Tingkat Keparahan (Severity) <span class="req">*</span></label>
-                  <span class="pill pill-sla">SLA Otomatis Sesuai Kebijakan Aktif</span>
+                  <span class="pill pill-sla">Target Penanganan Sesuai Kebijakan Aktif</span>
                 </div>
                 <div class="severity-grid">
                   <label class="severity-card critical" :class="{ selected: blockerSeverity === 'CRITICAL' }">
                     <input type="radio" v-model="blockerSeverity" value="CRITICAL" />
                     <div class="card-head">
                       <span class="sev-badge critical">Critical</span>
-                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.CRITICAL) }}</span>
+                      <span class="sev-sla">Target: {{ formatSla(slaMinutes.CRITICAL) }}</span>
                     </div>
                     <p class="sev-desc">Pekerjaan terhenti total, memicu notifikasi darurat instan &amp; auto-escalate.</p>
                   </label>
@@ -831,7 +905,7 @@ onBeforeUnmount(() => {
                     <input type="radio" v-model="blockerSeverity" value="HIGH" />
                     <div class="card-head">
                       <span class="sev-badge high">High</span>
-                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.HIGH) }}</span>
+                      <span class="sev-sla">Target: {{ formatSla(slaMinutes.HIGH) }}</span>
                     </div>
                     <p class="sev-desc">Hambatan berat pada jadwal atau milestone utama harian.</p>
                   </label>
@@ -840,7 +914,7 @@ onBeforeUnmount(() => {
                     <input type="radio" v-model="blockerSeverity" value="MEDIUM" />
                     <div class="card-head">
                       <span class="sev-badge medium">Medium</span>
-                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.MEDIUM) }}</span>
+                      <span class="sev-sla">Target: {{ formatSla(slaMinutes.MEDIUM) }}</span>
                     </div>
                     <p class="sev-desc">Hambatan parsial, namun masih dapat mengerjakan komitmen lain.</p>
                   </label>
@@ -849,7 +923,7 @@ onBeforeUnmount(() => {
                     <input type="radio" v-model="blockerSeverity" value="LOW" />
                     <div class="card-head">
                       <span class="sev-badge low">Low</span>
-                      <span class="sev-sla">SLA: {{ formatSla(slaMinutes.LOW) }}</span>
+                      <span class="sev-sla">Target: {{ formatSla(slaMinutes.LOW) }}</span>
                     </div>
                     <p class="sev-desc">Kendala minor atau ketidaknyamanan operasional berisiko rendah.</p>
                   </label>
@@ -1132,7 +1206,7 @@ onBeforeUnmount(() => {
         <div class="blockers-filter-bar">
           <div>
             <h2>Daftar Blocker yang Saya Laporkan</h2>
-            <p class="subtitle">Pantau siklus hidup tiket kendala, sisa waktu SLA, dan tindak lanjut penanganan.</p>
+            <p class="subtitle">Pantau siklus hidup tiket kendala, sisa waktu penanganan, dan tindak lanjut penanganan.</p>
           </div>
           <div class="filter-pills" role="radiogroup" aria-label="Filter status blocker">
             <button
@@ -1214,6 +1288,9 @@ onBeforeUnmount(() => {
 
             <div class="blocker-item-title">{{ getTicketTitle(b) }}</div>
             <p class="blocker-item-desc">{{ getTicketDescription(b) }}</p>
+            <div v-if="getTicketExpectedHelp(b)" class="blocker-expected-box">
+              <strong>Ekspektasi Bantuan:</strong> {{ getTicketExpectedHelp(b) }}
+            </div>
 
             <div class="blocker-item-meta">
               <span class="blocker-meta-item">Dampak: <strong>{{ b.impact }}</strong></span>
@@ -1240,6 +1317,71 @@ onBeforeUnmount(() => {
                 <span>Catatan Penyelesaian:</span>
               </div>
               <p class="resolution-text">{{ b.resolutionNote }}</p>
+            </div>
+
+            <!-- Accepted Risk Guidance (if available) -->
+            <div v-if="b.riskAcceptanceJustification || b.riskMitigationPlan" class="risk-box">
+              <div class="risk-title">
+                <ShieldAlert :size="14" />
+                <span>Keputusan Terima Risiko &amp; Arahan Mitigasi:</span>
+              </div>
+              <p v-if="b.riskAcceptanceJustification" class="risk-text">
+                <strong>Justifikasi:</strong> {{ b.riskAcceptanceJustification }}
+              </p>
+              <p v-if="b.riskMitigationPlan" class="risk-text">
+                <strong>Mitigasi Sementara:</strong> {{ b.riskMitigationPlan }}
+              </p>
+            </div>
+
+            <!-- Reporter Confirmation Actions -->
+            <div
+              v-if="b.status === 'RESOLVED' || b.status === 'ACCEPTED_RISK'"
+              class="reporter-confirm-panel"
+            >
+              <div class="confirm-prompt">
+                Apakah kendala sudah benar-benar teratasi atau arahan mitigasi dapat dijalankan?
+              </div>
+              <div v-if="reopeningId !== b.id" class="confirm-actions">
+                <button
+                  type="button"
+                  class="btn-confirm-close"
+                  :disabled="closingId === b.id"
+                  :data-testid="`close-ticket-${b.id}`"
+                  @click="confirmAndCloseTicket(b.id)"
+                >
+                  <CheckCircle2 :size="14" />
+                  <span>{{ closingId === b.id ? 'Menutup Tiket...' : 'Konfirmasi & Tutup Tiket' }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-reopen-ticket"
+                  :data-testid="`reopen-ticket-${b.id}`"
+                  @click="openInlineReopen(b.id)"
+                >
+                  <RotateCcw :size="14" />
+                  <span>Belum Memadai (Kembalikan)</span>
+                </button>
+              </div>
+              <div v-else class="inline-reopen-form">
+                <textarea
+                  v-model="reopenReasonMap[b.id]"
+                  rows="2"
+                  placeholder="Jelaskan alasan mengapa solusi/mitigasi belum memadai (min. 10 karakter)..."
+                ></textarea>
+                <div class="confirm-actions">
+                  <button
+                    type="button"
+                    class="btn-confirm-reopen"
+                    :disabled="submittingReopenId === b.id"
+                    @click="submitInlineReopen(b.id)"
+                  >
+                    {{ submittingReopenId === b.id ? 'Mengembalikan...' : 'Kirim & Kembalikan ke PIC' }}
+                  </button>
+                  <button type="button" class="btn-cancel-reopen" @click="cancelInlineReopen">
+                    Batal
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2095,6 +2237,133 @@ textarea:focus {
   color: #166534;
   line-height: 1.45;
   margin: 0;
+}
+
+.blocker-expected-box {
+  margin-top: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #F4F9F7;
+  border: 1px solid #DCE7E2;
+  font-size: 12.5px;
+  color: #1F352E;
+}
+
+.risk-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+}
+
+.risk-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #C2410C;
+  margin-bottom: 4px;
+}
+
+.risk-text {
+  font-size: 12.5px;
+  color: #7C2D12;
+  line-height: 1.45;
+  margin: 2px 0;
+}
+
+.reporter-confirm-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #DCE7E2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirm-prompt {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1F352E;
+}
+
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-confirm-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: #00674D;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-confirm-close:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-reopen-ticket {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 7px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #991B1B;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inline-reopen-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-reopen-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #CBD5E1;
+  font-family: inherit;
+  font-size: 12.5px;
+}
+
+.btn-confirm-reopen {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: #991B1B;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-cancel-reopen {
+  padding: 7px 12px;
+  border-radius: 7px;
+  border: 1px solid #DCE7E2;
+  background: #fff;
+  color: #475B54;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .toast-popup {

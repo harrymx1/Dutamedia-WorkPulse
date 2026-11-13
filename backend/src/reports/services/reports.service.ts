@@ -52,7 +52,7 @@ export class ReportsService {
     const noSubmissionPercent = totalUsers > 0 ? Math.round((noSubmissionCount / totalUsers) * 1000) / 10 : 3.8;
 
     const openBlockers = await this.prisma.blockerTicket.count({
-      where: { status: { not: 'RESOLVED' } },
+      where: { status: { in: ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'] } },
     });
 
     return {

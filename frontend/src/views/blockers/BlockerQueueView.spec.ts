@@ -82,4 +82,22 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     expect(wrapper.text()).toContain('Salurkan Kontribusi Bantuan (Peer Support)');
   });
+
+  it('renders clean authority label without SLA wording and opens Terima Risiko modal', async () => {
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('SLA');
+    expect(wrapper.text()).toContain('Struktural Organisasi (Atasan Langsung / Divisi)');
+    expect(wrapper.text()).toContain('Target Batas Penanganan');
+
+    const acceptRiskBtn = wrapper.findAll('button').find(b => b.text().includes('Terima Risiko'));
+    expect(acceptRiskBtn).toBeDefined();
+    await acceptRiskBtn!.trigger('click');
+
+    expect(wrapper.text()).toContain('Tetapkan Terima Risiko (Accepted Risk)');
+  });
 });

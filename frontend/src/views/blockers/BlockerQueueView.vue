@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { useAuthStore } from '../../stores/auth';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,9 +15,18 @@ import {
   HeartHandshake,
   CheckSquare,
   ShieldAlert,
+  RotateCcw,
   ChevronRight,
   X,
 } from 'lucide-vue-next';
+
+export type BlockerTicketStatus =
+  | 'OPEN'
+  | 'ACKNOWLEDGED'
+  | 'IN_PROGRESS'
+  | 'RESOLVED'
+  | 'ACCEPTED_RISK'
+  | 'CLOSED';
 
 interface BlockerTicketItem {
   id: string;
@@ -24,14 +34,17 @@ interface BlockerTicketItem {
   type: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   impact: string;
-  status: 'OPEN' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLVED';
+  status: BlockerTicketStatus;
   raisedAt: string;
   acknowledgedAt?: string;
   resolvedAt?: string;
+  closedAt?: string;
   targetResolutionAt?: string;
   ownerNeededType: string;
   projectCodeReference?: string;
   resolutionNote?: string;
+  riskAcceptanceJustification?: string;
+  riskMitigationPlan?: string;
   raisedBy: { id: string; fullName: string; email: string };
   assignedOwner?: { id: string; fullName: string; email: string };
   supportContributions?: Array<{
@@ -42,6 +55,8 @@ interface BlockerTicketItem {
     createdAt: string;
   }>;
 }
+
+const authStore = useAuthStore();
 
 // State
 const loading = ref(false);
@@ -63,6 +78,16 @@ const isResolveModalOpen = ref(false);
 const resolutionNote = ref('');
 const submittingResolve = ref(false);
 
+const isAcceptRiskModalOpen = ref(false);
+const riskJustification = ref('');
+const riskMitigation = ref('');
+const submittingAcceptRisk = ref(false);
+
+const isReopenModalOpen = ref(false);
+const reopenReason = ref('');
+const submittingReopen = ref(false);
+
+const submittingClose = ref(false);
 const acknowledging = ref(false);
 
 // Toast & Feedback
@@ -104,10 +129,80 @@ async function loadBlockers() {
   }
 }
 
-// Metrics
-const criticalCount = computed(() => blockers.value.filter((b) => b.severity === 'CRITICAL' && b.status !== 'RESOLVED').length);
+// Metrics & Lifecycle Helpers
+const ACTIVE_STATUSES: BlockerTicketStatus[] = ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'];
+
+function isActiveTicket(status?: string): boolean {
+  return Boolean(status && ACTIVE_STATUSES.includes(status as BlockerTicketStatus));
+}
+
+const isSelectedTicketReporter = computed(() =>
+  Boolean(
+    selectedTicket.value &&
+      authStore.user?.id &&
+      selectedTicket.value.raisedBy?.id === authStore.user.id,
+  ),
+);
+
+function parseTicketContent(rawDescription?: string): {
+  title: string;
+  body: string;
+  expectedHelp: string | null;
+} {
+  const raw = (rawDescription || '').trim();
+  if (!raw) {
+    return { title: '-', body: '', expectedHelp: null };
+  }
+
+  let working = raw;
+  let expectedHelp: string | null = null;
+  const expMatch = working.match(/\s*\(Ekspektasi:\s*([^)]+)\)\s*$/i);
+  if (expMatch) {
+    expectedHelp = expMatch[1].trim();
+    working = working.slice(0, expMatch.index).trim();
+  }
+
+  const titleMatch = working.match(/^\[(.+?)\]\s*(.*)$/s);
+  if (titleMatch) {
+    return {
+      title: titleMatch[1].trim(),
+      body: titleMatch[2].trim(),
+      expectedHelp,
+    };
+  }
+
+  return {
+    title: working,
+    body: '',
+    expectedHelp,
+  };
+}
+
+const parsedSelectedTicket = computed(() =>
+  parseTicketContent(selectedTicket.value?.description),
+);
+
+function formatAuthorityLabel(ownerNeededType?: string): string {
+  if (ownerNeededType === 'PROJECT_AUTHORITY') return 'Kewenangan Proyek';
+  if (ownerNeededType === 'ORGANIZATIONAL_AUTHORITY') {
+    return 'Struktural Organisasi (Atasan Langsung / Divisi)';
+  }
+  return ownerNeededType || '-';
+}
+
+function formatStatusLabel(status: string): string {
+  if (status === 'ACCEPTED_RISK') return 'ACCEPTED RISK';
+  if (status === 'IN_PROGRESS') return 'IN PROGRESS';
+  return status;
+}
+
+const criticalCount = computed(
+  () => blockers.value.filter((b) => b.severity === 'CRITICAL' && isActiveTicket(b.status)).length,
+);
 const pendingAckCount = computed(() => blockers.value.filter((b) => b.status === 'OPEN').length);
-const totalActiveCount = computed(() => blockers.value.filter((b) => b.status !== 'RESOLVED').length);
+const totalActiveCount = computed(
+  () => blockers.value.filter((b) => isActiveTicket(b.status)).length,
+);
 
 const filteredBlockers = computed(() => {
   return blockers.value.filter((b) => {
@@ -193,12 +288,93 @@ async function submitResolve() {
       }),
     });
     isResolveModalOpen.value = false;
-    showToast('Tiket kendala berhasil diselesaikan (RESOLVED).');
+    showToast('Solusi berhasil dicatat. Tiket berstatus RESOLVED dan menunggu konfirmasi pelapor.');
     await loadBlockers();
   } catch (err: any) {
     showToast(err.message || 'Gagal menyelesaikan tiket.', true);
   } finally {
     submittingResolve.value = false;
+  }
+}
+
+// Accept Risk Action
+function openAcceptRiskModal() {
+  riskJustification.value = '';
+  riskMitigation.value = '';
+  isAcceptRiskModalOpen.value = true;
+}
+
+async function submitAcceptRisk() {
+  if (!selectedTicket.value) return;
+  if (riskJustification.value.trim().length < 10) {
+    showToast('Justifikasi penerimaan risiko wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+  if (riskMitigation.value.trim().length < 10) {
+    showToast('Rencana mitigasi risiko wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+
+  submittingAcceptRisk.value = true;
+  try {
+    await apiClient(`/blockers/${selectedTicket.value.id}/accept-risk`, {
+      method: 'POST',
+      body: JSON.stringify({
+        riskAcceptanceJustification: riskJustification.value.trim(),
+        riskMitigationPlan: riskMitigation.value.trim(),
+      }),
+    });
+    isAcceptRiskModalOpen.value = false;
+    showToast('Keputusan Terima Risiko (ACCEPTED RISK) dicatat dan menunggu konfirmasi pelapor.');
+    await loadBlockers();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal menetapkan Terima Risiko.', true);
+  } finally {
+    submittingAcceptRisk.value = false;
+  }
+}
+
+// Close & Reopen Actions (Reporter Confirmation)
+async function handleCloseTicket(ticketId: string) {
+  submittingClose.value = true;
+  try {
+    await apiClient(`/blockers/${ticketId}/close`, { method: 'POST' });
+    showToast('Tiket kendala telah dikonfirmasi dan ditutup permanen (CLOSED).');
+    await loadBlockers();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal menutup tiket kendala.', true);
+  } finally {
+    submittingClose.value = false;
+  }
+}
+
+function openReopenModal() {
+  reopenReason.value = '';
+  isReopenModalOpen.value = true;
+}
+
+async function submitReopen() {
+  if (!selectedTicket.value) return;
+  if (reopenReason.value.trim().length < 10) {
+    showToast('Alasan pengembalian tiket wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+
+  submittingReopen.value = true;
+  try {
+    await apiClient(`/blockers/${selectedTicket.value.id}/reopen`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reopenReason: reopenReason.value.trim(),
+      }),
+    });
+    isReopenModalOpen.value = false;
+    showToast('Tiket dikembalikan ke penanggung jawab (ACKNOWLEDGED).');
+    await loadBlockers();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal mengembalikan tiket.', true);
+  } finally {
+    submittingReopen.value = false;
   }
 }
 
@@ -239,7 +415,7 @@ onMounted(() => {
           <span class="eyebrow">Manajemen Kendala, Eskalasi &amp; Dukungan Lintas Fungsi</span>
           <h1>Antrean Eskalasi Blocker</h1>
           <p class="subtitle">
-            Pantau seluruh kendala aktif, berikan respons awal (Acknowledge), salurkan bantuan (Support), dan catat resolusi sebelum melewati batas waktu SLA.
+            Pantau seluruh kendala aktif, berikan respons awal (Acknowledge), salurkan bantuan (Support), dan catat solusi atau keputusan risiko sebelum melewati batas waktu penanganan.
           </p>
         </div>
       </div>
@@ -270,7 +446,7 @@ onMounted(() => {
             <AlertTriangle :size="20" class="metric-icon" />
           </div>
           <div class="metric-value">{{ totalActiveCount }}</div>
-          <div class="metric-sub">Tiket dalam penanganan (OPEN, ACKNOWLEDGED, IN_PROGRESS)</div>
+          <div class="metric-sub">Tiket aktif dalam penanganan (OPEN, ACKNOWLEDGED)</div>
         </div>
       </div>
 
@@ -281,8 +457,10 @@ onMounted(() => {
           <select v-model="statusFilter" @change="loadBlockers">
             <option value="ALL">Semua Status</option>
             <option value="OPEN">Terbuka (OPEN)</option>
-            <option value="ACKNOWLEDGED">Diterima (ACKNOWLEDGED)</option>
-            <option value="RESOLVED">Selesai (RESOLVED)</option>
+            <option value="ACKNOWLEDGED">Ditangani (ACKNOWLEDGED)</option>
+            <option value="RESOLVED">Solusi Diberikan (RESOLVED)</option>
+            <option value="ACCEPTED_RISK">Risiko Diterima (ACCEPTED RISK)</option>
+            <option value="CLOSED">Ditutup Final (CLOSED)</option>
           </select>
         </div>
 
@@ -335,11 +513,11 @@ onMounted(() => {
             class="ticket-card"
             :class="{
               selected: selectedTicket?.id === ticket.id,
-              'sla-breached': isSlaBreached(ticket.targetResolutionAt) && ticket.status !== 'RESOLVED'
+              'sla-breached': isSlaBreached(ticket.targetResolutionAt) && isActiveTicket(ticket.status)
             }"
             @click="selectTicket(ticket)"
           >
-            <!-- Baris 1: Severity, Kategori, Status & SLA Indicator -->
+            <!-- Baris 1: Severity, Kategori, Status & Batas Waktu Indicator -->
             <div class="ticket-row-1">
               <div class="badge-cluster">
                 <span class="sev-badge" :class="ticket.severity.toLowerCase()">{{ ticket.severity }}</span>
@@ -348,18 +526,23 @@ onMounted(() => {
               </div>
               <div class="status-wrap">
                 <span
-                  v-if="ticket.status !== 'RESOLVED' && isSlaBreached(ticket.targetResolutionAt)"
+                  v-if="isActiveTicket(ticket.status) && isSlaBreached(ticket.targetResolutionAt)"
                   class="sla-breach-badge"
                 >
-                  TERLEWAT SLA
+                  LEWAT BATAS WAKTU
                 </span>
-                <span class="status-badge" :class="ticket.status.toLowerCase()">{{ ticket.status }}</span>
+                <span class="status-badge" :class="ticket.status.toLowerCase()">
+                  {{ formatStatusLabel(ticket.status) }}
+                </span>
               </div>
             </div>
 
-            <!-- Baris 2: Deskripsi Ringkas -->
+            <!-- Baris 2: Judul & Ringkasan Kendala -->
             <div class="ticket-row-2">
-              <p class="ticket-desc">{{ ticket.description }}</p>
+              <div class="ticket-list-title">{{ parseTicketContent(ticket.description).title }}</div>
+              <p v-if="parseTicketContent(ticket.description).body" class="ticket-desc">
+                {{ parseTicketContent(ticket.description).body }}
+              </p>
             </div>
 
             <!-- Baris 3: Pelapor, PIC & Support Counter -->
@@ -393,7 +576,9 @@ onMounted(() => {
                 <div class="detail-badges">
                   <span class="sev-badge" :class="selectedTicket.severity.toLowerCase()">{{ selectedTicket.severity }}</span>
                   <span class="type-pill">{{ selectedTicket.type }}</span>
-                  <span class="status-badge" :class="selectedTicket.status.toLowerCase()">{{ selectedTicket.status }}</span>
+                  <span class="status-badge" :class="selectedTicket.status.toLowerCase()">
+                    {{ formatStatusLabel(selectedTicket.status) }}
+                  </span>
                 </div>
               </div>
 
@@ -411,7 +596,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="selectedTicket.status !== 'RESOLVED'"
+                  v-if="selectedTicket.status !== 'CLOSED'"
                   type="button"
                   class="btn-action support"
                   @click="openSupportModal"
@@ -421,13 +606,52 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="selectedTicket.status !== 'RESOLVED'"
+                  v-if="isActiveTicket(selectedTicket.status)"
+                  type="button"
+                  class="btn-action accept-risk"
+                  @click="openAcceptRiskModal"
+                >
+                  <ShieldAlert :size="15" />
+                  <span>Terima Risiko</span>
+                </button>
+
+                <button
+                  v-if="isActiveTicket(selectedTicket.status)"
                   type="button"
                   class="btn-action resolve"
                   @click="openResolveModal"
                 >
                   <Check :size="15" />
                   <span>Selesaikan</span>
+                </button>
+
+                <button
+                  v-if="
+                    (selectedTicket.status === 'RESOLVED' ||
+                      selectedTicket.status === 'ACCEPTED_RISK') &&
+                    isSelectedTicketReporter
+                  "
+                  type="button"
+                  class="btn-action reopen"
+                  @click="openReopenModal"
+                >
+                  <RotateCcw :size="15" />
+                  <span>Belum Memadai</span>
+                </button>
+
+                <button
+                  v-if="
+                    (selectedTicket.status === 'RESOLVED' ||
+                      selectedTicket.status === 'ACCEPTED_RISK') &&
+                    isSelectedTicketReporter
+                  "
+                  type="button"
+                  class="btn-action close"
+                  :disabled="submittingClose"
+                  @click="handleCloseTicket(selectedTicket.id)"
+                >
+                  <CheckCircle2 :size="15" />
+                  <span>{{ submittingClose ? 'Menutup...' : 'Konfirmasi & Tutup' }}</span>
                 </button>
               </div>
             </div>
@@ -436,7 +660,14 @@ onMounted(() => {
             <div class="detail-body">
               <div class="info-block">
                 <label>Fakta &amp; Deskripsi Kendala</label>
-                <div class="desc-content">{{ selectedTicket.description }}</div>
+                <div class="desc-content">
+                  <div class="parsed-title">{{ parsedSelectedTicket.title }}</div>
+                  <p v-if="parsedSelectedTicket.body" class="parsed-body">{{ parsedSelectedTicket.body }}</p>
+                  <div v-if="parsedSelectedTicket.expectedHelp" class="parsed-expectation">
+                    <span class="exp-label">Ekspektasi Bantuan / Tindakan:</span>
+                    <span>{{ parsedSelectedTicket.expectedHelp }}</span>
+                  </div>
+                </div>
               </div>
 
               <div class="info-grid-2">
@@ -466,14 +697,16 @@ onMounted(() => {
               <div class="info-grid-2">
                 <div class="info-block">
                   <label>Konteks Kewenangan</label>
-                  <div class="context-val">
-                    <strong>{{ selectedTicket.ownerNeededType }}</strong>
-                    <span v-if="selectedTicket.projectCodeReference"> — Proyek {{ selectedTicket.projectCodeReference }}</span>
+                  <div class="authority-stack">
+                    <strong class="authority-primary">{{ formatAuthorityLabel(selectedTicket.ownerNeededType) }}</strong>
+                    <span v-if="selectedTicket.projectCodeReference" class="authority-proj-tag">
+                      Proyek: {{ selectedTicket.projectCodeReference }}
+                    </span>
                   </div>
                 </div>
 
                 <div class="info-block">
-                  <label>Target SLA Resolusi</label>
+                  <label>Target Batas Penanganan</label>
                   <div class="context-val">
                     <Clock :size="14" />
                     <span>{{ selectedTicket.targetResolutionAt ? new Date(selectedTicket.targetResolutionAt).toLocaleString('id-ID') : 'Tidak ditentukan' }}</span>
@@ -481,13 +714,59 @@ onMounted(() => {
                 </div>
               </div>
 
-              <!-- Hasil Resolusi Jika Sudah Selesai -->
-              <div v-if="selectedTicket.status === 'RESOLVED' && selectedTicket.resolutionNote" class="resolution-box">
+              <!-- Banner Menunggu Konfirmasi Pelapor / Ditutup Final -->
+              <div
+                v-if="
+                  selectedTicket.status === 'RESOLVED' ||
+                  selectedTicket.status === 'ACCEPTED_RISK'
+                "
+                class="awaiting-confirm-banner"
+              >
+                <Clock :size="16" />
+                <span>
+                  Menunggu verifikasi dan konfirmasi penutupan dari pelapor ({{ selectedTicket.raisedBy.fullName }}).
+                </span>
+              </div>
+
+              <div v-if="selectedTicket.status === 'CLOSED'" class="closed-banner">
+                <CheckCircle2 :size="16" />
+                <span>
+                  Tiket telah dikonfirmasi selesai dan ditutup permanen oleh pelapor
+                  <template v-if="selectedTicket.closedAt">
+                    ({{ new Date(selectedTicket.closedAt).toLocaleString('id-ID') }})
+                  </template>.
+                </span>
+              </div>
+
+              <!-- Hasil Resolusi -->
+              <div v-if="selectedTicket.resolutionNote" class="resolution-box">
                 <div class="res-head">
                   <CheckCircle2 :size="18" />
-                  <strong>Catatan Resolusi Akhir</strong>
+                  <strong>Catatan Solusi / Penyelesaian</strong>
                 </div>
                 <p>{{ selectedTicket.resolutionNote }}</p>
+              </div>
+
+              <!-- Keputusan Terima Risiko (Accepted Risk) -->
+              <div
+                v-if="
+                  selectedTicket.riskAcceptanceJustification ||
+                  selectedTicket.riskMitigationPlan
+                "
+                class="accepted-risk-box"
+              >
+                <div class="risk-head">
+                  <ShieldAlert :size="18" />
+                  <strong>Keputusan Terima Risiko (Accepted Risk)</strong>
+                </div>
+                <div v-if="selectedTicket.riskAcceptanceJustification" class="risk-field">
+                  <span class="risk-field-label">Justifikasi Penerimaan Risiko:</span>
+                  <p>{{ selectedTicket.riskAcceptanceJustification }}</p>
+                </div>
+                <div v-if="selectedTicket.riskMitigationPlan" class="risk-field">
+                  <span class="risk-field-label">Rencana Mitigasi Sementara:</span>
+                  <p>{{ selectedTicket.riskMitigationPlan }}</p>
+                </div>
               </div>
 
               <!-- Support Contributions Feed -->
@@ -601,7 +880,105 @@ onMounted(() => {
             :disabled="submittingResolve"
             @click="submitResolve"
           >
-            {{ submittingResolve ? 'Menyelesaikan...' : 'Tandai Selesai' }}
+            {{ submittingResolve ? 'Menyimpan...' : 'Kirim Solusi' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Accept Risk -->
+    <div v-if="isAcceptRiskModalOpen" class="modal-backdrop" @click.self="isAcceptRiskModalOpen = false">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Tetapkan Terima Risiko (Accepted Risk)</h3>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isAcceptRiskModalOpen = false">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Gunakan opsi ini apabila kendala belum dapat dihilangkan dalam waktu dekat (misalnya ketergantungan pihak ketiga/biaya) dan pekerjaan harus tetap berjalan dengan mitigasi sementara.
+          </p>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="riskJustification">Justifikasi Penerimaan Risiko <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: riskJustification.trim().length >= 10 }">
+                {{ riskJustification.trim().length }} / 10 min
+              </span>
+            </div>
+            <textarea
+              id="riskJustification"
+              v-model="riskJustification"
+              rows="3"
+              placeholder="Jelaskan alasan mengapa risiko ini diterima sementara (min. 10 karakter)..."
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="riskMitigation">Rencana Mitigasi Sementara <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: riskMitigation.trim().length >= 10 }">
+                {{ riskMitigation.trim().length }} / 10 min
+              </span>
+            </div>
+            <textarea
+              id="riskMitigation"
+              v-model="riskMitigation"
+              rows="3"
+              placeholder="Jelaskan langkah workaround atau kontrol risiko bagi pelapor (min. 10 karakter)..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" @click="isAcceptRiskModalOpen = false">Batal</button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="submittingAcceptRisk"
+            @click="submitAcceptRisk"
+          >
+            {{ submittingAcceptRisk ? 'Menyimpan...' : 'Tetapkan Terima Risiko' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Reopen Blocker -->
+    <div v-if="isReopenModalOpen" class="modal-backdrop" @click.self="isReopenModalOpen = false">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Kembalikan Tiket Kendala</h3>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isReopenModalOpen = false">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Tiket akan dikembalikan ke status ACKNOWLEDGED agar penanggung jawab menindaklanjuti ulang kendala Anda.
+          </p>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="reopenReason">Alasan Solusi / Mitigasi Belum Memadai <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: reopenReason.trim().length >= 10 }">
+                {{ reopenReason.trim().length }} / 10 min
+              </span>
+            </div>
+            <textarea
+              id="reopenReason"
+              v-model="reopenReason"
+              rows="3"
+              placeholder="Jelaskan bagian yang masih terhambat (min. 10 karakter)..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" @click="isReopenModalOpen = false">Batal</button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="submittingReopen"
+            @click="submitReopen"
+          >
+            {{ submittingReopen ? 'Mengembalikan...' : 'Kembalikan ke PIC' }}
           </button>
         </div>
       </div>
@@ -898,7 +1275,10 @@ h1 {
 
 .status-badge.open { background: #FEF3C7; color: #92400E; }
 .status-badge.acknowledged { background: #E0F2FE; color: #075985; }
-.status-badge.resolved { background: #DCFCE7; color: #166534; }
+.status-badge.in_progress { background: #E0E7FF; color: #3730A3; }
+.status-badge.resolved { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.status-badge.accepted_risk { background: #FFF7ED; color: #C2410C; border: 1px solid #FED7AA; }
+.status-badge.closed { background: #DCFCE7; color: #166534; }
 
 .sla-breach-badge {
   font-size: 10px;
@@ -910,10 +1290,18 @@ h1 {
   margin-right: 6px;
 }
 
-.ticket-desc {
-  font-size: 13px;
-  font-weight: 600;
+.ticket-list-title {
+  font-size: 13.5px;
+  font-weight: 700;
   color: #0E211B;
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+
+.ticket-desc {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: #475B54;
   line-height: 1.4;
   margin: 0 0 10px;
   display: -webkit-box;
@@ -1015,7 +1403,10 @@ h1 {
 
 .btn-action.ack { background: #E0F2FE; color: #075985; border-color: #BAE6FD; }
 .btn-action.support { background: #E6F4EE; color: #00674D; border-color: #A7F3D0; }
+.btn-action.accept-risk { background: #FFF7ED; color: #C2410C; border-color: #FED7AA; }
 .btn-action.resolve { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.btn-action.reopen { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
+.btn-action.close { background: #00674D; color: #FFFFFF; border-color: #00674D; }
 
 .detail-body {
   padding: 20px;
@@ -1041,7 +1432,125 @@ h1 {
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid #EFF5F2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.parsed-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0E211B;
+}
+
+.parsed-body {
+  margin: 0;
+  font-size: 13px;
+  color: #334841;
   white-space: pre-line;
+}
+
+.parsed-expectation {
+  margin-top: 2px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #EFF5F2;
+  font-size: 12.5px;
+  color: #1F352E;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exp-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00674D;
+  text-transform: uppercase;
+}
+
+.authority-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.authority-primary {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0E211B;
+  line-height: 1.35;
+}
+
+.authority-proj-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #E6F4EE;
+  color: #00674D;
+  border: 1px solid #B7E4D1;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.awaiting-confirm-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.closed-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  color: #166534;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.accepted-risk-box {
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  padding: 14px 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.risk-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #C2410C;
+}
+
+.risk-field-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #9A3412;
+  margin-bottom: 2px;
+}
+
+.risk-field p {
+  margin: 0;
+  font-size: 13px;
+  color: #7C2D12;
+  line-height: 1.45;
 }
 
 .info-grid-2 {

@@ -387,7 +387,7 @@ export class DashboardService {
             : b.severity === BlockerSeverity.HIGH
               ? 'Blocker Tinggi (P1)'
               : 'Kendala Aktif',
-        description: b.description,
+        description: this.formatBlockerSummaryText(b.description),
         supportNote:
           b.status === BlockerStatus.OPEN
             ? 'Kendala aktif belum direspon — butuh tindakan pimpinan'
@@ -562,8 +562,23 @@ export class DashboardService {
         highCount,
         riskLevel,
         healthScore,
-        topBlockerTitle: topBlocker ? `[${topBlocker.severity}] ${(topBlocker.description || '').slice(0, 80)}` : undefined,
+        topBlockerTitle: topBlocker
+          ? `[${topBlocker.severity}] ${this.formatBlockerSummaryText(topBlocker.description).slice(0, 80)}`
+          : undefined,
       };
     });
+  }
+
+  private formatBlockerSummaryText(rawDescription?: string | null): string {
+    const raw = (rawDescription || '').trim();
+    if (!raw) return '';
+    const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]*\)\s*$/i, '').trim();
+    const match = withoutExpectation.match(/^\[(.+?)\]\s*(.*)$/s);
+    if (match) {
+      const title = match[1].trim();
+      const body = match[2].trim();
+      return body ? `${title} — ${body}` : title;
+    }
+    return withoutExpectation;
   }
 }

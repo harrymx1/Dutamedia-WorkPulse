@@ -478,7 +478,7 @@ onMounted(() => {
         <div class="metric-card blocker">
           <div class="metric-header">
             <span class="metric-label">Blocker Belum Direspon</span>
-            <span class="pill red">SLA Menipis</span>
+            <span class="pill red">Perlu Segera Ditanggapi</span>
           </div>
           <div class="metric-val-wrap">
             <span class="metric-val text-red">{{ metrics.unacknowledgedBlockersCount }}</span>

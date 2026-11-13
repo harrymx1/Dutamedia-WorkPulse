@@ -63,7 +63,8 @@ describe('EscalationAgingView.vue (WP-EP06 / Prototipe 14 - Keterlambatan Penang
     await flushPromises();
 
     expect(wrapper.text()).toContain('Keterlambatan Penanganan Blocker');
-    expect(wrapper.text()).toContain('Terlewat SLA (Breached)');
+    expect(wrapper.text()).toContain('Lewat Batas Waktu');
+    expect(wrapper.text()).not.toContain('SLA');
     expect(wrapper.text()).toContain('67%');
     expect(wrapper.text()).toContain('Sertifikat SSL expired');
     expect(wrapper.text()).toContain('6 jam');

@@ -326,6 +326,7 @@ function getNotificationPreview(message: string): string {
 function getActionButtonLabel(actionUrl?: string): string {
   if (actionUrl === '/leave/queue') return 'Buka Antrean Persetujuan Cuti';
   if (actionUrl === '/blockers') return 'Buka Antrean Eskalasi Blocker';
+  if (actionUrl?.startsWith('/raise-blockers')) return 'Lihat & Konfirmasi Tiket Saya';
   if (actionUrl === '/daily/morning') return 'Buka Morning Commitment';
   if (actionUrl === '/admin/policies') return 'Buka Pengaturan Kebijakan';
   return 'Buka Halaman Terkait';
