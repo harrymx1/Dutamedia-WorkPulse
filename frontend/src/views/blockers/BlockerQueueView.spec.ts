@@ -53,7 +53,7 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     });
   });
 
-  it('renders metric summary cards and blocker ticket card list', async () => {
+  it('renders metric summary cards and blocker ticket card list with unified Indonesian status labels', async () => {
     const wrapper = mount(BlockerQueueView, {
       global: { plugins: [router] },
     });
@@ -63,10 +63,27 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(wrapper.text()).toContain('Antrean Eskalasi Blocker');
     expect(wrapper.text()).toContain('Management');
     expect(wrapper.text()).toContain('Kritis Belum Selesai');
-    expect(wrapper.text()).toContain('Menunggu Acknowledge');
+    expect(wrapper.text()).toContain('Menunggu Respons');
+    expect(wrapper.text()).toContain('Terima & Tangani');
     expect(wrapper.text()).toContain('Database query timeout');
     expect(wrapper.text()).toContain('Alice Dev');
     expect(wrapper.text()).toContain('Charlie Ops');
+
+    // Pastikan istilah lama / kode teknis mentah sudah hilang dari UI
+    expect(wrapper.text()).not.toContain('Menunggu Acknowledge');
+    expect(wrapper.text()).not.toContain('Terbuka (OPEN)');
+    expect(wrapper.text()).not.toContain('Ditangani (ACKNOWLEDGED)');
+    expect(wrapper.text()).not.toContain('Ditutup Final (CLOSED)');
+
+    const statusOptions = wrapper.findAll('select').at(0)!.findAll('option').map((o) => o.text());
+    expect(statusOptions).toEqual([
+      'Semua Status',
+      'Menunggu Respons',
+      'Sedang Ditangani',
+      'Solusi Diberikan',
+      'Risiko Diterima',
+      'Selesai Ditutup',
+    ]);
   });
 
   it('opens support contribution modal when Beri Bantuan is clicked', async () => {
@@ -98,6 +115,41 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(acceptRiskBtn).toBeDefined();
     await acceptRiskBtn!.trigger('click');
 
-    expect(wrapper.text()).toContain('Tetapkan Terima Risiko (Accepted Risk)');
+    expect(wrapper.text()).toContain('Tetapkan Risiko Diterima');
+  });
+
+  it('auto-scrolls to detail panel on tablet/mobile card click and scrolls back to list', async () => {
+    const scrollDetailSpy = vi.fn();
+    const scrollListSpy = vi.fn();
+    const matchMediaMock = vi.fn().mockReturnValue({ matches: true });
+    vi.stubGlobal('matchMedia', matchMediaMock);
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    const detailPanel = wrapper.find('[data-testid="ticket-detail-panel"]').element as HTMLElement;
+    const listPanel = wrapper.find('[data-testid="ticket-list-panel"]').element as HTMLElement;
+    detailPanel.scrollIntoView = scrollDetailSpy;
+    listPanel.scrollIntoView = scrollListSpy;
+
+    await wrapper.find('[data-testid="ticket-card-blk-001"]').trigger('click');
+    await flushPromises();
+
+    expect(matchMediaMock).toHaveBeenCalledWith('(max-width: 1024px)');
+    expect(scrollDetailSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+
+    await wrapper.find('[data-testid="btn-back-to-list"]').trigger('click');
+    expect(scrollListSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+
+    // Di desktop (> 1024px), tidak memicu auto-scroll
+    scrollDetailSpy.mockClear();
+    matchMediaMock.mockReturnValue({ matches: false });
+    await wrapper.find('[data-testid="ticket-card-blk-001"]').trigger('click');
+    await flushPromises();
+    expect(scrollDetailSpy).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 });

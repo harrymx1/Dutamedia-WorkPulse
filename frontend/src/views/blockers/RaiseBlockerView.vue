@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
+import { BLOCKER_STATUS_LABELS, getBlockerStatusLabel } from '../../utils/blockerStatus';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -575,23 +576,7 @@ function getStatusBadgeClass(status: string): string {
   }
 }
 
-function getStatusLabel(status: string): string {
-  switch (status) {
-    case 'RESOLVED':
-      return 'Solusi Diberikan · Menunggu Konfirmasi';
-    case 'IN_PROGRESS':
-    case 'ACKNOWLEDGED':
-      return 'Sedang Ditangani';
-    case 'OPEN':
-      return 'Menunggu Respons Penanggung Jawab';
-    case 'ACCEPTED_RISK':
-      return 'Risiko Diterima · Menunggu Konfirmasi';
-    case 'CLOSED':
-      return 'Selesai Ditutup';
-    default:
-      return status;
-  }
-}
+const getStatusLabel = getBlockerStatusLabel;
 
 function getSeverityClass(severity: string): string {
   switch (severity) {
@@ -787,7 +772,7 @@ onBeforeUnmount(() => {
           </div>
           <h2>Tiket Kendala Berhasil Diterbitkan</h2>
           <p class="submitted-msg">
-            Tiket ID: <code>{{ submittedTicket.id }}</code> telah dicatat pada sistem dengan status <strong>{{ submittedTicket.status }}</strong>. Notifikasi segera dikirimkan kepada penanggung jawab terkait.
+            Tiket ID: <code>{{ submittedTicket.id }}</code> telah dicatat pada sistem dengan status <strong>{{ getStatusLabel(submittedTicket.status) }}</strong>. Notifikasi segera dikirimkan kepada penanggung jawab terkait.
           </p>
           <div class="submitted-actions">
             <button
@@ -817,8 +802,8 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <!-- Form Utama -->
         <form v-else class="blocker-form" @submit.prevent="submitBlocker" novalidate>
+          <!-- Form Utama -->
           <!-- Panel 1: Detail Kendala -->
           <section class="panel">
             <div class="panel-head">
@@ -1049,81 +1034,82 @@ onBeforeUnmount(() => {
                   v-model="assignedOwnerId"
                   :disabled="authorityContext === 'PROJECT_AUTHORITY' && !projectCode"
                 >
+                  <option
+                    v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY' || projectCode"
+                    value=""
+                  >
+                    — Tidak memilih orang tertentu (Sistem menentukan otomatis) —
+                  </option>
+                  <option v-else value="">
+                    — Pilih Proyek Terdaftar terlebih dahulu —
+                  </option>
+
                   <!-- 1. JALUR ORGANIZATIONAL AUTHORITY (STRUKTURAL) -->
-                  <template v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
-                    <option value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis) —</option>
-
-                    <optgroup
-                      v-if="eligibleOwners.directManagers.length > 0"
-                      label="── Atasan Langsung (Direct Supervisor) ──"
+                  <optgroup
+                    v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY' && eligibleOwners.directManagers.length > 0"
+                    label="── Atasan Langsung (Direct Supervisor) ──"
+                  >
+                    <option
+                      v-for="u in eligibleOwners.directManagers"
+                      :key="u.id"
+                      :value="u.id"
                     >
-                      <option
-                        v-for="u in eligibleOwners.directManagers"
-                        :key="u.id"
-                        :value="u.id"
-                      >
-                        {{ u.fullName }} — {{ u.jobTitle || 'Technical Lead' }} [Atasan Langsung]
-                      </option>
-                    </optgroup>
+                      {{ u.fullName }} — {{ u.jobTitle || 'Technical Lead' }} [Atasan Langsung]
+                    </option>
+                  </optgroup>
 
-                    <optgroup
-                      v-if="eligibleOwners.departmentHeads.length > 0"
-                      label="── Penanggung Jawab Divisi Terkait (Department Heads) ──"
+                  <optgroup
+                    v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY' && eligibleOwners.departmentHeads.length > 0"
+                    label="── Penanggung Jawab Divisi Terkait (Department Heads) ──"
+                  >
+                    <option
+                      v-for="u in eligibleOwners.departmentHeads"
+                      :key="u.id"
+                      :value="u.id"
                     >
-                      <option
-                        v-for="u in eligibleOwners.departmentHeads"
-                        :key="u.id"
-                        :value="u.id"
-                      >
-                        {{ u.fullName }} — {{ u.jobTitle || 'Head of Department' }}
-                      </option>
-                    </optgroup>
+                      {{ u.fullName }} — {{ u.jobTitle || 'Head of Department' }}
+                    </option>
+                  </optgroup>
 
-                    <optgroup
-                      v-if="eligibleOwners.directors.length > 0"
-                      label="── Direksi Eksekutif (Leadership) ──"
+                  <optgroup
+                    v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY' && eligibleOwners.directors.length > 0"
+                    label="── Direksi Eksekutif (Leadership) ──"
+                  >
+                    <option
+                      v-for="u in eligibleOwners.directors"
+                      :key="u.id"
+                      :value="u.id"
                     >
-                      <option
-                        v-for="u in eligibleOwners.directors"
-                        :key="u.id"
-                        :value="u.id"
-                      >
-                        {{ u.fullName }} — {{ u.jobTitle || 'Chief Executive Officer' }}
-                      </option>
-                    </optgroup>
-                  </template>
+                      {{ u.fullName }} — {{ u.jobTitle || 'Chief Executive Officer' }}
+                    </option>
+                  </optgroup>
 
                   <!-- 2. JALUR PROJECT AUTHORITY (KEWENANGAN PROYEK) -->
-                  <template v-else>
-                    <option v-if="!projectCode" value="">— Pilih Proyek Terdaftar terlebih dahulu —</option>
-                    <option v-else value="">— Tidak memilih orang tertentu (Sistem menentukan otomatis) —</option>
-
-                    <optgroup
-                      v-if="eligibleOwners.projectLeads.length > 0"
-                      :label="`── Pimpinan Proyek (Project Lead / PM: ${projectCode}) ──`"
+                  <optgroup
+                    v-if="authorityContext !== 'ORGANIZATIONAL_AUTHORITY' && eligibleOwners.projectLeads.length > 0"
+                    :label="`── Pimpinan Proyek (Project Lead / PM: ${projectCode}) ──`"
+                  >
+                    <option
+                      v-for="u in eligibleOwners.projectLeads"
+                      :key="u.id"
+                      :value="u.id"
                     >
-                      <option
-                        v-for="u in eligibleOwners.projectLeads"
-                        :key="u.id"
-                        :value="u.id"
-                      >
-                        {{ u.fullName }} — {{ u.jobTitle || 'Project Lead' }} [Pimpinan Proyek]
-                      </option>
-                    </optgroup>
+                      {{ u.fullName }} — {{ u.jobTitle || 'Project Lead' }} [Pimpinan Proyek]
+                    </option>
+                  </optgroup>
 
-                    <optgroup
-                      v-if="eligibleOwners.projectSponsors.length > 0"
-                      :label="`── Pengarah Proyek (Project Sponsor / Reviewer: ${projectCode}) ──`"
+                  <optgroup
+                    v-if="authorityContext !== 'ORGANIZATIONAL_AUTHORITY' && eligibleOwners.projectSponsors.length > 0"
+                    :label="`── Pengarah Proyek (Project Sponsor / Reviewer: ${projectCode}) ──`"
+                  >
+                    <option
+                      v-for="u in eligibleOwners.projectSponsors"
+                      :key="u.id"
+                      :value="u.id"
                     >
-                      <option
-                        v-for="u in eligibleOwners.projectSponsors"
-                        :key="u.id"
-                        :value="u.id"
-                      >
-                        {{ u.fullName }} — {{ u.jobTitle || 'Project Sponsor' }} [Pengarah Proyek]
-                      </option>
-                    </optgroup>
-                  </template>
+                      {{ u.fullName }} — {{ u.jobTitle || 'Project Sponsor' }} [Pengarah Proyek]
+                    </option>
+                  </optgroup>
 
                   <!-- 3. REKAN / PIHAK LAIN: pilihan bebas pelapor di luar jalur kewenangan -->
                   <optgroup
@@ -1231,7 +1217,7 @@ onBeforeUnmount(() => {
               data-testid="filter-open"
               @click="blockerFilter = 'open'"
             >
-              Menunggu Respons ({{ countPendingResponse }})
+              {{ BLOCKER_STATUS_LABELS.OPEN }} ({{ countPendingResponse }})
             </button>
             <button
               type="button"
@@ -1240,7 +1226,7 @@ onBeforeUnmount(() => {
               data-testid="filter-handling"
               @click="blockerFilter = 'handling'"
             >
-              Sedang Ditangani ({{ countInProgress }})
+              {{ BLOCKER_STATUS_LABELS.ACKNOWLEDGED }} ({{ countInProgress }})
             </button>
             <button
               type="button"
@@ -1258,7 +1244,7 @@ onBeforeUnmount(() => {
               data-testid="filter-closed"
               @click="blockerFilter = 'closed'"
             >
-              Selesai / Ditutup ({{ countClosed }})
+              {{ BLOCKER_STATUS_LABELS.CLOSED }} ({{ countClosed }})
             </button>
           </div>
         </div>

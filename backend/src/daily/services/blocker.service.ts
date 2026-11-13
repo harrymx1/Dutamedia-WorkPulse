@@ -819,7 +819,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
         title: `Risiko Diterima (Mitigasi Aktif): ${this.extractCleanBlockerTitle(ticket.description)}`,
         message:
-          'Penanggung jawab menetapkan status Terima Risiko beserta rencana mitigasi. Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.',
+          'Penanggung jawab menetapkan status Risiko Diterima beserta rencana mitigasi. Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.',
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
       });
@@ -859,7 +859,7 @@ export class BlockerService {
       throw new AppException({
         code: ErrorCode.RESOURCE_CONFLICT,
         message:
-          'Tiket hanya dapat ditutup setelah penanggung jawab memberikan solusi (RESOLVED) atau menetapkan penerimaan risiko (ACCEPTED_RISK).',
+          'Tiket hanya dapat ditutup setelah penanggung jawab memberikan solusi (Solusi Diberikan) atau menetapkan mitigasi (Risiko Diterima).',
         statusCode: HttpStatus.CONFLICT,
       });
     }
@@ -918,7 +918,7 @@ export class BlockerService {
       throw new AppException({
         code: ErrorCode.RESOURCE_CONFLICT,
         message:
-          'Tiket hanya dapat dikembalikan apabila sedang berstatus RESOLVED atau ACCEPTED_RISK.',
+          'Tiket hanya dapat dikembalikan apabila sedang berstatus Solusi Diberikan atau Risiko Diterima.',
         statusCode: HttpStatus.CONFLICT,
       });
     }
@@ -948,7 +948,7 @@ export class BlockerService {
         recipientUserId: ticket.assignedOwnerId,
         triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
         title: `Tiket Dikembalikan Pelapor: ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message: `Pelapor menyatakan solusi/mitigasi belum memadai: "${trimmedReason}". Status tiket kembali menjadi ACKNOWLEDGED.`,
+        message: `Pelapor menyatakan solusi/mitigasi belum memadai: "${trimmedReason}". Status tiket kembali ke Sedang Ditangani.`,
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,
       });

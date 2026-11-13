@@ -390,8 +390,8 @@ export class DashboardService {
         description: this.formatBlockerSummaryText(b.description),
         supportNote:
           b.status === BlockerStatus.OPEN
-            ? 'Kendala aktif belum direspon — butuh tindakan pimpinan'
-            : `Kendala dalam penanganan (${b.status})`,
+            ? 'Kendala aktif (Menunggu Respons) — butuh tindakan pimpinan'
+            : 'Kendala aktif (Sedang Ditangani)',
         actionUrl: '/blockers',
         actionLabel: 'Bantu Unblock',
       });

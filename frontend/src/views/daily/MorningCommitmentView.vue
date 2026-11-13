@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/auth';
 import { getPromptHintForFunction, resolveUserFunction } from '../../config/prompts';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { getBlockerStatusLabel } from '../../utils/blockerStatus';
 import {
   Clock,
   Lock,
@@ -1032,7 +1033,7 @@ onMounted(() => {
                             class="badge-mini"
                             :class="blk.status === 'OPEN' ? 'open' : blk.status === 'ACKNOWLEDGED' ? 'ack' : 'in-prog'"
                           >
-                            {{ blk.severity }} · {{ blk.status }}
+                            {{ blk.severity }} · {{ getBlockerStatusLabel(blk.status) }}
                           </span>
                         </div>
                         <div class="picker-item-title">{{ blk.description }}</div>

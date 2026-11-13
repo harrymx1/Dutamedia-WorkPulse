@@ -303,4 +303,74 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     expect(wrapper.text()).toContain('Sedang Diproses');
     expect(wrapper.text()).not.toContain('Menunggu PIC');
   });
+
+  it('uses unified 5 Indonesian status labels on cards, closed pill, and creation success screen', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: any) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/blockers?mine=raised')) {
+          return Promise.resolve({
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              data: [
+                { id: 't1', description: '[Tiket Open] Masalah DNS', type: 'INFRA', severity: 'HIGH', impact: 'TASK', status: 'OPEN', raisedAt: '2026-11-13T04:00:00Z' },
+                { id: 't2', description: '[Tiket Ack] Masalah Cache', type: 'TECHNICAL', severity: 'MEDIUM', impact: 'TASK', status: 'ACKNOWLEDGED', raisedAt: '2026-11-13T04:10:00Z' },
+                { id: 't3', description: '[Tiket Res] Masalah Queue', type: 'TECHNICAL', severity: 'LOW', impact: 'TASK', status: 'RESOLVED', raisedAt: '2026-11-13T04:20:00Z' },
+                { id: 't4', description: '[Tiket Risk] Masalah Vendor', type: 'VENDOR', severity: 'HIGH', impact: 'TASK', status: 'ACCEPTED_RISK', raisedAt: '2026-11-13T04:30:00Z' },
+                { id: 't5', description: '[Tiket Done] Masalah Login', type: 'TECHNICAL', severity: 'LOW', impact: 'TASK', status: 'CLOSED', raisedAt: '2026-11-13T04:40:00Z' },
+              ],
+            }),
+          });
+        }
+        if (url.endsWith('/blockers')) {
+          return Promise.resolve({
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              data: { id: 'new-blk-123', status: 'OPEN' },
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    // Uji layar sukses pembuatan tiket memakai label resmi (bukan raw OPEN)
+    await wrapper.find('#blockerTitle').setValue('Kendala Gateway Timeout Staging');
+    await wrapper.find('#blockerType').setValue('INFRA');
+    await wrapper.find('#blockerImpact').setValue('TASK');
+    await wrapper.find('#blockerDesc').setValue('Endpoint API gateway staging mengembalikan HTTP 504 setelah deploy.');
+    await wrapper.find('form.blocker-form').trigger('submit');
+    await flushPromises();
+
+    const submittedCard = wrapper.find('[data-testid="submitted-ticket-card"]');
+    expect(submittedCard.exists()).toBe(true);
+    expect(submittedCard.text()).toContain('Menunggu Respons');
+    expect(submittedCard.text()).not.toContain('status OPEN');
+
+    // Uji 5 badge status seragam di tab Blocker Saya
+    await wrapper.find('[data-testid="btn-view-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="filter-closed"]').text()).toContain('Selesai Ditutup (1)');
+    const badgesText = wrapper.findAll('.pill').map((p) => p.text());
+    expect(badgesText).toContain('Menunggu Respons');
+    expect(badgesText).toContain('Sedang Ditangani');
+    expect(badgesText).toContain('Solusi Diberikan');
+    expect(badgesText).toContain('Risiko Diterima');
+    expect(badgesText).toContain('Selesai Ditutup');
+  });
 });

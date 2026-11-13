@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
+import {
+  BLOCKER_STATUS_FILTER_OPTIONS,
+  getBlockerStatusLabel,
+  isActiveBlockerStatus,
+  type BlockerTicketStatus,
+} from '../../utils/blockerStatus';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -17,16 +23,11 @@ import {
   ShieldAlert,
   RotateCcw,
   ChevronRight,
+  ArrowUp,
   X,
 } from 'lucide-vue-next';
 
-export type BlockerTicketStatus =
-  | 'OPEN'
-  | 'ACKNOWLEDGED'
-  | 'IN_PROGRESS'
-  | 'RESOLVED'
-  | 'ACCEPTED_RISK'
-  | 'CLOSED';
+export type { BlockerTicketStatus };
 
 interface BlockerTicketItem {
   id: string;
@@ -62,6 +63,11 @@ const authStore = useAuthStore();
 const loading = ref(false);
 const blockers = ref<BlockerTicketItem[]>([]);
 const selectedTicket = ref<BlockerTicketItem | null>(null);
+const listSectionRef = ref<HTMLElement | null>(null);
+const detailSectionRef = ref<HTMLElement | null>(null);
+
+// Menyesuaikan breakpoint CSS `.queue-split` saat beralih ke tampilan bertumpuk 1 kolom
+const STACKED_QUEUE_MEDIA_QUERY = '(max-width: 1024px)';
 
 // Filters
 const statusFilter = ref<string>('ALL');
@@ -130,11 +136,7 @@ async function loadBlockers() {
 }
 
 // Metrics & Lifecycle Helpers
-const ACTIVE_STATUSES: BlockerTicketStatus[] = ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'];
-
-function isActiveTicket(status?: string): boolean {
-  return Boolean(status && ACTIVE_STATUSES.includes(status as BlockerTicketStatus));
-}
+const isActiveTicket = isActiveBlockerStatus;
 
 const isSelectedTicketReporter = computed(() =>
   Boolean(
@@ -190,12 +192,6 @@ function formatAuthorityLabel(ownerNeededType?: string): string {
   return ownerNeededType || '-';
 }
 
-function formatStatusLabel(status: string): string {
-  if (status === 'ACCEPTED_RISK') return 'ACCEPTED RISK';
-  if (status === 'IN_PROGRESS') return 'IN PROGRESS';
-  return status;
-}
-
 const criticalCount = computed(
   () => blockers.value.filter((b) => b.severity === 'CRITICAL' && isActiveTicket(b.status)).length,
 );
@@ -211,19 +207,29 @@ const filteredBlockers = computed(() => {
   });
 });
 
-function selectTicket(ticket: BlockerTicketItem) {
+async function selectTicket(ticket: BlockerTicketItem) {
   selectedTicket.value = ticket;
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    if (window.matchMedia(STACKED_QUEUE_MEDIA_QUERY).matches) {
+      await nextTick();
+      detailSectionRef.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }
 
-// Acknowledge Action
+function scrollBackToTicketList() {
+  listSectionRef.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+}
+
+// Terima & Tangani Action
 async function handleAcknowledge(ticketId: string) {
   acknowledging.value = true;
   try {
     await apiClient(`/blockers/${ticketId}/acknowledge`, { method: 'POST' });
-    showToast('Tiket kendala berhasil di-acknowledge.');
+    showToast(`Tiket kendala berhasil diterima dan berstatus ${getBlockerStatusLabel('ACKNOWLEDGED')}.`);
     await loadBlockers();
   } catch (err: any) {
-    showToast(err.message || 'Gagal acknowledge tiket.', true);
+    showToast(err.message || 'Gagal menerima dan menangani tiket.', true);
   } finally {
     acknowledging.value = false;
   }
@@ -288,7 +294,7 @@ async function submitResolve() {
       }),
     });
     isResolveModalOpen.value = false;
-    showToast('Solusi berhasil dicatat. Tiket berstatus RESOLVED dan menunggu konfirmasi pelapor.');
+    showToast(`Solusi berhasil dicatat. Tiket berstatus ${getBlockerStatusLabel('RESOLVED')} dan menunggu konfirmasi pelapor.`);
     await loadBlockers();
   } catch (err: any) {
     showToast(err.message || 'Gagal menyelesaikan tiket.', true);
@@ -325,7 +331,7 @@ async function submitAcceptRisk() {
       }),
     });
     isAcceptRiskModalOpen.value = false;
-    showToast('Keputusan Terima Risiko (ACCEPTED RISK) dicatat dan menunggu konfirmasi pelapor.');
+    showToast(`Keputusan ${getBlockerStatusLabel('ACCEPTED_RISK')} dicatat dan menunggu konfirmasi pelapor.`);
     await loadBlockers();
   } catch (err: any) {
     showToast(err.message || 'Gagal menetapkan Terima Risiko.', true);
@@ -339,7 +345,7 @@ async function handleCloseTicket(ticketId: string) {
   submittingClose.value = true;
   try {
     await apiClient(`/blockers/${ticketId}/close`, { method: 'POST' });
-    showToast('Tiket kendala telah dikonfirmasi dan ditutup permanen (CLOSED).');
+    showToast(`Tiket kendala telah dikonfirmasi dan berstatus ${getBlockerStatusLabel('CLOSED')}.`);
     await loadBlockers();
   } catch (err: any) {
     showToast(err.message || 'Gagal menutup tiket kendala.', true);
@@ -369,7 +375,7 @@ async function submitReopen() {
       }),
     });
     isReopenModalOpen.value = false;
-    showToast('Tiket dikembalikan ke penanggung jawab (ACKNOWLEDGED).');
+    showToast(`Tiket dikembalikan ke penanggung jawab dengan status ${getBlockerStatusLabel('ACKNOWLEDGED')}.`);
     await loadBlockers();
   } catch (err: any) {
     showToast(err.message || 'Gagal mengembalikan tiket.', true);
@@ -415,7 +421,7 @@ onMounted(() => {
           <span class="eyebrow">Manajemen Kendala, Eskalasi &amp; Dukungan Lintas Fungsi</span>
           <h1>Antrean Eskalasi Blocker</h1>
           <p class="subtitle">
-            Pantau seluruh kendala aktif, berikan respons awal (Acknowledge), salurkan bantuan (Support), dan catat solusi atau keputusan risiko sebelum melewati batas waktu penanganan.
+            Pantau seluruh kendala aktif, terima dan tangani tiket masuk, salurkan bantuan tim, serta catat solusi atau keputusan risiko sebelum melewati batas waktu penanganan.
           </p>
         </div>
       </div>
@@ -433,11 +439,11 @@ onMounted(() => {
 
         <div class="metric-card alert-amber">
           <div class="metric-top">
-            <span class="metric-label">Menunggu Acknowledge</span>
+            <span class="metric-label">Menunggu Respons</span>
             <Clock :size="20" class="metric-icon" />
           </div>
           <div class="metric-value">{{ pendingAckCount }}</div>
-          <div class="metric-sub">Tiket status OPEN belum direspons oleh PIC terkait</div>
+          <div class="metric-sub">Tiket berstatus Menunggu Respons belum ditindaklanjuti oleh PIC terkait</div>
         </div>
 
         <div class="metric-card alert-blue">
@@ -446,7 +452,7 @@ onMounted(() => {
             <AlertTriangle :size="20" class="metric-icon" />
           </div>
           <div class="metric-value">{{ totalActiveCount }}</div>
-          <div class="metric-sub">Tiket aktif dalam penanganan (OPEN, ACKNOWLEDGED)</div>
+          <div class="metric-sub">Tiket aktif yang masih berjalan (Menunggu Respons &amp; Sedang Ditangani)</div>
         </div>
       </div>
 
@@ -456,11 +462,13 @@ onMounted(() => {
           <label>Status:</label>
           <select v-model="statusFilter" @change="loadBlockers">
             <option value="ALL">Semua Status</option>
-            <option value="OPEN">Terbuka (OPEN)</option>
-            <option value="ACKNOWLEDGED">Ditangani (ACKNOWLEDGED)</option>
-            <option value="RESOLVED">Solusi Diberikan (RESOLVED)</option>
-            <option value="ACCEPTED_RISK">Risiko Diterima (ACCEPTED RISK)</option>
-            <option value="CLOSED">Ditutup Final (CLOSED)</option>
+            <option
+              v-for="statusOpt in BLOCKER_STATUS_FILTER_OPTIONS"
+              :key="statusOpt.value"
+              :value="statusOpt.value"
+            >
+              {{ statusOpt.label }}
+            </option>
           </select>
         </div>
 
@@ -498,7 +506,7 @@ onMounted(() => {
       <!-- Main Queue 2-Column Split -->
       <div class="queue-split">
         <!-- Kolom Kiri: Daftar Tiket -->
-        <div class="ticket-list-col">
+        <div ref="listSectionRef" class="ticket-list-col" data-testid="ticket-list-panel">
           <div v-if="loading" class="empty-state">
             <span>Memuat antrean kendala...</span>
           </div>
@@ -515,6 +523,7 @@ onMounted(() => {
               selected: selectedTicket?.id === ticket.id,
               'sla-breached': isSlaBreached(ticket.targetResolutionAt) && isActiveTicket(ticket.status)
             }"
+            :data-testid="`ticket-card-${ticket.id}`"
             @click="selectTicket(ticket)"
           >
             <!-- Baris 1: Severity, Kategori, Status & Batas Waktu Indicator -->
@@ -532,7 +541,7 @@ onMounted(() => {
                   LEWAT BATAS WAKTU
                 </span>
                 <span class="status-badge" :class="ticket.status.toLowerCase()">
-                  {{ formatStatusLabel(ticket.status) }}
+                  {{ getBlockerStatusLabel(ticket.status) }}
                 </span>
               </div>
             </div>
@@ -563,12 +572,25 @@ onMounted(() => {
         </div>
 
         <!-- Kolom Kanan: Detail & Aksi Tiket Terpilih -->
-        <div class="ticket-detail-col">
+        <div ref="detailSectionRef" class="ticket-detail-col" data-testid="ticket-detail-panel">
           <div v-if="!selectedTicket" class="detail-empty">
             <p>Pilih tiket kendala di kolom sebelah kiri untuk melihat detail dan tindakan.</p>
           </div>
 
           <div v-else class="detail-card">
+            <!-- Navigasi Balik ke Daftar (Khusus Tablet / Smartphone) -->
+            <div class="detail-mobile-nav">
+              <button
+                type="button"
+                class="btn-back-to-list"
+                data-testid="btn-back-to-list"
+                @click="scrollBackToTicketList"
+              >
+                <ArrowUp :size="14" />
+                <span>Kembali ke Daftar</span>
+              </button>
+            </div>
+
             <!-- Header Detail -->
             <div class="detail-head">
               <div>
@@ -577,7 +599,7 @@ onMounted(() => {
                   <span class="sev-badge" :class="selectedTicket.severity.toLowerCase()">{{ selectedTicket.severity }}</span>
                   <span class="type-pill">{{ selectedTicket.type }}</span>
                   <span class="status-badge" :class="selectedTicket.status.toLowerCase()">
-                    {{ formatStatusLabel(selectedTicket.status) }}
+                    {{ getBlockerStatusLabel(selectedTicket.status) }}
                   </span>
                 </div>
               </div>
@@ -592,7 +614,7 @@ onMounted(() => {
                   @click="handleAcknowledge(selectedTicket.id)"
                 >
                   <CheckSquare :size="15" />
-                  <span>{{ acknowledging ? 'Memproses...' : 'Acknowledge' }}</span>
+                  <span>{{ acknowledging ? 'Memproses...' : 'Terima & Tangani' }}</span>
                 </button>
 
                 <button
@@ -747,7 +769,7 @@ onMounted(() => {
                 <p>{{ selectedTicket.resolutionNote }}</p>
               </div>
 
-              <!-- Keputusan Terima Risiko (Accepted Risk) -->
+              <!-- Keputusan Risiko Diterima -->
               <div
                 v-if="
                   selectedTicket.riskAcceptanceJustification ||
@@ -757,7 +779,7 @@ onMounted(() => {
               >
                 <div class="risk-head">
                   <ShieldAlert :size="18" />
-                  <strong>Keputusan Terima Risiko (Accepted Risk)</strong>
+                  <strong>Keputusan {{ getBlockerStatusLabel('ACCEPTED_RISK') }}</strong>
                 </div>
                 <div v-if="selectedTicket.riskAcceptanceJustification" class="risk-field">
                   <span class="risk-field-label">Justifikasi Penerimaan Risiko:</span>
@@ -847,7 +869,7 @@ onMounted(() => {
     <div v-if="isResolveModalOpen" class="modal-backdrop" @click.self="isResolveModalOpen = false">
       <div class="modal-card">
         <div class="modal-head">
-          <h3>Selesaikan Kendala (Resolve Blocker)</h3>
+          <h3>Selesaikan Kendala</h3>
           <button type="button" class="btn-close" aria-label="Tutup" @click="isResolveModalOpen = false">
             <X :size="18" />
           </button>
@@ -890,7 +912,7 @@ onMounted(() => {
     <div v-if="isAcceptRiskModalOpen" class="modal-backdrop" @click.self="isAcceptRiskModalOpen = false">
       <div class="modal-card">
         <div class="modal-head">
-          <h3>Tetapkan Terima Risiko (Accepted Risk)</h3>
+          <h3>Tetapkan {{ getBlockerStatusLabel('ACCEPTED_RISK') }}</h3>
           <button type="button" class="btn-close" aria-label="Tutup" @click="isAcceptRiskModalOpen = false">
             <X :size="18" />
           </button>
@@ -953,7 +975,7 @@ onMounted(() => {
         </div>
         <div class="modal-body">
           <p class="modal-hint">
-            Tiket akan dikembalikan ke status ACKNOWLEDGED agar penanggung jawab menindaklanjuti ulang kendala Anda.
+            Tiket akan dikembalikan ke status {{ getBlockerStatusLabel('ACKNOWLEDGED') }} agar penanggung jawab menindaklanjuti ulang kendala Anda.
           </p>
           <div class="form-group">
             <div class="label-row">
@@ -1204,6 +1226,7 @@ h1 {
   max-height: calc(100vh - 240px);
   overflow-y: auto;
   padding-right: 4px;
+  scroll-margin-top: 76px;
 }
 
 .ticket-card {
@@ -1234,6 +1257,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 8px;
 }
 
@@ -1269,8 +1294,9 @@ h1 {
 .status-badge {
   font-size: 10.5px;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .status-badge.open { background: #FEF3C7; color: #92400E; }
@@ -1352,6 +1378,7 @@ h1 {
   border: 1px solid #DCE7E2;
   border-radius: 12px;
   overflow: hidden;
+  scroll-margin-top: 76px;
 }
 
 .detail-empty {
@@ -1386,7 +1413,30 @@ h1 {
 
 .detail-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.detail-mobile-nav {
+  display: none;
+}
+
+.btn-back-to-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #CBE0D6;
+  background: #fff;
+  color: #00674D;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-back-to-list:hover {
+  background: #E6F4EE;
 }
 
 .btn-action {
@@ -1814,10 +1864,23 @@ h1 {
 .toast-popup.success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 .toast-popup.error { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .queue-split {
     grid-template-columns: 1fr;
   }
+  .ticket-list-col {
+    max-height: 440px;
+  }
+  .detail-mobile-nav {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #EFF5F2;
+    background: #F7FAF9;
+  }
+}
+
+@media (max-width: 900px) {
   .metrics-grid {
     grid-template-columns: 1fr;
   }

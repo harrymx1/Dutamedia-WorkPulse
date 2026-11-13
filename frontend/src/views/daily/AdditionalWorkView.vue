@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { getBlockerStatusLabel } from '../../utils/blockerStatus';
 import {
   Plus,
   CheckCircle2,
@@ -394,7 +395,7 @@ onMounted(() => {
                             class="badge-mini"
                             :class="blk.status === 'OPEN' ? 'open' : blk.status === 'ACKNOWLEDGED' ? 'ack' : 'in-prog'"
                           >
-                            {{ blk.severity }} · {{ blk.status }}
+                            {{ blk.severity }} · {{ getBlockerStatusLabel(blk.status) }}
                           </span>
                         </div>
                         <div class="picker-item-title">{{ blk.description }}</div>
