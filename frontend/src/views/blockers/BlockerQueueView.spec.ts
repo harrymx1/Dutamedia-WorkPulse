@@ -304,8 +304,12 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     const secondCard = wrapper.find('[data-testid="ticket-card-blk-mixed"]');
     expect(secondCard.find('[data-testid="card-support-count"]').text()).toContain('1 Bantuan');
 
-    // Detail tiket pertama memakai judul & label alasan pengembalian yang tepat
-    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (1)');
+    // Detail tiket pertama memakai judul & label alasan pengembalian yang tepat (didahului solusi awal)
+    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (2)');
+    const initialResCard = wrapper.find('[data-testid="history-item-synthetic-pre-reopen-blk-reopened-only-0"]');
+    expect(initialResCard.exists()).toBe(true);
+    expect(initialResCard.classes()).toContain('variant-resolution');
+    expect(initialResCard.text()).toContain('Solusi Diberikan');
     const reopenCard = wrapper.find('[data-testid="history-item-sup-reopen-1"]');
     expect(reopenCard.classes()).toContain('variant-reopen');
     expect(reopenCard.text()).toContain('Dikembalikan Pelapor (Belum Memadai)');
@@ -398,6 +402,21 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
               assignedOwner: { id: 'owner-bp', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
               supportContributions: [],
             },
+            {
+              id: 'blk-reopened-stale',
+              description: '[CI Runner] Token deploy gagal',
+              type: 'TECHNICAL',
+              severity: 'HIGH',
+              impact: 'MILESTONE',
+              status: 'ACKNOWLEDGED',
+              raisedAt: '2026-11-13T06:00:00.000Z',
+              resolutionNote: 'Solusi lama sebelum dikembalikan',
+              riskAcceptanceJustification: 'Justifikasi lama',
+              ownerNeededType: 'TECH_LEAD',
+              raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+              supportContributions: [],
+            },
           ],
         }),
       }),
@@ -416,9 +435,16 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     const otherCard = wrapper.find('[data-testid="ticket-card-blk-other-pic-risk"]');
     expect(otherCard.find('[data-testid="card-owner-badge"]').text()).toBe('PIC: Bambang Pratama');
 
-    // Detail panel tiket pertama: 3 entri riwayat lengkap (reopen + resolusi + penutupan disintesis)
+    // Detail panel tiket pertama: 4 entri riwayat lengkap (solusi awal + reopen + resolusi kedua + penutupan disintesis)
     expect(wrapper.find('[data-testid="detail-owner-badge"]').text()).toBe('Tugas Anda');
-    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (3)');
+    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (4)');
+
+    const initialResItem = wrapper.find('[data-testid="history-item-synthetic-pre-reopen-blk-closed-s2-0"]');
+    expect(initialResItem.exists()).toBe(true);
+    expect(initialResItem.classes()).toContain('variant-resolution');
+    expect(initialResItem.text()).toContain('Solusi Diberikan');
+    expect(initialResItem.text()).toContain('Catatan Solusi:');
+    expect(initialResItem.text()).toContain('Solusi awal telah diberikan oleh penanggung jawab sebelum tiket dikembalikan oleh pelapor.');
 
     const resItem = wrapper.find('[data-testid="history-item-sup-res-2"]');
     expect(resItem.classes()).toContain('variant-resolution');
@@ -442,6 +468,13 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(riskItem.text()).toContain('Menunggu approval kuartal depan');
     expect(riskItem.text()).toContain('Rencana Mitigasi:');
     expect(riskItem.text()).toContain('Gunakan fallback cache');
+
+    // Klik tiket ACKNOWLEDGED yang masih menyimpan snapshot lama: .resolution-box & .accepted-risk-box tidak boleh tampil
+    const staleAckCard = wrapper.find('[data-testid="ticket-card-blk-reopened-stale"]');
+    await staleAckCard.trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.resolution-box').exists()).toBe(false);
+    expect(wrapper.find('.accepted-risk-box').exists()).toBe(false);
 
     vi.unstubAllGlobals();
   });

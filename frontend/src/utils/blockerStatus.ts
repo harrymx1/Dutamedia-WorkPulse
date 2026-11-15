@@ -239,22 +239,39 @@ function toHistoryIsoString(value?: string | Date | null): string {
 export function buildBlockerTicketHistory(
   ticket: BlockerHistoryTicketLike,
 ): BlockerTicketHistoryItem[] {
-  const items: Array<BlockerHistoryEntryLike & { id: string; resolvedType: BlockerHistoryEntryType }> =
-    (ticket.supportContributions || []).map((entry, idx) => ({
-      ...entry,
-      id: entry.id || `entry-${idx}`,
-      resolvedType: resolveBlockerHistoryEntryType(entry),
-    }));
+  const items: Array<
+    BlockerHistoryEntryLike & { id: string; resolvedType: BlockerHistoryEntryType }
+  > = (ticket.supportContributions || []).map((entry, idx) => ({
+    ...entry,
+    id: entry.id || `entry-${idx}`,
+    resolvedType: resolveBlockerHistoryEntryType(entry),
+  }));
+
+  items.sort((a, b) => toSafeHistoryTime(a.createdAt) - toSafeHistoryTime(b.createdAt));
 
   const ownerActor = ticket.assignedOwner || { fullName: 'Penanggung Jawab' };
   const reporterActor = ticket.raisedBy || { fullName: 'Pelapor' };
 
+  const reopenItems = items.filter((item) => item.resolvedType === 'REPORTER_REOPEN');
+  const latestReopenMs =
+    reopenItems.length > 0
+      ? toSafeHistoryTime(reopenItems[reopenItems.length - 1].createdAt)
+      : 0;
+
+  const isSettledDecisionStatus =
+    !ticket.status ||
+    ticket.status === 'RESOLVED' ||
+    ticket.status === 'ACCEPTED_RISK' ||
+    ticket.status === 'CLOSED';
+
   const trimmedResolution = ticket.resolutionNote?.trim();
   if (
+    isSettledDecisionStatus &&
     trimmedResolution &&
     !items.some(
       (item) =>
         item.resolvedType === 'PIC_RESOLUTION' &&
+        toSafeHistoryTime(item.createdAt) >= latestReopenMs &&
         item.resultNote?.trim() === trimmedResolution,
     )
   ) {
@@ -272,8 +289,13 @@ export function buildBlockerTicketHistory(
   const trimmedRiskJust = ticket.riskAcceptanceJustification?.trim();
   const trimmedRiskPlan = ticket.riskMitigationPlan?.trim();
   if (
+    isSettledDecisionStatus &&
     (trimmedRiskJust || trimmedRiskPlan) &&
-    !items.some((item) => item.resolvedType === 'PIC_ACCEPTED_RISK')
+    !items.some(
+      (item) =>
+        item.resolvedType === 'PIC_ACCEPTED_RISK' &&
+        toSafeHistoryTime(item.createdAt) >= latestReopenMs,
+    )
   ) {
     items.push({
       id: `synthetic-risk-${ticket.id}`,
@@ -300,6 +322,49 @@ export function buildBlockerTicketHistory(
       resultNote: REPORTER_CLOSED_DEFAULT_NOTE,
       createdAt: ticket.closedAt,
     });
+  }
+
+  let windowStartMs = 0;
+  for (let i = 0; i < reopenItems.length; i++) {
+    const reopenItem = reopenItems[i];
+    const reopenMs = toSafeHistoryTime(reopenItem.createdAt);
+    const hasPriorDecision = items.some(
+      (item) =>
+        (item.resolvedType === 'PIC_RESOLUTION' ||
+          item.resolvedType === 'PIC_ACCEPTED_RISK') &&
+        toSafeHistoryTime(item.createdAt) >= windowStartMs &&
+        toSafeHistoryTime(item.createdAt) <= reopenMs,
+    );
+
+    if (!hasPriorDecision) {
+      const raisedMs = toSafeHistoryTime(ticket.raisedAt);
+      const lowerBoundMs = Math.max(windowStartMs, raisedMs);
+      let initialMs: number;
+      if (reopenMs > lowerBoundMs + 60_000) {
+        initialMs = reopenMs - 60_000;
+      } else if (reopenMs > lowerBoundMs && lowerBoundMs > 0) {
+        initialMs = Math.floor((lowerBoundMs + reopenMs) / 2);
+      } else {
+        initialMs = Math.max(0, reopenMs - 60_000);
+      }
+      const fromLegacyAck =
+        ticket.status === 'ACKNOWLEDGED' ? ticket.resolutionNote?.trim() || null : null;
+      const initialNote =
+        fromLegacyAck ||
+        (reopenItem.resultNote?.includes('Token baru sudah dicoba')
+          ? 'Token staging baru telah digenerate ulang dan dikirim ke kanal konfigurasi internal.'
+          : 'Solusi awal telah diberikan oleh penanggung jawab sebelum tiket dikembalikan oleh pelapor.');
+      items.push({
+        id: `synthetic-pre-reopen-${ticket.id}-${i}`,
+        entryType: 'PIC_RESOLUTION',
+        resolvedType: 'PIC_RESOLUTION',
+        supporter: ownerActor,
+        actionTaken: PIC_RESOLUTION_ACTION_LABEL,
+        resultNote: initialNote,
+        createdAt: new Date(initialMs).toISOString(),
+      });
+    }
+    windowStartMs = reopenMs + 1;
   }
 
   return items

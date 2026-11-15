@@ -548,15 +548,20 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       );
     });
 
-    it('reopens RESOLVED ticket back to ACKNOWLEDGED and logs reopen reason', async () => {
+    it('reopens RESOLVED ticket back to ACKNOWLEDGED, preserves missing initial solution snapshot, and clears active resolution fields', async () => {
       mockPrisma.blockerTicket.findUnique.mockResolvedValue({
         id: 'blk-reopen',
         status: BlockerStatus.RESOLVED,
         raisedByUserId: 'emp-1',
         assignedOwnerId: 'owner-1',
         description: '[Gateway 504] Timeout',
+        resolvedAt: new Date('2026-11-13T16:30:00.000Z'),
+        resolutionNote: 'Solusi awal staging dicoba',
+        riskAcceptanceJustification: null,
+        riskMitigationPlan: null,
       });
       mockPrisma.supportContribution = {
+        findMany: vi.fn().mockResolvedValue([]),
         create: vi.fn().mockResolvedValue({ id: 'sup-reopen' }),
       };
       mockPrisma.blockerTicket.update.mockResolvedValue({
@@ -569,7 +574,30 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       });
 
       expect(reopened.status).toBe(BlockerStatus.ACKNOWLEDGED);
-      expect(mockPrisma.supportContribution.create).toHaveBeenCalledWith(
+      expect(mockPrisma.blockerTicket.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: BlockerStatus.ACKNOWLEDGED,
+            resolvedAt: null,
+            resolutionNote: null,
+            riskAcceptanceJustification: null,
+            riskMitigationPlan: null,
+          }),
+        }),
+      );
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.supportContribution.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            blockerId: 'blk-reopen',
+            supporterUserId: 'owner-1',
+            resultNote: 'Solusi awal staging dicoba',
+          }),
+        }),
+      );
+      expect(mockPrisma.supportContribution.create).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
           data: expect.objectContaining({
             blockerId: 'blk-reopen',
@@ -677,6 +705,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       );
       expect(queue[0].supportContributions.map((s: any) => s.entryType)).toEqual([
         'PEER_SUPPORT',
+        'PIC_RESOLUTION',
         'REPORTER_REOPEN',
       ]);
     });
@@ -733,12 +762,15 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
 
       const queue = await service.getBlockerQueue();
       expect(queue[0].supportContributions.map((s: any) => s.entryType)).toEqual([
+        'PIC_RESOLUTION',
         'REPORTER_REOPEN',
         'PIC_RESOLUTION',
         'REPORTER_CLOSED',
       ]);
-      expect(queue[0].supportContributions[1].supporter.fullName).toBe('Arif Budiman');
-      expect(queue[0].supportContributions[2].supporter.fullName).toBe('Aditya Nugroho');
+      expect(queue[0].supportContributions[0].supporter.fullName).toBe('Arif Budiman');
+      expect(queue[0].supportContributions[1].supporter.fullName).toBe('Aditya Nugroho');
+      expect(queue[0].supportContributions[2].supporter.fullName).toBe('Arif Budiman');
+      expect(queue[0].supportContributions[3].supporter.fullName).toBe('Aditya Nugroho');
 
       expect(queue[1].supportContributions.map((s: any) => s.entryType)).toEqual([
         'PIC_ACCEPTED_RISK',

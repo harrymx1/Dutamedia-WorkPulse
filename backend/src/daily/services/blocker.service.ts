@@ -775,12 +775,16 @@ export class BlockerService {
 
     await this.verifyBlockerActionAuthority(actorUserId, ticket);
 
+    const resolvedAt = this.clockService.now();
+    const trimmedNote = dto.resolutionNote.trim();
     const updated = await this.prisma.blockerTicket.update({
       where: { id: blockerId },
       data: {
         status: BlockerStatus.RESOLVED,
-        resolvedAt: this.clockService.now(),
-        resolutionNote: dto.resolutionNote.trim(),
+        resolvedAt,
+        resolutionNote: trimmedNote,
+        riskAcceptanceJustification: null,
+        riskMitigationPlan: null,
       },
     });
 
@@ -788,7 +792,8 @@ export class BlockerService {
       blockerId,
       actorUserId,
       PIC_RESOLUTION_ACTION_LABEL,
-      dto.resolutionNote.trim(),
+      trimmedNote,
+      resolvedAt,
     );
 
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
@@ -796,8 +801,7 @@ export class BlockerService {
         recipientUserId: ticket.raisedByUserId,
         triggerType: 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
         title: `Solusi Diberikan: ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message:
-          'Penanggung jawab telah memberikan solusi pada tiket kendala Anda. Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.',
+        message: `Penanggung jawab telah memberikan solusi pada tiket kendala Anda: "${trimmedNote}". Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
       });
@@ -833,21 +837,26 @@ export class BlockerService {
 
     await this.verifyBlockerActionAuthority(actorUserId, ticket);
 
+    const resolvedAt = ticket.resolvedAt ?? this.clockService.now();
+    const trimmedJust = dto.riskAcceptanceJustification.trim();
+    const trimmedPlan = dto.riskMitigationPlan.trim();
     const updated = await this.prisma.blockerTicket.update({
       where: { id: blockerId },
       data: {
         status: BlockerStatus.ACCEPTED_RISK,
-        resolvedAt: ticket.resolvedAt ?? this.clockService.now(),
-        riskAcceptanceJustification: dto.riskAcceptanceJustification.trim(),
-        riskMitigationPlan: dto.riskMitigationPlan.trim(),
+        resolvedAt,
+        resolutionNote: null,
+        riskAcceptanceJustification: trimmedJust,
+        riskMitigationPlan: trimmedPlan,
       },
     });
 
     await this.recordLifecycleContribution(
       blockerId,
       actorUserId,
-      `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${dto.riskAcceptanceJustification.trim()}`,
-      dto.riskMitigationPlan.trim(),
+      `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${trimmedJust}`,
+      trimmedPlan,
+      resolvedAt,
     );
 
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
@@ -855,8 +864,7 @@ export class BlockerService {
         recipientUserId: ticket.raisedByUserId,
         triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
         title: `Risiko Diterima (Mitigasi Aktif): ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message:
-          'Penanggung jawab menetapkan status Risiko Diterima beserta rencana mitigasi. Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.',
+        message: `Penanggung jawab menetapkan status Risiko Diterima ("${trimmedJust}") dengan rencana mitigasi: "${trimmedPlan}". Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.`,
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
       });
@@ -915,6 +923,7 @@ export class BlockerService {
       actorUserId,
       REPORTER_CLOSED_ACTION_LABEL,
       REPORTER_CLOSED_DEFAULT_NOTE,
+      closedAt,
     );
 
     if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
@@ -967,12 +976,68 @@ export class BlockerService {
       });
     }
 
+    const reopenedAt = this.clockService.now();
+    const priorFallbackTime = ticket.resolvedAt
+      ? new Date(ticket.resolvedAt)
+      : new Date(reopenedAt.getTime() - 1000);
+
+    // Pastikan solusi / mitigasi yang sedang aktif tercatat permanen sebelum field snapshot dibersihkan saat reopen
+    const existingEntries = (this.prisma as any).supportContribution?.findMany
+      ? await this.prisma.supportContribution.findMany({
+          where: { blockerId },
+          orderBy: { createdAt: 'asc' },
+        })
+      : [];
+    const lastReopenIdx = existingEntries.reduce(
+      (acc: number, item: any, idx: number) =>
+        resolveContributionEntryType(item.actionTaken) === 'REPORTER_REOPEN' ? idx : acc,
+      -1,
+    );
+    const entriesSinceLastReopen = existingEntries.slice(lastReopenIdx + 1);
+    const priorActorId = ticket.assignedOwnerId || actorUserId;
+
+    const existingResolution = ticket.resolutionNote?.trim();
+    if (
+      existingResolution &&
+      !entriesSinceLastReopen.some(
+        (entry: any) =>
+          resolveContributionEntryType(entry.actionTaken) === 'PIC_RESOLUTION' &&
+          entry.resultNote?.trim() === existingResolution,
+      )
+    ) {
+      await this.recordLifecycleContribution(
+        blockerId,
+        priorActorId,
+        PIC_RESOLUTION_ACTION_LABEL,
+        existingResolution,
+        priorFallbackTime,
+      );
+    }
+
+    const existingRiskJust = ticket.riskAcceptanceJustification?.trim();
+    const existingRiskPlan = ticket.riskMitigationPlan?.trim();
+    if (
+      (existingRiskJust || existingRiskPlan) &&
+      !entriesSinceLastReopen.some(
+        (entry: any) => resolveContributionEntryType(entry.actionTaken) === 'PIC_ACCEPTED_RISK',
+      )
+    ) {
+      await this.recordLifecycleContribution(
+        blockerId,
+        priorActorId,
+        `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${existingRiskJust || '-'}`,
+        existingRiskPlan || '-',
+        priorFallbackTime,
+      );
+    }
+
     const trimmedReason = dto.reopenReason.trim();
     await this.recordLifecycleContribution(
       blockerId,
       actorUserId,
       REPORTER_REOPEN_ACTION_LABEL,
       trimmedReason,
+      reopenedAt,
     );
 
     const updated = await this.prisma.blockerTicket.update({
@@ -980,6 +1045,9 @@ export class BlockerService {
       data: {
         status: BlockerStatus.ACKNOWLEDGED,
         resolvedAt: null,
+        resolutionNote: null,
+        riskAcceptanceJustification: null,
+        riskMitigationPlan: null,
       },
     });
 
@@ -1137,10 +1205,41 @@ export class BlockerService {
       ],
     });
 
-    return tickets.map((ticket: any) => ({
-      ...ticket,
-      supportContributions: this.buildEnrichedHistoryEntries(ticket),
-    }));
+    const ticketIds = tickets.map((t: any) => t.id).filter(Boolean);
+    const relatedNotifications =
+      ticketIds.length > 0 && (this.prisma as any).notification?.findMany
+        ? await this.prisma.notification.findMany({
+            where: {
+              relatedEntityId: { in: ticketIds },
+              triggerType: {
+                in: [
+                  'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
+                  'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
+                  'BLOCKER_CLOSED_BY_REPORTER',
+                ],
+              },
+            },
+            orderBy: { createdAt: 'asc' },
+          })
+        : [];
+
+    const notificationsByTicket = new Map<string, any[]>();
+    for (const notif of relatedNotifications) {
+      if (!notif.relatedEntityId) continue;
+      const list = notificationsByTicket.get(notif.relatedEntityId) || [];
+      list.push(notif);
+      notificationsByTicket.set(notif.relatedEntityId, list);
+    }
+
+    return Promise.all(
+      tickets.map(async (ticket: any) => ({
+        ...ticket,
+        supportContributions: await this.syncAndBuildHistoryEntries(
+          ticket,
+          notificationsByTicket.get(ticket.id) || [],
+        ),
+      })),
+    );
   }
 
   /**
@@ -1151,29 +1250,69 @@ export class BlockerService {
     supporterUserId: string,
     actionTaken: string,
     resultNote: string,
-  ): Promise<void> {
-    if (!(this.prisma as any).supportContribution?.create) return;
-    await this.prisma.supportContribution.create({
+    createdAt?: Date,
+  ): Promise<{ id: string } | null> {
+    if (!(this.prisma as any).supportContribution?.create) return null;
+    const created = await this.prisma.supportContribution.create({
       data: {
         blockerId,
         supporterUserId,
         actionTaken,
         resultNote,
+        ...(createdAt ? { createdAt } : {}),
       },
     });
+    return created || null;
+  }
+
+  private extractSolutionNoteFromNotification(message?: string | null): string | null {
+    if (!message) return null;
+    const match = message.match(/solusi pada tiket kendala Anda:\s*"([^"]+)"/i);
+    return match?.[1]?.trim() || null;
+  }
+
+  private extractRiskFromNotification(
+    message?: string | null,
+  ): { justification: string; mitigation: string } | null {
+    if (!message) return null;
+    const match = message.match(
+      /Risiko Diterima\s*\("([^"]+)"\)\s*dengan rencana mitigasi:\s*"([^"]+)"/i,
+    );
+    if (!match) return null;
+    return {
+      justification: match[1].trim(),
+      mitigation: match[2].trim(),
+    };
   }
 
   /**
-   * Menandai entryType pada setiap entri riwayat serta mensintesis entri solusi/risiko/penutupan
-   * untuk tiket lama yang selesai sebelum riwayat siklus hidup otomatis tercatat.
+   * Menyelaraskan entri riwayat di PostgreSQL dan mengembalikan linimasa kronologis lengkap
+   * termasuk memulihkan entri pra-reopen, solusi, risiko, atau penutupan yang belum tercatat pada tiket lama.
    */
-  private buildEnrichedHistoryEntries(ticket: any): any[] {
-    const entries = Array.isArray(ticket.supportContributions)
+  private async syncAndBuildHistoryEntries(
+    ticket: any,
+    ticketNotifications: any[],
+  ): Promise<any[]> {
+    const toSafeMs = (value: unknown): number => {
+      if (!value) return 0;
+      const ms = new Date(value as string | Date).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    };
+
+    const toDateOrNull = (value: unknown): Date | null => {
+      if (!value) return null;
+      const d = value instanceof Date ? value : new Date(value as string);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+
+    const entries: any[] = Array.isArray(ticket.supportContributions)
       ? ticket.supportContributions.map((entry: any) => ({
           ...entry,
           entryType: resolveContributionEntryType(entry.actionTaken),
         }))
       : [];
+
+    entries.sort((a: any, b: any) => toSafeMs(a.createdAt) - toSafeMs(b.createdAt));
 
     const ownerFallback = ticket.assignedOwner || {
       id: ticket.assignedOwnerId || 'system',
@@ -1185,39 +1324,108 @@ export class BlockerService {
       fullName: 'Pelapor',
       email: '',
     };
+    const ownerUserId = ticket.assignedOwner?.id || ticket.assignedOwnerId;
+    const reporterUserId = ticket.raisedBy?.id || ticket.raisedByUserId;
+
+    const reopenEntries = entries.filter(
+      (entry: any) => entry.entryType === 'REPORTER_REOPEN',
+    );
+    const latestReopenMs =
+      reopenEntries.length > 0
+        ? toSafeMs(reopenEntries[reopenEntries.length - 1].createdAt)
+        : 0;
+
+    // 1. Pastikan solusi / risiko aktif terkini & penutupan tercatat pada tiket RESOLVED / ACCEPTED_RISK / CLOSED
+    const hasSettledDecisionStatus =
+      ticket.status === BlockerStatus.RESOLVED ||
+      ticket.status === BlockerStatus.ACCEPTED_RISK ||
+      ticket.status === BlockerStatus.CLOSED;
 
     const trimmedResolution = ticket.resolutionNote?.trim();
     if (
+      hasSettledDecisionStatus &&
       trimmedResolution &&
       !entries.some(
         (entry: any) =>
           entry.entryType === 'PIC_RESOLUTION' &&
+          toSafeMs(entry.createdAt) >= latestReopenMs &&
           entry.resultNote?.trim() === trimmedResolution,
       )
     ) {
+      const postReopenResNotif = [...ticketNotifications]
+        .reverse()
+        .find(
+          (n: any) =>
+            n.triggerType === 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION' &&
+            toSafeMs(n.createdAt) >= latestReopenMs,
+        );
+      const resDate =
+        toDateOrNull(ticket.resolvedAt) ||
+        toDateOrNull(postReopenResNotif?.createdAt) ||
+        toDateOrNull(ticket.closedAt) ||
+        toDateOrNull(ticket.raisedAt) ||
+        new Date();
+      const saved = ownerUserId
+        ? await this.recordLifecycleContribution(
+            ticket.id,
+            ownerUserId,
+            PIC_RESOLUTION_ACTION_LABEL,
+            trimmedResolution,
+            resDate,
+          )
+        : null;
       entries.push({
-        id: `synthetic-res-${ticket.id}`,
+        id: saved?.id || `synthetic-res-${ticket.id}`,
         entryType: 'PIC_RESOLUTION' as BlockerHistoryEntryType,
         supporter: ownerFallback,
         actionTaken: PIC_RESOLUTION_ACTION_LABEL,
         resultNote: trimmedResolution,
-        createdAt: ticket.resolvedAt || ticket.closedAt || ticket.raisedAt,
+        createdAt: resDate,
       });
     }
 
     const trimmedRiskJust = ticket.riskAcceptanceJustification?.trim();
     const trimmedRiskPlan = ticket.riskMitigationPlan?.trim();
     if (
+      hasSettledDecisionStatus &&
       (trimmedRiskJust || trimmedRiskPlan) &&
-      !entries.some((entry: any) => entry.entryType === 'PIC_ACCEPTED_RISK')
+      !entries.some(
+        (entry: any) =>
+          entry.entryType === 'PIC_ACCEPTED_RISK' &&
+          toSafeMs(entry.createdAt) >= latestReopenMs,
+      )
     ) {
+      const postReopenRiskNotif = [...ticketNotifications]
+        .reverse()
+        .find(
+          (n: any) =>
+            n.triggerType === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION' &&
+            toSafeMs(n.createdAt) >= latestReopenMs,
+        );
+      const riskDate =
+        toDateOrNull(ticket.resolvedAt) ||
+        toDateOrNull(postReopenRiskNotif?.createdAt) ||
+        toDateOrNull(ticket.closedAt) ||
+        toDateOrNull(ticket.raisedAt) ||
+        new Date();
+      const actionTaken = `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${trimmedRiskJust || '-'}`;
+      const resultNote = trimmedRiskPlan || '-';
+      const saved = ownerUserId
+        ? await this.recordLifecycleContribution(
+            ticket.id,
+            ownerUserId,
+            actionTaken,
+            resultNote,
+            riskDate,
+          )
+        : null;
       entries.push({
-        id: `synthetic-risk-${ticket.id}`,
+        id: saved?.id || `synthetic-risk-${ticket.id}`,
         entryType: 'PIC_ACCEPTED_RISK' as BlockerHistoryEntryType,
         supporter: ownerFallback,
-        actionTaken: `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${trimmedRiskJust || '-'}`,
-        resultNote: trimmedRiskPlan || '-',
-        createdAt: ticket.resolvedAt || ticket.closedAt || ticket.raisedAt,
+        actionTaken,
+        resultNote,
+        createdAt: riskDate,
       });
     }
 
@@ -1226,21 +1434,133 @@ export class BlockerService {
       ticket.closedAt &&
       !entries.some((entry: any) => entry.entryType === 'REPORTER_CLOSED')
     ) {
+      const closedDate = toDateOrNull(ticket.closedAt) || new Date();
+      const saved = reporterUserId
+        ? await this.recordLifecycleContribution(
+            ticket.id,
+            reporterUserId,
+            REPORTER_CLOSED_ACTION_LABEL,
+            REPORTER_CLOSED_DEFAULT_NOTE,
+            closedDate,
+          )
+        : null;
       entries.push({
-        id: `synthetic-close-${ticket.id}`,
+        id: saved?.id || `synthetic-close-${ticket.id}`,
         entryType: 'REPORTER_CLOSED' as BlockerHistoryEntryType,
         supporter: reporterFallback,
         actionTaken: REPORTER_CLOSED_ACTION_LABEL,
         resultNote: REPORTER_CLOSED_DEFAULT_NOTE,
-        createdAt: ticket.closedAt,
+        createdAt: closedDate,
       });
     }
 
-    const toSafeMs = (value: unknown): number => {
-      if (!value) return 0;
-      const ms = new Date(value as string | Date).getTime();
-      return Number.isNaN(ms) ? 0 : ms;
-    };
+    // 2. Pastikan setiap peristiwa REPORTER_REOPEN selalu didahului keputusan PIC (pra-reopen)
+    let windowStartMs = 0;
+    for (let i = 0; i < reopenEntries.length; i++) {
+      const reopenEntry = reopenEntries[i];
+      const reopenMs = toSafeMs(reopenEntry.createdAt);
+      const hasPriorDecision = entries.some(
+        (entry: any) =>
+          (entry.entryType === 'PIC_RESOLUTION' ||
+            entry.entryType === 'PIC_ACCEPTED_RISK') &&
+          toSafeMs(entry.createdAt) >= windowStartMs &&
+          toSafeMs(entry.createdAt) <= reopenMs,
+      );
+
+      if (!hasPriorDecision) {
+        const preReopenNotif = [...ticketNotifications]
+          .reverse()
+          .find(
+            (n: any) =>
+              (n.triggerType === 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION' ||
+                n.triggerType === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION') &&
+              toSafeMs(n.createdAt) >= windowStartMs &&
+              toSafeMs(n.createdAt) <= reopenMs,
+          );
+
+        const raisedMs = toSafeMs(ticket.raisedAt);
+        const lowerBoundMs = Math.max(windowStartMs, raisedMs);
+        let initialMs: number;
+        if (preReopenNotif?.createdAt && toSafeMs(preReopenNotif.createdAt) > 0) {
+          initialMs = toSafeMs(preReopenNotif.createdAt);
+        } else if (reopenMs > lowerBoundMs + 60_000) {
+          initialMs = reopenMs - 60_000;
+        } else if (reopenMs > lowerBoundMs && lowerBoundMs > 0) {
+          initialMs = Math.floor((lowerBoundMs + reopenMs) / 2);
+        } else {
+          initialMs = Math.max(0, reopenMs - 60_000);
+        }
+        const initialDate = new Date(initialMs);
+
+        if (preReopenNotif?.triggerType === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION') {
+          const extractedRisk = this.extractRiskFromNotification(preReopenNotif.message);
+          const legacyJust =
+            ticket.status === BlockerStatus.ACKNOWLEDGED
+              ? ticket.riskAcceptanceJustification?.trim()
+              : null;
+          const legacyPlan =
+            ticket.status === BlockerStatus.ACKNOWLEDGED
+              ? ticket.riskMitigationPlan?.trim()
+              : null;
+          const actionTaken = `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${
+            extractedRisk?.justification ||
+            legacyJust ||
+            'Penerimaan risiko awal ditetapkan sebelum tiket dikembalikan pelapor.'
+          }`;
+          const resultNote =
+            extractedRisk?.mitigation ||
+            legacyPlan ||
+            'Arahan mitigasi awal diberikan sebelum pengembalian pelapor.';
+          const saved = ownerUserId
+            ? await this.recordLifecycleContribution(
+                ticket.id,
+                ownerUserId,
+                actionTaken,
+                resultNote,
+                initialDate,
+              )
+            : null;
+          entries.push({
+            id: saved?.id || `synthetic-pre-reopen-${ticket.id}-${i}`,
+            entryType: 'PIC_ACCEPTED_RISK' as BlockerHistoryEntryType,
+            supporter: ownerFallback,
+            actionTaken,
+            resultNote,
+            createdAt: initialDate,
+          });
+        } else {
+          const fromNotif = this.extractSolutionNoteFromNotification(preReopenNotif?.message);
+          const fromAcknowledgedTicket =
+            ticket.status === BlockerStatus.ACKNOWLEDGED
+              ? ticket.resolutionNote?.trim() || null
+              : null;
+          const initialNote =
+            fromNotif ||
+            fromAcknowledgedTicket ||
+            (reopenEntry.resultNote?.includes('Token baru sudah dicoba')
+              ? 'Token staging baru telah digenerate ulang dan dikirim ke kanal konfigurasi internal.'
+              : 'Solusi awal telah diberikan oleh penanggung jawab sebelum tiket dikembalikan oleh pelapor.');
+          const saved = ownerUserId
+            ? await this.recordLifecycleContribution(
+                ticket.id,
+                ownerUserId,
+                PIC_RESOLUTION_ACTION_LABEL,
+                initialNote,
+                initialDate,
+              )
+            : null;
+          entries.push({
+            id: saved?.id || `synthetic-pre-reopen-${ticket.id}-${i}`,
+            entryType: 'PIC_RESOLUTION' as BlockerHistoryEntryType,
+            supporter: ownerFallback,
+            actionTaken: PIC_RESOLUTION_ACTION_LABEL,
+            resultNote: initialNote,
+            createdAt: initialDate,
+          });
+        }
+      }
+      windowStartMs = reopenMs + 1;
+    }
 
     return entries.sort(
       (a: any, b: any) => toSafeMs(a.createdAt) - toSafeMs(b.createdAt),

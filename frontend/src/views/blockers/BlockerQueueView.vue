@@ -802,7 +802,13 @@ onMounted(() => {
               </div>
 
               <!-- Hasil Resolusi -->
-              <div v-if="selectedTicket.resolutionNote" class="resolution-box">
+              <div
+                v-if="
+                  selectedTicket.resolutionNote &&
+                  (selectedTicket.status === 'RESOLVED' || selectedTicket.status === 'CLOSED')
+                "
+                class="resolution-box"
+              >
                 <div class="res-head">
                   <CheckCircle2 :size="18" />
                   <strong>Catatan Solusi / Penyelesaian</strong>
@@ -813,8 +819,9 @@ onMounted(() => {
               <!-- Keputusan Risiko Diterima -->
               <div
                 v-if="
-                  selectedTicket.riskAcceptanceJustification ||
-                  selectedTicket.riskMitigationPlan
+                  (selectedTicket.riskAcceptanceJustification ||
+                    selectedTicket.riskMitigationPlan) &&
+                  (selectedTicket.status === 'ACCEPTED_RISK' || selectedTicket.status === 'CLOSED')
                 "
                 class="accepted-risk-box"
               >

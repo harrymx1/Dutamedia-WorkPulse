@@ -1322,7 +1322,10 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Resolution Note (if available) -->
-            <div v-if="b.resolutionNote" class="resolution-box">
+            <div
+              v-if="b.resolutionNote && (b.status === 'RESOLVED' || b.status === 'CLOSED')"
+              class="resolution-box"
+            >
               <div class="resolution-title">
                 <CheckCircle2 :size="14" />
                 <span>Catatan Penyelesaian:</span>
@@ -1331,7 +1334,13 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Accepted Risk Guidance (if available) -->
-            <div v-if="b.riskAcceptanceJustification || b.riskMitigationPlan" class="risk-box">
+            <div
+              v-if="
+                (b.riskAcceptanceJustification || b.riskMitigationPlan) &&
+                (b.status === 'ACCEPTED_RISK' || b.status === 'CLOSED')
+              "
+              class="risk-box"
+            >
               <div class="risk-title">
                 <ShieldAlert :size="14" />
                 <span>Keputusan Terima Risiko &amp; Arahan Mitigasi:</span>
