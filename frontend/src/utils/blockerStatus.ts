@@ -41,6 +41,10 @@ export function isActiveBlockerStatus(status?: string | null): boolean {
   return Boolean(status && ACTIVE_BLOCKER_STATUSES.includes(status as BlockerTicketStatus));
 }
 
+export function isHandlingBlockerStatus(status?: string | null): boolean {
+  return status === 'ACKNOWLEDGED' || status === 'IN_PROGRESS';
+}
+
 export function getBlockerStatusLabel(status?: string | null): string {
   if (!status) return '-';
   return BLOCKER_STATUS_LABELS[status as BlockerTicketStatus] ?? status;
@@ -94,6 +98,24 @@ export interface BlockerHistoryTicketLike {
 
 export type BlockerHistoryVariant = 'support' | 'reopen' | 'resolution' | 'risk' | 'closed';
 
+export const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
+export const PIC_RESOLUTION_ACTION_LABEL = 'Solusi Diberikan oleh Penanggung Jawab';
+export const PIC_ACCEPTED_RISK_ACTION_PREFIX = '[PIC_ACCEPTED_RISK]';
+export const REPORTER_CLOSED_ACTION_LABEL = 'Dikonfirmasi & Ditutup oleh Pelapor';
+export const REPORTER_CLOSED_DEFAULT_NOTE =
+  'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala secara permanen.';
+
+export const SUPPORT_RESOLVED_CLOSED_PREFIX = '[SUPPORT_RESOLVED_CLOSED]';
+export const SUPPORT_ACCEPTED_PROGRESS_PREFIX = '[SUPPORT_ACCEPTED_PROGRESS]';
+export const SUPPORT_REJECTED_PREFIX = '[SUPPORT_REJECTED]';
+export const REPORTER_REJECTION_NOTE_MARKER = '\n[CATATAN_PENOLAKAN_PELAPOR]: ';
+
+export type PeerSupportResponseStatus =
+  | 'PENDING'
+  | 'RESOLVED_CLOSED'
+  | 'ACCEPTED_PROGRESS'
+  | 'REJECTED';
+
 export interface BlockerHistoryPresentation {
   entryType: BlockerHistoryEntryType;
   variant: BlockerHistoryVariant;
@@ -102,6 +124,8 @@ export interface BlockerHistoryPresentation {
   primaryText: string | null;
   secondaryLabel: string;
   secondaryText: string;
+  supportStatus?: PeerSupportResponseStatus;
+  reporterFeedback?: string | null;
 }
 
 export interface BlockerTicketHistoryItem extends BlockerHistoryPresentation {
@@ -109,13 +133,6 @@ export interface BlockerTicketHistoryItem extends BlockerHistoryPresentation {
   actorName: string;
   createdAt: string;
 }
-
-export const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
-export const PIC_RESOLUTION_ACTION_LABEL = 'Solusi Diberikan oleh Penanggung Jawab';
-export const PIC_ACCEPTED_RISK_ACTION_PREFIX = '[PIC_ACCEPTED_RISK]';
-export const REPORTER_CLOSED_ACTION_LABEL = 'Dikonfirmasi & Ditutup oleh Pelapor';
-export const REPORTER_CLOSED_DEFAULT_NOTE =
-  'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala secara permanen.';
 
 const BLOCKER_HISTORY_ENTRY_CONFIG: Record<
   BlockerHistoryEntryType,
@@ -198,6 +215,68 @@ export function formatBlockerHistoryEntry(
 ): BlockerHistoryPresentation {
   const entryType = resolveBlockerHistoryEntryType(entry);
   const cfg = BLOCKER_HISTORY_ENTRY_CONFIG[entryType];
+  if (entryType === 'PEER_SUPPORT') {
+    const normalizedAction = entry.actionTaken?.trim() || '';
+    const rawResult = entry.resultNote || '-';
+    if (normalizedAction.startsWith(SUPPORT_RESOLVED_CLOSED_PREFIX)) {
+      return {
+        entryType,
+        variant: 'resolution',
+        badgeLabel: 'Bantuan Diterima sbg Penyelesaian',
+        primaryLabel: cfg.primaryLabel,
+        primaryText: normalizedAction.slice(SUPPORT_RESOLVED_CLOSED_PREFIX.length).trim() || '-',
+        secondaryLabel: cfg.secondaryLabel,
+        secondaryText: rawResult,
+        supportStatus: 'RESOLVED_CLOSED',
+        reporterFeedback: null,
+      };
+    }
+    if (normalizedAction.startsWith(SUPPORT_ACCEPTED_PROGRESS_PREFIX)) {
+      return {
+        entryType,
+        variant: 'support',
+        badgeLabel: 'Bantuan Diterima (Belum Selesai)',
+        primaryLabel: cfg.primaryLabel,
+        primaryText: normalizedAction.slice(SUPPORT_ACCEPTED_PROGRESS_PREFIX.length).trim() || '-',
+        secondaryLabel: cfg.secondaryLabel,
+        secondaryText: rawResult,
+        supportStatus: 'ACCEPTED_PROGRESS',
+        reporterFeedback: null,
+      };
+    }
+    if (normalizedAction.startsWith(SUPPORT_REJECTED_PREFIX)) {
+      const markerIdx = rawResult.indexOf(REPORTER_REJECTION_NOTE_MARKER);
+      const initialResult =
+        markerIdx >= 0 ? rawResult.slice(0, markerIdx).trim() || '-' : rawResult;
+      const rejectionReason =
+        markerIdx >= 0
+          ? rawResult.slice(markerIdx + REPORTER_REJECTION_NOTE_MARKER.length).trim() || null
+          : null;
+      return {
+        entryType,
+        variant: 'reopen',
+        badgeLabel: 'Bantuan Ditolak Pelapor',
+        primaryLabel: cfg.primaryLabel,
+        primaryText: normalizedAction.slice(SUPPORT_REJECTED_PREFIX.length).trim() || '-',
+        secondaryLabel: cfg.secondaryLabel,
+        secondaryText: initialResult,
+        supportStatus: 'REJECTED',
+        reporterFeedback: rejectionReason,
+      };
+    }
+    return {
+      entryType,
+      variant: cfg.variant,
+      badgeLabel: cfg.badgeLabel,
+      primaryLabel: cfg.primaryLabel,
+      primaryText: normalizedAction || '-',
+      secondaryLabel: cfg.secondaryLabel,
+      secondaryText: rawResult,
+      supportStatus: 'PENDING',
+      reporterFeedback: null,
+    };
+  }
+
   let primaryText: string | null = null;
   if (cfg.includePrimaryLine) {
     if (entryType === 'PIC_ACCEPTED_RISK') {
@@ -265,9 +344,15 @@ export function buildBlockerTicketHistory(
     ticket.status === 'CLOSED';
 
   const trimmedResolution = ticket.resolutionNote?.trim();
+  const hasSupportResolvedEntry = items.some(
+    (item) =>
+      toSafeHistoryTime(item.createdAt) >= latestReopenMs &&
+      item.actionTaken?.trim().startsWith(SUPPORT_RESOLVED_CLOSED_PREFIX),
+  );
   if (
     isSettledDecisionStatus &&
     trimmedResolution &&
+    !hasSupportResolvedEntry &&
     !items.some(
       (item) =>
         item.resolvedType === 'PIC_RESOLUTION' &&

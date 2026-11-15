@@ -14,6 +14,7 @@ import {
   RaiseBlockerDto,
   ReopenBlockerDto,
   ResolveBlockerDto,
+  RespondSupportContributionDto,
 } from '../dto/raise-blocker.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
@@ -116,6 +117,21 @@ export class BlockerController {
       id,
       body.actionTaken,
       body.resultNote,
+    );
+  }
+
+  @Post(':id/support/:supportId/respond')
+  async respondToSupportContribution(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Param('supportId') supportId: string,
+    @Body() dto: RespondSupportContributionDto,
+  ) {
+    return this.blockerService.respondToSupportContribution(
+      req.user.id,
+      id,
+      supportId,
+      dto,
     );
   }
 }

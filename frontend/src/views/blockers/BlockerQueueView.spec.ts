@@ -54,7 +54,7 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     });
   });
 
-  it('renders metric summary cards and blocker ticket card list with unified Indonesian status labels', async () => {
+  it('renders metric summary cards and enforces Stage 1 OPEN shows only Terima & Tangani (DEC-015)', async () => {
     const wrapper = mount(BlockerQueueView, {
       global: { plugins: [router] },
     });
@@ -66,6 +66,9 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(wrapper.text()).toContain('Kritis Belum Selesai');
     expect(wrapper.text()).toContain('Menunggu Respons');
     expect(wrapper.text()).toContain('Terima & Tangani');
+    expect(wrapper.text()).not.toContain('Beri Bantuan');
+    expect(wrapper.text()).not.toContain('Terima Risiko');
+    expect(wrapper.text()).not.toContain('Selesaikan');
     expect(wrapper.text()).toContain('Database query timeout');
     expect(wrapper.text()).toContain('Alice Dev');
     expect(wrapper.text()).toContain('Charlie Ops');
@@ -87,7 +90,31 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     ]);
   });
 
-  it('opens support contribution modal when Beri Bantuan is clicked', async () => {
+  it('opens support contribution modal when Beri Bantuan is clicked on ACKNOWLEDGED ticket', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        success: true,
+        data: [
+          {
+            id: 'blk-ack-1',
+            description: 'Database query timeout pada reporting query',
+            type: 'TECHNICAL',
+            severity: 'CRITICAL',
+            impact: 'TASK',
+            status: 'ACKNOWLEDGED',
+            raisedAt: '2026-10-28T09:00:00.000Z',
+            targetResolutionAt: '2026-10-28T13:00:00.000Z',
+            ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+            raisedBy: { id: 'u1', fullName: 'Alice Dev', email: 'alice@dutamedia.com' },
+            assignedOwner: { id: 'u2', fullName: 'Bob Lead', email: 'bob@dutamedia.com' },
+            supportContributions: [],
+          },
+        ],
+      }),
+    }));
+
     const wrapper = mount(BlockerQueueView, {
       global: { plugins: [router] },
     });
@@ -101,7 +128,31 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(wrapper.text()).toContain('Salurkan Kontribusi Bantuan (Peer Support)');
   });
 
-  it('renders clean authority label without SLA wording and opens Terima Risiko modal', async () => {
+  it('renders clean authority label without SLA wording and opens Terima Risiko modal on ACKNOWLEDGED ticket', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        success: true,
+        data: [
+          {
+            id: 'blk-ack-2',
+            description: 'Database query timeout pada reporting query',
+            type: 'TECHNICAL',
+            severity: 'CRITICAL',
+            impact: 'TASK',
+            status: 'ACKNOWLEDGED',
+            raisedAt: '2026-10-28T09:00:00.000Z',
+            targetResolutionAt: '2026-10-28T13:00:00.000Z',
+            ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+            raisedBy: { id: 'u1', fullName: 'Alice Dev', email: 'alice@dutamedia.com' },
+            assignedOwner: { id: 'u2', fullName: 'Bob Lead', email: 'bob@dutamedia.com' },
+            supportContributions: [],
+          },
+        ],
+      }),
+    }));
+
     const wrapper = mount(BlockerQueueView, {
       global: { plugins: [router] },
     });
@@ -461,6 +512,9 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     await otherCard.trigger('click');
     await flushPromises();
     expect(wrapper.find('[data-testid="detail-owner-badge"]').text()).toBe('PIC Rekan / Lainnya');
+    expect(wrapper.find('.detail-actions').text()).not.toContain('Beri Bantuan');
+    expect(wrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+    expect(wrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
     const riskItem = wrapper.find('[data-testid="history-item-synthetic-risk-blk-other-pic-risk"]');
     expect(riskItem.classes()).toContain('variant-risk');
     expect(riskItem.text()).toContain('Risiko Diterima');

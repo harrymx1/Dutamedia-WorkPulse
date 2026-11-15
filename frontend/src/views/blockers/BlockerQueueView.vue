@@ -10,6 +10,7 @@ import {
   countPeerSupportContributions,
   getBlockerStatusLabel,
   isActiveBlockerStatus,
+  isHandlingBlockerStatus,
   sortBlockersByNewest,
   type BlockerHistoryEntryType,
   type BlockerTicketStatus,
@@ -100,6 +101,9 @@ const submittingReopen = ref(false);
 
 const submittingClose = ref(false);
 const acknowledging = ref(false);
+const respondingSupportId = ref<string | null>(null);
+const rejectingSupportId = ref<string | null>(null);
+const supportRejectReasonMap = ref<Record<string, string>>({});
 
 // Toast & Feedback
 const toastMessage = ref<string | null>(null);
@@ -142,6 +146,7 @@ async function loadBlockers() {
 
 // Metrics & Lifecycle Helpers
 const isActiveTicket = isActiveBlockerStatus;
+const isHandlingTicket = isHandlingBlockerStatus;
 
 const isSelectedTicketReporter = computed(() =>
   Boolean(
@@ -403,6 +408,53 @@ async function submitReopen() {
   }
 }
 
+function openSupportRejectForm(supportId: string) {
+  rejectingSupportId.value = supportId;
+  supportRejectReasonMap.value[supportId] = '';
+}
+
+function cancelSupportRejectForm() {
+  rejectingSupportId.value = null;
+}
+
+async function handleSupportDecision(
+  ticketId: string,
+  supportId: string,
+  decision: 'RESOLVE_AND_CLOSE' | 'ACCEPT_AS_SUPPORT' | 'REJECT_SUPPORT',
+) {
+  const reason = (supportRejectReasonMap.value[supportId] || '').trim();
+  if (decision === 'REJECT_SUPPORT' && reason.length < 10) {
+    showToast('Alasan penolakan bantuan wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+
+  respondingSupportId.value = supportId;
+  try {
+    await apiClient(`/blockers/${ticketId}/support/${supportId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({
+        decision,
+        ...(decision === 'REJECT_SUPPORT' ? { reason } : {}),
+      }),
+    });
+    if (rejectingSupportId.value === supportId) {
+      rejectingSupportId.value = null;
+    }
+    if (decision === 'RESOLVE_AND_CLOSE') {
+      showToast(`Bantuan diterima sebagai penyelesaian. Tiket berstatus ${getBlockerStatusLabel('CLOSED')}.`);
+    } else if (decision === 'ACCEPT_AS_SUPPORT') {
+      showToast('Bantuan diterima sebagai progres. Tiket tetap Sedang Ditangani.');
+    } else {
+      showToast('Penolakan bantuan berhasil dicatat dan diberitahukan ke penanggung jawab.');
+    }
+    await loadBlockers();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal merespons kontribusi bantuan.', true);
+  } finally {
+    respondingSupportId.value = null;
+  }
+}
+
 function formatRelativeTime(dateStr: string) {
   const d = new Date(dateStr);
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
@@ -649,7 +701,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="selectedTicket.status !== 'CLOSED'"
+                  v-if="isHandlingTicket(selectedTicket.status)"
                   type="button"
                   class="btn-action support"
                   @click="openSupportModal"
@@ -659,7 +711,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="isActiveTicket(selectedTicket.status)"
+                  v-if="isHandlingTicket(selectedTicket.status)"
                   type="button"
                   class="btn-action accept-risk"
                   @click="openAcceptRiskModal"
@@ -669,7 +721,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="isActiveTicket(selectedTicket.status)"
+                  v-if="isHandlingTicket(selectedTicket.status)"
                   type="button"
                   class="btn-action resolve"
                   @click="openResolveModal"
@@ -872,6 +924,71 @@ onMounted(() => {
                     </div>
                     <div class="sup-result">
                       <strong>{{ entry.secondaryLabel }}:</strong> {{ entry.secondaryText }}
+                    </div>
+                    <div v-if="entry.reporterFeedback" class="sup-feedback">
+                      <strong>Alasan Penolakan Pelapor:</strong> {{ entry.reporterFeedback }}
+                    </div>
+                    <div
+                      v-if="
+                        isSelectedTicketReporter &&
+                        entry.entryType === 'PEER_SUPPORT' &&
+                        entry.supportStatus === 'PENDING' &&
+                        selectedTicket.status !== 'CLOSED'
+                      "
+                      class="sup-response-panel"
+                      :data-testid="`support-response-panel-${entry.id}`"
+                    >
+                      <span class="sup-response-prompt">Tanggapan Pelapor terhadap bantuan ini:</span>
+                      <div v-if="rejectingSupportId !== entry.id" class="sup-response-actions">
+                        <button
+                          type="button"
+                          class="btn-sup-resolve"
+                          :disabled="respondingSupportId === entry.id"
+                          @click="handleSupportDecision(selectedTicket.id, entry.id, 'RESOLVE_AND_CLOSE')"
+                        >
+                          Terima sbg Penyelesaian (Tutup Tiket)
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-sup-accept"
+                          :disabled="respondingSupportId === entry.id"
+                          @click="handleSupportDecision(selectedTicket.id, entry.id, 'ACCEPT_AS_SUPPORT')"
+                        >
+                          Terima Bantuan (Belum Selesai)
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-sup-reject"
+                          :disabled="respondingSupportId === entry.id"
+                          @click="openSupportRejectForm(entry.id)"
+                        >
+                          Tolak Bantuan (Tidak Membantu)
+                        </button>
+                      </div>
+                      <div v-else class="inline-sup-reject-form">
+                        <textarea
+                          v-model="supportRejectReasonMap[entry.id]"
+                          rows="2"
+                          placeholder="Jelaskan mengapa bantuan ini belum membantu (min. 10 karakter)..."
+                        ></textarea>
+                        <div class="sup-response-actions">
+                          <button
+                            type="button"
+                            class="btn-sup-reject-submit"
+                            :disabled="respondingSupportId === entry.id"
+                            @click="handleSupportDecision(selectedTicket.id, entry.id, 'REJECT_SUPPORT')"
+                          >
+                            {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Penolakan Bantuan' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-sup-cancel"
+                            @click="cancelSupportRejectForm"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1888,6 +2005,103 @@ h1 {
 
 .sup-time {
   white-space: nowrap;
+}
+
+.sup-feedback {
+  margin-top: 4px;
+  color: #991B1B;
+}
+
+.sup-response-panel {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #CBD5E1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sup-response-prompt {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.sup-response-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn-sup-resolve {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #00674D;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-accept {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #93C5FD;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-reject {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #991B1B;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-reject-submit {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #991B1B;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-cancel {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #CBD5E1;
+  background: #fff;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inline-sup-reject-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inline-sup-reject-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
 }
 
 .modal-backdrop {

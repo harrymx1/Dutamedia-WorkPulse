@@ -1,5 +1,6 @@
 import {
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -68,5 +69,21 @@ export class ReopenBlockerDto {
   @IsString({ message: 'Alasan pembukaan kembali wajib diisi' })
   @MinLength(10, { message: 'Alasan pembukaan kembali minimal 10 karakter' })
   reopenReason!: string;
+}
+
+export type SupportContributionDecision =
+  | 'RESOLVE_AND_CLOSE'
+  | 'ACCEPT_AS_SUPPORT'
+  | 'REJECT_SUPPORT';
+
+export class RespondSupportContributionDto {
+  @IsIn(['RESOLVE_AND_CLOSE', 'ACCEPT_AS_SUPPORT', 'REJECT_SUPPORT'], {
+    message: 'Keputusan respons bantuan harus RESOLVE_AND_CLOSE, ACCEPT_AS_SUPPORT, atau REJECT_SUPPORT',
+  })
+  decision!: SupportContributionDecision;
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
 }
 

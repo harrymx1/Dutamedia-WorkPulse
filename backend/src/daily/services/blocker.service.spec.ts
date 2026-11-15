@@ -653,13 +653,73 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
   });
 
   describe('supportContribution and escalationAging (Prototipe 09 & 14)', () => {
-    it('records peer support contribution on a blocker ticket', async () => {
-      mockPrisma.blockerTicket.findUnique.mockResolvedValue({ id: 'blk-1', status: BlockerStatus.OPEN });
+    it('rejects addSupportContribution, resolveBlocker, and acceptRiskBlocker while ticket is still OPEN (DEC-015)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-open',
+        status: BlockerStatus.OPEN,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+      });
+
+      await expect(
+        service.addSupportContribution(
+          'usr-2',
+          'blk-open',
+          'Mengecek pool koneksi',
+          'Belum ada perubahan',
+        ),
+      ).rejects.toThrowError(AppException);
+
+      await expect(
+        service.resolveBlocker('owner-1', 'blk-open', {
+          resolutionNote: 'Mencoba langsung resolve tanpa Terima & Tangani',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      await expect(
+        service.acceptRiskBlocker('owner-1', 'blk-open', {
+          riskAcceptanceJustification: 'Justifikasi risiko tanpa Terima & Tangani',
+          riskMitigationPlan: 'Mitigasi sementara tanpa Terima & Tangani',
+        }),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('rejects addSupportContribution when ticket is RESOLVED or CLOSED', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-res',
+        status: BlockerStatus.RESOLVED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+      });
+      await expect(
+        service.addSupportContribution('usr-2', 'blk-res', 'Tambahan aksi', 'Catatan hasil'),
+      ).rejects.toThrowError(AppException);
+
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-closed',
+        status: BlockerStatus.CLOSED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+      });
+      await expect(
+        service.addSupportContribution('usr-2', 'blk-closed', 'Tambahan aksi', 'Catatan hasil'),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('records peer support contribution on ACKNOWLEDGED ticket and notifies reporter (DEC-015)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-1',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Pool Timeout] Latency query database staging tinggi',
+      });
       mockPrisma.supportContribution = {
         create: vi.fn().mockResolvedValue({
           id: 'sup-1',
           blockerId: 'blk-1',
           supporterUserId: 'usr-2',
+          supporter: { id: 'usr-2', fullName: 'Charlie Ops', email: 'charlie@dutamedia.com' },
           actionTaken: 'Membantu migrasi koneksi pool',
           resultNote: 'Latency turun normal < 50ms',
         }),
@@ -673,6 +733,221 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       );
       expect(res.id).toBe('sup-1');
       expect(mockPrisma.supportContribution.create).toHaveBeenCalled();
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'emp-1',
+            triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
+            actionUrl: '/raise-blockers?tab=mine',
+            message: expect.stringContaining('Membantu migrasi koneksi pool'),
+          }),
+        }),
+      );
+    });
+
+    it('allows reporter to accept support as final resolution and closes ticket without duplicating PIC_RESOLUTION (DEC-015)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-sup-close',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Token 403] Endpoint staging gagal akses',
+        resolvedAt: null,
+        resolutionNote: null,
+      });
+      mockPrisma.supportContribution = {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'sup-1',
+          blockerId: 'blk-sup-close',
+          supporterUserId: 'supporter-2',
+          actionTaken: 'Mengaktifkan role policy staging-reader',
+          resultNote: 'Endpoint staging kembali 200 OK',
+        }),
+        update: vi.fn().mockResolvedValue({
+          id: 'sup-1',
+          actionTaken: '[SUPPORT_RESOLVED_CLOSED] Mengaktifkan role policy staging-reader',
+        }),
+        create: vi.fn().mockResolvedValue({ id: 'sup-closed-1' }),
+      };
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-sup-close',
+        status: BlockerStatus.CLOSED,
+      });
+
+      const res = await service.respondToSupportContribution('emp-1', 'blk-sup-close', 'sup-1', {
+        decision: 'RESOLVE_AND_CLOSE',
+      });
+
+      expect(res.status).toBe(BlockerStatus.CLOSED);
+      expect(mockPrisma.supportContribution.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'sup-1' },
+          data: {
+            actionTaken: '[SUPPORT_RESOLVED_CLOSED] Mengaktifkan role policy staging-reader',
+          },
+        }),
+      );
+      expect(mockPrisma.blockerTicket.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'blk-sup-close' },
+          data: expect.objectContaining({ status: BlockerStatus.CLOSED }),
+        }),
+      );
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionTaken: 'Dikonfirmasi & Ditutup oleh Pelapor',
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
+          }),
+        }),
+      );
+
+      // Verifikasi getBlockerQueue tidak mensintesis entri PIC_RESOLUTION palsu jika bantuan yang menutup
+      mockPrisma.blockerTicket.findMany.mockResolvedValue([
+        {
+          id: 'blk-sup-close',
+          status: BlockerStatus.CLOSED,
+          raisedAt: new Date('2026-11-15T08:00:00.000Z'),
+          resolvedAt: new Date('2026-11-15T09:00:00.000Z'),
+          closedAt: new Date('2026-11-15T09:00:00.000Z'),
+          resolutionNote: 'Mengaktifkan role policy staging-reader — Endpoint staging kembali 200 OK',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+          assignedOwner: { id: 'owner-1', fullName: 'Gunawan Setiawan', email: 'ops@dutamedia.com' },
+          supportContributions: [
+            {
+              id: 'sup-1',
+              supporter: { id: 'supporter-2', fullName: 'Rekan Ops', email: 'rekan@dutamedia.com' },
+              actionTaken: '[SUPPORT_RESOLVED_CLOSED] Mengaktifkan role policy staging-reader',
+              resultNote: 'Endpoint staging kembali 200 OK',
+              createdAt: new Date('2026-11-15T08:30:00.000Z'),
+            },
+            {
+              id: 'sup-closed-1',
+              supporter: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              actionTaken: 'Dikonfirmasi & Ditutup oleh Pelapor',
+              resultNote: 'Pelapor menerima bantuan sebagai penyelesaian.',
+              createdAt: new Date('2026-11-15T09:00:00.000Z'),
+            },
+          ],
+        },
+      ]);
+      const queue = await service.getBlockerQueue();
+      expect(queue[0].supportContributions.map((e: any) => e.entryType)).toEqual([
+        'PEER_SUPPORT',
+        'REPORTER_CLOSED',
+      ]);
+    });
+
+    it('allows reporter to accept support as partial progress while keeping ticket ACKNOWLEDGED (DEC-015)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-sup-acc',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Token 403] Endpoint staging gagal akses',
+      });
+      mockPrisma.supportContribution = {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'sup-2',
+          blockerId: 'blk-sup-acc',
+          supporterUserId: 'owner-1',
+          actionTaken: 'Membuka firewall port staging',
+          resultNote: 'Port sudah terbuka untuk koneksi internal',
+        }),
+        update: vi.fn().mockResolvedValue({
+          id: 'sup-2',
+          actionTaken: '[SUPPORT_ACCEPTED_PROGRESS] Membuka firewall port staging',
+        }),
+      };
+
+      const res = await service.respondToSupportContribution('emp-1', 'blk-sup-acc', 'sup-2', {
+        decision: 'ACCEPT_AS_SUPPORT',
+      });
+
+      expect(res.status).toBe(BlockerStatus.ACKNOWLEDGED);
+      expect(mockPrisma.supportContribution.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            actionTaken: '[SUPPORT_ACCEPTED_PROGRESS] Membuka firewall port staging',
+          },
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'owner-1',
+            triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
+          }),
+        }),
+      );
+    });
+
+    it('validates minimum reason and rejects unhelpful support while keeping ticket ACKNOWLEDGED (DEC-015)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-sup-rej',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Token 403] Endpoint staging gagal akses',
+      });
+      mockPrisma.supportContribution = {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'sup-3',
+          blockerId: 'blk-sup-rej',
+          supporterUserId: 'supporter-2',
+          actionTaken: 'Reset password VPN pribadi',
+          resultNote: 'Silakan dicoba ulang',
+        }),
+        update: vi.fn().mockResolvedValue({
+          id: 'sup-3',
+          actionTaken: '[SUPPORT_REJECTED] Reset password VPN pribadi',
+        }),
+      };
+
+      await expect(
+        service.respondToSupportContribution('emp-1', 'blk-sup-rej', 'sup-3', {
+          decision: 'REJECT_SUPPORT',
+          reason: 'Gagal',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      // Penolakan oleh bukan pelapor wajib ditolak (FORBIDDEN)
+      await expect(
+        service.respondToSupportContribution('owner-1', 'blk-sup-rej', 'sup-3', {
+          decision: 'ACCEPT_AS_SUPPORT',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      const res = await service.respondToSupportContribution('emp-1', 'blk-sup-rej', 'sup-3', {
+        decision: 'REJECT_SUPPORT',
+        reason: 'Masalahnya bukan di akun VPN melainkan role IAM policy vault.',
+      });
+
+      expect(res.status).toBe(BlockerStatus.ACKNOWLEDGED);
+      expect(mockPrisma.supportContribution.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            actionTaken: '[SUPPORT_REJECTED] Reset password VPN pribadi',
+            resultNote:
+              'Silakan dicoba ulang\n[CATATAN_PENOLAKAN_PELAPOR]: Masalahnya bukan di akun VPN melainkan role IAM policy vault.',
+          },
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'BLOCKER_SUPPORT_REJECTED',
+            message: expect.stringContaining('role IAM policy vault'),
+          }),
+        }),
+      );
     });
 
     it('calculates escalation aging radar metrics and breach status correctly', async () => {

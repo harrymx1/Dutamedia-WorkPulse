@@ -418,4 +418,182 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     const openIds = wrapper.findAll('[data-ticket-id]').map((el) => el.attributes('data-ticket-id'));
     expect(openIds).toEqual(['new-high', 'mid-open']);
   });
+
+  it('displays contribution history in Blocker Saya and lets reporter resolve/close, accept progress, or reject support with reason (DEC-015)', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: any) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-sup-flow',
+                description: '[Token Vault 403] Endpoint staging gagal akses',
+                type: 'APPROVAL',
+                severity: 'HIGH',
+                impact: 'MILESTONE',
+                status: 'ACKNOWLEDGED',
+                raisedAt: '2026-11-15T06:00:00Z',
+                assignedOwner: { id: 'owner-1', fullName: 'Gunawan Setiawan', email: 'ops@dutamedia.com' },
+                supportContributions: [
+                  {
+                    id: 'sup-pending-1',
+                    supporter: { id: 'owner-1', fullName: 'Gunawan Setiawan', email: 'ops@dutamedia.com' },
+                    actionTaken: 'Menambahkan role staging-reader ke token sementara',
+                    resultNote: 'Role sudah aktif di cluster staging-01',
+                    createdAt: '2026-11-15T06:20:00Z',
+                  },
+                  {
+                    id: 'sup-rejected-1',
+                    supporter: { id: 'rekan-1', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
+                    actionTaken: '[SUPPORT_REJECTED] Reset akun VPN',
+                    resultNote: 'Akun VPN direset\n[CATATAN_PENOLAKAN_PELAPOR]: Kendala ada pada IAM policy vault, bukan akses VPN.',
+                    createdAt: '2026-11-15T06:10:00Z',
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/support/sup-pending-1/respond')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { status: 'ACKNOWLEDGED' } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    const historyBox = wrapper.find('[data-testid="my-blocker-history-blk-sup-flow"]');
+    expect(historyBox.exists()).toBe(true);
+    expect(historyBox.text()).toContain('Riwayat Penanganan & Kontribusi (2)');
+    expect(historyBox.text()).toContain('Gunawan Setiawan');
+    expect(historyBox.text()).toContain('Menambahkan role staging-reader ke token sementara');
+    expect(historyBox.text()).toContain('Bantuan Ditolak Pelapor');
+    expect(historyBox.text()).toContain('Alasan Penolakan Pelapor:');
+    expect(historyBox.text()).toContain('Kendala ada pada IAM policy vault, bukan akses VPN.');
+
+    const responsePanel = wrapper.find('[data-testid="support-response-panel-sup-pending-1"]');
+    expect(responsePanel.exists()).toBe(true);
+    expect(wrapper.find('[data-testid="support-resolve-close-sup-pending-1"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="support-accept-progress-sup-pending-1"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="support-reject-open-sup-pending-1"]').exists()).toBe(true);
+
+    // Uji Terima Bantuan (Belum Selesai) -> ACCEPT_AS_SUPPORT
+    await wrapper.find('[data-testid="support-accept-progress-sup-pending-1"]').trigger('click');
+    await flushPromises();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-sup-flow/support/sup-pending-1/respond'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ decision: 'ACCEPT_AS_SUPPORT' }),
+      }),
+    );
+
+    // Uji Tolak Bantuan (Tidak Membantu) -> REJECT_SUPPORT
+    await wrapper.find('[data-testid="support-reject-open-sup-pending-1"]').trigger('click');
+    const reasonTextarea = wrapper.find('[data-testid="support-response-panel-sup-pending-1"] textarea');
+    await reasonTextarea.setValue('Role sudah aktif namun policy staging masih menolak endpoint /secrets.');
+    await wrapper.find('[data-testid="support-reject-submit-sup-pending-1"]').trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-sup-flow/support/sup-pending-1/respond'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          decision: 'REJECT_SUPPORT',
+          reason: 'Role sudah aktif namun policy staging masih menolak endpoint /secrets.',
+        }),
+      }),
+    );
+
+    // Re-open or test RESOLVE_AND_CLOSE cleanly
+    vi.unstubAllGlobals();
+  });
+
+  it('submits RESOLVE_AND_CLOSE decision when reporter accepts peer support as final resolution', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: any) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-sup-close-ui',
+                description: '[Token Vault 403] Endpoint staging gagal akses',
+                type: 'APPROVAL',
+                severity: 'HIGH',
+                impact: 'MILESTONE',
+                status: 'ACKNOWLEDGED',
+                raisedAt: '2026-11-15T06:00:00Z',
+                supportContributions: [
+                  {
+                    id: 'sup-fix-1',
+                    supporter: { id: 'owner-1', fullName: 'Gunawan Setiawan', email: 'ops@dutamedia.com' },
+                    actionTaken: 'Memperbarui token vault dan izin staging',
+                    resultNote: 'Token aktif dan teruji 200 OK',
+                    createdAt: '2026-11-15T06:20:00Z',
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/support/sup-fix-1/respond')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { status: 'CLOSED' } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    await wrapper.find('[data-testid="support-resolve-close-sup-fix-1"]').trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-sup-close-ui/support/sup-fix-1/respond'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ decision: 'RESOLVE_AND_CLOSE' }),
+      }),
+    );
+
+    vi.unstubAllGlobals();
+  });
 });

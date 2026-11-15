@@ -267,3 +267,29 @@
   1. **Wajib Mandat Resmi untuk Rekan/Bawahan:** Sistem dilarang keras menunjuk bawahan (`SUPERVISOR` / `EMPLOYEE`) atau rekan sejawat secara otomatis tanpa adanya penugasan aktif di `TemporaryReviewerAssignment` (`/admin/temporary-reviewers`).
   2. **Fallback Vertikal ke Atasan Pengesah Cuti (`N+1`):** Apabila pejabat utama berstatus Cuti Resmi (`APPROVED` Leave) dan belum memiliki `Reviewer Sementara` aktif, penugasan otomatis kendala (*Blocker*) baik pada jalur Struktural, Lintas Divisi (`INFRA`, `FINANCE`, `LEGAL`), maupun Kewenangan Proyek (`PROJECT_AUTHORITY`) hanya boleh naik vertikal ke atasan struktural / pengarah proyek di atasnya (`N+1 -> N+2 -> CEO_MANAGEMENT`).
 - **Dampak Implementasi:** Pembaruan logika resolusi pada `backend/src/daily/services/blocker.service.ts` dan pengujian unit pada `backend/src/daily/services/blocker.service.spec.ts`.
+
+---
+
+### [DEC-012-UAT / DEC-015] Penetapan Aturan Bisnis Siklus Hidup Penanganan Blocker, Pemisahan Kontribusi Bantuan vs Klaim Penyelesaian, dan 4 Respons Verifikasi Pelapor
+- **Decision ID:** `DEC-012-UAT` (Referensi Arsitektur: `DEC-015`)
+- **Tanggal:** 15/11/2026 — 14:22 WIB
+- **Pengambil Keputusan (Decision Maker):** Harry (Acceptance Owner)
+- **Konteks:** Evaluasi kritis terhadap alur kerja penanganan tiket kendala (*Blocker*) antara **Pelapor** dan **Penanggung Jawab (PIC) / Rekan Penolong**. Ditemukan tiga kesenjangan logis pada implementasi awal: (1) tombol aksi `Beri Bantuan`, `Terima Risiko`, dan `Selesaikan` dapat langsung ditekan sebelum tiket diterima resmi (`Terima & Tangani`), (2) `Beri Bantuan` (*Peer Support*) tidak mengirim notifikasi maupun tampil pada halaman **Blocker Saya** (`/raise-blockers?tab=mine`), sehingga Pelapor buta terhadap progres bantuan, dan (3) Pelapor belum memiliki mekanisme resmi untuk merespons `Beri Bantuan` di antara kemungkinan penerimaan penyelesaian, penerimaan progres parsial, atau penolakan bantuan.
+- **Keputusan Resmi Siklus Hidup Penanganan Blocker (`DEC-015`):**
+  1. **Tahap 1 — Tiket Baru Masuk (`OPEN` / `Menunggu Respons`):**
+     - Di panel detail Penanggung Jawab (`/blockers`), **hanya tombol `Terima & Tangani` (`Acknowledge`)** yang tersedia dan dapat dieksekusi.
+     - Tombol & endpoint `Beri Bantuan`, `Terima Risiko`, dan `Selesaikan` dikunci pada antarmuka serta ditolak oleh validasi backend selama tiket masih berstatus `OPEN`.
+  2. **Tahap 2 — Tiket Sedang Dikerjakan (`ACKNOWLEDGED` / `IN_PROGRESS` / `Sedang Ditangani`):**
+     - Setelah PIC mengklik **`Terima & Tangani`**, barulah tombol pengerjaan muncul:
+       - **`Beri Bantuan` (*Peer Support*):** Mencatat pertolongan/progres sebagian tanpa mengklaim tiket selesai. Tidak mengubah status menjadi `RESOLVED`/`CLOSED`, langsung mengirim notifikasi ke Pelapor (`BLOCKER_SUPPORT_CONTRIBUTED`), dan tampil di linimasa kartu **Blocker Saya**.
+       - **`Selesaikan` (`Resolve`) / `Terima Risiko` (`Accept Risk`):** Klaim resmi PIC bahwa kendala telah beres atau dimitigasi sementara. Status beralih ke `RESOLVED` (`Solusi Diberikan`) atau `ACCEPTED_RISK` (`Risiko Diterima`) dan menunggu verifikasi Pelapor. Selama menunggu verifikasi Pelapor, tombol pengerjaan PIC disembunyikan.
+  3. **Tahap 3 — Transparansi Linimasa & 4 Mekanisme Respons Pelapor (`/raise-blockers?tab=mine`):**
+     - Seluruh kartu pada Tab **Blocker Saya** wajib menampilkan linimasa **`Riwayat Penanganan & Kontribusi`**.
+     - **Kondisi A — Respons Pelapor terhadap `Beri Bantuan` (*Peer Support*):**
+       1. **`Terima sebagai Penyelesaian (Tutup Tiket)` (`RESOLVE_AND_CLOSE`):** Digunakan apabila bantuan tersebut ternyata langsung menuntaskan masalah utama Pelapor → bantuan ditandai diterima sebagai penyelesaian, tiket otomatis berstatus **`Selesai Ditutup` (`CLOSED`)**, dan notifikasi dikirim ke PIC serta pemberi bantuan.
+       2. **`Terima sebagai Bantuan Saja (Belum Selesai)` (`ACCEPT_AS_SUPPORT`):** Digunakan apabila bantuan valid membantu sebagian progres namun kendala utama belum tuntas → bantuan ditandai **`Bantuan Diterima (Belum Selesai)`**, status tiket **tetap `Sedang Ditangani`**, dan notifikasi dikirim ke PIC serta pemberi bantuan.
+       3. **`Tolak Bantuan (Tidak Membantu)` (`REJECT_SUPPORT` + alasan wajib min. 10 karakter):** Digunakan apabila bantuan gagal atau tidak relevan → bantuan ditandai **`Bantuan Ditolak Pelapor`** beserta alasan Pelapor di linimasa, status tiket **tetap `Sedang Ditangani`**, dan notifikasi penolakan dikirim ke PIC serta pemberi bantuan.
+     - **Kondisi B — Respons Pelapor terhadap `Selesaikan` / `Terima Risiko` (Klaim Penyelesaian PIC):**
+       1. **`Konfirmasi & Tutup Tiket` (`close`):** Menyetujui klaim penyelesaian/mitigasi PIC dan menutup tiket secara final menjadi **`Selesai Ditutup` (`CLOSED`)**.
+       2. **`Belum Memadai (Kembalikan)` (`reopen` + alasan wajib min. 10 karakter):** Menolak klaim penyelesaian PIC beserta alasan tertulis di linimasa dan mengembalikan tiket ke status **`Sedang Ditangani` (`ACKNOWLEDGED`)** untuk ditangani ulang.
+- **Dampak Implementasi & Dokumentasi:** Menjadi acuan mengikat bagi `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/utils/blockerStatus.ts`, `frontend/src/views/blockers/` (`BlockerQueueView.vue`, `RaiseBlockerView.vue`), `NotificationCenterView.vue`, serta penyusunan Buku Panduan Penggunaan Sistem WorkPulse.

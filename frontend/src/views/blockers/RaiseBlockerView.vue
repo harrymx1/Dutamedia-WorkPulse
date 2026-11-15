@@ -6,6 +6,7 @@ import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
   BLOCKER_STATUS_LABELS,
+  buildBlockerTicketHistory,
   getBlockerStatusLabel,
   sortBlockersByNewest,
 } from '../../utils/blockerStatus';
@@ -22,6 +23,7 @@ import {
   Plus,
   Layers,
   RotateCcw,
+  HeartHandshake,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
@@ -350,6 +352,9 @@ const closingId = ref<string | null>(null);
 const reopeningId = ref<string | null>(null);
 const reopenReasonMap = ref<Record<string, string>>({});
 const submittingReopenId = ref<string | null>(null);
+const respondingSupportId = ref<string | null>(null);
+const rejectingSupportId = ref<string | null>(null);
+const supportRejectReasonMap = ref<Record<string, string>>({});
 
 const charCount = computed(() => title.value.length);
 
@@ -676,6 +681,72 @@ async function submitInlineReopen(ticketId: string) {
     errorMessage.value = err.message || 'Gagal mengembalikan tiket kendala.';
   } finally {
     submittingReopenId.value = null;
+  }
+}
+
+function getTicketHistory(ticket: any) {
+  return buildBlockerTicketHistory(ticket);
+}
+
+function formatHistoryTime(dateStr: string): string {
+  if (!dateStr) return '-';
+  try {
+    return (
+      new Date(dateStr).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }) + ' WIB'
+    );
+  } catch {
+    return '-';
+  }
+}
+
+function openSupportRejectForm(supportId: string) {
+  rejectingSupportId.value = supportId;
+  supportRejectReasonMap.value[supportId] = '';
+}
+
+function cancelSupportRejectForm() {
+  rejectingSupportId.value = null;
+}
+
+async function respondToSupport(
+  ticketId: string,
+  supportId: string,
+  decision: 'RESOLVE_AND_CLOSE' | 'ACCEPT_AS_SUPPORT' | 'REJECT_SUPPORT',
+) {
+  const reason = (supportRejectReasonMap.value[supportId] || '').trim();
+  if (decision === 'REJECT_SUPPORT' && reason.length < 10) {
+    errorMessage.value = 'Alasan penolakan bantuan wajib diisi minimal 10 karakter.';
+    return;
+  }
+
+  respondingSupportId.value = supportId;
+  errorMessage.value = null;
+  try {
+    await apiClient(`/blockers/${ticketId}/support/${supportId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({
+        decision,
+        ...(decision === 'REJECT_SUPPORT' ? { reason } : {}),
+      }),
+    });
+    if (rejectingSupportId.value === supportId) {
+      rejectingSupportId.value = null;
+    }
+    if (decision === 'RESOLVE_AND_CLOSE') {
+      toastMessage.value = 'Bantuan diterima sebagai penyelesaian. Tiket ditutup permanen.';
+    } else if (decision === 'ACCEPT_AS_SUPPORT') {
+      toastMessage.value = 'Bantuan diterima sebagai progres. Tiket tetap dilanjutkan penanggung jawab.';
+    } else {
+      toastMessage.value = 'Penolakan bantuan berhasil dicatat dan diteruskan ke penanggung jawab.';
+    }
+    await loadMyBlockers();
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Gagal merespons kontribusi bantuan.';
+  } finally {
+    respondingSupportId.value = null;
   }
 }
 
@@ -1351,6 +1422,115 @@ onBeforeUnmount(() => {
               <p v-if="b.riskMitigationPlan" class="risk-text">
                 <strong>Mitigasi Sementara:</strong> {{ b.riskMitigationPlan }}
               </p>
+            </div>
+
+            <!-- History & Peer Support Timeline -->
+            <div class="my-history-section" :data-testid="`my-blocker-history-${b.id}`">
+              <div class="my-history-head">
+                <HeartHandshake :size="14" />
+                <span>Riwayat Penanganan &amp; Kontribusi ({{ getTicketHistory(b).length }})</span>
+              </div>
+
+              <div v-if="getTicketHistory(b).length === 0" class="my-history-empty">
+                Belum ada catatan penanganan atau bantuan tercatat untuk tiket ini.
+              </div>
+
+              <div v-else class="my-history-list">
+                <div
+                  v-for="entry in getTicketHistory(b)"
+                  :key="entry.id"
+                  class="my-history-item"
+                  :class="`variant-${entry.variant}`"
+                  :data-testid="`my-history-item-${entry.id}`"
+                >
+                  <div class="my-hist-meta">
+                    <div class="my-hist-actor-group">
+                      <strong>{{ entry.actorName }}</strong>
+                      <span class="my-hist-badge" :class="`variant-${entry.variant}`">
+                        {{ entry.badgeLabel }}
+                      </span>
+                    </div>
+                    <span class="my-hist-time">{{ formatHistoryTime(entry.createdAt) }}</span>
+                  </div>
+                  <div v-if="entry.primaryLabel" class="my-hist-line">
+                    <strong>{{ entry.primaryLabel }}:</strong> {{ entry.primaryText }}
+                  </div>
+                  <div class="my-hist-line">
+                    <strong>{{ entry.secondaryLabel }}:</strong> {{ entry.secondaryText }}
+                  </div>
+                  <div v-if="entry.reporterFeedback" class="my-hist-feedback">
+                    <strong>Alasan Penolakan Pelapor:</strong> {{ entry.reporterFeedback }}
+                  </div>
+
+                  <div
+                    v-if="
+                      entry.entryType === 'PEER_SUPPORT' &&
+                      entry.supportStatus === 'PENDING' &&
+                      b.status !== 'CLOSED'
+                    "
+                    class="support-response-panel"
+                    :data-testid="`support-response-panel-${entry.id}`"
+                  >
+                    <div class="support-response-prompt">
+                      Bagaimana tanggapan Anda terhadap bantuan ini?
+                    </div>
+                    <div v-if="rejectingSupportId !== entry.id" class="confirm-actions">
+                      <button
+                        type="button"
+                        class="btn-sup-resolve"
+                        :disabled="respondingSupportId === entry.id"
+                        :data-testid="`support-resolve-close-${entry.id}`"
+                        @click="respondToSupport(b.id, entry.id, 'RESOLVE_AND_CLOSE')"
+                      >
+                        Terima sbg Penyelesaian (Tutup Tiket)
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-sup-accept"
+                        :disabled="respondingSupportId === entry.id"
+                        :data-testid="`support-accept-progress-${entry.id}`"
+                        @click="respondToSupport(b.id, entry.id, 'ACCEPT_AS_SUPPORT')"
+                      >
+                        Terima Bantuan (Belum Selesai)
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-sup-reject"
+                        :disabled="respondingSupportId === entry.id"
+                        :data-testid="`support-reject-open-${entry.id}`"
+                        @click="openSupportRejectForm(entry.id)"
+                      >
+                        Tolak Bantuan (Tidak Membantu)
+                      </button>
+                    </div>
+                    <div v-else class="inline-reopen-form">
+                      <textarea
+                        v-model="supportRejectReasonMap[entry.id]"
+                        rows="2"
+                        placeholder="Jelaskan mengapa bantuan ini belum membantu atau tidak sesuai (min. 10 karakter)..."
+                      ></textarea>
+                      <div class="confirm-actions">
+                        <button
+                          type="button"
+                          class="btn-confirm-reopen"
+                          :disabled="respondingSupportId === entry.id"
+                          :data-testid="`support-reject-submit-${entry.id}`"
+                          @click="respondToSupport(b.id, entry.id, 'REJECT_SUPPORT')"
+                        >
+                          {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Penolakan Bantuan' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-cancel-reopen"
+                          @click="cancelSupportRejectForm"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Reporter Confirmation Actions -->
@@ -2398,6 +2578,201 @@ textarea:focus {
   color: #475B54;
   font-size: 12.5px;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.my-history-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #E2ECE7;
+}
+
+.my-history-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #00674D;
+  margin-bottom: 8px;
+}
+
+.my-history-empty {
+  font-size: 12px;
+  color: #5C6E68;
+  background: #FAFCFB;
+  border: 1px solid #E2ECE7;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.my-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.my-history-item {
+  background: #F4FBF7;
+  border: 1px solid #C4EBD8;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.my-history-item.variant-reopen {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.my-history-item.variant-resolution {
+  background: #ECFDF5;
+  border-color: #6EE7B7;
+}
+
+.my-history-item.variant-risk {
+  background: #FFF7ED;
+  border-color: #FDBA74;
+}
+
+.my-history-item.variant-closed {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+.my-hist-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+  color: #00674D;
+}
+
+.my-history-item.variant-reopen .my-hist-meta {
+  color: #92400E;
+}
+
+.my-history-item.variant-resolution .my-hist-meta {
+  color: #065F46;
+}
+
+.my-history-item.variant-risk .my-hist-meta {
+  color: #9A3412;
+}
+
+.my-history-item.variant-closed .my-hist-meta {
+  color: #166534;
+}
+
+.my-hist-actor-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.my-hist-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.my-hist-badge.variant-support {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.my-hist-badge.variant-reopen {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+
+.my-hist-badge.variant-resolution {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #6EE7B7;
+}
+
+.my-hist-badge.variant-risk {
+  background: #FFEDD5;
+  color: #9A3412;
+  border: 1px solid #FDBA74;
+}
+
+.my-hist-badge.variant-closed {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.my-hist-time {
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.my-hist-line {
+  color: #1F352E;
+}
+
+.my-hist-feedback {
+  margin-top: 4px;
+  color: #991B1B;
+}
+
+.support-response-panel {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #CBD5E1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.support-response-prompt {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1F352E;
+}
+
+.btn-sup-resolve {
+  padding: 6px 11px;
+  border-radius: 6px;
+  border: none;
+  background: #00674D;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-accept {
+  padding: 6px 11px;
+  border-radius: 6px;
+  border: 1px solid #93C5FD;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-reject {
+  padding: 6px 11px;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #991B1B;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
 }
 

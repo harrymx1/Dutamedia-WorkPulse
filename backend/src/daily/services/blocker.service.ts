@@ -17,6 +17,7 @@ import {
   RaiseBlockerDto,
   ReopenBlockerDto,
   ResolveBlockerDto,
+  RespondSupportContributionDto,
 } from '../dto/raise-blocker.dto';
 import { BlockerSlaConfig, CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
@@ -35,6 +36,12 @@ const REPORTER_CLOSED_ACTION_LABEL = 'Dikonfirmasi & Ditutup oleh Pelapor';
 const REPORTER_CLOSED_DEFAULT_NOTE =
   'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala secara permanen.';
 
+// Prefix respons pelapor terhadap entri Peer Support (DEC-015) — mempertahankan entryType PEER_SUPPORT tanpa mengubah skema DB
+const SUPPORT_RESOLVED_CLOSED_PREFIX = '[SUPPORT_RESOLVED_CLOSED]';
+const SUPPORT_ACCEPTED_PROGRESS_PREFIX = '[SUPPORT_ACCEPTED_PROGRESS]';
+const SUPPORT_REJECTED_PREFIX = '[SUPPORT_REJECTED]';
+const REPORTER_REJECTION_NOTE_MARKER = '\n[CATATAN_PENOLAKAN_PELAPOR]: ';
+
 export type BlockerHistoryEntryType =
   | 'PEER_SUPPORT'
   | 'REPORTER_REOPEN'
@@ -49,6 +56,20 @@ function resolveContributionEntryType(actionTaken?: string | null): BlockerHisto
   if (normalized?.startsWith(PIC_ACCEPTED_RISK_ACTION_PREFIX)) return 'PIC_ACCEPTED_RISK';
   if (normalized === REPORTER_CLOSED_ACTION_LABEL) return 'REPORTER_CLOSED';
   return 'PEER_SUPPORT';
+}
+
+function stripSupportStatusPrefix(actionTaken?: string | null): string {
+  const normalized = actionTaken?.trim() || '';
+  for (const prefix of [
+    SUPPORT_RESOLVED_CLOSED_PREFIX,
+    SUPPORT_ACCEPTED_PROGRESS_PREFIX,
+    SUPPORT_REJECTED_PREFIX,
+  ]) {
+    if (normalized.startsWith(prefix)) {
+      return normalized.slice(prefix.length).trim();
+    }
+  }
+  return normalized;
 }
 
 export interface ParsedBlockerDescription {
@@ -1014,6 +1035,28 @@ export class BlockerService {
   }
 
   /**
+   * Memastikan tiket kendala berada pada fase pengerjaan aktif (bukan OPEN / CLOSED)
+   * sebelum PIC mengajukan klaim penyelesaian atau keputusan risiko (DEC-015).
+   */
+  private assertTicketReadyForResolutionDecision(ticket: any): void {
+    if (ticket.status === BlockerStatus.CLOSED) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+    if (ticket.status === BlockerStatus.OPEN) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message:
+          'Tiket kendala harus diterima terlebih dahulu (Terima & Tangani) sebelum dapat diselesaikan atau ditetapkan keputusan risiko.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+  }
+
+  /**
    * Menyelesaikan tiket kendala dengan catatan mitigasi/resolusi wajib.
    * Status menjadi RESOLVED (menunggu konfirmasi penutupan dari pelapor).
    */
@@ -1030,13 +1073,7 @@ export class BlockerService {
       });
     }
 
-    if (ticket.status === BlockerStatus.CLOSED) {
-      throw new AppException({
-        code: ErrorCode.RESOURCE_CONFLICT,
-        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
-        statusCode: HttpStatus.CONFLICT,
-      });
-    }
+    this.assertTicketReadyForResolutionDecision(ticket);
 
     await this.verifyBlockerActionAuthority(actorUserId, ticket);
 
@@ -1100,13 +1137,7 @@ export class BlockerService {
       });
     }
 
-    if (ticket.status === BlockerStatus.CLOSED) {
-      throw new AppException({
-        code: ErrorCode.RESOURCE_CONFLICT,
-        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
-        statusCode: HttpStatus.CONFLICT,
-      });
-    }
+    this.assertTicketReadyForResolutionDecision(ticket);
 
     await this.verifyBlockerActionAuthority(actorUserId, ticket);
 
@@ -1624,9 +1655,15 @@ export class BlockerService {
       ticket.status === BlockerStatus.CLOSED;
 
     const trimmedResolution = ticket.resolutionNote?.trim();
+    const hasSupportResolvedEntry = entries.some(
+      (entry: any) =>
+        toSafeMs(entry.createdAt) >= latestReopenMs &&
+        entry.actionTaken?.trim().startsWith(SUPPORT_RESOLVED_CLOSED_PREFIX),
+    );
     if (
       hasSettledDecisionStatus &&
       trimmedResolution &&
+      !hasSupportResolvedEntry &&
       !entries.some(
         (entry: any) =>
           entry.entryType === 'PIC_RESOLUTION' &&
@@ -1849,8 +1886,33 @@ export class BlockerService {
     );
   }
 
+  private async notifyBlockerRecipients(
+    recipientIds: Array<string | null | undefined>,
+    excludeUserId: string,
+    payload: {
+      triggerType: string;
+      title: string;
+      message: string;
+      actionUrl: string;
+      relatedEntityId: string;
+    },
+  ): Promise<void> {
+    const uniqueRecipients = Array.from(
+      new Set(
+        recipientIds.filter((id): id is string => Boolean(id) && id !== excludeUserId),
+      ),
+    );
+    for (const recipientUserId of uniqueRecipients) {
+      await this.createBlockerNotification({
+        recipientUserId,
+        ...payload,
+      });
+    }
+  }
+
   /**
-   * Menambahkan kontribusi bantuan (Support Contribution) lintas fungsi (Prototipe 09).
+   * Menambahkan kontribusi bantuan (Support Contribution) lintas fungsi (Prototipe 09 & DEC-015).
+   * Hanya diizinkan setelah tiket berstatus ACKNOWLEDGED / IN_PROGRESS, serta langsung memberi tahu Pelapor.
    */
   async addSupportContribution(
     supporterUserId: string,
@@ -1870,21 +1932,278 @@ export class BlockerService {
       });
     }
 
+    if (ticket.status === BlockerStatus.OPEN) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message:
+          'Tiket kendala harus diterima terlebih dahulu (Terima & Tangani) sebelum dapat diberikan kontribusi bantuan.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    if (
+      ticket.status === BlockerStatus.RESOLVED ||
+      ticket.status === BlockerStatus.ACCEPTED_RISK
+    ) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sedang menunggu konfirmasi penyelesaian dari pelapor.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    if (ticket.status === BlockerStatus.CLOSED) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    const trimmedAction = actionTaken.trim();
+    const trimmedResult = resultNote.trim();
+
     const created = await this.prisma.supportContribution.create({
       data: {
         blockerId,
         supporterUserId,
-        actionTaken: actionTaken.trim(),
-        resultNote: resultNote.trim(),
+        actionTaken: trimmedAction,
+        resultNote: trimmedResult,
       },
       include: {
         supporter: { select: { id: true, fullName: true, email: true } },
       },
     });
 
+    if (ticket.raisedByUserId && ticket.raisedByUserId !== supporterUserId) {
+      let supporterName = (created as any).supporter?.fullName?.trim() || '';
+      if (!supporterName && this.prisma.user?.findUnique) {
+        const supporterUser = await this.prisma.user.findUnique({
+          where: { id: supporterUserId },
+          select: { fullName: true },
+        });
+        supporterName = supporterUser?.fullName?.trim() || '';
+      }
+      supporterName = supporterName || 'Rekan Tim';
+
+      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+      const inlineAction = flattenInlineNotificationText(trimmedAction);
+      const inlineResult = flattenInlineNotificationText(trimmedResult);
+
+      await this.createBlockerNotification({
+        recipientUserId: ticket.raisedByUserId,
+        triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
+        title: formatBlockerNotificationTitle('Bantuan Kendala Diberikan', cleanTitle),
+        message: [
+          `${supporterName} memberikan kontribusi bantuan pada tiket kendala Anda: "${inlineAction}". Silakan tinjau apakah bantuan ini sudah menyelesaikan kendala, membantu sebagian progres, atau belum membantu.`,
+          `Judul Kendala: ${cleanTitle}`,
+          `Pemberi Bantuan: ${supporterName}`,
+          'Status Tiket: Sedang Ditangani (Menunggu Respons Bantuan Pelapor)',
+          `Aksi Bantuan: ${inlineAction}`,
+          `Hasil / Progres: ${inlineResult}`,
+          'Tindak Lanjut Anda: Buka tab Blocker Saya untuk memilih: Terima sebagai Penyelesaian (Tutup Tiket), Terima sebagai Bantuan Saja (Belum Selesai), atau Tolak Bantuan (Tidak Membantu).',
+        ].join('\n'),
+        actionUrl: '/raise-blockers?tab=mine',
+        relatedEntityId: ticket.id,
+      });
+    }
+
     return {
       ...created,
       entryType: 'PEER_SUPPORT' as const,
+    };
+  }
+
+  /**
+   * Memproses tanggapan resmi Pelapor terhadap sebuah entri Beri Bantuan (DEC-015):
+   * - RESOLVE_AND_CLOSE: menerima bantuan sebagai penyelesaian tuntas & menutup tiket (CLOSED)
+   * - ACCEPT_AS_SUPPORT: menerima bantuan sebagai progres sebagian, tiket tetap Sedang Ditangani
+   * - REJECT_SUPPORT: menolak bantuan beserta alasan minimal 10 karakter, tiket tetap Sedang Ditangani
+   */
+  async respondToSupportContribution(
+    actorUserId: string,
+    blockerId: string,
+    supportId: string,
+    dto: RespondSupportContributionDto,
+  ) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+    });
+
+    if (!ticket) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Tiket kendala tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (ticket.raisedByUserId !== actorUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: 'Hanya pelapor asli tiket kendala ini yang dapat merespons kontribusi bantuan.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (ticket.status === BlockerStatus.CLOSED) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    const contribution = await this.prisma.supportContribution.findUnique({
+      where: { id: supportId },
+    });
+
+    if (!contribution || contribution.blockerId !== blockerId) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Kontribusi bantuan tidak ditemukan pada tiket kendala ini.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (resolveContributionEntryType(contribution.actionTaken) !== 'PEER_SUPPORT') {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Entri riwayat ini bukan kontribusi bantuan yang dapat direspons.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    const normalizedAction = contribution.actionTaken?.trim() || '';
+    if (
+      normalizedAction.startsWith(SUPPORT_RESOLVED_CLOSED_PREFIX) ||
+      normalizedAction.startsWith(SUPPORT_ACCEPTED_PROGRESS_PREFIX) ||
+      normalizedAction.startsWith(SUPPORT_REJECTED_PREFIX)
+    ) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Kontribusi bantuan ini sudah direspons sebelumnya.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    const rawAction = stripSupportStatusPrefix(normalizedAction) || '-';
+    const rawResult = contribution.resultNote?.trim() || '-';
+    const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+    const inlineAction = flattenInlineNotificationText(rawAction);
+    const recipients = [ticket.assignedOwnerId, contribution.supporterUserId];
+
+    if (dto.decision === 'RESOLVE_AND_CLOSE') {
+      const now = this.clockService.now();
+      const updatedContribution = await this.prisma.supportContribution.update({
+        where: { id: supportId },
+        data: {
+          actionTaken: `${SUPPORT_RESOLVED_CLOSED_PREFIX} ${rawAction}`,
+        },
+      });
+
+      const updatedTicket = await this.prisma.blockerTicket.update({
+        where: { id: blockerId },
+        data: {
+          status: BlockerStatus.CLOSED,
+          resolvedAt: ticket.resolvedAt ?? now,
+          closedAt: now,
+          resolutionNote: ticket.resolutionNote?.trim() || `${rawAction} — ${rawResult}`,
+        },
+      });
+
+      await this.recordLifecycleContribution(
+        blockerId,
+        actorUserId,
+        REPORTER_CLOSED_ACTION_LABEL,
+        `Pelapor menerima bantuan ("${rawAction}") sebagai penyelesaian tuntas dan menutup tiket kendala.`,
+        now,
+      );
+
+      await this.notifyBlockerRecipients(recipients, actorUserId, {
+        triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
+        title: formatBlockerNotificationTitle('Tiket Ditutup Pelapor', cleanTitle),
+        message: [
+          `Pelapor menerima kontribusi bantuan "${inlineAction}" sebagai penyelesaian tuntas dan menutup tiket kendala ini.`,
+          `Judul Kendala: ${cleanTitle}`,
+          'Status Tiket: Selesai Ditutup',
+          `Aksi Bantuan yang Diterima: ${inlineAction}`,
+          'Konfirmasi Pelapor: Bantuan telah langsung menuntaskan kendala sehingga tiket ditutup permanen.',
+        ].join('\n'),
+        actionUrl: '/blockers',
+        relatedEntityId: ticket.id,
+      });
+
+      return {
+        ...updatedTicket,
+        respondedContribution: updatedContribution,
+      };
+    }
+
+    if (dto.decision === 'ACCEPT_AS_SUPPORT') {
+      const updatedContribution = await this.prisma.supportContribution.update({
+        where: { id: supportId },
+        data: {
+          actionTaken: `${SUPPORT_ACCEPTED_PROGRESS_PREFIX} ${rawAction}`,
+        },
+      });
+
+      await this.notifyBlockerRecipients(recipients, actorUserId, {
+        triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
+        title: formatBlockerNotificationTitle('Bantuan Diterima (Belum Selesai)', cleanTitle),
+        message: [
+          `Pelapor menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
+          `Judul Kendala: ${cleanTitle}`,
+          'Status Tiket: Sedang Ditangani (Belum Selesai)',
+          `Aksi Bantuan yang Diterima: ${inlineAction}`,
+          'Tindak Lanjut Anda: Lanjutkan penanganan kendala pada Antrean Eskalasi Blocker sampai tuntas dan ajukan penyelesaian.',
+        ].join('\n'),
+        actionUrl: '/blockers',
+        relatedEntityId: ticket.id,
+      });
+
+      return {
+        status: BlockerStatus.ACKNOWLEDGED,
+        contribution: updatedContribution,
+      };
+    }
+
+    const trimmedReason = dto.reason?.trim() || '';
+    if (trimmedReason.length < 10) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Alasan penolakan bantuan wajib diisi minimal 10 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const updatedContribution = await this.prisma.supportContribution.update({
+      where: { id: supportId },
+      data: {
+        actionTaken: `${SUPPORT_REJECTED_PREFIX} ${rawAction}`,
+        resultNote: `${rawResult}${REPORTER_REJECTION_NOTE_MARKER}${trimmedReason}`,
+      },
+    });
+
+    const inlineReason = flattenInlineNotificationText(trimmedReason);
+    await this.notifyBlockerRecipients(recipients, actorUserId, {
+      triggerType: 'BLOCKER_SUPPORT_REJECTED',
+      title: formatBlockerNotificationTitle('Bantuan Ditolak Pelapor', cleanTitle),
+      message: [
+        `Pelapor menolak kontribusi bantuan "${inlineAction}" karena dinilai belum membantu: "${inlineReason}".`,
+        `Judul Kendala: ${cleanTitle}`,
+        'Status Tiket: Sedang Ditangani (Bantuan Ditolak Pelapor)',
+        `Aksi Bantuan yang Ditolak: ${inlineAction}`,
+        `Alasan Penolakan Pelapor: ${inlineReason}`,
+        'Tindak Lanjut Anda: Tinjau alasan penolakan pelapor dan lanjutkan penanganan atau berikan bantuan alternatif.',
+      ].join('\n'),
+      actionUrl: '/blockers',
+      relatedEntityId: ticket.id,
+    });
+
+    return {
+      status: BlockerStatus.ACKNOWLEDGED,
+      contribution: updatedContribution,
     };
   }
 

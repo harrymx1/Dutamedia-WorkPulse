@@ -194,6 +194,12 @@ function formatNotificationTypeLabel(type?: string): string {
       return 'Pengembalian Kendala';
     case 'BLOCKER_CLOSED_BY_REPORTER':
       return 'Penutupan Kendala';
+    case 'BLOCKER_SUPPORT_CONTRIBUTED':
+      return 'Bantuan Kendala';
+    case 'BLOCKER_SUPPORT_ACCEPTED':
+      return 'Respons Bantuan Kendala';
+    case 'BLOCKER_SUPPORT_REJECTED':
+      return 'Penolakan Bantuan Kendala';
     case 'POLICY_UPDATED':
       return 'Pembaruan Kebijakan';
     case 'POLICY_OWNER_ASSIGNED':
@@ -415,6 +421,9 @@ function getDelegationHeading(notifOrType?: NotificationItem | string | null): s
   if (type === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION') return 'Rincian Keputusan Terima Risiko & Mitigasi';
   if (type === 'BLOCKER_REOPENED_BY_REPORTER') return 'Rincian Pengembalian Tiket oleh Pelapor';
   if (type === 'BLOCKER_CLOSED_BY_REPORTER') return 'Rincian Konfirmasi & Penutupan Tiket';
+  if (type === 'BLOCKER_SUPPORT_CONTRIBUTED') return 'Rincian Kontribusi Bantuan Kendala';
+  if (type === 'BLOCKER_SUPPORT_ACCEPTED') return 'Rincian Konfirmasi Bantuan (Kendala Belum Selesai)';
+  if (type === 'BLOCKER_SUPPORT_REJECTED') return 'Rincian Penolakan Bantuan oleh Pelapor';
   if (type.includes('BLOCKER')) return 'Rincian Pemberitahuan Tiket Kendala';
   if (type === 'POLICY_OWNER_ASSIGNED') return 'Rincian Penetapan Pemilik Kebijakan';
   if (type === 'POLICY_OWNER_UPDATED') return 'Rincian Perubahan Pemilik Kebijakan';
