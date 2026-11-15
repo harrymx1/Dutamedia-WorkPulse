@@ -62,17 +62,41 @@ export function sortBlockersByNewest<T extends { raisedAt?: string | Date | null
   });
 }
 
-export type BlockerHistoryEntryType = 'PEER_SUPPORT' | 'REPORTER_REOPEN';
+export type BlockerHistoryEntryType =
+  | 'PEER_SUPPORT'
+  | 'REPORTER_REOPEN'
+  | 'PIC_RESOLUTION'
+  | 'PIC_ACCEPTED_RISK'
+  | 'REPORTER_CLOSED';
 
 export interface BlockerHistoryEntryLike {
+  id?: string;
   entryType?: string | null;
   actionTaken?: string | null;
   resultNote?: string | null;
+  createdAt?: string | Date | null;
+  supporter?: { id?: string; fullName?: string; email?: string } | null;
 }
+
+export interface BlockerHistoryTicketLike {
+  id: string;
+  status?: string | null;
+  raisedAt?: string | Date | null;
+  resolvedAt?: string | Date | null;
+  closedAt?: string | Date | null;
+  resolutionNote?: string | null;
+  riskAcceptanceJustification?: string | null;
+  riskMitigationPlan?: string | null;
+  raisedBy?: { id?: string; fullName?: string; email?: string } | null;
+  assignedOwner?: { id?: string; fullName?: string; email?: string } | null;
+  supportContributions?: readonly BlockerHistoryEntryLike[] | null;
+}
+
+export type BlockerHistoryVariant = 'support' | 'reopen' | 'resolution' | 'risk' | 'closed';
 
 export interface BlockerHistoryPresentation {
   entryType: BlockerHistoryEntryType;
-  variant: 'support' | 'reopen';
+  variant: BlockerHistoryVariant;
   badgeLabel: string;
   primaryLabel: string | null;
   primaryText: string | null;
@@ -80,12 +104,23 @@ export interface BlockerHistoryPresentation {
   secondaryText: string;
 }
 
+export interface BlockerTicketHistoryItem extends BlockerHistoryPresentation {
+  id: string;
+  actorName: string;
+  createdAt: string;
+}
+
 export const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
+export const PIC_RESOLUTION_ACTION_LABEL = 'Solusi Diberikan oleh Penanggung Jawab';
+export const PIC_ACCEPTED_RISK_ACTION_PREFIX = '[PIC_ACCEPTED_RISK]';
+export const REPORTER_CLOSED_ACTION_LABEL = 'Dikonfirmasi & Ditutup oleh Pelapor';
+export const REPORTER_CLOSED_DEFAULT_NOTE =
+  'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala secara permanen.';
 
 const BLOCKER_HISTORY_ENTRY_CONFIG: Record<
   BlockerHistoryEntryType,
   {
-    variant: 'support' | 'reopen';
+    variant: BlockerHistoryVariant;
     badgeLabel: string;
     includePrimaryLine: boolean;
     primaryLabel: string | null;
@@ -106,16 +141,49 @@ const BLOCKER_HISTORY_ENTRY_CONFIG: Record<
     primaryLabel: null,
     secondaryLabel: 'Alasan Pengembalian',
   },
+  PIC_RESOLUTION: {
+    variant: 'resolution',
+    badgeLabel: 'Solusi Diberikan',
+    includePrimaryLine: false,
+    primaryLabel: null,
+    secondaryLabel: 'Catatan Solusi',
+  },
+  PIC_ACCEPTED_RISK: {
+    variant: 'risk',
+    badgeLabel: 'Risiko Diterima',
+    includePrimaryLine: true,
+    primaryLabel: 'Justifikasi Risiko',
+    secondaryLabel: 'Rencana Mitigasi',
+  },
+  REPORTER_CLOSED: {
+    variant: 'closed',
+    badgeLabel: 'Dikonfirmasi & Ditutup Pelapor',
+    includePrimaryLine: false,
+    primaryLabel: null,
+    secondaryLabel: 'Status Konfirmasi',
+  },
 };
+
+const KNOWN_HISTORY_ENTRY_TYPES: ReadonlySet<string> = new Set<BlockerHistoryEntryType>([
+  'PEER_SUPPORT',
+  'REPORTER_REOPEN',
+  'PIC_RESOLUTION',
+  'PIC_ACCEPTED_RISK',
+  'REPORTER_CLOSED',
+]);
 
 export function resolveBlockerHistoryEntryType(
   entry: BlockerHistoryEntryLike,
 ): BlockerHistoryEntryType {
-  if (entry.entryType === 'REPORTER_REOPEN') return 'REPORTER_REOPEN';
-  if (entry.entryType === 'PEER_SUPPORT') return 'PEER_SUPPORT';
-  return entry.actionTaken?.trim() === REPORTER_REOPEN_ACTION_LABEL
-    ? 'REPORTER_REOPEN'
-    : 'PEER_SUPPORT';
+  if (entry.entryType && KNOWN_HISTORY_ENTRY_TYPES.has(entry.entryType)) {
+    return entry.entryType as BlockerHistoryEntryType;
+  }
+  const normalized = entry.actionTaken?.trim();
+  if (normalized === REPORTER_REOPEN_ACTION_LABEL) return 'REPORTER_REOPEN';
+  if (normalized === PIC_RESOLUTION_ACTION_LABEL) return 'PIC_RESOLUTION';
+  if (normalized?.startsWith(PIC_ACCEPTED_RISK_ACTION_PREFIX)) return 'PIC_ACCEPTED_RISK';
+  if (normalized === REPORTER_CLOSED_ACTION_LABEL) return 'REPORTER_CLOSED';
+  return 'PEER_SUPPORT';
 }
 
 export function countPeerSupportContributions(
@@ -130,14 +198,117 @@ export function formatBlockerHistoryEntry(
 ): BlockerHistoryPresentation {
   const entryType = resolveBlockerHistoryEntryType(entry);
   const cfg = BLOCKER_HISTORY_ENTRY_CONFIG[entryType];
+  let primaryText: string | null = null;
+  if (cfg.includePrimaryLine) {
+    if (entryType === 'PIC_ACCEPTED_RISK') {
+      const stripped = entry.actionTaken
+        ?.trim()
+        .slice(PIC_ACCEPTED_RISK_ACTION_PREFIX.length)
+        .trim();
+      primaryText = stripped || '-';
+    } else {
+      primaryText = entry.actionTaken || '-';
+    }
+  }
   return {
     entryType,
     variant: cfg.variant,
     badgeLabel: cfg.badgeLabel,
     primaryLabel: cfg.primaryLabel,
-    primaryText: cfg.includePrimaryLine ? entry.actionTaken || '-' : null,
+    primaryText,
     secondaryLabel: cfg.secondaryLabel,
     secondaryText: entry.resultNote || '-',
   };
+}
+
+function toSafeHistoryTime(value?: string | Date | null): number {
+  if (!value) return 0;
+  const ms = new Date(value).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
+
+function toHistoryIsoString(value?: string | Date | null): string {
+  if (!value) return '';
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+/**
+ * Menyusun linimasa riwayat penanganan & kontribusi secara kronologis dan idempoten,
+ * termasuk mensintesis entri solusi/risiko/penutupan untuk tiket lama sebelum pencatatan otomatis aktif.
+ */
+export function buildBlockerTicketHistory(
+  ticket: BlockerHistoryTicketLike,
+): BlockerTicketHistoryItem[] {
+  const items: Array<BlockerHistoryEntryLike & { id: string; resolvedType: BlockerHistoryEntryType }> =
+    (ticket.supportContributions || []).map((entry, idx) => ({
+      ...entry,
+      id: entry.id || `entry-${idx}`,
+      resolvedType: resolveBlockerHistoryEntryType(entry),
+    }));
+
+  const ownerActor = ticket.assignedOwner || { fullName: 'Penanggung Jawab' };
+  const reporterActor = ticket.raisedBy || { fullName: 'Pelapor' };
+
+  const trimmedResolution = ticket.resolutionNote?.trim();
+  if (
+    trimmedResolution &&
+    !items.some(
+      (item) =>
+        item.resolvedType === 'PIC_RESOLUTION' &&
+        item.resultNote?.trim() === trimmedResolution,
+    )
+  ) {
+    items.push({
+      id: `synthetic-res-${ticket.id}`,
+      entryType: 'PIC_RESOLUTION',
+      resolvedType: 'PIC_RESOLUTION',
+      supporter: ownerActor,
+      actionTaken: PIC_RESOLUTION_ACTION_LABEL,
+      resultNote: trimmedResolution,
+      createdAt: ticket.resolvedAt || ticket.closedAt || ticket.raisedAt,
+    });
+  }
+
+  const trimmedRiskJust = ticket.riskAcceptanceJustification?.trim();
+  const trimmedRiskPlan = ticket.riskMitigationPlan?.trim();
+  if (
+    (trimmedRiskJust || trimmedRiskPlan) &&
+    !items.some((item) => item.resolvedType === 'PIC_ACCEPTED_RISK')
+  ) {
+    items.push({
+      id: `synthetic-risk-${ticket.id}`,
+      entryType: 'PIC_ACCEPTED_RISK',
+      resolvedType: 'PIC_ACCEPTED_RISK',
+      supporter: ownerActor,
+      actionTaken: `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${trimmedRiskJust || '-'}`,
+      resultNote: trimmedRiskPlan || '-',
+      createdAt: ticket.resolvedAt || ticket.closedAt || ticket.raisedAt,
+    });
+  }
+
+  if (
+    ticket.status === 'CLOSED' &&
+    ticket.closedAt &&
+    !items.some((item) => item.resolvedType === 'REPORTER_CLOSED')
+  ) {
+    items.push({
+      id: `synthetic-close-${ticket.id}`,
+      entryType: 'REPORTER_CLOSED',
+      resolvedType: 'REPORTER_CLOSED',
+      supporter: reporterActor,
+      actionTaken: REPORTER_CLOSED_ACTION_LABEL,
+      resultNote: REPORTER_CLOSED_DEFAULT_NOTE,
+      createdAt: ticket.closedAt,
+    });
+  }
+
+  return items
+    .sort((a, b) => toSafeHistoryTime(a.createdAt) - toSafeHistoryTime(b.createdAt))
+    .map((entry) => ({
+      id: entry.id,
+      actorName: entry.supporter?.fullName || '-',
+      createdAt: toHistoryIsoString(entry.createdAt),
+      ...formatBlockerHistoryEntry(entry),
+    }));
 }
 

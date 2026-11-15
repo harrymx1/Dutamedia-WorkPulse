@@ -421,12 +421,25 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         assignedOwnerId: 'owner-1',
         description: '[Gateway 504] Timeout dari staging',
       });
+      mockPrisma.supportContribution = {
+        create: vi.fn().mockResolvedValue({ id: 'sup-res-1' }),
+      };
       mockPrisma.blockerTicket.update.mockResolvedValue({ id: 'blk-1', status: BlockerStatus.RESOLVED });
 
       const res = await service.resolveBlocker('owner-1', 'blk-1', {
         resolutionNote: 'Kapasitas instance diperbesar dan indeks telah ditambahkan',
       });
       expect(res.status).toBe(BlockerStatus.RESOLVED);
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            blockerId: 'blk-1',
+            supporterUserId: 'owner-1',
+            actionTaken: 'Solusi Diberikan oleh Penanggung Jawab',
+            resultNote: 'Kapasitas instance diperbesar dan indeks telah ditambahkan',
+          }),
+        }),
+      );
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -460,6 +473,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         assignedOwnerId: 'owner-1',
         description: '[Vendor API Terbatas] Quota API pihak ketiga habis',
       });
+      mockPrisma.supportContribution = {
+        create: vi.fn().mockResolvedValue({ id: 'sup-risk-1' }),
+      };
       mockPrisma.blockerTicket.update.mockResolvedValue({
         id: 'blk-risk',
         status: BlockerStatus.ACCEPTED_RISK,
@@ -471,6 +487,16 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       });
 
       expect(res.status).toBe(BlockerStatus.ACCEPTED_RISK);
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            blockerId: 'blk-risk',
+            supporterUserId: 'owner-1',
+            actionTaken: '[PIC_ACCEPTED_RISK] Penambahan kuota vendor membutuhkan persetujuan kuartal depan',
+            resultNote: 'Gunakan data cache harian dan batasi sinkronisasi ke jam malam',
+          }),
+        }),
+      );
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -493,6 +519,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
 
       await expect(service.closeBlocker('owner-1', 'blk-res')).rejects.toThrow();
 
+      mockPrisma.supportContribution = {
+        create: vi.fn().mockResolvedValue({ id: 'sup-close-1' }),
+      };
       mockPrisma.blockerTicket.update.mockResolvedValue({
         id: 'blk-res',
         status: BlockerStatus.CLOSED,
@@ -500,6 +529,15 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
 
       const closed = await service.closeBlocker('emp-1', 'blk-res');
       expect(closed.status).toBe(BlockerStatus.CLOSED);
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            blockerId: 'blk-res',
+            supporterUserId: 'emp-1',
+            actionTaken: 'Dikonfirmasi & Ditutup oleh Pelapor',
+          }),
+        }),
+      );
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -641,6 +679,72 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         'PEER_SUPPORT',
         'REPORTER_REOPEN',
       ]);
+    });
+
+    it('synthesizes missing PIC resolution, accepted risk, and reporter closure entries chronologically for legacy tickets without duplicating recorded events', async () => {
+      mockPrisma.blockerTicket.findMany.mockResolvedValue([
+        {
+          id: 'blk-legacy-closed',
+          status: BlockerStatus.CLOSED,
+          raisedAt: new Date('2026-11-13T09:18:00.000Z'),
+          resolvedAt: new Date('2026-11-13T09:55:00.000Z'),
+          closedAt: new Date('2026-11-13T09:57:00.000Z'),
+          resolutionNote: 'Permission role staging-reader telah ditambahkan ke IAM policy dev.frontend.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+          assignedOwner: { id: 'head-1', fullName: 'Arif Budiman', email: 'arif@dutamedia.com' },
+          supportContributions: [
+            {
+              id: 'sc-reopen',
+              supporter: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+              resultNote: 'Endpoint /secrets/staging masih merespons 403.',
+              createdAt: new Date('2026-11-13T09:37:00.000Z'),
+            },
+          ],
+        },
+        {
+          id: 'blk-recorded-all',
+          status: BlockerStatus.CLOSED,
+          raisedAt: new Date('2026-11-14T08:00:00.000Z'),
+          resolvedAt: new Date('2026-11-14T09:00:00.000Z'),
+          closedAt: new Date('2026-11-14T09:15:00.000Z'),
+          riskAcceptanceJustification: 'Menunggu approval vendor',
+          riskMitigationPlan: 'Pakai backup cache',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+          assignedOwner: { id: 'head-1', fullName: 'Arif Budiman', email: 'arif@dutamedia.com' },
+          supportContributions: [
+            {
+              id: 'sc-risk',
+              supporter: { id: 'head-1', fullName: 'Arif Budiman', email: 'arif@dutamedia.com' },
+              actionTaken: '[PIC_ACCEPTED_RISK] Menunggu approval vendor',
+              resultNote: 'Pakai backup cache',
+              createdAt: new Date('2026-11-14T09:00:00.000Z'),
+            },
+            {
+              id: 'sc-close',
+              supporter: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              actionTaken: 'Dikonfirmasi & Ditutup oleh Pelapor',
+              resultNote: 'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala secara permanen.',
+              createdAt: new Date('2026-11-14T09:15:00.000Z'),
+            },
+          ],
+        },
+      ]);
+
+      const queue = await service.getBlockerQueue();
+      expect(queue[0].supportContributions.map((s: any) => s.entryType)).toEqual([
+        'REPORTER_REOPEN',
+        'PIC_RESOLUTION',
+        'REPORTER_CLOSED',
+      ]);
+      expect(queue[0].supportContributions[1].supporter.fullName).toBe('Arif Budiman');
+      expect(queue[0].supportContributions[2].supporter.fullName).toBe('Aditya Nugroho');
+
+      expect(queue[1].supportContributions.map((s: any) => s.entryType)).toEqual([
+        'PIC_ACCEPTED_RISK',
+        'REPORTER_CLOSED',
+      ]);
+      expect(queue[1].supportContributions).toHaveLength(2);
     });
   });
 });

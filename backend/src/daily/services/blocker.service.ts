@@ -29,12 +29,26 @@ const BLOCKER_TYPE_DIVISION_ROUTING: Record<string, { function: CanonicalFunctio
 };
 
 const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
-export type BlockerHistoryEntryType = 'PEER_SUPPORT' | 'REPORTER_REOPEN';
+const PIC_RESOLUTION_ACTION_LABEL = 'Solusi Diberikan oleh Penanggung Jawab';
+const PIC_ACCEPTED_RISK_ACTION_PREFIX = '[PIC_ACCEPTED_RISK]';
+const REPORTER_CLOSED_ACTION_LABEL = 'Dikonfirmasi & Ditutup oleh Pelapor';
+const REPORTER_CLOSED_DEFAULT_NOTE =
+  'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala secara permanen.';
+
+export type BlockerHistoryEntryType =
+  | 'PEER_SUPPORT'
+  | 'REPORTER_REOPEN'
+  | 'PIC_RESOLUTION'
+  | 'PIC_ACCEPTED_RISK'
+  | 'REPORTER_CLOSED';
 
 function resolveContributionEntryType(actionTaken?: string | null): BlockerHistoryEntryType {
-  return actionTaken?.trim() === REPORTER_REOPEN_ACTION_LABEL
-    ? 'REPORTER_REOPEN'
-    : 'PEER_SUPPORT';
+  const normalized = actionTaken?.trim();
+  if (normalized === REPORTER_REOPEN_ACTION_LABEL) return 'REPORTER_REOPEN';
+  if (normalized === PIC_RESOLUTION_ACTION_LABEL) return 'PIC_RESOLUTION';
+  if (normalized?.startsWith(PIC_ACCEPTED_RISK_ACTION_PREFIX)) return 'PIC_ACCEPTED_RISK';
+  if (normalized === REPORTER_CLOSED_ACTION_LABEL) return 'REPORTER_CLOSED';
+  return 'PEER_SUPPORT';
 }
 
 @Injectable()
@@ -770,6 +784,13 @@ export class BlockerService {
       },
     });
 
+    await this.recordLifecycleContribution(
+      blockerId,
+      actorUserId,
+      PIC_RESOLUTION_ACTION_LABEL,
+      dto.resolutionNote.trim(),
+    );
+
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
       await this.createBlockerNotification({
         recipientUserId: ticket.raisedByUserId,
@@ -821,6 +842,13 @@ export class BlockerService {
         riskMitigationPlan: dto.riskMitigationPlan.trim(),
       },
     });
+
+    await this.recordLifecycleContribution(
+      blockerId,
+      actorUserId,
+      `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${dto.riskAcceptanceJustification.trim()}`,
+      dto.riskMitigationPlan.trim(),
+    );
 
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
       await this.createBlockerNotification({
@@ -882,6 +910,13 @@ export class BlockerService {
       },
     });
 
+    await this.recordLifecycleContribution(
+      blockerId,
+      actorUserId,
+      REPORTER_CLOSED_ACTION_LABEL,
+      REPORTER_CLOSED_DEFAULT_NOTE,
+    );
+
     if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
       await this.createBlockerNotification({
         recipientUserId: ticket.assignedOwnerId,
@@ -933,16 +968,12 @@ export class BlockerService {
     }
 
     const trimmedReason = dto.reopenReason.trim();
-    if ((this.prisma as any).supportContribution?.create) {
-      await this.prisma.supportContribution.create({
-        data: {
-          blockerId,
-          supporterUserId: actorUserId,
-          actionTaken: REPORTER_REOPEN_ACTION_LABEL,
-          resultNote: trimmedReason,
-        },
-      });
-    }
+    await this.recordLifecycleContribution(
+      blockerId,
+      actorUserId,
+      REPORTER_REOPEN_ACTION_LABEL,
+      trimmedReason,
+    );
 
     const updated = await this.prisma.blockerTicket.update({
       where: { id: blockerId },
@@ -1108,13 +1139,112 @@ export class BlockerService {
 
     return tickets.map((ticket: any) => ({
       ...ticket,
-      supportContributions: Array.isArray(ticket.supportContributions)
-        ? ticket.supportContributions.map((entry: any) => ({
-            ...entry,
-            entryType: resolveContributionEntryType(entry.actionTaken),
-          }))
-        : [],
+      supportContributions: this.buildEnrichedHistoryEntries(ticket),
     }));
+  }
+
+  /**
+   * Menyimpan entri riwayat penanganan/siklus hidup secara aman jika model supportContribution tersedia.
+   */
+  private async recordLifecycleContribution(
+    blockerId: string,
+    supporterUserId: string,
+    actionTaken: string,
+    resultNote: string,
+  ): Promise<void> {
+    if (!(this.prisma as any).supportContribution?.create) return;
+    await this.prisma.supportContribution.create({
+      data: {
+        blockerId,
+        supporterUserId,
+        actionTaken,
+        resultNote,
+      },
+    });
+  }
+
+  /**
+   * Menandai entryType pada setiap entri riwayat serta mensintesis entri solusi/risiko/penutupan
+   * untuk tiket lama yang selesai sebelum riwayat siklus hidup otomatis tercatat.
+   */
+  private buildEnrichedHistoryEntries(ticket: any): any[] {
+    const entries = Array.isArray(ticket.supportContributions)
+      ? ticket.supportContributions.map((entry: any) => ({
+          ...entry,
+          entryType: resolveContributionEntryType(entry.actionTaken),
+        }))
+      : [];
+
+    const ownerFallback = ticket.assignedOwner || {
+      id: ticket.assignedOwnerId || 'system',
+      fullName: 'Penanggung Jawab',
+      email: '',
+    };
+    const reporterFallback = ticket.raisedBy || {
+      id: ticket.raisedByUserId || 'reporter',
+      fullName: 'Pelapor',
+      email: '',
+    };
+
+    const trimmedResolution = ticket.resolutionNote?.trim();
+    if (
+      trimmedResolution &&
+      !entries.some(
+        (entry: any) =>
+          entry.entryType === 'PIC_RESOLUTION' &&
+          entry.resultNote?.trim() === trimmedResolution,
+      )
+    ) {
+      entries.push({
+        id: `synthetic-res-${ticket.id}`,
+        entryType: 'PIC_RESOLUTION' as BlockerHistoryEntryType,
+        supporter: ownerFallback,
+        actionTaken: PIC_RESOLUTION_ACTION_LABEL,
+        resultNote: trimmedResolution,
+        createdAt: ticket.resolvedAt || ticket.closedAt || ticket.raisedAt,
+      });
+    }
+
+    const trimmedRiskJust = ticket.riskAcceptanceJustification?.trim();
+    const trimmedRiskPlan = ticket.riskMitigationPlan?.trim();
+    if (
+      (trimmedRiskJust || trimmedRiskPlan) &&
+      !entries.some((entry: any) => entry.entryType === 'PIC_ACCEPTED_RISK')
+    ) {
+      entries.push({
+        id: `synthetic-risk-${ticket.id}`,
+        entryType: 'PIC_ACCEPTED_RISK' as BlockerHistoryEntryType,
+        supporter: ownerFallback,
+        actionTaken: `${PIC_ACCEPTED_RISK_ACTION_PREFIX} ${trimmedRiskJust || '-'}`,
+        resultNote: trimmedRiskPlan || '-',
+        createdAt: ticket.resolvedAt || ticket.closedAt || ticket.raisedAt,
+      });
+    }
+
+    if (
+      ticket.status === BlockerStatus.CLOSED &&
+      ticket.closedAt &&
+      !entries.some((entry: any) => entry.entryType === 'REPORTER_CLOSED')
+    ) {
+      entries.push({
+        id: `synthetic-close-${ticket.id}`,
+        entryType: 'REPORTER_CLOSED' as BlockerHistoryEntryType,
+        supporter: reporterFallback,
+        actionTaken: REPORTER_CLOSED_ACTION_LABEL,
+        resultNote: REPORTER_CLOSED_DEFAULT_NOTE,
+        createdAt: ticket.closedAt,
+      });
+    }
+
+    const toSafeMs = (value: unknown): number => {
+      if (!value) return 0;
+      const ms = new Date(value as string | Date).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    };
+
+    return entries.sort(
+      (a: any, b: any) => toSafeMs(a.createdAt) - toSafeMs(b.createdAt),
+    );
   }
 
   /**

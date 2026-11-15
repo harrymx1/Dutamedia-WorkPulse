@@ -6,8 +6,8 @@ import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
   BLOCKER_STATUS_FILTER_OPTIONS,
+  buildBlockerTicketHistory,
   countPeerSupportContributions,
-  formatBlockerHistoryEntry,
   getBlockerStatusLabel,
   isActiveBlockerStatus,
   sortBlockersByNewest,
@@ -215,13 +215,16 @@ const filteredBlockers = computed(() => {
 });
 
 const selectedTicketHistory = computed(() =>
-  (selectedTicket.value?.supportContributions || []).map((entry) => ({
-    id: entry.id,
-    actorName: entry.supporter?.fullName || '-',
-    createdAt: entry.createdAt,
-    ...formatBlockerHistoryEntry(entry),
-  })),
+  selectedTicket.value ? buildBlockerTicketHistory(selectedTicket.value) : [],
 );
+
+function isAssignedToMe(ticket: BlockerTicketItem): boolean {
+  return Boolean(
+    authStore.user?.id &&
+      ticket.assignedOwner?.id &&
+      ticket.assignedOwner.id === authStore.user.id,
+  );
+}
 
 async function selectTicket(ticket: BlockerTicketItem) {
   selectedTicket.value = ticket;
@@ -579,6 +582,14 @@ onMounted(() => {
               </div>
               <div class="ticket-side-info">
                 <span
+                  v-if="ticket.assignedOwner"
+                  class="owner-badge"
+                  :class="{ 'is-mine': isAssignedToMe(ticket) }"
+                  data-testid="card-owner-badge"
+                >
+                  {{ isAssignedToMe(ticket) ? 'Tugas Anda' : `PIC: ${ticket.assignedOwner.fullName}` }}
+                </span>
+                <span
                   v-if="countPeerSupportContributions(ticket.supportContributions) > 0"
                   class="support-count"
                   data-testid="card-support-count"
@@ -729,7 +740,17 @@ onMounted(() => {
                   <div class="user-item">
                     <User :size="16" />
                     <div>
-                      <strong>{{ selectedTicket.assignedOwner ? selectedTicket.assignedOwner.fullName : 'Otomatis Sistem' }}</strong>
+                      <div class="pic-name-row">
+                        <strong>{{ selectedTicket.assignedOwner ? selectedTicket.assignedOwner.fullName : 'Otomatis Sistem' }}</strong>
+                        <span
+                          v-if="selectedTicket.assignedOwner && authStore.user?.id"
+                          class="owner-badge"
+                          :class="{ 'is-mine': isAssignedToMe(selectedTicket) }"
+                          data-testid="detail-owner-badge"
+                        >
+                          {{ isAssignedToMe(selectedTicket) ? 'Tugas Anda' : 'PIC Rekan / Lainnya' }}
+                        </span>
+                      </div>
                       <small>{{ selectedTicket.assignedOwner ? selectedTicket.assignedOwner.email : 'Sesuai Pemetaan Otoritas' }}</small>
                     </div>
                   </div>
@@ -1375,6 +1396,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   font-size: 11.5px;
   color: #5C6E68;
 }
@@ -1395,6 +1418,37 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.owner-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #F1F5F3;
+  color: #475B54;
+  border: 1px solid #DCE7E2;
+  white-space: nowrap;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.owner-badge.is-mine {
+  background: #DCFCE7;
+  color: #00674D;
+  border-color: #86EFAC;
+  font-weight: 700;
+}
+
+.pic-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .support-count {
@@ -1737,6 +1791,21 @@ h1 {
   border-color: #FDE68A;
 }
 
+.support-item.variant-resolution {
+  background: #ECFDF5;
+  border-color: #6EE7B7;
+}
+
+.support-item.variant-risk {
+  background: #FFF7ED;
+  border-color: #FDBA74;
+}
+
+.support-item.variant-closed {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+
 .sup-meta {
   display: flex;
   justify-content: space-between;
@@ -1749,6 +1818,18 @@ h1 {
 
 .support-item.variant-reopen .sup-meta {
   color: #92400E;
+}
+
+.support-item.variant-resolution .sup-meta {
+  color: #065F46;
+}
+
+.support-item.variant-risk .sup-meta {
+  color: #9A3412;
+}
+
+.support-item.variant-closed .sup-meta {
+  color: #166534;
 }
 
 .sup-actor-group {
@@ -1778,6 +1859,24 @@ h1 {
   background: #FEF3C7;
   color: #92400E;
   border: 1px solid #FCD34D;
+}
+
+.sup-type-badge.variant-resolution {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #6EE7B7;
+}
+
+.sup-type-badge.variant-risk {
+  background: #FFEDD5;
+  color: #9A3412;
+  border: 1px solid #FDBA74;
+}
+
+.sup-type-badge.variant-closed {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
 }
 
 .sup-time {

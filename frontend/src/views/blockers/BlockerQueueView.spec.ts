@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import BlockerQueueView from './BlockerQueueView.vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
 
 describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocker & Support)', () => {
   let router: any;
@@ -326,6 +327,121 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     const mixedReopenItem = wrapper.find('[data-testid="history-item-sup-reopen-2"]');
     expect(mixedReopenItem.classes()).toContain('variant-reopen');
     expect(mixedReopenItem.text()).toContain('Alasan Pengembalian:');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('renders complete PIC resolution, accepted risk, and reporter closure timeline plus PIC ownership badges', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'owner-ab',
+      email: 'head.eng@dutamedia.com',
+      fullName: 'Arif Budiman',
+      role: 'HEAD',
+      status: 'ACTIVE',
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-closed-s2',
+              description: '[Token Vault 403] Token akses vault environment staging ditolak 403',
+              type: 'APPROVAL',
+              severity: 'HIGH',
+              impact: 'MILESTONE',
+              status: 'CLOSED',
+              raisedAt: '2026-11-13T09:18:00.000Z',
+              resolvedAt: '2026-11-13T09:55:00.000Z',
+              closedAt: '2026-11-13T09:57:00.000Z',
+              resolutionNote: 'Permission role staging-reader telah ditambahkan ke IAM policy dev.frontend.',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+              supportContributions: [
+                {
+                  id: 'sup-reopen',
+                  entryType: 'REPORTER_REOPEN',
+                  supporter: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+                  actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
+                  resultNote: 'Token baru masih merespons 403.',
+                  createdAt: '2026-11-13T09:37:00.000Z',
+                },
+                {
+                  id: 'sup-res-2',
+                  entryType: 'PIC_RESOLUTION',
+                  supporter: { id: 'owner-ab', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+                  actionTaken: 'Solusi Diberikan oleh Penanggung Jawab',
+                  resultNote: 'Permission role staging-reader telah ditambahkan ke IAM policy dev.frontend.',
+                  createdAt: '2026-11-13T09:55:00.000Z',
+                },
+              ],
+            },
+            {
+              id: 'blk-other-pic-risk',
+              description: '[Gateway Staging 504] Menunggu upgrade kuota vendor',
+              type: 'INFRA',
+              severity: 'CRITICAL',
+              impact: 'PRODUCTION',
+              status: 'ACCEPTED_RISK',
+              raisedAt: '2026-11-13T07:18:00.000Z',
+              resolvedAt: '2026-11-13T08:00:00.000Z',
+              riskAcceptanceJustification: 'Menunggu approval kuartal depan',
+              riskMitigationPlan: 'Gunakan fallback cache',
+              ownerNeededType: 'PROJECT_AUTHORITY',
+              raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'owner-bp', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // Kepemilikan pada kartu daftar: 'Tugas Anda' vs 'PIC: <Nama>'
+    const myCard = wrapper.find('[data-testid="ticket-card-blk-closed-s2"]');
+    expect(myCard.find('[data-testid="card-owner-badge"]').text()).toBe('Tugas Anda');
+    expect(myCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
+
+    const otherCard = wrapper.find('[data-testid="ticket-card-blk-other-pic-risk"]');
+    expect(otherCard.find('[data-testid="card-owner-badge"]').text()).toBe('PIC: Bambang Pratama');
+
+    // Detail panel tiket pertama: 3 entri riwayat lengkap (reopen + resolusi + penutupan disintesis)
+    expect(wrapper.find('[data-testid="detail-owner-badge"]').text()).toBe('Tugas Anda');
+    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (3)');
+
+    const resItem = wrapper.find('[data-testid="history-item-sup-res-2"]');
+    expect(resItem.classes()).toContain('variant-resolution');
+    expect(resItem.text()).toContain('Solusi Diberikan');
+    expect(resItem.text()).toContain('Catatan Solusi:');
+    expect(resItem.text()).toContain('Permission role staging-reader');
+
+    const closeItem = wrapper.find('[data-testid="history-item-synthetic-close-blk-closed-s2"]');
+    expect(closeItem.classes()).toContain('variant-closed');
+    expect(closeItem.text()).toContain('Dikonfirmasi & Ditutup Pelapor');
+    expect(closeItem.text()).toContain('Status Konfirmasi:');
+
+    // Klik tiket kedua (milik PIC lain dengan keputusan Risiko Diterima)
+    await otherCard.trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="detail-owner-badge"]').text()).toBe('PIC Rekan / Lainnya');
+    const riskItem = wrapper.find('[data-testid="history-item-synthetic-risk-blk-other-pic-risk"]');
+    expect(riskItem.classes()).toContain('variant-risk');
+    expect(riskItem.text()).toContain('Risiko Diterima');
+    expect(riskItem.text()).toContain('Justifikasi Risiko:');
+    expect(riskItem.text()).toContain('Menunggu approval kuartal depan');
+    expect(riskItem.text()).toContain('Rencana Mitigasi:');
+    expect(riskItem.text()).toContain('Gunakan fallback cache');
 
     vi.unstubAllGlobals();
   });
