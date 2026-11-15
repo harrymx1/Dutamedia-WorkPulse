@@ -178,6 +178,70 @@ function formatNoteTypeLabel(type?: string): string {
   }
 }
 
+function formatNotificationTypeLabel(type?: string): string {
+  switch (type) {
+    case 'BLOCKER_RAISED':
+      return 'Alokasi Kendala';
+    case 'BLOCKER_CRITICAL_ESCALATION':
+    case 'BLOCKER_CRITICAL_ALERT':
+    case 'BLOCKER_ESCALATED_L2':
+      return 'Eskalasi Kendala';
+    case 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION':
+      return 'Solusi Kendala';
+    case 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION':
+      return 'Keputusan Risiko Kendala';
+    case 'BLOCKER_REOPENED_BY_REPORTER':
+      return 'Pengembalian Kendala';
+    case 'BLOCKER_CLOSED_BY_REPORTER':
+      return 'Penutupan Kendala';
+    case 'POLICY_UPDATED':
+      return 'Pembaruan Kebijakan';
+    case 'POLICY_OWNER_ASSIGNED':
+    case 'POLICY_OWNER_UPDATED':
+    case 'POLICY_OWNER_REVOKED':
+      return 'Tata Kelola Kebijakan';
+    case 'TEMPORARY_REVIEWER_ASSIGNED':
+    case 'TEMPORARY_REVIEWER_DELEGATED':
+    case 'TEMPORARY_REVIEWER_UPDATED':
+    case 'TEMPORARY_REVIEWER_REVOKED':
+    case 'TEMPORARY_REVIEWER_TEAM_NOTICE':
+      return 'Delegasi Wewenang';
+    case 'MANAGER_NOTE_SHARED':
+      return 'Catatan Pembinaan';
+    case 'LEAVE_REQUESTED':
+    case 'LEAVE_APPROVED':
+    case 'LEAVE_REJECTED':
+    case 'LEAVE_RECONCILED':
+      return 'Pengajuan Cuti';
+    case 'CORRECTION_REQUESTED':
+    case 'CORRECTION_SUBMITTED':
+    case 'CORRECTION_APPROVED':
+    case 'CORRECTION_REJECTED':
+      return 'Koreksi Komitmen';
+    case 'EOD_REMINDER':
+    case 'MORNING_REMINDER':
+      return 'Pengingat Harian';
+    case 'COMPLIANCE_PATTERN_ALERT':
+      return 'Peringatan Kepatuhan';
+    case 'TEST_SIMULATION':
+      return 'Simulasi Notifikasi';
+    default: {
+      if (!type) return 'Pemberitahuan Sistem';
+      if (type.includes('ESCALAT')) return 'Eskalasi Kendala';
+      if (type.startsWith('BLOCKER_')) return 'Tiket Kendala';
+      if (type.startsWith('POLICY_OWNER_')) return 'Tata Kelola Kebijakan';
+      if (type.startsWith('POLICY_')) return 'Pembaruan Kebijakan';
+      if (type.startsWith('TEMPORARY_REVIEWER_')) return 'Delegasi Wewenang';
+      if (type.startsWith('LEAVE_')) return 'Pengajuan Cuti';
+      if (type.startsWith('CORRECTION_')) return 'Koreksi Komitmen';
+      if (type.includes('COACHING') || type.includes('NOTE')) return 'Catatan Pembinaan';
+      if (type.includes('REMINDER')) return 'Pengingat Harian';
+      if (type.includes('COMPLIANCE')) return 'Peringatan Kepatuhan';
+      return 'Pemberitahuan Sistem';
+    }
+  }
+}
+
 const filteredNotifications = computed(() => {
   return notifications.value.filter((n) => {
     if (activeFilter.value === 'UNREAD' && n.read) return false;
@@ -718,7 +782,7 @@ onUnmounted(() => {
                 </div>
                 <p class="item-desc">{{ getNotificationPreview(item.message) }}</p>
                 <div class="item-meta">
-                  <span class="context-chip">{{ item.type }}</span>
+                  <span class="context-chip">{{ formatNotificationTypeLabel(item.type) }}</span>
                   <span class="item-time">{{ formatTime(item.createdAt) }}</span>
                 </div>
               </div>
@@ -827,10 +891,6 @@ onUnmounted(() => {
             </div>
 
             <div class="modal-detail-box">
-              <div class="detail-row">
-                <span>Tipe Event:</span>
-                <strong>{{ selectedNotification.type }}</strong>
-              </div>
               <div class="detail-row">
                 <span>Waktu Diterima:</span>
                 <span>{{ formatTime(selectedNotification.createdAt) }} ({{ new Date(selectedNotification.createdAt).toLocaleDateString('id-ID') }})</span>
@@ -1208,9 +1268,9 @@ h1 {
   background: #F1F5F9;
   border: 1px solid #CBD5E1;
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-size: 11px;
-  font-family: monospace;
+  font-weight: 600;
   color: var(--color-text-secondary, #5C6E68);
 }
 

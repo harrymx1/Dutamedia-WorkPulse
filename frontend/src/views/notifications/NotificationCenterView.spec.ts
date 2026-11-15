@@ -82,6 +82,10 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.find('h1').text()).toBe('Web Notification Center');
     expect(wrapper.text()).toContain('Blocker Kritis Dieskalasi');
     expect(wrapper.text()).toContain('Pengingat EOD Check-out');
+    expect(wrapper.text()).toContain('Alokasi Kendala');
+    expect(wrapper.text()).toContain('Pengingat Harian');
+    expect(wrapper.text()).not.toContain('BLOCKER_RAISED');
+    expect(wrapper.text()).not.toContain('EOD_REMINDER');
     expect(wrapper.text()).toContain('2 belum dibaca');
   });
 
@@ -501,6 +505,9 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     );
     expect(previewEl.text()).not.toContain(fullBody);
 
+    expect(wrapper.find('.notif-item .context-chip').text()).toBe('Alokasi Kendala');
+    expect(wrapper.text()).not.toContain('BLOCKER_RAISED');
+
     // Klik notifikasi untuk membuka modal Rincian Pemberitahuan
     await wrapper.find('.notif-item').trigger('click');
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -513,6 +520,9 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain(fullBody);
     expect(wrapper.text()).toContain('Ekspektasi Bantuan:');
     expect(wrapper.text()).toContain(expectedHelp);
+    expect(wrapper.text()).toContain('Waktu Diterima:');
+    expect(wrapper.text()).not.toContain('Tipe Event:');
+    expect(wrapper.text()).not.toContain('BLOCKER_RAISED');
     expect(wrapper.text()).toContain('Buka Antrean Eskalasi Blocker');
   });
 });
