@@ -230,7 +230,11 @@ function formatTime(isoStr: string) {
 function isDelegationNotification(notifOrType?: NotificationItem | string | null): boolean {
   if (!notifOrType) return false;
   if (typeof notifOrType === 'string') {
-    return notifOrType.includes('TEMPORARY_REVIEWER') || notifOrType.includes('POLICY');
+    return (
+      notifOrType.includes('TEMPORARY_REVIEWER') ||
+      notifOrType.includes('POLICY') ||
+      notifOrType.includes('BLOCKER')
+    );
   }
   const t = notifOrType.type || '';
   const title = notifOrType.title || '';
@@ -238,6 +242,7 @@ function isDelegationNotification(notifOrType?: NotificationItem | string | null
   return (
     t.includes('TEMPORARY_REVIEWER') ||
     t.includes('POLICY') ||
+    (t.includes('BLOCKER') && msg.includes('\n')) ||
     title.includes('Kebijakan') ||
     msg.includes('\n') ||
     msg.includes('Kategori Kebijakan:')
@@ -308,11 +313,14 @@ function getNotificationPreview(message: string): string {
   if (!message) return '';
   const normalized = normalizeStructuredMessage(message);
   if (normalized.includes('\n')) {
-    const lines = normalized
+    const rawLines = normalized
       .split('\n')
       .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) => cleanStructuredLine(l).text);
+      .filter(Boolean);
+    if (rawLines.some((l) => l.startsWith('Judul Kendala:'))) {
+      return rawLines[0] || '';
+    }
+    const lines = rawLines.map((l) => cleanStructuredLine(l).text);
     const intro = lines[0] || '';
     const impactLine = lines.find((l) => l.startsWith('Artinya bagi Anda:'));
     if (impactLine) {
@@ -335,6 +343,15 @@ function getActionButtonLabel(actionUrl?: string): string {
 function getDelegationHeading(notifOrType?: NotificationItem | string | null): string {
   const type = typeof notifOrType === 'string' ? notifOrType : (notifOrType?.type || '');
   const title = typeof notifOrType === 'object' && notifOrType ? (notifOrType.title || '') : '';
+  if (type === 'BLOCKER_RAISED') return 'Rincian Alokasi Tiket Kendala (Blocker)';
+  if (type === 'BLOCKER_CRITICAL_ESCALATION' || (type.includes('BLOCKER') && type.includes('ESCALAT'))) {
+    return 'Rincian Eskalasi Darurat Kendala (Critical)';
+  }
+  if (type === 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION') return 'Rincian Penyelesaian Kendala oleh PIC';
+  if (type === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION') return 'Rincian Keputusan Terima Risiko & Mitigasi';
+  if (type === 'BLOCKER_REOPENED_BY_REPORTER') return 'Rincian Pengembalian Tiket oleh Pelapor';
+  if (type === 'BLOCKER_CLOSED_BY_REPORTER') return 'Rincian Konfirmasi & Penutupan Tiket';
+  if (type.includes('BLOCKER')) return 'Rincian Pemberitahuan Tiket Kendala';
   if (type === 'POLICY_OWNER_ASSIGNED') return 'Rincian Penetapan Pemilik Kebijakan';
   if (type === 'POLICY_OWNER_UPDATED') return 'Rincian Perubahan Pemilik Kebijakan';
   if (type === 'POLICY_OWNER_REVOKED') return 'Rincian Pencabutan Wewenang Pemilik Kebijakan';
@@ -393,34 +410,43 @@ function parseDelegationContent(message: string): DelegationParsedContent {
         const label = cleaned.label || '';
         const value = cleaned.value;
 
-        const isHighlight = [
-          'Mandat',
-          'Wewenang',
-          'Status',
-          'Kategori Kebijakan',
-          'Pemilik Kebijakan Baru',
-          'Pemilik Baru',
-          'Pemilik Sebelumnya',
-          'Pejabat Sebelumnya',
-          'Dialihkan Kepada',
-          'Personil yang Dicabut',
-          'Periode Berlaku',
-          'Periode Pelimpahan',
-          'Periode Baru',
-          'Pejabat Pengganti',
-          'Menggantikan',
-          'Mulai Berlaku',
-          'Tanggal Pencabutan',
-          'Batas Tepat Waktu',
-          'Batas Kunci',
-          'Batas Respon',
-          'Batas Penanganan',
-          'Batas Waktu Naik',
-          'Batas Naik',
-          'Ambang Peringatan',
-          'Batas Maksimal',
-          'Artinya bagi Anda',
-        ].some(h => label.toLowerCase().includes(h.toLowerCase()));
+        const isHighlight =
+          label.toLowerCase() === 'pelapor' ||
+          [
+            'Judul Kendala',
+            'Kategori & Keparahan',
+            'Target Respons',
+            'Target Penyelesaian',
+            'Status Tiket',
+            'Penanggung Jawab Awal (PIC)',
+            'Penanggung Jawab (PIC)',
+            'Mandat',
+            'Wewenang',
+            'Status',
+            'Kategori Kebijakan',
+            'Pemilik Kebijakan Baru',
+            'Pemilik Baru',
+            'Pemilik Sebelumnya',
+            'Pejabat Sebelumnya',
+            'Dialihkan Kepada',
+            'Personil yang Dicabut',
+            'Periode Berlaku',
+            'Periode Pelimpahan',
+            'Periode Baru',
+            'Pejabat Pengganti',
+            'Menggantikan',
+            'Mulai Berlaku',
+            'Tanggal Pencabutan',
+            'Batas Tepat Waktu',
+            'Batas Kunci',
+            'Batas Respon',
+            'Batas Penanganan',
+            'Batas Waktu Naik',
+            'Batas Naik',
+            'Ambang Peringatan',
+            'Batas Maksimal',
+            'Artinya bagi Anda',
+          ].some(h => label.toLowerCase().includes(h.toLowerCase()));
         items.push({ label, value, isHighlight });
       } else {
         items.push({ label: 'Keterangan', value: line, isHighlight: false });

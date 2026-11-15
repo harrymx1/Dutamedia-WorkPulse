@@ -4,6 +4,7 @@ import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { NotificationChannel, NotificationStatus } from '@prisma/client';
+import { enrichLegacyBlockerNotification } from '../../daily/services/blocker.service';
 
 @Injectable()
 export class NotificationService {
@@ -13,29 +14,107 @@ export class NotificationService {
   ) {}
 
   /**
-   * Mengambil daftar notifikasi untuk pengguna (Prototipe 07).
+   * Mengambil daftar notifikasi untuk pengguna (Prototipe 07) sekaligus memperkaya
+   * notifikasi blocker lama yang masih terpotong atau belum terstruktur dari data tiket asli.
    */
   async getUserNotifications(userId: string, unreadOnly?: boolean) {
-    const notifications = await this.prisma.notification.findMany({
-      where: {
-        recipientUserId: userId,
-        ...(unreadOnly && { readAt: null }),
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
+    const [rawNotifications, unreadCount] = await Promise.all([
+      this.prisma.notification.findMany({
+        where: {
+          recipientUserId: userId,
+          ...(unreadOnly && { readAt: null }),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+      this.prisma.notification.count({
+        where: {
+          recipientUserId: userId,
+          readAt: null,
+        },
+      }),
+    ]);
 
-    const unreadCount = await this.prisma.notification.count({
-      where: {
-        recipientUserId: userId,
-        readAt: null,
-      },
-    });
+    const notifications = await this.enrichBlockerNotifications(rawNotifications);
 
     return {
       notifications,
       unreadCount,
     };
+  }
+
+  private async enrichBlockerNotifications(notifications: any[]): Promise<any[]> {
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+      return notifications;
+    }
+    if (!(this.prisma as any).blockerTicket?.findMany) {
+      return notifications;
+    }
+
+    const legacyBlockerNotifs = notifications.filter(
+      (n) =>
+        n?.relatedEntityId &&
+        (n.triggerType?.startsWith('BLOCKER_') || n.relatedEntityType === 'blocker_tickets') &&
+        !n.message?.includes('\n'),
+    );
+
+    if (legacyBlockerNotifs.length === 0) {
+      return notifications;
+    }
+
+    const blockerIds = Array.from(
+      new Set(legacyBlockerNotifs.map((n) => n.relatedEntityId as string)),
+    );
+
+    const tickets = await this.prisma.blockerTicket.findMany({
+      where: { id: { in: blockerIds } },
+      include: {
+        raisedBy: { select: { id: true, fullName: true } },
+        assignedOwner: { select: { id: true, fullName: true } },
+      },
+    });
+    const ticketById = new Map(tickets.map((t: any) => [t.id, t]));
+
+    return Promise.all(
+      notifications.map(async (notif) => {
+        if (
+          !notif?.relatedEntityId ||
+          notif.message?.includes('\n') ||
+          !(
+            notif.triggerType?.startsWith('BLOCKER_') ||
+            notif.relatedEntityType === 'blocker_tickets'
+          )
+        ) {
+          return notif;
+        }
+        const ticket = ticketById.get(notif.relatedEntityId);
+        if (!ticket) {
+          return notif;
+        }
+        const upgraded = enrichLegacyBlockerNotification(notif, ticket);
+        if (!upgraded) {
+          return notif;
+        }
+        if ((this.prisma as any).notification?.update && notif.id) {
+          try {
+            await this.prisma.notification.update({
+              where: { id: notif.id },
+              data: {
+                title: upgraded.title,
+                message: upgraded.message,
+              },
+            });
+          } catch {
+            // Abaikan error update persisten agar respon daftar notifikasi tetap aman
+          }
+        }
+        return {
+          ...notif,
+          title: upgraded.title,
+          message: upgraded.message,
+        };
+      }),
+    );
   }
 
   /**

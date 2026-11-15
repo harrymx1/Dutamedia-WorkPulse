@@ -435,5 +435,85 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('Rincian Perubahan Pemilik Kebijakan');
     expect(wrapper.text()).toContain('Buka Pengaturan Kebijakan');
   });
+
+  it('renders structured BLOCKER_RAISED notification concisely in list preview and full structured breakdown in detail modal', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-arif',
+      fullName: 'Arif Budiman',
+      role: 'HEAD',
+      hasSubordinates: true,
+    } as any;
+
+    const fullBody =
+      'Integrasi halaman komitmen pagi di frontend gagal menyimpan data karena endpoint POST /daily/commitments merespons HTTP 500 akibat deadlock query transaksi database.';
+    const expectedHelp = 'Perbaikan query transaksi di endpoint backend dan deploy hotfix ke server staging Engineering';
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-blocker-structured',
+              title: 'Kendala Baru Dialokasikan: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+              message: [
+                'Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE) yang dialokasikan kepada Anda dengan target respons 4 jam.',
+                'Judul Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+                'Pelapor: Aditya Nugroho',
+                'Kategori & Keparahan: TECHNICAL — Tingkat HIGH (Dampak: MILESTONE)',
+                'Target Respons: 4 jam',
+                `Deskripsi Kendala: ${fullBody}`,
+                `Ekspektasi Bantuan: ${expectedHelp}`,
+              ].join('\n'),
+              type: 'BLOCKER_RAISED',
+              channel: 'IN_APP_CENTER',
+              read: false,
+              actionUrl: '/blockers',
+              createdAt: '2026-11-15T13:08:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Pratinjau kartu daftar ringkas: hanya kalimat pengantar baris pertama tanpa menumpuk seluruh baris detail
+    const previewEl = wrapper.find('.item-desc');
+    expect(previewEl.text()).toContain(
+      'Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE) yang dialokasikan kepada Anda dengan target respons 4 jam.',
+    );
+    expect(previewEl.text()).not.toContain(fullBody);
+
+    // Klik notifikasi untuk membuka modal Rincian Pemberitahuan
+    await wrapper.find('.notif-item').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.modal-card').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Rincian Alokasi Tiket Kendala (Blocker)');
+    expect(wrapper.text()).toContain('Pelapor:');
+    expect(wrapper.text()).toContain('Aditya Nugroho');
+    expect(wrapper.text()).toContain('Deskripsi Kendala:');
+    expect(wrapper.text()).toContain(fullBody);
+    expect(wrapper.text()).toContain('Ekspektasi Bantuan:');
+    expect(wrapper.text()).toContain(expectedHelp);
+    expect(wrapper.text()).toContain('Buka Antrean Eskalasi Blocker');
+  });
 });
 

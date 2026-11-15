@@ -106,6 +106,49 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       expect(result.id).toBe('blk-1');
     });
 
+    it('creates structured, untruncated BLOCKER_RAISED notification with clean title, reporter name, full description, and expected help', async () => {
+      const longDescription =
+        'Integrasi halaman komitmen pagi di frontend gagal menyimpan data karena endpoint POST /daily/commitments merespons HTTP 500 akibat deadlock query transaksi database.';
+      const expectedHelp =
+        'Perbaikan query transaksi di endpoint backend dan deploy hotfix ke server staging Engineering';
+      const dto = {
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.MILESTONE,
+        description: `[Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form] ${longDescription} (Ekspektasi: ${expectedHelp})`,
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        assignedOwnerId: 'owner-ab',
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'owner-ab', fullName: 'Arif Budiman' });
+      mockPrisma.blockerTicket.create.mockResolvedValue({
+        id: 'blk-structured-1',
+        status: BlockerStatus.OPEN,
+        ...dto,
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+      });
+
+      await service.raiseBlocker('emp-adit', dto as any);
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'owner-ab',
+            triggerType: 'BLOCKER_RAISED',
+            title: 'Kendala Baru Dialokasikan: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+            message: expect.stringContaining(longDescription),
+          }),
+        }),
+      );
+
+      const notifCall = mockPrisma.notification.create.mock.calls[0][0].data;
+      expect(notifCall.message).toContain('Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE)');
+      expect(notifCall.message).toContain('Judul Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form');
+      expect(notifCall.message).toContain('Pelapor: Aditya Nugroho');
+      expect(notifCall.message).toContain(`Ekspektasi Bantuan: ${expectedHelp}`);
+    });
+
     it('sends immediate parallel escalation notification to next authority when severity is CRITICAL', async () => {
       const dto = {
         type: BlockerType.TECHNICAL,

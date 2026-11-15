@@ -51,6 +51,252 @@ function resolveContributionEntryType(actionTaken?: string | null): BlockerHisto
   return 'PEER_SUPPORT';
 }
 
+export interface ParsedBlockerDescription {
+  title: string;
+  body: string;
+  expectedHelp: string | null;
+}
+
+export function flattenInlineNotificationText(value?: string | null): string {
+  return (value || '').replace(/\s*\r?\n\s*/g, ' ').trim();
+}
+
+export function formatBlockerNotificationTitle(prefix: string, blockerTitle: string): string {
+  const full = `${prefix}: ${flattenInlineNotificationText(blockerTitle)}`;
+  return full.length <= 200 ? full : `${full.slice(0, 197)}...`;
+}
+
+export function parseBlockerDescription(rawDescription?: string | null): ParsedBlockerDescription {
+  const raw = (rawDescription || '').trim();
+  if (!raw) {
+    return { title: 'Tiket Kendala', body: '-', expectedHelp: null };
+  }
+  const expMatch = raw.match(/\s*\(Ekspektasi:\s*([^)]*)\)\s*$/i);
+  const expectedHelp = expMatch?.[1]?.trim() || null;
+  const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]*\)\s*$/i, '').trim();
+  const bracketMatch = withoutExpectation.match(/^\[(.+?)\]\s*(.*)$/s);
+  if (bracketMatch) {
+    const cleanTitle = bracketMatch[1].trim() || 'Tiket Kendala';
+    const remainingBody = bracketMatch[2].trim();
+    return {
+      title: cleanTitle,
+      body: remainingBody || withoutExpectation,
+      expectedHelp,
+    };
+  }
+  return {
+    title: withoutExpectation.slice(0, 90) || 'Tiket Kendala',
+    body: withoutExpectation,
+    expectedHelp,
+  };
+}
+
+export function buildBlockerRaisedNotificationContent(params: {
+  description?: string | null;
+  reporterName?: string | null;
+  type: string;
+  severity: string;
+  impact: string;
+  slaLabel: string;
+}): { title: string; message: string } {
+  const parsed = parseBlockerDescription(params.description);
+  const reporterName = params.reporterName?.trim() || 'Pelapor';
+  const lines = [
+    `${reporterName} melaporkan kendala ${params.type} (Tingkat ${params.severity}, Dampak ${params.impact}) yang dialokasikan kepada Anda dengan target respons ${params.slaLabel}.`,
+    `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
+    `Pelapor: ${reporterName}`,
+    `Kategori & Keparahan: ${params.type} — Tingkat ${params.severity} (Dampak: ${params.impact})`,
+    `Target Respons: ${params.slaLabel}`,
+    `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
+  ];
+  if (parsed.expectedHelp) {
+    lines.push(`Ekspektasi Bantuan: ${flattenInlineNotificationText(parsed.expectedHelp)}`);
+  }
+  return {
+    title: formatBlockerNotificationTitle('Kendala Baru Dialokasikan', parsed.title),
+    message: lines.join('\n'),
+  };
+}
+
+export function buildBlockerCriticalEscalationNotificationContent(params: {
+  description?: string | null;
+  reporterName?: string | null;
+  ownerName?: string | null;
+  type: string;
+  severity: string;
+  impact: string;
+  slaLabel: string;
+}): { title: string; message: string } {
+  const parsed = parseBlockerDescription(params.description);
+  const reporterName = params.reporterName?.trim() || 'Pelapor';
+  const ownerName = params.ownerName?.trim() || 'Penanggung Jawab';
+  const lines = [
+    `Kendala darurat dari ${reporterName} (Tingkat CRITICAL, Dampak ${params.impact}) diteruskan secara paralel kepada Anda sebagai pimpinan eskalasi dengan target penyelesaian ${params.slaLabel}.`,
+    `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
+    `Pelapor: ${reporterName}`,
+    `Penanggung Jawab Awal (PIC): ${ownerName}`,
+    `Kategori & Keparahan: ${params.type} — Tingkat ${params.severity} (Dampak: ${params.impact})`,
+    `Target Penyelesaian: ${params.slaLabel}`,
+    `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
+  ];
+  if (parsed.expectedHelp) {
+    lines.push(`Ekspektasi Bantuan: ${flattenInlineNotificationText(parsed.expectedHelp)}`);
+  }
+  return {
+    title: formatBlockerNotificationTitle('Eskalasi Darurat (CRITICAL)', parsed.title),
+    message: lines.join('\n'),
+  };
+}
+
+const SEVERITY_FALLBACK_SLA_LABELS: Record<string, string> = {
+  CRITICAL: '2 jam',
+  HIGH: '4 jam',
+  MEDIUM: '8 jam',
+  LOW: '24 jam',
+};
+
+export function extractSolutionNoteFromNotificationText(message?: string | null): string | null {
+  if (!message) return null;
+  const lineMatch = message.match(/^Catatan Solusi:\s*(.+)$/im);
+  if (lineMatch?.[1]?.trim()) {
+    return lineMatch[1].trim();
+  }
+  const match = message.match(/solusi pada tiket kendala Anda:\s*"([^"]+)"/i);
+  return match?.[1]?.trim() || null;
+}
+
+export function extractRiskFromNotificationText(
+  message?: string | null,
+): { justification: string; mitigation: string } | null {
+  if (!message) return null;
+  const justMatch = message.match(/^Justifikasi Risiko:\s*(.+)$/im);
+  const planMatch = message.match(/^Rencana Mitigasi:\s*(.+)$/im);
+  if (justMatch?.[1]?.trim() || planMatch?.[1]?.trim()) {
+    return {
+      justification: justMatch?.[1]?.trim() || '-',
+      mitigation: planMatch?.[1]?.trim() || '-',
+    };
+  }
+  const match = message.match(
+    /Risiko Diterima\s*\("([^"]+)"\)\s*dengan rencana mitigasi:\s*"([^"]+)"/i,
+  );
+  if (!match) return null;
+  return {
+    justification: match[1].trim(),
+    mitigation: match[2].trim(),
+  };
+}
+
+export function enrichLegacyBlockerNotification(
+  notif: { title?: string | null; message?: string | null; triggerType?: string | null },
+  ticket: {
+    description?: string | null;
+    type?: string | null;
+    severity?: string | null;
+    impact?: string | null;
+    resolutionNote?: string | null;
+    raisedBy?: { fullName?: string | null } | null;
+    assignedOwner?: { fullName?: string | null } | null;
+  },
+): { title: string; message: string } | null {
+  const existingMessage = (notif.message || '').trim();
+  if (!existingMessage || existingMessage.includes('\n')) {
+    return null;
+  }
+
+  const trigger = notif.triggerType || '';
+  const type = ticket.type || 'OTHER';
+  const severity = ticket.severity || 'HIGH';
+  const impact = ticket.impact || 'TASK';
+  const reporterName = ticket.raisedBy?.fullName?.trim() || 'Pelapor';
+  const ownerName = ticket.assignedOwner?.fullName?.trim() || 'Penanggung Jawab';
+  const defaultSla = SEVERITY_FALLBACK_SLA_LABELS[severity] || '4 jam';
+
+  if (trigger === 'BLOCKER_RAISED') {
+    const slaMatch = existingMessage.match(/target respon[s]?\s+([^.]+)\./i);
+    return buildBlockerRaisedNotificationContent({
+      description: ticket.description,
+      reporterName,
+      type,
+      severity,
+      impact,
+      slaLabel: slaMatch?.[1]?.trim() || defaultSla,
+    });
+  }
+
+  if (trigger === 'BLOCKER_CRITICAL_ESCALATION') {
+    const slaMatch = existingMessage.match(/target penyelesaian\s+([^)]+)\)/i);
+    return buildBlockerCriticalEscalationNotificationContent({
+      description: ticket.description,
+      reporterName,
+      ownerName,
+      type,
+      severity,
+      impact,
+      slaLabel: slaMatch?.[1]?.trim() || '2 jam',
+    });
+  }
+
+  const parsed = parseBlockerDescription(ticket.description);
+  const introLine = flattenInlineNotificationText(existingMessage);
+  const baseLines = [
+    introLine,
+    `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
+    `Pelapor: ${reporterName}`,
+    `Penanggung Jawab (PIC): ${ownerName}`,
+  ];
+
+  if (trigger === 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION') {
+    const sol = extractSolutionNoteFromNotificationText(existingMessage) || ticket.resolutionNote?.trim();
+    baseLines.push('Status Tiket: Solusi Diberikan (Menunggu Konfirmasi Pelapor)');
+    if (sol) {
+      baseLines.push(`Catatan Solusi: ${flattenInlineNotificationText(sol)}`);
+    }
+    return {
+      title: formatBlockerNotificationTitle('Solusi Diberikan', parsed.title),
+      message: baseLines.join('\n'),
+    };
+  }
+
+  if (trigger === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION') {
+    const risk = extractRiskFromNotificationText(existingMessage);
+    baseLines.push('Status Tiket: Risiko Diterima (Menunggu Konfirmasi Pelapor)');
+    if (risk?.justification) {
+      baseLines.push(`Justifikasi Risiko: ${flattenInlineNotificationText(risk.justification)}`);
+    }
+    if (risk?.mitigation) {
+      baseLines.push(`Rencana Mitigasi: ${flattenInlineNotificationText(risk.mitigation)}`);
+    }
+    return {
+      title: formatBlockerNotificationTitle('Risiko Diterima (Mitigasi Aktif)', parsed.title),
+      message: baseLines.join('\n'),
+    };
+  }
+
+  if (trigger === 'BLOCKER_REOPENED_BY_REPORTER') {
+    const reopenMatch = existingMessage.match(/belum memadai:\s*"([^"]+)"/i);
+    baseLines.push('Status Tiket: Sedang Ditangani (Dikembalikan oleh Pelapor)');
+    if (reopenMatch?.[1]?.trim()) {
+      baseLines.push(`Alasan Pengembalian: ${flattenInlineNotificationText(reopenMatch[1])}`);
+    }
+    return {
+      title: formatBlockerNotificationTitle('Tiket Dikembalikan Pelapor', parsed.title),
+      message: baseLines.join('\n'),
+    };
+  }
+
+  if (trigger === 'BLOCKER_CLOSED_BY_REPORTER') {
+    baseLines.push('Status Tiket: Selesai Ditutup');
+    baseLines.push('Konfirmasi Pelapor: Penyelesaian atau arahan mitigasi telah diverifikasi dan diterima oleh pelapor.');
+    return {
+      title: formatBlockerNotificationTitle('Tiket Ditutup Pelapor', parsed.title),
+      message: baseLines.join('\n'),
+    };
+  }
+
+  return null;
+}
+
 @Injectable()
 export class BlockerService {
   constructor(
@@ -134,14 +380,24 @@ export class BlockerService {
         },
       });
 
+      const reporterName = ticket.raisedBy?.fullName || 'Pelapor';
+      const raisedNotif = buildBlockerRaisedNotificationContent({
+        description: dto.description,
+        reporterName,
+        type: dto.type,
+        severity: dto.severity,
+        impact: dto.impact,
+        slaLabel,
+      });
+
       // Kirim notifikasi in-app ke pemilik yang ditunjuk (Jenjang Pertama)
       await tx.notification.create({
         data: {
           recipientUserId: targetOwnerId,
           triggerType: 'BLOCKER_RAISED',
           channel: NotificationChannel.IN_APP_CENTER,
-          title: `Kendala Baru Dialokasikan: ${dto.severity} Impact ${dto.impact}`,
-          message: `Kendala "${dto.description.slice(0, 100)}" telah dialokasikan kepada Anda dengan target respon ${slaLabel}.`,
+          title: raisedNotif.title,
+          message: raisedNotif.message,
           actionUrl: '/blockers',
           relatedEntityType: 'blocker_tickets',
           relatedEntityId: ticket.id,
@@ -156,13 +412,22 @@ export class BlockerService {
           dto.projectCodeReference,
         );
         if (nextAuthorityId && nextAuthorityId !== targetOwnerId && nextAuthorityId !== userId) {
+          const criticalNotif = buildBlockerCriticalEscalationNotificationContent({
+            description: dto.description,
+            reporterName,
+            ownerName: ticket.assignedOwner?.fullName || assignedOwner.fullName,
+            type: dto.type,
+            severity: dto.severity,
+            impact: dto.impact,
+            slaLabel,
+          });
           await tx.notification.create({
             data: {
               recipientUserId: nextAuthorityId,
               triggerType: 'BLOCKER_CRITICAL_ESCALATION',
               channel: NotificationChannel.IN_APP_CENTER,
-              title: `Eskalasi Darurat (CRITICAL): Kendala Impact ${dto.impact}`,
-              message: `Kendala darurat "${dto.description.slice(0, 100)}" dilaporkan (target penyelesaian ${slaLabel}) dan diteruskan secara paralel kepada Anda sebagai pimpinan eskalasi.`,
+              title: criticalNotif.title,
+              message: criticalNotif.message,
               actionUrl: '/blockers',
               relatedEntityType: 'blocker_tickets',
               relatedEntityId: ticket.id,
@@ -797,11 +1062,19 @@ export class BlockerService {
     );
 
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+      const inlineNote = flattenInlineNotificationText(trimmedNote);
       await this.createBlockerNotification({
         recipientUserId: ticket.raisedByUserId,
         triggerType: 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
-        title: `Solusi Diberikan: ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message: `Penanggung jawab telah memberikan solusi pada tiket kendala Anda: "${trimmedNote}". Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
+        title: formatBlockerNotificationTitle('Solusi Diberikan', cleanTitle),
+        message: [
+          `Penanggung jawab telah memberikan solusi pada tiket kendala Anda: "${inlineNote}". Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
+          `Judul Kendala: ${cleanTitle}`,
+          'Status Tiket: Solusi Diberikan (Menunggu Konfirmasi Pelapor)',
+          `Catatan Solusi: ${inlineNote}`,
+          'Tindak Lanjut Anda: Konfirmasi & Tutup Tiket apabila sudah teratasi, atau klik Belum Memadai (Kembalikan) jika kendala masih berlanjut.',
+        ].join('\n'),
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
       });
@@ -860,11 +1133,21 @@ export class BlockerService {
     );
 
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+      const inlineJust = flattenInlineNotificationText(trimmedJust);
+      const inlinePlan = flattenInlineNotificationText(trimmedPlan);
       await this.createBlockerNotification({
         recipientUserId: ticket.raisedByUserId,
         triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
-        title: `Risiko Diterima (Mitigasi Aktif): ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message: `Penanggung jawab menetapkan status Risiko Diterima ("${trimmedJust}") dengan rencana mitigasi: "${trimmedPlan}". Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.`,
+        title: formatBlockerNotificationTitle('Risiko Diterima (Mitigasi Aktif)', cleanTitle),
+        message: [
+          `Penanggung jawab menetapkan status Risiko Diterima ("${inlineJust}") dengan rencana mitigasi: "${inlinePlan}". Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.`,
+          `Judul Kendala: ${cleanTitle}`,
+          'Status Tiket: Risiko Diterima (Menunggu Konfirmasi Pelapor)',
+          `Justifikasi Risiko: ${inlineJust}`,
+          `Rencana Mitigasi: ${inlinePlan}`,
+          'Tindak Lanjut Anda: Tinjau arahan mitigasi sementara dan konfirmasi penutupan tiket atau kembalikan jika belum memadai.',
+        ].join('\n'),
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
       });
@@ -927,11 +1210,17 @@ export class BlockerService {
     );
 
     if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
+      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
       await this.createBlockerNotification({
         recipientUserId: ticket.assignedOwnerId,
         triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
-        title: `Tiket Ditutup Pelapor: ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message: 'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala ini.',
+        title: formatBlockerNotificationTitle('Tiket Ditutup Pelapor', cleanTitle),
+        message: [
+          'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala ini.',
+          `Judul Kendala: ${cleanTitle}`,
+          'Status Tiket: Selesai Ditutup',
+          'Konfirmasi Pelapor: Penyelesaian atau arahan mitigasi telah diverifikasi dan diterima oleh pelapor.',
+        ].join('\n'),
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,
       });
@@ -1052,11 +1341,19 @@ export class BlockerService {
     });
 
     if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
+      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+      const inlineReason = flattenInlineNotificationText(trimmedReason);
       await this.createBlockerNotification({
         recipientUserId: ticket.assignedOwnerId,
         triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
-        title: `Tiket Dikembalikan Pelapor: ${this.extractCleanBlockerTitle(ticket.description)}`,
-        message: `Pelapor menyatakan solusi/mitigasi belum memadai: "${trimmedReason}". Status tiket kembali ke Sedang Ditangani.`,
+        title: formatBlockerNotificationTitle('Tiket Dikembalikan Pelapor', cleanTitle),
+        message: [
+          `Pelapor menyatakan solusi/mitigasi belum memadai: "${inlineReason}". Status tiket kembali ke Sedang Ditangani.`,
+          `Judul Kendala: ${cleanTitle}`,
+          'Status Tiket: Sedang Ditangani (Dikembalikan oleh Pelapor)',
+          `Alasan Pengembalian: ${inlineReason}`,
+          'Tindak Lanjut Anda: Tinjau kembali kendala pada Antrean Eskalasi Blocker dan berikan solusi perbaikan atau mitigasi baru.',
+        ].join('\n'),
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,
       });
@@ -1066,14 +1363,7 @@ export class BlockerService {
   }
 
   private extractCleanBlockerTitle(rawDescription?: string | null): string {
-    const raw = (rawDescription || '').trim();
-    if (!raw) return 'Tiket Kendala';
-    const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]*\)\s*$/i, '').trim();
-    const match = withoutExpectation.match(/^\[(.+?)\]/);
-    if (match?.[1]?.trim()) {
-      return match[1].trim().slice(0, 90);
-    }
-    return withoutExpectation.slice(0, 90);
+    return parseBlockerDescription(rawDescription).title;
   }
 
   private async createBlockerNotification(params: {
@@ -1087,12 +1377,14 @@ export class BlockerService {
     if (!(this.prisma as any).notification?.create) {
       return;
     }
+    const safeTitle =
+      params.title.length <= 200 ? params.title : `${params.title.slice(0, 197)}...`;
     await this.prisma.notification.create({
       data: {
         recipientUserId: params.recipientUserId,
         triggerType: params.triggerType,
         channel: NotificationChannel.IN_APP_CENTER,
-        title: params.title,
+        title: safeTitle,
         message: params.message,
         actionUrl: params.actionUrl,
         relatedEntityType: 'blocker_tickets',
@@ -1266,23 +1558,13 @@ export class BlockerService {
   }
 
   private extractSolutionNoteFromNotification(message?: string | null): string | null {
-    if (!message) return null;
-    const match = message.match(/solusi pada tiket kendala Anda:\s*"([^"]+)"/i);
-    return match?.[1]?.trim() || null;
+    return extractSolutionNoteFromNotificationText(message);
   }
 
   private extractRiskFromNotification(
     message?: string | null,
   ): { justification: string; mitigation: string } | null {
-    if (!message) return null;
-    const match = message.match(
-      /Risiko Diterima\s*\("([^"]+)"\)\s*dengan rencana mitigasi:\s*"([^"]+)"/i,
-    );
-    if (!match) return null;
-    return {
-      justification: match[1].trim(),
-      mitigation: match[2].trim(),
-    };
+    return extractRiskFromNotificationText(message);
   }
 
   /**
