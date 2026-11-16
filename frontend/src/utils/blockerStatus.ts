@@ -37,6 +37,110 @@ export const BLOCKER_STATUS_FILTER_OPTIONS: ReadonlyArray<{
   { value: 'CLOSED', label: BLOCKER_STATUS_LABELS.CLOSED },
 ];
 
+export type BlockerDeleteReasonCategory =
+  | 'WRONG_INPUT_OR_DUPLICATE'
+  | 'SELF_RESOLVED'
+  | 'NO_LONGER_RELEVANT'
+  | 'OTHER';
+
+export const BLOCKER_DELETE_REASON_OPTIONS: ReadonlyArray<{
+  value: BlockerDeleteReasonCategory;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'WRONG_INPUT_OR_DUPLICATE',
+    label: 'Salah Input / Tiket Duplikat',
+    description: 'Salah akun pelapor, salah isi formulir, atau tiket terbuat ganda.',
+  },
+  {
+    value: 'SELF_RESOLVED',
+    label: 'Sudah Teratasi Mandiri',
+    description: 'Kendala berhasil diselesaikan sendiri sebelum penanganan tuntas.',
+  },
+  {
+    value: 'NO_LONGER_RELEVANT',
+    label: 'Kendala Tidak Jadi / Batal Relevan',
+    description: 'Kebutuhan atau rencana tugas berubah sehingga hambatan tidak berlaku lagi.',
+  },
+  {
+    value: 'OTHER',
+    label: 'Alasan Lainnya',
+    description: 'Alasan lain di luar tiga pilihan di atas (wajib dijelaskan pada kolom teks).',
+  },
+];
+
+export const BLOCKER_TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'TECHNICAL', label: 'Technical — Bug, kendala kode, query database' },
+  { value: 'REQUIREMENT', label: 'Requirement — Spesifikasi belum jelas / berubah' },
+  { value: 'CLIENT', label: 'Client — Menunggu respon, data, UAT dari klien' },
+  { value: 'VENDOR', label: 'Vendor — API eksternal, SaaS, lisensi pihak ketiga' },
+  { value: 'RESOURCE', label: 'Resource — Kapasitas tim, cuti, dependensi personil' },
+  { value: 'APPROVAL', label: 'Approval — Menunggu persetujuan pimpinan / stakeholder' },
+  { value: 'INFRA', label: 'Infra — Server, staging, CI/CD, VPN, jaringan' },
+  { value: 'FINANCE', label: 'Finance — Pembayaran server/domain/anggaran tertahan' },
+  { value: 'LEGAL', label: 'Legal — Kontrak, NDA, kepatuhan data' },
+  { value: 'OTHER', label: 'Other — Kendala operasional lainnya' },
+];
+
+export const BLOCKER_IMPACT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'TASK', label: 'Task — Menghambat 1 tugas individu' },
+  { value: 'MILESTONE', label: 'Milestone — Mengancam target fase / sprint' },
+  { value: 'PROJECT', label: 'Project — Menghambat jadwal proyek lintas tim' },
+  { value: 'PRODUCTION', label: 'Production — Mengganggu layanan live / klien aktif' },
+  { value: 'CLIENT', label: 'Client — Berdampak langsung pada kepuasan klien' },
+  { value: 'FINANCIAL', label: 'Financial — Potensi kerugian / pinalti finansial' },
+  { value: 'COMPLIANCE', label: 'Compliance — Risiko kepatuhan hukum / perjanjian kontrak' },
+];
+
+export const BLOCKER_SEVERITY_OPTIONS: ReadonlyArray<{
+  value: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  label: string;
+}> = [
+  { value: 'CRITICAL', label: 'Critical — Pekerjaan terhenti total / insiden produksi' },
+  { value: 'HIGH', label: 'High — Hambatan berat pada jadwal atau milestone' },
+  { value: 'MEDIUM', label: 'Medium — Hambatan parsial dengan alternatif kerja' },
+  { value: 'LOW', label: 'Low — Kendala minor berisiko rendah' },
+];
+
+export function parseBlockerTextParts(rawDescription?: string | null): {
+  title: string;
+  body: string;
+  expectedHelp: string | null;
+} {
+  const raw = (rawDescription || '').trim();
+  if (!raw) {
+    return { title: 'Laporan Kendala', body: '', expectedHelp: null };
+  }
+  const expMatch = raw.match(/\s*\(Ekspektasi:\s*([^)]*)\)\s*$/i);
+  const expectedHelp = expMatch?.[1]?.trim() || null;
+  const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]*\)\s*$/i, '').trim();
+  const bracketMatch = withoutExpectation.match(/^\[(.+?)\]\s*(.*)$/s);
+  if (bracketMatch) {
+    return {
+      title: bracketMatch[1].trim() || 'Laporan Kendala',
+      body: bracketMatch[2].trim(),
+      expectedHelp,
+    };
+  }
+  return {
+    title: withoutExpectation.slice(0, 50) || 'Laporan Kendala',
+    body: withoutExpectation,
+    expectedHelp,
+  };
+}
+
+export function composeBlockerDescription(
+  title: string,
+  body: string,
+  expectedHelp?: string | null,
+): string {
+  const cleanTitle = title.trim();
+  const cleanBody = body.trim();
+  const cleanExpected = expectedHelp?.trim() || '';
+  return `[${cleanTitle}] ${cleanBody}${cleanExpected ? ` (Ekspektasi: ${cleanExpected})` : ''}`;
+}
+
 export function isActiveBlockerStatus(status?: string | null): boolean {
   return Boolean(status && ACTIVE_BLOCKER_STATUSES.includes(status as BlockerTicketStatus));
 }

@@ -293,3 +293,27 @@
        1. **`Konfirmasi & Tutup Tiket` (`close`):** Menyetujui klaim penyelesaian/mitigasi PIC dan menutup tiket secara final menjadi **`Selesai Ditutup` (`CLOSED`)**.
        2. **`Belum Memadai (Kembalikan)` (`reopen` + alasan wajib min. 10 karakter):** Menolak klaim penyelesaian PIC beserta alasan tertulis di linimasa dan mengembalikan tiket ke status **`Sedang Ditangani` (`ACKNOWLEDGED`)** untuk ditangani ulang.
 - **Dampak Implementasi & Dokumentasi:** Menjadi acuan mengikat bagi `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/utils/blockerStatus.ts`, `frontend/src/views/blockers/` (`BlockerQueueView.vue`, `RaiseBlockerView.vue`), `NotificationCenterView.vue`, serta penyusunan Buku Panduan Penggunaan Sistem WorkPulse.
+
+---
+
+### [DEC-013-UAT / DEC-016] Penetapan Aturan Bisnis Edit & Hapus Tiket Blocker Aktif oleh Pelapor Beserta Kategori/Alasan Wajib dan Notifikasi Lintas Pihak Terkait
+- **Decision ID:** `DEC-013-UAT` (Referensi Arsitektur: `DEC-016`)
+- **Tanggal:** 16/11/2026 — 09:15 WIB
+- **Pengambil Keputusan (Decision Maker):** Harry (Acceptance Owner)
+- **Konteks:** Pada pengoperasian dan pengujian di lapangan, pelapor dapat mengalami kesalahan manusiawi (salah akun, salah ketik, duplikasi tiket, salah kategori/dampak, atau hambatan sudah selesai sendiri setelah tiket terlanjur dibuat/diterima PIC). Tanpa fitur Edit dan Hapus, tiket keliru menumpuk di antrean PIC dan memicu indikator terlambat (`Lewat Batas Waktu`) palsu. Di sisi lain, perubahan dan penghapusan tidak boleh dilakukan diam-diam agar Penanggung Jawab (PIC), Lead, Kepala Divisi, dan pemberi bantuan tetap mengetahui status terbaru.
+- **Keputusan Resmi (`DEC-016`):**
+  1. **Cakupan Aktor & Status Izin (`Edit Tiket` & `Hapus Tiket`):**
+     - Hanya **Pelapor Asli (`raisedByUserId`)** yang berhak mengedit atau menghapus tiket Blocker miliknya.
+     - Aksi **Edit** dan **Hapus** diizinkan selama tiket berstatus **aktif** (`OPEN` / `Menunggu Respons` maupun `ACKNOWLEDGED`/`IN_PROGRESS` / `Sedang Ditangani`).
+     - Begitu tiket memasuki tahap akhir (`RESOLVED` / `Solusi Diberikan`, `ACCEPTED_RISK` / `Risiko Diterima`, atau `CLOSED` / `Selesai Ditutup`), tombol Edit & Hapus dikunci/disembunyikan pada UI dan ditolak oleh backend (`409 Conflict`).
+  2. **Aturan `Edit Tiket`:**
+     - Pelapor dapat memperbarui Judul, Deskripsi, Ekspektasi Bantuan, Kategori (`type`), Dampak (`impact`), dan Tingkat Keparahan (`severity`) dari Tab **Blocker Saya** (`/raise-blockers?tab=mine`) maupun panel detail `/blockers`.
+     - Sistem mencatat jejak perubahan ke `audit_logs` (`BLOCKER_UPDATED_BY_REPORTER`) dan mengirim notifikasi `BLOCKER_UPDATED_BY_REPORTER` ke PIC, atasan/Lead/Head terkait, Pengarah Proyek, serta rekan pemberi bantuan sebelumnya.
+  3. **Aturan `Hapus Tiket`:**
+     - Istilah tombol tetap **`Hapus Tiket`**, disertai pilihan **4 Kategori Alasan Wajib** dan **kolom teks alasan wajib (min. 10 karakter)**:
+       1. `WRONG_INPUT_OR_DUPLICATE` — `Salah Input / Tiket Duplikat`
+       2. `SELF_RESOLVED` — `Sudah Teratasi Mandiri`
+       3. `NO_LONGER_RELEVANT` — `Kendala Tidak Jadi / Batal Relevan`
+       4. `OTHER` — `Alasan Lainnya`
+     - Saat dikonfirmasi: sistem mencatat salinan tiket dan alasan ke `audit_logs` (`BLOCKER_DELETED_BY_REPORTER`), membersihkan notifikasi lama tiket terkait agar antrean bersih, menghapus tiket dari `blocker_tickets`, dan mengirim notifikasi `BLOCKER_DELETED_BY_REPORTER` berisi alasan penghapusan ke seluruh pihak berwenang terkait (PIC, atasan langsung, Lead, Head, Pengarah Proyek, dan pemberi bantuan).
+- **Dampak Implementasi & Dokumentasi:** Mengikat `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/views/blockers/` (`RaiseBlockerView.vue`, `BlockerQueueView.vue`), `NotificationCenterView.vue`, serta Buku Panduan Penggunaan Sistem WorkPulse.

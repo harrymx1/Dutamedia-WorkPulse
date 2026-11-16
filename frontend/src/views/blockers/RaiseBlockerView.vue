@@ -5,10 +5,18 @@ import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
+  BLOCKER_DELETE_REASON_OPTIONS,
+  BLOCKER_IMPACT_OPTIONS,
+  BLOCKER_SEVERITY_OPTIONS,
   BLOCKER_STATUS_LABELS,
+  BLOCKER_TYPE_OPTIONS,
   buildBlockerTicketHistory,
+  composeBlockerDescription,
   getBlockerStatusLabel,
+  isActiveBlockerStatus,
+  parseBlockerTextParts,
   sortBlockersByNewest,
+  type BlockerDeleteReasonCategory,
 } from '../../utils/blockerStatus';
 import {
   AlertTriangle,
@@ -24,6 +32,9 @@ import {
   Layers,
   RotateCcw,
   HeartHandshake,
+  Pencil,
+  Trash2,
+  X,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
@@ -355,6 +366,21 @@ const submittingReopenId = ref<string | null>(null);
 const respondingSupportId = ref<string | null>(null);
 const rejectingSupportId = ref<string | null>(null);
 const supportRejectReasonMap = ref<Record<string, string>>({});
+
+// State Edit & Hapus Tiket Blocker Aktif (DEC-016)
+const editingTicket = ref<any>(null);
+const editTitle = ref('');
+const editType = ref('');
+const editImpact = ref('');
+const editSeverity = ref<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
+const editDescription = ref('');
+const editExpectedHelp = ref('');
+const submittingEdit = ref(false);
+
+const deletingTicket = ref<any>(null);
+const deleteReasonCategory = ref<BlockerDeleteReasonCategory | ''>('');
+const deleteReason = ref('');
+const submittingDelete = ref(false);
 
 const charCount = computed(() => title.value.length);
 
@@ -747,6 +773,110 @@ async function respondToSupport(
     errorMessage.value = err.message || 'Gagal merespons kontribusi bantuan.';
   } finally {
     respondingSupportId.value = null;
+  }
+}
+
+function openEditModal(ticket: any) {
+  errorMessage.value = null;
+  editingTicket.value = ticket;
+  const parts = parseBlockerTextParts(ticket?.description);
+  editTitle.value = parts.title;
+  editType.value = ticket?.type || 'TECHNICAL';
+  editImpact.value = ticket?.impact || 'TASK';
+  editSeverity.value = ticket?.severity || 'HIGH';
+  editDescription.value = parts.body;
+  editExpectedHelp.value = parts.expectedHelp || '';
+}
+
+function closeEditModal() {
+  editingTicket.value = null;
+}
+
+async function submitEditTicket() {
+  if (!editingTicket.value) return;
+  errorMessage.value = null;
+
+  if (editTitle.value.trim().length < 10) {
+    errorMessage.value = 'Judul kendala wajib diisi minimal 10 karakter.';
+    return;
+  }
+  if (!editType.value || !editImpact.value || !editSeverity.value) {
+    errorMessage.value = 'Kategori, dampak, dan tingkat keparahan wajib dipilih.';
+    return;
+  }
+  if (editDescription.value.trim().length < 20) {
+    errorMessage.value = 'Deskripsi kendala wajib diisi minimal 20 karakter.';
+    return;
+  }
+
+  submittingEdit.value = true;
+  try {
+    await apiClient(`/blockers/${editingTicket.value.id}/update`, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: editType.value,
+        severity: editSeverity.value,
+        impact: editImpact.value,
+        description: composeBlockerDescription(
+          editTitle.value,
+          editDescription.value,
+          editExpectedHelp.value,
+        ),
+      }),
+    });
+    editingTicket.value = null;
+    toastMessage.value =
+      'Perubahan tiket kendala disimpan dan dinotifikasikan ke PIC, Lead, serta Head terkait.';
+    await loadMyBlockers();
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Gagal memperbarui tiket kendala.';
+  } finally {
+    submittingEdit.value = false;
+  }
+}
+
+function openDeleteModal(ticket: any) {
+  errorMessage.value = null;
+  deletingTicket.value = ticket;
+  deleteReasonCategory.value = '';
+  deleteReason.value = '';
+}
+
+function closeDeleteModal() {
+  deletingTicket.value = null;
+}
+
+async function submitDeleteTicket() {
+  if (!deletingTicket.value) return;
+  errorMessage.value = null;
+
+  if (!deleteReasonCategory.value) {
+    errorMessage.value = 'Kategori alasan penghapusan wajib dipilih terlebih dahulu.';
+    return;
+  }
+  const trimmedReason = deleteReason.value.trim();
+  if (trimmedReason.length < 10) {
+    errorMessage.value = 'Detail alasan penghapusan wajib diisi minimal 10 karakter.';
+    return;
+  }
+
+  submittingDelete.value = true;
+  try {
+    await apiClient(`/blockers/${deletingTicket.value.id}/delete`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reasonCategory: deleteReasonCategory.value,
+        reason: trimmedReason,
+      }),
+    });
+    deletingTicket.value = null;
+    toastMessage.value =
+      'Tiket kendala telah dihapus dan pemberitahuan dikirim ke PIC, Lead, serta Head terkait.';
+    await loadMyBlockers();
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Gagal menghapus tiket kendala.';
+  } finally {
+    submittingDelete.value = false;
   }
 }
 
@@ -1392,6 +1522,32 @@ onBeforeUnmount(() => {
               </span>
             </div>
 
+            <!-- Tombol Edit & Hapus Khusus Tiket Aktif oleh Pelapor (DEC-016) -->
+            <div
+              v-if="isActiveBlockerStatus(b.status)"
+              class="reporter-manage-bar"
+              :data-testid="`reporter-manage-${b.id}`"
+            >
+              <button
+                type="button"
+                class="btn-manage-edit"
+                :data-testid="`edit-ticket-${b.id}`"
+                @click="openEditModal(b)"
+              >
+                <Pencil :size="13" />
+                <span>Edit Tiket</span>
+              </button>
+              <button
+                type="button"
+                class="btn-manage-delete"
+                :data-testid="`delete-ticket-${b.id}`"
+                @click="openDeleteModal(b)"
+              >
+                <Trash2 :size="13" />
+                <span>Hapus Tiket</span>
+              </button>
+            </div>
+
             <!-- Resolution Note (if available) -->
             <div
               v-if="b.resolutionNote && (b.status === 'RESOLVED' || b.status === 'CLOSED')"
@@ -1587,6 +1743,195 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </main>
+
+    <!-- Modal Edit Tiket Blocker Aktif (DEC-016) -->
+    <div
+      v-if="editingTicket"
+      class="modal-backdrop"
+      data-testid="edit-blocker-modal"
+      @click.self="closeEditModal"
+    >
+      <div class="modal-card modal-card-wide">
+        <div class="modal-head">
+          <h3>Edit Tiket Kendala #{{ editingTicket.id.slice(0, 8) }}</h3>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="closeEditModal">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Perubahan rincian tiket akan tercatat di jejak audit dan otomatis dikirimkan sebagai notifikasi ke PIC, Lead, Head, serta pihak terkait.
+          </p>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="editBlockerTitle">Judul Kendala <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: editTitle.trim().length >= 10 }">
+                {{ editTitle.trim().length }} / 10 min
+              </span>
+            </div>
+            <input
+              id="editBlockerTitle"
+              v-model="editTitle"
+              type="text"
+              maxlength="140"
+              placeholder="Tuliskan judul kendala yang jelas (min. 10 karakter)"
+            />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="editBlockerType">Kategori Kendala (Type) <span class="req">*</span></label>
+              <select id="editBlockerType" v-model="editType">
+                <option
+                  v-for="opt in BLOCKER_TYPE_OPTIONS"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editBlockerImpact">Dampak Kendala (Impact) <span class="req">*</span></label>
+              <select id="editBlockerImpact" v-model="editImpact">
+                <option
+                  v-for="opt in BLOCKER_IMPACT_OPTIONS"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editBlockerSeverity">Tingkat Keparahan (Severity) <span class="req">*</span></label>
+            <select id="editBlockerSeverity" v-model="editSeverity">
+              <option
+                v-for="opt in BLOCKER_SEVERITY_OPTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="editBlockerDescription">Deskripsi Kendala &amp; Upaya Mandiri <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: editDescription.trim().length >= 20 }">
+                {{ editDescription.trim().length }} / 20 min
+              </span>
+            </div>
+            <textarea
+              id="editBlockerDescription"
+              v-model="editDescription"
+              rows="4"
+              placeholder="Jelaskan detail kendala dan upaya yang sudah dicoba (min. 20 karakter)..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="editBlockerExpectedHelp">Bantuan Konkret yang Diharapkan <span class="opt">(opsional)</span></label>
+            <input
+              id="editBlockerExpectedHelp"
+              v-model="editExpectedHelp"
+              type="text"
+              maxlength="200"
+              placeholder="Contoh: Perbaikan query transaksi dan deploy hotfix ke staging"
+            />
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" @click="closeEditModal">Batal</button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="submittingEdit"
+            data-testid="confirm-edit-blocker"
+            @click="submitEditTicket"
+          >
+            {{ submittingEdit ? 'Menyimpan...' : 'Simpan Perubahan' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Hapus Tiket Blocker Aktif (DEC-016) -->
+    <div
+      v-if="deletingTicket"
+      class="modal-backdrop"
+      data-testid="delete-blocker-modal"
+      @click.self="closeDeleteModal"
+    >
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Hapus Tiket Kendala #{{ deletingTicket.id.slice(0, 8) }}</h3>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="closeDeleteModal">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Anda akan menghapus tiket <strong>"{{ getTicketTitle(deletingTicket) }}"</strong> dari antrean aktif. Alasan penghapusan wajib diisi dan akan dikirim sebagai notifikasi ke PIC, Lead, Head, serta pihak terkait.
+          </p>
+
+          <div class="form-group">
+            <label>Kategori Alasan Penghapusan <span class="req">*</span></label>
+            <div class="reason-radio-grid">
+              <label
+                v-for="opt in BLOCKER_DELETE_REASON_OPTIONS"
+                :key="opt.value"
+                class="reason-radio-card"
+                :class="{ selected: deleteReasonCategory === opt.value }"
+              >
+                <input
+                  v-model="deleteReasonCategory"
+                  type="radio"
+                  name="deleteReasonCategory"
+                  :value="opt.value"
+                  :data-testid="`delete-reason-${opt.value}`"
+                />
+                <div>
+                  <div class="reason-title">{{ opt.label }}</div>
+                  <div class="reason-desc">{{ opt.description }}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="deleteBlockerReason">Detail / Keterangan Alasan Penghapusan <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: deleteReason.trim().length >= 10 }">
+                {{ deleteReason.trim().length }} / 10 karakter min
+              </span>
+            </div>
+            <textarea
+              id="deleteBlockerReason"
+              v-model="deleteReason"
+              rows="3"
+              placeholder="Tuliskan penjelasan spesifik mengapa tiket ini dihapus (min. 10 karakter)..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" @click="closeDeleteModal">Batal</button>
+          <button
+            type="button"
+            class="btn-danger-solid"
+            :disabled="submittingDelete"
+            data-testid="confirm-delete-blocker"
+            @click="submitDeleteTicket"
+          >
+            {{ submittingDelete ? 'Menghapus...' : 'Konfirmasi Hapus Tiket' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -2774,6 +3119,192 @@ textarea:focus {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.reporter-manage-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-manage-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #B7DEC9;
+  background: #F2FAF6;
+  color: #00674D;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-manage-edit:hover {
+  background: #E2F4EA;
+}
+
+.btn-manage-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #991B1B;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-manage-delete:hover {
+  background: #FEE2E2;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 33, 27, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: 20px;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(14, 33, 27, 0.2);
+}
+
+.modal-card-wide {
+  max-width: 660px;
+}
+
+.modal-head {
+  padding: 15px 20px;
+  border-bottom: 1px solid #DCE7E2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0E211B;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #5C6E68;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+}
+
+.modal-hint {
+  font-size: 12.5px;
+  color: #5C6E68;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.char-count {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.char-count.ok {
+  color: #00674D;
+}
+
+.modal-foot {
+  padding: 14px 20px;
+  border-top: 1px solid #DCE7E2;
+  background: #FAFCFB;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.reason-radio-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reason-radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid #DCE7E2;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.reason-radio-card.selected {
+  border-color: #DC2626;
+  background: #FEF2F2;
+}
+
+.reason-radio-card input {
+  width: auto;
+  margin-top: 3px;
+}
+
+.reason-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0E211B;
+}
+
+.reason-desc {
+  font-size: 12px;
+  color: #5C6E68;
+  margin-top: 2px;
+}
+
+.btn-danger-solid {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #DC2626;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-danger-solid:hover:not(:disabled) {
+  background: #B91C1C;
+}
+
+.btn-danger-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .toast-popup {

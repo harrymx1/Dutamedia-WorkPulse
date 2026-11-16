@@ -596,4 +596,127 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     vi.unstubAllGlobals();
   });
+
+  it('shows Edit Tiket and Hapus Tiket only for active blockers and submits Edit and Delete (including OTHER reason) properly (DEC-016)', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: any) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-active-1',
+                description:
+                  '[Endpoint Error 500] Transaksi Prisma gagal saat submit komitmen lebih dari satu item (Ekspektasi: Perbaiki query transaksi)',
+                type: 'TECHNICAL',
+                severity: 'HIGH',
+                impact: 'MILESTONE',
+                status: 'ACKNOWLEDGED',
+                raisedAt: '2026-11-16T01:00:00Z',
+                supportContributions: [],
+              },
+              {
+                id: 'blk-resolved-1',
+                description: '[Token 403] Sudah diberi solusi oleh PIC',
+                type: 'APPROVAL',
+                severity: 'MEDIUM',
+                impact: 'TASK',
+                status: 'RESOLVED',
+                resolutionNote: 'Token sudah diaktifkan ulang pada environment staging.',
+                raisedAt: '2026-11-15T06:00:00Z',
+                supportContributions: [],
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/blockers/blk-active-1/update')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { id: 'blk-active-1' } }),
+        });
+      }
+      if (url.includes('/blockers/blk-active-1/delete')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { deleted: true, id: 'blk-active-1' } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    // Active ticket shows Edit & Delete; RESOLVED ticket hides both
+    expect(wrapper.find('[data-testid="edit-ticket-blk-active-1"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="delete-ticket-blk-active-1"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="edit-ticket-blk-resolved-1"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="delete-ticket-blk-resolved-1"]').exists()).toBe(false);
+
+    // Uji Edit Tiket
+    await wrapper.find('[data-testid="edit-ticket-blk-active-1"]').trigger('click');
+    const editModal = wrapper.find('[data-testid="edit-blocker-modal"]');
+    expect(editModal.exists()).toBe(true);
+    await editModal.find('#editBlockerTitle').setValue('Endpoint Error 500 Revisi');
+    await editModal.find('#editBlockerType').setValue('INFRA');
+    await editModal.find('#editBlockerDescription').setValue(
+      'Revisi detail: transaksi database timeout pada staging cluster saat beban tinggi.',
+    );
+    await wrapper.find('[data-testid="confirm-edit-blocker"]').trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-active-1/update'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'INFRA',
+          severity: 'HIGH',
+          impact: 'MILESTONE',
+          description:
+            '[Endpoint Error 500 Revisi] Revisi detail: transaksi database timeout pada staging cluster saat beban tinggi. (Ekspektasi: Perbaiki query transaksi)',
+        }),
+      }),
+    );
+
+    // Uji Hapus Tiket dengan kategori Alasan Lainnya (OTHER) & alasan wajib
+    await wrapper.find('[data-testid="delete-ticket-blk-active-1"]').trigger('click');
+    const deleteModal = wrapper.find('[data-testid="delete-blocker-modal"]');
+    expect(deleteModal.exists()).toBe(true);
+    await deleteModal.find('[data-testid="delete-reason-OTHER"]').setValue(true);
+    await deleteModal.find('#deleteBlockerReason').setValue(
+      'Tiket dibuat dengan akun uji yang salah dan akan dilaporkan ulang oleh pelapor asli.',
+    );
+    await wrapper.find('[data-testid="confirm-delete-blocker"]').trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-active-1/delete'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          reasonCategory: 'OTHER',
+          reason:
+            'Tiket dibuat dengan akun uji yang salah dan akan dilaporkan ulang oleh pelapor asli.',
+        }),
+      }),
+    );
+
+    vi.unstubAllGlobals();
+  });
 });

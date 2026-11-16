@@ -24,6 +24,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         create: vi.fn(),
         findUnique: vi.fn(),
         update: vi.fn(),
+        delete: vi.fn(),
         findMany: vi.fn().mockResolvedValue([]),
       },
       notification: {
@@ -1095,6 +1096,218 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         'REPORTER_CLOSED',
       ]);
       expect(queue[1].supportContributions).toHaveLength(2);
+    });
+
+    it('allows reporter to update active blocker ticket and notifies PIC, Head, and Supervisor (DEC-016)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-edit-1',
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.TASK,
+        status: BlockerStatus.ACKNOWLEDGED,
+        description: '[Judul Lama] Deskripsi lama kendala backend',
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        raisedAt: new Date('2026-11-16T01:00:00.000Z'),
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'owner-1', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+        supportContributions: [
+          { supporterUserId: 'supporter-1' },
+        ],
+      });
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-edit-1',
+        type: BlockerType.REQUIREMENT,
+        severity: BlockerSeverity.CRITICAL,
+        impact: BlockerImpact.MILESTONE,
+        status: BlockerStatus.ACKNOWLEDGED,
+        description: '[Judul Baru Revisi] Deskripsi baru lebih jelas (Ekspektasi: Review API)',
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'owner-1', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+      });
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue({
+          userId: 'emp-1',
+          function: 'Engineering',
+          directManagerId: 'head-1',
+        }),
+        findMany: vi.fn().mockResolvedValue([
+          { userId: 'head-1' },
+          { userId: 'lead-1' },
+        ]),
+      };
+      mockPrisma.auditLog = { create: vi.fn() };
+
+      const res = await service.updateBlocker('emp-1', 'blk-edit-1', {
+        type: BlockerType.REQUIREMENT,
+        severity: BlockerSeverity.CRITICAL,
+        impact: BlockerImpact.MILESTONE,
+        description: '[Judul Baru Revisi] Deskripsi baru lebih jelas (Ekspektasi: Review API)',
+      });
+
+      expect(res.type).toBe(BlockerType.REQUIREMENT);
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actorUserId: 'emp-1',
+            actionCode: 'BLOCKER_UPDATED_BY_REPORTER',
+            relatedEntityId: 'blk-edit-1',
+          }),
+        }),
+      );
+      const notifRecipients = mockPrisma.notification.create.mock.calls.map(
+        (c: any) => c[0].data.recipientUserId,
+      );
+      expect(notifRecipients).toEqual(
+        expect.arrayContaining(['owner-1', 'head-1', 'lead-1', 'supporter-1']),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'BLOCKER_UPDATED_BY_REPORTER',
+            actionUrl: '/blockers',
+          }),
+        }),
+      );
+    });
+
+    it('allows reporter to delete active blocker with reason category and mandatory text, cleaning stale notifications and notifying stakeholders (DEC-016)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-del-1',
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.MILESTONE,
+        status: BlockerStatus.OPEN,
+        description: '[Salah Akun Saat Lapor] Tiket keliru dibuat dengan akun lain',
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        raisedBy: { id: 'emp-1', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+        assignedOwner: { id: 'owner-1', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+        supportContributions: [{ supporterUserId: 'supporter-1' }],
+      });
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue({
+          userId: 'emp-1',
+          function: 'Engineering',
+          directManagerId: 'owner-1',
+        }),
+        findMany: vi.fn().mockResolvedValue([{ userId: 'owner-1' }, { userId: 'lead-2' }]),
+      };
+      mockPrisma.supportContribution = {
+        findMany: vi.fn().mockResolvedValue([]),
+        deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
+      };
+      mockPrisma.notification.findMany = vi
+        .fn()
+        .mockResolvedValue([{ recipientUserId: 'pm-1' }]);
+      mockPrisma.notification.deleteMany = vi.fn().mockResolvedValue({ count: 2 });
+      mockPrisma.auditLog = { create: vi.fn() };
+      mockPrisma.blockerTicket.delete.mockResolvedValue({ id: 'blk-del-1' });
+
+      const res = await service.deleteBlocker('emp-1', 'blk-del-1', {
+        reasonCategory: 'OTHER',
+        reason: 'Tiket tidak sengaja terbit menggunakan akun tester lain saat demo.',
+      });
+
+      expect(res).toEqual({ deleted: true, id: 'blk-del-1' });
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'BLOCKER_DELETED_BY_REPORTER',
+            relatedEntityId: 'blk-del-1',
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.deleteMany).toHaveBeenCalledWith({
+        where: { relatedEntityId: 'blk-del-1' },
+      });
+      expect(mockPrisma.supportContribution.deleteMany).toHaveBeenCalledWith({
+        where: { blockerId: 'blk-del-1' },
+      });
+      expect(mockPrisma.blockerTicket.delete).toHaveBeenCalledWith({
+        where: { id: 'blk-del-1' },
+      });
+      const notifRecipients = mockPrisma.notification.create.mock.calls.map(
+        (c: any) => c[0].data.recipientUserId,
+      );
+      expect(notifRecipients).toEqual(
+        expect.arrayContaining(['owner-1', 'lead-2', 'supporter-1', 'pm-1']),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'BLOCKER_DELETED_BY_REPORTER',
+            message: expect.stringContaining('Kategori Alasan Hapus: Alasan Lainnya'),
+          }),
+        }),
+      );
+    });
+
+    it('rejects edit and delete for non-reporter (403), settled tickets (409), and short delete reason (400)', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-guard-1',
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.TASK,
+        status: BlockerStatus.ACKNOWLEDGED,
+        description: '[Kendala Valid] Deskripsi cukup panjang',
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+      });
+
+      // Non-reporter -> 403
+      await expect(
+        service.updateBlocker('other-user', 'blk-guard-1', {
+          type: BlockerType.TECHNICAL,
+          severity: BlockerSeverity.HIGH,
+          impact: BlockerImpact.TASK,
+          description: '[Update Tidak Sah] Deskripsi baru valid',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      await expect(
+        service.deleteBlocker('other-user', 'blk-guard-1', {
+          reasonCategory: 'WRONG_INPUT_OR_DUPLICATE',
+          reason: 'Alasan cukup panjang untuk hapus tiket.',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      // Delete reason < 10 chars -> 400
+      await expect(
+        service.deleteBlocker('emp-1', 'blk-guard-1', {
+          reasonCategory: 'SELF_RESOLVED',
+          reason: 'Pendek',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      // Settled ticket (RESOLVED / ACCEPTED_RISK / CLOSED) -> 409
+      for (const settledStatus of [
+        BlockerStatus.RESOLVED,
+        BlockerStatus.ACCEPTED_RISK,
+        BlockerStatus.CLOSED,
+      ]) {
+        mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+          id: 'blk-settled',
+          status: settledStatus,
+          raisedByUserId: 'emp-1',
+        });
+
+        await expect(
+          service.updateBlocker('emp-1', 'blk-settled', {
+            type: BlockerType.TECHNICAL,
+            severity: BlockerSeverity.HIGH,
+            impact: BlockerImpact.TASK,
+            description: '[Update Terlambat] Deskripsi baru valid',
+          }),
+        ).rejects.toThrowError(AppException);
+
+        await expect(
+          service.deleteBlocker('emp-1', 'blk-settled', {
+            reasonCategory: 'NO_LONGER_RELEVANT',
+            reason: 'Alasan penghapusan lebih dari sepuluh karakter.',
+          }),
+        ).rejects.toThrowError(AppException);
+      }
     });
   });
 });

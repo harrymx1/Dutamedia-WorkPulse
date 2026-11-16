@@ -87,3 +87,43 @@ export class RespondSupportContributionDto {
   reason?: string;
 }
 
+export class UpdateBlockerDto {
+  @IsEnum(BlockerType, { message: 'Jenis kendala tidak valid' })
+  type!: BlockerType;
+
+  @IsEnum(BlockerSeverity, { message: 'Tingkat keparahan kendala tidak valid' })
+  severity!: BlockerSeverity;
+
+  @IsEnum(BlockerImpact, { message: 'Dampak kendala tidak valid' })
+  impact!: BlockerImpact;
+
+  @IsString({ message: 'Deskripsi kendala wajib diisi' })
+  @MinLength(10, { message: 'Deskripsi kendala minimal 10 karakter' })
+  description!: string;
+}
+
+export type BlockerDeleteReasonCategory =
+  | 'WRONG_INPUT_OR_DUPLICATE'
+  | 'SELF_RESOLVED'
+  | 'NO_LONGER_RELEVANT'
+  | 'OTHER';
+
+export class DeleteBlockerDto {
+  @IsIn(
+    [
+      'WRONG_INPUT_OR_DUPLICATE',
+      'SELF_RESOLVED',
+      'NO_LONGER_RELEVANT',
+      'OTHER',
+    ],
+    {
+      message: 'Kategori alasan penghapusan tidak valid',
+    },
+  )
+  reasonCategory!: BlockerDeleteReasonCategory;
+
+  @IsString({ message: 'Detail alasan penghapusan wajib diisi' })
+  @MinLength(10, { message: 'Detail alasan penghapusan wajib diisi minimal 10 karakter' })
+  reason!: string;
+}
+

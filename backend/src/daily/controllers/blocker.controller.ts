@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -11,10 +13,12 @@ import {
 import { BlockerService } from '../services/blocker.service';
 import {
   AcceptRiskBlockerDto,
+  DeleteBlockerDto,
   RaiseBlockerDto,
   ReopenBlockerDto,
   ResolveBlockerDto,
   RespondSupportContributionDto,
+  UpdateBlockerDto,
 } from '../dto/raise-blocker.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
@@ -133,5 +137,41 @@ export class BlockerController {
       supportId,
       dto,
     );
+  }
+
+  @Post(':id/update')
+  async updateBlockerViaPost(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateBlockerDto,
+  ) {
+    return this.blockerService.updateBlocker(req.user.id, id, dto);
+  }
+
+  @Patch(':id')
+  async updateBlocker(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateBlockerDto,
+  ) {
+    return this.blockerService.updateBlocker(req.user.id, id, dto);
+  }
+
+  @Post(':id/delete')
+  async deleteBlockerViaPost(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: DeleteBlockerDto,
+  ) {
+    return this.blockerService.deleteBlocker(req.user.id, id, dto);
+  }
+
+  @Delete(':id')
+  async deleteBlocker(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: DeleteBlockerDto,
+  ) {
+    return this.blockerService.deleteBlocker(req.user.id, id, dto);
   }
 }

@@ -5,13 +5,19 @@ import { ref, computed, onMounted, nextTick } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
+  BLOCKER_DELETE_REASON_OPTIONS,
+  BLOCKER_IMPACT_OPTIONS,
+  BLOCKER_SEVERITY_OPTIONS,
   BLOCKER_STATUS_FILTER_OPTIONS,
+  BLOCKER_TYPE_OPTIONS,
   buildBlockerTicketHistory,
+  composeBlockerDescription,
   countPeerSupportContributions,
   getBlockerStatusLabel,
   isActiveBlockerStatus,
   isHandlingBlockerStatus,
   sortBlockersByNewest,
+  type BlockerDeleteReasonCategory,
   type BlockerHistoryEntryType,
   type BlockerTicketStatus,
 } from '../../utils/blockerStatus';
@@ -29,6 +35,8 @@ import {
   RotateCcw,
   ChevronRight,
   ArrowUp,
+  Pencil,
+  Trash2,
   X,
 } from 'lucide-vue-next';
 
@@ -98,6 +106,20 @@ const submittingAcceptRisk = ref(false);
 const isReopenModalOpen = ref(false);
 const reopenReason = ref('');
 const submittingReopen = ref(false);
+
+const isQueueEditModalOpen = ref(false);
+const queueEditTitle = ref('');
+const queueEditType = ref('TECHNICAL');
+const queueEditImpact = ref('TASK');
+const queueEditSeverity = ref<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
+const queueEditDescription = ref('');
+const queueEditExpectedHelp = ref('');
+const submittingQueueEdit = ref(false);
+
+const isQueueDeleteModalOpen = ref(false);
+const queueDeleteReasonCategory = ref<BlockerDeleteReasonCategory | ''>('');
+const queueDeleteReason = ref('');
+const submittingQueueDelete = ref(false);
 
 const submittingClose = ref(false);
 const acknowledging = ref(false);
@@ -455,6 +477,93 @@ async function handleSupportDecision(
   }
 }
 
+function openQueueEditModal() {
+  if (!selectedTicket.value) return;
+  const parsed = parseTicketContent(selectedTicket.value.description);
+  queueEditTitle.value = parsed.title === '-' ? '' : parsed.title;
+  queueEditType.value = selectedTicket.value.type || 'TECHNICAL';
+  queueEditImpact.value = selectedTicket.value.impact || 'TASK';
+  queueEditSeverity.value = selectedTicket.value.severity || 'HIGH';
+  queueEditDescription.value = parsed.body || '';
+  queueEditExpectedHelp.value = parsed.expectedHelp || '';
+  isQueueEditModalOpen.value = true;
+}
+
+async function submitQueueEdit() {
+  if (!selectedTicket.value) return;
+  if (queueEditTitle.value.trim().length < 10) {
+    showToast('Judul kendala wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+  if (queueEditDescription.value.trim().length < 20) {
+    showToast('Deskripsi kendala wajib diisi minimal 20 karakter.', true);
+    return;
+  }
+
+  submittingQueueEdit.value = true;
+  try {
+    await apiClient(`/blockers/${selectedTicket.value.id}/update`, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: queueEditType.value,
+        severity: queueEditSeverity.value,
+        impact: queueEditImpact.value,
+        description: composeBlockerDescription(
+          queueEditTitle.value,
+          queueEditDescription.value,
+          queueEditExpectedHelp.value,
+        ),
+      }),
+    });
+    isQueueEditModalOpen.value = false;
+    showToast('Perubahan tiket disimpan dan dinotifikasikan ke PIC, Lead, serta Head terkait.');
+    await loadBlockers();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal memperbarui tiket kendala.', true);
+  } finally {
+    submittingQueueEdit.value = false;
+  }
+}
+
+function openQueueDeleteModal() {
+  if (!selectedTicket.value) return;
+  queueDeleteReasonCategory.value = '';
+  queueDeleteReason.value = '';
+  isQueueDeleteModalOpen.value = true;
+}
+
+async function submitQueueDelete() {
+  if (!selectedTicket.value) return;
+  if (!queueDeleteReasonCategory.value) {
+    showToast('Kategori alasan penghapusan wajib dipilih.', true);
+    return;
+  }
+  const trimmedReason = queueDeleteReason.value.trim();
+  if (trimmedReason.length < 10) {
+    showToast('Detail alasan penghapusan wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+
+  submittingQueueDelete.value = true;
+  try {
+    await apiClient(`/blockers/${selectedTicket.value.id}/delete`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reasonCategory: queueDeleteReasonCategory.value,
+        reason: trimmedReason,
+      }),
+    });
+    isQueueDeleteModalOpen.value = false;
+    selectedTicket.value = null;
+    showToast('Tiket kendala dihapus dan pemberitahuan dikirim ke PIC, Lead, serta Head terkait.');
+    await loadBlockers();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal menghapus tiket kendala.', true);
+  } finally {
+    submittingQueueDelete.value = false;
+  }
+}
+
 function formatRelativeTime(dateStr: string) {
   const d = new Date(dateStr);
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
@@ -728,6 +837,34 @@ onMounted(() => {
                 >
                   <Check :size="15" />
                   <span>Selesaikan</span>
+                </button>
+
+                <button
+                  v-if="
+                    isSelectedTicketReporter &&
+                    isActiveTicket(selectedTicket.status)
+                  "
+                  type="button"
+                  class="btn-action edit"
+                  data-testid="queue-edit-ticket"
+                  @click="openQueueEditModal"
+                >
+                  <Pencil :size="15" />
+                  <span>Edit Tiket</span>
+                </button>
+
+                <button
+                  v-if="
+                    isSelectedTicketReporter &&
+                    isActiveTicket(selectedTicket.status)
+                  "
+                  type="button"
+                  class="btn-action delete"
+                  data-testid="queue-delete-ticket"
+                  @click="openQueueDeleteModal"
+                >
+                  <Trash2 :size="15" />
+                  <span>Hapus Tiket</span>
                 </button>
 
                 <button
@@ -1181,6 +1318,158 @@ onMounted(() => {
             @click="submitReopen"
           >
             {{ submittingReopen ? 'Mengembalikan...' : 'Kembalikan ke PIC' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Edit Tiket Aktif (DEC-016) -->
+    <div
+      v-if="isQueueEditModalOpen && selectedTicket"
+      class="modal-backdrop"
+      data-testid="queue-edit-blocker-modal"
+      @click.self="isQueueEditModalOpen = false"
+    >
+      <div class="modal-card modal-card-wide">
+        <div class="modal-head">
+          <h3>Edit Tiket Kendala #{{ selectedTicket.id.substring(0, 8) }}</h3>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isQueueEditModalOpen = false">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Perubahan tiket akan tercatat di audit trail dan dikirim sebagai notifikasi ke PIC, Lead, serta Head terkait.
+          </p>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="queueEditTitle">Judul Kendala <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: queueEditTitle.trim().length >= 10 }">
+                {{ queueEditTitle.trim().length }} / 10 min
+              </span>
+            </div>
+            <input id="queueEditTitle" v-model="queueEditTitle" type="text" maxlength="140" />
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="queueEditType">Kategori Kendala <span class="req">*</span></label>
+              <select id="queueEditType" v-model="queueEditType">
+                <option v-for="opt in BLOCKER_TYPE_OPTIONS" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="queueEditImpact">Dampak Kendala <span class="req">*</span></label>
+              <select id="queueEditImpact" v-model="queueEditImpact">
+                <option v-for="opt in BLOCKER_IMPACT_OPTIONS" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="queueEditSeverity">Tingkat Keparahan <span class="req">*</span></label>
+            <select id="queueEditSeverity" v-model="queueEditSeverity">
+              <option v-for="opt in BLOCKER_SEVERITY_OPTIONS" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="queueEditDesc">Deskripsi Kendala <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: queueEditDescription.trim().length >= 20 }">
+                {{ queueEditDescription.trim().length }} / 20 min
+              </span>
+            </div>
+            <textarea id="queueEditDesc" v-model="queueEditDescription" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="queueEditExpected">Bantuan Konkret yang Diharapkan</label>
+            <input id="queueEditExpected" v-model="queueEditExpectedHelp" type="text" maxlength="200" />
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" @click="isQueueEditModalOpen = false">Batal</button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="submittingQueueEdit"
+            data-testid="confirm-queue-edit-blocker"
+            @click="submitQueueEdit"
+          >
+            {{ submittingQueueEdit ? 'Menyimpan...' : 'Simpan Perubahan' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Hapus Tiket Aktif (DEC-016) -->
+    <div
+      v-if="isQueueDeleteModalOpen && selectedTicket"
+      class="modal-backdrop"
+      data-testid="queue-delete-blocker-modal"
+      @click.self="isQueueDeleteModalOpen = false"
+    >
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Hapus Tiket Kendala #{{ selectedTicket.id.substring(0, 8) }}</h3>
+          <button type="button" class="btn-close" aria-label="Tutup" @click="isQueueDeleteModalOpen = false">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Anda akan menghapus tiket <strong>"{{ parsedSelectedTicket.title }}"</strong>. Alasan wajib diisi dan akan dikirim sebagai notifikasi ke PIC, Lead, serta Head terkait.
+          </p>
+          <div class="form-group">
+            <label>Kategori Alasan Penghapusan <span class="req">*</span></label>
+            <div class="reason-radio-grid">
+              <label
+                v-for="opt in BLOCKER_DELETE_REASON_OPTIONS"
+                :key="opt.value"
+                class="reason-radio-card"
+                :class="{ selected: queueDeleteReasonCategory === opt.value }"
+              >
+                <input
+                  v-model="queueDeleteReasonCategory"
+                  type="radio"
+                  name="queueDeleteReasonCategory"
+                  :value="opt.value"
+                />
+                <div>
+                  <div class="reason-title">{{ opt.label }}</div>
+                  <div class="reason-desc">{{ opt.description }}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="queueDeleteReason">Detail / Keterangan Alasan Penghapusan <span class="req">*</span></label>
+              <span class="char-count" :class="{ ok: queueDeleteReason.trim().length >= 10 }">
+                {{ queueDeleteReason.trim().length }} / 10 min
+              </span>
+            </div>
+            <textarea
+              id="queueDeleteReason"
+              v-model="queueDeleteReason"
+              rows="3"
+              placeholder="Tuliskan penjelasan spesifik mengapa tiket ini dihapus (min. 10 karakter)..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-secondary" @click="isQueueDeleteModalOpen = false">Batal</button>
+          <button
+            type="button"
+            class="btn-danger-solid"
+            :disabled="submittingQueueDelete"
+            data-testid="confirm-queue-delete-blocker"
+            @click="submitQueueDelete"
+          >
+            {{ submittingQueueDelete ? 'Menghapus...' : 'Konfirmasi Hapus Tiket' }}
           </button>
         </div>
       </div>
@@ -1670,6 +1959,8 @@ h1 {
 .btn-action.resolve { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
 .btn-action.reopen { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
 .btn-action.close { background: #00674D; color: #FFFFFF; border-color: #00674D; }
+.btn-action.edit { background: #F2FAF6; color: #00674D; border-color: #B7DEC9; }
+.btn-action.delete { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
 
 .detail-body {
   padding: 20px;
@@ -2120,8 +2411,15 @@ h1 {
   border-radius: 12px;
   width: 100%;
   max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   box-shadow: 0 16px 36px rgba(14, 33, 27, 0.16);
+}
+
+.modal-card-wide {
+  max-width: 660px;
 }
 
 .modal-head {
@@ -2148,6 +2446,68 @@ h1 {
 
 .modal-body {
   padding: 20px;
+  overflow-y: auto;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.reason-radio-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reason-radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid #DCE7E2;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.reason-radio-card.selected {
+  border-color: #DC2626;
+  background: #FEF2F2;
+}
+
+.reason-radio-card input {
+  width: auto;
+  margin-top: 3px;
+}
+
+.reason-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0E211B;
+}
+
+.reason-desc {
+  font-size: 12px;
+  color: #5C6E68;
+  margin-top: 2px;
+}
+
+.btn-danger-solid {
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #DC2626;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-danger-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .form-group {
@@ -2185,6 +2545,7 @@ h1 {
 }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
   width: 100%;
   box-sizing: border-box;

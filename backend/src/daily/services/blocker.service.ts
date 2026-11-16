@@ -14,10 +14,13 @@ import {
 } from '@prisma/client';
 import {
   AcceptRiskBlockerDto,
+  BlockerDeleteReasonCategory,
+  DeleteBlockerDto,
   RaiseBlockerDto,
   ReopenBlockerDto,
   ResolveBlockerDto,
   RespondSupportContributionDto,
+  UpdateBlockerDto,
 } from '../dto/raise-blocker.dto';
 import { BlockerSlaConfig, CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
@@ -41,6 +44,22 @@ const SUPPORT_RESOLVED_CLOSED_PREFIX = '[SUPPORT_RESOLVED_CLOSED]';
 const SUPPORT_ACCEPTED_PROGRESS_PREFIX = '[SUPPORT_ACCEPTED_PROGRESS]';
 const SUPPORT_REJECTED_PREFIX = '[SUPPORT_REJECTED]';
 const REPORTER_REJECTION_NOTE_MARKER = '\n[CATATAN_PENOLAKAN_PELAPOR]: ';
+
+const DELETE_REASON_CATEGORY_LABELS: Record<BlockerDeleteReasonCategory, string> = {
+  WRONG_INPUT_OR_DUPLICATE: 'Salah Input / Tiket Duplikat',
+  SELF_RESOLVED: 'Sudah Teratasi Mandiri',
+  NO_LONGER_RELEVANT: 'Kendala Tidak Jadi / Batal Relevan',
+  OTHER: 'Alasan Lainnya',
+};
+
+const ACTIVE_STATUS_LABELS: Record<string, string> = {
+  OPEN: 'Menunggu Respons',
+  ACKNOWLEDGED: 'Sedang Ditangani',
+  IN_PROGRESS: 'Sedang Ditangani',
+  RESOLVED: 'Solusi Diberikan',
+  ACCEPTED_RISK: 'Risiko Diterima',
+  CLOSED: 'Selesai Ditutup',
+};
 
 export type BlockerHistoryEntryType =
   | 'PEER_SUPPORT'
@@ -2204,6 +2223,427 @@ export class BlockerService {
     return {
       status: BlockerStatus.ACKNOWLEDGED,
       contribution: updatedContribution,
+    };
+  }
+
+  private assertTicketEditableOrDeletableByReporter(
+    actorUserId: string,
+    ticket: any,
+    actionLabel: 'mengedit' | 'menghapus',
+  ): void {
+    if (!ticket) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Tiket kendala tidak ditemukan.',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if (ticket.raisedByUserId !== actorUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: `Hanya pelapor asli tiket kendala ini yang berwenang ${actionLabel} tiket.`,
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (
+      ticket.status === BlockerStatus.RESOLVED ||
+      ticket.status === BlockerStatus.ACCEPTED_RISK ||
+      ticket.status === BlockerStatus.CLOSED
+    ) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: `Tiket kendala yang sudah diberi solusi atau ditutup tidak dapat ${actionLabel === 'mengedit' ? 'diedit' : 'dihapus'} lagi.`,
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+  }
+
+  private async recordBlockerAuditLog(
+    actorUserId: string,
+    actionCode: string,
+    blockerId: string,
+    valueBefore: Record<string, any> | null,
+    valueAfter: Record<string, any> | null,
+  ): Promise<void> {
+    if (!(this.prisma as any).auditLog?.create) {
+      return;
+    }
+    try {
+      await (this.prisma as any).auditLog.create({
+        data: {
+          actorUserId,
+          actionCode,
+          relatedEntityType: 'blocker_tickets',
+          relatedEntityId: blockerId,
+          valueBefore: valueBefore ?? undefined,
+          valueAfter: valueAfter ?? undefined,
+        },
+      });
+    } catch {
+      // Abaikan kegagalan pencatatan audit sekunder agar mutasi utama tidak terblokir
+    }
+  }
+
+  /**
+   * Mengumpulkan seluruh pemangku kepentingan yang berwenang mengetahui perubahan / penghapusan tiket:
+   * PIC, atasan langsung pelapor, Head/Supervisor/PM divisi pelapor, Head/Supervisor divisi target lintas fungsi,
+   * Pimpinan/Pengarah Proyek terkait, pemberi bantuan sebelumnya, serta penerima notifikasi tiket sebelumnya.
+   */
+  private async resolveBlockerStakeholderRecipientIds(
+    ticket: any,
+    excludeUserId: string,
+  ): Promise<string[]> {
+    const recipients = new Set<string>();
+    const addRecipient = (id?: string | null) => {
+      if (id && id !== excludeUserId) {
+        recipients.add(id);
+      }
+    };
+
+    addRecipient(ticket?.assignedOwnerId);
+
+    const today = toJakartaDateOnly(this.clockService.now());
+
+    try {
+      if (ticket?.raisedByUserId && this.prisma.organizationalAssignment?.findFirst) {
+        const reporterAssign = await this.prisma.organizationalAssignment.findFirst({
+          where: {
+            userId: ticket.raisedByUserId,
+            ...this.activeDateWhere(today),
+          },
+          orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+        });
+        addRecipient(reporterAssign?.directManagerId);
+
+        if (reporterAssign?.function && this.prisma.organizationalAssignment?.findMany) {
+          const functionLeaders = await this.prisma.organizationalAssignment.findMany({
+            where: {
+              function: reporterAssign.function,
+              role: {
+                in: [
+                  CanonicalRole.HEAD,
+                  CanonicalRole.SUPERVISOR,
+                  CanonicalRole.PROJECT_MANAGER,
+                ],
+              },
+              ...this.activeDateWhere(today),
+              user: { status: 'ACTIVE' },
+            },
+            select: { userId: true },
+          });
+          for (const row of functionLeaders) {
+            addRecipient(row.userId);
+          }
+        }
+      }
+    } catch {
+      // Abaikan kesalahan lookup hierarki pelapor
+    }
+
+    try {
+      const targetDivision = BLOCKER_TYPE_DIVISION_ROUTING[ticket?.type || ''];
+      if (targetDivision && this.prisma.organizationalAssignment?.findMany) {
+        const targetLeaders = await this.prisma.organizationalAssignment.findMany({
+          where: {
+            function: targetDivision.function,
+            role: {
+              in: [CanonicalRole.HEAD, CanonicalRole.SUPERVISOR, CanonicalRole.HRGA],
+            },
+            ...this.activeDateWhere(today),
+            user: { status: 'ACTIVE' },
+          },
+          select: { userId: true },
+        });
+        for (const row of targetLeaders) {
+          addRecipient(row.userId);
+        }
+      }
+    } catch {
+      // Abaikan kesalahan lookup divisi lintas fungsi
+    }
+
+    try {
+      if (ticket?.projectCodeReference && this.prisma.projectAuthorityMapping?.findFirst) {
+        const mapping = await this.prisma.projectAuthorityMapping.findFirst({
+          where: {
+            projectCode: ticket.projectCodeReference,
+            ...this.activeDateWhere(today),
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+        addRecipient(mapping?.projectManagerId);
+        addRecipient(mapping?.escalationReviewerId);
+      }
+    } catch {
+      // Abaikan kesalahan lookup pemetaan proyek
+    }
+
+    if (Array.isArray(ticket?.supportContributions)) {
+      for (const entry of ticket.supportContributions) {
+        addRecipient(entry?.supporterUserId || entry?.supporter?.id);
+      }
+    }
+
+    try {
+      if (ticket?.id && (this.prisma as any).supportContribution?.findMany) {
+        const contribs = await this.prisma.supportContribution.findMany({
+          where: { blockerId: ticket.id },
+          select: { supporterUserId: true },
+        });
+        for (const entry of contribs) {
+          addRecipient(entry.supporterUserId);
+        }
+      }
+    } catch {
+      // Abaikan kesalahan lookup kontributor bantuan
+    }
+
+    try {
+      if (ticket?.id && (this.prisma as any).notification?.findMany) {
+        const priorNotifs = await this.prisma.notification.findMany({
+          where: { relatedEntityId: ticket.id },
+          select: { recipientUserId: true },
+        });
+        for (const notif of priorNotifs) {
+          addRecipient(notif.recipientUserId);
+        }
+      }
+    } catch {
+      // Abaikan kesalahan lookup penerima notifikasi terdahulu
+    }
+
+    return Array.from(recipients);
+  }
+
+  /**
+   * Memperbarui rincian tiket kendala aktif oleh Pelapor asli (DEC-016)
+   * dan mengirim notifikasi ke PIC, Lead, Head, serta pihak terkait.
+   */
+  async updateBlocker(
+    actorUserId: string,
+    blockerId: string,
+    dto: UpdateBlockerDto,
+  ) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+      include: {
+        raisedBy: { select: { id: true, fullName: true, email: true } },
+        assignedOwner: { select: { id: true, fullName: true, email: true } },
+        supportContributions: true,
+      },
+    });
+
+    this.assertTicketEditableOrDeletableByReporter(actorUserId, ticket, 'mengedit');
+
+    const trimmedDescription = dto.description?.trim() || '';
+    if (trimmedDescription.length < 10) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Deskripsi kendala wajib diisi minimal 10 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    let targetResolutionAt = ticket!.targetResolutionAt;
+    if (dto.severity !== ticket!.severity) {
+      const slaMinutesMap = await this.getSlaMinutesMap();
+      const slaMinutes = slaMinutesMap[dto.severity as keyof typeof slaMinutesMap];
+      const baseMs = ticket!.raisedAt
+        ? new Date(ticket!.raisedAt).getTime()
+        : this.clockService.now().getTime();
+      targetResolutionAt = new Date(baseMs + slaMinutes * 60 * 1000);
+    }
+
+    const updated = await this.prisma.blockerTicket.update({
+      where: { id: blockerId },
+      data: {
+        type: dto.type,
+        severity: dto.severity,
+        impact: dto.impact,
+        description: trimmedDescription,
+        ...(targetResolutionAt !== undefined ? { targetResolutionAt } : {}),
+      },
+      include: {
+        raisedBy: { select: { id: true, fullName: true, email: true } },
+        assignedOwner: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+
+    await this.recordBlockerAuditLog(
+      actorUserId,
+      'BLOCKER_UPDATED_BY_REPORTER',
+      blockerId,
+      {
+        type: ticket!.type,
+        severity: ticket!.severity,
+        impact: ticket!.impact,
+        description: ticket!.description,
+      },
+      {
+        type: dto.type,
+        severity: dto.severity,
+        impact: dto.impact,
+        description: trimmedDescription,
+      },
+    );
+
+    const parsed = parseBlockerDescription(trimmedDescription);
+    const inlineTitle = flattenInlineNotificationText(parsed.title);
+    const reporterName =
+      (updated as any).raisedBy?.fullName?.trim() ||
+      (ticket as any).raisedBy?.fullName?.trim() ||
+      'Pelapor';
+    const ownerName =
+      (updated as any).assignedOwner?.fullName?.trim() ||
+      (ticket as any).assignedOwner?.fullName?.trim() ||
+      'Penanggung Jawab';
+    const statusLabel = ACTIVE_STATUS_LABELS[ticket!.status] || ticket!.status;
+
+    const recipients = await this.resolveBlockerStakeholderRecipientIds(
+      { ...ticket, type: dto.type },
+      actorUserId,
+    );
+
+    const lines = [
+      `${reporterName} memperbarui rincian tiket kendala "${inlineTitle}".`,
+      `Judul Kendala: ${inlineTitle}`,
+      `Pelapor: ${reporterName}`,
+      `Penanggung Jawab (PIC): ${ownerName}`,
+      `Status Tiket: ${statusLabel}`,
+      `Kategori & Keparahan: ${dto.type} — Tingkat ${dto.severity} (Dampak: ${dto.impact})`,
+      `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
+    ];
+    if (parsed.expectedHelp) {
+      lines.push(`Ekspektasi Bantuan: ${flattenInlineNotificationText(parsed.expectedHelp)}`);
+    }
+
+    await this.notifyBlockerRecipients(recipients, actorUserId, {
+      triggerType: 'BLOCKER_UPDATED_BY_REPORTER',
+      title: formatBlockerNotificationTitle(
+        'Laporan Kendala Diperbarui Pelapor',
+        parsed.title,
+      ),
+      message: lines.join('\n'),
+      actionUrl: '/blockers',
+      relatedEntityId: blockerId,
+    });
+
+    return updated;
+  }
+
+  /**
+   * Menghapus tiket kendala aktif oleh Pelapor asli (DEC-016) dengan kategori & alasan wajib,
+   * membersihkan notifikasi lama tiket tersebut, mencatat jejak audit, serta memberi tahu PIC, Lead, dan Head.
+   */
+  async deleteBlocker(
+    actorUserId: string,
+    blockerId: string,
+    dto: DeleteBlockerDto,
+  ) {
+    const ticket = await this.prisma.blockerTicket.findUnique({
+      where: { id: blockerId },
+      include: {
+        raisedBy: { select: { id: true, fullName: true, email: true } },
+        assignedOwner: { select: { id: true, fullName: true, email: true } },
+        supportContributions: true,
+      },
+    });
+
+    this.assertTicketEditableOrDeletableByReporter(actorUserId, ticket, 'menghapus');
+
+    const categoryLabel = DELETE_REASON_CATEGORY_LABELS[dto?.reasonCategory];
+    if (!categoryLabel) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Kategori alasan penghapusan tiket tidak valid.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const trimmedReason = dto?.reason?.trim() || '';
+    if (trimmedReason.length < 10) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Detail alasan penghapusan wajib diisi minimal 10 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const recipients = await this.resolveBlockerStakeholderRecipientIds(
+      ticket,
+      actorUserId,
+    );
+
+    const parsed = parseBlockerDescription(ticket!.description);
+    const inlineTitle = flattenInlineNotificationText(parsed.title);
+    const inlineReason = flattenInlineNotificationText(trimmedReason);
+    const reporterName = (ticket as any).raisedBy?.fullName?.trim() || 'Pelapor';
+    const ownerName =
+      (ticket as any).assignedOwner?.fullName?.trim() || 'Penanggung Jawab';
+    const statusLabel = ACTIVE_STATUS_LABELS[ticket!.status] || ticket!.status;
+
+    await this.recordBlockerAuditLog(
+      actorUserId,
+      'BLOCKER_DELETED_BY_REPORTER',
+      blockerId,
+      {
+        id: ticket!.id,
+        type: ticket!.type,
+        severity: ticket!.severity,
+        impact: ticket!.impact,
+        status: ticket!.status,
+        description: ticket!.description,
+        assignedOwnerId: ticket!.assignedOwnerId,
+      },
+      {
+        deleted: true,
+        reasonCategory: dto.reasonCategory,
+        reasonCategoryLabel: categoryLabel,
+        reason: trimmedReason,
+      },
+    );
+
+    if ((this.prisma as any).notification?.deleteMany) {
+      await this.prisma.notification.deleteMany({
+        where: { relatedEntityId: blockerId },
+      });
+    }
+
+    if ((this.prisma as any).supportContribution?.deleteMany) {
+      await this.prisma.supportContribution.deleteMany({
+        where: { blockerId },
+      });
+    }
+
+    await this.prisma.blockerTicket.delete({
+      where: { id: blockerId },
+    });
+
+    await this.notifyBlockerRecipients(recipients, actorUserId, {
+      triggerType: 'BLOCKER_DELETED_BY_REPORTER',
+      title: formatBlockerNotificationTitle(
+        'Tiket Kendala Dihapus Pelapor',
+        parsed.title,
+      ),
+      message: [
+        `${reporterName} telah menghapus tiket kendala "${inlineTitle}" dari antrean aktif.`,
+        `Judul Kendala: ${inlineTitle}`,
+        `Pelapor: ${reporterName}`,
+        `Penanggung Jawab (PIC): ${ownerName}`,
+        `Kategori & Keparahan: ${ticket!.type} — Tingkat ${ticket!.severity} (Dampak: ${ticket!.impact})`,
+        `Status Terakhir: ${statusLabel}`,
+        `Kategori Alasan Hapus: ${categoryLabel}`,
+        `Detail Alasan Penghapusan: ${inlineReason}`,
+      ].join('\n'),
+      actionUrl: '/blockers',
+      relatedEntityId: blockerId,
+    });
+
+    return {
+      deleted: true,
+      id: blockerId,
     };
   }
 
