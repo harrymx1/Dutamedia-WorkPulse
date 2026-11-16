@@ -374,18 +374,17 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     });
     await flushPromises();
 
-    // Tiket pertama hanya punya reopen tanpa bantuan rekan -> badge X Bantuan tidak boleh muncul palsu
+    // Kartu antrean kiri tidak lagi menampilkan badge X Bantuan agar tetap ringkas dan seragam
     const firstCard = wrapper.find('[data-testid="ticket-card-blk-reopened-only"]');
     expect(firstCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
 
-    // Tiket dengan bantuan yang seluruhnya berstatus Bantuan Belum Membantu -> badge X Bantuan tidak tampil
     const rejectedOnlyCard = wrapper.find('[data-testid="ticket-card-blk-rejected-only"]');
     expect(rejectedOnlyCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
 
-    // Tiket kedua punya 1 bantuan ditolak ([SUPPORT_REJECTED]) + 1 bantuan efektif + pre-reopen + reopen
-    // Kartu kiri hanya menghitung 1 Bantuan efektif, sedangkan linimasa kanan menampilkan seluruh 4 riwayat
+    // Tiket kedua memiliki 1 bantuan ditolak ([SUPPORT_REJECTED]) + 1 bantuan efektif + pre-reopen + reopen
+    // Kartu kiri tidak merender card-support-count, sedangkan linimasa kanan menampilkan seluruh 4 riwayat
     const secondCard = wrapper.find('[data-testid="ticket-card-blk-mixed"]');
-    expect(secondCard.find('[data-testid="card-support-count"]').text()).toContain('1 Bantuan');
+    expect(secondCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
 
     // Detail tiket pertama memakai judul & label alasan pengembalian yang tepat (didahului solusi awal)
     expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (2)');

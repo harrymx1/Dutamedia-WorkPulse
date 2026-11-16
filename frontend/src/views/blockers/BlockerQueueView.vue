@@ -12,7 +12,6 @@ import {
   BLOCKER_TYPE_OPTIONS,
   buildBlockerTicketHistory,
   composeBlockerDescription,
-  countPeerSupportContributions,
   getBlockerStatusLabel,
   isActiveBlockerStatus,
   isHandlingBlockerStatus,
@@ -780,13 +779,6 @@ onMounted(() => {
                   data-testid="card-owner-badge"
                 >
                   {{ isAssignedToMe(ticket) ? 'Tugas Anda' : `PIC: ${ticket.assignedOwner.fullName}` }}
-                </span>
-                <span
-                  v-if="countPeerSupportContributions(ticket.supportContributions) > 0"
-                  class="support-count"
-                  data-testid="card-support-count"
-                >
-                  <HeartHandshake :size="13" /> {{ countPeerSupportContributions(ticket.supportContributions) }} Bantuan
                 </span>
                 <ChevronRight :size="16" class="arrow-icon" />
               </div>
