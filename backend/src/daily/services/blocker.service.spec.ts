@@ -897,6 +897,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         raisedByUserId: 'emp-1',
         assignedOwnerId: 'owner-1',
         description: '[Token 403] Endpoint staging gagal akses',
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
       });
       mockPrisma.supportContribution = {
         findUnique: vi.fn().mockResolvedValue({
@@ -945,10 +946,13 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         expect.objectContaining({
           data: expect.objectContaining({
             triggerType: 'BLOCKER_SUPPORT_REJECTED',
-            message: expect.stringContaining('role IAM policy vault'),
+            message: expect.stringContaining('Pelapor: Aditya Nugroho'),
           }),
         }),
       );
+      const rejectNotifMessage = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(rejectNotifMessage).toContain('role IAM policy vault');
+      expect(rejectNotifMessage).not.toContain('Tindak Lanjut Anda:');
     });
 
     it('calculates escalation aging radar metrics and breach status correctly', async () => {

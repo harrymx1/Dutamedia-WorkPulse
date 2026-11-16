@@ -525,5 +525,49 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).not.toContain('BLOCKER_RAISED');
     expect(wrapper.text()).toContain('Buka Antrean Eskalasi Blocker');
   });
+
+  it('omits any legacy "Tindak Lanjut Anda:" row and displays Pelapor row cleanly in BLOCKER_SUPPORT_REJECTED modal', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => ({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          notifications: [
+            {
+              id: 'notif-rej-legacy',
+              title: 'Bantuan Ditolak Pelapor: Endpoint API Error 500',
+              message: [
+                'Aditya Nugroho menolak kontribusi bantuan "Cek null-check" karena dinilai belum membantu: "Masih gagal".',
+                'Judul Kendala: Endpoint API Error 500',
+                'Pelapor: Aditya Nugroho',
+                'Status Tiket: Sedang Ditangani (Bantuan Ditolak Pelapor)',
+                'Aksi Bantuan yang Ditolak: Cek null-check',
+                'Alasan Penolakan Pelapor: Masih gagal',
+                'Tindak Lanjut Anda: Tinjau alasan penolakan pelapor dan lanjutkan penanganan.',
+              ].join('\n'),
+              type: 'BLOCKER_SUPPORT_REJECTED',
+              channel: 'IN_APP_CENTER',
+              read: false,
+              actionUrl: '/blockers',
+              createdAt: '2026-11-16T02:55:00Z',
+            },
+          ],
+        },
+      }),
+    })));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    await wrapper.find('.notif-item').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Rincian Penolakan Bantuan oleh Pelapor');
+    expect(wrapper.text()).toContain('Pelapor:');
+    expect(wrapper.text()).toContain('Aditya Nugroho');
+    expect(wrapper.text()).not.toContain('Tindak Lanjut Anda:');
+  });
 });
 

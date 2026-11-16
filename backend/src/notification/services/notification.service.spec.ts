@@ -115,5 +115,56 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
       },
     });
   });
+
+  it('upgrades existing multi-line BLOCKER_SUPPORT_REJECTED notification by replacing Tindak Lanjut Anda with Pelapor name', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([
+      {
+        id: 'notif-sup-rej-1',
+        recipientUserId: 'owner-ab',
+        triggerType: 'BLOCKER_SUPPORT_REJECTED',
+        title: 'Bantuan Ditolak Pelapor: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+        message: [
+          'Pelapor menolak kontribusi bantuan "Cek null-check" karena dinilai belum membantu: "Masih error 500".',
+          'Judul Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+          'Status Tiket: Sedang Ditangani (Bantuan Ditolak Pelapor)',
+          'Aksi Bantuan yang Ditolak: Cek null-check',
+          'Alasan Penolakan Pelapor: Masih error 500',
+          'Tindak Lanjut Anda: Tinjau alasan penolakan pelapor dan lanjutkan penanganan atau berikan bantuan alternatif.',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-1',
+        readAt: null,
+      },
+    ]);
+    mockPrisma.notification.count.mockResolvedValue(1);
+    mockPrisma.blockerTicket = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'blk-1',
+          type: 'TECHNICAL',
+          severity: 'HIGH',
+          impact: 'MILESTONE',
+          description: '[Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form] Gagal submit.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+          assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman' },
+        },
+      ]),
+    };
+
+    const res = await service.getUserNotifications('owner-ab');
+
+    expect(res.notifications).toHaveLength(1);
+    const updatedMsg = res.notifications[0].message;
+    expect(updatedMsg).toContain('Aditya Nugroho menolak kontribusi bantuan');
+    expect(updatedMsg).toContain('Pelapor: Aditya Nugroho');
+    expect(updatedMsg).not.toContain('Tindak Lanjut Anda:');
+    expect(mockPrisma.notification.update).toHaveBeenCalledWith({
+      where: { id: 'notif-sup-rej-1' },
+      data: {
+        title: res.notifications[0].title,
+        message: updatedMsg,
+      },
+    });
+  });
 });
 

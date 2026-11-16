@@ -488,6 +488,9 @@ function parseDelegationContent(message: string): DelegationParsedContent {
         const cleaned = cleanStructuredLine(line);
         const label = cleaned.label || '';
         const value = cleaned.value;
+        if (label.toLowerCase() === 'tindak lanjut anda') {
+          continue;
+        }
 
         const isHighlight =
           label.toLowerCase() === 'pelapor' ||

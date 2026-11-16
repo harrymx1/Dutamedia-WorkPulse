@@ -51,12 +51,16 @@ export class NotificationService {
       return notifications;
     }
 
-    const legacyBlockerNotifs = notifications.filter(
-      (n) =>
+    const needsBlockerUpgrade = (n: any): boolean =>
+      Boolean(
         n?.relatedEntityId &&
-        (n.triggerType?.startsWith('BLOCKER_') || n.relatedEntityType === 'blocker_tickets') &&
-        !n.message?.includes('\n'),
-    );
+          (n.triggerType?.startsWith('BLOCKER_') || n.relatedEntityType === 'blocker_tickets') &&
+          (!n.message?.includes('\n') ||
+            n.message?.includes('Tindak Lanjut Anda:') ||
+            !n.message?.includes('Pelapor:')),
+      );
+
+    const legacyBlockerNotifs = notifications.filter(needsBlockerUpgrade);
 
     if (legacyBlockerNotifs.length === 0) {
       return notifications;
@@ -77,14 +81,7 @@ export class NotificationService {
 
     return Promise.all(
       notifications.map(async (notif) => {
-        if (
-          !notif?.relatedEntityId ||
-          notif.message?.includes('\n') ||
-          !(
-            notif.triggerType?.startsWith('BLOCKER_') ||
-            notif.relatedEntityType === 'blocker_tickets'
-          )
-        ) {
+        if (!needsBlockerUpgrade(notif)) {
           return notif;
         }
         const ticket = ticketById.get(notif.relatedEntityId);

@@ -240,8 +240,47 @@ export function enrichLegacyBlockerNotification(
   },
 ): { title: string; message: string } | null {
   const existingMessage = (notif.message || '').trim();
-  if (!existingMessage || existingMessage.includes('\n')) {
+  if (!existingMessage) {
     return null;
+  }
+
+  const reporterFullName = ticket.raisedBy?.fullName?.trim() || '';
+
+  if (existingMessage.includes('\n')) {
+    const originalLines = existingMessage.split('\n');
+    const filteredLines = originalLines.filter(
+      (line) => !line.trim().startsWith('Tindak Lanjut Anda:'),
+    );
+
+    if (reporterFullName && filteredLines.length > 0) {
+      filteredLines[0] = filteredLines[0].replace(
+        /^Pelapor\s+(menolak|menerima|menyatakan|telah)\b/,
+        `${reporterFullName} $1`,
+      );
+      if (!filteredLines.some((line) => line.trim().startsWith('Pelapor:'))) {
+        const judulIdx = filteredLines.findIndex((line) =>
+          line.trim().startsWith('Judul Kendala:'),
+        );
+        if (judulIdx >= 0) {
+          filteredLines.splice(judulIdx + 1, 0, `Pelapor: ${reporterFullName}`);
+        } else {
+          filteredLines.splice(1, 0, `Pelapor: ${reporterFullName}`);
+        }
+      }
+    }
+
+    const nextMessage = filteredLines.join('\n').trim();
+    if (nextMessage === existingMessage) {
+      return null;
+    }
+
+    const parsedFallback = parseBlockerDescription(ticket.description);
+    return {
+      title:
+        (notif.title || '').trim() ||
+        formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title),
+      message: nextMessage,
+    };
   }
 
   const trigger = notif.triggerType || '';
@@ -1120,16 +1159,21 @@ export class BlockerService {
     if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
       const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
       const inlineNote = flattenInlineNotificationText(trimmedNote);
+      const ownerName = await this.resolveActorFullName(
+        (ticket as any).assignedOwner,
+        actorUserId || ticket.assignedOwnerId,
+        'Penanggung Jawab',
+      );
       await this.createBlockerNotification({
         recipientUserId: ticket.raisedByUserId,
         triggerType: 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
         title: formatBlockerNotificationTitle('Solusi Diberikan', cleanTitle),
         message: [
-          `Penanggung jawab telah memberikan solusi pada tiket kendala Anda: "${inlineNote}". Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
+          `${ownerName} telah memberikan solusi pada tiket kendala Anda: "${inlineNote}". Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
           `Judul Kendala: ${cleanTitle}`,
+          `Penanggung Jawab (PIC): ${ownerName}`,
           'Status Tiket: Solusi Diberikan (Menunggu Konfirmasi Pelapor)',
           `Catatan Solusi: ${inlineNote}`,
-          'Tindak Lanjut Anda: Konfirmasi & Tutup Tiket apabila sudah teratasi, atau klik Belum Memadai (Kembalikan) jika kendala masih berlanjut.',
         ].join('\n'),
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
@@ -1186,17 +1230,22 @@ export class BlockerService {
       const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
       const inlineJust = flattenInlineNotificationText(trimmedJust);
       const inlinePlan = flattenInlineNotificationText(trimmedPlan);
+      const ownerName = await this.resolveActorFullName(
+        (ticket as any).assignedOwner,
+        actorUserId || ticket.assignedOwnerId,
+        'Penanggung Jawab',
+      );
       await this.createBlockerNotification({
         recipientUserId: ticket.raisedByUserId,
         triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
         title: formatBlockerNotificationTitle('Risiko Diterima (Mitigasi Aktif)', cleanTitle),
         message: [
-          `Penanggung jawab menetapkan status Risiko Diterima ("${inlineJust}") dengan rencana mitigasi: "${inlinePlan}". Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.`,
+          `${ownerName} menetapkan status Risiko Diterima ("${inlineJust}") dengan rencana mitigasi: "${inlinePlan}". Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.`,
           `Judul Kendala: ${cleanTitle}`,
+          `Penanggung Jawab (PIC): ${ownerName}`,
           'Status Tiket: Risiko Diterima (Menunggu Konfirmasi Pelapor)',
           `Justifikasi Risiko: ${inlineJust}`,
           `Rencana Mitigasi: ${inlinePlan}`,
-          'Tindak Lanjut Anda: Tinjau arahan mitigasi sementara dan konfirmasi penutupan tiket atau kembalikan jika belum memadai.',
         ].join('\n'),
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
@@ -1261,13 +1310,19 @@ export class BlockerService {
 
     if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
       const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+      const reporterName = await this.resolveActorFullName(
+        (ticket as any).raisedBy,
+        ticket.raisedByUserId || actorUserId,
+        'Pelapor',
+      );
       await this.createBlockerNotification({
         recipientUserId: ticket.assignedOwnerId,
         triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
         title: formatBlockerNotificationTitle('Tiket Ditutup Pelapor', cleanTitle),
         message: [
-          'Pelapor telah mengonfirmasi penyelesaian dan menutup tiket kendala ini.',
+          `${reporterName} telah mengonfirmasi penyelesaian dan menutup tiket kendala ini.`,
           `Judul Kendala: ${cleanTitle}`,
+          `Pelapor: ${reporterName}`,
           'Status Tiket: Selesai Ditutup',
           'Konfirmasi Pelapor: Penyelesaian atau arahan mitigasi telah diverifikasi dan diterima oleh pelapor.',
         ].join('\n'),
@@ -1393,16 +1448,21 @@ export class BlockerService {
     if (ticket.assignedOwnerId && ticket.assignedOwnerId !== actorUserId) {
       const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
       const inlineReason = flattenInlineNotificationText(trimmedReason);
+      const reporterName = await this.resolveActorFullName(
+        (ticket as any).raisedBy,
+        ticket.raisedByUserId || actorUserId,
+        'Pelapor',
+      );
       await this.createBlockerNotification({
         recipientUserId: ticket.assignedOwnerId,
         triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
         title: formatBlockerNotificationTitle('Tiket Dikembalikan Pelapor', cleanTitle),
         message: [
-          `Pelapor menyatakan solusi/mitigasi belum memadai: "${inlineReason}". Status tiket kembali ke Sedang Ditangani.`,
+          `${reporterName} menyatakan solusi/mitigasi belum memadai: "${inlineReason}". Status tiket kembali ke Sedang Ditangani.`,
           `Judul Kendala: ${cleanTitle}`,
+          `Pelapor: ${reporterName}`,
           'Status Tiket: Sedang Ditangani (Dikembalikan oleh Pelapor)',
           `Alasan Pengembalian: ${inlineReason}`,
-          'Tindak Lanjut Anda: Tinjau kembali kendala pada Antrean Eskalasi Blocker dan berikan solusi perbaikan atau mitigasi baru.',
         ].join('\n'),
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,
@@ -1410,6 +1470,32 @@ export class BlockerService {
     }
 
     return updated;
+  }
+
+  private async resolveActorFullName(
+    userObj: { fullName?: string | null } | null | undefined,
+    userId: string | null | undefined,
+    fallback: string,
+  ): Promise<string> {
+    const directName = userObj?.fullName?.trim();
+    if (directName) {
+      return directName;
+    }
+    if (userId && (this.prisma as any).user?.findUnique) {
+      try {
+        const found = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { fullName: true },
+        });
+        const resolved = found?.fullName?.trim();
+        if (resolved) {
+          return resolved;
+        }
+      } catch {
+        // Abaikan kegagalan lookup nama pengguna sekunder
+      }
+    }
+    return fallback;
   }
 
   private extractCleanBlockerTitle(rawDescription?: string | null): string {
@@ -2020,7 +2106,6 @@ export class BlockerService {
           'Status Tiket: Sedang Ditangani (Menunggu Respons Bantuan Pelapor)',
           `Aksi Bantuan: ${inlineAction}`,
           `Hasil / Progres: ${inlineResult}`,
-          'Tindak Lanjut Anda: Buka tab Blocker Saya untuk memilih: Terima sebagai Penyelesaian (Tutup Tiket), Terima sebagai Bantuan Saja (Belum Selesai), atau Tolak Bantuan (Tidak Membantu).',
         ].join('\n'),
         actionUrl: '/raise-blockers?tab=mine',
         relatedEntityId: ticket.id,
@@ -2110,6 +2195,11 @@ export class BlockerService {
     const rawResult = contribution.resultNote?.trim() || '-';
     const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
     const inlineAction = flattenInlineNotificationText(rawAction);
+    const reporterName = await this.resolveActorFullName(
+      (ticket as any).raisedBy,
+      ticket.raisedByUserId || actorUserId,
+      'Pelapor',
+    );
     const recipients = [ticket.assignedOwnerId, contribution.supporterUserId];
 
     if (dto.decision === 'RESOLVE_AND_CLOSE') {
@@ -2143,8 +2233,9 @@ export class BlockerService {
         triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
         title: formatBlockerNotificationTitle('Tiket Ditutup Pelapor', cleanTitle),
         message: [
-          `Pelapor menerima kontribusi bantuan "${inlineAction}" sebagai penyelesaian tuntas dan menutup tiket kendala ini.`,
+          `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai penyelesaian tuntas dan menutup tiket kendala ini.`,
           `Judul Kendala: ${cleanTitle}`,
+          `Pelapor: ${reporterName}`,
           'Status Tiket: Selesai Ditutup',
           `Aksi Bantuan yang Diterima: ${inlineAction}`,
           'Konfirmasi Pelapor: Bantuan telah langsung menuntaskan kendala sehingga tiket ditutup permanen.',
@@ -2171,11 +2262,11 @@ export class BlockerService {
         triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
         title: formatBlockerNotificationTitle('Bantuan Diterima (Belum Selesai)', cleanTitle),
         message: [
-          `Pelapor menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
+          `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
           `Judul Kendala: ${cleanTitle}`,
+          `Pelapor: ${reporterName}`,
           'Status Tiket: Sedang Ditangani (Belum Selesai)',
           `Aksi Bantuan yang Diterima: ${inlineAction}`,
-          'Tindak Lanjut Anda: Lanjutkan penanganan kendala pada Antrean Eskalasi Blocker sampai tuntas dan ajukan penyelesaian.',
         ].join('\n'),
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,
@@ -2209,12 +2300,12 @@ export class BlockerService {
       triggerType: 'BLOCKER_SUPPORT_REJECTED',
       title: formatBlockerNotificationTitle('Bantuan Ditolak Pelapor', cleanTitle),
       message: [
-        `Pelapor menolak kontribusi bantuan "${inlineAction}" karena dinilai belum membantu: "${inlineReason}".`,
+        `${reporterName} menolak kontribusi bantuan "${inlineAction}" karena dinilai belum membantu: "${inlineReason}".`,
         `Judul Kendala: ${cleanTitle}`,
+        `Pelapor: ${reporterName}`,
         'Status Tiket: Sedang Ditangani (Bantuan Ditolak Pelapor)',
         `Aksi Bantuan yang Ditolak: ${inlineAction}`,
         `Alasan Penolakan Pelapor: ${inlineReason}`,
-        'Tindak Lanjut Anda: Tinjau alasan penolakan pelapor dan lanjutkan penanganan atau berikan bantuan alternatif.',
       ].join('\n'),
       actionUrl: '/blockers',
       relatedEntityId: ticket.id,
