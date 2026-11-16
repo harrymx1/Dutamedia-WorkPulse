@@ -122,8 +122,8 @@ export class DeleteBlockerDto {
   )
   reasonCategory!: BlockerDeleteReasonCategory;
 
-  @IsString({ message: 'Detail alasan penghapusan wajib diisi' })
-  @MinLength(10, { message: 'Detail alasan penghapusan wajib diisi minimal 10 karakter' })
-  reason!: string;
+  @IsOptional()
+  @IsString({ message: 'Detail alasan penghapusan harus berupa teks' })
+  reason?: string;
 }
 

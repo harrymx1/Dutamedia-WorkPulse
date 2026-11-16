@@ -694,11 +694,17 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
       }),
     );
 
-    // Uji Hapus Tiket dengan kategori Alasan Lainnya (OTHER) & alasan wajib
+    // Uji Hapus Tiket: kategori standar tidak memunculkan textarea; hanya OTHER yang mewajibkan input teks
     await wrapper.find('[data-testid="delete-ticket-blk-active-1"]').trigger('click');
     const deleteModal = wrapper.find('[data-testid="delete-blocker-modal"]');
     expect(deleteModal.exists()).toBe(true);
+    expect(deleteModal.find('#deleteBlockerReason').exists()).toBe(false);
+
+    await deleteModal.find('[data-testid="delete-reason-WRONG_INPUT_OR_DUPLICATE"]').setValue(true);
+    expect(deleteModal.find('#deleteBlockerReason').exists()).toBe(false);
+
     await deleteModal.find('[data-testid="delete-reason-OTHER"]').setValue(true);
+    expect(deleteModal.find('#deleteBlockerReason').exists()).toBe(true);
     await deleteModal.find('#deleteBlockerReason').setValue(
       'Tiket dibuat dengan akun uji yang salah dan akan dilaporkan ulang oleh pelapor asli.',
     );

@@ -310,10 +310,10 @@
      - Pelapor dapat memperbarui Judul, Deskripsi, Ekspektasi Bantuan, Kategori (`type`), Dampak (`impact`), dan Tingkat Keparahan (`severity`) dari Tab **Blocker Saya** (`/raise-blockers?tab=mine`) maupun panel detail `/blockers`.
      - Sistem mencatat jejak perubahan ke `audit_logs` (`BLOCKER_UPDATED_BY_REPORTER`) dan mengirim notifikasi `BLOCKER_UPDATED_BY_REPORTER` ke PIC, atasan/Lead/Head terkait, Pengarah Proyek, serta rekan pemberi bantuan sebelumnya.
   3. **Aturan `Hapus Tiket`:**
-     - Istilah tombol tetap **`Hapus Tiket`**, disertai pilihan **4 Kategori Alasan Wajib** dan **kolom teks alasan wajib (min. 10 karakter)**:
+     - Istilah tombol tetap **`Hapus Tiket`**, disertai pilihan **4 Kategori Alasan Wajib**:
        1. `WRONG_INPUT_OR_DUPLICATE` — `Salah Input / Tiket Duplikat`
        2. `SELF_RESOLVED` — `Sudah Teratasi Mandiri`
        3. `NO_LONGER_RELEVANT` — `Kendala Tidak Jadi / Batal Relevan`
-       4. `OTHER` — `Alasan Lainnya`
+       4. `OTHER` — `Alasan Lainnya` *(kolom teks **`Detail Alasan Penghapusan`** hanya muncul dan wajib diisi minimal 10 karakter ketika pilihan ini dipilih; 3 pilihan di atas dapat langsung dikonfirmasi tanpa input teks tambahan)*
      - Saat dikonfirmasi: sistem mencatat salinan tiket dan alasan ke `audit_logs` (`BLOCKER_DELETED_BY_REPORTER`), membersihkan notifikasi lama tiket terkait agar antrean bersih, menghapus tiket dari `blocker_tickets`, dan mengirim notifikasi `BLOCKER_DELETED_BY_REPORTER` berisi alasan penghapusan ke seluruh pihak berwenang terkait (PIC, atasan langsung, Lead, Head, Pengarah Proyek, dan pemberi bantuan).
 - **Dampak Implementasi & Dokumentasi:** Mengikat `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/views/blockers/` (`RaiseBlockerView.vue`, `BlockerQueueView.vue`), `NotificationCenterView.vue`, serta Buku Panduan Penggunaan Sistem WorkPulse.

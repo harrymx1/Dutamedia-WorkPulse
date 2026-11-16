@@ -2688,10 +2688,11 @@ export class BlockerService {
     }
 
     const trimmedReason = dto?.reason?.trim() || '';
-    if (trimmedReason.length < 10) {
+    if (dto.reasonCategory === 'OTHER' && trimmedReason.length < 10) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
-        message: 'Detail alasan penghapusan wajib diisi minimal 10 karakter.',
+        message:
+          'Detail alasan penghapusan wajib diisi minimal 10 karakter untuk kategori Alasan Lainnya.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
@@ -2703,7 +2704,7 @@ export class BlockerService {
 
     const parsed = parseBlockerDescription(ticket!.description);
     const inlineTitle = flattenInlineNotificationText(parsed.title);
-    const inlineReason = flattenInlineNotificationText(trimmedReason);
+    const inlineReason = trimmedReason ? flattenInlineNotificationText(trimmedReason) : '';
     const reporterName = (ticket as any).raisedBy?.fullName?.trim() || 'Pelapor';
     const ownerName =
       (ticket as any).assignedOwner?.fullName?.trim() || 'Penanggung Jawab';
@@ -2726,7 +2727,7 @@ export class BlockerService {
         deleted: true,
         reasonCategory: dto.reasonCategory,
         reasonCategoryLabel: categoryLabel,
-        reason: trimmedReason,
+        reason: trimmedReason || categoryLabel,
       },
     );
 
@@ -2746,22 +2747,26 @@ export class BlockerService {
       where: { id: blockerId },
     });
 
+    const deleteNotifLines = [
+      `${reporterName} telah menghapus tiket kendala "${inlineTitle}" dari antrean aktif.`,
+      `Judul Kendala: ${inlineTitle}`,
+      `Pelapor: ${reporterName}`,
+      `Penanggung Jawab (PIC): ${ownerName}`,
+      `Kategori & Keparahan: ${ticket!.type} — Tingkat ${ticket!.severity} (Dampak: ${ticket!.impact})`,
+      `Status Terakhir: ${statusLabel}`,
+      `Kategori Alasan Hapus: ${categoryLabel}`,
+    ];
+    if (inlineReason) {
+      deleteNotifLines.push(`Detail Alasan Penghapusan: ${inlineReason}`);
+    }
+
     await this.notifyBlockerRecipients(recipients, actorUserId, {
       triggerType: 'BLOCKER_DELETED_BY_REPORTER',
       title: formatBlockerNotificationTitle(
         'Tiket Kendala Dihapus Pelapor',
         parsed.title,
       ),
-      message: [
-        `${reporterName} telah menghapus tiket kendala "${inlineTitle}" dari antrean aktif.`,
-        `Judul Kendala: ${inlineTitle}`,
-        `Pelapor: ${reporterName}`,
-        `Penanggung Jawab (PIC): ${ownerName}`,
-        `Kategori & Keparahan: ${ticket!.type} — Tingkat ${ticket!.severity} (Dampak: ${ticket!.impact})`,
-        `Status Terakhir: ${statusLabel}`,
-        `Kategori Alasan Hapus: ${categoryLabel}`,
-        `Detail Alasan Penghapusan: ${inlineReason}`,
-      ].join('\n'),
+      message: deleteNotifLines.join('\n'),
       actionUrl: '/blockers',
       relatedEntityId: blockerId,
     });

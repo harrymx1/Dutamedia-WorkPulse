@@ -855,8 +855,9 @@ async function submitDeleteTicket() {
     return;
   }
   const trimmedReason = deleteReason.value.trim();
-  if (trimmedReason.length < 10) {
-    errorMessage.value = 'Detail alasan penghapusan wajib diisi minimal 10 karakter.';
+  if (deleteReasonCategory.value === 'OTHER' && trimmedReason.length < 10) {
+    errorMessage.value =
+      'Detail alasan penghapusan wajib diisi minimal 10 karakter untuk kategori Alasan Lainnya.';
     return;
   }
 
@@ -866,7 +867,7 @@ async function submitDeleteTicket() {
       method: 'POST',
       body: JSON.stringify({
         reasonCategory: deleteReasonCategory.value,
-        reason: trimmedReason,
+        ...(deleteReasonCategory.value === 'OTHER' ? { reason: trimmedReason } : {}),
       }),
     });
     deletingTicket.value = null;
@@ -1876,7 +1877,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="modal-body">
           <p class="modal-hint">
-            Anda akan menghapus tiket <strong>"{{ getTicketTitle(deletingTicket) }}"</strong> dari antrean aktif. Alasan penghapusan wajib diisi dan akan dikirim sebagai notifikasi ke PIC, Lead, Head, serta pihak terkait.
+            Anda akan menghapus tiket <strong>"{{ getTicketTitle(deletingTicket) }}"</strong> dari antrean aktif. Pilih kategori alasan di bawah; pemberitahuan akan dikirim ke PIC, Lead, serta Head terkait.
           </p>
 
           <div class="form-group">
@@ -1903,7 +1904,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="form-group">
+          <div v-if="deleteReasonCategory === 'OTHER'" class="form-group">
             <div class="label-row">
               <label for="deleteBlockerReason">Detail / Keterangan Alasan Penghapusan <span class="req">*</span></label>
               <span class="char-count" :class="{ ok: deleteReason.trim().length >= 10 }">

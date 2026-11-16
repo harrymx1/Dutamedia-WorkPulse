@@ -1282,10 +1282,27 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         }),
       ).rejects.toThrowError(AppException);
 
-      // Delete reason < 10 chars -> 400
+      // Non-OTHER category deletes cleanly without requiring text reason
+      mockPrisma.blockerTicket.delete.mockResolvedValue({ id: 'blk-guard-1' });
+      const presetDeleteRes = await service.deleteBlocker('emp-1', 'blk-guard-1', {
+        reasonCategory: 'WRONG_INPUT_OR_DUPLICATE',
+      });
+      expect(presetDeleteRes).toEqual({ deleted: true, id: 'blk-guard-1' });
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'BLOCKER_DELETED_BY_REPORTER',
+            message: expect.stringContaining('Kategori Alasan Hapus: Salah Input / Tiket Duplikat'),
+          }),
+        }),
+      );
+      const presetMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(presetMsg).not.toContain('Detail Alasan Penghapusan:');
+
+      // Delete reason < 10 chars when OTHER -> 400
       await expect(
         service.deleteBlocker('emp-1', 'blk-guard-1', {
-          reasonCategory: 'SELF_RESOLVED',
+          reasonCategory: 'OTHER',
           reason: 'Pendek',
         }),
       ).rejects.toThrowError(AppException);

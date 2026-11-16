@@ -539,8 +539,11 @@ async function submitQueueDelete() {
     return;
   }
   const trimmedReason = queueDeleteReason.value.trim();
-  if (trimmedReason.length < 10) {
-    showToast('Detail alasan penghapusan wajib diisi minimal 10 karakter.', true);
+  if (queueDeleteReasonCategory.value === 'OTHER' && trimmedReason.length < 10) {
+    showToast(
+      'Detail alasan penghapusan wajib diisi minimal 10 karakter untuk kategori Alasan Lainnya.',
+      true,
+    );
     return;
   }
 
@@ -550,7 +553,7 @@ async function submitQueueDelete() {
       method: 'POST',
       body: JSON.stringify({
         reasonCategory: queueDeleteReasonCategory.value,
-        reason: trimmedReason,
+        ...(queueDeleteReasonCategory.value === 'OTHER' ? { reason: trimmedReason } : {}),
       }),
     });
     isQueueDeleteModalOpen.value = false;
@@ -1421,7 +1424,7 @@ onMounted(() => {
         </div>
         <div class="modal-body">
           <p class="modal-hint">
-            Anda akan menghapus tiket <strong>"{{ parsedSelectedTicket.title }}"</strong>. Alasan wajib diisi dan akan dikirim sebagai notifikasi ke PIC, Lead, serta Head terkait.
+            Anda akan menghapus tiket <strong>"{{ parsedSelectedTicket.title }}"</strong>. Pilih kategori alasan di bawah; pemberitahuan akan dikirim ke PIC, Lead, serta Head terkait.
           </p>
           <div class="form-group">
             <label>Kategori Alasan Penghapusan <span class="req">*</span></label>
@@ -1445,7 +1448,7 @@ onMounted(() => {
               </label>
             </div>
           </div>
-          <div class="form-group">
+          <div v-if="queueDeleteReasonCategory === 'OTHER'" class="form-group">
             <div class="label-row">
               <label for="queueDeleteReason">Detail / Keterangan Alasan Penghapusan <span class="req">*</span></label>
               <span class="char-count" :class="{ ok: queueDeleteReason.trim().length >= 10 }">
