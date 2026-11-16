@@ -1062,7 +1062,7 @@ onMounted(() => {
               <!-- Ticket Activity & Support Contributions Feed -->
               <div class="support-section">
                 <div class="sec-head">
-                  <HeartHandshake :size="18" />
+                  <Clock :size="18" />
                   <h3>Riwayat Penanganan &amp; Kontribusi ({{ selectedTicketHistory.length }})</h3>
                 </div>
 

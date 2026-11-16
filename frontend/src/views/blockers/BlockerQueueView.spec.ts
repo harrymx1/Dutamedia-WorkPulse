@@ -322,6 +322,13 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
               raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
               supportContributions: [
                 {
+                  id: 'sup-rejected-1',
+                  supporter: { id: 'u2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
+                  actionTaken: '[SUPPORT_REJECTED] Cek null-check controller',
+                  resultNote: 'Endpoint di-restart\n[CATATAN_PENOLAKAN_PELAPOR]: Masih error 500 karena transaksi DB',
+                  createdAt: '2026-11-13T08:15:00.000Z',
+                },
+                {
                   id: 'sup-peer-1',
                   supporter: { id: 'u2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
                   actionTaken: 'Pengecekan routing subnet staging',
@@ -334,6 +341,26 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
                   actionTaken: 'Dikembalikan oleh Pelapor (Belum Memadai)',
                   resultNote: 'Healthcheck masih timeout di endpoint /payments',
                   createdAt: '2026-11-13T08:45:00.000Z',
+                },
+              ],
+            },
+            {
+              id: 'blk-rejected-only',
+              description: '[Error Staging] Bantuan awal belum membantu',
+              type: 'TECHNICAL',
+              severity: 'HIGH',
+              impact: 'TASK',
+              status: 'ACKNOWLEDGED',
+              raisedAt: '2026-11-13T07:00:00.000Z',
+              targetResolutionAt: '2026-11-13T11:00:00.000Z',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
+              supportContributions: [
+                {
+                  id: 'sup-only-rej',
+                  supporter: { id: 'u2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
+                  actionTaken: '[SUPPORT_REJECTED] Restart pod staging',
+                  resultNote: 'Sudah restart\n[CATATAN_PENOLAKAN_PELAPOR]: Tetap gagal konek ke database',
+                  createdAt: '2026-11-13T07:30:00.000Z',
                 },
               ],
             },
@@ -351,7 +378,12 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     const firstCard = wrapper.find('[data-testid="ticket-card-blk-reopened-only"]');
     expect(firstCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
 
-    // Tiket kedua punya 1 bantuan rekan + 1 reopen -> hanya menghitung 1 Bantuan
+    // Tiket dengan bantuan yang seluruhnya berstatus Bantuan Belum Membantu -> badge X Bantuan tidak tampil
+    const rejectedOnlyCard = wrapper.find('[data-testid="ticket-card-blk-rejected-only"]');
+    expect(rejectedOnlyCard.find('[data-testid="card-support-count"]').exists()).toBe(false);
+
+    // Tiket kedua punya 1 bantuan ditolak ([SUPPORT_REJECTED]) + 1 bantuan efektif + pre-reopen + reopen
+    // Kartu kiri hanya menghitung 1 Bantuan efektif, sedangkan linimasa kanan menampilkan seluruh 4 riwayat
     const secondCard = wrapper.find('[data-testid="ticket-card-blk-mixed"]');
     expect(secondCard.find('[data-testid="card-support-count"]').text()).toContain('1 Bantuan');
 
@@ -373,6 +405,7 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     await secondCard.trigger('click');
     await flushPromises();
 
+    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (4)');
     const peerItem = wrapper.find('[data-testid="history-item-sup-peer-1"]');
     expect(peerItem.classes()).toContain('variant-support');
     expect(peerItem.text()).toContain('Kontribusi Bantuan');

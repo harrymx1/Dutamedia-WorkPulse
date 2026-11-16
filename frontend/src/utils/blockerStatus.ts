@@ -311,7 +311,11 @@ export function countPeerSupportContributions(
   entries?: readonly BlockerHistoryEntryLike[] | null,
 ): number {
   if (!entries?.length) return 0;
-  return entries.filter((item) => resolveBlockerHistoryEntryType(item) === 'PEER_SUPPORT').length;
+  return entries.filter((item) => {
+    if (resolveBlockerHistoryEntryType(item) !== 'PEER_SUPPORT') return false;
+    const normalizedAction = item.actionTaken?.trim() || '';
+    return !normalizedAction.startsWith(SUPPORT_REJECTED_PREFIX);
+  }).length;
 }
 
 export function formatBlockerHistoryEntry(

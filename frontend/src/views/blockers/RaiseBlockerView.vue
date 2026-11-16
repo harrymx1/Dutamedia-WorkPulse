@@ -31,7 +31,6 @@ import {
   Plus,
   Layers,
   RotateCcw,
-  HeartHandshake,
   Pencil,
   Trash2,
   X,
@@ -1584,7 +1583,7 @@ onBeforeUnmount(() => {
             <!-- History & Peer Support Timeline -->
             <div class="my-history-section" :data-testid="`my-blocker-history-${b.id}`">
               <div class="my-history-head">
-                <HeartHandshake :size="14" />
+                <Clock :size="14" />
                 <span>Riwayat Penanganan &amp; Kontribusi ({{ getTicketHistory(b).length }})</span>
               </div>
 
