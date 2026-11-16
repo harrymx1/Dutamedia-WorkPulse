@@ -1170,7 +1170,7 @@ onMounted(() => {
         </div>
         <div class="modal-body">
           <p class="modal-hint">
-            Catat bantuan konkret yang telah Anda berikan untuk mengurai kendala rekan kerja.
+            Gunakan fitur ini untuk mencatat <strong>bantuan rekan lintas tim</strong> atau <strong>tindakan bertahap / solusi percobaan</strong> tanpa mengklaim kendala sudah selesai sepenuhnya. Status tiket akan tetap aktif (<strong>{{ getBlockerStatusLabel(selectedTicket?.status || 'ACKNOWLEDGED') }}</strong>) sembari Pelapor mencoba bantuan Anda; apabila ingin menyatakan akar kendala utama sudah tuntas 100%, gunakan tombol <strong>Selesaikan</strong>.
           </p>
           <div class="form-group">
             <label for="supportAction">Aksi Bantuan yang Diberikan <span class="req">*</span></label>
@@ -1216,7 +1216,7 @@ onMounted(() => {
         </div>
         <div class="modal-body">
           <p class="modal-hint">
-            Catat fakta solusi yang diterapkan agar menjadi referensi pengetahuan bagi tim.
+            Gunakan fitur ini apabila akar kendala utama <strong>sudah teratasi sepenuhnya (100% tuntas)</strong>. Status tiket akan beralih ke <strong>Solusi Diberikan</strong> dan menunggu konfirmasi penutupan dari Pelapor (jika baru berupa progres sebagian atau percobaan sementara, gunakan tombol <strong>Beri Bantuan</strong>).
           </p>
           <div class="form-group">
             <div class="label-row">

@@ -293,6 +293,20 @@
      - **Kondisi B — Respons Pelapor terhadap `Selesaikan` / `Terima Risiko` (Klaim Penyelesaian PIC):**
        1. **`Konfirmasi & Tutup Tiket` (`close`):** Menyetujui klaim penyelesaian/mitigasi PIC dan menutup tiket secara final menjadi **`Selesai Ditutup` (`CLOSED`)**.
        2. **`Belum Memadai (Kembalikan)` (`reopen` + alasan wajib min. 10 karakter):** Menolak klaim penyelesaian PIC beserta alasan tertulis di linimasa dan mengembalikan tiket ke status **`Sedang Ditangani` (`ACKNOWLEDGED`)** untuk ditangani ulang.
+  4. **Perbedaan Operasional & Alasan Arsitektural `Beri Bantuan` vs `Selesaikan` (Acuan Buku Panduan Pengguna & UAT Final):**
+     - **Alasan Kuat Pemilihan Opsi 2 (PIC Memiliki Akses Keduanya + Penegasan Deskripsi Modal):**
+       1. **Mendukung Penanganan Bertahap / Percobaan (*Incremental & Trial Troubleshooting*):** Pada kendala teknis atau operasional di lapangan, PIC sering kali melakukan tindakan awal yang sifatnya baru *langkah uji coba* atau *cicilan progres* tanpa ingin terburu-buru mengklaim bahwa masalah sudah beres 100%. Jika PIC tidak memiliki `Beri Bantuan`, PIC terpaksa menekan `Selesaikan` walaupun belum yakin tuntas.
+       2. **Mencegah Kebuntuan Status (*Status Deadlock*) saat `Solusi Diberikan`:** Pada alur `Selesaikan` (`Solusi Diberikan`), tombol pengerjaan PIC sengaja dikunci sampai Pelapor memverifikasi (`Konfirmasi & Tutup Tiket` atau `Belum Memadai`). Menyediakan `Beri Bantuan` pada fase aktif membuat status tiket tetap berjalan (`Sedang Ditangani`) tanpa mengunci alur kerja PIC ketika Pelapor menyatakan langkah bantuan baru membantu sebagian atau belum membantu.
+       3. **Jalur Pintas Penutupan Instan (*Quick Closure Shortcut*) bila Uji Coba Berhasil:** Jika tindakan percobaan PIC atau rekan lewat `Beri Bantuan` ternyata langsung menuntaskan akar masalah, Pelapor dapat langsung memilih **`Terima sbg Penyelesaian (Tutup Tiket)`** sehingga tiket otomatis berstatus `Selesai Ditutup` tanpa PIC perlu menekan `Selesaikan` ulang.
+     - **Matriks Perbedaan untuk Panduan Pengguna & Skenario UAT Final:**
+       | Aspek | Tombol **`Beri Bantuan`** | Tombol **`Selesaikan`** |
+       | :--- | :--- | :--- |
+       | **Aktor yang Dapat Menekan** | **Rekan / Pihak Lain** (kapan saja saat aktif `OPEN` / `Sedang Ditangani`) **dan PIC** (setelah `Terima & Tangani`) | **Hanya PIC yang Ditunjuk** (setelah `Terima & Tangani`) |
+       | **Kapan Digunakan** | Saat memberikan **bantuan lintas tim** atau **progres bertahap / solusi percobaan** yang belum tentu menuntaskan 100% kendala | Saat **akar masalah utama sudah 100% tuntas** diperbaiki dan siap diverifikasi untuk penutupan tiket |
+       | **Dampak ke Status Tiket** | Status **tetap aktif** (`Menunggu Respons` atau `Sedang Ditangani`) | Berubah menjadi **`Solusi Diberikan`** (menunggu konfirmasi Pelapor) |
+       | **Kondisi Tombol Kerja PIC** | Tombol kerja PIC **tetap terbuka** untuk tindak lanjut | Seluruh tombol kerja PIC **terkunci/tersembunyi** hingga Pelapor merespons |
+       | **Opsi Respons Pelapor** | 3 opsi: **`Terima sbg Penyelesaian (Tutup Tiket)`**, **`Terima Bantuan (Membantu Sebagian)`**, **`Bantuan Belum Membantu`** | 2 opsi final: **`Konfirmasi & Tutup Tiket`**, **`Belum Memadai (Kembalikan)`** |
+     - **Penegasan Antarmuka Modal (`BlockerQueueView.vue`):** Kedua modal (`Salurkan Kontribusi Bantuan (Peer Support)` dan `Selesaikan Kendala`) wajib menampilkan kalimat panduan eksplisit mengenai perbedaan batas penggunaan di atas sehingga pengguna langsung memahami konteks tombol yang sedang dipilih.
 - **Dampak Implementasi & Dokumentasi:** Menjadi acuan mengikat bagi `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/utils/blockerStatus.ts`, `frontend/src/views/blockers/` (`BlockerQueueView.vue`, `RaiseBlockerView.vue`), `NotificationCenterView.vue`, serta penyusunan Buku Panduan Penggunaan Sistem WorkPulse.
 
 ---

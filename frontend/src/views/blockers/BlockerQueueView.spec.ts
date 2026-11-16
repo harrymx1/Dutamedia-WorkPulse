@@ -126,6 +126,15 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     await supportBtn!.trigger('click');
 
     expect(wrapper.text()).toContain('Salurkan Kontribusi Bantuan (Peer Support)');
+    expect(wrapper.text()).toContain('tindakan bertahap / solusi percobaan');
+
+    await wrapper.find('.modal-card .btn-secondary').trigger('click');
+    const resolveBtn = wrapper.findAll('button').find(b => b.text().includes('Selesaikan'));
+    expect(resolveBtn).toBeDefined();
+    await resolveBtn!.trigger('click');
+
+    expect(wrapper.text()).toContain('Selesaikan Kendala');
+    expect(wrapper.text()).toContain('sudah teratasi sepenuhnya (100% tuntas)');
   });
 
   it('renders clean authority label without SLA wording and opens Terima Risiko modal on ACKNOWLEDGED ticket', async () => {
