@@ -245,6 +245,9 @@ export function enrichLegacyBlockerNotification(
   }
 
   const reporterFullName = ticket.raisedBy?.fullName?.trim() || '';
+  const ownerFullName = ticket.assignedOwner?.fullName?.trim() || 'Penanggung Jawab';
+  const actorName = reporterFullName || 'Pelapor';
+  const trigger = notif.triggerType || '';
 
   if (existingMessage.includes('\n')) {
     const originalLines = existingMessage.split('\n');
@@ -268,12 +271,39 @@ export function enrichLegacyBlockerNotification(
       });
 
     if (filteredLines.length > 0) {
-      const rejectIntroMatch = filteredLines[0].match(
-        /^(.+?)\s+menolak kontribusi bantuan\s+"([^"]+)"\s+karena dinilai belum membantu:\s*"([^"]+)"\.?$/,
-      );
-      if (rejectIntroMatch) {
-        const actor = reporterFullName || rejectIntroMatch[1];
-        filteredLines[0] = `${actor} menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "${rejectIntroMatch[2]}": "${rejectIntroMatch[3]}".`;
+      const firstLine = filteredLines[0].trim();
+      const firstLineHasQuote = firstLine.includes('"');
+      if (
+        trigger === 'BLOCKER_SUPPORT_REJECTED' ||
+        /menolak kontribusi bantuan|setelah mencoba bantuan/i.test(firstLine)
+      ) {
+        filteredLines[0] = `${actorName} menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala.`;
+      } else if (
+        trigger === 'BLOCKER_SUPPORT_ACCEPTED' &&
+        (firstLineHasQuote || /^Pelapor\s+menerima\b/.test(firstLine))
+      ) {
+        filteredLines[0] = `${actorName} mengonfirmasi bahwa kontribusi bantuan telah membantu sebagian progres, namun kendala utama masih belum selesai.`;
+      } else if (trigger === 'BLOCKER_SUPPORT_CONTRIBUTED' && firstLineHasQuote) {
+        const supporterLine = filteredLines.find((l) => l.trim().startsWith('Pemberi Bantuan:'));
+        const supporterFromLine =
+          supporterLine?.split(':').slice(1).join(':').trim() || ownerFullName;
+        filteredLines[0] = `${supporterFromLine} telah memberikan kontribusi bantuan pada tiket kendala Anda. Silakan tinjau rincian bantuan di bawah ini dan berikan tanggapan Anda.`;
+      } else if (
+        trigger === 'BLOCKER_CLOSED_BY_REPORTER' &&
+        firstLine.includes('kontribusi bantuan') &&
+        firstLineHasQuote
+      ) {
+        filteredLines[0] = `${actorName} menerima kontribusi bantuan sebagai penyelesaian tuntas dan telah menutup tiket kendala ini.`;
+      } else if (trigger === 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION' && firstLineHasQuote) {
+        filteredLines[0] = `${ownerFullName} telah memberikan solusi pada tiket kendala Anda. Mohon verifikasi rincian solusi di bawah ini untuk mengonfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`;
+      } else if (trigger === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION' && firstLineHasQuote) {
+        filteredLines[0] = `${ownerFullName} telah menetapkan keputusan Risiko Diterima beserta arahan mitigasi sementara. Mohon tinjau rincian arahan di bawah ini dan konfirmasi penutupan tiket.`;
+      } else if (trigger === 'BLOCKER_REOPENED_BY_REPORTER' && firstLineHasQuote) {
+        filteredLines[0] = `${actorName} menyatakan bahwa solusi atau arahan mitigasi belum memadai sehingga status tiket dikembalikan ke Sedang Ditangani.`;
+      } else if (trigger === 'BLOCKER_UPDATED_BY_REPORTER' && firstLineHasQuote) {
+        filteredLines[0] = `${actorName} telah memperbarui rincian laporan kendala aktif.`;
+      } else if (trigger === 'BLOCKER_DELETED_BY_REPORTER' && firstLineHasQuote) {
+        filteredLines[0] = `${actorName} telah menghapus tiket kendala dari antrean aktif.`;
       } else if (reporterFullName) {
         filteredLines[0] = filteredLines[0].replace(
           /^Pelapor\s+(menolak|menerima|menyatakan|telah)\b/,
@@ -324,7 +354,6 @@ export function enrichLegacyBlockerNotification(
     };
   }
 
-  const trigger = notif.triggerType || '';
   const type = ticket.type || 'OTHER';
   const severity = ticket.severity || 'HIGH';
   const impact = ticket.impact || 'TASK';
@@ -1251,7 +1280,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION',
         title: formatBlockerNotificationTitle('Solusi Diberikan', cleanTitle),
         message: [
-          `${ownerName} telah memberikan solusi pada tiket kendala Anda: "${inlineNote}". Mohon verifikasi dan konfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
+          `${ownerName} telah memberikan solusi pada tiket kendala Anda. Mohon verifikasi rincian solusi di bawah ini untuk mengonfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`,
           `Judul Kendala: ${cleanTitle}`,
           `Penanggung Jawab (PIC): ${ownerName}`,
           'Status Tiket: Solusi Diberikan (Menunggu Konfirmasi Pelapor)',
@@ -1322,7 +1351,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION',
         title: formatBlockerNotificationTitle('Risiko Diterima (Mitigasi Aktif)', cleanTitle),
         message: [
-          `${ownerName} menetapkan status Risiko Diterima ("${inlineJust}") dengan rencana mitigasi: "${inlinePlan}". Mohon tinjau arahan mitigasi dan konfirmasi penutupan tiket.`,
+          `${ownerName} telah menetapkan keputusan Risiko Diterima beserta arahan mitigasi sementara. Mohon tinjau rincian arahan di bawah ini dan konfirmasi penutupan tiket.`,
           `Judul Kendala: ${cleanTitle}`,
           `Penanggung Jawab (PIC): ${ownerName}`,
           'Status Tiket: Risiko Diterima (Menunggu Konfirmasi Pelapor)',
@@ -1540,7 +1569,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
         title: formatBlockerNotificationTitle('Tiket Dikembalikan Pelapor', cleanTitle),
         message: [
-          `${reporterName} menyatakan solusi/mitigasi belum memadai: "${inlineReason}". Status tiket kembali ke Sedang Ditangani.`,
+          `${reporterName} menyatakan bahwa solusi atau arahan mitigasi belum memadai sehingga status tiket dikembalikan ke Sedang Ditangani.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
           'Status Tiket: Sedang Ditangani',
@@ -2215,7 +2244,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
         title: formatBlockerNotificationTitle('Bantuan Kendala Diberikan', cleanTitle),
         message: [
-          `${supporterName} memberikan kontribusi bantuan pada tiket kendala Anda: "${inlineAction}". Silakan tinjau apakah bantuan ini sudah menyelesaikan kendala, membantu sebagian progres, atau belum membantu.`,
+          `${supporterName} telah memberikan kontribusi bantuan pada tiket kendala Anda. Silakan tinjau rincian bantuan di bawah ini dan berikan tanggapan Anda.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pemberi Bantuan: ${supporterName}`,
           `Status Tiket: ${currentStatusLabel}`,
@@ -2348,7 +2377,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_CLOSED_BY_REPORTER',
         title: formatBlockerNotificationTitle('Tiket Ditutup Pelapor', cleanTitle),
         message: [
-          `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai penyelesaian tuntas dan menutup tiket kendala ini.`,
+          `${reporterName} menerima kontribusi bantuan sebagai penyelesaian tuntas dan telah menutup tiket kendala ini.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
           'Status Tiket: Selesai Ditutup',
@@ -2378,7 +2407,7 @@ export class BlockerService {
         triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
         title: formatBlockerNotificationTitle('Bantuan Diterima (Membantu Sebagian)', cleanTitle),
         message: [
-          `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
+          `${reporterName} mengonfirmasi bahwa kontribusi bantuan telah membantu sebagian progres, namun kendala utama masih belum selesai.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
           `Status Tiket: ${preservedStatusLabel}`,
@@ -2417,7 +2446,7 @@ export class BlockerService {
       triggerType: 'BLOCKER_SUPPORT_REJECTED',
       title: formatBlockerNotificationTitle('Bantuan Belum Membantu', cleanTitle),
       message: [
-        `${reporterName} menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "${inlineAction}": "${inlineReason}".`,
+        `${reporterName} menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala.`,
         `Judul Kendala: ${cleanTitle}`,
         `Pelapor: ${reporterName}`,
         `Status Tiket: ${preservedStatusLabel}`,
@@ -2715,7 +2744,7 @@ export class BlockerService {
     );
 
     const lines = [
-      `${reporterName} memperbarui rincian tiket kendala "${inlineTitle}".`,
+      `${reporterName} telah memperbarui rincian laporan kendala aktif.`,
       `Judul Kendala: ${inlineTitle}`,
       `Pelapor: ${reporterName}`,
       `Penanggung Jawab (PIC): ${ownerName}`,
@@ -2831,7 +2860,7 @@ export class BlockerService {
     });
 
     const deleteNotifLines = [
-      `${reporterName} telah menghapus tiket kendala "${inlineTitle}" dari antrean aktif.`,
+      `${reporterName} telah menghapus tiket kendala dari antrean aktif.`,
       `Judul Kendala: ${inlineTitle}`,
       `Pelapor: ${reporterName}`,
       `Penanggung Jawab (PIC): ${ownerName}`,

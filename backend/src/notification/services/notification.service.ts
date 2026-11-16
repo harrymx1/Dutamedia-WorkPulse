@@ -56,6 +56,7 @@ export class NotificationService {
         n?.relatedEntityId &&
           (n.triggerType?.startsWith('BLOCKER_') || n.relatedEntityType === 'blocker_tickets') &&
           (!n.message?.includes('\n') ||
+            n.message?.split('\n')[0]?.includes('"') ||
             n.message?.includes('Tindak Lanjut Anda:') ||
             !n.message?.includes('Pelapor:') ||
             n.title?.startsWith('Bantuan Ditolak Pelapor:') ||

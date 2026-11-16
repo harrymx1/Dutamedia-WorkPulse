@@ -537,7 +537,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
               id: 'notif-rej-legacy',
               title: 'Bantuan Belum Membantu: Endpoint API Error 500',
               message: [
-                'Aditya Nugroho menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "Cek null-check": "Masih gagal".',
+                'Aditya Nugroho menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala.',
                 'Judul Kendala: Endpoint API Error 500',
                 'Pelapor: Aditya Nugroho',
                 'Status Tiket: Sedang Ditangani',
@@ -566,6 +566,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(wrapper.text()).toContain('Rincian Umpan Balik Bantuan (Kendala Masih Berlanjut)');
+    expect(wrapper.text()).toContain('Aditya Nugroho menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala.');
     expect(wrapper.text()).toContain('Pelapor:');
     expect(wrapper.text()).toContain('Aditya Nugroho');
     expect(wrapper.text()).toContain('Bantuan yang Dicoba:');

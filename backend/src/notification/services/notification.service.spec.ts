@@ -160,8 +160,9 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
       'Bantuan Belum Membantu: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
     );
     expect(updatedMsg).toContain(
-      'Aditya Nugroho menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "Cek null-check": "Masih error 500".',
+      'Aditya Nugroho menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala.',
     );
+    expect(updatedMsg.split('\n')[0]).not.toContain('"');
     expect(updatedMsg).toContain('Pelapor: Aditya Nugroho');
     expect(updatedMsg).toContain('Status Tiket: Sedang Ditangani');
     expect(updatedMsg).not.toContain('Bantuan Ditolak Pelapor');

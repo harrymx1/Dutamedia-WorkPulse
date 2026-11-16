@@ -1043,7 +1043,10 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         }),
       );
       const rejectNotifMessage = mockPrisma.notification.create.mock.calls[0][0].data.message;
-      expect(rejectNotifMessage).toContain('menginformasikan bahwa kendala masih berlanjut');
+      expect(rejectNotifMessage).toContain(
+        'Aditya Nugroho menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala.',
+      );
+      expect(rejectNotifMessage.split('\n')[0]).not.toContain('"');
       expect(rejectNotifMessage).toContain('Status Tiket: Sedang Ditangani');
       expect(rejectNotifMessage).toContain('Bantuan yang Dicoba: Reset password VPN pribadi');
       expect(rejectNotifMessage).toContain('Catatan / Kendala yang Masih Terjadi:');
