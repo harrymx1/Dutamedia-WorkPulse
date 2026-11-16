@@ -157,7 +157,7 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
     const updatedTitle = res.notifications[0].title;
     const updatedMsg = res.notifications[0].message;
     expect(updatedTitle).toBe(
-      'Bantuan Belum Mengatasi Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+      'Bantuan Belum Membantu: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
     );
     expect(updatedMsg).toContain(
       'Aditya Nugroho menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "Cek null-check": "Masih error 500".',

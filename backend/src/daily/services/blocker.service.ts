@@ -298,13 +298,20 @@ export function enrichLegacyBlockerNotification(
 
     const parsedFallback = parseBlockerDescription(ticket.description);
     const currentTitle = (notif.title || '').trim();
-    const nextTitle = currentTitle.startsWith('Bantuan Ditolak Pelapor:')
+    const nextTitle = /^(?:Bantuan Ditolak Pelapor|Bantuan Belum Mengatasi Kendala):/.test(
+      currentTitle,
+    )
       ? currentTitle.replace(
-          /^Bantuan Ditolak Pelapor:/,
-          'Bantuan Belum Mengatasi Kendala:',
+          /^(?:Bantuan Ditolak Pelapor|Bantuan Belum Mengatasi Kendala):/,
+          'Bantuan Belum Membantu:',
         )
-      : currentTitle ||
-        formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title);
+      : /^Bantuan Diterima \(Belum Selesai\):/.test(currentTitle)
+        ? currentTitle.replace(
+            /^Bantuan Diterima \(Belum Selesai\):/,
+            'Bantuan Diterima (Membantu Sebagian):',
+          )
+        : currentTitle ||
+          formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title);
 
     const nextMessage = filteredLines.join('\n').trim();
     if (nextMessage === existingMessage && nextTitle === currentTitle) {
@@ -2369,7 +2376,7 @@ export class BlockerService {
 
       await this.notifyBlockerRecipients(recipients, actorUserId, {
         triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
-        title: formatBlockerNotificationTitle('Bantuan Diterima (Belum Selesai)', cleanTitle),
+        title: formatBlockerNotificationTitle('Bantuan Diterima (Membantu Sebagian)', cleanTitle),
         message: [
           `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
           `Judul Kendala: ${cleanTitle}`,
@@ -2408,7 +2415,7 @@ export class BlockerService {
     const preservedStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
     await this.notifyBlockerRecipients(recipients, actorUserId, {
       triggerType: 'BLOCKER_SUPPORT_REJECTED',
-      title: formatBlockerNotificationTitle('Bantuan Belum Mengatasi Kendala', cleanTitle),
+      title: formatBlockerNotificationTitle('Bantuan Belum Membantu', cleanTitle),
       message: [
         `${reporterName} menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "${inlineAction}": "${inlineReason}".`,
         `Judul Kendala: ${cleanTitle}`,

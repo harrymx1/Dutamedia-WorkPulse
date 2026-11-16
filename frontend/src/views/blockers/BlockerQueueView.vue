@@ -493,7 +493,7 @@ async function handleSupportDecision(
     if (decision === 'RESOLVE_AND_CLOSE') {
       showToast(`Bantuan diterima sebagai penyelesaian. Tiket berstatus ${getBlockerStatusLabel('CLOSED')}.`);
     } else if (decision === 'ACCEPT_AS_SUPPORT') {
-      showToast('Bantuan diterima sebagai progres. Tiket tetap Sedang Ditangani.');
+      showToast('Bantuan diterima (membantu sebagian). Tiket tetap dilanjutkan penanggung jawab.');
     } else {
       showToast('Catatan bahwa kendala masih berlanjut telah disimpan dan diberitahukan ke penanggung jawab.');
     }
@@ -1122,7 +1122,7 @@ onMounted(() => {
                           :disabled="respondingSupportId === entry.id"
                           @click="handleSupportDecision(selectedTicket.id, entry.id, 'ACCEPT_AS_SUPPORT')"
                         >
-                          Terima Bantuan (Belum Selesai)
+                          Terima Bantuan (Membantu Sebagian)
                         </button>
                         <button
                           type="button"
@@ -1130,7 +1130,7 @@ onMounted(() => {
                           :disabled="respondingSupportId === entry.id"
                           @click="openSupportRejectForm(entry.id)"
                         >
-                          Belum Mengatasi Kendala
+                          Bantuan Belum Membantu
                         </button>
                       </div>
                       <div v-else class="inline-sup-reject-form">

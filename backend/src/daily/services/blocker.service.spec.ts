@@ -1037,7 +1037,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         expect.objectContaining({
           data: expect.objectContaining({
             triggerType: 'BLOCKER_SUPPORT_REJECTED',
-            title: 'Bantuan Belum Mengatasi Kendala: Token 403',
+            title: 'Bantuan Belum Membantu: Token 403',
             message: expect.stringContaining('Pelapor: Aditya Nugroho'),
           }),
         }),

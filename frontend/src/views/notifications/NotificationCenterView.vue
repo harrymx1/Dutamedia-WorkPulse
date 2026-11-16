@@ -429,7 +429,7 @@ function getDelegationHeading(notifOrType?: NotificationItem | string | null): s
   if (type === 'BLOCKER_REOPENED_BY_REPORTER') return 'Rincian Pengembalian Tiket oleh Pelapor';
   if (type === 'BLOCKER_CLOSED_BY_REPORTER') return 'Rincian Konfirmasi & Penutupan Tiket';
   if (type === 'BLOCKER_SUPPORT_CONTRIBUTED') return 'Rincian Kontribusi Bantuan Kendala';
-  if (type === 'BLOCKER_SUPPORT_ACCEPTED') return 'Rincian Konfirmasi Bantuan (Kendala Belum Selesai)';
+  if (type === 'BLOCKER_SUPPORT_ACCEPTED') return 'Rincian Konfirmasi Bantuan (Membantu Sebagian)';
   if (type === 'BLOCKER_SUPPORT_REJECTED') return 'Rincian Umpan Balik Bantuan (Kendala Masih Berlanjut)';
   if (type === 'BLOCKER_UPDATED_BY_REPORTER') return 'Rincian Pembaruan Laporan Kendala oleh Pelapor';
   if (type === 'BLOCKER_DELETED_BY_REPORTER') return 'Rincian Penghapusan Tiket Kendala oleh Pelapor';

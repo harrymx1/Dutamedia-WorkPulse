@@ -339,7 +339,7 @@ export function formatBlockerHistoryEntry(
       return {
         entryType,
         variant: 'support',
-        badgeLabel: 'Bantuan Diterima (Belum Selesai)',
+        badgeLabel: 'Bantuan Diterima (Membantu Sebagian)',
         primaryLabel: cfg.primaryLabel,
         primaryText: normalizedAction.slice(SUPPORT_ACCEPTED_PROGRESS_PREFIX.length).trim() || '-',
         secondaryLabel: cfg.secondaryLabel,
@@ -359,7 +359,7 @@ export function formatBlockerHistoryEntry(
       return {
         entryType,
         variant: 'reopen',
-        badgeLabel: 'Belum Mengatasi Kendala',
+        badgeLabel: 'Bantuan Belum Membantu',
         primaryLabel: cfg.primaryLabel,
         primaryText: normalizedAction.slice(SUPPORT_REJECTED_PREFIX.length).trim() || '-',
         secondaryLabel: cfg.secondaryLabel,

@@ -764,7 +764,7 @@ async function respondToSupport(
     if (decision === 'RESOLVE_AND_CLOSE') {
       toastMessage.value = 'Bantuan diterima sebagai penyelesaian. Tiket ditutup permanen.';
     } else if (decision === 'ACCEPT_AS_SUPPORT') {
-      toastMessage.value = 'Bantuan diterima sebagai progres. Tiket tetap dilanjutkan penanggung jawab.';
+      toastMessage.value = 'Bantuan diterima (membantu sebagian). Tiket tetap dilanjutkan penanggung jawab.';
     } else {
       toastMessage.value = 'Catatan bahwa kendala masih berlanjut telah disimpan dan diberitahukan ke penanggung jawab.';
     }
@@ -1648,7 +1648,7 @@ onBeforeUnmount(() => {
                         :data-testid="`support-accept-progress-${entry.id}`"
                         @click="respondToSupport(b.id, entry.id, 'ACCEPT_AS_SUPPORT')"
                       >
-                        Terima Bantuan (Belum Selesai)
+                        Terima Bantuan (Membantu Sebagian)
                       </button>
                       <button
                         type="button"
@@ -1657,7 +1657,7 @@ onBeforeUnmount(() => {
                         :data-testid="`support-reject-open-${entry.id}`"
                         @click="openSupportRejectForm(entry.id)"
                       >
-                        Belum Mengatasi Kendala
+                        Bantuan Belum Membantu
                       </button>
                     </div>
                     <div v-else class="inline-reopen-form">

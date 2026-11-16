@@ -535,7 +535,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
           notifications: [
             {
               id: 'notif-rej-legacy',
-              title: 'Bantuan Belum Mengatasi Kendala: Endpoint API Error 500',
+              title: 'Bantuan Belum Membantu: Endpoint API Error 500',
               message: [
                 'Aditya Nugroho menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "Cek null-check": "Masih gagal".',
                 'Judul Kendala: Endpoint API Error 500',

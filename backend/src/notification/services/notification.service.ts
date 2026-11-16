@@ -59,6 +59,8 @@ export class NotificationService {
             n.message?.includes('Tindak Lanjut Anda:') ||
             !n.message?.includes('Pelapor:') ||
             n.title?.startsWith('Bantuan Ditolak Pelapor:') ||
+            n.title?.startsWith('Bantuan Belum Mengatasi Kendala:') ||
+            n.title?.startsWith('Bantuan Diterima (Belum Selesai):') ||
             n.message?.includes('Bantuan Ditolak Pelapor') ||
             n.message?.includes('Aksi Bantuan yang Ditolak:') ||
             n.message?.includes('menolak kontribusi bantuan') ||

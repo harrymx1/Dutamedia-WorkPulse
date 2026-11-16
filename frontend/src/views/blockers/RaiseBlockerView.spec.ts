@@ -486,7 +486,7 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     expect(historyBox.text()).toContain('Riwayat Penanganan & Kontribusi (2)');
     expect(historyBox.text()).toContain('Gunawan Setiawan');
     expect(historyBox.text()).toContain('Menambahkan role staging-reader ke token sementara');
-    expect(historyBox.text()).toContain('Belum Mengatasi Kendala');
+    expect(historyBox.text()).toContain('Bantuan Belum Membantu');
     expect(historyBox.text()).toContain('Catatan / Kendala yang Masih Terjadi:');
     expect(historyBox.text()).toContain('Kendala ada pada IAM policy vault, bukan akses VPN.');
 
