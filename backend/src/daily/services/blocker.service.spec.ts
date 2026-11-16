@@ -946,13 +946,19 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         expect.objectContaining({
           data: expect.objectContaining({
             triggerType: 'BLOCKER_SUPPORT_REJECTED',
+            title: 'Bantuan Belum Mengatasi Kendala: Token 403',
             message: expect.stringContaining('Pelapor: Aditya Nugroho'),
           }),
         }),
       );
       const rejectNotifMessage = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(rejectNotifMessage).toContain('menginformasikan bahwa kendala masih berlanjut');
+      expect(rejectNotifMessage).toContain('Status Tiket: Sedang Ditangani');
+      expect(rejectNotifMessage).toContain('Bantuan yang Dicoba: Reset password VPN pribadi');
+      expect(rejectNotifMessage).toContain('Catatan / Kendala yang Masih Terjadi:');
       expect(rejectNotifMessage).toContain('role IAM policy vault');
       expect(rejectNotifMessage).not.toContain('Tindak Lanjut Anda:');
+      expect(rejectNotifMessage).not.toContain('Bantuan Ditolak Pelapor');
     });
 
     it('calculates escalation aging radar metrics and breach status correctly', async () => {

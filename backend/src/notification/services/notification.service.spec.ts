@@ -154,14 +154,24 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
     const res = await service.getUserNotifications('owner-ab');
 
     expect(res.notifications).toHaveLength(1);
+    const updatedTitle = res.notifications[0].title;
     const updatedMsg = res.notifications[0].message;
-    expect(updatedMsg).toContain('Aditya Nugroho menolak kontribusi bantuan');
+    expect(updatedTitle).toBe(
+      'Bantuan Belum Mengatasi Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
+    );
+    expect(updatedMsg).toContain(
+      'Aditya Nugroho menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "Cek null-check": "Masih error 500".',
+    );
     expect(updatedMsg).toContain('Pelapor: Aditya Nugroho');
+    expect(updatedMsg).toContain('Status Tiket: Sedang Ditangani');
+    expect(updatedMsg).not.toContain('Bantuan Ditolak Pelapor');
+    expect(updatedMsg).toContain('Bantuan yang Dicoba: Cek null-check');
+    expect(updatedMsg).toContain('Catatan / Kendala yang Masih Terjadi: Masih error 500');
     expect(updatedMsg).not.toContain('Tindak Lanjut Anda:');
     expect(mockPrisma.notification.update).toHaveBeenCalledWith({
       where: { id: 'notif-sup-rej-1' },
       data: {
-        title: res.notifications[0].title,
+        title: updatedTitle,
         message: updatedMsg,
       },
     });

@@ -359,7 +359,7 @@ export function formatBlockerHistoryEntry(
       return {
         entryType,
         variant: 'reopen',
-        badgeLabel: 'Bantuan Ditolak Pelapor',
+        badgeLabel: 'Belum Mengatasi Kendala',
         primaryLabel: cfg.primaryLabel,
         primaryText: normalizedAction.slice(SUPPORT_REJECTED_PREFIX.length).trim() || '-',
         secondaryLabel: cfg.secondaryLabel,

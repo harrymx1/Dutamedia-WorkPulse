@@ -526,7 +526,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('Buka Antrean Eskalasi Blocker');
   });
 
-  it('omits any legacy "Tindak Lanjut Anda:" row and displays Pelapor row cleanly in BLOCKER_SUPPORT_REJECTED modal', async () => {
+  it('omits any legacy "Tindak Lanjut Anda:" row and displays collaborative feedback with Pelapor row in BLOCKER_SUPPORT_REJECTED modal', async () => {
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => ({
       ok: true,
       json: async () => ({
@@ -535,14 +535,14 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
           notifications: [
             {
               id: 'notif-rej-legacy',
-              title: 'Bantuan Ditolak Pelapor: Endpoint API Error 500',
+              title: 'Bantuan Belum Mengatasi Kendala: Endpoint API Error 500',
               message: [
-                'Aditya Nugroho menolak kontribusi bantuan "Cek null-check" karena dinilai belum membantu: "Masih gagal".',
+                'Aditya Nugroho menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "Cek null-check": "Masih gagal".',
                 'Judul Kendala: Endpoint API Error 500',
                 'Pelapor: Aditya Nugroho',
-                'Status Tiket: Sedang Ditangani (Bantuan Ditolak Pelapor)',
-                'Aksi Bantuan yang Ditolak: Cek null-check',
-                'Alasan Penolakan Pelapor: Masih gagal',
+                'Status Tiket: Sedang Ditangani',
+                'Bantuan yang Dicoba: Cek null-check',
+                'Catatan / Kendala yang Masih Terjadi: Masih gagal',
                 'Tindak Lanjut Anda: Tinjau alasan penolakan pelapor dan lanjutkan penanganan.',
               ].join('\n'),
               type: 'BLOCKER_SUPPORT_REJECTED',
@@ -561,12 +561,15 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     });
     await new Promise((resolve) => setTimeout(resolve, 50));
 
+    expect(wrapper.find('.notif-item .context-chip').text()).toBe('Umpan Balik Bantuan');
     await wrapper.find('.notif-item').trigger('click');
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.text()).toContain('Rincian Penolakan Bantuan oleh Pelapor');
+    expect(wrapper.text()).toContain('Rincian Umpan Balik Bantuan (Kendala Masih Berlanjut)');
     expect(wrapper.text()).toContain('Pelapor:');
     expect(wrapper.text()).toContain('Aditya Nugroho');
+    expect(wrapper.text()).toContain('Bantuan yang Dicoba:');
+    expect(wrapper.text()).toContain('Catatan / Kendala yang Masih Terjadi:');
     expect(wrapper.text()).not.toContain('Tindak Lanjut Anda:');
   });
 });

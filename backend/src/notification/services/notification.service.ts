@@ -57,7 +57,12 @@ export class NotificationService {
           (n.triggerType?.startsWith('BLOCKER_') || n.relatedEntityType === 'blocker_tickets') &&
           (!n.message?.includes('\n') ||
             n.message?.includes('Tindak Lanjut Anda:') ||
-            !n.message?.includes('Pelapor:')),
+            !n.message?.includes('Pelapor:') ||
+            n.title?.startsWith('Bantuan Ditolak Pelapor:') ||
+            n.message?.includes('Bantuan Ditolak Pelapor') ||
+            n.message?.includes('Aksi Bantuan yang Ditolak:') ||
+            n.message?.includes('menolak kontribusi bantuan') ||
+            n.message?.includes('Sedang Ditangani (')),
       );
 
     const legacyBlockerNotifs = notifications.filter(needsBlockerUpgrade);

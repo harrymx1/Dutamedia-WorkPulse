@@ -744,7 +744,7 @@ async function respondToSupport(
 ) {
   const reason = (supportRejectReasonMap.value[supportId] || '').trim();
   if (decision === 'REJECT_SUPPORT' && reason.length < 10) {
-    errorMessage.value = 'Alasan penolakan bantuan wajib diisi minimal 10 karakter.';
+    errorMessage.value = 'Penjelasan kendala yang masih terjadi wajib diisi minimal 10 karakter.';
     return;
   }
 
@@ -766,7 +766,7 @@ async function respondToSupport(
     } else if (decision === 'ACCEPT_AS_SUPPORT') {
       toastMessage.value = 'Bantuan diterima sebagai progres. Tiket tetap dilanjutkan penanggung jawab.';
     } else {
-      toastMessage.value = 'Penolakan bantuan berhasil dicatat dan diteruskan ke penanggung jawab.';
+      toastMessage.value = 'Catatan bahwa kendala masih berlanjut telah disimpan dan diberitahukan ke penanggung jawab.';
     }
     await loadMyBlockers();
   } catch (err: any) {
@@ -1615,7 +1615,7 @@ onBeforeUnmount(() => {
                     <strong>{{ entry.secondaryLabel }}:</strong> {{ entry.secondaryText }}
                   </div>
                   <div v-if="entry.reporterFeedback" class="my-hist-feedback">
-                    <strong>Alasan Penolakan Pelapor:</strong> {{ entry.reporterFeedback }}
+                    <strong>Catatan / Kendala yang Masih Terjadi:</strong> {{ entry.reporterFeedback }}
                   </div>
 
                   <div
@@ -1656,14 +1656,14 @@ onBeforeUnmount(() => {
                         :data-testid="`support-reject-open-${entry.id}`"
                         @click="openSupportRejectForm(entry.id)"
                       >
-                        Tolak Bantuan (Tidak Membantu)
+                        Belum Mengatasi Kendala
                       </button>
                     </div>
                     <div v-else class="inline-reopen-form">
                       <textarea
                         v-model="supportRejectReasonMap[entry.id]"
                         rows="2"
-                        placeholder="Jelaskan mengapa bantuan ini belum membantu atau tidak sesuai (min. 10 karakter)..."
+                        placeholder="Jelaskan kendala yang masih terjadi setelah bantuan ini dicoba (min. 10 karakter)..."
                       ></textarea>
                       <div class="confirm-actions">
                         <button
@@ -1673,7 +1673,7 @@ onBeforeUnmount(() => {
                           :data-testid="`support-reject-submit-${entry.id}`"
                           @click="respondToSupport(b.id, entry.id, 'REJECT_SUPPORT')"
                         >
-                          {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Penolakan Bantuan' }}
+                          {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Catatan Kendala' }}
                         </button>
                         <button
                           type="button"

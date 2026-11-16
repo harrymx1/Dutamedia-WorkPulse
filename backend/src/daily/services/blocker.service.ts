@@ -248,16 +248,43 @@ export function enrichLegacyBlockerNotification(
 
   if (existingMessage.includes('\n')) {
     const originalLines = existingMessage.split('\n');
-    const filteredLines = originalLines.filter(
-      (line) => !line.trim().startsWith('Tindak Lanjut Anda:'),
-    );
+    const filteredLines = originalLines
+      .filter((line) => !line.trim().startsWith('Tindak Lanjut Anda:'))
+      .map((line) => {
+        const trimmed = line.trim();
+        if (/^Status Tiket:\s*Sedang Ditangani\s*\(.*\)$/i.test(trimmed)) {
+          return 'Status Tiket: Sedang Ditangani';
+        }
+        if (/^Aksi Bantuan yang Ditolak:\s*/i.test(trimmed)) {
+          return trimmed.replace(/^Aksi Bantuan yang Ditolak:\s*/i, 'Bantuan yang Dicoba: ');
+        }
+        if (/^Alasan Penolakan Pelapor:\s*/i.test(trimmed)) {
+          return trimmed.replace(
+            /^Alasan Penolakan Pelapor:\s*/i,
+            'Catatan / Kendala yang Masih Terjadi: ',
+          );
+        }
+        return line;
+      });
 
-    if (reporterFullName && filteredLines.length > 0) {
-      filteredLines[0] = filteredLines[0].replace(
-        /^Pelapor\s+(menolak|menerima|menyatakan|telah)\b/,
-        `${reporterFullName} $1`,
+    if (filteredLines.length > 0) {
+      const rejectIntroMatch = filteredLines[0].match(
+        /^(.+?)\s+menolak kontribusi bantuan\s+"([^"]+)"\s+karena dinilai belum membantu:\s*"([^"]+)"\.?$/,
       );
-      if (!filteredLines.some((line) => line.trim().startsWith('Pelapor:'))) {
+      if (rejectIntroMatch) {
+        const actor = reporterFullName || rejectIntroMatch[1];
+        filteredLines[0] = `${actor} menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "${rejectIntroMatch[2]}": "${rejectIntroMatch[3]}".`;
+      } else if (reporterFullName) {
+        filteredLines[0] = filteredLines[0].replace(
+          /^Pelapor\s+(menolak|menerima|menyatakan|telah)\b/,
+          `${reporterFullName} $1`,
+        );
+      }
+
+      if (
+        reporterFullName &&
+        !filteredLines.some((line) => line.trim().startsWith('Pelapor:'))
+      ) {
         const judulIdx = filteredLines.findIndex((line) =>
           line.trim().startsWith('Judul Kendala:'),
         );
@@ -269,16 +296,23 @@ export function enrichLegacyBlockerNotification(
       }
     }
 
+    const parsedFallback = parseBlockerDescription(ticket.description);
+    const currentTitle = (notif.title || '').trim();
+    const nextTitle = currentTitle.startsWith('Bantuan Ditolak Pelapor:')
+      ? currentTitle.replace(
+          /^Bantuan Ditolak Pelapor:/,
+          'Bantuan Belum Mengatasi Kendala:',
+        )
+      : currentTitle ||
+        formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title);
+
     const nextMessage = filteredLines.join('\n').trim();
-    if (nextMessage === existingMessage) {
+    if (nextMessage === existingMessage && nextTitle === currentTitle) {
       return null;
     }
 
-    const parsedFallback = parseBlockerDescription(ticket.description);
     return {
-      title:
-        (notif.title || '').trim() ||
-        formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title),
+      title: nextTitle,
       message: nextMessage,
     };
   }
@@ -1461,7 +1495,7 @@ export class BlockerService {
           `${reporterName} menyatakan solusi/mitigasi belum memadai: "${inlineReason}". Status tiket kembali ke Sedang Ditangani.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
-          'Status Tiket: Sedang Ditangani (Dikembalikan oleh Pelapor)',
+          'Status Tiket: Sedang Ditangani',
           `Alasan Pengembalian: ${inlineReason}`,
         ].join('\n'),
         actionUrl: '/blockers',
@@ -2103,7 +2137,7 @@ export class BlockerService {
           `${supporterName} memberikan kontribusi bantuan pada tiket kendala Anda: "${inlineAction}". Silakan tinjau apakah bantuan ini sudah menyelesaikan kendala, membantu sebagian progres, atau belum membantu.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pemberi Bantuan: ${supporterName}`,
-          'Status Tiket: Sedang Ditangani (Menunggu Respons Bantuan Pelapor)',
+          'Status Tiket: Sedang Ditangani',
           `Aksi Bantuan: ${inlineAction}`,
           `Hasil / Progres: ${inlineResult}`,
         ].join('\n'),
@@ -2265,7 +2299,7 @@ export class BlockerService {
           `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
-          'Status Tiket: Sedang Ditangani (Belum Selesai)',
+          'Status Tiket: Sedang Ditangani',
           `Aksi Bantuan yang Diterima: ${inlineAction}`,
         ].join('\n'),
         actionUrl: '/blockers',
@@ -2298,14 +2332,14 @@ export class BlockerService {
     const inlineReason = flattenInlineNotificationText(trimmedReason);
     await this.notifyBlockerRecipients(recipients, actorUserId, {
       triggerType: 'BLOCKER_SUPPORT_REJECTED',
-      title: formatBlockerNotificationTitle('Bantuan Ditolak Pelapor', cleanTitle),
+      title: formatBlockerNotificationTitle('Bantuan Belum Mengatasi Kendala', cleanTitle),
       message: [
-        `${reporterName} menolak kontribusi bantuan "${inlineAction}" karena dinilai belum membantu: "${inlineReason}".`,
+        `${reporterName} menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "${inlineAction}": "${inlineReason}".`,
         `Judul Kendala: ${cleanTitle}`,
         `Pelapor: ${reporterName}`,
-        'Status Tiket: Sedang Ditangani (Bantuan Ditolak Pelapor)',
-        `Aksi Bantuan yang Ditolak: ${inlineAction}`,
-        `Alasan Penolakan Pelapor: ${inlineReason}`,
+        'Status Tiket: Sedang Ditangani',
+        `Bantuan yang Dicoba: ${inlineAction}`,
+        `Catatan / Kendala yang Masih Terjadi: ${inlineReason}`,
       ].join('\n'),
       actionUrl: '/blockers',
       relatedEntityId: ticket.id,
