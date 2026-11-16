@@ -178,6 +178,34 @@ const isSelectedTicketReporter = computed(() =>
   ),
 );
 
+const isSelectedTicketAssignedOwner = computed(() =>
+  Boolean(
+    selectedTicket.value &&
+      !isSelectedTicketReporter.value &&
+      (!authStore.user?.id ||
+        !selectedTicket.value.assignedOwner?.id ||
+        selectedTicket.value.assignedOwner.id === authStore.user.id),
+  ),
+);
+
+const isSelectedTicketPeerViewer = computed(() =>
+  Boolean(
+    selectedTicket.value &&
+      authStore.user?.id &&
+      !isSelectedTicketReporter.value &&
+      selectedTicket.value.assignedOwner?.id &&
+      selectedTicket.value.assignedOwner.id !== authStore.user.id,
+  ),
+);
+
+const canProvideSupportOnSelectedTicket = computed(() => {
+  if (!selectedTicket.value || isSelectedTicketReporter.value) return false;
+  if (isSelectedTicketPeerViewer.value) {
+    return isActiveTicket(selectedTicket.value.status);
+  }
+  return isHandlingTicket(selectedTicket.value.status);
+});
+
 function parseTicketContent(rawDescription?: string): {
   title: string;
   body: string;
@@ -802,7 +830,7 @@ onMounted(() => {
               <!-- Action Buttons -->
               <div class="detail-actions">
                 <button
-                  v-if="selectedTicket.status === 'OPEN'"
+                  v-if="selectedTicket.status === 'OPEN' && isSelectedTicketAssignedOwner"
                   type="button"
                   class="btn-action ack"
                   :disabled="acknowledging"
@@ -813,7 +841,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="isHandlingTicket(selectedTicket.status)"
+                  v-if="canProvideSupportOnSelectedTicket"
                   type="button"
                   class="btn-action support"
                   @click="openSupportModal"
@@ -823,7 +851,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="isHandlingTicket(selectedTicket.status)"
+                  v-if="isHandlingTicket(selectedTicket.status) && isSelectedTicketAssignedOwner"
                   type="button"
                   class="btn-action accept-risk"
                   @click="openAcceptRiskModal"
@@ -833,7 +861,7 @@ onMounted(() => {
                 </button>
 
                 <button
-                  v-if="isHandlingTicket(selectedTicket.status)"
+                  v-if="isHandlingTicket(selectedTicket.status) && isSelectedTicketAssignedOwner"
                   type="button"
                   class="btn-action resolve"
                   @click="openResolveModal"

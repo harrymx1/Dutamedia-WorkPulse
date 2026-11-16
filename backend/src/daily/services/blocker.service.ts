@@ -1100,7 +1100,8 @@ export class BlockerService {
     return { owner: null, reason: 'NONE' };
   }
   /**
-   * Memberikan konfirmasi resmi (Acknowledgement) terhadap tiket kendala.
+   * Memberikan konfirmasi resmi (Acknowledgement) terhadap tiket kendala
+   * serta mengirim notifikasi pembaruan ke Pelapor.
    */
   async acknowledgeBlocker(actorUserId: string, blockerId: string) {
     const ticket = await this.prisma.blockerTicket.findUnique({
@@ -1115,15 +1116,55 @@ export class BlockerService {
       });
     }
 
+    if (ticket.status === BlockerStatus.CLOSED) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala sudah ditutup dan tidak dapat diubah lagi.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
+    if (ticket.status !== BlockerStatus.OPEN) {
+      throw new AppException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Tiket kendala ini sudah diterima dan sedang dalam penanganan.',
+        statusCode: HttpStatus.CONFLICT,
+      });
+    }
+
     await this.verifyBlockerActionAuthority(actorUserId, ticket);
 
-    return this.prisma.blockerTicket.update({
+    const updated = await this.prisma.blockerTicket.update({
       where: { id: blockerId },
       data: {
         status: BlockerStatus.ACKNOWLEDGED,
         acknowledgedAt: this.clockService.now(),
       },
     });
+
+    if (ticket.raisedByUserId && ticket.raisedByUserId !== actorUserId) {
+      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+      const ownerName = await this.resolveActorFullName(
+        (ticket as any).assignedOwner,
+        actorUserId || ticket.assignedOwnerId,
+        'Penanggung Jawab',
+      );
+      await this.createBlockerNotification({
+        recipientUserId: ticket.raisedByUserId,
+        triggerType: 'BLOCKER_ACKNOWLEDGED',
+        title: formatBlockerNotificationTitle('Tiket Kendala Sedang Ditangani', cleanTitle),
+        message: [
+          `${ownerName} telah menerima laporan kendala Anda dan sedang menanganinya.`,
+          `Judul Kendala: ${cleanTitle}`,
+          `Penanggung Jawab (PIC): ${ownerName}`,
+          'Status Tiket: Sedang Ditangani',
+        ].join('\n'),
+        actionUrl: '/raise-blockers?tab=mine',
+        relatedEntityId: ticket.id,
+      });
+    }
+
+    return updated;
   }
 
   /**
@@ -1564,14 +1605,32 @@ export class BlockerService {
   }
 
   /**
-   * Memastikan hanya pemilik eskalasi (assignedOwnerId),
-   * pejabat manajerial (SUPERVISOR/HEAD/PROJECT_MANAGER/HRGA/CEO/ADMIN), Project Lead aktif,
-   * atau Temporary Reviewer aktif yang dapat melakukan Acknowledge / Resolve / Accept Risk.
-   * Pelapor asli tidak boleh menutup sendiri fase penanganan PIC.
+   * Memastikan Pelapor tidak dapat mengeksekusi fase PIC atas tiketnya sendiri,
+   * serta apabila Penanggung Jawab (PIC / assignedOwnerId) telah ditetapkan pada tiket,
+   * hanya PIC tersebut yang dapat melakukan Acknowledge / Resolve / Accept Risk.
+   * Rekan lain tetap dapat membantu melalui fitur Beri Bantuan (Peer Support).
    */
   private async verifyBlockerActionAuthority(actorUserId: string, ticket: any): Promise<void> {
-    if (ticket.assignedOwnerId === actorUserId) {
-      return;
+    if (ticket.raisedByUserId && ticket.raisedByUserId === actorUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Pelapor tidak dapat menindaklanjuti atau menyelesaikan sendiri tiket kendala yang dilaporkannya.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (ticket.assignedOwnerId) {
+      if (ticket.assignedOwnerId === actorUserId) {
+        return;
+      }
+
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Hanya Penanggung Jawab (PIC) yang ditunjuk pada tiket kendala ini yang dapat melakukan tindakan tersebut. Anda tetap dapat memberikan kontribusi melalui fitur Beri Bantuan.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
     }
 
     if (!this.prisma.organizationalAssignment?.findFirst) {
@@ -2051,7 +2110,9 @@ export class BlockerService {
 
   /**
    * Menambahkan kontribusi bantuan (Support Contribution) lintas fungsi (Prototipe 09 & DEC-015).
-   * Hanya diizinkan setelah tiket berstatus ACKNOWLEDGED / IN_PROGRESS, serta langsung memberi tahu Pelapor.
+   * - Pelapor asli dilarang memberi bantuan pada tiketnya sendiri.
+   * - PIC yang ditunjuk wajib mengklik Terima & Tangani (status ACKNOWLEDGED/IN_PROGRESS) terlebih dahulu.
+   * - Rekan/pihak lain selain PIC dan Pelapor boleh memberi bantuan bahkan saat status masih OPEN (Menunggu Respons).
    */
   async addSupportContribution(
     supporterUserId: string,
@@ -2071,11 +2132,23 @@ export class BlockerService {
       });
     }
 
-    if (ticket.status === BlockerStatus.OPEN) {
+    if (ticket.raisedByUserId && ticket.raisedByUserId === supporterUserId) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: 'Pelapor tidak dapat menambahkan kontribusi bantuan pada tiket kendalanya sendiri.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (
+      ticket.status === BlockerStatus.OPEN &&
+      ticket.assignedOwnerId &&
+      ticket.assignedOwnerId === supporterUserId
+    ) {
       throw new AppException({
         code: ErrorCode.RESOURCE_CONFLICT,
         message:
-          'Tiket kendala harus diterima terlebih dahulu (Terima & Tangani) sebelum dapat diberikan kontribusi bantuan.',
+          'Penanggung Jawab (PIC) harus menerima tiket terlebih dahulu (Terima & Tangani) sebelum mencatat kontribusi bantuan.',
         statusCode: HttpStatus.CONFLICT,
       });
     }
@@ -2128,6 +2201,7 @@ export class BlockerService {
       const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
       const inlineAction = flattenInlineNotificationText(trimmedAction);
       const inlineResult = flattenInlineNotificationText(trimmedResult);
+      const currentStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
 
       await this.createBlockerNotification({
         recipientUserId: ticket.raisedByUserId,
@@ -2137,7 +2211,7 @@ export class BlockerService {
           `${supporterName} memberikan kontribusi bantuan pada tiket kendala Anda: "${inlineAction}". Silakan tinjau apakah bantuan ini sudah menyelesaikan kendala, membantu sebagian progres, atau belum membantu.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pemberi Bantuan: ${supporterName}`,
-          'Status Tiket: Sedang Ditangani',
+          `Status Tiket: ${currentStatusLabel}`,
           `Aksi Bantuan: ${inlineAction}`,
           `Hasil / Progres: ${inlineResult}`,
         ].join('\n'),
@@ -2291,6 +2365,7 @@ export class BlockerService {
           actionTaken: `${SUPPORT_ACCEPTED_PROGRESS_PREFIX} ${rawAction}`,
         },
       });
+      const preservedStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
 
       await this.notifyBlockerRecipients(recipients, actorUserId, {
         triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
@@ -2299,7 +2374,7 @@ export class BlockerService {
           `${reporterName} menerima kontribusi bantuan "${inlineAction}" sebagai progres bantuan, namun kendala utama belum selesai.`,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
-          'Status Tiket: Sedang Ditangani',
+          `Status Tiket: ${preservedStatusLabel}`,
           `Aksi Bantuan yang Diterima: ${inlineAction}`,
         ].join('\n'),
         actionUrl: '/blockers',
@@ -2307,7 +2382,7 @@ export class BlockerService {
       });
 
       return {
-        status: BlockerStatus.ACKNOWLEDGED,
+        status: ticket.status,
         contribution: updatedContribution,
       };
     }
@@ -2330,6 +2405,7 @@ export class BlockerService {
     });
 
     const inlineReason = flattenInlineNotificationText(trimmedReason);
+    const preservedStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
     await this.notifyBlockerRecipients(recipients, actorUserId, {
       triggerType: 'BLOCKER_SUPPORT_REJECTED',
       title: formatBlockerNotificationTitle('Bantuan Belum Mengatasi Kendala', cleanTitle),
@@ -2337,7 +2413,7 @@ export class BlockerService {
         `${reporterName} menginformasikan bahwa kendala masih berlanjut setelah mencoba bantuan "${inlineAction}": "${inlineReason}".`,
         `Judul Kendala: ${cleanTitle}`,
         `Pelapor: ${reporterName}`,
-        'Status Tiket: Sedang Ditangani',
+        `Status Tiket: ${preservedStatusLabel}`,
         `Bantuan yang Dicoba: ${inlineAction}`,
         `Catatan / Kendala yang Masih Terjadi: ${inlineReason}`,
       ].join('\n'),
@@ -2346,7 +2422,7 @@ export class BlockerService {
     });
 
     return {
-      status: BlockerStatus.ACKNOWLEDGED,
+      status: ticket.status,
       contribution: updatedContribution,
     };
   }

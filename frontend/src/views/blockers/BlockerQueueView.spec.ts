@@ -532,4 +532,117 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('enforces persona action permissions across Assigned PIC, Peer Viewer (including on OPEN), and Reporter (DEC-015)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-open-auth',
+              description: '[Timeout Staging] Endpoint lambat merespons',
+              type: 'INFRA',
+              severity: 'HIGH',
+              impact: 'MILESTONE',
+              status: 'OPEN',
+              raisedAt: '2026-11-16T02:00:00.000Z',
+              targetResolutionAt: '2026-11-16T06:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u1', fullName: 'Alice Dev', email: 'alice@dutamedia.com' },
+              assignedOwner: { id: 'u2', fullName: 'Bob Lead', email: 'bob@dutamedia.com' },
+              supportContributions: [],
+            },
+            {
+              id: 'blk-ack-auth',
+              description: '[Vault 403] Token gagal otorisasi',
+              type: 'APPROVAL',
+              severity: 'CRITICAL',
+              impact: 'PRODUCTION',
+              status: 'ACKNOWLEDGED',
+              raisedAt: '2026-11-16T01:00:00.000Z',
+              targetResolutionAt: '2026-11-16T03:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u1', fullName: 'Alice Dev', email: 'alice@dutamedia.com' },
+              assignedOwner: { id: 'u2', fullName: 'Bob Lead', email: 'bob@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const authStore = useAuthStore();
+
+    // 1. Persona PIC yang ditunjuk (u2):
+    // OPEN -> hanya Terima & Tangani; ACKNOWLEDGED -> Beri Bantuan, Terima Risiko, Selesaikan
+    authStore.user = {
+      id: 'u2',
+      email: 'bob@dutamedia.com',
+      fullName: 'Bob Lead',
+      role: 'SUPERVISOR',
+      status: 'ACTIVE',
+    };
+    const picWrapper = mount(BlockerQueueView, { global: { plugins: [router] } });
+    await flushPromises();
+
+    expect(picWrapper.find('.detail-actions').text()).toContain('Terima & Tangani');
+    expect(picWrapper.find('.detail-actions').text()).not.toContain('Beri Bantuan');
+    expect(picWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
+    expect(picWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+
+    await picWrapper.find('[data-testid="ticket-card-blk-ack-auth"]').trigger('click');
+    await flushPromises();
+    expect(picWrapper.find('.detail-actions').text()).toContain('Beri Bantuan');
+    expect(picWrapper.find('.detail-actions').text()).toContain('Terima Risiko');
+    expect(picWrapper.find('.detail-actions').text()).toContain('Selesaikan');
+
+    // 2. Persona Rekan / Pemantau Lain (u3, bukan PIC & bukan Pelapor):
+    // Tidak boleh melihat Terima & Tangani, Terima Risiko, Selesaikan; BOLEH melihat Beri Bantuan baik di OPEN maupun ACKNOWLEDGED
+    authStore.user = {
+      id: 'u3',
+      email: 'charlie@dutamedia.com',
+      fullName: 'Charlie Head',
+      role: 'HEAD',
+      status: 'ACTIVE',
+    };
+    const peerWrapper = mount(BlockerQueueView, { global: { plugins: [router] } });
+    await flushPromises();
+
+    expect(peerWrapper.find('.detail-actions').text()).not.toContain('Terima & Tangani');
+    expect(peerWrapper.find('.detail-actions').text()).toContain('Beri Bantuan');
+    expect(peerWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
+    expect(peerWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+
+    await peerWrapper.find('[data-testid="ticket-card-blk-ack-auth"]').trigger('click');
+    await flushPromises();
+    expect(peerWrapper.find('.detail-actions').text()).not.toContain('Terima & Tangani');
+    expect(peerWrapper.find('.detail-actions').text()).toContain('Beri Bantuan');
+    expect(peerWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
+    expect(peerWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+
+    // 3. Persona Pelapor (u1, jika memiliki akses ke /blockers):
+    // Hanya melihat Edit Tiket & Hapus Tiket saat aktif, tidak pernah melihat Terima & Tangani, Beri Bantuan, Terima Risiko, atau Selesaikan
+    authStore.user = {
+      id: 'u1',
+      email: 'alice@dutamedia.com',
+      fullName: 'Alice Dev',
+      role: 'PROJECT_MANAGER',
+      status: 'ACTIVE',
+    };
+    const reporterWrapper = mount(BlockerQueueView, { global: { plugins: [router] } });
+    await flushPromises();
+
+    expect(reporterWrapper.find('.detail-actions').text()).not.toContain('Terima & Tangani');
+    expect(reporterWrapper.find('.detail-actions').text()).not.toContain('Beri Bantuan');
+    expect(reporterWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
+    expect(reporterWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+    expect(reporterWrapper.find('[data-testid="queue-edit-ticket"]').exists()).toBe(true);
+    expect(reporterWrapper.find('[data-testid="queue-delete-ticket"]').exists()).toBe(true);
+
+    vi.unstubAllGlobals();
+  });
 });

@@ -449,12 +449,44 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
   });
 
   describe('acknowledge and resolve', () => {
-    it('acknowledges blocker ticket', async () => {
-      mockPrisma.blockerTicket.findUnique.mockResolvedValue({ id: 'blk-1', status: BlockerStatus.OPEN });
-      mockPrisma.blockerTicket.update.mockResolvedValue({ id: 'blk-1', status: BlockerStatus.ACKNOWLEDGED });
+    it('acknowledges blocker ticket as assigned PIC, notifies reporter, and rejects non-PIC or reporter callers', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-1',
+        status: BlockerStatus.OPEN,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Pool Timeout] Koneksi staging lambat',
+        assignedOwner: { id: 'owner-1', fullName: 'Budi Lead' },
+      });
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-1',
+        status: BlockerStatus.ACKNOWLEDGED,
+      });
+
+      // Non-PIC peer tidak berhak Terima & Tangani
+      await expect(service.acknowledgeBlocker('other-lead', 'blk-1')).rejects.toThrowError(
+        AppException,
+      );
+
+      // Pelapor tidak berhak Terima & Tangani tiketnya sendiri
+      await expect(service.acknowledgeBlocker('emp-1', 'blk-1')).rejects.toThrowError(
+        AppException,
+      );
 
       const res = await service.acknowledgeBlocker('owner-1', 'blk-1');
       expect(res.status).toBe(BlockerStatus.ACKNOWLEDGED);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'emp-1',
+            triggerType: 'BLOCKER_ACKNOWLEDGED',
+            title: 'Tiket Kendala Sedang Ditangani: Pool Timeout',
+            actionUrl: '/raise-blockers?tab=mine',
+            relatedEntityId: 'blk-1',
+            message: expect.stringContaining('Penanggung Jawab (PIC): Budi Lead'),
+          }),
+        }),
+      );
     });
 
     it('resolves blocker ticket with mandatory resolution note', async () => {
@@ -654,23 +686,64 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
   });
 
   describe('supportContribution and escalationAging (Prototipe 09 & 14)', () => {
-    it('rejects addSupportContribution, resolveBlocker, and acceptRiskBlocker while ticket is still OPEN (DEC-015)', async () => {
+    it('enforces OPEN lifecycle rules: blocks PIC/reporter support and PIC resolve/acceptRisk while OPEN, but allows non-PIC peer support while OPEN (DEC-015)', async () => {
       mockPrisma.blockerTicket.findUnique.mockResolvedValue({
         id: 'blk-open',
         status: BlockerStatus.OPEN,
         raisedByUserId: 'emp-1',
         assignedOwnerId: 'owner-1',
+        description: '[Staging 502] Gateway gagal merespons',
       });
+      mockPrisma.supportContribution = {
+        create: vi.fn().mockResolvedValue({
+          id: 'sup-open-peer-1',
+          blockerId: 'blk-open',
+          supporterUserId: 'usr-2',
+          supporter: { id: 'usr-2', fullName: 'Charlie Ops', email: 'charlie@dutamedia.com' },
+          actionTaken: 'Mengecek pool koneksi upstream',
+          resultNote: 'Pool koneksi restart sementara untuk memulihkan staging',
+        }),
+      };
 
+      // PIC tetap harus klik Terima & Tangani sebelum mencatat bantuan / resolve / accept-risk
       await expect(
         service.addSupportContribution(
-          'usr-2',
+          'owner-1',
           'blk-open',
           'Mengecek pool koneksi',
           'Belum ada perubahan',
         ),
       ).rejects.toThrowError(AppException);
 
+      // Pelapor tidak boleh memberi bantuan pada tiketnya sendiri
+      await expect(
+        service.addSupportContribution(
+          'emp-1',
+          'blk-open',
+          'Coba bantu sendiri',
+          'Catatan',
+        ),
+      ).rejects.toThrowError(AppException);
+
+      // Rekan lain (bukan PIC & bukan Pelapor) BOLEH memberi bantuan meskipun status masih OPEN
+      const peerSupport = await service.addSupportContribution(
+        'usr-2',
+        'blk-open',
+        'Mengecek pool koneksi upstream',
+        'Pool koneksi restart sementara untuk memulihkan staging',
+      );
+      expect(peerSupport.id).toBe('sup-open-peer-1');
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'emp-1',
+            triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
+            message: expect.stringContaining('Status Tiket: Menunggu Respons'),
+          }),
+        }),
+      );
+
+      // Resolve & AcceptRisk wajib ditolak saat OPEN maupun ketika dipanggil oleh bukan PIC
       await expect(
         service.resolveBlocker('owner-1', 'blk-open', {
           resolutionNote: 'Mencoba langsung resolve tanpa Terima & Tangani',
@@ -681,6 +754,24 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         service.acceptRiskBlocker('owner-1', 'blk-open', {
           riskAcceptanceJustification: 'Justifikasi risiko tanpa Terima & Tangani',
           riskMitigationPlan: 'Mitigasi sementara tanpa Terima & Tangani',
+        }),
+      ).rejects.toThrowError(AppException);
+
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-ack-auth',
+        status: BlockerStatus.ACKNOWLEDGED,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+      });
+      await expect(
+        service.resolveBlocker('usr-2', 'blk-ack-auth', {
+          resolutionNote: 'Non-PIC mencoba menyelesaikan tiket orang lain',
+        }),
+      ).rejects.toThrowError(AppException);
+      await expect(
+        service.acceptRiskBlocker('usr-2', 'blk-ack-auth', {
+          riskAcceptanceJustification: 'Non-PIC mencoba accept risk',
+          riskMitigationPlan: 'Rencana mitigasi non-PIC',
         }),
       ).rejects.toThrowError(AppException);
     });

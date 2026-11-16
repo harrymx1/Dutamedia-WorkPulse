@@ -182,6 +182,8 @@ function formatNotificationTypeLabel(type?: string): string {
   switch (type) {
     case 'BLOCKER_RAISED':
       return 'Alokasi Kendala';
+    case 'BLOCKER_ACKNOWLEDGED':
+      return 'Penerimaan Kendala';
     case 'BLOCKER_CRITICAL_ESCALATION':
     case 'BLOCKER_CRITICAL_ALERT':
     case 'BLOCKER_ESCALATED_L2':
@@ -418,6 +420,7 @@ function getDelegationHeading(notifOrType?: NotificationItem | string | null): s
   const type = typeof notifOrType === 'string' ? notifOrType : (notifOrType?.type || '');
   const title = typeof notifOrType === 'object' && notifOrType ? (notifOrType.title || '') : '';
   if (type === 'BLOCKER_RAISED') return 'Rincian Alokasi Tiket Kendala (Blocker)';
+  if (type === 'BLOCKER_ACKNOWLEDGED') return 'Rincian Penerimaan & Penanganan Tiket Kendala';
   if (type === 'BLOCKER_CRITICAL_ESCALATION' || (type.includes('BLOCKER') && type.includes('ESCALAT'))) {
     return 'Rincian Eskalasi Darurat Kendala (Critical)';
   }
