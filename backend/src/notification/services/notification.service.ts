@@ -58,6 +58,7 @@ export class NotificationService {
           (!n.message?.includes('\n') ||
             n.message?.split('\n')[0]?.includes('"') ||
             n.message?.includes('Tindak Lanjut Anda:') ||
+            n.message?.includes('Kategori & Keparahan:') ||
             !n.message?.includes('Pelapor:') ||
             n.title?.startsWith('Bantuan Ditolak Pelapor:') ||
             n.title?.startsWith('Bantuan Belum Mengatasi Kendala:') ||

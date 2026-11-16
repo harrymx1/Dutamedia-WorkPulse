@@ -474,7 +474,9 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
                 'Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE) yang dialokasikan kepada Anda dengan target respons 4 jam.',
                 'Judul Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
                 'Pelapor: Aditya Nugroho',
-                'Kategori & Keparahan: TECHNICAL — Tingkat HIGH (Dampak: MILESTONE)',
+                'Kategori Kendala: TECHNICAL',
+                'Tingkat Keparahan: HIGH',
+                'Dampak Kendala: MILESTONE',
                 'Target Respons: 4 jam',
                 `Deskripsi Kendala: ${fullBody}`,
                 `Ekspektasi Bantuan: ${expectedHelp}`,
@@ -516,6 +518,12 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('Rincian Alokasi Tiket Kendala (Blocker)');
     expect(wrapper.text()).toContain('Pelapor:');
     expect(wrapper.text()).toContain('Aditya Nugroho');
+    expect(wrapper.text()).toContain('Kategori Kendala:');
+    expect(wrapper.text()).toContain('TECHNICAL');
+    expect(wrapper.text()).toContain('Tingkat Keparahan:');
+    expect(wrapper.text()).toContain('HIGH');
+    expect(wrapper.text()).toContain('Dampak Kendala:');
+    expect(wrapper.text()).toContain('MILESTONE');
     expect(wrapper.text()).toContain('Deskripsi Kendala:');
     expect(wrapper.text()).toContain(fullBody);
     expect(wrapper.text()).toContain('Ekspektasi Bantuan:');

@@ -494,11 +494,27 @@ function parseDelegationContent(message: string): DelegationParsedContent {
         if (label.toLowerCase() === 'tindak lanjut anda') {
           continue;
         }
+        if (label.toLowerCase() === 'kategori & keparahan') {
+          const katMatch = value.match(
+            /^(.+?)\s*—\s*Tingkat\s*(.+?)\s*\(Dampak:\s*(.+?)\)\s*$/i,
+          );
+          if (katMatch) {
+            items.push(
+              { label: 'Kategori Kendala', value: katMatch[1].trim(), isHighlight: true },
+              { label: 'Tingkat Keparahan', value: katMatch[2].trim(), isHighlight: true },
+              { label: 'Dampak Kendala', value: katMatch[3].trim(), isHighlight: true },
+            );
+            continue;
+          }
+        }
 
         const isHighlight =
           label.toLowerCase() === 'pelapor' ||
           [
             'Judul Kendala',
+            'Kategori Kendala',
+            'Tingkat Keparahan',
+            'Dampak Kendala',
             'Kategori & Keparahan',
             'Target Respons',
             'Target Penyelesaian',

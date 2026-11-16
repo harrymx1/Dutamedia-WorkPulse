@@ -145,7 +145,9 @@ export function buildBlockerRaisedNotificationContent(params: {
     `${reporterName} melaporkan kendala ${params.type} (Tingkat ${params.severity}, Dampak ${params.impact}) yang dialokasikan kepada Anda dengan target respons ${params.slaLabel}.`,
     `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
     `Pelapor: ${reporterName}`,
-    `Kategori & Keparahan: ${params.type} — Tingkat ${params.severity} (Dampak: ${params.impact})`,
+    `Kategori Kendala: ${params.type}`,
+    `Tingkat Keparahan: ${params.severity}`,
+    `Dampak Kendala: ${params.impact}`,
     `Target Respons: ${params.slaLabel}`,
     `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
   ];
@@ -175,7 +177,9 @@ export function buildBlockerCriticalEscalationNotificationContent(params: {
     `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
     `Pelapor: ${reporterName}`,
     `Penanggung Jawab Awal (PIC): ${ownerName}`,
-    `Kategori & Keparahan: ${params.type} — Tingkat ${params.severity} (Dampak: ${params.impact})`,
+    `Kategori Kendala: ${params.type}`,
+    `Tingkat Keparahan: ${params.severity}`,
+    `Dampak Kendala: ${params.impact}`,
     `Target Penyelesaian: ${params.slaLabel}`,
     `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
   ];
@@ -253,21 +257,33 @@ export function enrichLegacyBlockerNotification(
     const originalLines = existingMessage.split('\n');
     const filteredLines = originalLines
       .filter((line) => !line.trim().startsWith('Tindak Lanjut Anda:'))
-      .map((line) => {
+      .flatMap((line) => {
         const trimmed = line.trim();
         if (/^Status Tiket:\s*Sedang Ditangani\s*\(.*\)$/i.test(trimmed)) {
-          return 'Status Tiket: Sedang Ditangani';
+          return ['Status Tiket: Sedang Ditangani'];
         }
         if (/^Aksi Bantuan yang Ditolak:\s*/i.test(trimmed)) {
-          return trimmed.replace(/^Aksi Bantuan yang Ditolak:\s*/i, 'Bantuan yang Dicoba: ');
+          return [trimmed.replace(/^Aksi Bantuan yang Ditolak:\s*/i, 'Bantuan yang Dicoba: ')];
         }
         if (/^Alasan Penolakan Pelapor:\s*/i.test(trimmed)) {
-          return trimmed.replace(
-            /^Alasan Penolakan Pelapor:\s*/i,
-            'Catatan / Kendala yang Masih Terjadi: ',
-          );
+          return [
+            trimmed.replace(
+              /^Alasan Penolakan Pelapor:\s*/i,
+              'Catatan / Kendala yang Masih Terjadi: ',
+            ),
+          ];
         }
-        return line;
+        const katMatch = trimmed.match(
+          /^Kategori\s*&\s*Keparahan:\s*(.+?)\s*—\s*Tingkat\s*(.+?)\s*\(Dampak:\s*(.+?)\)\s*$/i,
+        );
+        if (katMatch) {
+          return [
+            `Kategori Kendala: ${katMatch[1].trim()}`,
+            `Tingkat Keparahan: ${katMatch[2].trim()}`,
+            `Dampak Kendala: ${katMatch[3].trim()}`,
+          ];
+        }
+        return [line];
       });
 
     if (filteredLines.length > 0) {
@@ -2749,7 +2765,9 @@ export class BlockerService {
       `Pelapor: ${reporterName}`,
       `Penanggung Jawab (PIC): ${ownerName}`,
       `Status Tiket: ${statusLabel}`,
-      `Kategori & Keparahan: ${dto.type} — Tingkat ${dto.severity} (Dampak: ${dto.impact})`,
+      `Kategori Kendala: ${dto.type}`,
+      `Tingkat Keparahan: ${dto.severity}`,
+      `Dampak Kendala: ${dto.impact}`,
       `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
     ];
     if (parsed.expectedHelp) {
@@ -2864,7 +2882,9 @@ export class BlockerService {
       `Judul Kendala: ${inlineTitle}`,
       `Pelapor: ${reporterName}`,
       `Penanggung Jawab (PIC): ${ownerName}`,
-      `Kategori & Keparahan: ${ticket!.type} — Tingkat ${ticket!.severity} (Dampak: ${ticket!.impact})`,
+      `Kategori Kendala: ${ticket!.type}`,
+      `Tingkat Keparahan: ${ticket!.severity}`,
+      `Dampak Kendala: ${ticket!.impact}`,
       `Status Terakhir: ${statusLabel}`,
       `Kategori Alasan Hapus: ${categoryLabel}`,
     ];
