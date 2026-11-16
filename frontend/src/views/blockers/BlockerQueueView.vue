@@ -1163,14 +1163,23 @@ onMounted(() => {
     <div v-if="isSupportModalOpen" class="modal-backdrop" @click.self="isSupportModalOpen = false">
       <div class="modal-card">
         <div class="modal-head">
-          <h3>Salurkan Kontribusi Bantuan (Peer Support)</h3>
+          <h3>
+            {{
+              isSelectedTicketAssignedOwner
+                ? 'Catat Bantuan / Progres Penanganan Bertahap'
+                : 'Salurkan Kontribusi Bantuan (Peer Support)'
+            }}
+          </h3>
           <button type="button" class="btn-close" aria-label="Tutup" @click="isSupportModalOpen = false">
             <X :size="18" />
           </button>
         </div>
         <div class="modal-body">
-          <p class="modal-hint">
-            Gunakan fitur ini untuk mencatat <strong>bantuan rekan lintas tim</strong> atau <strong>tindakan bertahap / solusi percobaan</strong> tanpa mengklaim kendala sudah selesai sepenuhnya. Status tiket akan tetap aktif (<strong>{{ getBlockerStatusLabel(selectedTicket?.status || 'ACKNOWLEDGED') }}</strong>) sembari Pelapor mencoba bantuan Anda; apabila ingin menyatakan akar kendala utama sudah tuntas 100%, gunakan tombol <strong>Selesaikan</strong>.
+          <p v-if="isSelectedTicketAssignedOwner" class="modal-hint">
+            Gunakan fitur ini untuk mencatat <strong>tindakan bantuan bertahap atau solusi percobaan sementara</strong> tanpa mengklaim kendala sudah selesai sepenuhnya (status tiket tetap <strong>Sedang Ditangani</strong>). Apabila akar kendala utama sudah teratasi 100%, gunakan tombol <strong>Selesaikan</strong>.
+          </p>
+          <p v-else class="modal-hint">
+            Catat <strong>bantuan konkret lintas tim / rekan kerja</strong> untuk membantu mengurai kendala ini. Pelapor akan menerima notifikasi untuk meninjau bantuan Anda dan dapat langsung menutup tiket apabila kendalanya sudah teratasi.
           </p>
           <div class="form-group">
             <label for="supportAction">Aksi Bantuan yang Diberikan <span class="req">*</span></label>

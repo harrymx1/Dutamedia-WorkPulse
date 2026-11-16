@@ -306,7 +306,10 @@
        | **Dampak ke Status Tiket** | Status **tetap aktif** (`Menunggu Respons` atau `Sedang Ditangani`) | Berubah menjadi **`Solusi Diberikan`** (menunggu konfirmasi Pelapor) |
        | **Kondisi Tombol Kerja PIC** | Tombol kerja PIC **tetap terbuka** untuk tindak lanjut | Seluruh tombol kerja PIC **terkunci/tersembunyi** hingga Pelapor merespons |
        | **Opsi Respons Pelapor** | 3 opsi: **`Terima sbg Penyelesaian (Tutup Tiket)`**, **`Terima Bantuan (Membantu Sebagian)`**, **`Bantuan Belum Membantu`** | 2 opsi final: **`Konfirmasi & Tutup Tiket`**, **`Belum Memadai (Kembalikan)`** |
-     - **Penegasan Antarmuka Modal (`BlockerQueueView.vue`):** Kedua modal (`Salurkan Kontribusi Bantuan (Peer Support)` dan `Selesaikan Kendala`) wajib menampilkan kalimat panduan eksplisit mengenai perbedaan batas penggunaan di atas sehingga pengguna langsung memahami konteks tombol yang sedang dipilih.
+     - **Penegasan Antarmuka Modal (`BlockerQueueView.vue`):** Kedua modal wajib membedakan konteks peran pembuka sehingga pengguna langsung memahami batas penggunaan yang berlaku:
+       - Ketika **PIC yang Ditunjuk** membuka `Beri Bantuan`, modal berjudul **`Catat Bantuan / Progres Penanganan Bertahap`** dengan panduan untuk tindakan bertahap/percobaan sementara serta arahan memakai **`Selesaikan`** bila akar kendala sudah tuntas 100%.
+       - Ketika **Rekan / Pihak Lain (Bukan PIC)** membuka `Beri Bantuan`, modal berjudul **`Salurkan Kontribusi Bantuan (Peer Support)`** dengan panduan kolaborasi lintas tim/rekan kerja tanpa menyinggung tombol `Selesaikan`.
+       - Modal **`Selesaikan Kendala`** menegaskan bahwa fitur ini digunakan ketika akar kendala utama sudah teratasi sepenuhnya (100% tuntas) dan menunggu konfirmasi penutupan dari Pelapor.
 - **Dampak Implementasi & Dokumentasi:** Menjadi acuan mengikat bagi `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/utils/blockerStatus.ts`, `frontend/src/views/blockers/` (`BlockerQueueView.vue`, `RaiseBlockerView.vue`), `NotificationCenterView.vue`, serta penyusunan Buku Panduan Penggunaan Sistem WorkPulse.
 
 ---

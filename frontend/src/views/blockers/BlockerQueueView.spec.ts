@@ -125,8 +125,9 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(supportBtn).toBeDefined();
     await supportBtn!.trigger('click');
 
-    expect(wrapper.text()).toContain('Salurkan Kontribusi Bantuan (Peer Support)');
-    expect(wrapper.text()).toContain('tindakan bertahap / solusi percobaan');
+    expect(wrapper.text()).toContain('Catat Bantuan / Progres Penanganan Bertahap');
+    expect(wrapper.text()).toContain('tindakan bantuan bertahap atau solusi percobaan sementara');
+    expect(wrapper.text()).toContain('gunakan tombol Selesaikan');
 
     await wrapper.find('.modal-card .btn-secondary').trigger('click');
     const resolveBtn = wrapper.findAll('button').find(b => b.text().includes('Selesaikan'));
@@ -657,6 +658,16 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(peerWrapper.find('.detail-actions').text()).toContain('Beri Bantuan');
     expect(peerWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
     expect(peerWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+
+    // Modal Beri Bantuan bagi rekan non-PIC harus memakai judul & panduan Peer Support tanpa menyinggung tombol Selesaikan
+    const peerSupportBtn = peerWrapper.findAll('button').find((b) => b.text().includes('Beri Bantuan'));
+    expect(peerSupportBtn).toBeDefined();
+    await peerSupportBtn!.trigger('click');
+    const peerModalText = peerWrapper.find('.modal-card').text();
+    expect(peerModalText).toContain('Salurkan Kontribusi Bantuan (Peer Support)');
+    expect(peerModalText).toContain('bantuan konkret lintas tim / rekan kerja');
+    expect(peerModalText).not.toContain('gunakan tombol Selesaikan');
+    await peerWrapper.find('.modal-card .btn-secondary').trigger('click');
 
     await peerWrapper.find('[data-testid="ticket-card-blk-ack-auth"]').trigger('click');
     await flushPromises();
