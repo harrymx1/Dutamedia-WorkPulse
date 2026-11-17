@@ -968,12 +968,11 @@ onMounted(() => {
                       <div class="pic-name-row">
                         <strong>{{ selectedTicket.assignedOwner ? selectedTicket.assignedOwner.fullName : 'Otomatis Sistem' }}</strong>
                         <span
-                          v-if="selectedTicket.assignedOwner && authStore.user?.id"
-                          class="owner-badge"
-                          :class="{ 'is-mine': isAssignedToMe(selectedTicket) }"
+                          v-if="isAssignedToMe(selectedTicket)"
+                          class="owner-badge is-mine"
                           data-testid="detail-owner-badge"
                         >
-                          {{ isAssignedToMe(selectedTicket) ? 'Tugas Anda' : 'PIC Rekan / Lainnya' }}
+                          Tugas Anda
                         </span>
                       </div>
                       <small>{{ selectedTicket.assignedOwner ? selectedTicket.assignedOwner.email : 'Sesuai Pemetaan Otoritas' }}</small>

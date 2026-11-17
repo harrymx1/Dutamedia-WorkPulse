@@ -565,7 +565,7 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     // Klik tiket kedua (milik PIC lain dengan keputusan Risiko Diterima)
     await otherCard.trigger('click');
     await flushPromises();
-    expect(wrapper.find('[data-testid="detail-owner-badge"]').text()).toBe('PIC Rekan / Lainnya');
+    expect(wrapper.find('[data-testid="detail-owner-badge"]').exists()).toBe(false);
     expect(wrapper.find('.detail-actions').text()).not.toContain('Beri Bantuan');
     expect(wrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
     expect(wrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
