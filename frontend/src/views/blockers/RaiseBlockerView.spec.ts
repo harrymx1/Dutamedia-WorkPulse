@@ -373,6 +373,11 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     expect(badgesText).toContain('Solusi Diberikan');
     expect(badgesText).toContain('Risiko Diterima');
     expect(badgesText).toContain('Selesai Ditutup');
+    const resolvedPill = wrapper.findAll('.pill').find((p) => p.text() === 'Solusi Diberikan');
+    const closedPill = wrapper.findAll('.pill').find((p) => p.text() === 'Selesai Ditutup');
+    expect(resolvedPill?.classes()).toContain('teal');
+    expect(closedPill?.classes()).toContain('green');
+    expect(closedPill?.classes()).not.toContain('neutral');
     expect(wrapper.findAll('[data-testid="reporter-confirm-label"]')).toHaveLength(2);
   });
 

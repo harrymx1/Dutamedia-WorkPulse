@@ -1838,9 +1838,9 @@ h1 {
 .status-badge.open { background: #FEF3C7; color: #92400E; }
 .status-badge.acknowledged { background: #E0F2FE; color: #075985; }
 .status-badge.in_progress { background: #E0E7FF; color: #3730A3; }
-.status-badge.resolved { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.status-badge.resolved { background: #CCFBF1; color: #0F766E; border: 1px solid #5EEAD4; }
 .status-badge.accepted_risk { background: #FFF7ED; color: #C2410C; border: 1px solid #FED7AA; }
-.status-badge.closed { background: #DCFCE7; color: #166534; }
+.status-badge.closed { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 
 .sla-breach-badge {
   font-size: 10px;
@@ -2274,8 +2274,8 @@ h1 {
 }
 
 .support-item.variant-resolution {
-  background: #ECFDF5;
-  border-color: #6EE7B7;
+  background: #F0FDFA;
+  border-color: #5EEAD4;
 }
 
 .support-item.variant-risk {
@@ -2303,7 +2303,7 @@ h1 {
 }
 
 .support-item.variant-resolution .sup-meta {
-  color: #065F46;
+  color: #0F766E;
 }
 
 .support-item.variant-risk .sup-meta {
@@ -2344,9 +2344,9 @@ h1 {
 }
 
 .sup-type-badge.variant-resolution {
-  background: #D1FAE5;
-  color: #065F46;
-  border: 1px solid #6EE7B7;
+  background: #CCFBF1;
+  color: #0F766E;
+  border: 1px solid #5EEAD4;
 }
 
 .sup-type-badge.variant-risk {

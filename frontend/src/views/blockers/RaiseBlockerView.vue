@@ -595,7 +595,7 @@ async function submitBlocker() {
 function getStatusBadgeClass(status: string): string {
   switch (status) {
     case 'RESOLVED':
-      return 'green';
+      return 'teal';
     case 'IN_PROGRESS':
     case 'ACKNOWLEDGED':
       return 'blue';
@@ -604,6 +604,7 @@ function getStatusBadgeClass(status: string): string {
     case 'ACCEPTED_RISK':
       return 'orange';
     case 'CLOSED':
+      return 'green';
     default:
       return 'neutral';
   }
@@ -2140,6 +2141,12 @@ h1 {
   border: 1px solid #CBD5E1;
 }
 
+.pill.teal {
+  background: #CCFBF1;
+  color: #0F766E;
+  border: 1px solid #5EEAD4;
+}
+
 .pill.green {
   background: #DCFCE7;
   color: #166534;
@@ -3013,8 +3020,8 @@ textarea:focus {
 }
 
 .my-history-item.variant-resolution {
-  background: #ECFDF5;
-  border-color: #6EE7B7;
+  background: #F0FDFA;
+  border-color: #5EEAD4;
 }
 
 .my-history-item.variant-risk {
@@ -3042,7 +3049,7 @@ textarea:focus {
 }
 
 .my-history-item.variant-resolution .my-hist-meta {
-  color: #065F46;
+  color: #0F766E;
 }
 
 .my-history-item.variant-risk .my-hist-meta {
@@ -3083,9 +3090,9 @@ textarea:focus {
 }
 
 .my-hist-badge.variant-resolution {
-  background: #D1FAE5;
-  color: #065F46;
-  border: 1px solid #6EE7B7;
+  background: #CCFBF1;
+  color: #0F766E;
+  border: 1px solid #5EEAD4;
 }
 
 .my-hist-badge.variant-risk {
