@@ -364,6 +364,7 @@ const reopenReasonMap = ref<Record<string, string>>({});
 const submittingReopenId = ref<string | null>(null);
 const respondingSupportId = ref<string | null>(null);
 const rejectingSupportId = ref<string | null>(null);
+const supportResponseMode = ref<'ACCEPT_AS_SUPPORT' | 'REJECT_SUPPORT'>('REJECT_SUPPORT');
 const supportRejectReasonMap = ref<Record<string, string>>({});
 
 // State Edit & Hapus Tiket Blocker Aktif (DEC-016)
@@ -727,8 +728,15 @@ function formatHistoryTime(dateStr: string): string {
   }
 }
 
+function openSupportAcceptForm(supportId: string) {
+  rejectingSupportId.value = supportId;
+  supportResponseMode.value = 'ACCEPT_AS_SUPPORT';
+  supportRejectReasonMap.value[supportId] = '';
+}
+
 function openSupportRejectForm(supportId: string) {
   rejectingSupportId.value = supportId;
+  supportResponseMode.value = 'REJECT_SUPPORT';
   supportRejectReasonMap.value[supportId] = '';
 }
 
@@ -742,8 +750,11 @@ async function respondToSupport(
   decision: 'RESOLVE_AND_CLOSE' | 'ACCEPT_AS_SUPPORT' | 'REJECT_SUPPORT',
 ) {
   const reason = (supportRejectReasonMap.value[supportId] || '').trim();
-  if (decision === 'REJECT_SUPPORT' && reason.length < 10) {
-    errorMessage.value = 'Penjelasan kendala yang masih terjadi wajib diisi minimal 10 karakter.';
+  if (decision !== 'RESOLVE_AND_CLOSE' && reason.length < 10) {
+    errorMessage.value =
+      decision === 'ACCEPT_AS_SUPPORT'
+        ? 'Catatan progres dan sisa kendala yang masih terjadi wajib diisi minimal 10 karakter.'
+        : 'Penjelasan kendala yang masih terjadi wajib diisi minimal 10 karakter.';
     return;
   }
 
@@ -754,7 +765,7 @@ async function respondToSupport(
       method: 'POST',
       body: JSON.stringify({
         decision,
-        ...(decision === 'REJECT_SUPPORT' ? { reason } : {}),
+        ...(decision !== 'RESOLVE_AND_CLOSE' ? { reason } : {}),
       }),
     });
     if (rejectingSupportId.value === supportId) {
@@ -1614,8 +1625,12 @@ onBeforeUnmount(() => {
                   <div class="my-hist-line">
                     <strong>{{ entry.secondaryLabel }}:</strong> {{ entry.secondaryText }}
                   </div>
-                  <div v-if="entry.reporterFeedback" class="my-hist-feedback">
-                    <strong>Catatan / Kendala yang Masih Terjadi:</strong> {{ entry.reporterFeedback }}
+                  <div
+                    v-if="entry.reporterFeedback"
+                    class="my-hist-feedback"
+                    :class="{ 'is-progress': entry.supportStatus === 'ACCEPTED_PROGRESS' }"
+                  >
+                    <strong>{{ entry.reporterFeedbackLabel || 'Catatan / Kendala yang Masih Terjadi' }}:</strong> {{ entry.reporterFeedback }}
                   </div>
 
                   <div
@@ -1645,7 +1660,7 @@ onBeforeUnmount(() => {
                         class="btn-sup-accept"
                         :disabled="respondingSupportId === entry.id"
                         :data-testid="`support-accept-progress-${entry.id}`"
-                        @click="respondToSupport(b.id, entry.id, 'ACCEPT_AS_SUPPORT')"
+                        @click="openSupportAcceptForm(entry.id)"
                       >
                         Terima Bantuan (Membantu Sebagian)
                       </button>
@@ -1663,10 +1678,25 @@ onBeforeUnmount(() => {
                       <textarea
                         v-model="supportRejectReasonMap[entry.id]"
                         rows="2"
-                        placeholder="Jelaskan kendala yang masih terjadi setelah bantuan ini dicoba (min. 10 karakter)..."
+                        :placeholder="
+                          supportResponseMode === 'ACCEPT_AS_SUPPORT'
+                            ? 'Jelaskan bagian yang sudah terbantu dan sisa kendala yang masih perlu dituntaskan (min. 10 karakter)...'
+                            : 'Jelaskan kendala yang masih terjadi setelah bantuan ini dicoba (min. 10 karakter)...'
+                        "
                       ></textarea>
                       <div class="confirm-actions">
                         <button
+                          v-if="supportResponseMode === 'ACCEPT_AS_SUPPORT'"
+                          type="button"
+                          class="btn-confirm-accept-progress"
+                          :disabled="respondingSupportId === entry.id"
+                          :data-testid="`support-accept-submit-${entry.id}`"
+                          @click="respondToSupport(b.id, entry.id, 'ACCEPT_AS_SUPPORT')"
+                        >
+                          {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Catatan Membantu Sebagian' }}
+                        </button>
+                        <button
+                          v-else
                           type="button"
                           class="btn-confirm-reopen"
                           :disabled="respondingSupportId === entry.id"
@@ -2915,6 +2945,17 @@ textarea:focus {
   cursor: pointer;
 }
 
+.btn-confirm-accept-progress {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: #1D4ED8;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .btn-cancel-reopen {
   padding: 7px 12px;
   border-radius: 7px;
@@ -3071,6 +3112,10 @@ textarea:focus {
 .my-hist-feedback {
   margin-top: 4px;
   color: #991B1B;
+}
+
+.my-hist-feedback.is-progress {
+  color: #1E40AF;
 }
 
 .support-response-panel {

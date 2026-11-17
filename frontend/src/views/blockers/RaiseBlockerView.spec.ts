@@ -447,6 +447,14 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
                     createdAt: '2026-11-15T06:20:00Z',
                   },
                   {
+                    id: 'sup-accepted-1',
+                    supporter: { id: 'rekan-2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
+                    actionTaken: '[SUPPORT_ACCEPTED_PROGRESS] Buka port firewall staging',
+                    resultNote:
+                      'Port staging sudah terbuka\n[CATATAN_PROGRES_PELAPOR]: Koneksi host berhasil, namun query transaksi masih timeout.',
+                    createdAt: '2026-11-15T06:05:00Z',
+                  },
+                  {
                     id: 'sup-rejected-1',
                     supporter: { id: 'rekan-1', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
                     actionTaken: '[SUPPORT_REJECTED] Reset akun VPN',
@@ -483,9 +491,12 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     const historyBox = wrapper.find('[data-testid="my-blocker-history-blk-sup-flow"]');
     expect(historyBox.exists()).toBe(true);
-    expect(historyBox.text()).toContain('Riwayat Penanganan & Kontribusi (2)');
+    expect(historyBox.text()).toContain('Riwayat Penanganan & Kontribusi (3)');
     expect(historyBox.text()).toContain('Gunawan Setiawan');
     expect(historyBox.text()).toContain('Menambahkan role staging-reader ke token sementara');
+    expect(historyBox.text()).toContain('Bantuan Diterima (Membantu Sebagian)');
+    expect(historyBox.text()).toContain('Catatan Progres & Sisa Kendala:');
+    expect(historyBox.text()).toContain('Koneksi host berhasil, namun query transaksi masih timeout.');
     expect(historyBox.text()).toContain('Bantuan Belum Membantu');
     expect(historyBox.text()).toContain('Catatan / Kendala yang Masih Terjadi:');
     expect(historyBox.text()).toContain('Kendala ada pada IAM policy vault, bukan akses VPN.');
@@ -496,18 +507,24 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     expect(wrapper.find('[data-testid="support-accept-progress-sup-pending-1"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="support-reject-open-sup-pending-1"]').exists()).toBe(true);
 
-    // Uji Terima Bantuan (Belum Selesai) -> ACCEPT_AS_SUPPORT
+    // Uji Terima Bantuan (Membantu Sebagian) -> ACCEPT_AS_SUPPORT (wajib isi catatan progres & sisa kendala)
     await wrapper.find('[data-testid="support-accept-progress-sup-pending-1"]').trigger('click');
+    const acceptReasonTextarea = wrapper.find('[data-testid="support-response-panel-sup-pending-1"] textarea');
+    await acceptReasonTextarea.setValue('Role reader sudah aktif untuk GET, namun submit POST multi-item masih 500.');
+    await wrapper.find('[data-testid="support-accept-submit-sup-pending-1"]').trigger('click');
     await flushPromises();
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/blockers/blk-sup-flow/support/sup-pending-1/respond'),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ decision: 'ACCEPT_AS_SUPPORT' }),
+        body: JSON.stringify({
+          decision: 'ACCEPT_AS_SUPPORT',
+          reason: 'Role reader sudah aktif untuk GET, namun submit POST multi-item masih 500.',
+        }),
       }),
     );
 
-    // Uji Tolak Bantuan (Tidak Membantu) -> REJECT_SUPPORT
+    // Uji Tolak Bantuan (Belum Membantu) -> REJECT_SUPPORT
     await wrapper.find('[data-testid="support-reject-open-sup-pending-1"]').trigger('click');
     const reasonTextarea = wrapper.find('[data-testid="support-response-panel-sup-pending-1"] textarea');
     await reasonTextarea.setValue('Role sudah aktif namun policy staging masih menolak endpoint /secrets.');

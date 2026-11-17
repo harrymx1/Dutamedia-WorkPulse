@@ -43,6 +43,7 @@ const REPORTER_CLOSED_DEFAULT_NOTE =
 const SUPPORT_RESOLVED_CLOSED_PREFIX = '[SUPPORT_RESOLVED_CLOSED]';
 const SUPPORT_ACCEPTED_PROGRESS_PREFIX = '[SUPPORT_ACCEPTED_PROGRESS]';
 const SUPPORT_REJECTED_PREFIX = '[SUPPORT_REJECTED]';
+const REPORTER_PROGRESS_NOTE_MARKER = '\n[CATATAN_PROGRES_PELAPOR]: ';
 const REPORTER_REJECTION_NOTE_MARKER = '\n[CATATAN_PENOLAKAN_PELAPOR]: ';
 
 const DELETE_REASON_CATEGORY_LABELS: Record<BlockerDeleteReasonCategory, string> = {
@@ -2281,8 +2282,8 @@ export class BlockerService {
   /**
    * Memproses tanggapan resmi Pelapor terhadap sebuah entri Beri Bantuan (DEC-015):
    * - RESOLVE_AND_CLOSE: menerima bantuan sebagai penyelesaian tuntas & menutup tiket (CLOSED)
-   * - ACCEPT_AS_SUPPORT: menerima bantuan sebagai progres sebagian, tiket tetap Sedang Ditangani
-   * - REJECT_SUPPORT: menolak bantuan beserta alasan minimal 10 karakter, tiket tetap Sedang Ditangani
+   * - ACCEPT_AS_SUPPORT: menerima bantuan sebagai progres sebagian beserta catatan sisa kendala (min. 10 karakter), tiket tetap aktif
+   * - REJECT_SUPPORT: menyatakan bantuan belum membantu beserta alasan minimal 10 karakter, tiket tetap aktif
    */
   async respondToSupportContribution(
     actorUserId: string,
@@ -2411,12 +2412,24 @@ export class BlockerService {
     }
 
     if (dto.decision === 'ACCEPT_AS_SUPPORT') {
+      const trimmedReason = dto.reason?.trim() || '';
+      if (trimmedReason.length < 10) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Catatan progres dan sisa kendala yang masih terjadi wajib diisi minimal 10 karakter.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
       const updatedContribution = await this.prisma.supportContribution.update({
         where: { id: supportId },
         data: {
           actionTaken: `${SUPPORT_ACCEPTED_PROGRESS_PREFIX} ${rawAction}`,
+          resultNote: `${rawResult}${REPORTER_PROGRESS_NOTE_MARKER}${trimmedReason}`,
         },
       });
+      const inlineReason = flattenInlineNotificationText(trimmedReason);
       const preservedStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
 
       await this.notifyBlockerRecipients(recipients, actorUserId, {
@@ -2428,6 +2441,7 @@ export class BlockerService {
           `Pelapor: ${reporterName}`,
           `Status Tiket: ${preservedStatusLabel}`,
           `Aksi Bantuan yang Diterima: ${inlineAction}`,
+          `Catatan Progres & Sisa Kendala: ${inlineReason}`,
         ].join('\n'),
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,

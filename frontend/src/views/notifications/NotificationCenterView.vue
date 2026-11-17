@@ -520,6 +520,8 @@ function parseDelegationContent(message: string): DelegationParsedContent {
             'Target Penyelesaian',
             'Status Tiket',
             'Status Terakhir',
+            'Aksi Bantuan yang Diterima',
+            'Catatan Progres & Sisa Kendala',
             'Bantuan yang Dicoba',
             'Catatan / Kendala yang Masih Terjadi',
             'Kategori Alasan Hapus',

@@ -332,6 +332,14 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
               raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'adit@dutamedia.com' },
               supportContributions: [
                 {
+                  id: 'sup-accepted-1',
+                  supporter: { id: 'u2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
+                  actionTaken: '[SUPPORT_ACCEPTED_PROGRESS] Naikkan timeout gateway sementara',
+                  resultNote:
+                    'Timeout dinaikkan ke 15 detik\n[CATATAN_PROGRES_PELAPOR]: Request GET sudah lancar, namun submit batch masih macet.',
+                  createdAt: '2026-11-13T08:10:00.000Z',
+                },
+                {
                   id: 'sup-rejected-1',
                   supporter: { id: 'u2', fullName: 'Bambang Pratama', email: 'bambang@dutamedia.com' },
                   actionTaken: '[SUPPORT_REJECTED] Cek null-check controller',
@@ -410,11 +418,15 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(reopenCard.text()).not.toContain('Tindakan:');
     expect(reopenCard.text()).not.toContain('Hasil / Solusi:');
 
-    // Pilih tiket kedua dan pastikan format peer support vs reopen berdampingan rapi
+    // Klik tiket kedua dan pastikan format peer support, catatan sebagian, vs reopen berdampingan rapi
     await secondCard.trigger('click');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (4)');
+    expect(wrapper.text()).toContain('Riwayat Penanganan & Kontribusi (5)');
+    const acceptedItem = wrapper.find('[data-testid="history-item-sup-accepted-1"]');
+    expect(acceptedItem.text()).toContain('Bantuan Diterima (Membantu Sebagian)');
+    expect(acceptedItem.text()).toContain('Catatan Progres & Sisa Kendala:');
+    expect(acceptedItem.text()).toContain('Request GET sudah lancar, namun submit batch masih macet.');
     const peerItem = wrapper.find('[data-testid="history-item-sup-peer-1"]');
     expect(peerItem.classes()).toContain('variant-support');
     expect(peerItem.text()).toContain('Kontribusi Bantuan');

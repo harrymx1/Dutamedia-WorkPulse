@@ -212,6 +212,7 @@ export const REPORTER_CLOSED_DEFAULT_NOTE =
 export const SUPPORT_RESOLVED_CLOSED_PREFIX = '[SUPPORT_RESOLVED_CLOSED]';
 export const SUPPORT_ACCEPTED_PROGRESS_PREFIX = '[SUPPORT_ACCEPTED_PROGRESS]';
 export const SUPPORT_REJECTED_PREFIX = '[SUPPORT_REJECTED]';
+export const REPORTER_PROGRESS_NOTE_MARKER = '\n[CATATAN_PROGRES_PELAPOR]: ';
 export const REPORTER_REJECTION_NOTE_MARKER = '\n[CATATAN_PENOLAKAN_PELAPOR]: ';
 
 export type PeerSupportResponseStatus =
@@ -229,6 +230,7 @@ export interface BlockerHistoryPresentation {
   secondaryLabel: string;
   secondaryText: string;
   supportStatus?: PeerSupportResponseStatus;
+  reporterFeedbackLabel?: string | null;
   reporterFeedback?: string | null;
 }
 
@@ -318,6 +320,21 @@ export function countPeerSupportContributions(
   }).length;
 }
 
+/** Memisahkan hasil awal kontributor dari catatan respons pelapor berdasarkan marker persisten. */
+function splitReporterContributionFeedback(
+  rawResult: string,
+  marker: string,
+): { initialResult: string; feedbackNote: string | null } {
+  const markerIdx = rawResult.indexOf(marker);
+  if (markerIdx < 0) {
+    return { initialResult: rawResult, feedbackNote: null };
+  }
+  return {
+    initialResult: rawResult.slice(0, markerIdx).trim() || '-',
+    feedbackNote: rawResult.slice(markerIdx + marker.length).trim() || null,
+  };
+}
+
 export function formatBlockerHistoryEntry(
   entry: BlockerHistoryEntryLike,
 ): BlockerHistoryPresentation {
@@ -336,10 +353,15 @@ export function formatBlockerHistoryEntry(
         secondaryLabel: cfg.secondaryLabel,
         secondaryText: rawResult,
         supportStatus: 'RESOLVED_CLOSED',
+        reporterFeedbackLabel: null,
         reporterFeedback: null,
       };
     }
     if (normalizedAction.startsWith(SUPPORT_ACCEPTED_PROGRESS_PREFIX)) {
+      const { initialResult, feedbackNote } = splitReporterContributionFeedback(
+        rawResult,
+        REPORTER_PROGRESS_NOTE_MARKER,
+      );
       return {
         entryType,
         variant: 'support',
@@ -347,19 +369,17 @@ export function formatBlockerHistoryEntry(
         primaryLabel: cfg.primaryLabel,
         primaryText: normalizedAction.slice(SUPPORT_ACCEPTED_PROGRESS_PREFIX.length).trim() || '-',
         secondaryLabel: cfg.secondaryLabel,
-        secondaryText: rawResult,
+        secondaryText: initialResult,
         supportStatus: 'ACCEPTED_PROGRESS',
-        reporterFeedback: null,
+        reporterFeedbackLabel: 'Catatan Progres & Sisa Kendala',
+        reporterFeedback: feedbackNote,
       };
     }
     if (normalizedAction.startsWith(SUPPORT_REJECTED_PREFIX)) {
-      const markerIdx = rawResult.indexOf(REPORTER_REJECTION_NOTE_MARKER);
-      const initialResult =
-        markerIdx >= 0 ? rawResult.slice(0, markerIdx).trim() || '-' : rawResult;
-      const rejectionReason =
-        markerIdx >= 0
-          ? rawResult.slice(markerIdx + REPORTER_REJECTION_NOTE_MARKER.length).trim() || null
-          : null;
+      const { initialResult, feedbackNote } = splitReporterContributionFeedback(
+        rawResult,
+        REPORTER_REJECTION_NOTE_MARKER,
+      );
       return {
         entryType,
         variant: 'reopen',
@@ -369,7 +389,8 @@ export function formatBlockerHistoryEntry(
         secondaryLabel: cfg.secondaryLabel,
         secondaryText: initialResult,
         supportStatus: 'REJECTED',
-        reporterFeedback: rejectionReason,
+        reporterFeedbackLabel: 'Catatan / Kendala yang Masih Terjadi',
+        reporterFeedback: feedbackNote,
       };
     }
     return {
@@ -381,6 +402,7 @@ export function formatBlockerHistoryEntry(
       secondaryLabel: cfg.secondaryLabel,
       secondaryText: rawResult,
       supportStatus: 'PENDING',
+      reporterFeedbackLabel: null,
       reporterFeedback: null,
     };
   }

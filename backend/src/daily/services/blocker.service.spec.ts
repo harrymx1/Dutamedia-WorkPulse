@@ -937,13 +937,14 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       ]);
     });
 
-    it('allows reporter to accept support as partial progress while keeping ticket ACKNOWLEDGED (DEC-015)', async () => {
+    it('validates minimum progress note and allows reporter to accept support as partial progress while keeping ticket ACKNOWLEDGED (DEC-015)', async () => {
       mockPrisma.blockerTicket.findUnique.mockResolvedValue({
         id: 'blk-sup-acc',
         status: BlockerStatus.ACKNOWLEDGED,
         raisedByUserId: 'emp-1',
         assignedOwnerId: 'owner-1',
         description: '[Token 403] Endpoint staging gagal akses',
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
       });
       mockPrisma.supportContribution = {
         findUnique: vi.fn().mockResolvedValue({
@@ -956,11 +957,22 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         update: vi.fn().mockResolvedValue({
           id: 'sup-2',
           actionTaken: '[SUPPORT_ACCEPTED_PROGRESS] Membuka firewall port staging',
+          resultNote:
+            'Port sudah terbuka untuk koneksi internal\n[CATATAN_PROGRES_PELAPOR]: Koneksi ke host staging sudah terbuka, namun endpoint /secrets masih mengembalikan 403.',
         }),
       };
 
+      await expect(
+        service.respondToSupportContribution('emp-1', 'blk-sup-acc', 'sup-2', {
+          decision: 'ACCEPT_AS_SUPPORT',
+          reason: 'Kurang',
+        }),
+      ).rejects.toThrowError(AppException);
+
       const res = await service.respondToSupportContribution('emp-1', 'blk-sup-acc', 'sup-2', {
         decision: 'ACCEPT_AS_SUPPORT',
+        reason:
+          'Koneksi ke host staging sudah terbuka, namun endpoint /secrets masih mengembalikan 403.',
       });
 
       expect(res.status).toBe(BlockerStatus.ACKNOWLEDGED);
@@ -968,6 +980,8 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         expect.objectContaining({
           data: {
             actionTaken: '[SUPPORT_ACCEPTED_PROGRESS] Membuka firewall port staging',
+            resultNote:
+              'Port sudah terbuka untuk koneksi internal\n[CATATAN_PROGRES_PELAPOR]: Koneksi ke host staging sudah terbuka, namun endpoint /secrets masih mengembalikan 403.',
           },
         }),
       );
@@ -976,6 +990,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
           data: expect.objectContaining({
             recipientUserId: 'owner-1',
             triggerType: 'BLOCKER_SUPPORT_ACCEPTED',
+            message: expect.stringContaining(
+              'Catatan Progres & Sisa Kendala: Koneksi ke host staging sudah terbuka, namun endpoint /secrets masih mengembalikan 403.',
+            ),
           }),
         }),
       );

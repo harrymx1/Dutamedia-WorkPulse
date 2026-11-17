@@ -124,6 +124,7 @@ const submittingClose = ref(false);
 const acknowledging = ref(false);
 const respondingSupportId = ref<string | null>(null);
 const rejectingSupportId = ref<string | null>(null);
+const supportResponseMode = ref<'ACCEPT_AS_SUPPORT' | 'REJECT_SUPPORT'>('REJECT_SUPPORT');
 const supportRejectReasonMap = ref<Record<string, string>>({});
 
 // Toast & Feedback
@@ -457,8 +458,15 @@ async function submitReopen() {
   }
 }
 
+function openSupportAcceptForm(supportId: string) {
+  rejectingSupportId.value = supportId;
+  supportResponseMode.value = 'ACCEPT_AS_SUPPORT';
+  supportRejectReasonMap.value[supportId] = '';
+}
+
 function openSupportRejectForm(supportId: string) {
   rejectingSupportId.value = supportId;
+  supportResponseMode.value = 'REJECT_SUPPORT';
   supportRejectReasonMap.value[supportId] = '';
 }
 
@@ -472,8 +480,13 @@ async function handleSupportDecision(
   decision: 'RESOLVE_AND_CLOSE' | 'ACCEPT_AS_SUPPORT' | 'REJECT_SUPPORT',
 ) {
   const reason = (supportRejectReasonMap.value[supportId] || '').trim();
-  if (decision === 'REJECT_SUPPORT' && reason.length < 10) {
-    showToast('Penjelasan kendala yang masih terjadi wajib diisi minimal 10 karakter.', true);
+  if (decision !== 'RESOLVE_AND_CLOSE' && reason.length < 10) {
+    showToast(
+      decision === 'ACCEPT_AS_SUPPORT'
+        ? 'Catatan progres dan sisa kendala yang masih terjadi wajib diisi minimal 10 karakter.'
+        : 'Penjelasan kendala yang masih terjadi wajib diisi minimal 10 karakter.',
+      true,
+    );
     return;
   }
 
@@ -483,7 +496,7 @@ async function handleSupportDecision(
       method: 'POST',
       body: JSON.stringify({
         decision,
-        ...(decision === 'REJECT_SUPPORT' ? { reason } : {}),
+        ...(decision !== 'RESOLVE_AND_CLOSE' ? { reason } : {}),
       }),
     });
     if (rejectingSupportId.value === supportId) {
@@ -1085,8 +1098,12 @@ onMounted(() => {
                     <div class="sup-result">
                       <strong>{{ entry.secondaryLabel }}:</strong> {{ entry.secondaryText }}
                     </div>
-                    <div v-if="entry.reporterFeedback" class="sup-feedback">
-                      <strong>Catatan / Kendala yang Masih Terjadi:</strong> {{ entry.reporterFeedback }}
+                    <div
+                      v-if="entry.reporterFeedback"
+                      class="sup-feedback"
+                      :class="{ 'is-progress': entry.supportStatus === 'ACCEPTED_PROGRESS' }"
+                    >
+                      <strong>{{ entry.reporterFeedbackLabel || 'Catatan / Kendala yang Masih Terjadi' }}:</strong> {{ entry.reporterFeedback }}
                     </div>
                     <div
                       v-if="
@@ -1112,7 +1129,8 @@ onMounted(() => {
                           type="button"
                           class="btn-sup-accept"
                           :disabled="respondingSupportId === entry.id"
-                          @click="handleSupportDecision(selectedTicket.id, entry.id, 'ACCEPT_AS_SUPPORT')"
+                          :data-testid="`queue-support-accept-progress-${entry.id}`"
+                          @click="openSupportAcceptForm(entry.id)"
                         >
                           Terima Bantuan (Membantu Sebagian)
                         </button>
@@ -1120,6 +1138,7 @@ onMounted(() => {
                           type="button"
                           class="btn-sup-reject"
                           :disabled="respondingSupportId === entry.id"
+                          :data-testid="`queue-support-reject-open-${entry.id}`"
                           @click="openSupportRejectForm(entry.id)"
                         >
                           Bantuan Belum Membantu
@@ -1129,13 +1148,29 @@ onMounted(() => {
                         <textarea
                           v-model="supportRejectReasonMap[entry.id]"
                           rows="2"
-                          placeholder="Jelaskan kendala yang masih terjadi setelah bantuan ini dicoba (min. 10 karakter)..."
+                          :placeholder="
+                            supportResponseMode === 'ACCEPT_AS_SUPPORT'
+                              ? 'Jelaskan bagian yang sudah terbantu dan sisa kendala yang masih perlu dituntaskan (min. 10 karakter)...'
+                              : 'Jelaskan kendala yang masih terjadi setelah bantuan ini dicoba (min. 10 karakter)...'
+                          "
                         ></textarea>
                         <div class="sup-response-actions">
                           <button
+                            v-if="supportResponseMode === 'ACCEPT_AS_SUPPORT'"
+                            type="button"
+                            class="btn-sup-accept-submit"
+                            :disabled="respondingSupportId === entry.id"
+                            :data-testid="`queue-support-accept-submit-${entry.id}`"
+                            @click="handleSupportDecision(selectedTicket.id, entry.id, 'ACCEPT_AS_SUPPORT')"
+                          >
+                            {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Catatan Membantu Sebagian' }}
+                          </button>
+                          <button
+                            v-else
                             type="button"
                             class="btn-sup-reject-submit"
                             :disabled="respondingSupportId === entry.id"
+                            :data-testid="`queue-support-reject-submit-${entry.id}`"
                             @click="handleSupportDecision(selectedTicket.id, entry.id, 'REJECT_SUPPORT')"
                           >
                             {{ respondingSupportId === entry.id ? 'Mengirim...' : 'Kirim Catatan Kendala' }}
@@ -2335,6 +2370,10 @@ h1 {
   color: #991B1B;
 }
 
+.sup-feedback.is-progress {
+  color: #1E40AF;
+}
+
 .sup-response-panel {
   margin-top: 8px;
   padding-top: 8px;
@@ -2394,6 +2433,17 @@ h1 {
   border-radius: 6px;
   border: none;
   background: #991B1B;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-sup-accept-submit {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #1D4ED8;
   color: #fff;
   font-size: 11.5px;
   font-weight: 700;
