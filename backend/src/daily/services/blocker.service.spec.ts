@@ -144,7 +144,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       );
 
       const notifCall = mockPrisma.notification.create.mock.calls[0][0].data;
-      expect(notifCall.message).toContain('Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE)');
+      expect(notifCall.message).toContain(
+        'Aditya Nugroho melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.',
+      );
       expect(notifCall.message).toContain('Judul Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form');
       expect(notifCall.message).toContain('Pelapor: Aditya Nugroho');
       expect(notifCall.message).toContain(`Ekspektasi Bantuan: ${expectedHelp}`);
@@ -182,6 +184,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
           data: expect.objectContaining({
             recipientUserId: 'head-1',
             triggerType: 'BLOCKER_CRITICAL_ESCALATION',
+            message: expect.stringContaining(
+              'melaporkan kendala darurat yang ditugaskan kepada Bambang Supervisor. Pemberitahuan ini diteruskan kepada Anda selaku pimpinan untuk pemantauan dan bantuan percepatan penanganan.',
+            ),
           }),
         }),
       );

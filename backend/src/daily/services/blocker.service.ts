@@ -143,7 +143,7 @@ export function buildBlockerRaisedNotificationContent(params: {
   const parsed = parseBlockerDescription(params.description);
   const reporterName = params.reporterName?.trim() || 'Pelapor';
   const lines = [
-    `${reporterName} melaporkan kendala ${params.type} (Tingkat ${params.severity}, Dampak ${params.impact}) yang dialokasikan kepada Anda dengan target respons ${params.slaLabel}.`,
+    `${reporterName} melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.`,
     `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
     `Pelapor: ${reporterName}`,
     `Kategori Kendala: ${params.type}`,
@@ -174,7 +174,7 @@ export function buildBlockerCriticalEscalationNotificationContent(params: {
   const reporterName = params.reporterName?.trim() || 'Pelapor';
   const ownerName = params.ownerName?.trim() || 'Penanggung Jawab';
   const lines = [
-    `Kendala darurat dari ${reporterName} (Tingkat CRITICAL, Dampak ${params.impact}) diteruskan secara paralel kepada Anda sebagai pimpinan eskalasi dengan target penyelesaian ${params.slaLabel}.`,
+    `${reporterName} melaporkan kendala darurat yang ditugaskan kepada ${ownerName}. Pemberitahuan ini diteruskan kepada Anda selaku pimpinan untuk pemantauan dan bantuan percepatan penanganan.`,
     `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
     `Pelapor: ${reporterName}`,
     `Penanggung Jawab Awal (PIC): ${ownerName}`,
@@ -362,6 +362,24 @@ export function enrichLegacyBlockerNotification(
         filteredLines[0] = `${actorName} telah memperbarui rincian laporan kendala aktif.`;
       } else if (trigger === 'BLOCKER_DELETED_BY_REPORTER' && firstLineHasQuote) {
         filteredLines[0] = `${actorName} telah menghapus tiket kendala dari antrean aktif.`;
+      } else if (
+        trigger === 'BLOCKER_CRITICAL_ESCALATION' &&
+        (firstLineHasQuote ||
+          firstLine.includes('diteruskan secara paralel') ||
+          firstLine.includes('(Tingkat CRITICAL'))
+      ) {
+        const picLine = filteredLines.find((l) =>
+          l.trim().startsWith('Penanggung Jawab Awal (PIC):'),
+        );
+        const picFromLine = picLine?.split(':').slice(1).join(':').trim() || ownerFullName;
+        filteredLines[0] = `${actorName} melaporkan kendala darurat yang ditugaskan kepada ${picFromLine}. Pemberitahuan ini diteruskan kepada Anda selaku pimpinan untuk pemantauan dan bantuan percepatan penanganan.`;
+      } else if (
+        trigger === 'BLOCKER_RAISED' &&
+        (firstLineHasQuote ||
+          firstLine.includes('dialokasikan kepada Anda dengan target') ||
+          /melaporkan kendala\s+[A-Z_]+\s*\(Tingkat/i.test(firstLine))
+      ) {
+        filteredLines[0] = `${actorName} melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.`;
       } else if (reporterFullName) {
         filteredLines[0] = filteredLines[0].replace(
           /^Pelapor\s+(menolak|menerima|menyatakan|telah)\b/,

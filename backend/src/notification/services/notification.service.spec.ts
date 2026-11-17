@@ -270,5 +270,74 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
       'Catatan / Alasan Belum Memadai: Mock endpoint tidak memiliki field terbaru.',
     );
   });
+
+  it('auto-upgrades multi-line BLOCKER_RAISED and BLOCKER_CRITICAL_ESCALATION intro lines to clear role-focused wording with diteruskan', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([
+      {
+        id: 'notif-raised-old-intro',
+        recipientUserId: 'owner-bp',
+        triggerType: 'BLOCKER_RAISED',
+        title: 'Kendala Baru Dialokasikan: Deadlock Query Transaksi',
+        message: [
+          'Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat CRITICAL, Dampak PROJECT) yang dialokasikan kepada Anda dengan target respons 2 jam.',
+          'Judul Kendala: Deadlock Query Transaksi',
+          'Pelapor: Aditya Nugroho',
+          'Kategori Kendala: TECHNICAL',
+          'Tingkat Keparahan: CRITICAL',
+          'Dampak Kendala: PROJECT',
+          'Target Respons: 2 jam',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-crit-9',
+        readAt: null,
+      },
+      {
+        id: 'notif-crit-old-intro',
+        recipientUserId: 'owner-ab',
+        triggerType: 'BLOCKER_CRITICAL_ESCALATION',
+        title: 'Eskalasi Darurat (CRITICAL): Deadlock Query Transaksi',
+        message: [
+          'Kendala darurat dari Aditya Nugroho (Tingkat CRITICAL, Dampak PROJECT) diteruskan secara paralel kepada Anda sebagai pimpinan eskalasi dengan target penyelesaian 2 jam.',
+          'Judul Kendala: Deadlock Query Transaksi',
+          'Pelapor: Aditya Nugroho',
+          'Penanggung Jawab Awal (PIC): Bambang Pratama',
+          'Kategori Kendala: TECHNICAL',
+          'Tingkat Keparahan: CRITICAL',
+          'Dampak Kendala: PROJECT',
+          'Target Penyelesaian: 2 jam',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-crit-9',
+        readAt: null,
+      },
+    ]);
+    mockPrisma.notification.count.mockResolvedValue(2);
+    mockPrisma.blockerTicket = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'blk-crit-9',
+          type: 'TECHNICAL',
+          severity: 'CRITICAL',
+          impact: 'PROJECT',
+          description: '[Deadlock Query Transaksi] Query agregasi mengalami deadlock.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+          assignedOwner: { id: 'owner-bp', fullName: 'Bambang Pratama' },
+          supportContributions: [],
+        },
+      ]),
+    };
+
+    const res = await service.getUserNotifications('owner-ab');
+
+    expect(res.notifications).toHaveLength(2);
+    expect(res.notifications[0].message.split('\n')[0]).toBe(
+      'Aditya Nugroho melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.',
+    );
+    expect(res.notifications[1].message.split('\n')[0]).toBe(
+      'Aditya Nugroho melaporkan kendala darurat yang ditugaskan kepada Bambang Pratama. Pemberitahuan ini diteruskan kepada Anda selaku pimpinan untuk pemantauan dan bantuan percepatan penanganan.',
+    );
+    expect(res.notifications[1].message).not.toContain('ditembuskan');
+    expect(res.notifications[1].message).not.toContain('secara paralel');
+  });
 });
 

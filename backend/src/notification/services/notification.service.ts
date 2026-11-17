@@ -69,6 +69,8 @@ export class NotificationService {
             n.message?.includes('menolak kontribusi bantuan') ||
             n.message?.includes('Alasan Pengembalian:') ||
             n.message?.includes('solusi atau arahan mitigasi belum memadai') ||
+            n.message?.includes('diteruskan secara paralel') ||
+            n.message?.includes('dialokasikan kepada Anda dengan target') ||
             n.message?.includes('Sedang Ditangani (')),
       );
 

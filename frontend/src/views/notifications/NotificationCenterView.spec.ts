@@ -471,7 +471,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
               id: 'notif-blocker-structured',
               title: 'Kendala Baru Dialokasikan: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
               message: [
-                'Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE) yang dialokasikan kepada Anda dengan target respons 4 jam.',
+                'Aditya Nugroho melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.',
                 'Judul Kendala: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form',
                 'Pelapor: Aditya Nugroho',
                 'Kategori Kendala: TECHNICAL',
@@ -503,7 +503,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     // Pratinjau kartu daftar ringkas: hanya kalimat pengantar baris pertama tanpa menumpuk seluruh baris detail
     const previewEl = wrapper.find('.item-desc');
     expect(previewEl.text()).toContain(
-      'Aditya Nugroho melaporkan kendala TECHNICAL (Tingkat HIGH, Dampak MILESTONE) yang dialokasikan kepada Anda dengan target respons 4 jam.',
+      'Aditya Nugroho melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.',
     );
     expect(previewEl.text()).not.toContain(fullBody);
 
