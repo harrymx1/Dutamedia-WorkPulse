@@ -1071,7 +1071,10 @@ onMounted(() => {
                 </div>
 
                 <div v-if="selectedTicketHistory.length === 0" class="no-support">
-                  Belum ada riwayat penanganan atau bantuan tercatat untuk tiket ini. Klik "Beri Bantuan" untuk mencatat kontribusi peer-support.
+                  Belum ada riwayat penanganan atau kontribusi bantuan tercatat untuk tiket ini.
+                  <template v-if="canProvideSupportOnSelectedTicket">
+                    Klik "Beri Bantuan" untuk menyalurkan kontribusi bantuan.
+                  </template>
                 </div>
 
                 <div v-else class="support-list">
@@ -1201,7 +1204,7 @@ onMounted(() => {
             {{
               isSelectedTicketAssignedOwner
                 ? 'Catat Bantuan / Progres Penanganan Bertahap'
-                : 'Salurkan Kontribusi Bantuan (Peer Support)'
+                : 'Salurkan Kontribusi Bantuan'
             }}
           </h3>
           <button type="button" class="btn-close" aria-label="Tutup" @click="isSupportModalOpen = false">

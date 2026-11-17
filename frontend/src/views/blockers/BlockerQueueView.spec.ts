@@ -647,12 +647,15 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(picWrapper.find('.detail-actions').text()).not.toContain('Beri Bantuan');
     expect(picWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
     expect(picWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
+    expect(picWrapper.find('.no-support').text()).not.toContain('peer-support');
+    expect(picWrapper.find('.no-support').text()).not.toContain('Klik "Beri Bantuan"');
 
     await picWrapper.find('[data-testid="ticket-card-blk-ack-auth"]').trigger('click');
     await flushPromises();
     expect(picWrapper.find('.detail-actions').text()).toContain('Beri Bantuan');
     expect(picWrapper.find('.detail-actions').text()).toContain('Terima Risiko');
     expect(picWrapper.find('.detail-actions').text()).toContain('Selesaikan');
+    expect(picWrapper.find('.no-support').text()).toContain('Klik "Beri Bantuan"');
 
     // 2. Persona Rekan / Pemantau Lain (u3, bukan PIC & bukan Pelapor):
     // Tidak boleh melihat Terima & Tangani, Terima Risiko, Selesaikan; BOLEH melihat Beri Bantuan baik di OPEN maupun ACKNOWLEDGED
@@ -671,12 +674,15 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
     expect(peerWrapper.find('.detail-actions').text()).not.toContain('Terima Risiko');
     expect(peerWrapper.find('.detail-actions').text()).not.toContain('Selesaikan');
 
-    // Modal Beri Bantuan bagi rekan non-PIC harus memakai judul & panduan Peer Support tanpa menyinggung tombol Selesaikan
+    // Modal Beri Bantuan bagi pihak non-PIC berjudul bersih tanpa "(Peer Support)" dan tanpa menyinggung tombol Selesaikan
+    expect(peerWrapper.find('.no-support').text()).toContain('Klik "Beri Bantuan"');
+    expect(peerWrapper.find('.no-support').text()).not.toContain('peer-support');
     const peerSupportBtn = peerWrapper.findAll('button').find((b) => b.text().includes('Beri Bantuan'));
     expect(peerSupportBtn).toBeDefined();
     await peerSupportBtn!.trigger('click');
     const peerModalText = peerWrapper.find('.modal-card').text();
-    expect(peerModalText).toContain('Salurkan Kontribusi Bantuan (Peer Support)');
+    expect(peerModalText).toContain('Salurkan Kontribusi Bantuan');
+    expect(peerModalText).not.toContain('Peer Support');
     expect(peerModalText).toContain('bantuan konkret lintas tim / rekan kerja');
     expect(peerModalText).not.toContain('gunakan tombol Selesaikan');
     await peerWrapper.find('.modal-card .btn-secondary').trigger('click');
