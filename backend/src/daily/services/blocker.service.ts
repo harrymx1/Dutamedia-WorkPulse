@@ -1825,14 +1825,201 @@ export class BlockerService {
   }
 
   /**
-   * Mengambil antrean tiket kendala.
+   * Menyaring daftar tiket kendala agar hanya pengguna yang memiliki hubungan wewenang sah
+   * (pihak langsung di tiket, atasan berjenjang/Head/Temp Reviewer divisi pelapor atau PIC,
+   * pimpinan/pengarah proyek terkait, pimpinan divisi keahlian kategori lintas fungsi,
+   * atau pengawas universal CEO/HRGA/Admin) yang dapat melihat dan mengaksesnya.
    */
-  async getBlockerQueue(filters?: {
-    status?: BlockerStatus;
-    assignedOwnerId?: string;
-    raisedByUserId?: string;
-  }) {
-    const tickets = await this.prisma.blockerTicket.findMany({
+  private async filterBlockersByViewerScope<T extends Record<string, any>>(
+    tickets: T[],
+    viewerUserId?: string,
+  ): Promise<T[]> {
+    if (!viewerUserId || tickets.length === 0 || !this.prisma.organizationalAssignment?.findMany) {
+      return tickets;
+    }
+
+    const today = toJakartaDateOnly(this.clockService.now());
+    const [activeAssignments, activeProjectMappings, activeTempDelegations] = await Promise.all([
+      this.prisma.organizationalAssignment.findMany({
+        where: {
+          ...this.activeDateWhere(today),
+        },
+        select: {
+          userId: true,
+          role: true,
+          function: true,
+          directManagerId: true,
+        },
+      }),
+      this.prisma.projectAuthorityMapping?.findMany
+        ? this.prisma.projectAuthorityMapping.findMany({
+            where: {
+              ...this.activeDateWhere(today),
+            },
+            select: {
+              projectCode: true,
+              projectManagerId: true,
+              escalationReviewerId: true,
+              involvedFunction: true,
+            },
+          })
+        : Promise.resolve([]),
+      this.prisma.temporaryReviewerAssignment?.findMany
+        ? this.prisma.temporaryReviewerAssignment.findMany({
+            where: {
+              delegateUserId: viewerUserId,
+              effectiveDate: { lte: today },
+              expiryDate: { gte: today },
+            },
+            select: {
+              targetFunction: true,
+            },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const assignmentsByUserId = new Map<
+      string,
+      Array<{ role: string; function: CanonicalFunction; directManagerId: string | null }>
+    >();
+    for (const assign of activeAssignments as any[]) {
+      const list = assignmentsByUserId.get(assign.userId) || [];
+      list.push({
+        role: assign.role,
+        function: assign.function,
+        directManagerId: assign.directManagerId ?? null,
+      });
+      assignmentsByUserId.set(assign.userId, list);
+    }
+
+    const viewerAssignments = assignmentsByUserId.get(viewerUserId) || [];
+    const isUniversalViewer = viewerAssignments.some(
+      (a) =>
+        a.role === CanonicalRole.CEO_MANAGEMENT ||
+        a.role === CanonicalRole.HRGA ||
+        a.role === CanonicalRole.SYSTEM_ADMIN,
+    );
+    if (isUniversalViewer) {
+      return tickets;
+    }
+
+    const tempDelegateFunctions = new Set<CanonicalFunction>(
+      (activeTempDelegations as any[]).map((d) => d.targetFunction).filter(Boolean),
+    );
+    const headFunctions = new Set<CanonicalFunction>(
+      viewerAssignments.filter((a) => a.role === CanonicalRole.HEAD).map((a) => a.function),
+    );
+    const crossFunctionalLeaderFunctions = new Set<CanonicalFunction>([
+      ...viewerAssignments
+        .filter((a) => a.role === CanonicalRole.HEAD || a.role === CanonicalRole.SUPERVISOR)
+        .map((a) => a.function),
+      ...tempDelegateFunctions,
+    ]);
+
+    const projectMappingByCode = new Map<string, any>();
+    for (const mapping of activeProjectMappings as any[]) {
+      if (mapping.projectCode && !projectMappingByCode.has(mapping.projectCode)) {
+        projectMappingByCode.set(mapping.projectCode, mapping);
+      }
+    }
+
+    const isHierarchicalSuperiorOf = (targetUserId?: string | null): boolean => {
+      if (!targetUserId) return false;
+      const queue: string[] = [targetUserId];
+      const visited = new Set<string>([targetUserId]);
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const assigns = assignmentsByUserId.get(currentId) || [];
+        for (const a of assigns) {
+          const mgrId = a.directManagerId;
+          if (!mgrId) continue;
+          if (mgrId === viewerUserId) return true;
+          if (!visited.has(mgrId)) {
+            visited.add(mgrId);
+            queue.push(mgrId);
+          }
+        }
+      }
+      return false;
+    };
+
+    const userBelongsToAllowedDivision = (targetUserId?: string | null): boolean => {
+      if (!targetUserId) return false;
+      const assigns = assignmentsByUserId.get(targetUserId) || [];
+      return assigns.some(
+        (a) => headFunctions.has(a.function) || tempDelegateFunctions.has(a.function),
+      );
+    };
+
+    return tickets.filter((ticket) => {
+      const reporterId = ticket.raisedByUserId || ticket.raisedBy?.id || null;
+      const ownerId = ticket.assignedOwnerId || ticket.assignedOwner?.id || null;
+
+      // 1. Pihak langsung di tiket (Pelapor, PIC, atau Kontributor Bantuan)
+      if (reporterId === viewerUserId || ownerId === viewerUserId) {
+        return true;
+      }
+      if (
+        Array.isArray(ticket.supportContributions) &&
+        ticket.supportContributions.some(
+          (entry: any) => (entry?.supporterUserId || entry?.supporter?.id) === viewerUserId,
+        )
+      ) {
+        return true;
+      }
+
+      // 2. Rantai atasan struktural dari Pelapor atau PIC
+      if (isHierarchicalSuperiorOf(reporterId) || isHierarchicalSuperiorOf(ownerId)) {
+        return true;
+      }
+
+      // 3. Kepala Divisi (HEAD) atau Reviewer Sementara aktif pada divisi Pelapor atau divisi PIC
+      if (userBelongsToAllowedDivision(reporterId) || userBelongsToAllowedDivision(ownerId)) {
+        return true;
+      }
+
+      // 4. Pemegang otoritas proyek (PM, Escalation Reviewer, atau Head divisi terkait proyek)
+      if (ticket.projectCodeReference) {
+        const mapping = projectMappingByCode.get(ticket.projectCodeReference);
+        if (mapping) {
+          if (
+            mapping.projectManagerId === viewerUserId ||
+            mapping.escalationReviewerId === viewerUserId
+          ) {
+            return true;
+          }
+          if (
+            mapping.involvedFunction &&
+            (headFunctions.has(mapping.involvedFunction) ||
+              tempDelegateFunctions.has(mapping.involvedFunction))
+          ) {
+            return true;
+          }
+        }
+      }
+
+      // 5. Pimpinan pada divisi keahlian kategori kendala lintas fungsi (INFRA, FINANCE, LEGAL)
+      const routedDivision = BLOCKER_TYPE_DIVISION_ROUTING[ticket.type || ''];
+      if (routedDivision && crossFunctionalLeaderFunctions.has(routedDivision.function)) {
+        return true;
+      }
+
+      return false;
+    });
+  }
+
+  /**
+   * Mengambil antrean tiket kendala sesuai batasan cakupan wewenang pemirsa.
+   */
+  async getBlockerQueue(
+    filters?: {
+      status?: BlockerStatus;
+      assignedOwnerId?: string;
+      raisedByUserId?: string;
+    },
+    viewerUserId?: string,
+  ) {
+    const rawTickets = await this.prisma.blockerTicket.findMany({
       where: {
         ...(filters?.status && { status: filters.status }),
         ...(filters?.assignedOwnerId && { assignedOwnerId: filters.assignedOwnerId }),
@@ -1852,6 +2039,8 @@ export class BlockerService {
         { id: 'desc' },
       ],
     });
+
+    const tickets = await this.filterBlockersByViewerScope(rawTickets, viewerUserId);
 
     const ticketIds = tickets.map((t: any) => t.id).filter(Boolean);
     const relatedNotifications =
@@ -2267,6 +2456,16 @@ export class BlockerService {
       });
     }
 
+    const scopedTickets = await this.filterBlockersByViewerScope([ticket], supporterUserId);
+    if (scopedTickets.length === 0) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message:
+          'Anda tidak memiliki wewenang pada cakupan divisi atau proyek untuk mengakses tiket kendala ini.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
     if (
       ticket.status === BlockerStatus.OPEN &&
       ticket.assignedOwnerId &&
@@ -2314,35 +2513,71 @@ export class BlockerService {
       },
     });
 
+    let supporterName = (created as any).supporter?.fullName?.trim() || '';
+    if (!supporterName && this.prisma.user?.findUnique) {
+      const supporterUser = await this.prisma.user.findUnique({
+        where: { id: supporterUserId },
+        select: { fullName: true },
+      });
+      supporterName = supporterUser?.fullName?.trim() || '';
+    }
+    supporterName = supporterName || 'Rekan Tim';
+
+    const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
+    const inlineAction = flattenInlineNotificationText(trimmedAction);
+    const inlineResult = flattenInlineNotificationText(trimmedResult);
+    const currentStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
+    const reporterName = await this.resolveActorFullName(
+      (ticket as any).raisedBy,
+      ticket.raisedByUserId,
+      'Pelapor',
+    );
+
+    const supportNotifTitle = formatBlockerNotificationTitle(
+      'Bantuan Kendala Diberikan',
+      cleanTitle,
+    );
+    const sharedDetailLines = [
+      `Judul Kendala: ${cleanTitle}`,
+      `Pelapor: ${reporterName}`,
+      `Pemberi Bantuan: ${supporterName}`,
+      `Status Tiket: ${currentStatusLabel}`,
+      `Aksi Bantuan: ${inlineAction}`,
+      `Hasil / Progres: ${inlineResult}`,
+    ];
+    const supportNotificationTargets: Array<{
+      recipientUserId: string;
+      intro: string;
+      actionUrl: string;
+    }> = [];
+
     if (ticket.raisedByUserId && ticket.raisedByUserId !== supporterUserId) {
-      let supporterName = (created as any).supporter?.fullName?.trim() || '';
-      if (!supporterName && this.prisma.user?.findUnique) {
-        const supporterUser = await this.prisma.user.findUnique({
-          where: { id: supporterUserId },
-          select: { fullName: true },
-        });
-        supporterName = supporterUser?.fullName?.trim() || '';
-      }
-      supporterName = supporterName || 'Rekan Tim';
-
-      const cleanTitle = this.extractCleanBlockerTitle(ticket.description);
-      const inlineAction = flattenInlineNotificationText(trimmedAction);
-      const inlineResult = flattenInlineNotificationText(trimmedResult);
-      const currentStatusLabel = ACTIVE_STATUS_LABELS[ticket.status] || 'Sedang Ditangani';
-
-      await this.createBlockerNotification({
+      supportNotificationTargets.push({
         recipientUserId: ticket.raisedByUserId,
-        triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
-        title: formatBlockerNotificationTitle('Bantuan Kendala Diberikan', cleanTitle),
-        message: [
-          `${supporterName} telah memberikan kontribusi bantuan pada tiket kendala Anda. Silakan tinjau rincian bantuan di bawah ini dan berikan tanggapan Anda.`,
-          `Judul Kendala: ${cleanTitle}`,
-          `Pemberi Bantuan: ${supporterName}`,
-          `Status Tiket: ${currentStatusLabel}`,
-          `Aksi Bantuan: ${inlineAction}`,
-          `Hasil / Progres: ${inlineResult}`,
-        ].join('\n'),
+        intro: `${supporterName} telah memberikan kontribusi bantuan pada tiket kendala Anda. Silakan tinjau rincian bantuan di bawah ini dan berikan tanggapan Anda.`,
         actionUrl: '/raise-blockers?tab=mine',
+      });
+    }
+
+    if (
+      ticket.assignedOwnerId &&
+      ticket.assignedOwnerId !== supporterUserId &&
+      ticket.assignedOwnerId !== ticket.raisedByUserId
+    ) {
+      supportNotificationTargets.push({
+        recipientUserId: ticket.assignedOwnerId,
+        intro: `${supporterName} telah menyalurkan kontribusi bantuan pada tiket kendala yang ditugaskan kepada Anda. Silakan pantau perkembangan ini sembari menunggu konfirmasi Pelapor.`,
+        actionUrl: '/blockers',
+      });
+    }
+
+    for (const target of supportNotificationTargets) {
+      await this.createBlockerNotification({
+        recipientUserId: target.recipientUserId,
+        triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
+        title: supportNotifTitle,
+        message: [target.intro, ...sharedDetailLines].join('\n'),
+        actionUrl: target.actionUrl,
         relatedEntityId: ticket.id,
       });
     }
@@ -2998,20 +3233,23 @@ export class BlockerService {
   }
 
   /**
-   * Mengambil metrik aging eskalasi kendala (Prototipe 14).
+   * Mengambil metrik aging eskalasi kendala sesuai batasan cakupan wewenang pemirsa (Prototipe 14).
    */
-  async getEscalationAgingMetrics() {
+  async getEscalationAgingMetrics(viewerUserId?: string) {
     const now = this.clockService.now();
-    const openBlockers = await this.prisma.blockerTicket.findMany({
+    const rawOpenBlockers = await this.prisma.blockerTicket.findMany({
       where: {
         status: { in: [BlockerStatus.OPEN, BlockerStatus.ACKNOWLEDGED, BlockerStatus.IN_PROGRESS] },
       },
       include: {
         raisedBy: { select: { id: true, fullName: true } },
         assignedOwner: { select: { id: true, fullName: true } },
+        supportContributions: { select: { supporterUserId: true } },
       },
       orderBy: { raisedAt: 'asc' },
     });
+
+    const openBlockers = await this.filterBlockersByViewerScope(rawOpenBlockers, viewerUserId);
 
     const items = openBlockers.map((b) => {
       const elapsedHours = Math.max(

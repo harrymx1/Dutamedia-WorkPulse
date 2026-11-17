@@ -55,8 +55,8 @@ export class BlockerController {
   }
 
   @Get('aging')
-  async getEscalationAgingMetrics() {
-    return this.blockerService.getEscalationAgingMetrics();
+  async getEscalationAgingMetrics(@Req() req: any) {
+    return this.blockerService.getEscalationAgingMetrics(req.user?.id);
   }
 
   @Get()
@@ -70,7 +70,7 @@ export class BlockerController {
     if (mine === 'assigned') filters.assignedOwnerId = req.user.id;
     if (mine === 'raised') filters.raisedByUserId = req.user.id;
 
-    return this.blockerService.getBlockerQueue(filters);
+    return this.blockerService.getBlockerQueue(filters, req.user?.id);
   }
 
   @Post(':id/acknowledge')

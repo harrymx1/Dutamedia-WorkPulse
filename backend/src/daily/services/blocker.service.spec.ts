@@ -863,33 +863,45 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       ).rejects.toThrowError(AppException);
     });
 
-    it('records peer support contribution on ACKNOWLEDGED ticket and notifies reporter (DEC-015)', async () => {
+    it('records support contribution on ACKNOWLEDGED ticket: notifies both reporter and PIC when non-PIC helps, and only reporter when PIC helps (DEC-015)', async () => {
       mockPrisma.blockerTicket.findUnique.mockResolvedValue({
         id: 'blk-1',
         status: BlockerStatus.ACKNOWLEDGED,
         raisedByUserId: 'emp-1',
         assignedOwnerId: 'owner-1',
         description: '[Pool Timeout] Latency query database staging tinggi',
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
       });
       mockPrisma.supportContribution = {
-        create: vi.fn().mockResolvedValue({
-          id: 'sup-1',
-          blockerId: 'blk-1',
-          supporterUserId: 'usr-2',
-          supporter: { id: 'usr-2', fullName: 'Charlie Ops', email: 'charlie@dutamedia.com' },
-          actionTaken: 'Membantu migrasi koneksi pool',
-          resultNote: 'Latency turun normal < 50ms',
-        }),
+        create: vi
+          .fn()
+          .mockResolvedValueOnce({
+            id: 'sup-1',
+            blockerId: 'blk-1',
+            supporterUserId: 'usr-2',
+            supporter: { id: 'usr-2', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+            actionTaken: 'Membantu migrasi koneksi pool',
+            resultNote: 'Latency turun normal < 50ms',
+          })
+          .mockResolvedValueOnce({
+            id: 'sup-2',
+            blockerId: 'blk-1',
+            supporterUserId: 'owner-1',
+            supporter: { id: 'owner-1', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+            actionTaken: 'Tuning index PostgreSQL',
+            resultNote: 'Query plan sudah optimal',
+          }),
       };
 
-      const res = await service.addSupportContribution(
+      const nonPicRes = await service.addSupportContribution(
         'usr-2',
         'blk-1',
         'Membantu migrasi koneksi pool',
         'Latency turun normal < 50ms',
       );
-      expect(res.id).toBe('sup-1');
-      expect(mockPrisma.supportContribution.create).toHaveBeenCalled();
+      expect(nonPicRes.id).toBe('sup-1');
+      expect(mockPrisma.supportContribution.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(2);
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -897,6 +909,38 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
             triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
             actionUrl: '/raise-blockers?tab=mine',
             message: expect.stringContaining('Membantu migrasi koneksi pool'),
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'owner-1',
+            triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
+            actionUrl: '/blockers',
+            message: expect.stringContaining(
+              'Arif Budiman telah menyalurkan kontribusi bantuan pada tiket kendala yang ditugaskan kepada Anda.',
+            ),
+          }),
+        }),
+      );
+
+      // Jika PIC sendiri yang mencatat bantuan, hanya Pelapor yang menerima notifikasi
+      mockPrisma.notification.create.mockClear();
+      const picRes = await service.addSupportContribution(
+        'owner-1',
+        'blk-1',
+        'Tuning index PostgreSQL',
+        'Query plan sudah optimal',
+      );
+      expect(picRes.id).toBe('sup-2');
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'emp-1',
+            triggerType: 'BLOCKER_SUPPORT_CONTRIBUTED',
+            actionUrl: '/raise-blockers?tab=mine',
           }),
         }),
       );
@@ -1511,6 +1555,125 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
           }),
         ).rejects.toThrowError(AppException);
       }
+    });
+
+    it('restricts blocker queue, escalation aging radar, and support actions by organizational, project, and cross-functional scope', async () => {
+      const engProjectTicket = {
+        id: 'blk-wp-core',
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.CRITICAL,
+        impact: BlockerImpact.PROJECT,
+        status: BlockerStatus.OPEN,
+        description: '[Deadlock WP-CORE] Deadlock transaksi mingguan',
+        raisedByUserId: 'emp-adit',
+        assignedOwnerId: 'lead-bambang',
+        projectCodeReference: 'WP-CORE',
+        raisedAt: new Date('2026-11-17T05:00:00.000Z'),
+        targetResolutionAt: new Date('2026-11-17T07:00:00.000Z'),
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'lead-bambang', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+        supportContributions: [],
+      };
+      const infraTicket = {
+        id: 'blk-infra-1',
+        type: BlockerType.INFRA,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.PRODUCTION,
+        status: BlockerStatus.ACKNOWLEDGED,
+        description: '[Staging Down] Node staging tidak merespons',
+        raisedByUserId: 'emp-adit',
+        assignedOwnerId: 'head-ops',
+        projectCodeReference: null,
+        raisedAt: new Date('2026-11-17T04:00:00.000Z'),
+        targetResolutionAt: new Date('2026-11-17T08:00:00.000Z'),
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'head-ops', fullName: 'Gunawan Setiawan', email: 'head.ops@dutamedia.com' },
+        supportContributions: [],
+      };
+
+      mockPrisma.organizationalAssignment = {
+        findMany: vi.fn().mockResolvedValue([
+          { userId: 'emp-adit', role: 'EMPLOYEE', function: 'Engineering', directManagerId: 'lead-bambang' },
+          { userId: 'lead-bambang', role: 'SUPERVISOR', function: 'Engineering', directManagerId: 'head-arif' },
+          { userId: 'head-arif', role: 'HEAD', function: 'Engineering', directManagerId: 'ceo-hendra' },
+          { userId: 'ceo-hendra', role: 'CEO_MANAGEMENT', function: 'Management', directManagerId: null },
+          { userId: 'head-lukman', role: 'HEAD', function: 'SalesPresales', directManagerId: 'ceo-hendra' },
+          { userId: 'pm-dimas', role: 'PROJECT_MANAGER', function: 'Delivery', directManagerId: 'head-dharma' },
+          { userId: 'head-dharma', role: 'HEAD', function: 'Delivery', directManagerId: 'ceo-hendra' },
+          { userId: 'head-ops', role: 'HEAD', function: 'OperationsInfrastructure', directManagerId: 'ceo-hendra' },
+        ]),
+      };
+      mockPrisma.projectAuthorityMapping = {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            projectCode: 'WP-CORE',
+            projectManagerId: 'lead-bambang',
+            escalationReviewerId: 'head-arif',
+            involvedFunction: 'Engineering',
+          },
+          {
+            projectCode: 'PRJ-PORTAL',
+            projectManagerId: 'pm-dimas',
+            escalationReviewerId: 'head-dharma',
+            involvedFunction: 'Delivery',
+          },
+        ]),
+      };
+      mockPrisma.temporaryReviewerAssignment = {
+        findMany: vi.fn().mockResolvedValue([]),
+      };
+      mockPrisma.blockerTicket.findMany.mockResolvedValue([engProjectTicket, infraTicket]);
+
+      // Head of Sales, PM proyek lain, & Head Delivery tidak melihat tiket Engineering maupun INFRA
+      expect(await service.getBlockerQueue({}, 'head-lukman')).toEqual([]);
+      expect(await service.getBlockerQueue({}, 'pm-dimas')).toEqual([]);
+      expect(await service.getBlockerQueue({}, 'head-dharma')).toEqual([]);
+
+      // Head of Ops hanya melihat tiket INFRA (bukan WP-CORE TECHNICAL)
+      const opsQueue = await service.getBlockerQueue({}, 'head-ops');
+      expect(opsQueue.map((t: any) => t.id)).toEqual(['blk-infra-1']);
+
+      // PIC (Bambang), Head of Eng / Reviewer WP-CORE (Arif), & CEO melihat seluruhnya
+      expect((await service.getBlockerQueue({}, 'lead-bambang')).map((t: any) => t.id)).toEqual([
+        'blk-wp-core',
+        'blk-infra-1',
+      ]);
+      expect((await service.getBlockerQueue({}, 'head-arif')).map((t: any) => t.id)).toEqual([
+        'blk-wp-core',
+        'blk-infra-1',
+      ]);
+      expect((await service.getBlockerQueue({}, 'ceo-hendra')).map((t: any) => t.id)).toEqual([
+        'blk-wp-core',
+        'blk-infra-1',
+      ]);
+
+      // Radar penuaan /blockers/aging juga mengikuti cakupan wewenang pemirsa
+      const salesAging = await service.getEscalationAgingMetrics('head-lukman');
+      expect(salesAging.summary.totalOpen).toBe(0);
+      expect(salesAging.blockers).toEqual([]);
+
+      const opsAging = await service.getEscalationAgingMetrics('head-ops');
+      expect(opsAging.summary.totalOpen).toBe(1);
+      expect(opsAging.blockers[0].id).toBe('blk-infra-1');
+
+      // Aksi Beri Bantuan oleh manajer di luar cakupan (Head of Sales / Ops Head pada tiket WP-CORE) ditolak 403
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue(engProjectTicket);
+      await expect(
+        service.addSupportContribution(
+          'head-lukman',
+          'blk-wp-core',
+          'Mencoba intervensi lintas divisi tanpa wewenang',
+          'Catatan tidak sah',
+        ),
+      ).rejects.toThrowError(AppException);
+      await expect(
+        service.addSupportContribution(
+          'head-ops',
+          'blk-wp-core',
+          'Mencoba intervensi tiket TECHNICAL WP-CORE',
+          'Catatan tidak sah',
+        ),
+      ).rejects.toThrowError(AppException);
     });
   });
 });
