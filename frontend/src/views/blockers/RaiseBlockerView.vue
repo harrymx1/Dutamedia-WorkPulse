@@ -1104,7 +1104,7 @@ onBeforeUnmount(() => {
                       <span class="sev-badge critical">Critical</span>
                       <span class="sev-sla">Target: {{ formatSla(slaMinutes.CRITICAL) }}</span>
                     </div>
-                    <p class="sev-desc">Pekerjaan terhenti total, memicu notifikasi darurat instan &amp; auto-escalate.</p>
+                    <p class="sev-desc">Kerja macet total, butuh penanganan darurat segera.</p>
                   </label>
 
                   <label class="severity-card high" :class="{ selected: blockerSeverity === 'HIGH' }">
@@ -1113,7 +1113,7 @@ onBeforeUnmount(() => {
                       <span class="sev-badge high">High</span>
                       <span class="sev-sla">Target: {{ formatSla(slaMinutes.HIGH) }}</span>
                     </div>
-                    <p class="sev-desc">Hambatan berat pada jadwal atau milestone utama harian.</p>
+                    <p class="sev-desc">Hambatan berat, target kerja terancam jika tidak segera ditangani.</p>
                   </label>
 
                   <label class="severity-card medium" :class="{ selected: blockerSeverity === 'MEDIUM' }">
@@ -1122,7 +1122,7 @@ onBeforeUnmount(() => {
                       <span class="sev-badge medium">Medium</span>
                       <span class="sev-sla">Target: {{ formatSla(slaMinutes.MEDIUM) }}</span>
                     </div>
-                    <p class="sev-desc">Hambatan parsial, namun masih dapat mengerjakan komitmen lain.</p>
+                    <p class="sev-desc">Hambatan sedang, masih bisa mengerjakan tugas lain sementara.</p>
                   </label>
 
                   <label class="severity-card low" :class="{ selected: blockerSeverity === 'LOW' }">
@@ -1131,7 +1131,7 @@ onBeforeUnmount(() => {
                       <span class="sev-badge low">Low</span>
                       <span class="sev-sla">Target: {{ formatSla(slaMinutes.LOW) }}</span>
                     </div>
-                    <p class="sev-desc">Kendala minor atau ketidaknyamanan operasional berisiko rendah.</p>
+                    <p class="sev-desc">Kendala kecil, tidak mendesak dan risiko rendah.</p>
                   </label>
                 </div>
 

@@ -97,10 +97,10 @@ export const BLOCKER_SEVERITY_OPTIONS: ReadonlyArray<{
   value: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   label: string;
 }> = [
-  { value: 'CRITICAL', label: 'Critical — Pekerjaan terhenti total / insiden produksi' },
-  { value: 'HIGH', label: 'High — Hambatan berat pada jadwal atau milestone' },
-  { value: 'MEDIUM', label: 'Medium — Hambatan parsial dengan alternatif kerja' },
-  { value: 'LOW', label: 'Low — Kendala minor berisiko rendah' },
+  { value: 'CRITICAL', label: 'Critical (Target 2 jam) — Kerja macet total, butuh penanganan darurat segera' },
+  { value: 'HIGH', label: 'High (Target 4 jam) — Hambatan berat, target kerja terancam jika tidak segera ditangani' },
+  { value: 'MEDIUM', label: 'Medium (Target 8 jam) — Hambatan sedang, masih bisa mengerjakan tugas lain sementara' },
+  { value: 'LOW', label: 'Low (Target 24 jam) — Kendala kecil, tidak mendesak dan risiko rendah' },
 ];
 
 export function parseBlockerTextParts(rawDescription?: string | null): {
