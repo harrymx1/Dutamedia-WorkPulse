@@ -624,7 +624,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       );
     });
 
-    it('reopens RESOLVED ticket back to ACKNOWLEDGED, preserves missing initial solution snapshot, and clears active resolution fields', async () => {
+    it('reopens RESOLVED ticket back to ACKNOWLEDGED, preserves missing initial solution snapshot, clears active resolution fields, and sends Solusi Belum Memadai notification', async () => {
       mockPrisma.blockerTicket.findUnique.mockResolvedValue({
         id: 'blk-reopen',
         status: BlockerStatus.RESOLVED,
@@ -635,6 +635,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         resolutionNote: 'Solusi awal staging dicoba',
         riskAcceptanceJustification: null,
         riskMitigationPlan: null,
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
       });
       mockPrisma.supportContribution = {
         findMany: vi.fn().mockResolvedValue([]),
@@ -681,6 +682,65 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
             resultNote: 'Staging masih mengembalikan HTTP 504 saat load test',
           }),
         }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'owner-1',
+            triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
+            title: 'Solusi Belum Memadai: Gateway 504',
+            message: expect.stringContaining(
+              'Aditya Nugroho menyatakan bahwa solusi yang diberikan belum memadai untuk mengatasi kendala, sehingga tiket kembali berstatus Sedang Ditangani.',
+            ),
+          }),
+        }),
+      );
+      const reopenMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(reopenMsg).toContain('Catatan / Alasan Belum Memadai: Staging masih mengembalikan HTTP 504 saat load test');
+      expect(reopenMsg).not.toContain('Tiket Dikembalikan Pelapor');
+    });
+
+    it('reopens ACCEPTED_RISK ticket back to ACKNOWLEDGED and sends Mitigasi Belum Memadai notification', async () => {
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-reopen-risk',
+        status: BlockerStatus.ACCEPTED_RISK,
+        raisedByUserId: 'emp-1',
+        assignedOwnerId: 'owner-1',
+        description: '[Vendor Quota] Limit sandbox hampir habis',
+        resolvedAt: new Date('2026-11-13T16:30:00.000Z'),
+        resolutionNote: null,
+        riskAcceptanceJustification: 'Menunggu top-up kuartal depan',
+        riskMitigationPlan: 'Pakai endpoint mock lokal',
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+      });
+      mockPrisma.supportContribution = {
+        findMany: vi.fn().mockResolvedValue([]),
+        create: vi.fn().mockResolvedValue({ id: 'sup-reopen-risk' }),
+      };
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-reopen-risk',
+        status: BlockerStatus.ACKNOWLEDGED,
+      });
+
+      await service.reopenBlocker('emp-1', 'blk-reopen-risk', {
+        reopenReason: 'Endpoint mock lokal tidak memiliki skema webhook terbaru.',
+      });
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'owner-1',
+            triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
+            title: 'Mitigasi Belum Memadai: Vendor Quota',
+            message: expect.stringContaining(
+              'Aditya Nugroho menyatakan bahwa arahan mitigasi risiko belum memadai untuk dijalankan, sehingga tiket kembali berstatus Sedang Ditangani.',
+            ),
+          }),
+        }),
+      );
+      const msg = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(msg).toContain(
+        'Catatan / Alasan Belum Memadai: Endpoint mock lokal tidak memiliki skema webhook terbaru.',
       );
     });
   });

@@ -177,5 +177,98 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
       },
     });
   });
+
+  it('auto-upgrades legacy Tiket Dikembalikan Pelapor notifications contextually to Solusi Belum Memadai or Mitigasi Belum Memadai', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([
+      {
+        id: 'notif-reopen-res',
+        recipientUserId: 'owner-ab',
+        triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
+        title: 'Tiket Dikembalikan Pelapor: Endpoint API Error 500',
+        message: [
+          'Aditya Nugroho menyatakan bahwa solusi atau arahan mitigasi belum memadai sehingga status tiket dikembalikan ke Sedang Ditangani.',
+          'Judul Kendala: Endpoint API Error 500',
+          'Pelapor: Aditya Nugroho',
+          'Status Tiket: Sedang Ditangani',
+          'Alasan Pengembalian: Cache API lama masih muncul saat reload.',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-res-1',
+        createdAt: new Date('2026-11-17T04:46:00.000Z'),
+        readAt: null,
+      },
+      {
+        id: 'notif-reopen-risk',
+        recipientUserId: 'owner-ab',
+        triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
+        title: 'Tiket Dikembalikan Pelapor: Vendor API Sandbox Limit',
+        message: [
+          'Aditya Nugroho menyatakan bahwa solusi atau arahan mitigasi belum memadai sehingga status tiket dikembalikan ke Sedang Ditangani.',
+          'Judul Kendala: Vendor API Sandbox Limit',
+          'Pelapor: Aditya Nugroho',
+          'Status Tiket: Sedang Ditangani',
+          'Alasan Pengembalian: Mock endpoint tidak memiliki field terbaru.',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-risk-1',
+        createdAt: new Date('2026-11-17T05:00:00.000Z'),
+        readAt: null,
+      },
+    ]);
+    mockPrisma.notification.count.mockResolvedValue(2);
+    mockPrisma.blockerTicket = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'blk-res-1',
+          type: 'TECHNICAL',
+          severity: 'HIGH',
+          impact: 'MILESTONE',
+          description: '[Endpoint API Error 500] Gagal submit.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+          assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman' },
+          supportContributions: [
+            {
+              actionTaken: 'Solusi Diberikan oleh Penanggung Jawab',
+              createdAt: new Date('2026-11-17T04:40:00.000Z'),
+            },
+          ],
+        },
+        {
+          id: 'blk-risk-1',
+          type: 'VENDOR',
+          severity: 'HIGH',
+          impact: 'PROJECT',
+          description: '[Vendor API Sandbox Limit] Kuota habis.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+          assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman' },
+          supportContributions: [
+            {
+              actionTaken: '[PIC_ACCEPTED_RISK] Tunggu perpanjangan kuartal depan',
+              createdAt: new Date('2026-11-17T04:50:00.000Z'),
+            },
+          ],
+        },
+      ]),
+    };
+
+    const res = await service.getUserNotifications('owner-ab');
+
+    expect(res.notifications).toHaveLength(2);
+    expect(res.notifications[0].title).toBe('Solusi Belum Memadai: Endpoint API Error 500');
+    expect(res.notifications[0].message).toContain(
+      'Aditya Nugroho menyatakan bahwa solusi yang diberikan belum memadai untuk mengatasi kendala, sehingga tiket kembali berstatus Sedang Ditangani.',
+    );
+    expect(res.notifications[0].message).toContain(
+      'Catatan / Alasan Belum Memadai: Cache API lama masih muncul saat reload.',
+    );
+
+    expect(res.notifications[1].title).toBe('Mitigasi Belum Memadai: Vendor API Sandbox Limit');
+    expect(res.notifications[1].message).toContain(
+      'Aditya Nugroho menyatakan bahwa arahan mitigasi risiko belum memadai untuk dijalankan, sehingga tiket kembali berstatus Sedang Ditangani.',
+    );
+    expect(res.notifications[1].message).toContain(
+      'Catatan / Alasan Belum Memadai: Mock endpoint tidak memiliki field terbaru.',
+    );
+  });
 });
 

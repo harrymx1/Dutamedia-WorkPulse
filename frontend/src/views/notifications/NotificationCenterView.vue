@@ -193,7 +193,7 @@ function formatNotificationTypeLabel(type?: string): string {
     case 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION':
       return 'Keputusan Risiko Kendala';
     case 'BLOCKER_REOPENED_BY_REPORTER':
-      return 'Pengembalian Kendala';
+      return 'Solusi Belum Memadai';
     case 'BLOCKER_CLOSED_BY_REPORTER':
       return 'Penutupan Kendala';
     case 'BLOCKER_SUPPORT_CONTRIBUTED':
@@ -380,6 +380,7 @@ function cleanStructuredLine(line: string): { label?: string; value: string; tex
   if (label === 'Batas Respon Atasan Langsung') label = 'Batas Respon Jenjang Pertama';
   if (label === 'Batas Respon Kepala Divisi') label = 'Batas Penanganan Jenjang Lanjutan';
   if (label === 'Batas Naik ke Atasan Berikutnya') label = 'Batas Waktu Naik ke Atasan Berikutnya';
+  if (label === 'Alasan Pengembalian') label = 'Catatan / Alasan Belum Memadai';
   value = value.replace(/^Tetap\s+/i, '');
 
   return { label, value, text: `${label}: ${value}` };
@@ -426,7 +427,15 @@ function getDelegationHeading(notifOrType?: NotificationItem | string | null): s
   }
   if (type === 'BLOCKER_RESOLVED_AWAITING_CONFIRMATION') return 'Rincian Penyelesaian Kendala oleh PIC';
   if (type === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION') return 'Rincian Keputusan Terima Risiko & Mitigasi';
-  if (type === 'BLOCKER_REOPENED_BY_REPORTER') return 'Rincian Pengembalian Tiket oleh Pelapor';
+  if (type === 'BLOCKER_REOPENED_BY_REPORTER') {
+    if (title.startsWith('Mitigasi Belum Memadai')) {
+      return 'Rincian Mitigasi Belum Memadai (Perlu Penanganan Ulang)';
+    }
+    if (title.startsWith('Solusi Belum Memadai')) {
+      return 'Rincian Solusi Belum Memadai (Perlu Penanganan Ulang)';
+    }
+    return 'Rincian Solusi / Mitigasi Belum Memadai (Perlu Penanganan Ulang)';
+  }
   if (type === 'BLOCKER_CLOSED_BY_REPORTER') return 'Rincian Konfirmasi & Penutupan Tiket';
   if (type === 'BLOCKER_SUPPORT_CONTRIBUTED') return 'Rincian Kontribusi Bantuan Kendala';
   if (type === 'BLOCKER_SUPPORT_ACCEPTED') return 'Rincian Konfirmasi Bantuan (Membantu Sebagian)';
@@ -524,6 +533,7 @@ function parseDelegationContent(message: string): DelegationParsedContent {
             'Catatan Progres & Sisa Kendala',
             'Bantuan yang Dicoba',
             'Catatan / Kendala yang Masih Terjadi',
+            'Catatan / Alasan Belum Memadai',
             'Kategori Alasan Hapus',
             'Detail Alasan Penghapusan',
             'Penanggung Jawab Awal (PIC)',

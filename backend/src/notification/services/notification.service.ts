@@ -63,9 +63,12 @@ export class NotificationService {
             n.title?.startsWith('Bantuan Ditolak Pelapor:') ||
             n.title?.startsWith('Bantuan Belum Mengatasi Kendala:') ||
             n.title?.startsWith('Bantuan Diterima (Belum Selesai):') ||
+            n.title?.startsWith('Tiket Dikembalikan Pelapor:') ||
             n.message?.includes('Bantuan Ditolak Pelapor') ||
             n.message?.includes('Aksi Bantuan yang Ditolak:') ||
             n.message?.includes('menolak kontribusi bantuan') ||
+            n.message?.includes('Alasan Pengembalian:') ||
+            n.message?.includes('solusi atau arahan mitigasi belum memadai') ||
             n.message?.includes('Sedang Ditangani (')),
       );
 
@@ -84,6 +87,10 @@ export class NotificationService {
       include: {
         raisedBy: { select: { id: true, fullName: true } },
         assignedOwner: { select: { id: true, fullName: true } },
+        supportContributions: {
+          select: { actionTaken: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
     const ticketById = new Map(tickets.map((t: any) => [t.id, t]));

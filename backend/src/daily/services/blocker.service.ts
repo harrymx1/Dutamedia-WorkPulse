@@ -233,15 +233,26 @@ export function extractRiskFromNotificationText(
 }
 
 export function enrichLegacyBlockerNotification(
-  notif: { title?: string | null; message?: string | null; triggerType?: string | null },
+  notif: {
+    title?: string | null;
+    message?: string | null;
+    triggerType?: string | null;
+    createdAt?: Date | string | null;
+  },
   ticket: {
     description?: string | null;
     type?: string | null;
     severity?: string | null;
     impact?: string | null;
     resolutionNote?: string | null;
+    riskAcceptanceJustification?: string | null;
+    riskMitigationPlan?: string | null;
     raisedBy?: { fullName?: string | null } | null;
     assignedOwner?: { fullName?: string | null } | null;
+    supportContributions?: Array<{
+      actionTaken?: string | null;
+      createdAt?: Date | string | null;
+    }> | null;
   },
 ): { title: string; message: string } | null {
   const existingMessage = (notif.message || '').trim();
@@ -253,6 +264,24 @@ export function enrichLegacyBlockerNotification(
   const ownerFullName = ticket.assignedOwner?.fullName?.trim() || 'Penanggung Jawab';
   const actorName = reporterFullName || 'Pelapor';
   const trigger = notif.triggerType || '';
+  const notifMs = notif.createdAt ? new Date(notif.createdAt).getTime() : NaN;
+  const relevantContribs = (ticket.supportContributions || []).filter((c) => {
+    if (Number.isNaN(notifMs) || !c.createdAt) return true;
+    const cMs = new Date(c.createdAt).getTime();
+    return Number.isNaN(cMs) || cMs <= notifMs + 2000;
+  });
+  const latestDecision = [...relevantContribs].reverse().find((c) => {
+    const act = c.actionTaken?.trim() || '';
+    return act === PIC_RESOLUTION_ACTION_LABEL || act.startsWith(PIC_ACCEPTED_RISK_ACTION_PREFIX);
+  });
+  const isReopenFromAcceptedRisk =
+    (notif.title || '').startsWith('Mitigasi Belum Memadai:') ||
+    (!(notif.title || '').startsWith('Solusi Belum Memadai:') &&
+      Boolean(
+        latestDecision
+          ? latestDecision.actionTaken?.trim().startsWith(PIC_ACCEPTED_RISK_ACTION_PREFIX)
+          : ticket.riskAcceptanceJustification?.trim() || ticket.riskMitigationPlan?.trim(),
+      ));
 
   if (existingMessage.includes('\n')) {
     const originalLines = existingMessage.split('\n');
@@ -272,6 +301,11 @@ export function enrichLegacyBlockerNotification(
               /^Alasan Penolakan Pelapor:\s*/i,
               'Catatan / Kendala yang Masih Terjadi: ',
             ),
+          ];
+        }
+        if (/^Alasan Pengembalian:\s*/i.test(trimmed)) {
+          return [
+            trimmed.replace(/^Alasan Pengembalian:\s*/i, 'Catatan / Alasan Belum Memadai: '),
           ];
         }
         const katMatch = trimmed.match(
@@ -315,8 +349,15 @@ export function enrichLegacyBlockerNotification(
         filteredLines[0] = `${ownerFullName} telah memberikan solusi pada tiket kendala Anda. Mohon verifikasi rincian solusi di bawah ini untuk mengonfirmasi penutupan tiket atau kembalikan jika kendala masih berlanjut.`;
       } else if (trigger === 'BLOCKER_ACCEPTED_RISK_AWAITING_CONFIRMATION' && firstLineHasQuote) {
         filteredLines[0] = `${ownerFullName} telah menetapkan keputusan Risiko Diterima beserta arahan mitigasi sementara. Mohon tinjau rincian arahan di bawah ini dan konfirmasi penutupan tiket.`;
-      } else if (trigger === 'BLOCKER_REOPENED_BY_REPORTER' && firstLineHasQuote) {
-        filteredLines[0] = `${actorName} menyatakan bahwa solusi atau arahan mitigasi belum memadai sehingga status tiket dikembalikan ke Sedang Ditangani.`;
+      } else if (
+        trigger === 'BLOCKER_REOPENED_BY_REPORTER' &&
+        (firstLineHasQuote ||
+          firstLine.includes('solusi atau arahan mitigasi belum memadai') ||
+          firstLine.startsWith('Pelapor '))
+      ) {
+        filteredLines[0] = isReopenFromAcceptedRisk
+          ? `${actorName} menyatakan bahwa arahan mitigasi risiko belum memadai untuk dijalankan, sehingga tiket kembali berstatus Sedang Ditangani.`
+          : `${actorName} menyatakan bahwa solusi yang diberikan belum memadai untuk mengatasi kendala, sehingga tiket kembali berstatus Sedang Ditangani.`;
       } else if (trigger === 'BLOCKER_UPDATED_BY_REPORTER' && firstLineHasQuote) {
         filteredLines[0] = `${actorName} telah memperbarui rincian laporan kendala aktif.`;
       } else if (trigger === 'BLOCKER_DELETED_BY_REPORTER' && firstLineHasQuote) {
@@ -345,6 +386,9 @@ export function enrichLegacyBlockerNotification(
 
     const parsedFallback = parseBlockerDescription(ticket.description);
     const currentTitle = (notif.title || '').trim();
+    const reopenTitlePrefix = isReopenFromAcceptedRisk
+      ? 'Mitigasi Belum Memadai:'
+      : 'Solusi Belum Memadai:';
     const nextTitle = /^(?:Bantuan Ditolak Pelapor|Bantuan Belum Mengatasi Kendala):/.test(
       currentTitle,
     )
@@ -357,8 +401,10 @@ export function enrichLegacyBlockerNotification(
             /^Bantuan Diterima \(Belum Selesai\):/,
             'Bantuan Diterima (Membantu Sebagian):',
           )
-        : currentTitle ||
-          formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title);
+        : /^Tiket Dikembalikan Pelapor:/.test(currentTitle)
+          ? currentTitle.replace(/^Tiket Dikembalikan Pelapor:/, reopenTitlePrefix)
+          : currentTitle ||
+            formatBlockerNotificationTitle('Pemberitahuan Kendala', parsedFallback.title);
 
     const nextMessage = filteredLines.join('\n').trim();
     if (nextMessage === existingMessage && nextTitle === currentTitle) {
@@ -441,12 +487,17 @@ export function enrichLegacyBlockerNotification(
 
   if (trigger === 'BLOCKER_REOPENED_BY_REPORTER') {
     const reopenMatch = existingMessage.match(/belum memadai:\s*"([^"]+)"/i);
-    baseLines.push('Status Tiket: Sedang Ditangani (Dikembalikan oleh Pelapor)');
+    baseLines.push('Status Tiket: Sedang Ditangani');
     if (reopenMatch?.[1]?.trim()) {
-      baseLines.push(`Alasan Pengembalian: ${flattenInlineNotificationText(reopenMatch[1])}`);
+      baseLines.push(
+        `Catatan / Alasan Belum Memadai: ${flattenInlineNotificationText(reopenMatch[1])}`,
+      );
     }
     return {
-      title: formatBlockerNotificationTitle('Tiket Dikembalikan Pelapor', parsed.title),
+      title: formatBlockerNotificationTitle(
+        isReopenFromAcceptedRisk ? 'Mitigasi Belum Memadai' : 'Solusi Belum Memadai',
+        parsed.title,
+      ),
       message: baseLines.join('\n'),
     };
   }
@@ -1498,6 +1549,7 @@ export class BlockerService {
       });
     }
 
+    const wasAcceptedRisk = ticket.status === BlockerStatus.ACCEPTED_RISK;
     const reopenedAt = this.clockService.now();
     const priorFallbackTime = ticket.resolvedAt
       ? new Date(ticket.resolvedAt)
@@ -1581,16 +1633,20 @@ export class BlockerService {
         ticket.raisedByUserId || actorUserId,
         'Pelapor',
       );
+      const notifPrefix = wasAcceptedRisk ? 'Mitigasi Belum Memadai' : 'Solusi Belum Memadai';
+      const introSentence = wasAcceptedRisk
+        ? `${reporterName} menyatakan bahwa arahan mitigasi risiko belum memadai untuk dijalankan, sehingga tiket kembali berstatus Sedang Ditangani.`
+        : `${reporterName} menyatakan bahwa solusi yang diberikan belum memadai untuk mengatasi kendala, sehingga tiket kembali berstatus Sedang Ditangani.`;
       await this.createBlockerNotification({
         recipientUserId: ticket.assignedOwnerId,
         triggerType: 'BLOCKER_REOPENED_BY_REPORTER',
-        title: formatBlockerNotificationTitle('Tiket Dikembalikan Pelapor', cleanTitle),
+        title: formatBlockerNotificationTitle(notifPrefix, cleanTitle),
         message: [
-          `${reporterName} menyatakan bahwa solusi atau arahan mitigasi belum memadai sehingga status tiket dikembalikan ke Sedang Ditangani.`,
+          introSentence,
           `Judul Kendala: ${cleanTitle}`,
           `Pelapor: ${reporterName}`,
           'Status Tiket: Sedang Ditangani',
-          `Alasan Pengembalian: ${inlineReason}`,
+          `Catatan / Alasan Belum Memadai: ${inlineReason}`,
         ].join('\n'),
         actionUrl: '/blockers',
         relatedEntityId: ticket.id,
