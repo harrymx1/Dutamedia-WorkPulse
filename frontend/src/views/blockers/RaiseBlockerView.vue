@@ -861,12 +861,59 @@ async function respondToSupport(
   }
 }
 
+const modalError = ref<string | null>(null);
+
+watch(
+  [
+    editTitle,
+    editType,
+    editImpacts,
+    editWaitingForFunction,
+    editSeverity,
+    editDescription,
+    editExpectedHelp,
+    deleteReasonCategory,
+    deleteReason,
+  ],
+  () => {
+    if (modalError.value) modalError.value = null;
+  },
+  { deep: true },
+);
+
+const canSubmitEdit = computed(() => {
+  if (!editingTicket.value) return false;
+  if (editTitle.value.trim().length < 10) return false;
+  if (!editType.value || editImpacts.value.length < 1 || editImpacts.value.length > 3 || !editSeverity.value) {
+    return false;
+  }
+  if (
+    editType.value === 'CROSS_TEAM' &&
+    editingTicket.value.ownerNeededType !== 'PROJECT_AUTHORITY' &&
+    !editWaitingForFunction.value
+  ) {
+    return false;
+  }
+  if (editDescription.value.trim().length < 20) return false;
+  return true;
+});
+
+const canSubmitDelete = computed(() => {
+  if (!deletingTicket.value) return false;
+  if (!deleteReasonCategory.value) return false;
+  if (deleteReasonCategory.value === 'OTHER' && deleteReason.value.trim().length < 10) {
+    return false;
+  }
+  return true;
+});
+
 function toggleEditImpact(code: string) {
   editImpacts.value = toggleImpactSelection(editImpacts.value, code, 3);
 }
 
 function openEditModal(ticket: any) {
   errorMessage.value = null;
+  modalError.value = null;
   editingTicket.value = ticket;
   const parts = parseBlockerTextParts(ticket?.description);
   editTitle.value = parts.title;
@@ -880,19 +927,23 @@ function openEditModal(ticket: any) {
 }
 
 function closeEditModal() {
+  modalError.value = null;
   editingTicket.value = null;
 }
 
 async function submitEditTicket() {
   if (!editingTicket.value) return;
   errorMessage.value = null;
+  modalError.value = null;
 
   if (editTitle.value.trim().length < 10) {
-    errorMessage.value = 'Judul kendala wajib diisi minimal 10 karakter.';
+    modalError.value = 'Judul kendala wajib diisi minimal 10 karakter.';
+    errorMessage.value = modalError.value;
     return;
   }
   if (!editType.value || editImpacts.value.length < 1 || editImpacts.value.length > 3 || !editSeverity.value) {
-    errorMessage.value = 'Kategori, minimal 1–3 dampak, dan tingkat keparahan wajib dipilih.';
+    modalError.value = 'Kategori, minimal 1–3 dampak, dan tingkat keparahan wajib dipilih.';
+    errorMessage.value = modalError.value;
     return;
   }
   if (
@@ -900,11 +951,13 @@ async function submitEditTicket() {
     editingTicket.value.ownerNeededType !== 'PROJECT_AUTHORITY' &&
     !editWaitingForFunction.value
   ) {
-    errorMessage.value = 'Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.';
+    modalError.value = 'Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.';
+    errorMessage.value = modalError.value;
     return;
   }
   if (editDescription.value.trim().length < 20) {
-    errorMessage.value = 'Deskripsi kendala wajib diisi minimal 20 karakter.';
+    modalError.value = 'Deskripsi kendala wajib diisi minimal 20 karakter.';
+    errorMessage.value = modalError.value;
     return;
   }
 
@@ -932,7 +985,8 @@ async function submitEditTicket() {
       'Perubahan tiket kendala disimpan dan dinotifikasikan ke PIC, Lead, serta Head terkait.';
     await loadMyBlockers();
   } catch (err: any) {
-    errorMessage.value = err.message || 'Gagal memperbarui tiket kendala.';
+    modalError.value = err.message || 'Gagal memperbarui tiket kendala.';
+    errorMessage.value = modalError.value;
   } finally {
     submittingEdit.value = false;
   }
@@ -940,27 +994,32 @@ async function submitEditTicket() {
 
 function openDeleteModal(ticket: any) {
   errorMessage.value = null;
+  modalError.value = null;
   deletingTicket.value = ticket;
   deleteReasonCategory.value = '';
   deleteReason.value = '';
 }
 
 function closeDeleteModal() {
+  modalError.value = null;
   deletingTicket.value = null;
 }
 
 async function submitDeleteTicket() {
   if (!deletingTicket.value) return;
   errorMessage.value = null;
+  modalError.value = null;
 
   if (!deleteReasonCategory.value) {
-    errorMessage.value = 'Kategori alasan penghapusan wajib dipilih terlebih dahulu.';
+    modalError.value = 'Kategori alasan penghapusan wajib dipilih terlebih dahulu.';
+    errorMessage.value = modalError.value;
     return;
   }
   const trimmedReason = deleteReason.value.trim();
   if (deleteReasonCategory.value === 'OTHER' && trimmedReason.length < 10) {
-    errorMessage.value =
+    modalError.value =
       'Detail alasan penghapusan wajib diisi minimal 10 karakter untuk kategori Alasan Lainnya.';
+    errorMessage.value = modalError.value;
     return;
   }
 
@@ -978,7 +1037,8 @@ async function submitDeleteTicket() {
       'Tiket kendala telah dihapus dan pemberitahuan dikirim ke PIC, Lead, serta Head terkait.';
     await loadMyBlockers();
   } catch (err: any) {
-    errorMessage.value = err.message || 'Gagal menghapus tiket kendala.';
+    modalError.value = err.message || 'Gagal menghapus tiket kendala.';
+    errorMessage.value = modalError.value;
   } finally {
     submittingDelete.value = false;
   }
@@ -1968,7 +2028,14 @@ onBeforeUnmount(() => {
           <div class="form-group">
             <div class="label-row">
               <label for="editBlockerTitle">Judul Kendala <span class="req">*</span></label>
-              <span class="char-count" :class="{ ok: editTitle.trim().length >= 10 }">
+              <span
+                class="char-count"
+                :class="{
+                  ok: editTitle.trim().length >= 10,
+                  invalid: editTitle.trim().length < 10,
+                }"
+                data-testid="edit-title-counter"
+              >
                 {{ editTitle.trim().length }} / 10 min
               </span>
             </div>
@@ -2022,7 +2089,10 @@ onBeforeUnmount(() => {
               <label>Dampak Kendala (Pilih 1–3 Dampak) <span class="req">*</span></label>
               <span
                 class="char-count"
-                :class="{ ok: editImpacts.length >= 1 && editImpacts.length <= 3 }"
+                :class="{
+                  ok: editImpacts.length >= 1 && editImpacts.length <= 3,
+                  invalid: editImpacts.length === 0,
+                }"
               >
                 {{ editImpacts.length }} / 3 dipilih
               </span>
@@ -2078,7 +2148,14 @@ onBeforeUnmount(() => {
           <div class="form-group">
             <div class="label-row">
               <label for="editBlockerDescription">Deskripsi Kendala &amp; Upaya Mandiri <span class="req">*</span></label>
-              <span class="char-count" :class="{ ok: editDescription.trim().length >= 20 }">
+              <span
+                class="char-count"
+                :class="{
+                  ok: editDescription.trim().length >= 20,
+                  invalid: editDescription.trim().length < 20,
+                }"
+                data-testid="edit-desc-counter"
+              >
                 {{ editDescription.trim().length }} / 20 min
               </span>
             </div>
@@ -2100,13 +2177,18 @@ onBeforeUnmount(() => {
               placeholder="Contoh: Perbaikan query transaksi dan deploy hotfix ke staging"
             />
           </div>
+
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
+          </div>
         </div>
         <div class="modal-foot">
           <button type="button" class="btn-secondary" @click="closeEditModal">Batal</button>
           <button
             type="button"
             class="btn-primary"
-            :disabled="submittingEdit"
+            :disabled="submittingEdit || !canSubmitEdit"
             data-testid="confirm-edit-blocker"
             @click="submitEditTicket"
           >
@@ -2162,7 +2244,14 @@ onBeforeUnmount(() => {
           <div v-if="deleteReasonCategory === 'OTHER'" class="form-group">
             <div class="label-row">
               <label for="deleteBlockerReason">Detail / Keterangan Alasan Penghapusan <span class="req">*</span></label>
-              <span class="char-count" :class="{ ok: deleteReason.trim().length >= 10 }">
+              <span
+                class="char-count"
+                :class="{
+                  ok: deleteReason.trim().length >= 10,
+                  invalid: deleteReason.trim().length < 10,
+                }"
+                data-testid="delete-reason-counter"
+              >
                 {{ deleteReason.trim().length }} / 10 karakter min
               </span>
             </div>
@@ -2173,13 +2262,18 @@ onBeforeUnmount(() => {
               placeholder="Tuliskan penjelasan spesifik mengapa tiket ini dihapus (min. 10 karakter)..."
             ></textarea>
           </div>
+
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
+          </div>
         </div>
         <div class="modal-foot">
           <button type="button" class="btn-secondary" @click="closeDeleteModal">Batal</button>
           <button
             type="button"
             class="btn-danger-solid"
-            :disabled="submittingDelete"
+            :disabled="submittingDelete || !canSubmitDelete"
             data-testid="confirm-delete-blocker"
             @click="submitDeleteTicket"
           >
@@ -3513,6 +3607,25 @@ textarea:focus {
 
 .char-count.ok {
   color: #00674D;
+}
+
+.char-count.invalid {
+  color: #B91C1C;
+  font-weight: 700;
+}
+
+.modal-inline-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .modal-foot {

@@ -3257,28 +3257,28 @@ Seluruh akun menggunakan kata sandi standar `Password123!`. Buka 4 jendela/profi
        - **Uji Validasi Negatif Edit:** Ganti **Judul Kendala (*)** dengan teks 5 karakter `Salah` $\rightarrow$ tombol **Simpan Perubahan** menjadi nonaktif (*disabled*).
        - **Uji Kombinasi Edit Kategori ke `CROSS_TEAM` + Multi-Dampak:**
          - **Judul Kendala (*):** `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`
-         - **Kategori Kendala (*):** Pilih **`Menunggu Tim / Rekan Lain — Menunggu data dari divisi lain...`** (`CROSS_TEAM`) $\rightarrow$ pastikan di dalam modal edit langsung muncul dropdown **`Divisi / Tim yang Sedang Ditunggu (*)`**!
-         - **Divisi / Tim yang Sedang Ditunggu (*):** Pilih **`Operations & Infrastructure (Ops, Server & Jaringan)`**.
+         - **Kategori Kendala (*):** Pilih **`Menunggu Tim / Rekan Lain — Menunggu data dari divisi lain...`** (`CROSS_TEAM`) $\rightarrow$ pastikan di dalam modal edit langsung muncul dropdown **`Divisi yang Sedang Ditunggu *`**!
+         - **Divisi yang Sedang Ditunggu (*):** Pilih **`Divisi Operations & Infrastructure (IT, Server & Jaringan)`**.
          - **Dampak Kendala (*):** Lepas centang `Tugas Pribadi` setelah mencentang **`Target & Tenggat Waktu`** (`MILESTONE`) dan **`Jadwal Proyek Lintas Tim`** (`PROJECT`) (terpilih 2 dampak).
-         - **Tingkat Keparahan (Severity) (*):** Pilih **`HIGH (Target 4 jam)`**.
+         - **Tingkat Keparahan (Severity) (*):** Pilih **`High (Target 4 jam)`**.
          - **Deskripsi Kendala & Upaya Mandiri (*):** `Webhook callback pembayaran dari sandbox vendor terblokir firewall staging sehingga membutuhkan pembukaan port dari tim Operations & Infrastructure.`
          - **Bantuan Konkret yang Diharapkan (opsional):** `Whitelist IP server sandbox vendor pada firewall staging`
        - Klik **Simpan Perubahan**.
      - **Verifikasi Hasil Edit & *Dynamic Re-Routing* (`Celah A`):**
-       - Pada kartu tiket di `Blocker Saya`: judul berubah menjadi `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`, tingkat keparahan menjadi `Tingkat HIGH`, kotak taksonomi menampilkan **`Kategori Kendala: Menunggu Tim / Rekan Lain`**, baris **`Divisi yang Ditunggu: Operations & Infrastructure (Ops, Server & Jaringan)`**, serta 2 dampak (`Target & Tenggat Waktu` & `Jadwal Proyek Lintas Tim`).
+       - Pada kartu tiket di `Blocker Saya`: judul berubah menjadi `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`, tingkat keparahan menjadi `Tingkat HIGH`, kotak taksonomi menampilkan **`Kategori Kendala: Menunggu Tim / Rekan Lain`**, baris **`Divisi yang Ditunggu: Divisi Operations & Infrastructure (IT, Server & Jaringan)`**, serta 2 dampak (`Target & Tenggat Waktu` & `Jadwal Proyek Lintas Tim`).
        - Perhatikan baris **Penanggung Jawab**: karena tiket masih berstatus `Menunggu Respons` (`OPEN`) dan kategori diubah ke `CROSS_TEAM` (menunggu divisi Ops & Infra), **Penanggung Jawab otomatis berpindah dari `Arif Budiman` menjadi `Gunawan Setiawan` (`Head of Operations & Infrastructure`)**!
      - Cek `/notifications` di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** dan **Jendela 4B (`head.ops@dutamedia.com` — Gunawan Setiawan)**: keduanya menerima notifikasi **`Laporan Kendala Diperbarui Pelapor: Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`** yang mencantumkan `Penanggung Jawab (PIC): Gunawan Setiawan`, `Kategori Kendala: Menunggu Tim / Rekan Lain` (bersih tanpa kode Inggris), dan daftar 2 dampak!
 
 3. **Langkah 3.3 — Uji Hapus Tiket Varian 1 (Kategori `Alasan Lainnya` Wajib Teks $\ge 10$ Karakter + Pembersihan Notifikasi Lama) & Varian 2 (Kategori Preset Tanpa Teks)**
    - Di **Jendela 1 (Aditya)** pada tab `Blocker Saya`, klik tombol merah **`Hapus Tiket`** pada kartu `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`:
-     - Pilih **`Sudah Teratasi Mandiri`** $\rightarrow$ pastikan textarea `Detail / Keterangan Alasan Penghapusan` **TIDAK MUNCUL** dan tombol `Ya, Hapus Tiket` langsung aktif.
-     - Ubah pilihan menjadi **`Alasan Lainnya`** $\rightarrow$ pastikan textarea `Detail / Keterangan Alasan Penghapusan (*)` muncul dan tombol `Ya, Hapus Tiket` menjadi nonaktif (*disabled*).
-     - **Uji Negatif (`< 10` karakter):** Ketik `Batal.` (6 karakter) $\rightarrow$ penghitung menampilkan `6 / 10 karakter min` (merah) dan tombol tetap nonaktif.
-     - **Isi Valid ($\ge 10$ karakter):** `Tim infra sudah membuka akses port firewall melalui permintaan grup koordinasi pagi ini.` $\rightarrow$ klik **`Ya, Hapus Tiket`**.
+     - Pilih **`Sudah Teratasi Mandiri`** $\rightarrow$ pastikan textarea `Detail / Keterangan Alasan Penghapusan` **TIDAK MUNCUL** dan tombol **`Konfirmasi Hapus Tiket`** langsung aktif.
+     - Ubah pilihan menjadi **`Alasan Lainnya`** $\rightarrow$ pastikan textarea `Detail / Keterangan Alasan Penghapusan *` muncul dan tombol **`Konfirmasi Hapus Tiket`** menjadi nonaktif (*disabled*).
+     - **Uji Negatif (`< 10` karakter):** Ketik `Batal.` (6 karakter) $\rightarrow$ penghitung menampilkan `6 / 10 karakter min` (merah) dan tombol **`Konfirmasi Hapus Tiket`** tetap nonaktif.
+     - **Isi Valid ($\ge 10$ karakter):** `Tim infra sudah membuka akses port firewall melalui permintaan grup koordinasi pagi ini.` $\rightarrow$ klik **`Konfirmasi Hapus Tiket`**.
    - Cek `/notifications` di **Jendela 4B (Gunawan Setiawan)** dan **Jendela 3 (Arif Budiman)** (refresh):
      - Notifikasi lama tiket tersebut otomatis terhapus bersih, digantikan 1 notifikasi baru **`Tiket Kendala Dihapus Pelapor: Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`** dengan `Kategori Alasan Hapus: Alasan Lainnya` dan `Detail Alasan Penghapusan: Tim infra sudah membuka akses port firewall...`.
    - **Uji Hapus Varian 2 (Kategori Preset Tanpa Input Teks):**
-     - Di **Jendela 1 (Aditya)**, buat 1 tiket cepat di `/raise-blockers`: Judul `Duplikasi Tiket Pengujian Integrasi Komitmen Harian`, Kategori `APPROVAL`, Dampak `TASK`, Keparahan `Low`, Deskripsi `Tiket ini tidak sengaja dibuat dua kali untuk pengujian penghapusan kategori duplikat.` $\rightarrow$ kirim $\rightarrow$ buka `Blocker Saya` $\rightarrow$ klik **`Hapus Tiket`** $\rightarrow$ pilih **`Salah Input / Tiket Duplikat`** $\rightarrow$ langsung klik **`Ya, Hapus Tiket`** (tanpa mengetik teks).
+     - Di **Jendela 1 (Aditya)**, buat 1 tiket cepat di `/raise-blockers`: Judul `Duplikasi Tiket Pengujian Integrasi Komitmen Harian`, Kategori `APPROVAL`, Dampak `TASK`, Keparahan `Low`, Deskripsi `Tiket ini tidak sengaja dibuat dua kali untuk pengujian penghapusan kategori duplikat.` $\rightarrow$ kirim $\rightarrow$ buka `Blocker Saya` $\rightarrow$ klik **`Hapus Tiket`** $\rightarrow$ pilih **`Salah Input / Tiket Duplikat`** $\rightarrow$ langsung klik **`Konfirmasi Hapus Tiket`** (tanpa mengetik teks).
      - Cek `/notifications` di **Jendela 3 (Arif Budiman)**: masuk notifikasi `Tiket Kendala Dihapus Pelapor: Duplikasi Tiket...` dengan `Kategori Alasan Hapus: Salah Input / Tiket Duplikat` (tanpa baris `Detail Alasan Penghapusan`).
 
 ---

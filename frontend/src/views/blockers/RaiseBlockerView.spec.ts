@@ -973,4 +973,78 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     vi.useRealTimers();
     vi.unstubAllGlobals();
   });
+
+  it('disables modal Edit & Delete submit buttons and marks counters invalid when below minimum length', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-modal-val',
+                type: 'APPROVAL',
+                severity: 'LOW',
+                impact: 'TASK',
+                impacts: ['TASK'],
+                status: 'OPEN',
+                ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+                description: '[Salah Konfigurasi Variabel Environment] Pemanggilan API lokal gagal karena variabel base URL belum diperbarui.',
+                raisedAt: '2026-11-18T09:00:00Z',
+                assignedOwner: { id: 'owner-1', fullName: 'Arif Budiman' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    // 1. Uji Modal Edit: judul 5 karakter "Salah" -> counter merah (.invalid) & Simpan Perubahan disabled
+    await wrapper.find('[data-testid="edit-ticket-blk-modal-val"]').trigger('click');
+    const editTitleInput = wrapper.find('#editBlockerTitle');
+    await editTitleInput.setValue('Salah');
+    expect(wrapper.find('[data-testid="edit-title-counter"]').classes()).toContain('invalid');
+    expect((wrapper.find('[data-testid="confirm-edit-blocker"]').element as HTMLButtonElement).disabled).toBe(true);
+
+    await editTitleInput.setValue('Judul Edit Baru Valid Minimal Sepuluh');
+    expect(wrapper.find('[data-testid="edit-title-counter"]').classes()).toContain('ok');
+    expect((wrapper.find('[data-testid="confirm-edit-blocker"]').element as HTMLButtonElement).disabled).toBe(false);
+    await wrapper.find('[data-testid="edit-blocker-modal"] .btn-close').trigger('click');
+
+    // 2. Uji Modal Hapus: awalnya disabled -> preset aktif -> Alasan Lainnya < 10 char disabled & counter merah
+    await wrapper.find('[data-testid="delete-ticket-blk-modal-val"]').trigger('click');
+    const delBtn = () => wrapper.find('[data-testid="confirm-delete-blocker"]').element as HTMLButtonElement;
+    expect(delBtn().disabled).toBe(true);
+
+    await wrapper.find('[data-testid="delete-reason-SELF_RESOLVED"]').setValue(true);
+    expect(delBtn().disabled).toBe(false);
+
+    await wrapper.find('[data-testid="delete-reason-OTHER"]').setValue(true);
+    expect(delBtn().disabled).toBe(true);
+    await wrapper.find('#deleteBlockerReason').setValue('Batal.');
+    expect(wrapper.find('[data-testid="delete-reason-counter"]').classes()).toContain('invalid');
+    expect(delBtn().disabled).toBe(true);
+
+    await wrapper.find('#deleteBlockerReason').setValue('Kendala sudah diselesaikan melalui koordinasi tim infra pagi ini.');
+    expect(wrapper.find('[data-testid="delete-reason-counter"]').classes()).toContain('ok');
+    expect(delBtn().disabled).toBe(false);
+
+    vi.unstubAllGlobals();
+  });
 });
