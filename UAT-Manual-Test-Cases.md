@@ -3298,14 +3298,14 @@ Seluruh akun menggunakan kata sandi standar `Password123!`. Buka 4 jendela/profi
        - **Verifikasi Anti-Self-Routing (`DEC-017`):** Meskipun Bambang adalah Penanggung Jawab Kategori `TECHNICAL`, karena Bambang adalah **pelapor tiket ini**, sistem **tidak menunjuk Bambang ke dirinya sendiri**, melainkan otomatis menaikkan ke Atasan Langsung Bambang yaitu **`Arif Budiman`**!
      - Klik **Kirim Laporan Blocker**.
    - Masih di **Jendela 2 (Bambang Pratama)**, buka menu **Antrean Blocker (`/blockers`)** di sidebar kiri:
-     - Ubah dropdown filter kepemilikan ke-2 dari `Semua Tiket Tim` menjadi **`Dilaporkan oleh Saya`**, lalu pilih tiket `Limitasi Kuota API Payment Gateway...`.
+     - Ubah dropdown filter kepemilikan ke-2 dari `Semua Tiket` menjadi **`Dilaporkan oleh Saya`**, lalu pilih tiket `Limitasi Kuota API Payment Gateway...`.
      - **Verifikasi Proteksi Self-Handling di `/blockers`:** Meskipun Bambang adalah Technical Lead yang membuka `/blockers`, karena ia adalah Pelapor tiket ini, tombol `Terima & Tangani` dan `Beri Bantuan` **TIDAK MUNCUL**. Yang muncul di kanan atas hanyalah **`Edit Tiket`** dan **`Hapus Tiket`**!
      - **Uji Fitur Edit Tiket Langsung dari Antrean `/blockers`:**
-       - Klik tombol **`Edit Tiket`** di kanan atas panel detail `/blockers` (membuka modal `Edit Tiket Kendala Aktif` di halaman antrean).
+       - Klik tombol **`Edit Tiket`** di kanan atas panel detail `/blockers` (membuka modal `Edit Tiket Kendala #...` di halaman antrean).
        - Ubah **Kategori Kendala (*)** menjadi **`Vendor & Pihak Ketiga — Layanan pihak luar bermasalah (API/payment gateway error, lisensi habis, vendor cetak/jasa telat)`** (`VENDOR`).
        - Tambahkan centang dampak ke-3: **`Keuangan & Kerugian Uang`** (`FINANCIAL`) (sehingga terpilih **3 dampak**: `CLIENT`, `PRODUCTION`, `FINANCIAL`).
        - Klik **Simpan Perubahan** $\rightarrow$ pastikan di panel detail `/blockers` bagian **Kategori Kendala** langsung berubah menjadi `Vendor & Pihak Ketiga` dan bagian **Dampak Kendala** menampilkan 3 dampak lengkap!
-       - Kembalikan dropdown filter ke-2 ke `Semua Tiket Tim`.
+       - Kembalikan dropdown filter ke-2 ke `Semua Tiket`.
 
 2. **Langkah 4.2 — PIC (`Arif Budiman`) Menekan `Terima & Tangani` lalu Menetapkan `Terima Risiko` (Jendela 3: `head.eng@dutamedia.com`)**
    - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** $\rightarrow$ buka `/blockers` (refresh) dan pilih tiket `Limitasi Kuota API Payment Gateway Vendor Pihak Ketiga Bulan Berjalan`.
@@ -3321,8 +3321,8 @@ Seluruh akun menggunakan kata sandi standar `Password123!`. Buka 4 jendela/profi
      - Buka `/notifications` (refresh) $\rightarrow$ masuk notifikasi `Risiko Diterima (Mitigasi Aktif): Limitasi Kuota API Payment Gateway...`.
      - Buka `/blockers` (refresh) dan pilih tiket tersebut $\rightarrow$ di kanan atas panel detail kini tampil tombol **`Belum Memadai`** dan **`Konfirmasi & Tutup`**.
      - Klik **`Belum Memadai`**:
-       - **Uji Negatif (`< 10` karakter):** Ketik `Kurang` lalu klik **Kirim & Kembalikan** $\rightarrow$ muncul toast error merah `"Alasan pengembalian wajib diisi minimal 10 karakter."`
-       - **Isi Alasan Valid:** `Tanpa antrean retry lokal, webhook transaksi yang gagal di tengah jam sibuk berisiko hilang sebelum jadwal batch 30 menit berikutnya.` $\rightarrow$ klik **Kirim & Kembalikan**.
+       - **Uji Negatif (`< 10` karakter):** Ketik `Kurang` lalu klik **`Kembalikan ke PIC`** $\rightarrow$ muncul kotak error merah di modal & toast `"Alasan pengembalian tiket wajib diisi minimal 10 karakter."`
+       - **Isi Alasan Valid:** `Tanpa antrean retry lokal, webhook transaksi yang gagal di tengah jam sibuk berisiko hilang sebelum jadwal batch 30 menit berikutnya.` $\rightarrow$ klik **`Kembalikan ke PIC`**.
        - *Hasil yang Diharapkan:* Status kembali ke `Sedang Ditangani`, kotak jingga lama disembunyikan dari atas detail tiket namun tercatat utuh di `Riwayat Penanganan & Kontribusi (2)`.
    - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**:
      - Buka `/notifications` (refresh) $\rightarrow$ pastikan masuk notifikasi dengan judul khusus **`Mitigasi Belum Memadai: Limitasi Kuota API Payment Gateway Vendor Pihak Ketiga Bulan Berjalan`** dan kalimat pengantar bersih: `"Bambang Pratama menyatakan bahwa arahan mitigasi risiko belum memadai untuk dijalankan, sehingga tiket kembali berstatus Sedang Ditangani."`
@@ -3371,12 +3371,12 @@ Seluruh akun menggunakan kata sandi standar `Password123!`. Buka 4 jendela/profi
        2. **Halaman 2 — Radar Risiko Proyek (`/projects/risk`):** Kartu `WP-CORE` menampilkan jumlah `Blocker Terbuka` bertambah dan menampilkan kendala utama secara bersih.
        3. **Halaman 3 — Penuaan & Eskalasi (`/blockers/aging`):** Tiket aktif tampil di dalam tabel penuaan dengan keterangan `Kategori:` & `Dampak:` bahasa Indonesia, dan seluruh label halaman bebas dari kata `SLA` (tekan `Ctrl + F` ketik `SLA` $\rightarrow$ `0` hasil).
      - Di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**:
-       4. **Halaman 4 — Laporan Eksekutif (`/reports`):** Catat angka kolom `Blocker Aktif` pada baris `Engineering`.
+       4. **Halaman 4 — Laporan Eksekutif (`/reports`):** Catat angka kolom `Blocker Aktif` pada baris `Engineering & Tech`.
    - **Uji Responsivitas Layar Kecil ($\le 1024\text{ px}$) & Selesaikan Tiket Proyek `WP-CORE`:**
      - Di **Jendela 2 (Bambang Pratama)**, buka `/blockers`.
      - Perkecil lebar jendela browser (atau tekan `F12` $\rightarrow$ *Toggle Device Toolbar* dengan lebar $\le 1024\text{ px}$) hingga daftar tiket berada di atas dan detail di bawah $\rightarrow$ klik kartu `Memori Heap Node Worker Habis Saat Kompilasi Laporan Bulanan` $\rightarrow$ pastikan layar otomatis *scroll* halus turun ke panel detail bawah $\rightarrow$ klik tombol **`↑ Kembali ke Daftar`** untuk naik kembali. Kembalikan ukuran browser ke layar penuh.
      - Klik **`Terima & Tangani`** $\rightarrow$ klik **`Selesaikan`** $\rightarrow$ isi catatan solusi: `Query export laporan bulanan telah diubah menggunakan mekanisme batch cursor 500 baris sehingga penggunaan memori stabil di bawah 150MB.` $\rightarrow$ klik **Kirim Solusi**.
-     - Refresh `/dashboard`, `/projects/risk`, `/blockers/aging` (di Jendela 2) dan `/reports` (di Jendela 3) $\rightarrow$ pastikan angka `Blocker Belum Direspon`, `Blocker Terbuka` pada `WP-CORE`, daftar `/blockers/aging`, dan `Blocker Aktif` pada baris `Engineering` di `/reports` langsung **berkurang 1**!
+     - Refresh `/dashboard`, `/projects/risk`, `/blockers/aging` (di Jendela 2) dan `/reports` (di Jendela 3) $\rightarrow$ pastikan angka `Blocker Belum Direspon`, `Blocker Terbuka` pada `WP-CORE`, daftar `/blockers/aging`, dan `Blocker Aktif` pada baris `Engineering & Tech` di `/reports` langsung **berkurang 1**!
      - Di **Jendela 1 (Aditya)**, buka `/raise-blockers?tab=mine` (refresh) $\rightarrow$ klik **`Konfirmasi & Tutup Tiket`** pada tiket `Memori Heap Node Worker Habis Saat Kompilasi Laporan Bulanan`.
 
 ---
@@ -3505,7 +3505,7 @@ Buka **DevTools Console (`F12` $\rightarrow$ tab `Console`)** untuk membuktikan 
      1. `1. Close OPEN Ticket (Harus 409): 409` (`"Tiket hanya dapat ditutup setelah penanggung jawab memberikan solusi (Solusi Diberikan) atau menetapkan mitigasi (Risiko Diterima)."`)
      2. `2. Edit CLOSED Ticket (Harus 409): 409` (`"Tiket kendala yang sudah diberi solusi atau ditutup tidak dapat diedit lagi."`)
      3. `3. Kirim 4 Dampak Sekaligus (Harus 400): 400` (ditolak validasi maksimal 3 dampak)
-     4. `4. Kirim CROSS_TEAM Tanpa Divisi (Harus 400): 400` (`"Untuk kategori Menunggu Tim / Rekan Lain (CROSS_TEAM), divisi yang ditunggu wajib dipilih."`)
+     4. `4. Kirim CROSS_TEAM Tanpa Divisi (Harus 400): 400` (`"Untuk kategori Menunggu Tim / Rekan Lain, wajib memilih divisi yang sedang ditunggu."`)
 
 ---
 
