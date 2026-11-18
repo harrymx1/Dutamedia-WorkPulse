@@ -828,10 +828,18 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     await wrapper.find('#waitingForFunction').setValue('Delivery');
     await flushPromises();
 
-    // 3. Kotak centang 9 dampak dengan batas maksimal 3
+    // 3. Kotak centang 9 dampak dengan batas maksimal 3 dan peringatan inline jika dilepas ke 0
     expect(wrapper.text()).toContain('Pilih 1 sampai maksimal 3 dampak yang paling terasa.');
     expect(wrapper.findAll('input[data-testid^="impact-checkbox-"]')).toHaveLength(9);
+    expect(wrapper.find('[data-testid="impact-min-warning"]').exists()).toBe(false);
     await wrapper.find('[data-testid="impact-checkbox-TASK"]').setValue(true);
+    await wrapper.find('[data-testid="impact-checkbox-TASK"]').setValue(false);
+    expect(wrapper.find('[data-testid="impact-selection-count"]').text()).toBe('0 / 3 dipilih');
+    expect(wrapper.find('[data-testid="impact-min-warning"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="impact-min-warning"]').text()).toContain('Minimal pilih 1 dampak kendala.');
+
+    await wrapper.find('[data-testid="impact-checkbox-TASK"]').setValue(true);
+    expect(wrapper.find('[data-testid="impact-min-warning"]').exists()).toBe(false);
     await wrapper.find('[data-testid="impact-checkbox-TEAM"]').setValue(true);
     await wrapper.find('[data-testid="impact-checkbox-PROJECT"]').setValue(true);
     expect(wrapper.find('[data-testid="impact-selection-count"]').text()).toBe('3 / 3 dipilih');

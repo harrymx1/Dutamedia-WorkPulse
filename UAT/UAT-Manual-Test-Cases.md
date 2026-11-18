@@ -1337,41 +1337,41 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-BLKR-002: Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge)
+### TC-BLKR-002: Konfirmasi Penerimaan Blocker oleh Penanggung Jawab / Atasan (Acknowledge)
 - **Test Case ID:** `TC-BLKR-002`
 - **Scenario ID:** `SCN-BLKR-02`
-- **Requirement ID:** `FR-31`, `FR-32`, `DEC-007`
-- **Judul:** Konfirmasi Penerimaan Blocker oleh Atasan (Acknowledge / Respons Awal)
-- **Tujuan:** Memvalidasi bahwa Tech Lead / Supervisor dapat melihat blocker aktif anggota timnya dan mengonfirmasi penanganan (*Acknowledge*) sebelum batas waktu SLA kedaluwarsa.
+- **Requirement ID:** `FR-31`, `FR-32`, `DEC-007`, `DEC-015`, `DEC-017`
+- **Judul:** Konfirmasi Penerimaan Blocker oleh Penanggung Jawab (PIC) / Atasan (Terima & Tangani)
+- **Tujuan:** Memvalidasi bahwa Penanggung Jawab (PIC) yang ditunjuk (baik Supervisor, Head, maupun staf Penanggung Jawab Kategori resmi `isCategoryOwner`) dapat membuka `/blockers`, melihat rincian Kategori & multi-Dampak secara utuh tanpa badge singkatan kaku, memastikan tombol pengerjaan (`Beri Bantuan`, `Terima Risiko`, `Selesaikan`) terkunci sebelum diterima, dan mengonfirmasi penanganan (*Terima & Tangani / Acknowledge*) dalam target waktu respons.
 - **Modul / Halaman:** Blocker Queue (`/blockers`)
 - **Kategori Pengujian:** Workflow Transition / SLA Adherence
 - **Teknik Desain Test Case:** State Transition Testing
-- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`)
+- **Role:** `SUPERVISOR` (`lead.tech@dutamedia.com`) / Penanggung Jawab Kategori (`network.infra@dutamedia.com`) / `HEAD` (`head.eng@dutamedia.com`)
 - **Priority:** **Critical (P0)**
-- **Risk Rationale:** Tanpa acknowledgment tepat waktu, blocker dianggap terlantar (*SLA breach*) dan tereskalasi ke level direksi.
-- **Preconditions:** Login sebagai `lead.tech@dutamedia.com`. Terdapat blocker `TC-BLKR-001` berstatus `OPEN` di antrean tim Engineering.
+- **Risk Rationale:** Tanpa penerimaan tepat waktu oleh PIC, kendala dianggap belum ditangani dan tereskalasi ke jenjang manajemen di atasnya.
+- **Preconditions:** Login sebagai PIC tiket (`lead.tech@dutamedia.com`, `network.infra@dutamedia.com`, atau `head.eng@dutamedia.com`). Terdapat blocker aktif berstatus `OPEN` (`Menunggu Respons`) di `/blockers`.
 - **Test Data ID:** `TD-AUTH-02` dan `TD-BLKR-01`
 - **Persiapan Sebelum Tes:** Masuk ke halaman `/blockers`.
 
 **Langkah Pengujian:**
 1. **Langkah 1**
-   - **Aksi:** Buka halaman Blocker Queue via sidebar.
+   - **Aksi:** Buka halaman Antrean Blocker via sidebar (`/blockers`).
    - **Lokasi:** Menu "Antrean Blocker" (`/blockers`).
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Daftar blocker tim ditampilkan. Blocker `Database Staging Timeout` yang dilaporkan Aditya Nugroho muncul dengan badge `OPEN`.
-   - **Verifikasi:** Tombol "Respons / Bantu" tersedia pada baris blocker tersebut.
+   - **Hasil yang diharapkan:** Daftar kendala ditampilkan. Tiket kendala yang ditugaskan ke pengguna menampilkan badge hijau `Tugas Anda` dan status `Menunggu Respons` (tanpa badge singkatan kode kategori kaku di sudut kartu maupun header kanan).
+   - **Verifikasi:** Panel detail kanan menampilkan bagian khusus **Kategori Kendala** (nama lengkap + penjelasan, serta **Divisi yang Ditunggu** bila kategori `CROSS_TEAM`) dan susunan **Dampak Kendala** (1–3 dampak lengkap dengan penjelasannya).
 2. **Langkah 2**
-   - **Aksi:** Klik tombol "Respons / Bantu" pada blocker kritis tersebut.
-   - **Lokasi:** Tombol aksi pada kartu blocker.
+   - **Aksi:** Periksa penguncian tombol aksi tahap awal pada panel detail kanan.
+   - **Lokasi:** Kanan atas panel detail di `/blockers`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Modal dialog "Respons Hambatan Tim" terbuka, memuat opsi tindakan intervensi dan kolom catatan tindakan awal.
-   - **Verifikasi:** Modal terbuka dengan judul yang sesuai dan field catatan intervensi aktif.
+   - **Hasil yang diharapkan:** Saat tiket berstatus `Menunggu Respons` dan pengguna adalah PIC tiket, hanya muncul 1 tombol aksi yaitu **Terima & Tangani** (tombol `Beri Bantuan`, `Terima Risiko`, dan `Selesaikan` belum muncul). Jika pengguna adalah Pelapor tiket itu sendiri, tombol `Terima & Tangani` dan `Beri Bantuan` disembunyikan (diganti tombol `Edit Tiket` & `Hapus Tiket`).
+   - **Verifikasi:** Penguncian tombol sesuai peran (PIC vs Non-PIC vs Pelapor) berjalan ketat.
 3. **Langkah 3**
-   - **Aksi:** Masukkan rencana tindakan awal dan klik "Konfirmasi Respons (Acknowledge)".
-   - **Lokasi:** Modal dialog respons blocker.
-   - **Data:** Catatan: `Saya sedang mengontak tim Infra DevOps untuk restart instance RDS staging sekarang.`
-   - **Hasil yang diharapkan:** Modal menutup, toast sukses muncul, status blocker bertransisi dari `OPEN` menjadi `ACKNOWLEDGED` (atau `IN_PROGRESS`). SLA respons awal tercatat terpenuhi tepat waktu (*Within SLA*).
-   - **Verifikasi:** Status badge pada blocker berubah warna menjadi biru/kuning dengan teks `ACKNOWLEDGED` / `IN_PROGRESS`.
+   - **Aksi:** Klik tombol **Terima & Tangani**.
+   - **Lokasi:** Panel detail `/blockers`.
+   - **Data:** Tidak ada.
+   - **Hasil yang diharapkan:** Muncul toast hijau `"Tiket kendala berhasil diterima dan berstatus Sedang Ditangani."` Status tiket bertransisi dari `OPEN` (`Menunggu Respons`) menjadi `ACKNOWLEDGED` (`Sedang Ditangani`), ke-3 tombol pengerjaan PIC (`Beri Bantuan`, `Terima Risiko`, `Selesaikan`) langsung terbuka, dan pelapor menerima notifikasi `Tiket Kendala Sedang Ditangani`.
+   - **Verifikasi:** Status badge pada kartu dan detail berubah menjadi biru (`Sedang Ditangani`).
 
 - **Expected Final Result:** Transisi status berhasil, waktu respons awal tercatat di sistem audit, dan timer breached SLA berhenti.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot kartu blocker yang telah berubah status menjadi `ACKNOWLEDGED` dengan catatan supervisor tertera.
@@ -1457,11 +1457,11 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Hasil yang diharapkan:** Halaman radar eskalasi terbuka dengan statistik: Total Blocker Breached SLA, Rata-rata Durasi Hambatan Menua, dan Matriks Distribusi Departemen.
    - **Verifikasi:** Header dan indikator matriks eskalasi tampil utuh.
 2. **Langkah 2**
-   - **Aksi:** Periksa daftar blocker pada kelompok "Melewati SLA (Breached)".
+   - **Aksi:** Periksa daftar blocker pada tabel antrean penuaan & eskalasi.
    - **Lokasi:** Tabel antrean eskalasi `/blockers/aging`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Blocker yang belum direspon atau belum terselesaikan melewati batas waktu menampilkan label merah tebal: "SLA Breached (+X Jam Terlambat)".
-   - **Verifikasi:** Detail durasi keterlambatan tertera secara akurat.
+   - **Hasil yang diharapkan:** Kolom rincian kendala menampilkan nama **Kategori** dan daftar **Dampak** dalam bahasa Indonesia yang jelas (tanpa badge kode kategori mentah), serta kendala yang melewati batas waktu menampilkan label merah keterlambatan. Halaman ini juga dapat diakses oleh staf pemegang mandat **Penanggung Jawab Kategori (`isCategoryOwner`, `DEC-017`)**.
+   - **Verifikasi:** Detail durasi penuaan, Kategori, dan Dampak tertera secara akurat.
 3. **Langkah 3**
    - **Aksi:** Klik tombol "Intervensi Manajemen / Tag Atasan" pada salah satu blocker yang menua.
    - **Lokasi:** Baris tindakan pada tabel aging.
@@ -1553,11 +1553,11 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Hasil yang diharapkan:** Tampilan beralih ke Tab 2 ("Blocker Saya"). Muncul kartu ringkasan jumlah tiket (Semua, Aktif, Selesai, Ditutup). Daftar tiket kendala yang dilaporkan oleh pengguna ditampilkan secara kronologis.
    - **Verifikasi:** Tiket `Database Staging Timeout` yang dilaporkan sebelumnya tampil dengan badge severity merah (`CRITICAL`), badge status kuning/biru (`ACKNOWLEDGED` / `IN_PROGRESS`), dan indikator target SLA.
 2. **Langkah 2**
-   - **Aksi:** Periksa rincian kartu kendala dan riwayat kontribusi bantuan.
+   - **Aksi:** Periksa rincian kartu kendala, informasi taksonomi (Kategori & Dampak), aksi Edit/Hapus tiket aktif (`DEC-016`), dan riwayat kontribusi bantuan (`DEC-015`).
    - **Lokasi:** Kartu tiket kendala pada Tab "Blocker Saya".
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Kartu menampilkan rincian: deskripsi masalah, konteks wewenang, nama atasan yang mengonfirmasi (*acknowledged by*), serta blok riwayat kontribusi bantuan (*Support Contributions*) yang memuat nama rekan pembantu, tindakan yang diambil, dan hasil bantuan.
-   - **Verifikasi:** Kontribusi bantuan dari rekan kerja terbaca dengan jelas dan terformat rapi.
+   - **Hasil yang diharapkan:** Kartu menampilkan rincian bersih tanpa badge singkatan kategori kaku di header: kotak taksonomi memuat **Kategori Kendala** lengkap (beserta **Divisi yang Ditunggu** bila kategori `CROSS_TEAM`) dan susunan 1–3 **Dampak Kendala** lengkap dengan penjelasannya; tombol `Edit Tiket` & `Hapus Tiket` tampil hanya untuk tiket aktif (`OPEN`/`ACKNOWLEDGED`/`IN_PROGRESS`); serta blok **Riwayat Penanganan & Kontribusi** memuat 3 tombol tanggapan bantuan (`Terima sbg Penyelesaian (Tutup Tiket)`, `Terima Bantuan (Membantu Sebagian)` dengan catatan wajib >= 10 karakter, dan `Bantuan Belum Membantu` dengan catatan wajib >= 10 karakter).
+   - **Verifikasi:** Informasi Kategori, multi-Dampak, dan riwayat kontribusi bantuan terbaca dengan jelas dan terformat rapi.
 3. **Langkah 3**
    - **Aksi:** Gunakan tombol filter status: klik filter "Selesai" dan "Aktif".
    - **Lokasi:** Tombol filter di atas daftar kartu kendala.
@@ -3023,50 +3023,494 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 
 ---
 
-### TC-E2E-002: Siklus Blocker: Pelaporan -> SLA Escalation -> Resolusi
+### TC-E2E-002: Siklus Blocker Lengkap: 16 Kategori, 9 Multi-Dampak, Penanggung Jawab Kategori (`DEC-017`), Kolaborasi Bantuan, Terima Risiko, Edit/Hapus (`DEC-016`), & Keamanan Backend
 - **Test Case ID:** `TC-E2E-002`
 - **Scenario ID:** `SCN-E2E-02`
-- **Requirement ID:** `FR-29`, `FR-31`, `FR-32`, `FR-33`, `FR-34`, `DEC-007`
-- **Judul:** Perjalanan Hambatan Kritis: Pelaporan oleh Karyawan -> Tinjauan Atasan -> Resolusi Tuntas
-- **Tujuan:** Memvalidasi siklus hidup blocker dari pelaporan awal, masuknya ke antrean atasan dengan penghitung waktu SLA mundur, intervensi atasan, hingga penutupan resmi dengan catatan solusi teknis.
-- **Modul / Halaman:** Lintas Modul (`/raise-blockers` -> `/blockers` -> `/blockers/aging`)
-- **Kategori Pengujian:** End-to-End User Journey / State Transition
-- **Teknik Desain Test Case:** Use Case Testing & State Transition
-- **Role:** Multi-Aktor (`EMPLOYEE` dilanjutkan `SUPERVISOR`)
+- **Requirement ID:** `FR-15`..`FR-21`, `FR-29`..`FR-35`, `DEC-006`, `DEC-007`, `DEC-014`, `DEC-015`, `DEC-016`, `DEC-017`, `CR-018`
+- **Judul:** Panduan Master Pengujian End-to-End Blocker & Eskalasi WorkPulse (7 Skenario Lengkap + Kombinasi & Kondisi Langka)
+- **Tujuan:** Memvalidasi seluruh siklus hidup kendala (Blocker) tanpa celah: 16 Kategori (5 kelompok `<optgroup>`), 9 Dampak (kotak centang pilih 1–3 dampak), dropdown kondisional `Divisi yang Ditunggu` untuk `CROSS_TEAM`, pengarahan otomatis ke Penanggung Jawab Kategori (`DEC-017`) / Atasan / Pimpinan Proyek beserta pencegahan self-routing & fallback cuti ke atas (`DEC-014`), pembukaan menu `/blockers` & `/blockers/aging` bagi staf `isCategoryOwner`, siklus 6-riwayat penanganan (`Terima & Tangani`, `Beri Bantuan`, `Bantuan Belum Membantu`, `Terima Bantuan Membantu Sebagian` dengan catatan wajib >= 10 karakter, `Selesaikan`, `Solusi Belum Memadai`, `Konfirmasi & Tutup`), eskalasi paralel `CRITICAL` & bantuan Non-PIC saat `Menunggu Respons` (`Terima sbg Penyelesaian`), siklus `Edit Tiket` (termasuk *Dynamic Re-Routing* saat kategori diubah) & 2 varian `Hapus Tiket` (`DEC-016`), siklus `Terima Risiko` (`Mitigasi Belum Memadai`), audit 4 halaman pengawasan manajerial, responsivitas layar kecil ($\le 1024\text{ px}$), serta uji tembus keamanan API via Console (`403 Forbidden`, `400 Bad Request`, `409 Conflict`).
+- **Modul / Halaman:** Lintas Modul (`/raise-blockers`, `/blockers`, `/blockers/aging`, `/notifications`, `/dashboard`, `/projects/risk`, `/reports`)
+- **Kategori Pengujian:** End-to-End User Journey / State Transition / Combinatorial & Edge-Case Verification
+- **Teknik Desain Test Case:** Use Case Testing, State Transition, Boundary Value Analysis, & Security Negative Testing
+- **Role:** Multi-Aktor (`EMPLOYEE`, `SUPERVISOR`, `HEAD`, dan Staf `EMPLOYEE` Pemegang Mandat Penanggung Jawab Kategori `isCategoryOwner`)
 - **Priority:** **Critical (P0)**
-- **Risk Rationale:** Memastikan sistem eskalasi blocker benar-benar mampu mencegah keterlambatan penyelesaian hambatan teknis tim.
-- **Preconditions:** Akun Employee dan Supervisor aktif.
-- **Test Data ID:** `TD-BLKR-01` dan `TD-BLKR-03`
-- **Persiapan Sebelum Tes:** Login sebagai Employee.
+- **Risk Rationale:** Memastikan setiap kemungkinan alur, kombinasi kategori/dampak, delegasi wewenang, notifikasi lintas peran, dan pagar keamanan backend berjalan 100% akurat sesuai aturan bisnis.
+- **Preconditions:** Seluruh akun seeder aktif dan database telah memiliki 9 mandat Penanggung Jawab Kategori resmi (`seed.ts`).
+- **Test Data ID:** `TD-BLKR-01` s/d `TD-BLKR-06`
+- **Persiapan Sebelum Tes:** Siapkan 4 jendela/profil browser terpisah sesuai **Tahap 0** di bawah ini.
 
-**Langkah Pengujian:**
-1. **Langkah 1 (Pelaporan)**
-   - **Aksi:** Login sebagai Employee, buka `/raise-blockers`. Buat laporan kendala kritis terkait akses jaringan API server.
-   - **Lokasi:** `/raise-blockers`.
-   - **Data:** Deskripsi: `API Server Gateway Network Unreachable`, Severity: `KRITIS (CRITICAL)`, Kategori: `TECHNICAL` (*Teknis & Kode Program*) atau `NETWORK` (*Jaringan & Koneksi*), Dampak (centang 1–3): `TEAM` (*Satu Tim / Divisi*) & `PROJECT` (*Jadwal Proyek Lintas Tim*).
-   - **Hasil yang diharapkan:** Blocker tersimpan berstatus `OPEN` dengan target SLA respons 2 jam serta diarahkan ke Penanggung Jawab Kategori / atasan terkait (`DEC-017`).
-   - **Verifikasi:** Muncul di antrean blocker pribadi (`Blocker Saya`) lengkap dengan keterangan Kategori dan daftar Dampak.
-2. **Langkah 2 (Intervensi Atasan / Penanggung Jawab)**
-   - **Aksi:** Logout, lalu login sebagai Supervisor / Penanggung Jawab (`lead.tech@dutamedia.com` atau `network.infra@dutamedia.com`). Buka `/blockers`.
-   - **Lokasi:** `/blockers`.
-   - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Blocker kritis tampil di posisi teratas antrean. Penanggung jawab klik "Respons / Bantu" (atau "Acknowledge") dan memberikan catatan intervensi.
-   - **Verifikasi:** Status blocker bertransisi menjadi `ACKNOWLEDGED`.
-3. **Langkah 3 (Penyelesaian Tuntas)**
-   - **Aksi:** Setelah perbaikan simulasi selesai, klik "Tandai Selesai (Resolve)". Masukkan deskripsi solusi minimal 10 karakter.
-   - **Lokasi:** Modal penyelesaian blocker di `/blockers`.
-   - **Data:** `Gateway network route telah di-reroute ke redundant subnet dan failover sukses.`
-   - **Hasil yang diharapkan:** Status blocker bertransisi menjadi `RESOLVED`.
-   - **Verifikasi:** Blocker tercatat menunggu konfirmasi pelapor.
-4. **Langkah 4 (Verifikasi & Penutupan oleh Karyawan)**
-   - **Aksi:** Logout dan login kembali sebagai Employee. Buka menu `Lapor Blocker` -> tab `Blocker Saya` (atau klik notifikasi `Lihat & Konfirmasi Tiket Saya`), cek catatan penyelesaian pada tiket, lalu klik **Konfirmasi & Tutup Tiket**.
-   - **Lokasi:** `/raise-blockers?tab=mine`.
-   - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Sebelum dikonfirmasi, status tiket tampil sebagai `Solusi Diberikan · Menunggu Konfirmasi` (dan `ACCEPTED_RISK` sebagai `Risiko Diterima · Menunggu Konfirmasi` jika supervisor memilih Terima Risiko). Setelah karyawan mengklik **Konfirmasi & Tutup Tiket**, status berubah permanen menjadi `CLOSED` (`Selesai Ditutup`) dan counter `Menunggu Konfirmasi` berkurang / berpindah ke filter `Selesai / Ditutup`. Jika memilih **Belum Memadai (Kembalikan)** dengan alasan minimal 10 karakter, tiket kembali ke `ACKNOWLEDGED`.
-   - **Verifikasi:** Siklus kendala selesai secara akuntabel dengan validasi dua pihak (PIC menyelesaikan/mitigasi -> Pelapor mengonfirmasi penutupan).
+---
 
-- **Expected Final Result:** Alur eskalasi dan resolusi hambatan berjalan mulus, kolaboratif, dan terdokumentasi rapi.
-- **Bukti yang Perlu Dikumpulkan:** Screenshot kartu blocker berstatus RESOLVED lengkap dengan riwayat intervensi atasan.
+#### Tahap 0 — Persiapan Lingkungan & Daftar Akun Uji Resmi (4 Jendela Browser)
+Seluruh akun menggunakan kata sandi standar `Password123!`. Buka 4 jendela/profil browser terpisah agar pengujian lintas peran berjalan cepat:
+
+1. **Jendela 1 — Pelapor / Employee Biasa (Aditya Nugroho — Frontend Developer, Divisi Engineering):**
+   - Email: `dev.frontend@dutamedia.com` | Password: `Password123!`
+   - *Karakteristik:* Staf `EMPLOYEE` biasa (bukan Penanggung Jawab Kategori); **tidak** memiliki menu `/blockers` di sidebar.
+2. **Jendela 2 — Pimpinan Proyek `WP-CORE` & Penanggung Jawab Kategori `TECHNICAL` / Supervisor (Bambang Pratama — Technical Lead 1, Divisi Engineering):**
+   - Email: `lead.tech@dutamedia.com` | Password: `Password123!`
+   - *Karakteristik:* `SUPERVISOR`, Pimpinan Proyek `WP-CORE`, sekaligus pemegang mandat resmi **Penanggung Jawab Kategori `TECHNICAL` (*Teknis & Kode Program*)**.
+3. **Jendela 3 — Atasan Langsung Engineering & Pengarah Proyek `WP-CORE` / Head (Arif Budiman — Head of Engineering):**
+   - Email: `head.eng@dutamedia.com` | Password: `Password123!`
+   - *Karakteristik:* `HEAD` Divisi Engineering (Atasan Langsung dari Aditya Nugroho dan Bambang Pratama) serta Pengarah Proyek (*Project Sponsor*) `WP-CORE`.
+4. **Jendela 4 — Staf Spesialis Penanggung Jawab Kategori `INFRA` & `NETWORK` (`isCategoryOwner`) serta Head Ops & Infra:**
+   - **Akun 4A (Staf Spesialis `EMPLOYEE` dengan Mandat Kategori):** Fakhrizal Asshiddiq (*Network & Infrastructure*, Divisi Ops & Infra)
+     - Email: `network.infra@dutamedia.com` | Password: `Password123!`
+     - *Karakteristik:* Berperan `EMPLOYEE`, namun karena memegang mandat resmi **Penanggung Jawab Kategori `INFRA` & `NETWORK` (`isCategoryOwner = true`)**, menu **`Antrean Blocker` (`/blockers`)** dan **`Penuaan & Eskalasi` (`/blockers/aging`)** terbuka untuknya!
+   - **Akun 4B (Atasan Langsung Ops & Infra / Head):** Gunawan Setiawan (*Head of Operations & Infrastructure*)
+     - Email: `head.ops@dutamedia.com` | Password: `Password123!`
+
+---
+
+#### Skenario 1 — Validasi Formulir Baru (16 Kategori 5 Grup, Dropdown Kondisional `CROSS_TEAM`, Kotak Centang 9 Dampak Batas 1–3, Pratinjau Routing Dinamis) & Siklus Lengkap 6-Riwayat oleh PIC (`Terima & Tangani` → `Beri Bantuan #1 [Bantuan Belum Membantu]` → `Beri Bantuan #2 [Terima Bantuan Membantu Sebagian + Catatan Wajib]` → `Selesaikan #1` → `Belum Memadai [Solusi Belum Memadai]` → `Selesaikan #2` → `Konfirmasi & Tutup Tiket`)
+
+1. **Langkah 1.1 — Uji Validasi Form, Pratinjau Routing 16 Kategori, Batas 1–3 Kotak Centang Dampak, & Buat Tiket `HIGH` Jalur Struktural Engineering (Jendela 1: `dev.frontend@dutamedia.com` — Aditya)**
+   - Di **Jendela 1 (`dev.frontend@dutamedia.com`)**, klik menu **Lapor Blocker (`/raise-blockers`)** di sidebar kiri, dan pastikan berada di tab **Buat Laporan Blocker**.
+   - **A. Uji Cepat Validasi Negatif Judul & Fitur Bantu Input:**
+     1. Pada kolom **Judul Kendala (*)**, *copy-paste* teks 8 karakter ini: `Error DB`
+        - *Hasil yang Diharapkan:* Penghitung karakter menampilkan `8 / 140` dan tombol **Kirim Laporan Blocker** di bawah tetap **nonaktif (*disabled*)**.
+     2. Pada bagian **Bantuan Konkret yang Diharapkan**, klik chip **`+ Code Review`** lalu klik **`+ Approval`** $\rightarrow$ pastikan kolom terisi `Review Solusi / Arsitektur | Approval PR/Tiket`.
+     3. Klik tombol **Bersihkan Formulir** di kiri bawah $\rightarrow$ pastikan seluruh field kembali kosong dan muncul toast `"Formulir berhasil dibersihkan."`
+   - **B. Uji Interaktif Dropdown 16 Kategori (5 Kelompok `<optgroup>`) & Pratinjau Routing Dinamis (`DEC-017`):**
+     1. Buka dropdown **Kategori Kendala *** $\rightarrow$ pastikan tampil **16 pilihan yang dikelompokkan rapi ke dalam 5 grup**:
+        - `1. Teknis & Sistem` (`TECHNICAL`, `INFRA`, `HOSTING_DOMAIN`, `ACCESS_SECURITY`)
+        - `2. Kantor & Perangkat` (`NETWORK`, `WORK_DEVICE`, `OFFICE_FACILITY`)
+        - `3. Orang & Keputusan` (`REQUIREMENT`, `APPROVAL`, `CROSS_TEAM`, `RESOURCE`)
+        - `4. Pihak Luar, Uang & Hukum` (`CLIENT`, `VENDOR`, `FINANCE`, `LEGAL`)
+        - `5. Lainnya` (`OTHER`)
+     2. Pilih **`Teknis & Kode Program — Bug aplikasi, error kode, query database lambat, skenario tes gagal`** (`TECHNICAL`):
+        - *Hasil yang Diharapkan di Kotak Hijau `Jalur Penanganan Otomatis` (Bagian 2):* Menampilkan `"Diarahkan ke Penanggung Jawab Kategori Teknis & Kode Program. Penanggung jawab otomatis saat ini: Bambang Pratama."`
+     3. Sekarang ubah pilihan Kategori menjadi **`Menunggu Tim / Rekan Lain — Menunggu data dari divisi lain, review kode, atau materi desain/konten`** (`CROSS_TEAM`):
+        - *Hasil yang Diharapkan:* Tepat di bawah dropdown Kategori, **muncul dropdown baru `Divisi yang Sedang Ditunggu *`**! Selama divisi belum dipilih, tombol **Kirim Laporan Blocker** tetap terkunci (*disabled*).
+        - Pilih **`Divisi Operations & Infrastructure (IT, Server & Jaringan)`** pada dropdown Divisi yang Ditunggu $\rightarrow$ perhatikan kotak hijau `Jalur Penanganan Otomatis` di bawah otomatis berubah menunjuk pimpinan divisi tersebut: **`Gunawan Setiawan`**!
+     4. Sekarang ubah pilihan Kategori menjadi **`Persetujuan & Tanda Tangan — Menunggu ACC atau tanda tangan atasan untuk dokumen, penawaran, pengajuan, atau rilis`** (`APPROVAL`):
+        - *Hasil yang Diharapkan:* Dropdown `Divisi yang Sedang Ditunggu *` otomatis hilang, dan kotak hijau `Jalur Penanganan Otomatis` kembali menampilkan: `"Tiket akan langsung diteruskan otomatis ke Atasan Langsung Anda: Arif Budiman."`
+   - **C. Uji Batas Kotak Centang 9 Dampak Kendala (Minimal 1, Maksimal 3 Pilihan):**
+     1. Periksa bagian **Dampak Kendala (Pilih 1–3 Dampak) *** $\rightarrow$ pastikan terdapat petunjuk *"Pilih 1 sampai maksimal 3 dampak yang paling terasa."* dan penghitung kanan atas bertuliskan **`0 / 3 dipilih`**.
+     2. Centang **3 kotak dampak** sekaligus:
+        - `Target & Tenggat Waktu` (`MILESTONE`)
+        - `Satu Tim / Divisi` (`TEAM`)
+        - `Jadwal Proyek Lintas Tim` (`PROJECT`)
+        - *Hasil yang Diharapkan:* Penghitung berubah menjadi **`3 / 3 dipilih`**, dan **6 kotak centang dampak lainnya otomatis terkunci (*disabled*)** sehingga tidak bisa memilih dampak ke-4!
+     3. Sekarang lepas centang `Jadwal Proyek Lintas Tim` (`PROJECT`), `Satu Tim / Divisi` (`TEAM`), lalu `Target & Tenggat Waktu` (`MILESTONE`) hingga menjadi `0 / 3 dipilih`:
+        - *Hasil yang Diharapkan:* Penghitung berubah menjadi merah **`0 / 3 dipilih`**, muncul peringatan merah `"Minimal pilih 1 dampak kendala."`, dan tombol **Kirim Laporan Blocker** tetap nonaktif (*disabled*).
+     4. Centang kembali **`Target & Tenggat Waktu`** (`MILESTONE`) dan **`Satu Tim / Divisi`** (`TEAM`) $\rightarrow$ peringatan merah hilang dan penghitung menjadi **`2 / 3 dipilih`**.
+   - **D. Isi Lengkap Formulir & Kirim Tiket Skenario 1:**
+     - **Judul Kendala (*):** `Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form`
+     - **Tautkan ke Komitmen / Tugas Hari Ini (opsional):** Biarkan `— Tidak Terkait Komitmen Hari Ini —`
+     - **Kategori Kendala *:** Pastikan terpilih **`Persetujuan & Tanda Tangan — Menunggu ACC atau tanda tangan atasan untuk dokumen, penawaran, pengajuan, atau rilis`** (`APPROVAL`) *(agar otomatis mengarah ke Atasan Langsung Aditya yaitu **Arif Budiman**)*.
+     - **Dampak Kendala (Pilih 1–3 Dampak) *:** Pastikan tercentang **2 dampak**: **`Target & Tenggat Waktu`** (`MILESTONE`) dan **`Satu Tim / Divisi`** (`TEAM`).
+     - **Tingkat Keparahan (Severity) (*):** Klik kartu **`High`** (`Target: 4 jam` — pastikan label atas berbunyi `Target Penanganan Sesuai Kebijakan Aktif`).
+     - **Deskripsi Kendala & Upaya Mandiri (*):** `Integrasi halaman komitmen pagi ke endpoint POST /api/v1/daily/morning gagal dengan HTTP 500 Internal Server Error ketika payload berisi lebih dari satu item komitmen. Sudah dicek format payload JSON di browser DevTools sudah sesuai kontrak API, namun transaksi database di sisi backend gagal dieksekusi.`
+     - **Bantuan Konkret yang Diharapkan (opsional):** `Perbaikan query transaksi di endpoint backend dan persetujuan deploy hotfix ke server staging Engineering`
+     - **Bagian 2 (Penanggung Jawab Awal & Jalur Kewenangan):**
+       - Klik kartu kiri **Organizational Authority (Struktural)**.
+       - Biarkan dropdown **Penanggung Jawab Khusus** pada `— Ditentukan Otomatis: Arif Budiman (Head of Engineering) —`.
+       - Pastikan kotak hijau `Jalur Penanganan Otomatis` menampilkan: `"Tiket akan langsung diteruskan otomatis ke Atasan Langsung Anda: Arif Budiman."`
+     - Klik tombol hijau **Kirim Laporan Blocker** $\rightarrow$ setelah muncul kartu konfirmasi **Tiket Kendala Berhasil Diterbitkan**, klik **Lihat di Blocker Saya**.
+   - **E. Verifikasi Tampilan Baru di Tab `Blocker Saya` (`/raise-blockers`):**
+     - Pastikan filter terdiri dari 5 pill: `Semua`, `Menunggu Respons`, `Sedang Ditangani`, `Menunggu Konfirmasi`, `Selesai Ditutup`.
+     - Pada header kartu tiket: **TIDAK ADA badge singkatan kode kategori kaku** (seperti `APPROVAL`), hanya ada badge tingkat keparahan (`Tingkat HIGH`), status (`Menunggu Respons`), dan sisa waktu.
+     - Di bawah deskripsi & ekspektasi bantuan, pastikan tampil **Kotak Taksonomi Lengkap** yang memuat:
+       - **Kategori Kendala:** `Persetujuan & Tanda Tangan` — *Menunggu ACC atau tanda tangan atasan untuk dokumen, penawaran, pengajuan, atau rilis*
+       - **Dampak Kendala (2 baris bersusun rapi):**
+         1. `Target & Tenggat Waktu` — *Mengancam jadwal tenggat penting yang sudah disepakati (deadline rilis, tutup buku bulanan, target kirim laporan).*
+         2. `Satu Tim / Divisi` — *Menghambat pekerjaan beberapa rekan kerja dalam satu tim yang sama.*
+
+2. **Langkah 1.2 — Cek Notifikasi Alokasi Multi-Dampak & Penguncian Tombol Tahap 1 di `/blockers` (Jendela 3: `head.eng@dutamedia.com` — Arif Budiman)**
+   - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**, buka menu **Notifikasi (`/notifications`)**.
+   - **Verifikasi Tampilan Notifikasi Alokasi:**
+     - Kartu notifikasi teratas menampilkan chip `Alokasi Kendala` dan judul `Kendala Baru Dialokasikan: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form`.
+     - Klik notifikasi tersebut $\rightarrow$ muncul modal **Rincian Alokasi Tiket Kendala (Blocker)** dengan kalimat pengantar bersih: `"Aditya Nugroho melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti."`
+     - Pastikan baris rincian di dalam modal menampilkan bahasa Indonesia bersih tanpa kode sistem:
+       - `Kategori Kendala: Persetujuan & Tanda Tangan`
+       - `Dampak Kendala: Target & Tenggat Waktu (Mengancam jadwal tenggat penting yang sudah disepakati); Satu Tim / Divisi (Menghambat pekerjaan beberapa rekan kerja dalam satu tim)`
+     - Klik tombol hijau **Buka Antrean Eskalasi Blocker** (menuju `/blockers`).
+   - **Verifikasi Tampilan Daftar, Bagian Taksonomi Detail, & Penguncian Tombol Tahap 1 di `/blockers`:**
+     - Pada kartu tiket di daftar kiri maupun header detail di panel kanan: **TIDAK ADA badge singkatan kode kategori kaku** (`APPROVAL`).
+     - Di panel detail kanan, pastikan tampil bagian khusus **Kategori Kendala** (`Persetujuan & Tanda Tangan` + penjelasan) dan **Dampak Kendala** (2 poin bersusun: `Target & Tenggat Waktu` dan `Satu Tim / Divisi` lengkap dengan artinya).
+     - Pada kartu kiri dan panel kanan, di samping nama `Arif Budiman` tampil badge hijau **`Tugas Anda`**.
+     - Periksa tombol aksi di kanan atas panel detail: **HANYA ada 1 tombol yaitu `Terima & Tangani`** (tombol `Beri Bantuan`, `Terima Risiko`, dan `Selesaikan` belum muncul).
+     - Klik tombol **`Terima & Tangani`** $\rightarrow$ muncul toast hijau `"Tiket kendala berhasil diterima dan berstatus Sedang Ditangani."`, status berubah menjadi **`Sedang Ditangani`**, dan sekarang ke-3 tombol pengerjaan PIC (**`Beri Bantuan`**, **`Terima Risiko`**, **`Selesaikan`**) terbuka di kanan atas panel detail!
+
+3. **Langkah 1.3 — Verifikasi Notifikasi Penerimaan Kendala, Kirim `Beri Bantuan #1`, & Respons `Bantuan Belum Membantu`**
+   - Pindah ke **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)** $\rightarrow$ buka **Notifikasi (`/notifications`)** (refresh):
+     - Masuk notifikasi `Tiket Kendala Sedang Ditangani: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form` (chip: `Penerimaan Kendala`) dengan kalimat `"Arif Budiman telah menerima laporan kendala Anda dan sedang menanganinya."`
+   - Kembali ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** di `/blockers`:
+     - Klik tombol **`Beri Bantuan`**.
+     - **Verifikasi Modal Bantuan khusus PIC:** Judul modal bertuliskan **`Catat Bantuan / Progres Penanganan Bertahap`** dengan deskripsi `"Gunakan fitur ini untuk mencatat tindakan bantuan bertahap atau solusi percobaan sementara tanpa mengklaim kendala sudah selesai sepenuhnya (status tiket tetap Sedang Ditangani). Apabila akar kendala utama sudah teratasi 100%, gunakan tombol Selesaikan."`
+     - **Uji Validasi Negatif (`< 5` karakter):** Ketik `Cek` pada **Aksi Bantuan yang Diberikan (*)** lalu klik **Simpan Kontribusi** $\rightarrow$ muncul kotak error merah langsung di dalam modal (dan toast di atas modal) bertuliskan `"Tindakan bantuan minimal 5 karakter."`
+     - **Isi Input Valid Bantuan #1 (Copy-Paste):**
+       - **Aksi Bantuan yang Diberikan (*):** `Menambahkan pengecekan null-check pada array commitments di controller backend staging`
+       - **Hasil / Progres yang Dicapai (*):** `Endpoint sudah di-restart di server staging, silakan dicoba submit ulang dari form komitmen pagi`
+       - Klik **Simpan Kontribusi** $\rightarrow$ status tiket tetap `Sedang Ditangani`, dan di bawah `Riwayat Penanganan & Kontribusi (1)` muncul entri bantuan dari Arif Budiman.
+   - Pindah ke **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)**:
+     - Buka `/notifications` (refresh) $\rightarrow$ klik notifikasi `Bantuan Kendala Diberikan: ...` $\rightarrow$ klik **Lihat & Konfirmasi Tiket Saya** (`/raise-blockers?tab=mine`).
+     - Pada entri bantuan ke-1, pastikan tampil 3 tombol: `Terima sbg Penyelesaian (Tutup Tiket)`, `Terima Bantuan (Membantu Sebagian)`, dan `Bantuan Belum Membantu`.
+     - Klik tombol merah ke-3: **`Bantuan Belum Membantu`**.
+     - **Uji Validasi Negatif (`< 10` karakter):** Ketik `Gagal` lalu klik **Kirim Catatan Kendala** $\rightarrow$ muncul pesan error merah `"Penjelasan kendala yang masih terjadi wajib diisi minimal 10 karakter."`
+     - **Isi Catatan Valid:** `Sudah dicoba submit 2 komitmen di staging, tetapi masih muncul error 500 karena kegagalan transaksi Prisma di service.` $\rightarrow$ klik **Kirim Catatan Kendala**.
+     - *Hasil yang Diharapkan:* Badge entri ke-1 berubah menjadi `Bantuan Belum Membantu`, muncul baris `Catatan / Kendala yang Masih Terjadi:`, dan status tiket tetap `Sedang Ditangani`.
+
+4. **Langkah 1.4 — Verifikasi Notifikasi `Bantuan Belum Membantu`, Kirim `Beri Bantuan #2`, & Respons `Terima Bantuan (Membantu Sebagian)` (dengan Validasi Catatan Progres Wajib $\ge 10$ Karakter)**
+   - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** $\rightarrow$ buka `/notifications` (refresh):
+     - Masuk notifikasi `Bantuan Belum Membantu: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form` (chip: `Umpan Balik Bantuan`) dengan kalimat `"Aditya Nugroho menginformasikan bahwa bantuan yang diberikan belum membantu mengatasi kendala."` $\rightarrow$ klik **Buka Antrean Eskalasi Blocker** (`/blockers`).
+   - Di `/blockers` milik Arif Budiman, klik kembali **`Beri Bantuan`**, lalu isi Bantuan #2:
+     - **Aksi Bantuan yang Diberikan (*):** `Memperbaiki query nested create commitments di dalam transaksi Prisma pada DailyService`
+     - **Hasil / Progres yang Dicapai (*):** `Query insert multi-komitmen sudah berhasil masuk ke database staging, tinggal uji regresi penguncian form`
+     - Klik **Simpan Kontribusi**.
+   - Pindah ke **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)** di tab **Blocker Saya (`/raise-blockers?tab=mine`)** (refresh):
+     - Pada entri bantuan ke-2 di bawah `Riwayat Penanganan & Kontribusi (2)`, klik tombol biru ke-2: **`Terima Bantuan (Membantu Sebagian)`**.
+     - **Verifikasi Form Catatan Wajib pada `Terima Bantuan (Membantu Sebagian)`:**
+       - Pastikan muncul kotak teks dengan *placeholder* `"Jelaskan bagian yang sudah terbantu dan sisa kendala yang masih perlu dituntaskan (min. 10 karakter)..."` dan tombol **`Kirim Catatan Membantu Sebagian`**.
+       - **Uji Validasi Negatif (`< 10` karakter):** Ketik `Baru 50%` (8 karakter) lalu klik **`Kirim Catatan Membantu Sebagian`** $\rightarrow$ muncul pesan error merah `"Catatan progres dan sisa kendala yang masih terjadi wajib diisi minimal 10 karakter."`
+       - **Isi Catatan Progres Valid (Copy-Paste):** `Penyimpanan 2 komitmen sudah berhasil masuk ke DB staging, namun status penguncian form pasca-submit masih perlu disesuaikan.`
+       - Klik **`Kirim Catatan Membantu Sebagian`**.
+       - *Hasil yang Diharapkan:* Muncul toast `"Bantuan diterima (membantu sebagian). Tiket tetap dilanjutkan penanggung jawab."`, badge entri ke-2 berubah menjadi `Bantuan Diterima (Membantu Sebagian)`, muncul baris **`Catatan Progres & Sisa Kendala:`**, dan status tiket tetap `Sedang Ditangani`.
+   - Cek di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** pada `/notifications` (refresh):
+     - Masuk notifikasi `Bantuan Diterima (Membantu Sebagian): Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form` yang menampilkan baris `Catatan Progres & Sisa Kendala`.
+
+5. **Langkah 1.5 — Klaim `Selesaikan #1`, Pengembalian `Belum Memadai` (Notifikasi `Solusi Belum Memadai`), `Selesaikan #2`, & `Konfirmasi & Tutup Tiket`**
+   - Di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**, buka `/blockers` (refresh) $\rightarrow$ klik tombol hijau **`Selesaikan`**:
+     - **Uji Validasi Negatif (`< 10` karakter):** Ketik `Sudah ok` lalu klik **Kirim Solusi** $\rightarrow$ muncul toast error `"Catatan resolusi wajib diisi minimal 10 karakter."`
+     - **Isi Solusi #1:** `Hotfix transaksi komitmen harian dan respons serializer telah di-deploy ke staging, namun cache Redis gateway belum di-flush.` $\rightarrow$ klik **Kirim Solusi**.
+     - *Hasil yang Diharapkan:* Status tiket berubah menjadi **`Solusi Diberikan`**, seluruh tombol kerja PIC disembunyikan, dan muncul banner kuning `"Menunggu verifikasi dan konfirmasi penutupan dari pelapor (Aditya Nugroho)."`
+   - Pindah ke **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)**:
+     - Cek `/notifications` (refresh) $\rightarrow$ masuk notifikasi `Solusi Diberikan: ...` $\rightarrow$ klik **Lihat & Konfirmasi Tiket Saya**.
+     - Di tab `Blocker Saya`, klik tombol **`Belum Memadai (Kembalikan)`**.
+     - **Uji Validasi Negatif (`< 10` karakter):** Ketik `Masih 5` lalu klik **Kirim & Kembalikan ke PIC** $\rightarrow$ muncul pesan error merah `"Alasan pengembalian minimal 10 karakter."`
+     - **Isi Alasan Reopen Valid:** `Saat submit pertama kali berhasil, namun halaman langsung error saat memuat ulang status komitmen karena cache API lama.` $\rightarrow$ klik **Kirim & Kembalikan ke PIC**.
+     - *Hasil yang Diharapkan:* Status tiket kembali ke **`Sedang Ditangani`**, dan di dalam `Riwayat Penanganan & Kontribusi (4)` tercatat berurutan: `Bantuan Belum Membantu` $\rightarrow$ `Bantuan Diterima (Membantu Sebagian)` $\rightarrow$ `Solusi Diberikan` $\rightarrow$ `Dikembalikan Pelapor (Belum Memadai)`.
+   - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**:
+     - Cek `/notifications` (refresh) $\rightarrow$ pastikan masuk notifikasi dengan judul baru **`Solusi Belum Memadai: Endpoint API Komitmen Harian Mengembalikan Error 500 Saat Submit Form`** dan kalimat pengantar bersih: `"Aditya Nugroho menyatakan bahwa solusi yang diberikan belum memadai untuk mengatasi kendala, sehingga tiket kembali berstatus Sedang Ditangani."`
+     - Buka `/blockers` (refresh) $\rightarrow$ klik tombol hijau **`Selesaikan`**, lalu *copy-paste* solusi akhir: `Cache Redis API gateway staging sudah di-flush dan invalidasi otomatis ditambahkan pasca-submit komitmen harian.` $\rightarrow$ klik **Kirim Solusi**.
+   - Pindah ke **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)** di tab `Blocker Saya` (refresh) $\rightarrow$ klik tombol hijau **`Konfirmasi & Tutup Tiket`**.
+   - **Hasil Akhir Skenario 1:** Status tiket berubah permanen menjadi **`Selesai Ditutup`** (tombol `Edit Tiket` / `Hapus Tiket` tidak tampil), Arif menerima notifikasi `Tiket Ditutup Pelapor`, dan di dalam **`Riwayat Penanganan & Kontribusi (6)`** tampil lengkap 6 entri berurutan!
+
+---
+
+#### Skenario 2 — Kolaborasi Lintas Peran pada Tiket `CRITICAL` Proyek `WP-CORE`: Eskalasi Paralel ke Atasan, Bantuan oleh Non-PIC Saat Masih `Menunggu Respons` (Notifikasi Ganda ke Pelapor & PIC!), Modal Non-PIC Bersih Tanpa Istilah `Peer Support`, & Penutupan Instan via `Terima sbg Penyelesaian (Tutup Tiket)`
+
+1. **Langkah 2.1 — Buat Tiket `CRITICAL` Kategori `TECHNICAL` (2 Dampak) pada Proyek `WP-CORE` (Jendela 1: `dev.frontend@dutamedia.com` — Aditya)**
+   - Di **Jendela 1 (Aditya)**, buka `/raise-blockers` $\rightarrow$ tab **Buat Laporan Blocker**:
+     - **Judul Kendala (*):** `Deadlock Query Transaksi Saat Agregasi Data Dashboard Proyek WP-CORE`
+     - **Kategori Kendala (Type) (*):** Pilih **`Teknis & Kode Program — Bug aplikasi, error kode, query database lambat, skenario tes gagal`** (`TECHNICAL`)
+     - **Dampak Kendala (Impact) (*):** Centang **2 kotak**: **`Jadwal Proyek Lintas Tim`** (`PROJECT`) dan **`Layanan Langsung Pengguna`** (`PRODUCTION`)
+     - **Tingkat Keparahan (Severity) (*):** Klik kartu **`Critical`** (`Target: 2 jam` — pastikan kotak peringatan merah `Perhatian Skala Critical` muncul)
+     - **Deskripsi Kendala & Upaya Mandiri (*):** `Query agregasi komitmen mingguan pada modul backend WP-CORE mengalami deadlock transaksi PostgreSQL ketika dijalankan bersamaan oleh lebih dari 5 pengguna aktif.`
+     - **Bantuan Konkret yang Diharapkan (opsional):** `Optimasi urutan lock transaksi Prisma dan penambahan composite index pada tabel daily_records`
+     - **Bagian 2 (Penanggung Jawab Awal & Jalur Kewenangan):**
+       - Klik kartu kanan: **`Project Authority (Kewenangan Proyek)`**.
+       - Pada dropdown **Pilih Proyek Terdaftar (*)**, pilih: **`WP-CORE — WorkPulse Platform Core 2026`**.
+       - Pastikan kotak hijau `Jalur Penanganan Otomatis` menunjuk Pimpinan Proyek `WP-CORE` yaitu **`Bambang Pratama`**.
+     - Klik **Kirim Laporan Blocker** $\rightarrow$ klik **Lihat di Blocker Saya**.
+
+2. **Langkah 2.2 — Cek Eskalasi Paralel `CRITICAL` & Uji Bantuan oleh Non-PIC Saat Tiket Masih `Menunggu Respons` (Jendela 3: `head.eng@dutamedia.com` — Arif Budiman)**
+   - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** $\rightarrow$ buka `/notifications` (refresh):
+     - Masuk notifikasi **`Eskalasi Darurat (CRITICAL): Deadlock Query Transaksi Saat Agregasi Data Dashboard Proyek WP-CORE`** (chip: `Eskalasi Kendala`) dengan kalimat pengantar bersih: `"Aditya Nugroho melaporkan kendala darurat yang ditugaskan kepada Bambang Pratama. Pemberitahuan ini diteruskan kepada Anda selaku pimpinan untuk pemantauan dan bantuan percepatan penanganan."`
+     - Klik notifikasi tersebut $\rightarrow$ pastikan tercantum `Penanggung Jawab Awal (PIC): Bambang Pratama`, `Kategori Kendala: Teknis & Kode Program (TECHNICAL)`, dan 2 dampak $\rightarrow$ klik **Buka Antrean Eskalasi Blocker** (`/blockers`).
+   - Di halaman `/blockers` milik Arif Budiman, pilih tiket `Deadlock Query Transaksi Saat Agregasi Data Dashboard Proyek WP-CORE` (status: `Menunggu Respons`):
+     - **Verifikasi Tampilan Bersih & Hak Aksi Non-PIC (Arif Budiman):**
+       - Pada panel detail kanan di bagian **Penanggung Jawab Awal (PIC)** tertulis bersih **`Bambang Pratama`** (tanpa badge `PIC Rekan / Lainnya` yang redundan).
+       - Di kanan atas panel detail: tombol `Terima & Tangani`, `Terima Risiko`, dan `Selesaikan` **TIDAK MUNCUL**. Yang muncul **HANYA tombol `Beri Bantuan`** meskipun tiket masih `Menunggu Respons`!
+     - Klik tombol **`Beri Bantuan`** (sebagai Arif Budiman — Non-PIC):
+       - **Verifikasi Judul & Deskripsi Modal Non-PIC:** Judul modal wajib bertuliskan bersih **`Salurkan Kontribusi Bantuan`** (tanpa kata `Peer Support`!) dengan deskripsi `"Catat bantuan konkret lintas tim / rekan kerja untuk membantu mengurai kendala ini. Pelapor akan menerima notifikasi untuk meninjau bantuan Anda dan dapat langsung menutup tiket apabila kendalanya sudah teratasi."`
+       - **Isi Input Valid:**
+         - **Aksi Bantuan yang Diberikan (*):** `Menambahkan composite index pada kolom userId dan workDate serta mengurutkan operasi upsert transaksi Prisma`
+         - **Hasil / Progres yang Dicapai (*):** `Migration index sudah dijalankan di database staging dan uji beban 20 request paralel selesai dalam 45ms tanpa deadlock`
+       - Klik **Simpan Kontribusi** $\rightarrow$ muncul entri bantuan dari Arif Budiman di bawah `Riwayat Penanganan & Kontribusi (1)` dan status tiket tetap `Menunggu Respons`.
+
+3. **Langkah 2.3 — Verifikasi Notifikasi Ganda ke PIC Proyek (`Bambang Pratama`) & Klik `Terima & Tangani` (Jendela 2: `lead.tech@dutamedia.com`)**
+   - Pindah ke **Jendela 2 (`lead.tech@dutamedia.com` — Bambang Pratama)** $\rightarrow$ buka `/notifications` (refresh):
+     - **Verifikasi Notifikasi ke PIC atas Bantuan Non-PIC:** Pastikan Bambang menerima **2 notifikasi**:
+       1. `Kendala Baru Dialokasikan: Deadlock Query Transaksi Saat Agregasi Data Dashboard Proyek WP-CORE`
+       2. **`Bantuan Kendala Diberikan: Deadlock Query Transaksi Saat Agregasi Data Dashboard Proyek WP-CORE`** dengan kalimat pengantar khusus PIC: `"Arif Budiman telah menyalurkan kontribusi bantuan pada tiket kendala yang ditugaskan kepada Anda. Silakan pantau perkembangan ini sembari menunggu konfirmasi Pelapor."`
+     - Buka `/blockers` milik Bambang Pratama $\rightarrow$ pilih tiket tersebut (status: `Menunggu Respons`, badge hijau `Tugas Anda`, hanya tombol `Terima & Tangani` yang aktif) $\rightarrow$ klik **`Terima & Tangani`** sehingga status berubah menjadi `Sedang Ditangani`.
+
+4. **Langkah 2.4 — Tutup Tiket Instan dari Entri Bantuan Rekan via `Terima sbg Penyelesaian (Tutup Tiket)` (Jendela 1: `dev.frontend@dutamedia.com` — Aditya)**
+   - Pindah ke **Jendela 1 (Aditya)** $\rightarrow$ buka tab **Blocker Saya (`/raise-blockers?tab=mine`)** (refresh).
+   - Pada tiket `Deadlock Query Transaksi...`, di bawah `Riwayat Penanganan & Kontribusi (1)`, klik tombol hijau ke-1: **`Terima sbg Penyelesaian (Tutup Tiket)`**.
+   - **Hasil Akhir Skenario 2:**
+     - Muncul toast `"Bantuan diterima sebagai penyelesaian. Tiket ditutup permanen."`
+     - Status tiket langsung berubah menjadi **`Selesai Ditutup`** dengan 2 entri riwayat (`Bantuan Diterima sbg Penyelesaian` dan `Dikonfirmasi & Ditutup Pelapor`).
+     - Baik Bambang Pratama (Jendela 2) maupun Arif Budiman (Jendela 3) menerima notifikasi `Tiket Ditutup Pelapor` dengan kalimat `"Aditya Nugroho menerima kontribusi bantuan sebagai penyelesaian tuntas dan telah menutup tiket kendala ini."`
+
+---
+
+#### Skenario 3 — Siklus Edit Tiket Aktif (Termasuk Kombinasi Langka *Dynamic Re-Routing* Saat Kategori Diubah ke `CROSS_TEAM`) & 2 Varian Hapus Tiket oleh Pelapor (`DEC-016`)
+
+1. **Langkah 3.1 — Buat Tiket Uji Edit & Hapus (Jendela 1: `dev.frontend@dutamedia.com` — Aditya)**
+   - Di **Jendela 1 (Aditya)**, buka `/raise-blockers` $\rightarrow$ tab **Buat Laporan Blocker**:
+     - **Judul Kendala (*):** `Salah Konfigurasi Variabel Environment Modul Pembayaran di Lokal`
+     - **Kategori Kendala (Type) (*):** Pilih **`Persetujuan & Tanda Tangan`** (`APPROVAL`)
+     - **Dampak Kendala (Impact) (*):** Centang **`Tugas Pribadi`** (`TASK`)
+     - **Tingkat Keparahan (Severity) (*):** Klik **`Low`** (`Target: 24 jam`)
+     - **Deskripsi Kendala & Upaya Mandiri (*):** `Pemanggilan API pembayaran dari environment lokal gagal karena variabel base URL pada file contoh konfigurasi belum diperbarui.`
+     - **Bantuan Konkret yang Diharapkan (opsional):** `Konfirmasi nilai variabel environment terbaru untuk modul pembayaran lokal`
+     - **Konteks Kewenangan:** `Organizational Authority (Struktural)` (otomatis menunjuk **Arif Budiman**).
+     - Klik **Kirim Laporan Blocker** $\rightarrow$ klik **Lihat di Blocker Saya**.
+
+2. **Langkah 3.2 — Uji Edit Tiket Aktif + Kombinasi Langka *Dynamic Re-Routing* Lintas Divisi (`APPROVAL` $\rightarrow$ `CROSS_TEAM` ke Gunawan Setiawan) (Jendela 1 $\rightarrow$ Jendela 3 & Jendela 4B)**
+   - Di **Jendela 1 (Aditya)** pada tab `Blocker Saya`:
+     - Pastikan pada kartu tiket `Salah Konfigurasi...` muncul tombol **`Edit Tiket`** dan **`Hapus Tiket`** (sedangkan pada tiket Skenario 1 & 2 yang sudah `Selesai Ditutup`, kedua tombol tersebut tidak muncul).
+     - Klik **`Edit Tiket`** (membuka modal `Edit Tiket Kendala Aktif`):
+       - **Uji Validasi Negatif Edit:** Ganti **Judul Kendala (*)** dengan teks 5 karakter `Salah` $\rightarrow$ tombol **Simpan Perubahan** menjadi nonaktif (*disabled*).
+       - **Uji Kombinasi Edit Kategori ke `CROSS_TEAM` + Multi-Dampak:**
+         - **Judul Kendala (*):** `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`
+         - **Kategori Kendala (*):** Pilih **`Menunggu Tim / Rekan Lain — Menunggu data dari divisi lain...`** (`CROSS_TEAM`) $\rightarrow$ pastikan di dalam modal edit langsung muncul dropdown **`Divisi / Tim yang Sedang Ditunggu (*)`**!
+         - **Divisi / Tim yang Sedang Ditunggu (*):** Pilih **`Operations & Infrastructure (Ops, Server & Jaringan)`**.
+         - **Dampak Kendala (*):** Lepas centang `Tugas Pribadi` setelah mencentang **`Target & Tenggat Waktu`** (`MILESTONE`) dan **`Jadwal Proyek Lintas Tim`** (`PROJECT`) (terpilih 2 dampak).
+         - **Tingkat Keparahan (Severity) (*):** Pilih **`HIGH (Target 4 jam)`**.
+         - **Deskripsi Kendala & Upaya Mandiri (*):** `Webhook callback pembayaran dari sandbox vendor terblokir firewall staging sehingga membutuhkan pembukaan port dari tim Operations & Infrastructure.`
+         - **Bantuan Konkret yang Diharapkan (opsional):** `Whitelist IP server sandbox vendor pada firewall staging`
+       - Klik **Simpan Perubahan**.
+     - **Verifikasi Hasil Edit & *Dynamic Re-Routing* (`Celah A`):**
+       - Pada kartu tiket di `Blocker Saya`: judul berubah menjadi `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`, tingkat keparahan menjadi `Tingkat HIGH`, kotak taksonomi menampilkan **`Kategori Kendala: Menunggu Tim / Rekan Lain`**, baris **`Divisi yang Ditunggu: Operations & Infrastructure (Ops, Server & Jaringan)`**, serta 2 dampak (`Target & Tenggat Waktu` & `Jadwal Proyek Lintas Tim`).
+       - Perhatikan baris **Penanggung Jawab**: karena tiket masih berstatus `Menunggu Respons` (`OPEN`) dan kategori diubah ke `CROSS_TEAM` (menunggu divisi Ops & Infra), **Penanggung Jawab otomatis berpindah dari `Arif Budiman` menjadi `Gunawan Setiawan` (`Head of Operations & Infrastructure`)**!
+     - Cek `/notifications` di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** dan **Jendela 4B (`head.ops@dutamedia.com` — Gunawan Setiawan)**: keduanya menerima notifikasi **`Laporan Kendala Diperbarui Pelapor: Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`** yang mencantumkan `Penanggung Jawab (PIC): Gunawan Setiawan`, `Kategori Kendala: Menunggu Tim / Rekan Lain (CROSS_TEAM)`, dan daftar 2 dampak!
+
+3. **Langkah 3.3 — Uji Hapus Tiket Varian 1 (Kategori `Alasan Lainnya` Wajib Teks $\ge 10$ Karakter + Pembersihan Notifikasi Lama) & Varian 2 (Kategori Preset Tanpa Teks)**
+   - Di **Jendela 1 (Aditya)** pada tab `Blocker Saya`, klik tombol merah **`Hapus Tiket`** pada kartu `Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`:
+     - Pilih **`Sudah Teratasi Mandiri`** $\rightarrow$ pastikan textarea `Detail / Keterangan Alasan Penghapusan` **TIDAK MUNCUL** dan tombol `Ya, Hapus Tiket` langsung aktif.
+     - Ubah pilihan menjadi **`Alasan Lainnya`** $\rightarrow$ pastikan textarea `Detail / Keterangan Alasan Penghapusan (*)` muncul dan tombol `Ya, Hapus Tiket` menjadi nonaktif (*disabled*).
+     - **Uji Negatif (`< 10` karakter):** Ketik `Batal.` (6 karakter) $\rightarrow$ penghitung menampilkan `6 / 10 karakter min` (merah) dan tombol tetap nonaktif.
+     - **Isi Valid ($\ge 10$ karakter):** `Tim infra sudah membuka akses port firewall melalui permintaan grup koordinasi pagi ini.` $\rightarrow$ klik **`Ya, Hapus Tiket`**.
+   - Cek `/notifications` di **Jendela 4B (Gunawan Setiawan)** dan **Jendela 3 (Arif Budiman)** (refresh):
+     - Notifikasi lama tiket tersebut otomatis terhapus bersih, digantikan 1 notifikasi baru **`Tiket Kendala Dihapus Pelapor: Menunggu Whitelist IP Callback Sandbox Pembayaran dari Tim Infra`** dengan `Kategori Alasan Hapus: Alasan Lainnya` dan `Detail Alasan Penghapusan: Tim infra sudah membuka akses port firewall...`.
+   - **Uji Hapus Varian 2 (Kategori Preset Tanpa Input Teks):**
+     - Di **Jendela 1 (Aditya)**, buat 1 tiket cepat di `/raise-blockers`: Judul `Duplikasi Tiket Pengujian Integrasi Komitmen Harian`, Kategori `APPROVAL`, Dampak `TASK`, Keparahan `Low`, Deskripsi `Tiket ini tidak sengaja dibuat dua kali untuk pengujian penghapusan kategori duplikat.` $\rightarrow$ kirim $\rightarrow$ buka `Blocker Saya` $\rightarrow$ klik **`Hapus Tiket`** $\rightarrow$ pilih **`Salah Input / Tiket Duplikat`** $\rightarrow$ langsung klik **`Ya, Hapus Tiket`** (tanpa mengetik teks).
+     - Cek `/notifications` di **Jendela 3 (Arif Budiman)**: masuk notifikasi `Tiket Kendala Dihapus Pelapor: Duplikasi Tiket...` dengan `Kategori Alasan Hapus: Salah Input / Tiket Duplikat` (tanpa baris `Detail Alasan Penghapusan`).
+
+---
+
+#### Skenario 4 — Kondisi Langka (*Edge Case*) Anti-Self-Routing Saat Penanggung Jawab Kategori Melapor Sendiri, Edit Tiket Langsung dari Antrean `/blockers`, & Siklus `Terima Risiko` (`ACCEPTED_RISK` → `Mitigasi Belum Memadai` → Revisi Mitigasi → `Konfirmasi & Tutup`)
+
+1. **Langkah 4.1 — Uji *Edge Case* Ketika Penanggung Jawab Kategori `TECHNICAL` (`Bambang Pratama`) Melaporkan Kendala `TECHNICAL` Miliknya Sendiri + Edit Tiket dari `/blockers` (Jendela 2: `lead.tech@dutamedia.com`)**
+   - **Bambang Pratama (`lead.tech@dutamedia.com`)** adalah pemegang mandat Penanggung Jawab Kategori `TECHNICAL`. Bagaimana jika Bambang sendiri yang mengalami kendala `TECHNICAL`?
+   - Di **Jendela 2 (`lead.tech@dutamedia.com` — Bambang Pratama)**, buka menu **Lapor Blocker (`/raise-blockers`)** $\rightarrow$ tab **Buat Laporan Blocker**:
+     - **Judul Kendala (*):** `Limitasi Kuota API Payment Gateway Vendor Pihak Ketiga Bulan Berjalan`
+     - **Kategori Kendala (Type) (*):** Pilih **`Teknis & Kode Program — Bug aplikasi, error kode, query database lambat, skenario tes gagal`** (`TECHNICAL`)
+     - **Dampak Kendala (Impact) (*):** Centang **2 dampak**: **`Kepuasan & Hubungan Klien`** (`CLIENT`) dan **`Layanan Langsung Pengguna`** (`PRODUCTION`)
+     - **Tingkat Keparahan (Severity) (*):** Klik kartu **`Medium`** (`Target: 8 jam`)
+     - **Deskripsi Kendala & Upaya Mandiri (*):** `Sinkronisasi webhook transaksi real-time terkena rate limit HTTP 429 dari gateway karena kuota paket dasar sudah mencapai 95 persen bulan ini.`
+     - **Bantuan Konkret yang Diharapkan (opsional):** `Persetujuan upgrade paket API vendor atau penetapan mekanisme fallback sinkronisasi`
+     - **Bagian 2 (`Organizational Authority`):**
+       - **Verifikasi Anti-Self-Routing (`DEC-017`):** Meskipun Bambang adalah Penanggung Jawab Kategori `TECHNICAL`, karena Bambang adalah **pelapor tiket ini**, sistem **tidak menunjuk Bambang ke dirinya sendiri**, melainkan otomatis menaikkan ke Atasan Langsung Bambang yaitu **`Arif Budiman`**!
+     - Klik **Kirim Laporan Blocker**.
+   - Masih di **Jendela 2 (Bambang Pratama)**, buka menu **Antrean Blocker (`/blockers`)** di sidebar kiri:
+     - Ubah dropdown filter kepemilikan ke-2 dari `Semua Tiket Tim` menjadi **`Dilaporkan oleh Saya`**, lalu pilih tiket `Limitasi Kuota API Payment Gateway...`.
+     - **Verifikasi Proteksi Self-Handling di `/blockers`:** Meskipun Bambang adalah Technical Lead yang membuka `/blockers`, karena ia adalah Pelapor tiket ini, tombol `Terima & Tangani` dan `Beri Bantuan` **TIDAK MUNCUL**. Yang muncul di kanan atas hanyalah **`Edit Tiket`** dan **`Hapus Tiket`**!
+     - **Uji Fitur Edit Tiket Langsung dari Antrean `/blockers`:**
+       - Klik tombol **`Edit Tiket`** di kanan atas panel detail `/blockers` (membuka modal `Edit Tiket Kendala Aktif` di halaman antrean).
+       - Ubah **Kategori Kendala (*)** menjadi **`Vendor & Pihak Ketiga — Layanan pihak luar bermasalah (API/payment gateway error, lisensi habis, vendor cetak/jasa telat)`** (`VENDOR`).
+       - Tambahkan centang dampak ke-3: **`Keuangan & Kerugian Uang`** (`FINANCIAL`) (sehingga terpilih **3 dampak**: `CLIENT`, `PRODUCTION`, `FINANCIAL`).
+       - Klik **Simpan Perubahan** $\rightarrow$ pastikan di panel detail `/blockers` bagian **Kategori Kendala** langsung berubah menjadi `Vendor & Pihak Ketiga` dan bagian **Dampak Kendala** menampilkan 3 dampak lengkap!
+       - Kembalikan dropdown filter ke-2 ke `Semua Tiket Tim`.
+
+2. **Langkah 4.2 — PIC (`Arif Budiman`) Menekan `Terima & Tangani` lalu Menetapkan `Terima Risiko` (Jendela 3: `head.eng@dutamedia.com`)**
+   - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)** $\rightarrow$ buka `/blockers` (refresh) dan pilih tiket `Limitasi Kuota API Payment Gateway Vendor Pihak Ketiga Bulan Berjalan`.
+   - Klik **`Terima & Tangani`** $\rightarrow$ status berubah menjadi `Sedang Ditangani`.
+   - Klik tombol jingga **`Terima Risiko`** (membuka modal `Tetapkan Risiko Diterima`):
+     - **Uji Validasi Negatif 1 (Justifikasi `< 10` karakter):** Isi Justifikasi `Tunggu Q2` (9 karakter) dan Rencana Mitigasi `Jalankan sinkronisasi batch setiap 30 menit di luar jam sibuk tanpa antrean lokal.` $\rightarrow$ klik **Tetapkan Terima Risiko** $\rightarrow$ muncul toast error merah `"Justifikasi penerimaan risiko wajib diisi minimal 10 karakter."`
+     - **Uji Validasi Negatif 2 (Rencana Mitigasi `< 10` karakter):** Isi Justifikasi `Upgrade paket API vendor baru disetujui manajemen untuk siklus anggaran bulan depan sehingga limit 429 diterima sementara.` dan ganti Rencana Mitigasi menjadi `Cron saja` (9 karakter) $\rightarrow$ klik **Tetapkan Terima Risiko** $\rightarrow$ muncul toast error merah `"Rencana mitigasi risiko wajib diisi minimal 10 karakter."`
+     - **Isi Input Valid Lengkap:** Ganti Rencana Mitigasi dengan `Jalankan sinkronisasi batch setiap 30 menit di luar jam sibuk tanpa antrean lokal.` $\rightarrow$ klik **Tetapkan Terima Risiko**.
+     - *Hasil yang Diharapkan:* Status tiket berubah menjadi **`Risiko Diterima`**, tombol kerja PIC disembunyikan, dan muncul kotak jingga `Keputusan Risiko Diterima`.
+
+3. **Langkah 4.3 — Pelapor (`Bambang Pratama`) Mengembalikan Keputusan Risiko (`Belum Memadai` $\rightarrow$ Notifikasi `Mitigasi Belum Memadai`) lalu Mengonfirmasi Penutupan dari `/blockers`**
+   - Pindah ke **Jendela 2 (`lead.tech@dutamedia.com` — Bambang Pratama)**:
+     - Buka `/notifications` (refresh) $\rightarrow$ masuk notifikasi `Risiko Diterima (Mitigasi Aktif): Limitasi Kuota API Payment Gateway...`.
+     - Buka `/blockers` (refresh) dan pilih tiket tersebut $\rightarrow$ di kanan atas panel detail kini tampil tombol **`Belum Memadai`** dan **`Konfirmasi & Tutup`**.
+     - Klik **`Belum Memadai`**:
+       - **Uji Negatif (`< 10` karakter):** Ketik `Kurang` lalu klik **Kirim & Kembalikan** $\rightarrow$ muncul toast error merah `"Alasan pengembalian wajib diisi minimal 10 karakter."`
+       - **Isi Alasan Valid:** `Tanpa antrean retry lokal, webhook transaksi yang gagal di tengah jam sibuk berisiko hilang sebelum jadwal batch 30 menit berikutnya.` $\rightarrow$ klik **Kirim & Kembalikan**.
+       - *Hasil yang Diharapkan:* Status kembali ke `Sedang Ditangani`, kotak jingga lama disembunyikan dari atas detail tiket namun tercatat utuh di `Riwayat Penanganan & Kontribusi (2)`.
+   - Pindah ke **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**:
+     - Buka `/notifications` (refresh) $\rightarrow$ pastikan masuk notifikasi dengan judul khusus **`Mitigasi Belum Memadai: Limitasi Kuota API Payment Gateway Vendor Pihak Ketiga Bulan Berjalan`** dan kalimat pengantar bersih: `"Bambang Pratama menyatakan bahwa arahan mitigasi risiko belum memadai untuk dijalankan, sehingga tiket kembali berstatus Sedang Ditangani."`
+     - Buka `/blockers` $\rightarrow$ klik **`Terima Risiko`**, isi Justifikasi yang sama dan Rencana Mitigasi revisi: `Aktifkan batch sync terjadwal setiap 30 menit disertai tabel antrean retry lokal otomatis untuk setiap webhook yang terkena HTTP 429.` $\rightarrow$ klik **Tetapkan Terima Risiko**.
+   - Pindah ke **Jendela 2 (Bambang Pratama)** di `/blockers` (refresh) $\rightarrow$ klik tombol hijau **`Konfirmasi & Tutup`**.
+   - **Hasil Akhir Skenario 4:** Status tiket berubah menjadi **`Selesai Ditutup`** dengan **4 entri riwayat lengkap** (`Risiko Diterima` awal $\rightarrow$ `Dikembalikan Pelapor` $\rightarrow$ `Risiko Diterima` revisi $\rightarrow$ `Dikonfirmasi & Ditutup Pelapor`).
+
+---
+
+#### Skenario 5 — Pengujian Nyata Penanggung Jawab Kategori Spesialis (`DEC-017`: Staf `EMPLOYEE` `network.infra@dutamedia.com` Membuka `/blockers` & `/blockers/aging`), Eskalasi Paralel ke Head Ops (`head.ops@dutamedia.com`), Audit 4 Halaman Manajerial (`/dashboard`, `/projects/risk`, `/blockers/aging`, `/reports`), & UX Responsif Layar Kecil ($\le 1024\text{ px}$)
+
+1. **Langkah 5.1 — Buat Tiket `CRITICAL` Kategori `INFRA` (Otomatis ke Penanggung Jawab Kategori `Fakhrizal Asshiddiq` + Eskalasi ke `Gunawan Setiawan`) & 1 Tiket Proyek `WP-CORE` (Jendela 1: `dev.frontend@dutamedia.com` — Aditya)**
+   - Di **Jendela 1 (Aditya)**, buka `/raise-blockers` $\rightarrow$ tab **Buat Laporan Blocker**, lalu buat **Tiket #1 (Lintas Divisi `INFRA` — `CRITICAL`)**:
+     - **Judul Kendala (*):** `Sertifikat SSL Private Registry Docker Runner Staging Kedaluwarsa`
+     - **Kategori Kendala (*):** Pilih **`Server & Rilis Sistem — Server (kantor/cloud) bermasalah, server staging mati, proses rilis/deploy gagal`** (`INFRA`)
+     - **Dampak Kendala (*):** Centang **2 dampak**: **`Layanan Langsung Pengguna`** (`PRODUCTION`) dan **`Operasional Kantor`** (`COMPANY_OPS`)
+     - **Tingkat Keparahan (*):** Klik kartu **`Critical`** (`Target: 2 jam`)
+     - **Deskripsi Kendala & Upaya Mandiri (*):** `Node runner CI/CD gagal menarik base image dari private registry internal karena sertifikat TLS domain registry kedaluwarsa sejak pukul 08.00 WIB.`
+     - **Bantuan Konkret yang Diharapkan:** `Pembaruan sertifikat TLS Wildcard pada server private registry dan restart daemon Docker`
+     - **Bagian 2 (`Organizational Authority`):**
+       - **Verifikasi Routing Penanggung Jawab Kategori (`DEC-017`):** Pastikan kotak hijau `Jalur Penanganan Otomatis` menampilkan: `"Diarahkan ke Penanggung Jawab Kategori Server & Rilis Sistem. Penanggung jawab otomatis saat ini: Fakhrizal Asshiddiq."`
+     - Klik **Kirim Laporan Blocker** $\rightarrow$ klik **Laporkan Kendala Lain**.
+   - Sekarang buat **Tiket #2 (Proyek `WP-CORE` — `HIGH`)** agar pergerakan metrik proyek terlihat jelas:
+     - **Judul Kendala (*):** `Memori Heap Node Worker Habis Saat Kompilasi Laporan Bulanan`
+     - **Kategori Kendala (*):** Pilih **`Teknis & Kode Program`** (`TECHNICAL`)
+     - **Dampak Kendala (*):** Centang **`Jadwal Proyek Lintas Tim`** (`PROJECT`)
+     - **Tingkat Keparahan (*):** Klik kartu **`High`** (`Target: 4 jam`)
+     - **Deskripsi Kendala & Upaya Mandiri (*):** `Proses export laporan bulanan pada modul WP-CORE terhenti dengan error JavaScript heap out of memory saat memproses lebih dari 5.000 baris data.`
+     - **Bantuan Konkret yang Diharapkan:** `Implementasi cursor pagination atau streaming query pada service export`
+     - **Bagian 2 (`Project Authority`):** Pilih proyek **`WP-CORE — WorkPulse Platform Core 2026`** (otomatis menunjuk **`Bambang Pratama`**).
+     - Klik **Kirim Laporan Blocker**.
+
+2. **Langkah 5.2 — Verifikasi Hak Akses Menu `/blockers` & `/blockers/aging` bagi Staf `EMPLOYEE` Penanggung Jawab Kategori (`network.infra@dutamedia.com`) serta Eskalasi Paralel di `head.ops@dutamedia.com` (Jendela 4)**
+   - Di **Jendela 4**, login sebagai **Fakhrizal Asshiddiq (`network.infra@dutamedia.com` / `Password123!`)**:
+     - **Verifikasi Pembukaan Menu Khusus `isCategoryOwner` (`DEC-017`):**
+       - Meskipun Fakhrizal berstatus `EMPLOYEE` (staf spesialis, bukan Supervisor/Head), periksa sidebar kiri di bawah grup **Management**: **muncul menu `Antrean Blocker` (`/blockers`) dan `Penuaan & Eskalasi` (`/blockers/aging`)**! (Sedangkan menu manajerial lain seperti `Pulse Dashboard`, `Persetujuan Cuti`, atau `Catatan Evaluasi Kerja` tetap tidak muncul).
+     - Buka `/notifications` milik Fakhrizal $\rightarrow$ pastikan masuk notifikasi **`Kendala Baru Dialokasikan: Sertifikat SSL Private Registry Docker Runner Staging Kedaluwarsa`** sebagai PIC utama!
+     - Buka `/blockers` milik Fakhrizal $\rightarrow$ pastikan tiket `Sertifikat SSL Private Registry...` tampil dengan badge hijau **`Tugas Anda`** dan tombol **`Terima & Tangani`** aktif! *(Jangan klik Terima & Tangani dulu agar tiket ini tetap berstatus `OPEN` untuk diuji pada Skenario 6 & 7 di bawah).*
+     - Buka juga `/blockers/aging` sebagai Fakhrizal $\rightarrow$ pastikan halaman terbuka tanpa error `403 Forbidden`, dan pada kolom pertama di bawah judul tiket tampil keterangan **`Kategori: Server & Rilis Sistem`** serta **`Dampak: Layanan Langsung Pengguna, Operasional Kantor`** (tanpa badge kode mentah `INFRA`).
+   - *(Opsional di Jendela 4)*: Jika login sebentar ke **Gunawan Setiawan (`head.ops@dutamedia.com` / `Password123!`)**, pastikan di `/notifications` Gunawan masuk **`Eskalasi Darurat (CRITICAL): Sertifikat SSL Private Registry Docker Runner Staging Kedaluwarsa`** karena Gunawan adalah atasan langsung dari PIC Fakhrizal Asshiddiq!
+
+3. **Langkah 5.3 — Audit Pergerakan Metrik 4 Halaman Manajerial (`/dashboard`, `/projects/risk`, `/blockers/aging`, `/reports`) & UX Responsif Layar Kecil ($\le 1024\text{ px}$)**
+   - **Cek 4 Halaman Manajerial Saat Tiket Berstatus Aktif (`Menunggu Respons`):**
+     - Di **Jendela 2 (`lead.tech@dutamedia.com` — Bambang Pratama)**:
+       1. **Halaman 1 — Pulse Dashboard (`/dashboard`):** Kartu metrik ke-4 `Blocker Belum Direspon` menampilkan badge `Perlu Segera Ditanggapi`, dan daftar `Butuh Perhatian Segera` menampilkan tiket tanpa kurung siku `[...]` mentah.
+       2. **Halaman 2 — Radar Risiko Proyek (`/projects/risk`):** Kartu `WP-CORE` menampilkan jumlah `Blocker Terbuka` bertambah dan menampilkan kendala utama secara bersih.
+       3. **Halaman 3 — Penuaan & Eskalasi (`/blockers/aging`):** Tiket aktif tampil di dalam tabel penuaan dengan keterangan `Kategori:` & `Dampak:` bahasa Indonesia, dan seluruh label halaman bebas dari kata `SLA` (tekan `Ctrl + F` ketik `SLA` $\rightarrow$ `0` hasil).
+     - Di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**:
+       4. **Halaman 4 — Laporan Eksekutif (`/reports`):** Catat angka kolom `Blocker Aktif` pada baris `Engineering`.
+   - **Uji Responsivitas Layar Kecil ($\le 1024\text{ px}$) & Selesaikan Tiket Proyek `WP-CORE`:**
+     - Di **Jendela 2 (Bambang Pratama)**, buka `/blockers`.
+     - Perkecil lebar jendela browser (atau tekan `F12` $\rightarrow$ *Toggle Device Toolbar* dengan lebar $\le 1024\text{ px}$) hingga daftar tiket berada di atas dan detail di bawah $\rightarrow$ klik kartu `Memori Heap Node Worker Habis Saat Kompilasi Laporan Bulanan` $\rightarrow$ pastikan layar otomatis *scroll* halus turun ke panel detail bawah $\rightarrow$ klik tombol **`↑ Kembali ke Daftar`** untuk naik kembali. Kembalikan ukuran browser ke layar penuh.
+     - Klik **`Terima & Tangani`** $\rightarrow$ klik **`Selesaikan`** $\rightarrow$ isi catatan solusi: `Query export laporan bulanan telah diubah menggunakan mekanisme batch cursor 500 baris sehingga penggunaan memori stabil di bawah 150MB.` $\rightarrow$ klik **Kirim Solusi**.
+     - Refresh `/dashboard`, `/projects/risk`, `/blockers/aging` (di Jendela 2) dan `/reports` (di Jendela 3) $\rightarrow$ pastikan angka `Blocker Belum Direspon`, `Blocker Terbuka` pada `WP-CORE`, daftar `/blockers/aging`, dan `Blocker Aktif` pada baris `Engineering` di `/reports` langsung **berkurang 1**!
+     - Di **Jendela 1 (Aditya)**, buka `/raise-blockers?tab=mine` (refresh) $\rightarrow$ klik **`Konfirmasi & Tutup Tiket`** pada tiket `Memori Heap Node Worker Habis Saat Kompilasi Laporan Bulanan`.
+
+---
+
+#### Skenario 6 — Kondisi Kombinasi Cuti Penanggung Jawab Kategori (`DEC-014` + `DEC-017`: Fallback Vertikal ke Atas N+1 $\rightarrow$ N+2 $\rightarrow$ CEO / Reviewer Sementara, Tidak Pernah Turun ke Rekan/Bawahan)
+
+1. **Langkah 6.1 — Simulasi Penanggung Jawab Kategori `INFRA` (`Fakhrizal Asshiddiq`) Sedang Cuti Resmi Hari Ini & Verifikasi Kenaikan Otomatis ke Atasan (`Gunawan Setiawan`)**
+   - Di **Jendela 4 (`network.infra@dutamedia.com` — Fakhrizal Asshiddiq)**, buka menu **Pengajuan Cuti (`/leave/my`)**, lalu ajukan cuti untuk **hari ini** (Tanggal Mulai = Hari Ini, Tanggal Selesai = Hari Ini, Jenis = `Cuti Sakit`, Alasan = `Simulasi pengujian fallback cuti Penanggung Jawab Kategori INFRA ke atasan langsung`).
+   - Login ke **Gunawan Setiawan (`head.ops@dutamedia.com`)** di Jendela 4, buka menu **Persetujuan Cuti (`/leave/queue`)**, lalu **Setujui (`Approve`)** pengajuan cuti Fakhrizal tersebut.
+   - Sekarang kembali ke **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)**, buka `/raise-blockers` $\rightarrow$ tab **Buat Laporan Blocker**:
+     - Pilih Kategori **`Server & Rilis Sistem`** (`INFRA`) dengan `Organizational Authority`.
+     - **Verifikasi Fallback Cuti Vertikal (`DEC-014` + `DEC-017`):**
+       - Karena Fakhrizal Asshiddiq (Penanggung Jawab Kategori `INFRA`) sedang berstatus **Cuti Resmi (`APPROVED`)** hari ini, sistem **tidak pernah** menurunkan tiket ke rekan sejawat di Ops & Infra, melainkan otomatis menaikkan ke atasan langsung Fakhrizal yaitu **`Gunawan Setiawan`** (atau ke Reviewer Sementara aktif untuk fungsi `OperationsInfrastructure` bila sedang didelegasikan)!
+       - Kotak hijau `Jalur Penanganan Otomatis` menampilkan: `"Penanggung jawab kategori sedang cuti resmi, sehingga diteruskan otomatis ke atasan langsungnya. Penanggung jawab otomatis saat ini: Gunawan Setiawan."`
+
+---
+
+#### Skenario 7 — Uji Negatif Keamanan Backend, Hak Akses Lintas Peran/Scope (`403 Forbidden`), Validasi Payload Taksonomi Baru (`400 Bad Request` untuk $>3$ Dampak & `CROSS_TEAM` Tanpa Divisi), serta Transisi Status Ilegal (`409 Conflict`) via Browser DevTools Console
+
+Buka **DevTools Console (`F12` $\rightarrow$ tab `Console`)** untuk membuktikan bahwa seluruh aturan keamanan di sisi mesin belakang (*backend*) tidak dapat ditembus meskipun seseorang memanipulasi pemanggilan API secara langsung:
+
+1. **Langkah 7.1 — Uji Negatif 1: Pelapor (`dev.frontend@dutamedia.com`) Mencoba `Terima & Tangani` Tiketnya Sendiri (`403 Forbidden`) & Mencoba Membuka URL `/blockers` (`403 Forbidden Route Guard`)**
+   - Di **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)**:
+     - Ketik manual URL `/blockers` di bilah alamat browser $\rightarrow$ karena Aditya adalah `EMPLOYEE` biasa yang **bukan** Penanggung Jawab Kategori (`isCategoryOwner = false`), sistem langsung mengalihkan ke halaman **`/forbidden` (403 Akses Dibatasi)**! Klik kembali ke `/raise-blockers`.
+     - Tekan `F12` $\rightarrow$ tab **Console**, lalu *copy-paste* skrip berikut dan tekan **Enter**:
+```javascript
+(async () => {
+  const csrf = document.cookie.split('; ').find(r => r.startsWith('csrf_token='))?.split('=')[1] || '';
+  const listRes = await fetch('/api/blockers?mine=raised', { credentials: 'include' });
+  const { data } = await listRes.json();
+  const openTicket = data.find(t => t.status === 'OPEN') || data[0];
+  console.log('Target Ticket:', openTicket?.id, openTicket?.status);
+  const ackRes = await fetch(`/api/blockers/${openTicket.id}/acknowledge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+    credentials: 'include'
+  });
+  console.log('Self-Acknowledge Status (Harus 403):', ackRes.status, await ackRes.json());
+})();
+```
+   - *Hasil yang Diharapkan di Console:* `Self-Acknowledge Status (Harus 403): 403` dengan pesan `"Pelapor tidak dapat menindaklanjuti atau menyelesaikan sendiri tiket kendala yang dilaporkannya."`
+
+2. **Langkah 7.2 — Uji Negatif 2: Pihak Lain yang Bukan PIC (`head.eng@dutamedia.com` — Arif Budiman) Mencoba `Terima & Tangani` pada Tiket `INFRA` Milik Divisi Ops & Infra (`403 Forbidden`)**
+   - Di **Jendela 3 (`head.eng@dutamedia.com` — Arif Budiman)**, buka tab **Console (`F12`)**, lalu *copy-paste* skrip berikut dan tekan **Enter**:
+```javascript
+(async () => {
+  const csrf = document.cookie.split('; ').find(r => r.startsWith('csrf_token='))?.split('=')[1] || '';
+  const listRes = await fetch('/api/blockers', { credentials: 'include' });
+  const { data } = await listRes.json();
+  const otherPicTicket = data.find(t => t.status === 'OPEN' && t.type === 'INFRA');
+  console.log('Target Ticket INFRA:', otherPicTicket?.id, otherPicTicket?.assignedOwner?.email);
+  const ackRes = await fetch(`/api/blockers/${otherPicTicket.id}/acknowledge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+    credentials: 'include'
+  });
+  console.log('Non-PIC Acknowledge Status (Harus 403):', ackRes.status, await ackRes.json());
+})();
+```
+   - *Hasil yang Diharapkan di Console:* `Non-PIC Acknowledge Status (Harus 403): 403` dengan pesan `"Hanya Penanggung Jawab (PIC) yang ditunjuk pada tiket kendala ini yang dapat melakukan tindakan tersebut. Anda tetap dapat memberikan kontribusi melalui fitur Beri Bantuan."`
+
+3. **Langkah 7.3 — Uji Negatif 3: Transisi Status Ilegal (`Close` Tiket `OPEN` & `Edit` Tiket `CLOSED` $\rightarrow$ `409 Conflict`) serta Validasi Pagar Taksonomi (`> 3` Dampak & `CROSS_TEAM` Tanpa Divisi $\rightarrow$ `400 Bad Request`)**
+   - Di **Jendela 1 (`dev.frontend@dutamedia.com` — Aditya)**, pada tab **Console (`F12`)**, *copy-paste* skrip berikut dan tekan **Enter**:
+```javascript
+(async () => {
+  const csrf = document.cookie.split('; ').find(r => r.startsWith('csrf_token='))?.split('=')[1] || '';
+  const listRes = await fetch('/api/blockers?mine=raised', { credentials: 'include' });
+  const { data } = await listRes.json();
+  const openTicket = data.find(t => t.status === 'OPEN');
+  const closedTicket = data.find(t => t.status === 'CLOSED');
+
+  if (openTicket) {
+    const closeRes = await fetch(`/api/blockers/${openTicket.id}/close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+      credentials: 'include'
+    });
+    console.log('1. Close OPEN Ticket (Harus 409):', closeRes.status, await closeRes.json());
+  }
+
+  if (closedTicket) {
+    const editRes = await fetch(`/api/blockers/${closedTicket.id}/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+      credentials: 'include',
+      body: JSON.stringify({
+        type: 'TECHNICAL',
+        severity: 'HIGH',
+        impacts: ['TASK'],
+        description: '[Judul Baru] Mencoba mengedit tiket yang sudah ditutup permanen.'
+      })
+    });
+    console.log('2. Edit CLOSED Ticket (Harus 409):', editRes.status, await editRes.json());
+  }
+
+  const fourImpactsRes = await fetch('/api/blockers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+    credentials: 'include',
+    body: JSON.stringify({
+      type: 'TECHNICAL',
+      severity: 'HIGH',
+      impacts: ['TASK', 'TEAM', 'MILESTONE', 'PROJECT'],
+      ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+      description: '[Uji 4 Dampak] Mencoba mengirim lebih dari 3 dampak sekaligus.'
+    })
+  });
+  console.log('3. Kirim 4 Dampak Sekaligus (Harus 400):', fourImpactsRes.status, await fourImpactsRes.json());
+
+  const crossTeamNoDivRes = await fetch('/api/blockers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+    credentials: 'include',
+    body: JSON.stringify({
+      type: 'CROSS_TEAM',
+      severity: 'MEDIUM',
+      impacts: ['TEAM'],
+      ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+      description: '[Uji CROSS_TEAM Tanpa Divisi] Mencoba kirim CROSS_TEAM tanpa waitingForFunction.'
+    })
+  });
+  console.log('4. Kirim CROSS_TEAM Tanpa Divisi (Harus 400):', crossTeamNoDivRes.status, await crossTeamNoDivRes.json());
+})();
+```
+   - *Hasil yang Diharapkan di Console:*
+     1. `1. Close OPEN Ticket (Harus 409): 409` (`"Tiket hanya dapat ditutup setelah penanggung jawab memberikan solusi (Solusi Diberikan) atau menetapkan mitigasi (Risiko Diterima)."`)
+     2. `2. Edit CLOSED Ticket (Harus 409): 409` (`"Tiket kendala yang sudah diberi solusi atau ditutup tidak dapat diedit lagi."`)
+     3. `3. Kirim 4 Dampak Sekaligus (Harus 400): 400` (ditolak validasi maksimal 3 dampak)
+     4. `4. Kirim CROSS_TEAM Tanpa Divisi (Harus 400): 400` (`"Untuk kategori Menunggu Tim / Rekan Lain (CROSS_TEAM), divisi yang ditunggu wajib dipilih."`)
+
+---
+
+- **Expected Final Result:** Seluruh 7 skenario perjalanan kendala (mulai dari validasi 16 kategori & 9 kotak centang dampak 1–3, Penanggung Jawab Kategori `DEC-017`, `CROSS_TEAM`, siklus 6-riwayat penanganan, eskalasi paralel `CRITICAL`, *Dynamic Re-Routing* saat edit tiket, hapus 2 varian, *Anti-Self-Routing*, edit dari `/blockers`, siklus `Terima Risiko`, pembukaan menu `/blockers` bagi staf `isCategoryOwner`, fallback cuti vertikal `DEC-014`, hingga pagar keamanan API `400`/`403`/`409`) berjalan 100% akurat tanpa celah.
+- **Bukti yang Perlu Dikumpulkan:** Tangkapan layar kartu blocker dengan tampilan Kategori & multi-Dampak baru, riwayat 6 entri lengkap, antrean `/blockers` pada akun Penanggung Jawab Kategori (`network.infra@dutamedia.com`), serta output Console hasil uji keamanan.
 - **Actual Result:** 
 - **Execution Status:** 
 - **Tester:** 

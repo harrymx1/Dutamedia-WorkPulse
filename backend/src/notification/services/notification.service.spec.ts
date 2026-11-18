@@ -339,9 +339,11 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
     expect(res.notifications[1].message).not.toContain('ditembuskan');
     expect(res.notifications[1].message).not.toContain('secara paralel');
     expect(res.notifications[0].message).toContain(
-      'Kategori Kendala: Teknis & Kode Program (TECHNICAL)',
+      'Kategori Kendala: Teknis & Kode Program',
     );
+    expect(res.notifications[0].message).not.toContain('(TECHNICAL)');
     expect(res.notifications[0].message).toContain('Jadwal Proyek Lintas Tim');
+    expect(res.notifications[0].message).not.toContain('[PROJECT]');
   });
 
   it('auto-upgrades stored BLOCKER_UPDATED_BY_REPORTER notifications with raw category/impact codes to full descriptions', async () => {
@@ -386,9 +388,12 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
 
     const res = await service.getUserNotifications('owner-ab');
     const upgradedMsg = res.notifications[0].message;
-    expect(upgradedMsg).toContain('Kategori Kendala: Vendor & Pihak Ketiga (VENDOR)');
+    expect(upgradedMsg).toContain('Kategori Kendala: Vendor & Pihak Ketiga');
+    expect(upgradedMsg).not.toContain('(VENDOR)');
     expect(upgradedMsg).toContain('Target & Tenggat Waktu');
     expect(upgradedMsg).toContain('Kepuasan & Hubungan Klien');
+    expect(upgradedMsg).not.toContain('[MILESTONE]');
+    expect(upgradedMsg).not.toContain('[CLIENT]');
     expect(mockPrisma.notification.update).toHaveBeenCalledWith({
       where: { id: 'notif-raw-codes-1' },
       data: {

@@ -87,8 +87,7 @@ export const BLOCKER_IMPACT_LABELS: Record<string, string> = {
 export function formatBlockerTypeLabel(type?: string | null): string {
   const code = String(type || '').trim();
   if (!code) return '-';
-  const label = BLOCKER_TYPE_LABELS[code];
-  return label ? `${label} (${code})` : code;
+  return BLOCKER_TYPE_LABELS[code] || code;
 }
 
 export function normalizeBlockerImpacts(
@@ -111,10 +110,7 @@ export function formatBlockerImpactsLabel(
   const list = normalizeBlockerImpacts(impactsInput, singleImpactInput);
   if (list.length === 0) return '-';
   return list
-    .map((code) => {
-      const label = BLOCKER_IMPACT_LABELS[code];
-      return label ? `${label} [${code}]` : String(code);
-    })
+    .map((code) => BLOCKER_IMPACT_LABELS[code] || String(code))
     .join('; ');
 }
 
@@ -411,10 +407,17 @@ export function enrichLegacyBlockerNotification(
         if (rawCatMatch) {
           return [`Kategori Kendala: ${formatBlockerTypeLabel(ticket.type || rawCatMatch[1])}`];
         }
+        const codedCatMatch = trimmed.match(/^Kategori Kendala:[ \t]*(.+?)[ \t]+\(([A-Z_]+)\)[ \t]*$/);
+        if (codedCatMatch) {
+          return [`Kategori Kendala: ${formatBlockerTypeLabel(ticket.type || codedCatMatch[2])}`];
+        }
         const rawImpMatch = trimmed.match(/^Dampak Kendala:[ \t]*([A-Z_, ]+)[ \t]*$/);
         if (rawImpMatch) {
           const fallbackSingle = rawImpMatch[1].split(',')[0]?.trim();
           return [`Dampak Kendala: ${formatBlockerImpactsLabel(ticket.impacts, ticket.impact || fallbackSingle)}`];
+        }
+        if (/^Dampak Kendala:.*\[[A-Z_]+\]/.test(trimmed)) {
+          return [`Dampak Kendala: ${formatBlockerImpactsLabel(ticket.impacts, ticket.impact)}`];
         }
         return [line];
       });

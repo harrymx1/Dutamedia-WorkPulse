@@ -765,4 +765,75 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('displays persistent inline validation error directly inside Support & Resolve modals (Skenario 1 fix)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u-pic',
+      email: 'head.eng@dutamedia.com',
+      fullName: 'Arif Budiman',
+      role: 'HEAD',
+      function: 'Engineering',
+    } as any;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-modal-err-1',
+              description: '[Error 500 API] Transaksi gagal saat submit',
+              type: 'APPROVAL',
+              severity: 'HIGH',
+              impact: 'MILESTONE',
+              impacts: ['MILESTONE', 'TEAM'],
+              status: 'ACKNOWLEDGED',
+              raisedAt: '2026-11-18T08:00:00.000Z',
+              targetResolutionAt: '2026-11-18T12:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'u-pic', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // 1. Uji modal Beri Bantuan (< 5 karakter)
+    const supportBtn = wrapper.findAll('button').find((b) => b.text().includes('Beri Bantuan'));
+    await supportBtn!.trigger('click');
+    await wrapper.find('#supportAction').setValue('Cek');
+    const saveSupportBtn = wrapper.findAll('button').find((b) => b.text().includes('Simpan Kontribusi'));
+    await saveSupportBtn!.trigger('click');
+    expect(wrapper.find('[data-testid="modal-inline-error"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="modal-inline-error"]').text()).toContain('Tindakan bantuan minimal 5 karakter.');
+
+    // Mengetik ulang menghapus error inline
+    await wrapper.find('#supportAction').setValue('Perbaikan query transaksi');
+    expect(wrapper.find('[data-testid="modal-inline-error"]').exists()).toBe(false);
+
+    // Tutup modal bantuan, buka modal Selesaikan (< 10 karakter)
+    const cancelBtn = wrapper.findAll('.modal-foot button').find((b) => b.text().includes('Batal'));
+    await cancelBtn!.trigger('click');
+
+    const resolveBtn = wrapper.findAll('button').find((b) => b.text().includes('Selesaikan'));
+    await resolveBtn!.trigger('click');
+    await wrapper.find('#resolutionNote').setValue('Sudah ok');
+    const submitResolveBtn = wrapper.findAll('button').find((b) => b.text().includes('Kirim Solusi'));
+    await submitResolveBtn!.trigger('click');
+    expect(wrapper.find('[data-testid="modal-inline-error"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="modal-inline-error"]').text()).toContain('Catatan resolusi wajib diisi minimal 10 karakter.');
+
+    vi.unstubAllGlobals();
+  });
 });

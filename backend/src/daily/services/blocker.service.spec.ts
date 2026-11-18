@@ -1997,9 +1997,12 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       const raisedMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
       const critMsg = mockPrisma.notification.create.mock.calls[1][0].data.message;
       for (const msg of [raisedMsg, critMsg]) {
-        expect(msg).toContain('Kategori Kendala: Jaringan & Koneksi (NETWORK)');
+        expect(msg).toContain('Kategori Kendala: Jaringan & Koneksi');
+        expect(msg).not.toContain('(NETWORK)');
         expect(msg).toContain('Operasional Kantor');
         expect(msg).toContain('Satu Tim / Divisi');
+        expect(msg).not.toContain('[COMPANY_OPS]');
+        expect(msg).not.toContain('[TEAM]');
       }
 
       // Update & Delete notification formatting
@@ -2039,9 +2042,11 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         description: '[Listrik Lantai 2 Padam] Panel listrik ruang kerja turun',
       });
       const updateMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
-      expect(updateMsg).toContain('Kategori Kendala: Fasilitas & Sarana Kantor (OFFICE_FACILITY)');
+      expect(updateMsg).toContain('Kategori Kendala: Fasilitas & Sarana Kantor');
+      expect(updateMsg).not.toContain('(OFFICE_FACILITY)');
       expect(updateMsg).toContain('Operasional Kantor');
       expect(updateMsg).toContain('Target & Tenggat Waktu');
+      expect(updateMsg).not.toContain('[MILESTONE]');
 
       mockPrisma.notification.create.mockClear();
       mockPrisma.blockerTicket.delete.mockResolvedValue({ id: 'blk-notif-full' });
@@ -2049,7 +2054,8 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         reasonCategory: 'SELF_RESOLVED',
       });
       const deleteMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
-      expect(deleteMsg).toContain('Kategori Kendala: Jaringan & Koneksi (NETWORK)');
+      expect(deleteMsg).toContain('Kategori Kendala: Jaringan & Koneksi');
+      expect(deleteMsg).not.toContain('(NETWORK)');
       expect(deleteMsg).toContain('Tugas Pribadi');
       expect(deleteMsg).toContain('Operasional Kantor');
     });

@@ -75,7 +75,10 @@ function formatSla(minutes?: number): string {
   return `${minutes} menit`;
 }
 
+const impactTouched = ref(false);
+
 function toggleBlockerImpact(code: string) {
+  impactTouched.value = true;
   blockerImpacts.value = toggleImpactSelection(blockerImpacts.value, code, 3);
 }
 
@@ -474,6 +477,7 @@ function resetForm() {
   linkedCommitmentId.value = '';
   blockerType.value = '';
   blockerImpacts.value = [];
+  impactTouched.value = false;
   waitingForFunction.value = '';
   blockerSeverity.value = 'HIGH';
   description.value = '';
@@ -1159,13 +1163,24 @@ onBeforeUnmount(() => {
                   <label>Dampak Kendala (Pilih 1–3 Dampak) <span class="req">*</span></label>
                   <span
                     class="char-counter"
-                    :class="{ 'char-valid': blockerImpacts.length >= 1 && blockerImpacts.length <= 3 }"
+                    :class="{
+                      'char-valid': blockerImpacts.length >= 1 && blockerImpacts.length <= 3,
+                      'char-invalid': impactTouched && blockerImpacts.length === 0,
+                    }"
                     data-testid="impact-selection-count"
                   >
                     {{ blockerImpacts.length }} / 3 dipilih
                   </span>
                 </div>
                 <p class="impact-hint-text">Pilih 1 sampai maksimal 3 dampak yang paling terasa.</p>
+                <p
+                  v-if="impactTouched && blockerImpacts.length === 0"
+                  class="impact-error-text"
+                  role="alert"
+                  data-testid="impact-min-warning"
+                >
+                  Minimal pilih 1 dampak kendala.
+                </p>
                 <div class="impact-checkbox-grid" data-testid="impact-checkbox-grid">
                   <label
                     v-for="opt in BLOCKER_IMPACT_OPTIONS"
@@ -1983,6 +1998,14 @@ onBeforeUnmount(() => {
               </span>
             </div>
             <p class="impact-hint-text">Pilih 1 sampai maksimal 3 dampak yang paling terasa.</p>
+            <p
+              v-if="editImpacts.length === 0"
+              class="impact-error-text"
+              role="alert"
+              data-testid="edit-impact-min-warning"
+            >
+              Minimal pilih 1 dampak kendala.
+            </p>
             <div class="impact-checkbox-grid compact">
               <label
                 v-for="opt in BLOCKER_IMPACT_OPTIONS"
@@ -3542,7 +3565,7 @@ textarea:focus {
   display: flex;
   align-items: center;
   gap: 10px;
-  z-index: 100;
+  z-index: 250;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -3562,6 +3585,18 @@ textarea:focus {
   font-size: 12px;
   color: #5C6E68;
   margin: 0 0 8px;
+}
+
+.impact-error-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #B91C1C;
+  margin: -2px 0 8px;
+}
+
+.char-counter.char-invalid {
+  color: #B91C1C;
+  font-weight: 700;
 }
 
 .impact-checkbox-grid {

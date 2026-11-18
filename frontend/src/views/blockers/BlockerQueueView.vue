@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import {
@@ -138,6 +138,33 @@ const supportRejectReasonMap = ref<Record<string, string>>({});
 // Toast & Feedback
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
+const modalError = ref<string | null>(null);
+
+watch(
+  [
+    supportAction,
+    supportResult,
+    resolutionNote,
+    riskJustification,
+    riskMitigation,
+    reopenReason,
+    queueEditTitle,
+    queueEditType,
+    queueEditWaitingForFunction,
+    queueEditImpacts,
+    queueEditDescription,
+    queueDeleteReasonCategory,
+    queueDeleteReason,
+  ],
+  () => {
+    if (modalError.value) modalError.value = null;
+  },
+);
+
+function setModalValidationError(msg: string) {
+  modalError.value = msg;
+  showToast(msg, true);
+}
 
 function showToast(msg: string, isError = false) {
   if (isError) {
@@ -308,8 +335,8 @@ async function handleAcknowledge(ticketId: string) {
   acknowledging.value = true;
   try {
     await apiClient(`/blockers/${ticketId}/acknowledge`, { method: 'POST' });
-    showToast(`Tiket kendala berhasil diterima dan berstatus ${getBlockerStatusLabel('ACKNOWLEDGED')}.`);
     await loadBlockers();
+    showToast(`Tiket kendala berhasil diterima dan berstatus ${getBlockerStatusLabel('ACKNOWLEDGED')}.`);
   } catch (err: any) {
     showToast(err.message || 'Gagal menerima dan menangani tiket.', true);
   } finally {
@@ -319,6 +346,7 @@ async function handleAcknowledge(ticketId: string) {
 
 // Support Contribution Action
 function openSupportModal() {
+  modalError.value = null;
   supportAction.value = '';
   supportResult.value = '';
   isSupportModalOpen.value = true;
@@ -327,11 +355,11 @@ function openSupportModal() {
 async function submitSupportContribution() {
   if (!selectedTicket.value) return;
   if (supportAction.value.trim().length < 5) {
-    showToast('Tindakan bantuan minimal 5 karakter.', true);
+    setModalValidationError('Tindakan bantuan minimal 5 karakter.');
     return;
   }
   if (supportResult.value.trim().length < 5) {
-    showToast('Hasil / progres bantuan minimal 5 karakter.', true);
+    setModalValidationError('Hasil / progres bantuan minimal 5 karakter.');
     return;
   }
 
@@ -344,11 +372,12 @@ async function submitSupportContribution() {
         resultNote: supportResult.value.trim(),
       }),
     });
+    modalError.value = null;
     isSupportModalOpen.value = false;
-    showToast('Kontribusi bantuan berhasil dicatat.');
     await loadBlockers();
+    showToast('Kontribusi bantuan berhasil dicatat.');
   } catch (err: any) {
-    showToast(err.message || 'Gagal menambahkan bantuan.', true);
+    setModalValidationError(err.message || 'Gagal menambahkan bantuan.');
   } finally {
     submittingSupport.value = false;
   }
@@ -356,6 +385,7 @@ async function submitSupportContribution() {
 
 // Resolve Action
 function openResolveModal() {
+  modalError.value = null;
   resolutionNote.value = '';
   isResolveModalOpen.value = true;
 }
@@ -363,7 +393,7 @@ function openResolveModal() {
 async function submitResolve() {
   if (!selectedTicket.value) return;
   if (resolutionNote.value.trim().length < 10) {
-    showToast('Catatan resolusi wajib diisi minimal 10 karakter.', true);
+    setModalValidationError('Catatan resolusi wajib diisi minimal 10 karakter.');
     return;
   }
 
@@ -375,11 +405,12 @@ async function submitResolve() {
         resolutionNote: resolutionNote.value.trim(),
       }),
     });
+    modalError.value = null;
     isResolveModalOpen.value = false;
-    showToast(`Solusi berhasil dicatat. Tiket berstatus ${getBlockerStatusLabel('RESOLVED')} dan menunggu konfirmasi pelapor.`);
     await loadBlockers();
+    showToast(`Solusi berhasil dicatat. Tiket berstatus ${getBlockerStatusLabel('RESOLVED')} dan menunggu konfirmasi pelapor.`);
   } catch (err: any) {
-    showToast(err.message || 'Gagal menyelesaikan tiket.', true);
+    setModalValidationError(err.message || 'Gagal menyelesaikan tiket.');
   } finally {
     submittingResolve.value = false;
   }
@@ -387,6 +418,7 @@ async function submitResolve() {
 
 // Accept Risk Action
 function openAcceptRiskModal() {
+  modalError.value = null;
   riskJustification.value = '';
   riskMitigation.value = '';
   isAcceptRiskModalOpen.value = true;
@@ -395,11 +427,11 @@ function openAcceptRiskModal() {
 async function submitAcceptRisk() {
   if (!selectedTicket.value) return;
   if (riskJustification.value.trim().length < 10) {
-    showToast('Justifikasi penerimaan risiko wajib diisi minimal 10 karakter.', true);
+    setModalValidationError('Justifikasi penerimaan risiko wajib diisi minimal 10 karakter.');
     return;
   }
   if (riskMitigation.value.trim().length < 10) {
-    showToast('Rencana mitigasi risiko wajib diisi minimal 10 karakter.', true);
+    setModalValidationError('Rencana mitigasi risiko wajib diisi minimal 10 karakter.');
     return;
   }
 
@@ -412,11 +444,12 @@ async function submitAcceptRisk() {
         riskMitigationPlan: riskMitigation.value.trim(),
       }),
     });
+    modalError.value = null;
     isAcceptRiskModalOpen.value = false;
-    showToast(`Keputusan ${getBlockerStatusLabel('ACCEPTED_RISK')} dicatat dan menunggu konfirmasi pelapor.`);
     await loadBlockers();
+    showToast(`Keputusan ${getBlockerStatusLabel('ACCEPTED_RISK')} dicatat dan menunggu konfirmasi pelapor.`);
   } catch (err: any) {
-    showToast(err.message || 'Gagal menetapkan Terima Risiko.', true);
+    setModalValidationError(err.message || 'Gagal menetapkan Terima Risiko.');
   } finally {
     submittingAcceptRisk.value = false;
   }
@@ -427,8 +460,8 @@ async function handleCloseTicket(ticketId: string) {
   submittingClose.value = true;
   try {
     await apiClient(`/blockers/${ticketId}/close`, { method: 'POST' });
-    showToast(`Tiket kendala telah dikonfirmasi dan berstatus ${getBlockerStatusLabel('CLOSED')}.`);
     await loadBlockers();
+    showToast(`Tiket kendala telah dikonfirmasi dan berstatus ${getBlockerStatusLabel('CLOSED')}.`);
   } catch (err: any) {
     showToast(err.message || 'Gagal menutup tiket kendala.', true);
   } finally {
@@ -437,6 +470,7 @@ async function handleCloseTicket(ticketId: string) {
 }
 
 function openReopenModal() {
+  modalError.value = null;
   reopenReason.value = '';
   isReopenModalOpen.value = true;
 }
@@ -444,7 +478,7 @@ function openReopenModal() {
 async function submitReopen() {
   if (!selectedTicket.value) return;
   if (reopenReason.value.trim().length < 10) {
-    showToast('Alasan pengembalian tiket wajib diisi minimal 10 karakter.', true);
+    setModalValidationError('Alasan pengembalian tiket wajib diisi minimal 10 karakter.');
     return;
   }
 
@@ -456,11 +490,12 @@ async function submitReopen() {
         reopenReason: reopenReason.value.trim(),
       }),
     });
+    modalError.value = null;
     isReopenModalOpen.value = false;
-    showToast(`Tiket dikembalikan ke penanggung jawab dengan status ${getBlockerStatusLabel('ACKNOWLEDGED')}.`);
     await loadBlockers();
+    showToast(`Tiket dikembalikan ke penanggung jawab dengan status ${getBlockerStatusLabel('ACKNOWLEDGED')}.`);
   } catch (err: any) {
-    showToast(err.message || 'Gagal mengembalikan tiket.', true);
+    setModalValidationError(err.message || 'Gagal mengembalikan tiket.');
   } finally {
     submittingReopen.value = false;
   }
@@ -510,6 +545,7 @@ async function handleSupportDecision(
     if (rejectingSupportId.value === supportId) {
       rejectingSupportId.value = null;
     }
+    await loadBlockers();
     if (decision === 'RESOLVE_AND_CLOSE') {
       showToast(`Bantuan diterima sebagai penyelesaian. Tiket berstatus ${getBlockerStatusLabel('CLOSED')}.`);
     } else if (decision === 'ACCEPT_AS_SUPPORT') {
@@ -517,7 +553,6 @@ async function handleSupportDecision(
     } else {
       showToast('Catatan bahwa kendala masih berlanjut telah disimpan dan diberitahukan ke penanggung jawab.');
     }
-    await loadBlockers();
   } catch (err: any) {
     showToast(err.message || 'Gagal merespons kontribusi bantuan.', true);
   } finally {
@@ -531,6 +566,7 @@ function toggleQueueEditImpact(code: string) {
 
 function openQueueEditModal() {
   if (!selectedTicket.value) return;
+  modalError.value = null;
   const parsed = parseTicketContent(selectedTicket.value.description);
   queueEditTitle.value = parsed.title === '-' ? '' : parsed.title;
   queueEditType.value = selectedTicket.value.type || 'TECHNICAL';
@@ -546,11 +582,11 @@ function openQueueEditModal() {
 async function submitQueueEdit() {
   if (!selectedTicket.value) return;
   if (queueEditTitle.value.trim().length < 10) {
-    showToast('Judul kendala wajib diisi minimal 10 karakter.', true);
+    setModalValidationError('Judul kendala wajib diisi minimal 10 karakter.');
     return;
   }
   if (queueEditImpacts.value.length < 1 || queueEditImpacts.value.length > 3) {
-    showToast('Pilih minimal 1 dan maksimal 3 dampak kendala.', true);
+    setModalValidationError('Pilih minimal 1 dan maksimal 3 dampak kendala.');
     return;
   }
   if (
@@ -558,11 +594,11 @@ async function submitQueueEdit() {
     selectedTicket.value.ownerNeededType !== 'PROJECT_AUTHORITY' &&
     !queueEditWaitingForFunction.value
   ) {
-    showToast('Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.', true);
+    setModalValidationError('Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.');
     return;
   }
   if (queueEditDescription.value.trim().length < 20) {
-    showToast('Deskripsi kendala wajib diisi minimal 20 karakter.', true);
+    setModalValidationError('Deskripsi kendala wajib diisi minimal 20 karakter.');
     return;
   }
 
@@ -585,11 +621,12 @@ async function submitQueueEdit() {
         ),
       }),
     });
+    modalError.value = null;
     isQueueEditModalOpen.value = false;
-    showToast('Perubahan tiket disimpan dan dinotifikasikan ke PIC, Lead, serta Head terkait.');
     await loadBlockers();
+    showToast('Perubahan tiket disimpan dan dinotifikasikan ke PIC, Lead, serta Head terkait.');
   } catch (err: any) {
-    showToast(err.message || 'Gagal memperbarui tiket kendala.', true);
+    setModalValidationError(err.message || 'Gagal memperbarui tiket kendala.');
   } finally {
     submittingQueueEdit.value = false;
   }
@@ -597,6 +634,7 @@ async function submitQueueEdit() {
 
 function openQueueDeleteModal() {
   if (!selectedTicket.value) return;
+  modalError.value = null;
   queueDeleteReasonCategory.value = '';
   queueDeleteReason.value = '';
   isQueueDeleteModalOpen.value = true;
@@ -605,14 +643,13 @@ function openQueueDeleteModal() {
 async function submitQueueDelete() {
   if (!selectedTicket.value) return;
   if (!queueDeleteReasonCategory.value) {
-    showToast('Kategori alasan penghapusan wajib dipilih.', true);
+    setModalValidationError('Kategori alasan penghapusan wajib dipilih.');
     return;
   }
   const trimmedReason = queueDeleteReason.value.trim();
   if (queueDeleteReasonCategory.value === 'OTHER' && trimmedReason.length < 10) {
-    showToast(
+    setModalValidationError(
       'Detail alasan penghapusan wajib diisi minimal 10 karakter untuk kategori Alasan Lainnya.',
-      true,
     );
     return;
   }
@@ -626,12 +663,13 @@ async function submitQueueDelete() {
         ...(queueDeleteReasonCategory.value === 'OTHER' ? { reason: trimmedReason } : {}),
       }),
     });
+    modalError.value = null;
     isQueueDeleteModalOpen.value = false;
     selectedTicket.value = null;
-    showToast('Tiket kendala dihapus dan pemberitahuan dikirim ke PIC, Lead, serta Head terkait.');
     await loadBlockers();
+    showToast('Tiket kendala dihapus dan pemberitahuan dikirim ke PIC, Lead, serta Head terkait.');
   } catch (err: any) {
-    showToast(err.message || 'Gagal menghapus tiket kendala.', true);
+    setModalValidationError(err.message || 'Gagal menghapus tiket kendala.');
   } finally {
     submittingQueueDelete.value = false;
   }
@@ -1294,6 +1332,10 @@ onMounted(() => {
               placeholder="Contoh: Koneksi API sandbox telah terverifikasi normal kembali..."
             ></textarea>
           </div>
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
+          </div>
         </div>
         <div class="modal-foot">
           <button type="button" class="btn-secondary" @click="isSupportModalOpen = false">Batal</button>
@@ -1336,6 +1378,10 @@ onMounted(() => {
               minlength="10"
               placeholder="Jelaskan langkah konkret penyelesaian masalah ini (min. 10 karakter)..."
             ></textarea>
+          </div>
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
           </div>
         </div>
         <div class="modal-foot">
@@ -1393,6 +1439,10 @@ onMounted(() => {
               placeholder="Jelaskan langkah workaround atau kontrol risiko bagi pelapor (min. 10 karakter)..."
             ></textarea>
           </div>
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
+          </div>
         </div>
         <div class="modal-foot">
           <button type="button" class="btn-secondary" @click="isAcceptRiskModalOpen = false">Batal</button>
@@ -1434,6 +1484,10 @@ onMounted(() => {
               rows="3"
               placeholder="Jelaskan bagian yang masih terhambat (min. 10 karakter)..."
             ></textarea>
+          </div>
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
           </div>
         </div>
         <div class="modal-foot">
@@ -1518,6 +1572,14 @@ onMounted(() => {
               </span>
             </div>
             <p class="impact-hint-text">Pilih 1 sampai maksimal 3 dampak yang paling terasa.</p>
+            <p
+              v-if="queueEditImpacts.length === 0"
+              class="impact-error-text"
+              role="alert"
+              data-testid="queue-edit-impact-min-warning"
+            >
+              Minimal pilih 1 dampak kendala.
+            </p>
             <div class="impact-checkbox-grid compact">
               <label
                 v-for="opt in BLOCKER_IMPACT_OPTIONS"
@@ -1563,6 +1625,10 @@ onMounted(() => {
           <div class="form-group">
             <label for="queueEditExpected">Bantuan Konkret yang Diharapkan</label>
             <input id="queueEditExpected" v-model="queueEditExpectedHelp" type="text" maxlength="200" />
+          </div>
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
           </div>
         </div>
         <div class="modal-foot">
@@ -1633,6 +1699,10 @@ onMounted(() => {
               rows="3"
               placeholder="Tuliskan penjelasan spesifik mengapa tiket ini dihapus (min. 10 karakter)..."
             ></textarea>
+          </div>
+          <div v-if="modalError" class="modal-inline-error" role="alert" data-testid="modal-inline-error">
+            <AlertCircle :size="15" />
+            <span>{{ modalError }}</span>
           </div>
         </div>
         <div class="modal-foot">
@@ -2809,8 +2879,30 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  z-index: 100;
+  z-index: 250;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modal-inline-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.impact-error-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #B91C1C;
+  margin: -2px 0 8px;
 }
 
 .toast-popup.success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
