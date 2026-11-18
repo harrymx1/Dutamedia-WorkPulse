@@ -497,18 +497,21 @@ CREATE TABLE additional_works (
 
 ### 3.4. Domain: Blocker Lifecycle & Support
 
-#### Tabel `blocker_tickets` (`DEC-002`, `DEC-008`, Prototipe 05, 09)
-Menyimpan siklus hidup kendala operasional, tingkat keparahan, dan eskalasi.
+#### Tabel `blocker_tickets` & `blocker_category_owners` (`DEC-002`, `DEC-008`, `DEC-017`, Prototipe 05, 09)
+Menyimpan siklus hidup kendala operasional (16 kategori, 9 multi-dampak), mandat penanggung jawab kategori, tingkat keparahan, dan eskalasi.
 ```sql
 CREATE TYPE blocker_type_enum AS ENUM (
-    'TECHNICAL', 'REQUIREMENT', 'CLIENT', 'VENDOR', 'RESOURCE', 
-    'APPROVAL', 'INFRA', 'FINANCE', 'LEGAL', 'OTHER'
+    'TECHNICAL', 'INFRA', 'HOSTING_DOMAIN', 'ACCESS_SECURITY',
+    'NETWORK', 'WORK_DEVICE', 'OFFICE_FACILITY',
+    'REQUIREMENT', 'APPROVAL', 'CROSS_TEAM', 'RESOURCE',
+    'CLIENT', 'VENDOR', 'FINANCE', 'LEGAL', 'OTHER'
 );
 
 CREATE TYPE blocker_severity_enum AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 
 CREATE TYPE blocker_impact_enum AS ENUM (
-    'TASK', 'MILESTONE', 'PROJECT', 'PRODUCTION', 'CLIENT', 'FINANCIAL', 'COMPLIANCE'
+    'TASK', 'TEAM', 'MILESTONE', 'PROJECT', 'COMPANY_OPS',
+    'PRODUCTION', 'CLIENT', 'FINANCIAL', 'COMPLIANCE'
 );
 
 CREATE TYPE authority_context_enum AS ENUM ('ORGANIZATIONAL_AUTHORITY', 'PROJECT_AUTHORITY');
@@ -524,6 +527,8 @@ CREATE TABLE blocker_tickets (
     type blocker_type_enum NOT NULL,
     severity blocker_severity_enum NOT NULL,
     impact blocker_impact_enum NOT NULL,
+    impacts blocker_impact_enum[] NOT NULL DEFAULT '{}'::blocker_impact_enum[],
+    waiting_for_function canonical_function_enum NULL,
     description TEXT NOT NULL,
     owner_needed_type authority_context_enum NOT NULL,
     assigned_owner_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -541,6 +546,7 @@ CREATE TABLE blocker_tickets (
     last_escalated_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_blocker_impacts_count CHECK (cardinality(impacts) BETWEEN 1 AND 3),
     CONSTRAINT chk_resolution_note_required CHECK (
         (status = 'RESOLVED' AND resolution_note IS NOT NULL) OR
         (status != 'RESOLVED')
@@ -549,6 +555,19 @@ CREATE TABLE blocker_tickets (
         (status = 'ACCEPTED_RISK' AND risk_acceptance_justification IS NOT NULL AND risk_mitigation_plan IS NOT NULL) OR
         (status != 'ACCEPTED_RISK')
     )
+);
+
+CREATE TABLE blocker_category_owners (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category blocker_type_enum NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    is_primary BOOLEAN NOT NULL DEFAULT true,
+    effective_date DATE NOT NULL,
+    end_date DATE NULL,
+    notes TEXT NULL,
+    assigned_by_user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -1323,7 +1342,7 @@ $$\text{Authorization Decision} = f(\text{Role}, \text{Contextual Scope}, \text{
 | Method & Endpoint Path | Otorisasi Akses | Body Request / Parameter | Deskripsi & Aturan Bisnis |
 |---|---|---|---|
 | `GET /api/v1/blocker-tickets` | Terautentikasi | Query: `status`, `severity`, `scope`, `page`, `limit` | Mengambil antrean eskalasi blocker sesuai wewenang pemanggil (Prototipe 09). |
-| `POST /api/v1/blocker-tickets` | Terautentikasi | `{ type, severity, impact, description, ownerNeededType, projectCode?, linkedCommitmentId? }` | Melaporkan kendala baru (*Instant Blocker* atau terikat komitmen, Prototipe 05). |
+| `POST /api/v1/blocker-tickets` | Terautentikasi | `{ type, severity, impacts (1..3), impact?, waitingForFunction?, description, ownerNeededType, projectCode?, linkedCommitmentId? }` | Melaporkan kendala baru (*Instant Blocker* atau terikat komitmen, Prototipe 05, `DEC-017`). |
 | `POST /api/v1/blocker-tickets/:id/acknowledge` | Assigned Owner / PM | — | Mengakui tanggung jawab penanganan kendala (`status = ACKNOWLEDGED`). |
 | `POST /api/v1/blocker-tickets/:id/resolve` | Assigned Owner / PM | `{ resolutionNote }` | Menyelesaikan kendala (`status = RESOLVED`, `resolutionNote` wajib). |
 | `POST /api/v1/blocker-tickets/:id/accept-risk` | Assigned Owner / HEAD | `{ justification, mitigationPlan }` | Menerima risiko kendala (`status = ACCEPTED_RISK`, justifikasi & mitigasi wajib). |

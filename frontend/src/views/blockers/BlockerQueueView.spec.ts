@@ -715,4 +715,54 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('removes rigid category type-pill from queue cards & detail header and displays full Kategori & multi-Dampak details', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-full-tax-1',
+              description: '[Menunggu Review QA Delivery] Fitur navigasi siap diuji',
+              type: 'CROSS_TEAM',
+              waitingForFunction: 'Delivery',
+              severity: 'HIGH',
+              impact: 'TASK',
+              impacts: ['TASK', 'PROJECT'],
+              status: 'OPEN',
+              raisedAt: '2026-11-18T08:00:00.000Z',
+              targetResolutionAt: '2026-11-18T12:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'u-dharma', fullName: 'Dharma Putra', email: 'head.delivery@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // Badge singkatan kaku .type-pill tidak lagi muncul di kartu kiri maupun header detail
+    expect(wrapper.find('.ticket-card .type-pill').exists()).toBe(false);
+    expect(wrapper.find('.detail-head .type-pill').exists()).toBe(false);
+
+    // Bagian detail menampilkan kategori, divisi tunggu, dan multi-dampak lengkap
+    const taxDetail = wrapper.find('[data-testid="detail-taxonomy-section"]');
+    expect(taxDetail.exists()).toBe(true);
+    expect(taxDetail.text()).toContain('Menunggu Tim / Rekan Lain');
+    expect(taxDetail.text()).toContain('Divisi Delivery (Proyek, Produk & QA)');
+    expect(taxDetail.text()).toContain('Tugas Pribadi');
+    expect(taxDetail.text()).toContain('Jadwal Proyek Lintas Tim');
+
+    vi.unstubAllGlobals();
+  });
 });

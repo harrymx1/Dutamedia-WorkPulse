@@ -70,28 +70,278 @@ export const BLOCKER_DELETE_REASON_OPTIONS: ReadonlyArray<{
   },
 ];
 
-export const BLOCKER_TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: 'TECHNICAL', label: 'Technical — Bug, kendala kode, query database' },
-  { value: 'REQUIREMENT', label: 'Requirement — Spesifikasi belum jelas / berubah' },
-  { value: 'CLIENT', label: 'Client — Menunggu respon, data, UAT dari klien' },
-  { value: 'VENDOR', label: 'Vendor — API eksternal, SaaS, lisensi pihak ketiga' },
-  { value: 'RESOURCE', label: 'Resource — Kapasitas tim, cuti, dependensi personil' },
-  { value: 'APPROVAL', label: 'Approval — Menunggu persetujuan pimpinan / stakeholder' },
-  { value: 'INFRA', label: 'Infra — Server, staging, CI/CD, VPN, jaringan' },
-  { value: 'FINANCE', label: 'Finance — Pembayaran server/domain/anggaran tertahan' },
-  { value: 'LEGAL', label: 'Legal — Kontrak, NDA, kepatuhan data' },
-  { value: 'OTHER', label: 'Other — Kendala operasional lainnya' },
+export interface BlockerTypeOption {
+  value: string;
+  name: string;
+  examples: string;
+  label: string;
+}
+
+export interface BlockerTypeGroup {
+  groupLabel: string;
+  options: ReadonlyArray<BlockerTypeOption>;
+}
+
+export const BLOCKER_TYPE_GROUPS: ReadonlyArray<BlockerTypeGroup> = [
+  {
+    groupLabel: '1. Teknis & Sistem',
+    options: [
+      {
+        value: 'TECHNICAL',
+        name: 'Teknis & Kode Program',
+        examples: 'Bug aplikasi, error kode, query database lambat, skenario tes gagal',
+        label: 'Teknis & Kode Program — Bug aplikasi, error kode, query database lambat, skenario tes gagal',
+      },
+      {
+        value: 'INFRA',
+        name: 'Server & Rilis Sistem',
+        examples: 'Server (kantor/cloud) bermasalah, server staging mati, proses rilis/deploy gagal',
+        label: 'Server & Rilis Sistem — Server (kantor/cloud) bermasalah, server staging mati, proses rilis/deploy gagal',
+      },
+      {
+        value: 'HOSTING_DOMAIN',
+        name: 'Hosting, Cloud & Domain',
+        examples: 'Layanan hosting/cloud gangguan, domain mati, sertifikat SSL habis',
+        label: 'Hosting, Cloud & Domain — Layanan hosting/cloud gangguan, domain mati, sertifikat SSL habis',
+      },
+      {
+        value: 'ACCESS_SECURITY',
+        name: 'Akses & Keamanan Digital',
+        examples: 'Tidak bisa login akun kerja, belum punya hak akses folder/aplikasi, email mencurigakan/diretas',
+        label: 'Akses & Keamanan Digital — Tidak bisa login akun kerja, belum punya hak akses folder/aplikasi',
+      },
+    ],
+  },
+  {
+    groupLabel: '2. Kantor & Perangkat',
+    options: [
+      {
+        value: 'NETWORK',
+        name: 'Jaringan & Koneksi',
+        examples: 'Internet kantor mati, gangguan provider internet, WiFi lemah, VPN gagal konek',
+        label: 'Jaringan & Koneksi — Internet kantor mati, gangguan provider internet, WiFi lemah, VPN gagal konek',
+      },
+      {
+        value: 'WORK_DEVICE',
+        name: 'Perangkat Kerja',
+        examples: 'Laptop/komputer error, HP operasional rusak, printer macet, butuh mouse/kabel/alat kerja',
+        label: 'Perangkat Kerja — Laptop/komputer error, HP operasional rusak, printer macet, butuh alat kerja',
+      },
+      {
+        value: 'OFFICE_FACILITY',
+        name: 'Fasilitas & Sarana Kantor',
+        examples: 'Listrik mati, AC rusak, ruang rapat penuh, ATK habis, kendaraan kantor mogok, urusan gedung',
+        label: 'Fasilitas & Sarana Kantor — Listrik mati, AC rusak, ruang rapat penuh, ATK habis, kendaraan kantor',
+      },
+    ],
+  },
+  {
+    groupLabel: '3. Orang & Keputusan',
+    options: [
+      {
+        value: 'REQUIREMENT',
+        name: 'Kebutuhan & Arahan Kerja',
+        examples: 'Instruksi tugas belum jelas, spesifikasi produk berubah, anak magang butuh arahan kerja',
+        label: 'Kebutuhan & Arahan Kerja — Instruksi tugas belum jelas, spesifikasi produk berubah, butuh arahan',
+      },
+      {
+        value: 'APPROVAL',
+        name: 'Persetujuan & Tanda Tangan',
+        examples: 'Menunggu ACC atau tanda tangan atasan untuk dokumen, penawaran, pengajuan, atau rilis',
+        label: 'Persetujuan & Tanda Tangan — Menunggu ACC atau tanda tangan atasan untuk dokumen/penawaran/rilis',
+      },
+      {
+        value: 'CROSS_TEAM',
+        name: 'Menunggu Tim / Rekan Lain',
+        examples: 'Menunggu data dari divisi lain, menunggu review kode, menunggu materi desain/konten',
+        label: 'Menunggu Tim / Rekan Lain — Menunggu data dari divisi lain, review kode, atau materi desain/konten',
+      },
+      {
+        value: 'RESOURCE',
+        name: 'Tenaga & Kapasitas Tim',
+        examples: 'Beban kerja menumpuk (kurang orang), rekan satu tim sakit/cuti mendadak, butuh bantuan keahlian khusus',
+        label: 'Tenaga & Kapasitas Tim — Beban kerja menumpuk, rekan sakit/cuti mendadak, butuh bantuan keahlian',
+      },
+    ],
+  },
+  {
+    groupLabel: '4. Pihak Luar, Uang & Hukum',
+    options: [
+      {
+        value: 'CLIENT',
+        name: 'Klien & Calon Klien',
+        examples: 'Klien lambat kirim data/umpan balik, jadwal demo/UAT diundur klien, calon klien belum balas penawaran',
+        label: 'Klien & Calon Klien — Klien lambat kirim data/umpan balik, jadwal demo diundur, calon klien belum balas',
+      },
+      {
+        value: 'VENDOR',
+        name: 'Vendor & Pihak Ketiga',
+        examples: 'Layanan pihak luar bermasalah (API/payment gateway error, lisensi habis, vendor cetak/jasa telat)',
+        label: 'Vendor & Pihak Ketiga — Layanan pihak luar bermasalah (API/payment gateway error, lisensi habis, vendor telat)',
+      },
+      {
+        value: 'FINANCE',
+        name: 'Keuangan & Pembayaran',
+        examples: 'Pencairan dana operasional tertahan, tagihan vendor/server belum dibayar, kendala pajak/invoicing klien',
+        label: 'Keuangan & Pembayaran — Pencairan dana tertahan, tagihan vendor/server belum dibayar, pajak/invoicing',
+      },
+      {
+        value: 'LEGAL',
+        name: 'Hukum, Kontrak & Kepatuhan',
+        examples: 'Draft kontrak klien/vendor belum selesai, menunggu review NDA, kendala aturan hukum/perizinan',
+        label: 'Hukum, Kontrak & Kepatuhan — Draft kontrak belum selesai, menunggu review NDA, aturan hukum/perizinan',
+      },
+    ],
+  },
+  {
+    groupLabel: '5. Lainnya',
+    options: [
+      {
+        value: 'OTHER',
+        name: 'Kendala Lainnya',
+        examples: 'Kendala pekerjaan di luar 15 kategori di atas (bukan untuk keluhan pribadi seperti gaji atau cuti)',
+        label: 'Kendala Lainnya — Kendala pekerjaan di luar 15 kategori di atas (bukan keluhan pribadi seperti gaji/cuti)',
+      },
+    ],
+  },
 ];
 
-export const BLOCKER_IMPACT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: 'TASK', label: 'Task — Menghambat 1 tugas individu' },
-  { value: 'MILESTONE', label: 'Milestone — Mengancam target fase / sprint' },
-  { value: 'PROJECT', label: 'Project — Menghambat jadwal proyek lintas tim' },
-  { value: 'PRODUCTION', label: 'Production — Mengganggu layanan live / klien aktif' },
-  { value: 'CLIENT', label: 'Client — Berdampak langsung pada kepuasan klien' },
-  { value: 'FINANCIAL', label: 'Financial — Potensi kerugian / pinalti finansial' },
-  { value: 'COMPLIANCE', label: 'Compliance — Risiko kepatuhan hukum / perjanjian kontrak' },
+export const BLOCKER_TYPE_OPTIONS: ReadonlyArray<BlockerTypeOption> =
+  BLOCKER_TYPE_GROUPS.flatMap((g) => g.options);
+
+export interface BlockerImpactOption {
+  value: string;
+  name: string;
+  meaning: string;
+  examples: string;
+  label: string;
+}
+
+export const BLOCKER_IMPACT_OPTIONS: ReadonlyArray<BlockerImpactOption> = [
+  {
+    value: 'TASK',
+    name: 'Tugas Pribadi',
+    meaning: 'Hanya menghambat 1 tugas milik pelapor sendiri. Rekan lain tidak terganggu.',
+    examples: 'Laptop pelapor hang, akun pribadi pelapor belum aktif, materi ketikan sendiri belum selesai.',
+    label: 'Tugas Pribadi — Hanya menghambat 1 tugas milik pelapor sendiri. Rekan lain tidak terganggu.',
+  },
+  {
+    value: 'TEAM',
+    name: 'Satu Tim / Divisi',
+    meaning: 'Menghambat pekerjaan beberapa rekan kerja dalam satu tim yang sama.',
+    examples: 'Form rekap tim Finance error bersamaan, printer tim Admin/GA macet saat mau cetak berkas tim.',
+    label: 'Satu Tim / Divisi — Menghambat pekerjaan beberapa rekan kerja dalam satu tim yang sama.',
+  },
+  {
+    value: 'MILESTONE',
+    name: 'Target & Tenggat Waktu',
+    meaning: 'Mengancam jadwal tenggat penting yang sudah disepakati (deadline rilis, tutup buku bulanan, target kirim laporan).',
+    examples: 'Dokumen penawaran belum selesai padahal sore ini harus dikirim, laporan audit pajak belum beres jelang batas akhir.',
+    label: 'Target & Tenggat Waktu — Mengancam jadwal tenggat penting yang sudah disepakati (deadline rilis, tutup buku, laporan).',
+  },
+  {
+    value: 'PROJECT',
+    name: 'Jadwal Proyek Lintas Tim',
+    meaning: 'Menghambat jadwal proyek besar yang melibatkan kerja sama beberapa tim sekaligus.',
+    examples: 'Bagian desain telat kirim gambar sehingga tim programmer dan tim penguji tidak bisa lanjut kerja.',
+    label: 'Jadwal Proyek Lintas Tim — Menghambat jadwal proyek besar yang melibatkan kerja sama beberapa tim sekaligus.',
+  },
+  {
+    value: 'COMPANY_OPS',
+    name: 'Operasional Kantor',
+    meaning: 'Mengganggu aktivitas kerja banyak orang di kantor di luar urusan proyek.',
+    examples: 'Internet kantor mati total, listrik gedung padam, air/AC kantor mati, kendaraan operasional mogok saat mau antar dokumen.',
+    label: 'Operasional Kantor — Mengganggu aktivitas kerja banyak orang di kantor di luar urusan proyek.',
+  },
+  {
+    value: 'PRODUCTION',
+    name: 'Layanan Langsung Pengguna',
+    meaning: 'Aplikasi, website, atau sistem yang sedang aktif dipakai klien/publik mengalami gangguan atau mati.',
+    examples: 'Server website aplikasi klien tiba-tiba mati, tombol pembayaran di aplikasi error saat dipakai belanja.',
+    label: 'Layanan Langsung Pengguna — Aplikasi, website, atau sistem yang sedang aktif dipakai klien/publik mengalami gangguan atau mati.',
+  },
+  {
+    value: 'CLIENT',
+    name: 'Kepuasan & Hubungan Klien',
+    meaning: 'Berisiko membuat klien komplain, membatalkan kerja sama, atau merusak citra perusahaan.',
+    examples: 'Klien kecewa karena jadwal pelatihan diundur sepihak, calon klien batal tanda tangan karena penawaran lambat dikirim.',
+    label: 'Kepuasan & Hubungan Klien — Berisiko membuat klien komplain, membatalkan kerja sama, atau merusak citra perusahaan.',
+  },
+  {
+    value: 'FINANCIAL',
+    name: 'Keuangan & Kerugian Uang',
+    meaning: 'Berpotensi menimbulkan kerugian uang tunai, denda keterlambatan, atau pemborosan anggaran.',
+    examples: 'Tagihan server telat dibayar sehingga kena denda, salah hitung nominal faktur, uang kas operasional hilang.',
+    label: 'Keuangan & Kerugian Uang — Berpotensi menimbulkan kerugian uang tunai, denda keterlambatan, atau pemborosan anggaran.',
+  },
+  {
+    value: 'COMPLIANCE',
+    name: 'Hukum & Keamanan Data',
+    meaning: 'Berisiko melanggar undang-undang, perjanjian kontrak resmi, atau bahaya kebocoran data rahasia.',
+    examples: 'Menjalankan proyek tanpa izin tertulis klien, dokumen rahasia kantor tersebar, keterlambatan lapor pajak resmi.',
+    label: 'Hukum & Keamanan Data — Berisiko melanggar undang-undang, perjanjian kontrak resmi, atau bahaya kebocoran data rahasia.',
+  },
 ];
+
+export const WAITING_FOR_FUNCTION_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'Engineering', label: 'Divisi Engineering (Teknis & Kode Program)' },
+  { value: 'Delivery', label: 'Divisi Delivery (Proyek, Produk & QA)' },
+  { value: 'OperationsInfrastructure', label: 'Divisi Operations & Infrastructure (IT, Server & Jaringan)' },
+  { value: 'RnD', label: 'Divisi R&D & Technical Advisory (Arsitektur & Riset)' },
+  { value: 'SalesEnablementPresales', label: 'Divisi Commercial / Sales & Presales' },
+  { value: 'Finance', label: 'Divisi Finance (Keuangan & Pembayaran)' },
+  { value: 'HRGA', label: 'Divisi HRGA & Corporate Legal (SDM, GA & Hukum)' },
+];
+
+export function getBlockerTypeInfo(type?: string | null): BlockerTypeOption {
+  const code = String(type || '').trim();
+  const found = BLOCKER_TYPE_OPTIONS.find((opt) => opt.value === code);
+  if (found) return found;
+  return {
+    value: code,
+    name: code || '-',
+    examples: '',
+    label: code || '-',
+  };
+}
+
+export function getTicketImpactsList(
+  ticket?: { impacts?: string[] | null; impact?: string | null } | null,
+): BlockerImpactOption[] {
+  const rawCodes =
+    Array.isArray(ticket?.impacts) && ticket!.impacts.length > 0
+      ? ticket!.impacts
+      : ticket?.impact
+        ? [ticket.impact]
+        : [];
+  const uniqueCodes = Array.from(new Set(rawCodes.filter(Boolean)));
+  return uniqueCodes.map((code) => {
+    const found = BLOCKER_IMPACT_OPTIONS.find((opt) => opt.value === code);
+    if (found) return found;
+    return {
+      value: code,
+      name: code,
+      meaning: '',
+      examples: '',
+      label: code,
+    };
+  });
+}
+
+export function getWaitingForFunctionLabel(fn?: string | null): string | null {
+  if (!fn) return null;
+  return WAITING_FOR_FUNCTION_OPTIONS.find((opt) => opt.value === fn)?.label || fn;
+}
+
+export function toggleImpactSelection(current: string[], code: string, maxItems = 3): string[] {
+  if (current.includes(code)) {
+    return current.filter((item) => item !== code);
+  }
+  if (current.length >= maxItems) {
+    return current;
+  }
+  return [...current, code];
+}
 
 export const BLOCKER_SEVERITY_OPTIONS: ReadonlyArray<{
   value: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';

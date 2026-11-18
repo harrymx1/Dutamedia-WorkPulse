@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { getBlockerTypeInfo, getTicketImpactsList } from '../../utils/blockerStatus';
 import {
   Clock,
   AlertTriangle,
@@ -18,6 +19,7 @@ interface AgingBlockerItem {
   type: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   impact: string;
+  impacts?: string[];
   status: string;
   raisedAt: string;
   targetResolutionAt?: string;
@@ -206,11 +208,15 @@ onMounted(() => {
               >
                 <!-- Kolom 1: Kendala -->
                 <td class="col-desc">
-                  <div class="ticket-type-row">
-                    <span class="type-pill">{{ item.type }}</span>
-                    <span v-if="item.projectCodeReference" class="proj-pill">{{ item.projectCodeReference }}</span>
+                  <div v-if="item.projectCodeReference" class="ticket-type-row">
+                    <span class="proj-pill">{{ item.projectCodeReference }}</span>
                   </div>
                   <div class="ticket-title-desc">{{ formatCleanBlockerSummary(item.description) }}</div>
+                  <div class="aging-taxonomy-meta">
+                    <span><strong>Kategori:</strong> {{ getBlockerTypeInfo(item.type).name }}</span>
+                    <span> · </span>
+                    <span><strong>Dampak:</strong> {{ getTicketImpactsList(item).map((i) => i.name).join(', ') }}</span>
+                  </div>
                 </td>
 
                 <!-- Kolom 2: Pelapor -->
@@ -535,6 +541,13 @@ h1 {
   color: #0E211B;
   line-height: 1.4;
   max-width: 360px;
+}
+
+.aging-taxonomy-meta {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #5C6E68;
+  line-height: 1.35;
 }
 
 .user-inline {

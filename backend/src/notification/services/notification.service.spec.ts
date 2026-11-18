@@ -338,6 +338,64 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
     );
     expect(res.notifications[1].message).not.toContain('ditembuskan');
     expect(res.notifications[1].message).not.toContain('secara paralel');
+    expect(res.notifications[0].message).toContain(
+      'Kategori Kendala: Teknis & Kode Program (TECHNICAL)',
+    );
+    expect(res.notifications[0].message).toContain('Jadwal Proyek Lintas Tim');
+  });
+
+  it('auto-upgrades stored BLOCKER_UPDATED_BY_REPORTER notifications with raw category/impact codes to full descriptions', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([
+      {
+        id: 'notif-raw-codes-1',
+        recipientUserId: 'owner-ab',
+        triggerType: 'BLOCKER_UPDATED_BY_REPORTER',
+        title: 'Laporan Kendala Diperbarui Pelapor: Kredensial Sandbox Vendor',
+        message: [
+          'Aditya Nugroho telah memperbarui rincian laporan kendala aktif.',
+          'Judul Kendala: Kredensial Sandbox Vendor',
+          'Pelapor: Aditya Nugroho',
+          'Penanggung Jawab (PIC): Arif Budiman',
+          'Status Tiket: Menunggu Respons',
+          'Kategori Kendala: VENDOR',
+          'Tingkat Keparahan: HIGH',
+          'Dampak Kendala: MILESTONE',
+          'Deskripsi Kendala: API key sandbox ditolak.',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-vendor-1',
+        readAt: null,
+      },
+    ]);
+    mockPrisma.notification.count.mockResolvedValue(1);
+    mockPrisma.blockerTicket = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'blk-vendor-1',
+          type: 'VENDOR',
+          severity: 'HIGH',
+          impact: 'MILESTONE',
+          impacts: ['MILESTONE', 'CLIENT'],
+          description: '[Kredensial Sandbox Vendor] API key sandbox ditolak.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+          assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman' },
+          supportContributions: [],
+        },
+      ]),
+    };
+
+    const res = await service.getUserNotifications('owner-ab');
+    const upgradedMsg = res.notifications[0].message;
+    expect(upgradedMsg).toContain('Kategori Kendala: Vendor & Pihak Ketiga (VENDOR)');
+    expect(upgradedMsg).toContain('Target & Tenggat Waktu');
+    expect(upgradedMsg).toContain('Kepuasan & Hubungan Klien');
+    expect(mockPrisma.notification.update).toHaveBeenCalledWith({
+      where: { id: 'notif-raw-codes-1' },
+      data: {
+        title: 'Laporan Kendala Diperbarui Pelapor: Kredensial Sandbox Vendor',
+        message: upgradedMsg,
+      },
+    });
   });
 });
 

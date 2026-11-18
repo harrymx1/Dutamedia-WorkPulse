@@ -1,4 +1,7 @@
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  ArrayUnique,
   IsArray,
   IsEnum,
   IsISO8601,
@@ -16,6 +19,7 @@ import {
   BlockerSeverity,
   BlockerImpact,
   AuthorityContext,
+  CanonicalFunction,
 } from '@prisma/client';
 
 export class CommitmentOutcomeItemDto {
@@ -65,8 +69,21 @@ export class InstantBlockerDto {
   @IsEnum(BlockerSeverity)
   severity!: BlockerSeverity;
 
+  @IsOptional()
   @IsEnum(BlockerImpact)
-  impact!: BlockerImpact;
+  impact?: BlockerImpact;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
+  @ArrayUnique()
+  @IsEnum(BlockerImpact, { each: true })
+  impacts?: BlockerImpact[];
+
+  @IsOptional()
+  @IsEnum(CanonicalFunction)
+  waitingForFunction?: CanonicalFunction;
 
   @IsString()
   description!: string;

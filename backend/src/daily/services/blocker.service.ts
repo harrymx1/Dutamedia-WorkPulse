@@ -6,7 +6,9 @@ import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import {
   AuthorityContext,
+  BlockerImpact,
   BlockerStatus,
+  BlockerType,
   CanonicalFunction,
   CanonicalRole,
   NotificationChannel,
@@ -25,12 +27,96 @@ import {
 import { BlockerSlaConfig, CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
 
-// Kategori kendala yang membutuhkan keahlian divisi tertentu (bukan sekadar atasan langsung)
+// Kategori kendala yang membutuhkan keahlian divisi tertentu (cadangan bila Penanggung Jawab Kategori tidak tersedia)
 const BLOCKER_TYPE_DIVISION_ROUTING: Record<string, { function: CanonicalFunction; label: string }> = {
   INFRA: { function: CanonicalFunction.OperationsInfrastructure, label: 'Operations & Infrastructure' },
+  HOSTING_DOMAIN: { function: CanonicalFunction.OperationsInfrastructure, label: 'Operations & Infrastructure' },
+  ACCESS_SECURITY: { function: CanonicalFunction.OperationsInfrastructure, label: 'Operations & Infrastructure' },
+  NETWORK: { function: CanonicalFunction.OperationsInfrastructure, label: 'Operations & Infrastructure' },
+  WORK_DEVICE: { function: CanonicalFunction.OperationsInfrastructure, label: 'Operations & Infrastructure' },
+  OFFICE_FACILITY: { function: CanonicalFunction.HRGA, label: 'HRGA & General Affairs' },
+  CLIENT: { function: CanonicalFunction.SalesEnablementPresales, label: 'Sales & Commercial' },
   FINANCE: { function: CanonicalFunction.Finance, label: 'Finance' },
   LEGAL: { function: CanonicalFunction.HRGA, label: 'HRGA & Legal' },
 };
+
+export const CANONICAL_FUNCTION_LABELS: Record<string, string> = {
+  Engineering: 'Engineering',
+  Quality: 'Quality Assurance',
+  OperationsInfrastructure: 'Operations & Infrastructure',
+  RnD: 'R&D & Technical Advisory',
+  Delivery: 'Delivery & Project Management',
+  BusinessDevelopment: 'Business Development',
+  SalesEnablementPresales: 'Sales & Commercial',
+  Finance: 'Finance',
+  HRGA: 'HRGA & Legal',
+  Management: 'Executive Management',
+};
+
+export const BLOCKER_TYPE_LABELS: Record<string, string> = {
+  TECHNICAL: 'Teknis & Kode Program',
+  INFRA: 'Server & Rilis Sistem',
+  HOSTING_DOMAIN: 'Hosting, Cloud & Domain',
+  ACCESS_SECURITY: 'Akses & Keamanan Digital',
+  NETWORK: 'Jaringan & Koneksi',
+  WORK_DEVICE: 'Perangkat Kerja',
+  OFFICE_FACILITY: 'Fasilitas & Sarana Kantor',
+  REQUIREMENT: 'Kebutuhan & Arahan Kerja',
+  APPROVAL: 'Persetujuan & Tanda Tangan',
+  CROSS_TEAM: 'Menunggu Tim / Rekan Lain',
+  RESOURCE: 'Tenaga & Kapasitas Tim',
+  CLIENT: 'Klien & Calon Klien',
+  VENDOR: 'Vendor & Pihak Ketiga',
+  FINANCE: 'Keuangan & Pembayaran',
+  LEGAL: 'Hukum, Kontrak & Kepatuhan',
+  OTHER: 'Kendala Lainnya',
+};
+
+export const BLOCKER_IMPACT_LABELS: Record<string, string> = {
+  TASK: 'Tugas Pribadi (Hanya menghambat 1 tugas milik pelapor sendiri)',
+  TEAM: 'Satu Tim / Divisi (Menghambat pekerjaan beberapa rekan kerja dalam satu tim)',
+  MILESTONE: 'Target & Tenggat Waktu (Mengancam jadwal tenggat penting yang sudah disepakati)',
+  PROJECT: 'Jadwal Proyek Lintas Tim (Menghambat jadwal proyek besar lintas tim)',
+  COMPANY_OPS: 'Operasional Kantor (Mengganggu aktivitas kerja banyak orang di kantor)',
+  PRODUCTION: 'Layanan Langsung Pengguna (Aplikasi/sistem klien sedang gangguan atau mati)',
+  CLIENT: 'Kepuasan & Hubungan Klien (Berisiko membuat klien komplain atau membatalkan kerja sama)',
+  FINANCIAL: 'Keuangan & Kerugian Uang (Berpotensi menimbulkan kerugian uang atau denda)',
+  COMPLIANCE: 'Hukum & Keamanan Data (Berisiko melanggar aturan hukum, kontrak, atau keamanan data)',
+};
+
+export function formatBlockerTypeLabel(type?: string | null): string {
+  const code = String(type || '').trim();
+  if (!code) return '-';
+  const label = BLOCKER_TYPE_LABELS[code];
+  return label ? `${label} (${code})` : code;
+}
+
+export function normalizeBlockerImpacts(
+  impactsInput?: (BlockerImpact | string)[] | null,
+  singleImpactInput?: BlockerImpact | string | null,
+): BlockerImpact[] {
+  if (Array.isArray(impactsInput) && impactsInput.length > 0) {
+    return Array.from(new Set(impactsInput.filter(Boolean))) as BlockerImpact[];
+  }
+  if (singleImpactInput) {
+    return [singleImpactInput as BlockerImpact];
+  }
+  return [];
+}
+
+export function formatBlockerImpactsLabel(
+  impactsInput?: (BlockerImpact | string)[] | null,
+  singleImpactInput?: BlockerImpact | string | null,
+): string {
+  const list = normalizeBlockerImpacts(impactsInput, singleImpactInput);
+  if (list.length === 0) return '-';
+  return list
+    .map((code) => {
+      const label = BLOCKER_IMPACT_LABELS[code];
+      return label ? `${label} [${code}]` : String(code);
+    })
+    .join('; ');
+}
 
 const REPORTER_REOPEN_ACTION_LABEL = 'Dikembalikan oleh Pelapor (Belum Memadai)';
 const PIC_RESOLUTION_ACTION_LABEL = 'Solusi Diberikan oleh Penanggung Jawab';
@@ -138,6 +224,7 @@ export function buildBlockerRaisedNotificationContent(params: {
   type: string;
   severity: string;
   impact: string;
+  impacts?: (BlockerImpact | string)[] | null;
   slaLabel: string;
 }): { title: string; message: string } {
   const parsed = parseBlockerDescription(params.description);
@@ -146,9 +233,9 @@ export function buildBlockerRaisedNotificationContent(params: {
     `${reporterName} melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC). Silakan tinjau rincian di bawah ini untuk segera ditindaklanjuti.`,
     `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
     `Pelapor: ${reporterName}`,
-    `Kategori Kendala: ${params.type}`,
+    `Kategori Kendala: ${formatBlockerTypeLabel(params.type)}`,
     `Tingkat Keparahan: ${params.severity}`,
-    `Dampak Kendala: ${params.impact}`,
+    `Dampak Kendala: ${formatBlockerImpactsLabel(params.impacts, params.impact)}`,
     `Target Respons: ${params.slaLabel}`,
     `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
   ];
@@ -168,6 +255,7 @@ export function buildBlockerCriticalEscalationNotificationContent(params: {
   type: string;
   severity: string;
   impact: string;
+  impacts?: (BlockerImpact | string)[] | null;
   slaLabel: string;
 }): { title: string; message: string } {
   const parsed = parseBlockerDescription(params.description);
@@ -178,9 +266,9 @@ export function buildBlockerCriticalEscalationNotificationContent(params: {
     `Judul Kendala: ${flattenInlineNotificationText(parsed.title)}`,
     `Pelapor: ${reporterName}`,
     `Penanggung Jawab Awal (PIC): ${ownerName}`,
-    `Kategori Kendala: ${params.type}`,
+    `Kategori Kendala: ${formatBlockerTypeLabel(params.type)}`,
     `Tingkat Keparahan: ${params.severity}`,
-    `Dampak Kendala: ${params.impact}`,
+    `Dampak Kendala: ${formatBlockerImpactsLabel(params.impacts, params.impact)}`,
     `Target Penyelesaian: ${params.slaLabel}`,
     `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
   ];
@@ -244,6 +332,7 @@ export function enrichLegacyBlockerNotification(
     type?: string | null;
     severity?: string | null;
     impact?: string | null;
+    impacts?: (BlockerImpact | string)[] | null;
     resolutionNote?: string | null;
     riskAcceptanceJustification?: string | null;
     riskMitigationPlan?: string | null;
@@ -313,10 +402,19 @@ export function enrichLegacyBlockerNotification(
         );
         if (katMatch) {
           return [
-            `Kategori Kendala: ${katMatch[1].trim()}`,
+            `Kategori Kendala: ${formatBlockerTypeLabel(ticket.type || katMatch[1].trim())}`,
             `Tingkat Keparahan: ${katMatch[2].trim()}`,
-            `Dampak Kendala: ${katMatch[3].trim()}`,
+            `Dampak Kendala: ${formatBlockerImpactsLabel(ticket.impacts, ticket.impact || katMatch[3].trim())}`,
           ];
+        }
+        const rawCatMatch = trimmed.match(/^Kategori Kendala:[ \t]*([A-Z_]+)[ \t]*$/);
+        if (rawCatMatch) {
+          return [`Kategori Kendala: ${formatBlockerTypeLabel(ticket.type || rawCatMatch[1])}`];
+        }
+        const rawImpMatch = trimmed.match(/^Dampak Kendala:[ \t]*([A-Z_, ]+)[ \t]*$/);
+        if (rawImpMatch) {
+          const fallbackSingle = rawImpMatch[1].split(',')[0]?.trim();
+          return [`Dampak Kendala: ${formatBlockerImpactsLabel(ticket.impacts, ticket.impact || fallbackSingle)}`];
         }
         return [line];
       });
@@ -450,6 +548,7 @@ export function enrichLegacyBlockerNotification(
       type,
       severity,
       impact,
+      impacts: ticket.impacts,
       slaLabel: slaMatch?.[1]?.trim() || defaultSla,
     });
   }
@@ -463,6 +562,7 @@ export function enrichLegacyBlockerNotification(
       type,
       severity,
       impact,
+      impacts: ticket.impacts,
       slaLabel: slaMatch?.[1]?.trim() || '2 jam',
     });
   }
@@ -540,6 +640,56 @@ export class BlockerService {
     private readonly policyService: PolicyService,
   ) {}
 
+  private resolveAndValidateImpacts(
+    impactsInput?: BlockerImpact[],
+    singleImpactInput?: BlockerImpact,
+  ): BlockerImpact[] {
+    const validImpacts = new Set<string>(Object.values(BlockerImpact));
+    if (impactsInput !== undefined) {
+      if (!Array.isArray(impactsInput) || impactsInput.length < 1 || impactsInput.length > 3) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Pilih minimal 1 dan maksimal 3 dampak kendala.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      if (new Set(impactsInput).size !== impactsInput.length) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Pilihan dampak kendala tidak boleh duplikat.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      for (const item of impactsInput) {
+        if (!validImpacts.has(item)) {
+          throw new AppException({
+            code: ErrorCode.VALIDATION_FAILED,
+            message: 'Pilihan dampak kendala tidak valid.',
+            statusCode: HttpStatus.BAD_REQUEST,
+          });
+        }
+      }
+      return impactsInput;
+    }
+
+    if (singleImpactInput) {
+      if (!validImpacts.has(singleImpactInput)) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Pilihan dampak kendala tidak valid.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return [singleImpactInput];
+    }
+
+    throw new AppException({
+      code: ErrorCode.VALIDATION_FAILED,
+      message: 'Pilih minimal 1 dampak kendala.',
+      statusCode: HttpStatus.BAD_REQUEST,
+    });
+  }
+
   /**
    * Mengajukan kendala baru (Instant Blocker atau via Form, Prototipe 05).
    */
@@ -555,6 +705,22 @@ export class BlockerService {
       });
     }
 
+    const normalizedImpacts = this.resolveAndValidateImpacts(dto.impacts, dto.impact);
+    const primaryImpact = normalizedImpacts[0];
+
+    if (
+      dto.type === BlockerType.CROSS_TEAM &&
+      dto.ownerNeededType !== AuthorityContext.PROJECT_AUTHORITY &&
+      !dto.assignedOwnerId &&
+      !dto.waitingForFunction
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Untuk kategori Menunggu Tim / Rekan Lain, wajib memilih divisi yang sedang ditunggu.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     // Resolusi assignedOwnerId jika tidak ditentukan secara eksplisit
     let targetOwnerId = dto.assignedOwnerId;
     if (!targetOwnerId) {
@@ -562,6 +728,7 @@ export class BlockerService {
         type: dto.type,
         ownerNeededType: dto.ownerNeededType,
         projectCode: dto.projectCodeReference,
+        waitingForFunction: dto.waitingForFunction,
       });
       targetOwnerId = suggestion.owner?.id;
     }
@@ -600,7 +767,10 @@ export class BlockerService {
           linkedCommitmentId: dto.linkedCommitmentId || null,
           type: dto.type,
           severity: dto.severity,
-          impact: dto.impact,
+          impact: primaryImpact,
+          impacts: normalizedImpacts,
+          waitingForFunction:
+            dto.type === BlockerType.CROSS_TEAM ? (dto.waitingForFunction ?? null) : null,
           description: dto.description.trim(),
           ownerNeededType: dto.ownerNeededType,
           assignedOwnerId: targetOwnerId,
@@ -621,7 +791,8 @@ export class BlockerService {
         reporterName,
         type: dto.type,
         severity: dto.severity,
-        impact: dto.impact,
+        impact: primaryImpact,
+        impacts: normalizedImpacts,
         slaLabel,
       });
 
@@ -653,7 +824,8 @@ export class BlockerService {
             ownerName: ticket.assignedOwner?.fullName || assignedOwner.fullName,
             type: dto.type,
             severity: dto.severity,
-            impact: dto.impact,
+            impact: primaryImpact,
+            impacts: normalizedImpacts,
             slaLabel,
           });
           await tx.notification.create({
@@ -969,25 +1141,134 @@ export class BlockerService {
     }
   }
 
+  private async resolveDivisionOwnerCandidate(
+    targetFunction: CanonicalFunction,
+    divisionLabel: string,
+    reporterUserId: string,
+    today: Date,
+    pick: (id?: string | null) => Promise<{ id: string; fullName: string; jobTitle: string | null } | null>,
+  ): Promise<{
+    owner: { id: string; fullName: string; jobTitle: string | null };
+    reason: 'DIVISION_HEAD';
+    divisionLabel: string;
+    routingNote?: string;
+  } | null> {
+    // 1. Prioritaskan Reviewer Sementara resmi jika telah diterbitkan mandat aktif (DEC-014)
+    const divisionDelegateId = await this.findActiveTemporaryDelegate(targetFunction, [reporterUserId], today);
+    if (divisionDelegateId) {
+      const delegateOwner = await pick(divisionDelegateId);
+      if (delegateOwner) {
+        return {
+          owner: delegateOwner,
+          reason: 'DIVISION_HEAD',
+          divisionLabel,
+          routingNote: `Dialihkan otomatis ke Reviewer Sementara aktif untuk divisi ${divisionLabel}.`,
+        };
+      }
+    }
+
+    // 2. Cari HANYA Pimpinan Utama Divisi (HEAD / HRGA). Dilarang keras menunjuk bawahan (SUPERVISOR / EMPLOYEE)
+    //    secara otomatis tanpa mandat Reviewer Sementara (DEC-014).
+    const divisionHeads = this.prisma.organizationalAssignment?.findMany
+      ? await this.prisma.organizationalAssignment.findMany({
+          where: {
+            function: targetFunction,
+            ...this.activeDateWhere(today),
+            userId: { not: reporterUserId },
+            role: { in: [CanonicalRole.HEAD, CanonicalRole.HRGA] },
+            user: { status: 'ACTIVE' },
+          },
+          select: { userId: true, role: true, directManagerId: true },
+        })
+      : [];
+    const rank = ['HEAD', 'HRGA'];
+    divisionHeads.sort((a, b) => {
+      const ra = rank.indexOf(a.role);
+      const rb = rank.indexOf(b.role);
+      return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
+    });
+
+    let primaryHeadOnLeaveId: string | null = null;
+    for (const headCandidate of divisionHeads) {
+      const onLeave = await this.isUserOnApprovedLeave(headCandidate.userId, today);
+      if (!onLeave) {
+        const owner = await pick(headCandidate.userId);
+        if (owner) {
+          return {
+            owner,
+            reason: 'DIVISION_HEAD',
+            divisionLabel,
+          };
+        }
+      } else if (!primaryHeadOnLeaveId) {
+        primaryHeadOnLeaveId = headCandidate.userId;
+      }
+    }
+
+    // 3. Jika Pimpinan Utama Divisi sedang cuti resmi tanpa Reviewer Sementara, tanggung jawab HANYA naik vertikal
+    //    ke atasan struktural di atasnya / pengesah cuti (N+1 -> CEO), tidak pernah turun ke bawahan (DEC-014).
+    if (primaryHeadOnLeaveId) {
+      const chainResult = await this.resolveAvailableManagerChain(
+        primaryHeadOnLeaveId,
+        reporterUserId,
+        targetFunction,
+        { skipTempDelegation: true },
+      );
+      let chainOwner = await pick(chainResult.userId);
+      if (!chainOwner && this.prisma.organizationalAssignment?.findFirst) {
+        const ceoAssign = await this.prisma.organizationalAssignment.findFirst({
+          where: {
+            role: CanonicalRole.CEO_MANAGEMENT,
+            ...this.activeDateWhere(today),
+            userId: { notIn: [reporterUserId, primaryHeadOnLeaveId] },
+            user: { status: 'ACTIVE' },
+          },
+          orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+        });
+        if (ceoAssign?.userId && !(await this.isUserOnApprovedLeave(ceoAssign.userId, today))) {
+          chainOwner = await pick(ceoAssign.userId);
+        }
+      }
+      if (chainOwner) {
+        return {
+          owner: chainOwner,
+          reason: 'DIVISION_HEAD',
+          divisionLabel,
+          routingNote: `Pimpinan utama divisi ${divisionLabel} sedang cuti resmi dan belum memiliki Reviewer Sementara aktif, sehingga diteruskan otomatis ke atasan struktural di atasnya.`,
+        };
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Menentukan penanggung jawab yang paling tepat ketika pelapor tidak menunjuk siapa pun.
    * - Kewenangan Proyek: Pimpinan Proyek -> Reviewer Sementara / Pengarah Proyek -> rantai atasan hingga CEO (melewati yang cuti).
-   * - Kewenangan Struktural: kendala lintas fungsi (INFRA, FINANCE, LEGAL) ke fungsi terkait (dengan cek cuti/delegasi/chain);
-   *   selain itu ke Atasan Langsung / Reviewer Sementara / rantai atasan hingga CEO.
+   * - Kewenangan Struktural:
+   *   1. Menunggu Tim Lain (CROSS_TEAM): ke Head divisi yang ditunggu.
+   *   2. Penanggung Jawab Kategori Resmi (DEC-017): ke pemegang mandat kategori; bila cuti hanya ke Reviewer Sementara atau naik ke atasan (DEC-014).
+   *   3. Cadangan lintas divisi (BLOCKER_TYPE_DIVISION_ROUTING) bila kategori belum memiliki penanggung jawab resmi.
+   *   4. Rantai atasan langsung pelapor hingga CEO.
    */
   async resolveSuggestedOwner(
     userId: string,
-    input: { type?: string; ownerNeededType?: AuthorityContext; projectCode?: string | null },
+    input: {
+      type?: string;
+      ownerNeededType?: AuthorityContext;
+      projectCode?: string | null;
+      waitingForFunction?: CanonicalFunction | string | null;
+    },
   ): Promise<{
     owner: { id: string; fullName: string; jobTitle: string | null } | null;
-    reason: 'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE';
+    reason: 'PROJECT_LEAD' | 'CATEGORY_OWNER' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE';
     divisionLabel?: string;
     routingNote?: string;
   }> {
     const today = toJakartaDateOnly(this.clockService.now());
 
     const pick = async (id?: string | null) => {
-      if (!id) return null;
+      if (!id || !this.prisma.user?.findFirst) return null;
       const u = await this.prisma.user.findFirst({
         where: { id, status: 'ACTIVE' },
         select: {
@@ -1063,89 +1344,130 @@ export class BlockerService {
     }
 
     if (input.ownerNeededType !== AuthorityContext.PROJECT_AUTHORITY) {
-      const target = BLOCKER_TYPE_DIVISION_ROUTING[input.type || ''];
-      if (target) {
-        // 1. Prioritaskan Reviewer Sementara resmi jika telah diterbitkan mandat aktif (DEC-014)
-        const divisionDelegateId = await this.findActiveTemporaryDelegate(target.function, [userId], today);
-        if (divisionDelegateId) {
-          const delegateOwner = await pick(divisionDelegateId);
-          if (delegateOwner) {
-            return {
-              owner: delegateOwner,
-              reason: 'DIVISION_HEAD',
-              divisionLabel: target.label,
-              routingNote: `Dialihkan otomatis ke Reviewer Sementara aktif untuk divisi ${target.label}.`,
-            };
-          }
+      // 1. Kategori Menunggu Tim / Rekan Lain (CROSS_TEAM): ke Head divisi yang ditunggu
+      if (input.type === 'CROSS_TEAM' && input.waitingForFunction) {
+        const targetFunc = input.waitingForFunction as CanonicalFunction;
+        const divLabel = CANONICAL_FUNCTION_LABELS[String(targetFunc)] || String(targetFunc);
+        const crossTeamOwner = await this.resolveDivisionOwnerCandidate(
+          targetFunc,
+          divLabel,
+          userId,
+          today,
+          pick,
+        );
+        if (crossTeamOwner) {
+          return crossTeamOwner;
         }
+      }
 
-        // 2. Cari HANYA Pimpinan Utama Divisi (HEAD / HRGA). Dilarang keras menunjuk bawahan (SUPERVISOR / EMPLOYEE)
-        //    secara otomatis tanpa mandat Reviewer Sementara (DEC-014).
-        const divisionHeads = await this.prisma.organizationalAssignment.findMany({
+      // 2. Penanggung Jawab Kategori Resmi (DEC-017)
+      let isReporterCategoryOwner = false;
+      if (input.type && (this.prisma as any).blockerCategoryOwner?.findFirst) {
+        const categoryOwnerRecord = await (this.prisma as any).blockerCategoryOwner.findFirst({
           where: {
-            function: target.function,
+            blockerType: input.type as BlockerType,
             ...this.activeDateWhere(today),
-            userId: { not: userId },
-            role: { in: [CanonicalRole.HEAD, CanonicalRole.HRGA] },
-            user: { status: 'ACTIVE' },
           },
-          select: { userId: true, role: true, directManagerId: true },
-        });
-        const rank = ['HEAD', 'HRGA'];
-        divisionHeads.sort((a, b) => {
-          const ra = rank.indexOf(a.role);
-          const rb = rank.indexOf(b.role);
-          return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
+          orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
         });
 
-        let primaryHeadOnLeaveId: string | null = null;
-        for (const headCandidate of divisionHeads) {
-          const onLeave = await this.isUserOnApprovedLeave(headCandidate.userId, today);
-          if (!onLeave) {
-            const owner = await pick(headCandidate.userId);
-            if (owner) {
+        if (categoryOwnerRecord?.ownerUserId) {
+          if (categoryOwnerRecord.ownerUserId === userId) {
+            isReporterCategoryOwner = true;
+          } else {
+            const catLabel = BLOCKER_TYPE_LABELS[input.type] || input.type;
+            const onLeave = await this.isUserOnApprovedLeave(categoryOwnerRecord.ownerUserId, today);
+            if (!onLeave) {
+              const catOwner = await pick(categoryOwnerRecord.ownerUserId);
+              if (catOwner) {
+                return {
+                  owner: catOwner,
+                  reason: 'CATEGORY_OWNER',
+                  divisionLabel: catLabel,
+                  routingNote: `Diarahkan ke Penanggung Jawab Kategori ${catLabel}.`,
+                };
+              }
+            }
+
+            // Penanggung jawab kategori sedang cuti resmi (atau tidak aktif):
+            // sesuai DEC-014 & DEC-017, hanya ke Reviewer Sementara aktif atau naik ke atasan langsungnya (N+1 -> N+2 -> CEO)
+            const catOwnerAssign = this.prisma.organizationalAssignment?.findFirst
+              ? await this.prisma.organizationalAssignment.findFirst({
+                  where: {
+                    userId: categoryOwnerRecord.ownerUserId,
+                    ...this.activeDateWhere(today),
+                  },
+                  orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+                })
+              : null;
+
+            if (catOwnerAssign?.function) {
+              const tempDelegateId = await this.findActiveTemporaryDelegate(
+                catOwnerAssign.function,
+                [userId, categoryOwnerRecord.ownerUserId],
+                today,
+              );
+              if (tempDelegateId) {
+                const delegateOwner = await pick(tempDelegateId);
+                if (delegateOwner) {
+                  return {
+                    owner: delegateOwner,
+                    reason: 'CATEGORY_OWNER',
+                    divisionLabel: catLabel,
+                    routingNote:
+                      'Penanggung jawab kategori sedang cuti resmi, sehingga dialihkan otomatis ke Reviewer Sementara aktif.',
+                  };
+                }
+              }
+            }
+
+            const chainResult = await this.resolveAvailableManagerChain(
+              catOwnerAssign?.directManagerId,
+              userId,
+              catOwnerAssign?.function,
+              { skipTempDelegation: true, excludeUserIds: [categoryOwnerRecord.ownerUserId] },
+            );
+            let chainOwner = await pick(chainResult.userId);
+            if (!chainOwner && this.prisma.organizationalAssignment?.findFirst) {
+              const ceoAssign = await this.prisma.organizationalAssignment.findFirst({
+                where: {
+                  role: CanonicalRole.CEO_MANAGEMENT,
+                  ...this.activeDateWhere(today),
+                  userId: { notIn: [userId, categoryOwnerRecord.ownerUserId] },
+                  user: { status: 'ACTIVE' },
+                },
+                orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+              });
+              if (ceoAssign?.userId && !(await this.isUserOnApprovedLeave(ceoAssign.userId, today))) {
+                chainOwner = await pick(ceoAssign.userId);
+              }
+            }
+            if (chainOwner) {
               return {
-                owner,
-                reason: 'DIVISION_HEAD',
-                divisionLabel: target.label,
+                owner: chainOwner,
+                reason: 'CATEGORY_OWNER',
+                divisionLabel: catLabel,
+                routingNote:
+                  'Penanggung jawab kategori sedang cuti resmi, sehingga diteruskan otomatis ke atasan langsungnya.',
               };
             }
-          } else if (!primaryHeadOnLeaveId) {
-            primaryHeadOnLeaveId = headCandidate.userId;
           }
         }
+      }
 
-        // 3. Jika Pimpinan Utama Divisi sedang cuti resmi tanpa Reviewer Sementara, tanggung jawab HANYA naik vertikal
-        //    ke atasan struktural di atasnya / pengesah cuti (N+1 -> CEO), tidak pernah turun ke bawahan (DEC-014).
-        if (primaryHeadOnLeaveId) {
-          const chainResult = await this.resolveAvailableManagerChain(
-            primaryHeadOnLeaveId,
-            userId,
+      // 3. Jalur cadangan lintas divisi jika kategori belum memiliki Penanggung Jawab Kategori resmi
+      if (!isReporterCategoryOwner) {
+        const target = BLOCKER_TYPE_DIVISION_ROUTING[input.type || ''];
+        if (target) {
+          const divisionOwner = await this.resolveDivisionOwnerCandidate(
             target.function,
-            { skipTempDelegation: true },
+            target.label,
+            userId,
+            today,
+            pick,
           );
-          let chainOwner = await pick(chainResult.userId);
-          if (!chainOwner && this.prisma.organizationalAssignment?.findFirst) {
-            const ceoAssign = await this.prisma.organizationalAssignment.findFirst({
-              where: {
-                role: CanonicalRole.CEO_MANAGEMENT,
-                ...this.activeDateWhere(today),
-                userId: { notIn: [userId, primaryHeadOnLeaveId] },
-                user: { status: 'ACTIVE' },
-              },
-              orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
-            });
-            if (ceoAssign?.userId && !(await this.isUserOnApprovedLeave(ceoAssign.userId, today))) {
-              chainOwner = await pick(ceoAssign.userId);
-            }
-          }
-          if (chainOwner) {
-            return {
-              owner: chainOwner,
-              reason: 'DIVISION_HEAD',
-              divisionLabel: target.label,
-              routingNote: `Pimpinan utama divisi ${target.label} sedang cuti resmi dan belum memiliki Reviewer Sementara aktif, sehingga diteruskan otomatis ke atasan struktural di atasnya.`,
-            };
+          if (divisionOwner) {
+            return divisionOwner;
           }
         }
       }
@@ -1839,7 +2161,7 @@ export class BlockerService {
     }
 
     const today = toJakartaDateOnly(this.clockService.now());
-    const [activeAssignments, activeProjectMappings, activeTempDelegations] = await Promise.all([
+    const [activeAssignments, activeProjectMappings, activeTempDelegations, viewerCategoryOwnerRows] = await Promise.all([
       this.prisma.organizationalAssignment.findMany({
         where: {
           ...this.activeDateWhere(today),
@@ -1873,6 +2195,17 @@ export class BlockerService {
             },
             select: {
               targetFunction: true,
+            },
+          })
+        : Promise.resolve([]),
+      (this.prisma as any).blockerCategoryOwner?.findMany
+        ? (this.prisma as any).blockerCategoryOwner.findMany({
+            where: {
+              ownerUserId: viewerUserId,
+              ...this.activeDateWhere(today),
+            },
+            select: {
+              blockerType: true,
             },
           })
         : Promise.resolve([]),
@@ -1915,6 +2248,9 @@ export class BlockerService {
         .map((a) => a.function),
       ...tempDelegateFunctions,
     ]);
+    const viewerOwnedCategories = new Set<string>(
+      (viewerCategoryOwnerRows as any[]).map((r) => String(r.blockerType)).filter(Boolean),
+    );
 
     const projectMappingByCode = new Map<string, any>();
     for (const mapping of activeProjectMappings as any[]) {
@@ -1998,7 +2334,13 @@ export class BlockerService {
         }
       }
 
-      // 5. Pimpinan pada divisi keahlian kategori kendala lintas fungsi (INFRA, FINANCE, LEGAL)
+      // 5. Pemegang mandat Penanggung Jawab Kategori atau pimpinan divisi keahlian lintas fungsi
+      if (ticket.type && viewerOwnedCategories.has(ticket.type)) {
+        return true;
+      }
+      if (ticket.waitingForFunction && crossFunctionalLeaderFunctions.has(ticket.waitingForFunction)) {
+        return true;
+      }
       const routedDivision = BLOCKER_TYPE_DIVISION_ROUTING[ticket.type || ''];
       if (routedDivision && crossFunctionalLeaderFunctions.has(routedDivision.function)) {
         return true;
@@ -2071,6 +2413,7 @@ export class BlockerService {
     return Promise.all(
       tickets.map(async (ticket: any) => ({
         ...ticket,
+        impacts: normalizeBlockerImpacts(ticket.impacts, ticket.impact),
         supportContributions: await this.syncAndBuildHistoryEntries(
           ticket,
           notificationsByTicket.get(ticket.id) || [],
@@ -2919,11 +3262,47 @@ export class BlockerService {
     }
 
     try {
+      if (ticket?.type && (this.prisma as any).blockerCategoryOwner?.findFirst) {
+        const catOwner = await (this.prisma as any).blockerCategoryOwner.findFirst({
+          where: {
+            blockerType: ticket.type as BlockerType,
+            ...this.activeDateWhere(today),
+          },
+          orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+          select: { ownerUserId: true },
+        });
+        if (catOwner?.ownerUserId) {
+          addRecipient(catOwner.ownerUserId);
+          if (this.prisma.organizationalAssignment?.findFirst) {
+            const catOwnerAssign = await this.prisma.organizationalAssignment.findFirst({
+              where: {
+                userId: catOwner.ownerUserId,
+                ...this.activeDateWhere(today),
+              },
+              orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
+              select: { directManagerId: true },
+            });
+            addRecipient(catOwnerAssign?.directManagerId);
+          }
+        }
+      }
+    } catch {
+      // Abaikan kesalahan lookup penanggung jawab kategori
+    }
+
+    try {
+      const targetFunctionsToNotify: CanonicalFunction[] = [];
       const targetDivision = BLOCKER_TYPE_DIVISION_ROUTING[ticket?.type || ''];
-      if (targetDivision && this.prisma.organizationalAssignment?.findMany) {
+      if (targetDivision) {
+        targetFunctionsToNotify.push(targetDivision.function);
+      }
+      if (ticket?.waitingForFunction) {
+        targetFunctionsToNotify.push(ticket.waitingForFunction as CanonicalFunction);
+      }
+      if (targetFunctionsToNotify.length > 0 && this.prisma.organizationalAssignment?.findMany) {
         const targetLeaders = await this.prisma.organizationalAssignment.findMany({
           where: {
-            function: targetDivision.function,
+            function: { in: Array.from(new Set(targetFunctionsToNotify)) },
             role: {
               in: [CanonicalRole.HEAD, CanonicalRole.SUPERVISOR, CanonicalRole.HRGA],
             },
@@ -3022,6 +3401,44 @@ export class BlockerService {
       });
     }
 
+    const normalizedImpacts = this.resolveAndValidateImpacts(dto.impacts, dto.impact);
+    const primaryImpact = normalizedImpacts[0];
+    const nextWaitingForFunction =
+      dto.type === BlockerType.CROSS_TEAM
+        ? dto.waitingForFunction !== undefined
+          ? dto.waitingForFunction
+          : ((ticket as any).waitingForFunction ?? null)
+        : null;
+
+    if (
+      dto.type === BlockerType.CROSS_TEAM &&
+      ticket!.ownerNeededType !== AuthorityContext.PROJECT_AUTHORITY &&
+      !nextWaitingForFunction
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Untuk kategori Menunggu Tim / Rekan Lain, wajib memilih divisi yang sedang ditunggu.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    let nextAssignedOwnerId = ticket!.assignedOwnerId;
+    const prevWaitingForFunction = (ticket as any).waitingForFunction ?? null;
+    const categoryOrTeamChanged =
+      dto.type !== ticket!.type || nextWaitingForFunction !== prevWaitingForFunction;
+
+    if (ticket!.status === BlockerStatus.OPEN && categoryOrTeamChanged) {
+      const suggestion = await this.resolveSuggestedOwner(actorUserId, {
+        type: dto.type,
+        ownerNeededType: ticket!.ownerNeededType,
+        projectCode: ticket!.projectCodeReference,
+        waitingForFunction: nextWaitingForFunction,
+      });
+      if (suggestion.owner?.id) {
+        nextAssignedOwnerId = suggestion.owner.id;
+      }
+    }
+
     let targetResolutionAt = ticket!.targetResolutionAt;
     if (dto.severity !== ticket!.severity) {
       const slaMinutesMap = await this.getSlaMinutesMap();
@@ -3037,7 +3454,10 @@ export class BlockerService {
       data: {
         type: dto.type,
         severity: dto.severity,
-        impact: dto.impact,
+        impact: primaryImpact,
+        impacts: normalizedImpacts,
+        waitingForFunction: nextWaitingForFunction,
+        assignedOwnerId: nextAssignedOwnerId,
         description: trimmedDescription,
         ...(targetResolutionAt !== undefined ? { targetResolutionAt } : {}),
       },
@@ -3055,12 +3475,18 @@ export class BlockerService {
         type: ticket!.type,
         severity: ticket!.severity,
         impact: ticket!.impact,
+        impacts: normalizeBlockerImpacts((ticket as any)!.impacts, ticket!.impact),
+        waitingForFunction: prevWaitingForFunction,
+        assignedOwnerId: ticket!.assignedOwnerId,
         description: ticket!.description,
       },
       {
         type: dto.type,
         severity: dto.severity,
-        impact: dto.impact,
+        impact: primaryImpact,
+        impacts: normalizedImpacts,
+        waitingForFunction: nextWaitingForFunction,
+        assignedOwnerId: nextAssignedOwnerId,
         description: trimmedDescription,
       },
     );
@@ -3078,9 +3504,21 @@ export class BlockerService {
     const statusLabel = ACTIVE_STATUS_LABELS[ticket!.status] || ticket!.status;
 
     const recipients = await this.resolveBlockerStakeholderRecipientIds(
-      { ...ticket, type: dto.type },
+      {
+        ...ticket,
+        type: dto.type,
+        waitingForFunction: nextWaitingForFunction,
+        assignedOwnerId: nextAssignedOwnerId,
+      },
       actorUserId,
     );
+    if (
+      ticket!.assignedOwnerId &&
+      ticket!.assignedOwnerId !== actorUserId &&
+      !recipients.includes(ticket!.assignedOwnerId)
+    ) {
+      recipients.push(ticket!.assignedOwnerId);
+    }
 
     const lines = [
       `${reporterName} telah memperbarui rincian laporan kendala aktif.`,
@@ -3088,9 +3526,9 @@ export class BlockerService {
       `Pelapor: ${reporterName}`,
       `Penanggung Jawab (PIC): ${ownerName}`,
       `Status Tiket: ${statusLabel}`,
-      `Kategori Kendala: ${dto.type}`,
+      `Kategori Kendala: ${formatBlockerTypeLabel(dto.type)}`,
       `Tingkat Keparahan: ${dto.severity}`,
-      `Dampak Kendala: ${dto.impact}`,
+      `Dampak Kendala: ${formatBlockerImpactsLabel(normalizedImpacts, primaryImpact)}`,
       `Deskripsi Kendala: ${flattenInlineNotificationText(parsed.body)}`,
     ];
     if (parsed.expectedHelp) {
@@ -3172,6 +3610,7 @@ export class BlockerService {
         type: ticket!.type,
         severity: ticket!.severity,
         impact: ticket!.impact,
+        impacts: normalizeBlockerImpacts((ticket as any)!.impacts, ticket!.impact),
         status: ticket!.status,
         description: ticket!.description,
         assignedOwnerId: ticket!.assignedOwnerId,
@@ -3205,9 +3644,9 @@ export class BlockerService {
       `Judul Kendala: ${inlineTitle}`,
       `Pelapor: ${reporterName}`,
       `Penanggung Jawab (PIC): ${ownerName}`,
-      `Kategori Kendala: ${ticket!.type}`,
+      `Kategori Kendala: ${formatBlockerTypeLabel(ticket!.type)}`,
       `Tingkat Keparahan: ${ticket!.severity}`,
-      `Dampak Kendala: ${ticket!.impact}`,
+      `Dampak Kendala: ${formatBlockerImpactsLabel((ticket as any)!.impacts, ticket!.impact)}`,
       `Status Terakhir: ${statusLabel}`,
       `Kategori Alasan Hapus: ${categoryLabel}`,
     ];
@@ -3267,6 +3706,8 @@ export class BlockerService {
         type: b.type,
         severity: b.severity,
         impact: b.impact,
+        impacts: normalizeBlockerImpacts((b as any).impacts, b.impact),
+        waitingForFunction: (b as any).waitingForFunction || null,
         status: b.status,
         raisedAt: b.raisedAt,
         targetResolutionAt: b.targetResolutionAt,

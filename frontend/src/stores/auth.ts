@@ -16,6 +16,8 @@ export interface UserProfile {
   isProjectLead?: boolean;
   isPolicyOwner?: boolean;
   ownedPolicyCategories?: string[];
+  isCategoryOwner?: boolean;
+  ownedBlockerCategories?: string[];
 }
 
 function sanitizeUserProfile(u: UserProfile | null | undefined): UserProfile | null {

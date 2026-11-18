@@ -10,6 +10,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { CanonicalRole } from '@prisma/client';
 import { toJakartaDateOnly } from '../common/time/date-only.util';
 import { ensurePolicyOwnersBaselineSynced } from '../policy/policy-owner-sync.util';
+import { resolveOwnedBlockerCategories } from './utils/category-owner.util';
 
 export interface LoginResult {
   accessToken: string;
@@ -28,6 +29,8 @@ export interface LoginResult {
     isProjectLead?: boolean;
     isPolicyOwner?: boolean;
     ownedPolicyCategories?: string[];
+    isCategoryOwner?: boolean;
+    ownedBlockerCategories?: string[];
   };
   session: {
     id: string;
@@ -164,6 +167,8 @@ export class AuthService {
       new Set((policyOwnerRecords || []).map((r: any) => String(r.policyCategory))),
     );
 
+    const ownedBlockerCategories = await resolveOwnedBlockerCategories(this.prisma, user.id, today);
+
     // Penerbitan Sesi Baru (24 Jam)
     const sessionTokenRaw = this.tokenService.generateRandomToken(32);
     const sessionTokenHash = this.tokenService.hashToken(sessionTokenRaw);
@@ -208,6 +213,8 @@ export class AuthService {
         isProjectLead: projectLeadCount > 0,
         isPolicyOwner: ownedPolicyCategories.length > 0,
         ownedPolicyCategories,
+        isCategoryOwner: ownedBlockerCategories.length > 0,
+        ownedBlockerCategories,
       },
       session: {
         id: session.id,

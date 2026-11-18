@@ -1,4 +1,8 @@
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  ArrayUnique,
+  IsArray,
   IsEnum,
   IsIn,
   IsOptional,
@@ -11,6 +15,7 @@ import {
   BlockerSeverity,
   BlockerImpact,
   AuthorityContext,
+  CanonicalFunction,
 } from '@prisma/client';
 
 export class RaiseBlockerDto {
@@ -20,8 +25,21 @@ export class RaiseBlockerDto {
   @IsEnum(BlockerSeverity, { message: 'Tingkat keparahan kendala tidak valid' })
   severity!: BlockerSeverity;
 
+  @IsOptional()
   @IsEnum(BlockerImpact, { message: 'Dampak kendala tidak valid' })
-  impact!: BlockerImpact;
+  impact?: BlockerImpact;
+
+  @IsOptional()
+  @IsArray({ message: 'Daftar dampak kendala harus berupa array' })
+  @ArrayMinSize(1, { message: 'Pilih minimal 1 dampak kendala' })
+  @ArrayMaxSize(3, { message: 'Pilih maksimal 3 dampak kendala' })
+  @ArrayUnique({ message: 'Pilihan dampak kendala tidak boleh duplikat' })
+  @IsEnum(BlockerImpact, { each: true, message: 'Pilihan dampak kendala tidak valid' })
+  impacts?: BlockerImpact[];
+
+  @IsOptional()
+  @IsEnum(CanonicalFunction, { message: 'Divisi yang ditunggu tidak valid' })
+  waitingForFunction?: CanonicalFunction;
 
   @IsString({ message: 'Deskripsi kendala wajib diisi' })
   @MinLength(10, { message: 'Deskripsi kendala minimal 10 karakter' })
@@ -94,8 +112,21 @@ export class UpdateBlockerDto {
   @IsEnum(BlockerSeverity, { message: 'Tingkat keparahan kendala tidak valid' })
   severity!: BlockerSeverity;
 
+  @IsOptional()
   @IsEnum(BlockerImpact, { message: 'Dampak kendala tidak valid' })
-  impact!: BlockerImpact;
+  impact?: BlockerImpact;
+
+  @IsOptional()
+  @IsArray({ message: 'Daftar dampak kendala harus berupa array' })
+  @ArrayMinSize(1, { message: 'Pilih minimal 1 dampak kendala' })
+  @ArrayMaxSize(3, { message: 'Pilih maksimal 3 dampak kendala' })
+  @ArrayUnique({ message: 'Pilihan dampak kendala tidak boleh duplikat' })
+  @IsEnum(BlockerImpact, { each: true, message: 'Pilihan dampak kendala tidak valid' })
+  impacts?: BlockerImpact[];
+
+  @IsOptional()
+  @IsEnum(CanonicalFunction, { message: 'Divisi yang ditunggu tidak valid' })
+  waitingForFunction?: CanonicalFunction;
 
   @IsString({ message: 'Deskripsi kendala wajib diisi' })
   @MinLength(10, { message: 'Deskripsi kendala minimal 10 karakter' })

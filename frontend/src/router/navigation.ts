@@ -24,6 +24,8 @@ export interface UserAccessContext {
   isProjectLead?: boolean;
   isPolicyOwner?: boolean;
   ownedPolicyCategories?: string[];
+  isCategoryOwner?: boolean;
+  ownedBlockerCategories?: string[];
 }
 
 export interface ResolvedAccessContext {
@@ -32,6 +34,7 @@ export interface ResolvedAccessContext {
   isTemporaryReviewer: boolean;
   isProjectLead: boolean;
   isPolicyOwner: boolean;
+  isCategoryOwner: boolean;
 }
 
 export interface NavItem {
@@ -43,6 +46,7 @@ export interface NavItem {
   allowTemporaryReviewer?: boolean;
   allowProjectLead?: boolean;
   allowPolicyOwner?: boolean;
+  allowCategoryOwner?: boolean;
   badge?: string;
   badgeType?: 'amber' | 'red' | 'neutral' | 'green';
 }
@@ -107,10 +111,10 @@ export const navGroups: NavGroup[] = [
     title: 'Management',
     items: [
       { label: 'Pulse Dashboard', to: '/dashboard', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'Activity' },
-      { label: 'Antrean Blocker', to: '/blockers', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, iconName: 'ShieldAlert' },
+      { label: 'Antrean Blocker', to: '/blockers', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, allowCategoryOwner: true, iconName: 'ShieldAlert' },
       { label: 'Catatan Coaching', to: '/coaching', requiresSubordinates: true, iconName: 'MessagesSquare' },
       { label: 'Radar Risiko Proyek', to: '/projects/risk', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'FolderGit2' },
-      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, iconName: 'Clock' },
+      { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, allowCategoryOwner: true, iconName: 'Clock' },
       { label: 'Persetujuan Cuti', to: '/leave/queue', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'CheckSquare' },
       { label: 'Review Koreksi & Cuti', to: '/corrections/review', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'FileCheck' },
       { label: 'Laporan Eksekutif', to: '/reports', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'], iconName: 'BarChart3' },
@@ -141,6 +145,7 @@ export function resolveAccessContext(
       isTemporaryReviewer: false,
       isProjectLead: false,
       isPolicyOwner: false,
+      isCategoryOwner: false,
     };
   }
   if (typeof userOrRole === 'string') {
@@ -152,12 +157,16 @@ export function resolveAccessContext(
       isProjectLead: role === 'SUPERVISOR' || role === 'PROJECT_MANAGER',
       isPolicyOwner:
         role === 'SYSTEM_ADMIN' || role === 'CEO_MANAGEMENT' || role === 'HRGA',
+      isCategoryOwner: false,
     };
   }
   const role = (userOrRole.role as RoleName) || null;
   const hasOwnedCategories =
     Array.isArray(userOrRole.ownedPolicyCategories) &&
     userOrRole.ownedPolicyCategories.length > 0;
+  const hasOwnedBlockerCategories =
+    Array.isArray(userOrRole.ownedBlockerCategories) &&
+    userOrRole.ownedBlockerCategories.length > 0;
   return {
     role,
     hasSubordinates:
@@ -177,6 +186,10 @@ export function resolveAccessContext(
           : role === 'SYSTEM_ADMIN' ||
             role === 'CEO_MANAGEMENT' ||
             role === 'HRGA',
+    isCategoryOwner:
+      typeof userOrRole.isCategoryOwner === 'boolean'
+        ? userOrRole.isCategoryOwner
+        : hasOwnedBlockerCategories,
   };
 }
 
@@ -200,6 +213,11 @@ export function canAccessNavItem(item: NavItem, ctx: ResolvedAccessContext): boo
 
   // Wewenang Pemilik Kebijakan Dinamis (Authorized Policy Owner dari tabel policy_owner_assignments)
   if (item.allowPolicyOwner && ctx.isPolicyOwner) {
+    return true;
+  }
+
+  // Wewenang Penanggung Jawab Kategori Kendala Resmi (DEC-017)
+  if (item.allowCategoryOwner && ctx.isCategoryOwner) {
     return true;
   }
 

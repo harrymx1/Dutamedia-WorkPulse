@@ -6,6 +6,7 @@ import {
   BlockerSeverity,
   BlockerStatus,
   BlockerType,
+  CanonicalFunction,
 } from '@prisma/client';
 import { AppException } from '../../common/exceptions/app.exception';
 
@@ -1674,6 +1675,494 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
           'Catatan tidak sah',
         ),
       ).rejects.toThrowError(AppException);
+    });
+  });
+
+  describe('Tahap 3: 16 Kategori, Multi-Dampak (1-3), Penanggung Jawab Kategori (DEC-017) & CROSS_TEAM', () => {
+    it('validates multi-impact (accepts 1-3 unique impacts & single-impact fallback; rejects empty, >3, or duplicates)', async () => {
+      mockPrisma.blockerTicket.create.mockImplementation(async ({ data }: any) => ({
+        id: 'blk-multi-1',
+        ...data,
+        raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'owner-1', fullName: 'Budi Lead', email: 'lead@dutamedia.com' },
+      }));
+
+      // 1-3 dampak unik diterima
+      const resMulti = await service.raiseBlocker('emp-1', {
+        type: BlockerType.NETWORK,
+        severity: BlockerSeverity.HIGH,
+        impacts: [BlockerImpact.TASK, BlockerImpact.COMPANY_OPS, BlockerImpact.TEAM],
+        description: '[WiFi Putus] Koneksi kantor lantai 2 mati total',
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        assignedOwnerId: 'owner-1',
+      } as any);
+      expect(resMulti.impact).toBe(BlockerImpact.TASK);
+      expect(resMulti.impacts).toEqual([
+        BlockerImpact.TASK,
+        BlockerImpact.COMPANY_OPS,
+        BlockerImpact.TEAM,
+      ]);
+
+      // Kompatibilitas mundur: impact tunggal otomatis mengisi impacts array
+      const resLegacy = await service.raiseBlocker('emp-1', {
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.MILESTONE,
+        description: '[Query Lambat] Endpoint laporan butuh optimasi index',
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        assignedOwnerId: 'owner-1',
+      } as any);
+      expect(resLegacy.impact).toBe(BlockerImpact.MILESTONE);
+      expect(resLegacy.impacts).toEqual([BlockerImpact.MILESTONE]);
+
+      // Array kosong ditolak 400
+      await expect(
+        service.raiseBlocker('emp-1', {
+          type: BlockerType.TECHNICAL,
+          severity: BlockerSeverity.HIGH,
+          impacts: [],
+          description: '[Dampak Kosong] Deskripsi kendala valid minimal 10 karakter',
+          ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+          assignedOwnerId: 'owner-1',
+        } as any),
+      ).rejects.toThrowError(AppException);
+
+      // Lebih dari 3 dampak ditolak 400
+      await expect(
+        service.raiseBlocker('emp-1', {
+          type: BlockerType.TECHNICAL,
+          severity: BlockerSeverity.HIGH,
+          impacts: [
+            BlockerImpact.TASK,
+            BlockerImpact.TEAM,
+            BlockerImpact.MILESTONE,
+            BlockerImpact.PROJECT,
+          ],
+          description: '[Dampak > 3] Deskripsi kendala valid minimal 10 karakter',
+          ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+          assignedOwnerId: 'owner-1',
+        } as any),
+      ).rejects.toThrowError(AppException);
+
+      // Duplikat dampak ditolak 400
+      await expect(
+        service.raiseBlocker('emp-1', {
+          type: BlockerType.TECHNICAL,
+          severity: BlockerSeverity.HIGH,
+          impacts: [BlockerImpact.TASK, BlockerImpact.TASK],
+          description: '[Dampak Duplikat] Deskripsi kendala valid minimal 10 karakter',
+          ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+          assignedOwnerId: 'owner-1',
+        } as any),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('requires waitingForFunction on CROSS_TEAM when non-project and no explicit owner; routes to target division HEAD', async () => {
+      await expect(
+        service.raiseBlocker('emp-adit', {
+          type: BlockerType.CROSS_TEAM,
+          severity: BlockerSeverity.MEDIUM,
+          impacts: [BlockerImpact.TASK],
+          description: '[Menunggu Review QA] Fitur navigasi siap diuji QA',
+          ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        } as any),
+      ).rejects.toThrowError(AppException);
+
+      mockPrisma.temporaryReviewerAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+      mockPrisma.organizationalAssignment = {
+        findMany: vi.fn().mockResolvedValue([
+          { userId: 'head-dharma', role: 'HEAD', directManagerId: 'ceo-hendra' },
+        ]),
+      };
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.user.findFirst = vi.fn().mockResolvedValue({
+        id: 'head-dharma',
+        fullName: 'Dharma Putra',
+        orgAssignments: [{ jobTitle: 'Head of Delivery' }],
+      });
+
+      const suggestion = await service.resolveSuggestedOwner('emp-adit', {
+        type: BlockerType.CROSS_TEAM,
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        waitingForFunction: CanonicalFunction.Delivery,
+      });
+      expect(suggestion.owner?.id).toBe('head-dharma');
+      expect(suggestion.reason).toBe('DIVISION_HEAD');
+    });
+
+    it('routes 16 blocker categories accurately using BlockerCategoryOwner, project authority, CROSS_TEAM, and fallback rules (DEC-017)', async () => {
+      const categoryOwnersByType: Record<string, string> = {
+        TECHNICAL: 'lead-bambang',
+        INFRA: 'staff-fakhrizal',
+        HOSTING_DOMAIN: 'staff-achmad',
+        ACCESS_SECURITY: 'staff-rahian',
+        NETWORK: 'staff-fakhrizal',
+        WORK_DEVICE: 'staff-rahian',
+        OFFICE_FACILITY: 'staff-sugito',
+        FINANCE: 'staff-oivi',
+        CLIENT: 'staff-hari',
+      };
+      const usersDirectory: Record<string, { fullName: string; jobTitle: string }> = {
+        'lead-bambang': { fullName: 'Bambang Pratama', jobTitle: 'Technical Lead 1' },
+        'staff-fakhrizal': { fullName: 'Fakhrizal Asshiddiq', jobTitle: 'Network & Infrastructure Engineer' },
+        'staff-achmad': { fullName: 'Achmad Noer Wahid', jobTitle: 'IT Systems & Cloud Specialist' },
+        'staff-rahian': { fullName: 'Rahian M. Suari', jobTitle: 'IT Technical Support' },
+        'staff-sugito': { fullName: 'Sugito Erik Fajar', jobTitle: 'General Affairs (GA) Officer' },
+        'staff-oivi': { fullName: 'Oivi Deasepta', jobTitle: 'Finance & Invoicing Staff' },
+        'staff-hari': { fullName: 'Hari Wibowo', jobTitle: 'Business Development Executive' },
+        'head-arif': { fullName: 'Arif Budiman', jobTitle: 'Head of Engineering' },
+        'head-dewi': { fullName: 'Dewi Lestari', jobTitle: 'HRGA & Corporate Legal Administration' },
+        'head-dharma': { fullName: 'Dharma Putra', jobTitle: 'Head of Delivery' },
+        'pm-dimas': { fullName: 'Dimas Prakoso', jobTitle: 'Project Manager 1' },
+      };
+
+      mockPrisma.blockerCategoryOwner = {
+        findFirst: vi.fn().mockImplementation(async ({ where }: any) => {
+          const ownerId = categoryOwnersByType[where?.blockerType];
+          return ownerId ? { blockerType: where.blockerType, ownerUserId: ownerId } : null;
+        }),
+      };
+      mockPrisma.projectAuthorityMapping = {
+        findFirst: vi.fn().mockResolvedValue({
+          projectCode: 'PRJ-PORTAL',
+          projectManagerId: 'pm-dimas',
+          escalationReviewerId: 'head-dharma',
+          involvedFunction: CanonicalFunction.Delivery,
+        }),
+      };
+      mockPrisma.temporaryReviewerAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue({
+          userId: 'emp-adit',
+          role: 'EMPLOYEE',
+          function: CanonicalFunction.Engineering,
+          directManagerId: 'head-arif',
+        }),
+        findMany: vi.fn().mockImplementation(async ({ where }: any) => {
+          if (where?.function === CanonicalFunction.HRGA) {
+            return [{ userId: 'head-dewi', role: 'HRGA', directManagerId: 'ceo-hendra' }];
+          }
+          if (where?.function === CanonicalFunction.Delivery) {
+            return [{ userId: 'head-dharma', role: 'HEAD', directManagerId: 'ceo-hendra' }];
+          }
+          return [];
+        }),
+      };
+      mockPrisma.user.findFirst = vi.fn().mockImplementation(async ({ where }: any) => {
+        const entry = usersDirectory[where?.id];
+        return entry
+          ? { id: where.id, fullName: entry.fullName, orgAssignments: [{ jobTitle: entry.jobTitle }] }
+          : null;
+      });
+
+      const cases: Array<{
+        type: BlockerType;
+        ownerNeededType: AuthorityContext;
+        projectCode?: string;
+        waitingForFunction?: CanonicalFunction;
+        expectedOwnerId: string;
+      }> = [
+        { type: BlockerType.TECHNICAL, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'lead-bambang' },
+        { type: BlockerType.INFRA, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-fakhrizal' },
+        { type: BlockerType.HOSTING_DOMAIN, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-achmad' },
+        { type: BlockerType.ACCESS_SECURITY, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-rahian' },
+        { type: BlockerType.NETWORK, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-fakhrizal' },
+        { type: BlockerType.WORK_DEVICE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-rahian' },
+        { type: BlockerType.OFFICE_FACILITY, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-sugito' },
+        { type: BlockerType.REQUIREMENT, ownerNeededType: AuthorityContext.PROJECT_AUTHORITY, projectCode: 'PRJ-PORTAL', expectedOwnerId: 'pm-dimas' },
+        { type: BlockerType.APPROVAL, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
+        { type: BlockerType.CROSS_TEAM, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, waitingForFunction: CanonicalFunction.Delivery, expectedOwnerId: 'head-dharma' },
+        { type: BlockerType.RESOURCE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
+        { type: BlockerType.CLIENT, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-hari' },
+        { type: BlockerType.VENDOR, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
+        { type: BlockerType.FINANCE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-oivi' },
+        { type: BlockerType.LEGAL, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-dewi' },
+        { type: BlockerType.OTHER, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
+      ];
+
+      expect(cases).toHaveLength(16);
+      for (const tc of cases) {
+        const res = await service.resolveSuggestedOwner('emp-adit', {
+          type: tc.type,
+          ownerNeededType: tc.ownerNeededType,
+          projectCode: tc.projectCode,
+          waitingForFunction: tc.waitingForFunction,
+        });
+        expect(res.owner?.id, `Kategori ${tc.type}`).toBe(tc.expectedOwnerId);
+      }
+    });
+
+    it('escalates upward to Category Owner manager when Category Owner is on APPROVED leave or IS the reporter (DEC-014 & DEC-017)', async () => {
+      mockPrisma.blockerCategoryOwner = {
+        findFirst: vi.fn().mockResolvedValue({
+          blockerType: BlockerType.NETWORK,
+          ownerUserId: 'staff-fakhrizal',
+        }),
+      };
+      mockPrisma.temporaryReviewerAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockImplementation(async ({ where }: any) => {
+          if (where?.userId === 'staff-fakhrizal') {
+            return {
+              userId: 'staff-fakhrizal',
+              role: 'EMPLOYEE',
+              function: CanonicalFunction.OperationsInfrastructure,
+              directManagerId: 'head-gunawan',
+            };
+          }
+          if (where?.userId === 'head-gunawan') {
+            return {
+              userId: 'head-gunawan',
+              role: 'HEAD',
+              function: CanonicalFunction.OperationsInfrastructure,
+              directManagerId: 'ceo-hendra',
+            };
+          }
+          return null;
+        }),
+      };
+      mockPrisma.user.findFirst = vi.fn().mockImplementation(async ({ where }: any) => {
+        if (where?.id === 'head-gunawan') {
+          return {
+            id: 'head-gunawan',
+            fullName: 'Gunawan Setiawan',
+            orgAssignments: [{ jobTitle: 'Head of Operations & Infrastructure' }],
+          };
+        }
+        return null;
+      });
+
+      // Kasus 1: Fakhrizal sedang cuti resmi -> naik ke Pak Gunawan (bukan ke rekan Operations)
+      mockPrisma.leaveRequest = {
+        findFirst: vi.fn().mockImplementation(async ({ where }: any) => {
+          if (where?.userId === 'staff-fakhrizal') {
+            return { id: 'lv-fk', status: 'APPROVED' };
+          }
+          return null;
+        }),
+      };
+      const resOnLeave = await service.resolveSuggestedOwner('emp-adit', {
+        type: BlockerType.NETWORK,
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      });
+      expect(resOnLeave.owner?.id).toBe('head-gunawan');
+      expect(resOnLeave.reason).toBe('CATEGORY_OWNER');
+      expect(resOnLeave.routingNote).toContain('atasan langsung');
+
+      // Kasus 2: Pelapor adalah Fakhrizal sendiri -> langsung naik ke atasannya (Pak Gunawan), tidak ke dirinya sendiri
+      mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
+      const resSelf = await service.resolveSuggestedOwner('staff-fakhrizal', {
+        type: BlockerType.NETWORK,
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      });
+      expect(resSelf.owner?.id).toBe('head-gunawan');
+      expect(resSelf.reason).toBe('DIRECT_MANAGER');
+    });
+
+    it('includes full category label and all impacts in BLOCKER_RAISED, BLOCKER_CRITICAL_ESCALATION, UPDATE, and DELETE notifications', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' });
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue({
+          userId: 'staff-fakhrizal',
+          role: 'EMPLOYEE',
+          function: CanonicalFunction.OperationsInfrastructure,
+          directManagerId: 'head-gunawan',
+        }),
+        findMany: vi.fn().mockResolvedValue([{ userId: 'head-gunawan' }]),
+      };
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.blockerTicket.create.mockResolvedValue({
+        id: 'blk-notif-full',
+        type: BlockerType.NETWORK,
+        severity: BlockerSeverity.CRITICAL,
+        impact: BlockerImpact.COMPANY_OPS,
+        impacts: [BlockerImpact.COMPANY_OPS, BlockerImpact.TEAM],
+        status: BlockerStatus.OPEN,
+        description: '[Internet Mati Total] Seluruh jaringan lantai 2 terputus',
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq', email: 'network.infra@dutamedia.com' },
+      });
+
+      await service.raiseBlocker('emp-adit', {
+        type: BlockerType.NETWORK,
+        severity: BlockerSeverity.CRITICAL,
+        impacts: [BlockerImpact.COMPANY_OPS, BlockerImpact.TEAM],
+        description: '[Internet Mati Total] Seluruh jaringan lantai 2 terputus',
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        assignedOwnerId: 'staff-fakhrizal',
+      } as any);
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(2);
+      const raisedMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      const critMsg = mockPrisma.notification.create.mock.calls[1][0].data.message;
+      for (const msg of [raisedMsg, critMsg]) {
+        expect(msg).toContain('Kategori Kendala: Jaringan & Koneksi (NETWORK)');
+        expect(msg).toContain('Operasional Kantor');
+        expect(msg).toContain('Satu Tim / Divisi');
+      }
+
+      // Update & Delete notification formatting
+      mockPrisma.notification.create.mockClear();
+      mockPrisma.auditLog = { create: vi.fn() };
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-notif-full',
+        type: BlockerType.NETWORK,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.TASK,
+        impacts: [BlockerImpact.TASK, BlockerImpact.COMPANY_OPS],
+        status: BlockerStatus.OPEN,
+        description: '[Internet Lambat] Koneksi tidak stabil',
+        raisedByUserId: 'emp-adit',
+        assignedOwnerId: 'staff-fakhrizal',
+        raisedAt: new Date('2026-11-18T01:00:00.000Z'),
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
+        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' },
+        supportContributions: [],
+      });
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-notif-full',
+        type: BlockerType.OFFICE_FACILITY,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.COMPANY_OPS,
+        impacts: [BlockerImpact.COMPANY_OPS, BlockerImpact.MILESTONE],
+        status: BlockerStatus.OPEN,
+        description: '[Listrik Lantai 2 Padam] Panel listrik ruang kerja turun',
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
+        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' },
+      });
+
+      await service.updateBlocker('emp-adit', 'blk-notif-full', {
+        type: BlockerType.OFFICE_FACILITY,
+        severity: BlockerSeverity.HIGH,
+        impacts: [BlockerImpact.COMPANY_OPS, BlockerImpact.MILESTONE],
+        description: '[Listrik Lantai 2 Padam] Panel listrik ruang kerja turun',
+      });
+      const updateMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(updateMsg).toContain('Kategori Kendala: Fasilitas & Sarana Kantor (OFFICE_FACILITY)');
+      expect(updateMsg).toContain('Operasional Kantor');
+      expect(updateMsg).toContain('Target & Tenggat Waktu');
+
+      mockPrisma.notification.create.mockClear();
+      mockPrisma.blockerTicket.delete.mockResolvedValue({ id: 'blk-notif-full' });
+      await service.deleteBlocker('emp-adit', 'blk-notif-full', {
+        reasonCategory: 'SELF_RESOLVED',
+      });
+      const deleteMsg = mockPrisma.notification.create.mock.calls[0][0].data.message;
+      expect(deleteMsg).toContain('Kategori Kendala: Jaringan & Koneksi (NETWORK)');
+      expect(deleteMsg).toContain('Tugas Pribadi');
+      expect(deleteMsg).toContain('Operasional Kantor');
+    });
+
+    it('reroutes assignedOwnerId on OPEN ticket when category changes in updateBlocker, and keeps PIC when already ACKNOWLEDGED', async () => {
+      mockPrisma.auditLog = { create: vi.fn() };
+      mockPrisma.blockerCategoryOwner = {
+        findFirst: vi.fn().mockResolvedValue({
+          blockerType: BlockerType.NETWORK,
+          ownerUserId: 'staff-fakhrizal',
+        }),
+      };
+      mockPrisma.temporaryReviewerAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue(null),
+        findMany: vi.fn().mockResolvedValue([]),
+      };
+      mockPrisma.user.findFirst = vi.fn().mockResolvedValue({
+        id: 'staff-fakhrizal',
+        fullName: 'Fakhrizal Asshiddiq',
+        orgAssignments: [{ jobTitle: 'Network & Infrastructure Engineer' }],
+      });
+
+      // Kasus 1: Status masih OPEN dan kategori diubah dari TECHNICAL -> NETWORK => pindah ke staff-fakhrizal
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-reroute-open',
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.TASK,
+        impacts: [BlockerImpact.TASK],
+        status: BlockerStatus.OPEN,
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        description: '[Kendala Jaringan] Salah pilih kategori sebelumnya',
+        raisedByUserId: 'emp-adit',
+        assignedOwnerId: 'lead-bambang',
+        raisedAt: new Date('2026-11-18T01:00:00.000Z'),
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
+        assignedOwner: { id: 'lead-bambang', fullName: 'Bambang Pratama' },
+        supportContributions: [],
+      });
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-reroute-open',
+        type: BlockerType.NETWORK,
+        assignedOwnerId: 'staff-fakhrizal',
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
+        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' },
+      });
+
+      await service.updateBlocker('emp-adit', 'blk-reroute-open', {
+        type: BlockerType.NETWORK,
+        severity: BlockerSeverity.HIGH,
+        impacts: [BlockerImpact.TASK, BlockerImpact.COMPANY_OPS],
+        description: '[Kendala Jaringan] Ternyata kabel LAN kantor putus',
+      });
+
+      expect(mockPrisma.blockerTicket.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            type: BlockerType.NETWORK,
+            assignedOwnerId: 'staff-fakhrizal',
+          }),
+        }),
+      );
+      const recipientsOpen = mockPrisma.notification.create.mock.calls.map(
+        (c: any) => c[0].data.recipientUserId,
+      );
+      expect(recipientsOpen).toEqual(
+        expect.arrayContaining(['staff-fakhrizal', 'lead-bambang']),
+      );
+
+      // Kasus 2: Status sudah ACKNOWLEDGED => PIC tidak berpindah meski kategori diedit
+      mockPrisma.notification.create.mockClear();
+      mockPrisma.blockerTicket.update.mockClear();
+      mockPrisma.blockerTicket.findUnique.mockResolvedValue({
+        id: 'blk-keep-ack',
+        type: BlockerType.TECHNICAL,
+        severity: BlockerSeverity.HIGH,
+        impact: BlockerImpact.TASK,
+        impacts: [BlockerImpact.TASK],
+        status: BlockerStatus.ACKNOWLEDGED,
+        ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+        description: '[Sudah Ditangani] Sedang dicek Mas Bambang',
+        raisedByUserId: 'emp-adit',
+        assignedOwnerId: 'lead-bambang',
+        raisedAt: new Date('2026-11-18T01:00:00.000Z'),
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
+        assignedOwner: { id: 'lead-bambang', fullName: 'Bambang Pratama' },
+        supportContributions: [],
+      });
+      mockPrisma.blockerTicket.update.mockResolvedValue({
+        id: 'blk-keep-ack',
+        type: BlockerType.NETWORK,
+        assignedOwnerId: 'lead-bambang',
+        raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
+        assignedOwner: { id: 'lead-bambang', fullName: 'Bambang Pratama' },
+      });
+
+      await service.updateBlocker('emp-adit', 'blk-keep-ack', {
+        type: BlockerType.NETWORK,
+        severity: BlockerSeverity.HIGH,
+        impacts: [BlockerImpact.TASK],
+        description: '[Sudah Ditangani] Diperbarui kategorinya tetapi PIC tetap',
+      });
+
+      expect(mockPrisma.blockerTicket.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            type: BlockerType.NETWORK,
+            assignedOwnerId: 'lead-bambang',
+          }),
+        }),
+      );
     });
   });
 });

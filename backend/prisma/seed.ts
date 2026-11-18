@@ -155,6 +155,13 @@ async function main() {
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
     },
+    {
+      email: 'product@dutamedia.com',
+      fullName: 'Dio Bayu Bagaskara',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
     // Divisi Operations & Infrastructure
     {
       email: 'head.ops@dutamedia.com',
@@ -166,6 +173,27 @@ async function main() {
     {
       email: 'lead.creative@dutamedia.com',
       fullName: 'Rian Kurniawan',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'network.infra@dutamedia.com',
+      fullName: 'Fakhrizal Asshiddiq',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'specialist.it@dutamedia.com',
+      fullName: 'Achmad Noer Wahid',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'it.support@dutamedia.com',
+      fullName: 'Rahian M. Suari',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -186,6 +214,13 @@ async function main() {
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
     },
+    {
+      email: 'sales.bd@dutamedia.com',
+      fullName: 'Hari Wibowo',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
     // Divisi Finance
     {
       email: 'finance@dutamedia.com',
@@ -194,10 +229,24 @@ async function main() {
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
     },
+    {
+      email: 'staff.finance@dutamedia.com',
+      fullName: 'Oivi Deasepta',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
     // Divisi HRGA & Corporate Legal Administration
     {
       email: 'hrga@dutamedia.com',
       fullName: 'Dewi Lestari',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'ga@dutamedia.com',
+      fullName: 'Sugito Erik Fajar',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -234,12 +283,19 @@ async function main() {
   const headDeliveryUser = userMap['head.delivery@dutamedia.com'];
   const pmUser = userMap['pm@dutamedia.com'];
   const qaUser = userMap['qa@dutamedia.com'];
+  const productManagerUser = userMap['product@dutamedia.com'];
   const headOpsUser = userMap['head.ops@dutamedia.com'];
   const opsSupvUser = userMap['lead.creative@dutamedia.com'];
+  const networkInfraUser = userMap['network.infra@dutamedia.com'];
+  const specialistItUser = userMap['specialist.it@dutamedia.com'];
+  const itSupportUser = userMap['it.support@dutamedia.com'];
   const rndPrincipalUser = userMap['designer@dutamedia.com'];
   const headSalesUser = userMap['head.sales@dutamedia.com'];
+  const salesBdUser = userMap['sales.bd@dutamedia.com'];
   const financeUser = userMap['finance@dutamedia.com'];
+  const staffFinanceUser = userMap['staff.finance@dutamedia.com'];
   const hrgaUser = userMap['hrga@dutamedia.com'];
+  const gaUser = userMap['ga@dutamedia.com'];
 
   // =========================================================================
   // 2. SEED ORGANIZATIONAL ASSIGNMENTS (Pohon Hierarki Resmi PT Dutamedia)
@@ -350,7 +406,17 @@ async function main() {
       assignmentReason: 'Penugasan Software QA Specialist di bawah Head of Delivery',
       createdByUserId: hrgaUser.id,
     },
-    // 3. Divisi Operations & Infrastructure: Head of Ops membawahi Operations Supervisor
+    {
+      userId: productManagerUser.id,
+      jobTitle: 'Product Manager',
+      role: CanonicalRole.PROJECT_MANAGER,
+      function: CanonicalFunction.Delivery,
+      directManagerId: headDeliveryUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Product Manager di bawah Head of Delivery',
+      createdByUserId: adminUser.id,
+    },
+    // 3. Divisi Operations & Infrastructure: Head of Ops membawahi Ops Supervisor & tim spesialis IT/Jaringan
     {
       userId: headOpsUser.id,
       jobTitle: 'Head of Operations & Infrastructure',
@@ -371,6 +437,36 @@ async function main() {
       assignmentReason: 'Penugasan Operations Supervisor di bawah Head of Operations & Infrastructure',
       createdByUserId: adminUser.id,
     },
+    {
+      userId: networkInfraUser.id,
+      jobTitle: 'Network & Infrastructure Engineer',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.OperationsInfrastructure,
+      directManagerId: headOpsUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Network & Infrastructure Engineer di bawah Head of Operations & Infrastructure',
+      createdByUserId: hrgaUser.id,
+    },
+    {
+      userId: specialistItUser.id,
+      jobTitle: 'IT Systems & Cloud Specialist',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.OperationsInfrastructure,
+      directManagerId: headOpsUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan IT Systems & Cloud Specialist di bawah Head of Operations & Infrastructure',
+      createdByUserId: hrgaUser.id,
+    },
+    {
+      userId: itSupportUser.id,
+      jobTitle: 'IT Technical Support',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.OperationsInfrastructure,
+      directManagerId: headOpsUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan IT Technical Support di bawah Head of Operations & Infrastructure',
+      createdByUserId: hrgaUser.id,
+    },
     // 4. Divisi R&D & Technical Advisory: Principal Engineer melapor ke CEO
     {
       userId: rndPrincipalUser.id,
@@ -382,7 +478,7 @@ async function main() {
       assignmentReason: 'Penugasan Principal Engineer — R&D & Technical Advisory',
       createdByUserId: hrgaUser.id,
     },
-    // 5. Divisi Commercial: Head of Sales Enablement & Presales melapor ke CEO
+    // 5. Divisi Commercial: Head of Sales Enablement & Presales melapor ke CEO & membawahi Business Development
     {
       userId: headSalesUser.id,
       jobTitle: 'Head of Sales Enablement & Presales',
@@ -393,7 +489,17 @@ async function main() {
       assignmentReason: 'Penetapan Head of Sales Enablement & Presales (Commercial)',
       createdByUserId: adminUser.id,
     },
-    // 6. Divisi Finance: Senior Finance Staff melapor ke CEO
+    {
+      userId: salesBdUser.id,
+      jobTitle: 'Business Development Executive',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.SalesEnablementPresales,
+      directManagerId: headSalesUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Business Development Executive di bawah Head of Sales Enablement & Presales',
+      createdByUserId: hrgaUser.id,
+    },
+    // 6. Divisi Finance: Senior Finance Staff melapor ke CEO & membawahi Staff Finance
     {
       userId: financeUser.id,
       jobTitle: 'Senior Finance Staff',
@@ -402,6 +508,16 @@ async function main() {
       directManagerId: direkturUser.id,
       effectiveDate: todayDate,
       assignmentReason: 'Penugasan Senior Finance Staff',
+      createdByUserId: hrgaUser.id,
+    },
+    {
+      userId: staffFinanceUser.id,
+      jobTitle: 'Finance & Invoicing Staff',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.Finance,
+      directManagerId: financeUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan Finance & Invoicing Staff di bawah Senior Finance Staff',
       createdByUserId: hrgaUser.id,
     },
     // 7. Divisi HRGA & Corporate Legal Administration
@@ -414,6 +530,16 @@ async function main() {
       effectiveDate: todayDate,
       assignmentReason: 'Penetapan HRGA & Corporate Legal Administration',
       createdByUserId: adminUser.id,
+    },
+    {
+      userId: gaUser.id,
+      jobTitle: 'General Affairs (GA) Officer',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.HRGA,
+      directManagerId: hrgaUser.id,
+      effectiveDate: todayDate,
+      assignmentReason: 'Penugasan General Affairs (GA) Officer di bawah HRGA & Corporate Legal',
+      createdByUserId: hrgaUser.id,
     },
   ];
 
@@ -663,6 +789,46 @@ async function main() {
     }
   }
 
+  // =========================================================================
+  // 5c. SEED PENANGGUNG JAWAB KATEGORI KENDALA (DEC-017 / Tahap 2B)
+  //     Penunjukan resmi per kategori. Bila cuti, tiket hanya naik ke atasan (DEC-014).
+  // =========================================================================
+  console.log('🧭 [5c/6] Menetapkan Penanggung Jawab Kategori Kendala Resmi...');
+
+  const categoryOwnerPlan: { type: BlockerType; owner: any; reason: string }[] = [
+    { type: BlockerType.TECHNICAL, owner: techLeadUser, reason: 'Technical Lead menjadi penanggung jawab kendala Teknis & Kode Program' },
+    { type: BlockerType.INFRA, owner: networkInfraUser, reason: 'Network & Infrastructure menjadi penanggung jawab kendala Server & Rilis Sistem' },
+    { type: BlockerType.HOSTING_DOMAIN, owner: specialistItUser, reason: 'Specialist IT memegang akun hosting, cloud, dan domain' },
+    { type: BlockerType.ACCESS_SECURITY, owner: itSupportUser, reason: 'IT Support menangani akses dan akun kerja harian' },
+    { type: BlockerType.NETWORK, owner: networkInfraUser, reason: 'Network & Infrastructure menjadi penanggung jawab Jaringan & Koneksi' },
+    { type: BlockerType.WORK_DEVICE, owner: itSupportUser, reason: 'IT Support menangani Perangkat Kerja' },
+    { type: BlockerType.OFFICE_FACILITY, owner: gaUser, reason: 'Tim GA menangani Fasilitas & Sarana Kantor' },
+    { type: BlockerType.FINANCE, owner: staffFinanceUser, reason: 'Tim Finance menangani Keuangan & Pembayaran' },
+    { type: BlockerType.CLIENT, owner: salesBdUser, reason: 'Sales/Business Development menangani calon klien dan tahap penawaran (kendala proyek berjalan tetap ke pimpinan proyek)' },
+  ];
+
+  for (const plan of categoryOwnerPlan) {
+    const existingOwner = await prisma.blockerCategoryOwner.findFirst({
+      where: { blockerType: plan.type, endDate: null },
+    });
+    if (!existingOwner) {
+      await prisma.blockerCategoryOwner.create({
+        data: {
+          blockerType: plan.type,
+          ownerUserId: plan.owner.id,
+          effectiveDate: todayDate,
+          assignmentReason: plan.reason,
+          createdByUserId: adminUser.id,
+        },
+      });
+    } else if (existingOwner.ownerUserId !== plan.owner.id) {
+      await prisma.blockerCategoryOwner.update({
+        where: { id: existingOwner.id },
+        data: { ownerUserId: plan.owner.id, assignmentReason: plan.reason },
+      });
+    }
+  }
+
   // 5b. Token Undangan 72 Jam untuk Calon Karyawan
   const existingInvitation = await prisma.userInvitation.findFirst({
     where: { userId: newHireUser.id, status: 'PENDING' },
@@ -751,6 +917,7 @@ async function main() {
         type: BlockerType.TECHNICAL,
         severity: BlockerSeverity.HIGH,
         impact: BlockerImpact.TASK,
+        impacts: [BlockerImpact.TASK, BlockerImpact.MILESTONE],
         description: 'CI runner mengalami Out Of Memory (OOM) saat proses bundle minification',
         ownerNeededType: AuthorityContext.PROJECT_AUTHORITY,
         assignedOwnerId: techLeadUser.id,
@@ -784,6 +951,124 @@ async function main() {
         },
       },
     });
+  }
+
+  // Sinkronkan tiket contoh OOM agar selalu memiliki multi-dampak baru
+  await prisma.blockerTicket.updateMany({
+    where: {
+      description: 'CI runner mengalami Out Of Memory (OOM) saat proses bundle minification',
+    },
+    data: {
+      impacts: [BlockerImpact.TASK, BlockerImpact.MILESTONE],
+    },
+  });
+
+  // Pengaman: pastikan seluruh tiket lama di DB yang kolom impacts-nya masih kosong terisi dari impact utama
+  const ticketsMissingImpacts = await prisma.blockerTicket.findMany({
+    where: { impacts: { equals: [] } },
+    select: { id: true, impact: true },
+  });
+  for (const legacyTicket of ticketsMissingImpacts) {
+    await prisma.blockerTicket.update({
+      where: { id: legacyTicket.id },
+      data: { impacts: [legacyTicket.impact] },
+    });
+  }
+
+  // Contoh tiket kendala lintas kategori & multi-dampak (idempoten)
+  const crossCategorySampleBlockers = [
+    {
+      raisedByUserId: frontendUser.id,
+      type: BlockerType.NETWORK,
+      severity: BlockerSeverity.HIGH,
+      impact: BlockerImpact.TASK,
+      impacts: [BlockerImpact.TASK, BlockerImpact.COMPANY_OPS],
+      description:
+        '[Koneksi WiFi & VPN Ruang Kerja Lantai 2 Terputus] Jaringan internet kantor dan akses VPN ke repositori internal tidak stabil sejak pagi.',
+      ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      assignedOwnerId: networkInfraUser.id,
+      projectCodeReference: null,
+      status: 'OPEN' as const,
+      targetResolutionAt: new Date(Date.now() + 4 * 3600 * 1000),
+    },
+    {
+      raisedByUserId: qaUser.id,
+      type: BlockerType.OFFICE_FACILITY,
+      severity: BlockerSeverity.MEDIUM,
+      impact: BlockerImpact.COMPANY_OPS,
+      impacts: [BlockerImpact.COMPANY_OPS, BlockerImpact.TEAM],
+      description:
+        '[AC Ruang Rapat Utama & Area Kerja Proyek Mati] Pendingin ruangan di area kerja tim proyek tidak berfungsi sehingga suhu ruangan panas.',
+      ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      assignedOwnerId: gaUser.id,
+      projectCodeReference: null,
+      status: 'OPEN' as const,
+      targetResolutionAt: new Date(Date.now() + 8 * 3600 * 1000),
+    },
+    {
+      raisedByUserId: backendUser.id,
+      type: BlockerType.CLIENT,
+      severity: BlockerSeverity.HIGH,
+      impact: BlockerImpact.CLIENT,
+      impacts: [BlockerImpact.CLIENT, BlockerImpact.PROJECT],
+      description:
+        '[Klien Belum Mengirimkan Data Umpan Balik UAT Portal] Tim klien belum memberikan konfirmasi tertulis atas hasil demo modul diskon.',
+      ownerNeededType: AuthorityContext.PROJECT_AUTHORITY,
+      assignedOwnerId: pmUser.id,
+      projectCodeReference: 'PRJ-PORTAL',
+      status: 'OPEN' as const,
+      targetResolutionAt: new Date(Date.now() + 4 * 3600 * 1000),
+    },
+    {
+      raisedByUserId: techLeadUser.id,
+      type: BlockerType.APPROVAL,
+      severity: BlockerSeverity.MEDIUM,
+      impact: BlockerImpact.MILESTONE,
+      impacts: [BlockerImpact.MILESTONE],
+      description:
+        '[Menunggu Persetujuan Rilis Arsitektur Database Baru] Dokumen skema migrasi tahap 2 memerlukan tanda tangan persetujuan Head of Engineering.',
+      ownerNeededType: AuthorityContext.PROJECT_AUTHORITY,
+      assignedOwnerId: headEngUser.id,
+      projectCodeReference: 'WP-CORE',
+      status: 'OPEN' as const,
+      targetResolutionAt: new Date(Date.now() + 8 * 3600 * 1000),
+    },
+    {
+      raisedByUserId: frontendUser.id,
+      type: BlockerType.CROSS_TEAM,
+      severity: BlockerSeverity.MEDIUM,
+      impact: BlockerImpact.TASK,
+      impacts: [BlockerImpact.TASK, BlockerImpact.PROJECT],
+      waitingForFunction: CanonicalFunction.Delivery,
+      description:
+        '[Menunggu Hasil Uji QA dari Tim Delivery] Perbaikan fitur navigasi sudah selesai, tetapi belum bisa dirilis karena hasil pengujian belum diterima.',
+      ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+      assignedOwnerId: headDeliveryUser.id,
+      projectCodeReference: null,
+      status: 'OPEN' as const,
+      targetResolutionAt: new Date(Date.now() + 8 * 3600 * 1000),
+    },
+  ];
+
+  for (const sampleTicket of crossCategorySampleBlockers) {
+    const existingSample = await prisma.blockerTicket.findFirst({
+      where: { description: sampleTicket.description },
+      select: { id: true },
+    });
+    if (!existingSample) {
+      await prisma.blockerTicket.create({ data: sampleTicket });
+    } else {
+      await prisma.blockerTicket.update({
+        where: { id: existingSample.id },
+        data: {
+          type: sampleTicket.type,
+          impact: sampleTicket.impact,
+          impacts: sampleTicket.impacts,
+          waitingForFunction: (sampleTicket as any).waitingForFunction ?? null,
+          assignedOwnerId: sampleTicket.assignedOwnerId,
+        },
+      });
+    }
   }
 
   // 6b. Pengajuan Cuti PENDING untuk Backend Dev (Siti Rahma - Divisi Engineering)
@@ -859,15 +1144,22 @@ async function main() {
   • Technical Lead 1 (Eng)   : lead.tech@dutamedia.com      (Bambang Pratama)  [SUPERVISOR / Project Lead WP-CORE & PRJ-CORE]
   • Frontend Developer (Eng) : dev.frontend@dutamedia.com   (Aditya Nugroho)   [EMPLOYEE]
   • Backend Developer (Eng)  : dev.backend@dutamedia.com    (Siti Rahma)       [EMPLOYEE]
-  • Head of Delivery         : head.delivery@dutamedia.com  (Dharma Putra)     [HEAD]
-  • Project Manager 1 (Del)  : pm@dutamedia.com             (Dimas Prakoso)    [PROJECT_MANAGER / Project Lead PRJ-PORTAL & PRJ-MOBILE]
-  • Software QA (Del)        : qa@dutamedia.com             (Nadia Kusuma)     [EMPLOYEE]
-  • Head of Ops & Infra      : head.ops@dutamedia.com       (Gunawan Setiawan) [HEAD]
-  • Operations Supervisor    : lead.creative@dutamedia.com  (Rian Kurniawan)   [SUPERVISOR]
-  • Principal Engineer (R&D) : designer@dutamedia.com       (Maya Putri)       [EMPLOYEE]
-  • Head of Sales & Presales : head.sales@dutamedia.com     (Lukman Hakim)     [HEAD]
-  • Senior Finance Staff     : finance@dutamedia.com        (Ratna Sari)       [EMPLOYEE]
-  • HRGA & Legal Admin       : hrga@dutamedia.com           (Dewi Lestari)     [HRGA]
+  • Head of Delivery         : head.delivery@dutamedia.com  (Dharma Putra)        [HEAD]
+  • Project Manager 1 (Del)  : pm@dutamedia.com             (Dimas Prakoso)       [PROJECT_MANAGER / Project Lead PRJ-PORTAL & PRJ-MOBILE]
+  • Product Manager (Del)    : product@dutamedia.com        (Dio Bayu Bagaskara)  [PROJECT_MANAGER]
+  • Software QA (Del)        : qa@dutamedia.com             (Nadia Kusuma)        [EMPLOYEE]
+  • Head of Ops & Infra      : head.ops@dutamedia.com       (Gunawan Setiawan)    [HEAD]
+  • Operations Supervisor    : lead.creative@dutamedia.com  (Rian Kurniawan)      [SUPERVISOR]
+  • Network & Infra (Ops)    : network.infra@dutamedia.com  (Fakhrizal Asshiddiq) [EMPLOYEE]
+  • Specialist IT (Ops)      : specialist.it@dutamedia.com  (Achmad Noer Wahid)   [EMPLOYEE]
+  • IT Support (Ops)         : it.support@dutamedia.com     (Rahian M. Suari)     [EMPLOYEE]
+  • Principal Engineer (R&D) : designer@dutamedia.com       (Maya Putri)          [EMPLOYEE]
+  • Head of Sales & Presales : head.sales@dutamedia.com     (Lukman Hakim)        [HEAD]
+  • Sales / BD Executive     : sales.bd@dutamedia.com       (Hari Wibowo)         [EMPLOYEE]
+  • Senior Finance Staff     : finance@dutamedia.com        (Ratna Sari)          [EMPLOYEE]
+  • Finance Staff            : staff.finance@dutamedia.com  (Oivi Deasepta)       [EMPLOYEE]
+  • HRGA & Legal Admin       : hrga@dutamedia.com           (Dewi Lestari)        [HRGA]
+  • General Affairs (GA)     : ga@dutamedia.com             (Sugito Erik Fajar)   [EMPLOYEE]
   ════════════════════════════════════════════════════════════════════════════
   `);
 }

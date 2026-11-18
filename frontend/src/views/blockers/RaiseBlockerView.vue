@@ -9,13 +9,18 @@ import {
   BLOCKER_IMPACT_OPTIONS,
   BLOCKER_SEVERITY_OPTIONS,
   BLOCKER_STATUS_LABELS,
-  BLOCKER_TYPE_OPTIONS,
+  BLOCKER_TYPE_GROUPS,
+  WAITING_FOR_FUNCTION_OPTIONS,
   buildBlockerTicketHistory,
   composeBlockerDescription,
   getBlockerStatusLabel,
+  getBlockerTypeInfo,
+  getTicketImpactsList,
+  getWaitingForFunctionLabel,
   isActiveBlockerStatus,
   parseBlockerTextParts,
   sortBlockersByNewest,
+  toggleImpactSelection,
   type BlockerDeleteReasonCategory,
 } from '../../utils/blockerStatus';
 import {
@@ -46,7 +51,8 @@ const activeTab = ref<'create' | 'mine'>(route?.query?.tab === 'mine' ? 'mine' :
 const title = ref('');
 const linkedCommitmentId = ref('');
 const blockerType = ref<string>('');
-const blockerImpact = ref<string>('');
+const blockerImpacts = ref<string[]>([]);
+const waitingForFunction = ref<string>('');
 const blockerSeverity = ref<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
 const description = ref('');
 const expectedHelp = ref('');
@@ -57,7 +63,7 @@ const assignedOwnerId = ref('');
 // Kebijakan batas waktu penanganan & rekomendasi penanggung jawab otomatis (sumber tunggal: backend)
 const slaMinutes = ref<Record<string, number>>({ CRITICAL: 120, HIGH: 240, MEDIUM: 480, LOW: 1440 });
 const suggestedOwner = ref<{ id: string; fullName: string; jobTitle?: string | null } | null>(null);
-const suggestionReason = ref<'PROJECT_LEAD' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE'>('NONE');
+const suggestionReason = ref<'PROJECT_LEAD' | 'CATEGORY_OWNER' | 'DIVISION_HEAD' | 'DIRECT_MANAGER' | 'NONE'>('NONE');
 const suggestionDivision = ref('');
 const suggestionNote = ref('');
 const nowTick = ref(Date.now());
@@ -69,6 +75,10 @@ function formatSla(minutes?: number): string {
   return `${minutes} menit`;
 }
 
+function toggleBlockerImpact(code: string) {
+  blockerImpacts.value = toggleImpactSelection(blockerImpacts.value, code, 3);
+}
+
 async function loadRoutingPreview() {
   try {
     const params = new URLSearchParams();
@@ -76,6 +86,9 @@ async function loadRoutingPreview() {
     params.set('ownerNeededType', authorityContext.value);
     if (authorityContext.value === 'PROJECT_AUTHORITY' && projectCode.value) {
       params.set('projectCode', projectCode.value);
+    }
+    if (blockerType.value === 'CROSS_TEAM' && waitingForFunction.value) {
+      params.set('waitingForFunction', waitingForFunction.value);
     }
     const res = await apiClient<any>(`/blockers/routing-preview?${params.toString()}`);
     if (res.data) {
@@ -90,7 +103,10 @@ async function loadRoutingPreview() {
   }
 }
 
-watch([blockerType, authorityContext, projectCode], () => {
+watch([blockerType, authorityContext, projectCode, waitingForFunction], () => {
+  if (blockerType.value !== 'CROSS_TEAM' && waitingForFunction.value) {
+    waitingForFunction.value = '';
+  }
   loadRoutingPreview();
 });
 
@@ -371,7 +387,8 @@ const supportRejectReasonMap = ref<Record<string, string>>({});
 const editingTicket = ref<any>(null);
 const editTitle = ref('');
 const editType = ref('');
-const editImpact = ref('');
+const editImpacts = ref<string[]>([]);
+const editWaitingForFunction = ref('');
 const editSeverity = ref<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
 const editDescription = ref('');
 const editExpectedHelp = ref('');
@@ -387,7 +404,15 @@ const charCount = computed(() => title.value.length);
 const isFormValid = computed(() => {
   if (title.value.trim().length < 10) return false;
   if (!blockerType.value) return false;
-  if (!blockerImpact.value) return false;
+  if (blockerImpacts.value.length < 1 || blockerImpacts.value.length > 3) return false;
+  if (
+    blockerType.value === 'CROSS_TEAM' &&
+    authorityContext.value !== 'PROJECT_AUTHORITY' &&
+    !assignedOwnerId.value &&
+    !waitingForFunction.value
+  ) {
+    return false;
+  }
   if (!blockerSeverity.value) return false;
   if (description.value.trim().length < 20) return false;
   if (authorityContext.value === 'PROJECT_AUTHORITY' && !projectCode.value.trim()) return false;
@@ -448,7 +473,8 @@ function resetForm() {
   title.value = '';
   linkedCommitmentId.value = '';
   blockerType.value = '';
-  blockerImpact.value = '';
+  blockerImpacts.value = [];
+  waitingForFunction.value = '';
   blockerSeverity.value = 'HIGH';
   description.value = '';
   expectedHelp.value = '';
@@ -545,11 +571,21 @@ async function submitBlocker() {
     return;
   }
   if (!blockerType.value) {
-    errorMessage.value = 'Kategori / jenis kendala (Type) wajib dipilih.';
+    errorMessage.value = 'Kategori kendala wajib dipilih.';
     return;
   }
-  if (!blockerImpact.value) {
-    errorMessage.value = 'Dampak kendala (Impact) wajib dipilih.';
+  if (blockerImpacts.value.length < 1 || blockerImpacts.value.length > 3) {
+    errorMessage.value = 'Pilih minimal 1 dan maksimal 3 dampak kendala.';
+    return;
+  }
+  if (
+    blockerType.value === 'CROSS_TEAM' &&
+    authorityContext.value !== 'PROJECT_AUTHORITY' &&
+    !assignedOwnerId.value &&
+    !waitingForFunction.value
+  ) {
+    errorMessage.value =
+      'Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.';
     return;
   }
   if (description.value.trim().length < 20) {
@@ -569,7 +605,11 @@ async function submitBlocker() {
     const payload = {
       type: blockerType.value,
       severity: blockerSeverity.value,
-      impact: blockerImpact.value,
+      impact: blockerImpacts.value[0],
+      impacts: [...blockerImpacts.value],
+      ...(blockerType.value === 'CROSS_TEAM' && waitingForFunction.value
+        ? { waitingForFunction: waitingForFunction.value }
+        : {}),
       description: `[${title.value.trim()}] ${description.value.trim()}${expectedHelp.value.trim() ? ` (Ekspektasi: ${expectedHelp.value.trim()})` : ''}`,
       ownerNeededType: authorityContext.value,
       assignedOwnerId: targetOwnerId,
@@ -787,13 +827,19 @@ async function respondToSupport(
   }
 }
 
+function toggleEditImpact(code: string) {
+  editImpacts.value = toggleImpactSelection(editImpacts.value, code, 3);
+}
+
 function openEditModal(ticket: any) {
   errorMessage.value = null;
   editingTicket.value = ticket;
   const parts = parseBlockerTextParts(ticket?.description);
   editTitle.value = parts.title;
   editType.value = ticket?.type || 'TECHNICAL';
-  editImpact.value = ticket?.impact || 'TASK';
+  const parsedImpacts = getTicketImpactsList(ticket).map((i) => i.value);
+  editImpacts.value = parsedImpacts.length > 0 ? parsedImpacts.slice(0, 3) : ['TASK'];
+  editWaitingForFunction.value = ticket?.waitingForFunction || '';
   editSeverity.value = ticket?.severity || 'HIGH';
   editDescription.value = parts.body;
   editExpectedHelp.value = parts.expectedHelp || '';
@@ -811,8 +857,16 @@ async function submitEditTicket() {
     errorMessage.value = 'Judul kendala wajib diisi minimal 10 karakter.';
     return;
   }
-  if (!editType.value || !editImpact.value || !editSeverity.value) {
-    errorMessage.value = 'Kategori, dampak, dan tingkat keparahan wajib dipilih.';
+  if (!editType.value || editImpacts.value.length < 1 || editImpacts.value.length > 3 || !editSeverity.value) {
+    errorMessage.value = 'Kategori, minimal 1–3 dampak, dan tingkat keparahan wajib dipilih.';
+    return;
+  }
+  if (
+    editType.value === 'CROSS_TEAM' &&
+    editingTicket.value.ownerNeededType !== 'PROJECT_AUTHORITY' &&
+    !editWaitingForFunction.value
+  ) {
+    errorMessage.value = 'Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.';
     return;
   }
   if (editDescription.value.trim().length < 20) {
@@ -827,7 +881,11 @@ async function submitEditTicket() {
       body: JSON.stringify({
         type: editType.value,
         severity: editSeverity.value,
-        impact: editImpact.value,
+        impact: editImpacts.value[0],
+        impacts: [...editImpacts.value],
+        ...(editType.value === 'CROSS_TEAM' && editWaitingForFunction.value
+          ? { waitingForFunction: editWaitingForFunction.value }
+          : {}),
         description: composeBlockerDescription(
           editTitle.value,
           editDescription.value,
@@ -1057,37 +1115,80 @@ onBeforeUnmount(() => {
                 </select>
               </div>
 
-              <!-- Kategori & Dampak -->
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label for="blockerType">Kategori Kendala (Type) <span class="req">*</span></label>
-                  <select id="blockerType" v-model="blockerType" required>
-                    <option value="" disabled>-- Pilih Kategori (10 Enum Resmi) --</option>
-                    <option value="TECHNICAL">Technical — Bug, kendala kode, query database</option>
-                    <option value="REQUIREMENT">Requirement — Spesifikasi belum jelas / berubah</option>
-                    <option value="CLIENT">Client — Menunggu respon, data, UAT dari klien</option>
-                    <option value="VENDOR">Vendor — API eksternal, SaaS, lisensi pihak ketiga</option>
-                    <option value="RESOURCE">Resource — Kapasitas tim, cuti, dependensi personil</option>
-                    <option value="APPROVAL">Approval — Menunggu persetujuan pimpinan / stakeholder</option>
-                    <option value="INFRA">Infra — Server, staging, CI/CD, VPN, jaringan</option>
-                    <option value="FINANCE">Finance — Pembayaran server/domain/anggaran tertahan</option>
-                    <option value="LEGAL">Legal — Kontrak, NDA, kepatuhan data</option>
-                    <option value="OTHER">Other — Kendala operasional lainnya</option>
-                  </select>
-                </div>
+              <!-- Kategori & Divisi yang Ditunggu -->
+              <div class="form-group">
+                <label for="blockerType">Kategori Kendala <span class="req">*</span></label>
+                <select id="blockerType" v-model="blockerType" required>
+                  <option value="" disabled>-- Pilih Kategori Kendala (16 Kategori) --</option>
+                  <optgroup
+                    v-for="group in BLOCKER_TYPE_GROUPS"
+                    :key="group.groupLabel"
+                    :label="group.groupLabel"
+                  >
+                    <option
+                      v-for="opt in group.options"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </option>
+                  </optgroup>
+                </select>
+              </div>
 
-                <div class="form-group">
-                  <label for="blockerImpact">Dampak Kendala (Impact) <span class="req">*</span></label>
-                  <select id="blockerImpact" v-model="blockerImpact" required>
-                    <option value="" disabled>-- Pilih Cakupan Dampak (7 Enum Resmi) --</option>
-                    <option value="TASK">Task — Menghambat 1 tugas individu</option>
-                    <option value="MILESTONE">Milestone — Mengancam target fase / sprint</option>
-                    <option value="PROJECT">Project — Menghambat jadwal proyek lintas tim</option>
-                    <option value="PRODUCTION">Production — Mengganggu layanan live / klien aktif</option>
-                    <option value="CLIENT">Client — Berdampak langsung pada kepuasan klien</option>
-                    <option value="FINANCIAL">Financial — Potensi kerugian / pinalti finansial</option>
-                    <option value="COMPLIANCE">Compliance — Risiko kepatuhan hukum / perjanjian kontrak</option>
-                  </select>
+              <div
+                v-if="blockerType === 'CROSS_TEAM' && authorityContext !== 'PROJECT_AUTHORITY'"
+                class="form-group"
+              >
+                <label for="waitingForFunction">Divisi yang Sedang Ditunggu <span class="req">*</span></label>
+                <select id="waitingForFunction" v-model="waitingForFunction" required>
+                  <option value="" disabled>-- Pilih Divisi yang Sedang Ditunggu --</option>
+                  <option
+                    v-for="fnOpt in WAITING_FOR_FUNCTION_OPTIONS"
+                    :key="fnOpt.value"
+                    :value="fnOpt.value"
+                  >
+                    {{ fnOpt.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Dampak Kendala (Kotak Centang 1-3 Pilihan) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label>Dampak Kendala (Pilih 1–3 Dampak) <span class="req">*</span></label>
+                  <span
+                    class="char-counter"
+                    :class="{ 'char-valid': blockerImpacts.length >= 1 && blockerImpacts.length <= 3 }"
+                    data-testid="impact-selection-count"
+                  >
+                    {{ blockerImpacts.length }} / 3 dipilih
+                  </span>
+                </div>
+                <p class="impact-hint-text">Pilih 1 sampai maksimal 3 dampak yang paling terasa.</p>
+                <div class="impact-checkbox-grid" data-testid="impact-checkbox-grid">
+                  <label
+                    v-for="opt in BLOCKER_IMPACT_OPTIONS"
+                    :key="opt.value"
+                    class="impact-checkbox-card"
+                    :class="{
+                      selected: blockerImpacts.includes(opt.value),
+                      disabled: !blockerImpacts.includes(opt.value) && blockerImpacts.length >= 3,
+                    }"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="opt.value"
+                      :checked="blockerImpacts.includes(opt.value)"
+                      :disabled="!blockerImpacts.includes(opt.value) && blockerImpacts.length >= 3"
+                      :data-testid="`impact-checkbox-${opt.value}`"
+                      @change="toggleBlockerImpact(opt.value)"
+                    />
+                    <div class="impact-checkbox-copy">
+                      <span class="impact-name">{{ opt.name }}</span>
+                      <span class="impact-meaning">{{ opt.meaning }}</span>
+                    </div>
+                  </label>
                 </div>
               </div>
 
@@ -1253,7 +1354,7 @@ onBeforeUnmount(() => {
                     v-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY' || projectCode"
                     value=""
                   >
-                    — Tidak memilih orang tertentu (Sistem menentukan otomatis) —
+                    — Ditentukan Otomatis{{ defaultSupervisorName ? `: ${defaultSupervisorName}${suggestedOwner?.jobTitle ? ` (${suggestedOwner.jobTitle})` : ''}` : ' oleh Sistem' }} —
                   </option>
                   <option v-else value="">
                     — Pilih Proyek Terdaftar terlebih dahulu —
@@ -1352,6 +1453,9 @@ onBeforeUnmount(() => {
                   <p v-else-if="authorityContext === 'ORGANIZATIONAL_AUTHORITY'">
                     <template v-if="suggestionNote">
                       {{ suggestionNote }} Penanggung jawab otomatis saat ini<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
+                    </template>
+                    <template v-else-if="suggestionReason === 'CATEGORY_OWNER'">
+                      Tiket otomatis diteruskan ke Penanggung Jawab Kategori {{ suggestionDivision }}<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
                     </template>
                     <template v-else-if="suggestionReason === 'DIVISION_HEAD'">
                       Karena kategori kendala ini membutuhkan keahlian divisi {{ suggestionDivision }}, tiket otomatis diteruskan ke pimpinan divisi tersebut<span v-if="defaultSupervisorName">: <strong>{{ defaultSupervisorName }}</strong></span>.
@@ -1493,7 +1597,6 @@ onBeforeUnmount(() => {
                 <span class="pill" :class="getStatusBadgeClass(b.status)">
                   <span class="dot-sm"></span> {{ getStatusLabel(b.status) }}
                 </span>
-                <span class="pill pill-neutral">{{ b.type }}</span>
               </div>
               <div class="head-right">
                 <span
@@ -1516,8 +1619,31 @@ onBeforeUnmount(() => {
               <strong>Ekspektasi Bantuan:</strong> {{ getTicketExpectedHelp(b) }}
             </div>
 
+            <div class="blocker-taxonomy-box" :data-testid="`my-blocker-taxonomy-${b.id}`">
+              <div class="blocker-taxonomy-row">
+                <span class="taxonomy-label">Kategori Kendala:</span>
+                <span class="taxonomy-value">
+                  <strong>{{ getBlockerTypeInfo(b.type).name }}</strong>
+                  <template v-if="getBlockerTypeInfo(b.type).examples">
+                    — {{ getBlockerTypeInfo(b.type).examples }}
+                  </template>
+                </span>
+              </div>
+              <div v-if="b.waitingForFunction" class="blocker-taxonomy-row">
+                <span class="taxonomy-label">Divisi yang Ditunggu:</span>
+                <span class="taxonomy-value"><strong>{{ getWaitingForFunctionLabel(b.waitingForFunction) }}</strong></span>
+              </div>
+              <div class="blocker-taxonomy-row">
+                <span class="taxonomy-label">Dampak Kendala:</span>
+                <ul class="blocker-taxonomy-impact-list">
+                  <li v-for="imp in getTicketImpactsList(b)" :key="imp.value">
+                    <strong>{{ imp.name }}</strong><template v-if="imp.meaning"> — {{ imp.meaning }}</template>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <div class="blocker-item-meta">
-              <span class="blocker-meta-item">Dampak: <strong>{{ b.impact }}</strong></span>
               <span class="blocker-meta-item">
                 Penanggung Jawab: <strong>{{ b.assignedOwner?.fullName || 'Belum Ditugaskan' }}</strong>
               </span>
@@ -1810,30 +1936,76 @@ onBeforeUnmount(() => {
             />
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="editBlockerType">Kategori Kendala (Type) <span class="req">*</span></label>
-              <select id="editBlockerType" v-model="editType">
+          <div class="form-group">
+            <label for="editBlockerType">Kategori Kendala <span class="req">*</span></label>
+            <select id="editBlockerType" v-model="editType">
+              <optgroup
+                v-for="group in BLOCKER_TYPE_GROUPS"
+                :key="group.groupLabel"
+                :label="group.groupLabel"
+              >
                 <option
-                  v-for="opt in BLOCKER_TYPE_OPTIONS"
+                  v-for="opt in group.options"
                   :key="opt.value"
                   :value="opt.value"
                 >
                   {{ opt.label }}
                 </option>
-              </select>
+              </optgroup>
+            </select>
+          </div>
+
+          <div
+            v-if="editType === 'CROSS_TEAM' && editingTicket.ownerNeededType !== 'PROJECT_AUTHORITY'"
+            class="form-group"
+          >
+            <label for="editWaitingForFunction">Divisi yang Sedang Ditunggu <span class="req">*</span></label>
+            <select id="editWaitingForFunction" v-model="editWaitingForFunction">
+              <option value="" disabled>-- Pilih Divisi yang Sedang Ditunggu --</option>
+              <option
+                v-for="fnOpt in WAITING_FOR_FUNCTION_OPTIONS"
+                :key="fnOpt.value"
+                :value="fnOpt.value"
+              >
+                {{ fnOpt.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label>Dampak Kendala (Pilih 1–3 Dampak) <span class="req">*</span></label>
+              <span
+                class="char-count"
+                :class="{ ok: editImpacts.length >= 1 && editImpacts.length <= 3 }"
+              >
+                {{ editImpacts.length }} / 3 dipilih
+              </span>
             </div>
-            <div class="form-group">
-              <label for="editBlockerImpact">Dampak Kendala (Impact) <span class="req">*</span></label>
-              <select id="editBlockerImpact" v-model="editImpact">
-                <option
-                  v-for="opt in BLOCKER_IMPACT_OPTIONS"
-                  :key="opt.value"
+            <p class="impact-hint-text">Pilih 1 sampai maksimal 3 dampak yang paling terasa.</p>
+            <div class="impact-checkbox-grid compact">
+              <label
+                v-for="opt in BLOCKER_IMPACT_OPTIONS"
+                :key="opt.value"
+                class="impact-checkbox-card"
+                :class="{
+                  selected: editImpacts.includes(opt.value),
+                  disabled: !editImpacts.includes(opt.value) && editImpacts.length >= 3,
+                }"
+              >
+                <input
+                  type="checkbox"
                   :value="opt.value"
-                >
-                  {{ opt.label }}
-                </option>
-              </select>
+                  :checked="editImpacts.includes(opt.value)"
+                  :disabled="!editImpacts.includes(opt.value) && editImpacts.length >= 3"
+                  :data-testid="`edit-impact-checkbox-${opt.value}`"
+                  @change="toggleEditImpact(opt.value)"
+                />
+                <div class="impact-checkbox-copy">
+                  <span class="impact-name">{{ opt.name }}</span>
+                  <span class="impact-meaning">{{ opt.meaning }}</span>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -3386,10 +3558,118 @@ textarea:focus {
   border: 1px solid #FCA5A5;
 }
 
+.impact-hint-text {
+  font-size: 12px;
+  color: #5C6E68;
+  margin: 0 0 8px;
+}
+
+.impact-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.impact-checkbox-grid.compact {
+  grid-template-columns: 1fr;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.impact-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid #DCE7E2;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.impact-checkbox-card input[type="checkbox"] {
+  width: auto;
+  margin-top: 3px;
+  accent-color: #00674D;
+  flex-shrink: 0;
+}
+
+.impact-checkbox-card.selected {
+  border-color: #00674D;
+  background: #F4FBF7;
+}
+
+.impact-checkbox-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.impact-checkbox-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.impact-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0E211B;
+}
+
+.impact-meaning {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #5C6E68;
+  line-height: 1.35;
+}
+
+.blocker-taxonomy-box {
+  background: #F8FBFA;
+  border: 1px solid #E2ECE7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #243831;
+}
+
+.blocker-taxonomy-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.taxonomy-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5C6E68;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.taxonomy-value {
+  line-height: 1.45;
+}
+
+.blocker-taxonomy-impact-list {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  line-height: 1.4;
+}
+
 @media (max-width: 768px) {
   .form-grid-2,
   .severity-grid,
-  .authority-grid {
+  .authority-grid,
+  .impact-checkbox-grid {
     grid-template-columns: 1fr;
   }
 }

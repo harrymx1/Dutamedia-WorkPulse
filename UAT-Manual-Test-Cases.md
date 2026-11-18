@@ -1292,9 +1292,9 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 ### TC-BLKR-001: Pelaporan Hambatan Baru Tingkat Kritis dengan SLA 2 Jam
 - **Test Case ID:** `TC-BLKR-001`
 - **Scenario ID:** `SCN-BLKR-01`
-- **Requirement ID:** `FR-29`, `FR-30`, `DEC-007`
+- **Requirement ID:** `FR-29`, `FR-30`, `DEC-007`, `DEC-017`
 - **Judul:** Pelaporan Hambatan Baru Tingkat Kritis (Raise Blocker) & Verifikasi Target SLA
-- **Tujuan:** Memvalidasi bahwa setiap pengguna dapat melaporkan kendala teknis kritis, memilih tipe hambatan dan dampak organisasi, serta memverifikasi bahwa sistem menyematkan target SLA respons 2 jam secara otomatis.
+- **Tujuan:** Memvalidasi bahwa setiap pengguna dapat melaporkan kendala teknis kritis, memilih kategori hambatan dari 16 kategori resmi (5 kelompok) serta memilih 1 s/d 3 dampak kendala melalui kotak centang (dari 9 jenis dampak), dan memverifikasi bahwa sistem menyematkan target SLA respons 2 jam serta menentukan penanggung jawab secara otomatis (`DEC-017`).
 - **Modul / Halaman:** Raise Blocker (`/raise-blockers`)
 - **Kategori Pengujian:** Happy Path / Workflow Initialization
 - **Teknik Desain Test Case:** Equivalence Partitioning & Decision Table
@@ -1310,22 +1310,22 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
    - **Aksi:** Buka halaman Raise Blocker.
    - **Lokasi:** `/raise-blockers`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Halaman Laporkan & Pantau Blocker terbuka di `/raise-blockers` dengan tautan navigasi `← Kembali ke Ruang Kerja My Today`, 2 Tab Navigasi (*Tab 1: Buat Laporan Blocker* dan *Tab 2: Blocker Saya*), formulir detail kendala lengkap, serta footer aksi full-width fixed dengan tombol sekunder "Bersihkan Formulir" dan primer "Kirim Laporan Blocker" (IMP-041, IMP-042, IMP-044).
-   - **Verifikasi:** Seluruh field dan dropdown dalam kondisi interaktif.
+   - **Hasil yang diharapkan:** Halaman Laporkan & Pantau Blocker terbuka di `/raise-blockers` dengan tautan navigasi `← Kembali ke Ruang Kerja My Today`, 2 Tab Navigasi (*Tab 1: Buat Laporan Blocker* dan *Tab 2: Blocker Saya*), formulir detail kendala lengkap (16 kategori dalam 5 `<optgroup>`, 9 kotak centang dampak pilih 1–3), serta footer aksi full-width fixed dengan tombol sekunder "Bersihkan Formulir" dan primer "Kirim Laporan Blocker" (IMP-041, IMP-042, IMP-044, DEC-017).
+   - **Verifikasi:** Seluruh field, dropdown kategori (5 kelompok), dan 9 kotak centang dampak dalam kondisi interaktif.
 2. **Langkah 2**
    - **Aksi:** Isi detail hambatan tingkat kritis.
    - **Lokasi:** Formulir pelaporan blocker.
-   - **Data:** Judul: `Database Staging Timeout & Redis Cache Corrupt`, Deskripsi: `Koneksi database pool staging terputus berulang kali menyebabkan integrasi terhenti total. Butuh restart service dan reset connection.`, Severity: `KRITIS`, Tipe: `INFRASTRUCTURE`, Dampak: `TEAM_BLOCKED`.
-   - **Hasil yang diharapkan:** Sistem otomatis menampilkan kalkulasi target SLA: "Target Respons SLA: 2 Jam Kerja (Tingkat Kritis)".
-   - **Verifikasi:** Indikator badge target 2 jam tampil jelas di sebelah pilihan Kritis.
+   - **Data:** Deskripsi: `Koneksi database pool staging terputus berulang kali menyebabkan integrasi terhenti total. Butuh restart service dan reset connection.`, Severity: `KRITIS (CRITICAL)`, Kategori: `INFRA` (*Server & Rilis Sistem*), Dampak (centang 1–3 kotak): `PROJECT` (*Jadwal Proyek Lintas Tim*) dan `TEAM` (*Satu Tim / Divisi*).
+   - **Hasil yang diharapkan:** Sistem otomatis menampilkan kalkulasi target SLA: "Target Respons SLA: 2 Jam Kerja (Tingkat Kritis)" serta pratinjau penanggung jawab otomatis sesuai kategori (`DEC-017`).
+   - **Verifikasi:** Indikator badge target 2 jam tampil jelas di sebelah pilihan Kritis, dan penghitung dampak menampilkan `2 / 3 dipilih`.
 3. **Langkah 3**
-   - **Aksi:** Klik tombol "Kirim Laporan Hambatan".
+   - **Aksi:** Klik tombol "Kirim Laporan Blocker".
    - **Lokasi:** Tombol submit.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Toast sukses muncul "Hambatan kritis berhasil dilaporkan". Aplikasi menampilkan toast sukses dan mengarahkan pelapor (EMPLOYEE) langsung ke Tab 2 "Blocker Saya" pada halaman `/raise-blockers` untuk memantau tiket kendala aktifnya secara transparan (tanpa tombol antrean manajerial).
-   - **Verifikasi:** Blocker baru tercantum di bagian paling atas antrean dengan status `OPEN`, badge merah `KRITIS`, dan timer countdown SLA aktif.
+   - **Hasil yang diharapkan:** Toast sukses muncul. Aplikasi mengarahkan pelapor (EMPLOYEE) langsung ke Tab 2 "Blocker Saya" pada halaman `/raise-blockers` untuk memantau tiket kendala aktifnya secara transparan (tanpa tombol antrean manajerial).
+   - **Verifikasi:** Blocker baru tercantum di bagian paling atas antrean dengan status `OPEN`, badge merah `CRITICAL`, timer countdown SLA aktif, serta kotak rincian **Kategori Kendala** dan susunan **Dampak Kendala** tampil lengkap dengan kalimat penjelasnya (tanpa badge singkatan kode kategori yang kaku).
 
-- **Expected Final Result:** Blocker kritis tersimpan dengan status OPEN, SLA 2 jam terpasang deterministik, dan siap ditindaklanjuti oleh atasan.
+- **Expected Final Result:** Blocker kritis tersimpan dengan status OPEN, SLA 2 jam terpasang deterministik, dan siap ditindaklanjuti oleh atasan / Penanggung Jawab Kategori.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot detail blocker di antrean dengan badge KRITIS dan SLA 2 Jam.
 - **Actual Result:** Tiket blocker kritis (#e101c2e3) "Akses VPN Staging & Server Redis Gateway Terputus Total" berhasil diterbitkan dengan status OPEN (Menunggu Respons Penanggung Jawab), badge Tingkat CRITICAL, Dampak PROJECT, kategori INFRA, dan timer countdown SLA aktif terpasang deterministik 2 Jam (Sisa SLA 2j 0m). Tiket siap ditindaklanjuti di antrean blocker.
 - **Execution Status:** Pass
@@ -1333,7 +1333,7 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 - **Execution Date:** 2026-11-09
 - **Defect ID:** -
 - **Retest Result:** -
-- **Catatan:** Formula dan countdown SLA aktif deterministik 2 jam (120 menit). Form raise blocker disempurnakan dengan pemisahan direktori wewenang, opsi kelompok 'Lainnya', dan label default netral (IMP-046).
+- **Catatan:** Formula dan countdown SLA aktif deterministik 2 jam (120 menit). Form raise blocker disempurnakan dengan pemisahan direktori wewenang, opsi kelompok 'Lainnya', label default netral (IMP-046), serta perluasan ke 16 Kategori (5 kelompok), 9 Dampak (kotak centang pilih 1–3), dan Penanggung Jawab Kategori resmi (`DEC-017`).
 
 ---
 
@@ -3043,27 +3043,27 @@ Dokumen ini memuat seluruh **42 test case manual** langkah-demi-langkah yang dir
 1. **Langkah 1 (Pelaporan)**
    - **Aksi:** Login sebagai Employee, buka `/raise-blockers`. Buat laporan kendala kritis terkait akses jaringan API server.
    - **Lokasi:** `/raise-blockers`.
-   - **Data:** Judul: `API Server Gateway Network Unreachable`, Severity: `KRITIS`, Dampak: `TEAM_BLOCKED`.
-   - **Hasil yang diharapkan:** Blocker tersimpan berstatus `OPEN` dengan target SLA respons 2 jam.
-   - **Verifikasi:** Muncul di antrean blocker pribadi.
-2. **Langkah 2 (Intervensi Atasan)**
-   - **Aksi:** Logout, lalu login sebagai Supervisor (`lead.tech@dutamedia.com`). Buka `/blockers`.
+   - **Data:** Deskripsi: `API Server Gateway Network Unreachable`, Severity: `KRITIS (CRITICAL)`, Kategori: `TECHNICAL` (*Teknis & Kode Program*) atau `NETWORK` (*Jaringan & Koneksi*), Dampak (centang 1–3): `TEAM` (*Satu Tim / Divisi*) & `PROJECT` (*Jadwal Proyek Lintas Tim*).
+   - **Hasil yang diharapkan:** Blocker tersimpan berstatus `OPEN` dengan target SLA respons 2 jam serta diarahkan ke Penanggung Jawab Kategori / atasan terkait (`DEC-017`).
+   - **Verifikasi:** Muncul di antrean blocker pribadi (`Blocker Saya`) lengkap dengan keterangan Kategori dan daftar Dampak.
+2. **Langkah 2 (Intervensi Atasan / Penanggung Jawab)**
+   - **Aksi:** Logout, lalu login sebagai Supervisor / Penanggung Jawab (`lead.tech@dutamedia.com` atau `network.infra@dutamedia.com`). Buka `/blockers`.
    - **Lokasi:** `/blockers`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Blocker jaringan kritis tampil di posisi teratas antrean tim. Supervisor klik "Respons / Bantu" dan memberikan catatan intervensi.
+   - **Hasil yang diharapkan:** Blocker kritis tampil di posisi teratas antrean. Penanggung jawab klik "Respons / Bantu" (atau "Acknowledge") dan memberikan catatan intervensi.
    - **Verifikasi:** Status blocker bertransisi menjadi `ACKNOWLEDGED`.
 3. **Langkah 3 (Penyelesaian Tuntas)**
    - **Aksi:** Setelah perbaikan simulasi selesai, klik "Tandai Selesai (Resolve)". Masukkan deskripsi solusi minimal 10 karakter.
    - **Lokasi:** Modal penyelesaian blocker di `/blockers`.
    - **Data:** `Gateway network route telah di-reroute ke redundant subnet dan failover sukses.`
    - **Hasil yang diharapkan:** Status blocker bertransisi menjadi `RESOLVED`.
-   - **Verifikasi:** Blocker ditutup dan tercatat di riwayat selesai.
-4. **Langkah 4 (Verifikasi Karyawan)**
-   - **Aksi:** Logout dan login kembali sebagai Employee. Buka riwayat blocker pribadi.
-   - **Lokasi:** `/blockers`.
+   - **Verifikasi:** Blocker tercatat menunggu konfirmasi pelapor.
+4. **Langkah 4 (Verifikasi & Penutupan oleh Karyawan)**
+   - **Aksi:** Logout dan login kembali sebagai Employee. Buka menu `Lapor Blocker` -> tab `Blocker Saya` (atau klik notifikasi `Lihat & Konfirmasi Tiket Saya`), cek catatan penyelesaian pada tiket, lalu klik **Konfirmasi & Tutup Tiket**.
+   - **Lokasi:** `/raise-blockers?tab=mine`.
    - **Data:** Tidak ada.
-   - **Hasil yang diharapkan:** Karyawan melihat blocker yang dilaporkannya telah berstatus `RESOLVED` lengkap dengan deskripsi solusi dari Tech Lead.
-   - **Verifikasi:** Karyawan mendapatkan kepastian bahwa hambatannya telah diselesaikan oleh pimpinan.
+   - **Hasil yang diharapkan:** Sebelum dikonfirmasi, status tiket tampil sebagai `Solusi Diberikan · Menunggu Konfirmasi` (dan `ACCEPTED_RISK` sebagai `Risiko Diterima · Menunggu Konfirmasi` jika supervisor memilih Terima Risiko). Setelah karyawan mengklik **Konfirmasi & Tutup Tiket**, status berubah permanen menjadi `CLOSED` (`Selesai Ditutup`) dan counter `Menunggu Konfirmasi` berkurang / berpindah ke filter `Selesai / Ditutup`. Jika memilih **Belum Memadai (Kembalikan)** dengan alasan minimal 10 karakter, tiket kembali ke `ACKNOWLEDGED`.
+   - **Verifikasi:** Siklus kendala selesai secara akuntabel dengan validasi dua pihak (PIC menyelesaikan/mitigasi -> Pelapor mengonfirmasi penutupan).
 
 - **Expected Final Result:** Alur eskalasi dan resolusi hambatan berjalan mulus, kolaboratif, dan terdokumentasi rapi.
 - **Bukti yang Perlu Dikumpulkan:** Screenshot kartu blocker berstatus RESOLVED lengkap dengan riwayat intervensi atasan.

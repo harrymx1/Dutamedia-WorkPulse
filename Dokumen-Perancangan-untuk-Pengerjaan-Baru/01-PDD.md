@@ -129,7 +129,10 @@ Organisasi membutuhkan mekanisme pembinaan dan konsekuensi yang terdokumentasi s
 ### Penentuan Owner Needed dan Authority Context
 
 - **Organizational Authority** adalah konteks default untuk menentukan Owner Needed pada blocker.
-- Untuk blocker yang berkaitan dengan pekerjaan sehari-hari, **Direct Manager (atasan langsung)** menjadi kandidat awal penanganan. Kepala Divisi tidak otomatis menjadi penerima pertama; kewenangan yang lebih tinggi dapat terlibat melalui aturan fallback atau eskalasi yang berlaku.
+- Untuk blocker dengan **Organizational Authority**, sistem menentukan kandidat penerima awal secara berjenjang (`DEC-014`, `DEC-017`):
+  1. Jika kategori kendala memiliki **Penanggung Jawab Kategori Resmi (*Blocker Category Owner*, `DEC-017`)** yang sedang aktif, tiket diarahkan ke penanggung jawab tersebut (atau naik ke atasan langsungnya N+1 → N+2 → CEO / Reviewer Sementara aktif apabila sedang cuti resmi; tidak pernah turun ke rekan sejawat atau bawahan sesuai `DEC-014`).
+  2. Khusus kategori `CROSS_TEAM` (*Menunggu Tim / Rekan Lain*) dengan pilihan **Divisi yang Ditunggu (`waitingForFunction`)**, tiket diarahkan ke pimpinan/Head divisi yang ditunggu tersebut.
+  3. Untuk kategori yang menggunakan jalur struktural pelapor (`APPROVAL`, `RESOURCE`, `OTHER`, atau `REQUIREMENT`/`CLIENT` non-proyek), **Direct Manager (atasan langsung)** pelapor menjadi kandidat awal penanganan. Kepala Divisi tidak otomatis menjadi penerima pertama kecuali melalui mandat kategori atau aturan fallback/eskalasi yang berlaku.
 - **Project Authority** dapat dipilih secara eksplisit jika blocker terkait dengan proyek/reference tertentu. Pemilihan ini kontekstual dan tidak menggantikan Direct Manager atau Organizational Assignment secara permanen.
 - Pemilihan orang tertentu oleh pelapor bersifat opsional. Jika tidak ada orang yang dipilih, sistem menentukan Owner Needed berdasarkan Authority Context, assignment/mapping yang aktif pada waktu kejadian, serta aturan resolusi yang berlaku.
 - Pilihan manual hanya diterima jika orang tersebut aktif dan diizinkan dalam Authority Context serta scope terkait. Pilihan yang tidak valid harus ditolak dengan penjelasan, bukan diterima diam-diam.
@@ -234,7 +237,15 @@ Reminder (belum cutoff)
 - Nilai kebijakan yang memang ditetapkan configurable harus berversi dan memiliki effective date; data historis tunduk pada versi yang berlaku saat event terjadi. Aturan tetap produk tidak boleh ditampilkan sebagai konfigurasi yang dapat diubah.
 - Leave wajib melalui Authorized Approval sebelum berlaku sebagai valid exception; jika Leave disetujui setelah Cut-Off pada tanggal yang terlanjur tercatat sebagai No Submission, sistem merekonsiliasi tanggal tersebut menjadi Approved Leave dan menandai event No Submission sebelumnya sebagai `Superseded by Approved Leave` pada audit trail tanpa menghapus catatan historis dan tanpa menghitungnya dalam ambang pola ketidakpatuhan. Holiday dan individual Exemption dapat langsung di-set oleh Admin/HRGA berwenang tanpa approval tambahan — keduanya sama-sama mengecualikan tanggal terkait dari No Submission detection. Pengecualian pada jabatan tertentu (mis. CEO/Board) dapat bersifat permanen tanpa batas waktu (*open-ended / indefinite*, tanpa tanggal kedaluwarsa) sejak tanggal efektif diberlakukan.
 - `Tomorrow Priority` adalah catatan opsional yang disimpan pada EOD dan ditampilkan ke Employee pada Morning hari kerja berikutnya sebagai konteks terpisah. Ia tidak menghasilkan, menggantikan, mengurutkan, atau mengubah draft Commitment FR-11 dan tidak memengaruhi Initial Daily Status.
-- Taksonomi Blocker resmi mencakup: **Type** (`Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other`), **Severity** (`Low`, `Medium`, `High`, `Critical`), dan **Impact** (`Task`, `Milestone`, `Project`, `Production`, `Client`, `Financial`, `Compliance`).
+- Taksonomi Blocker resmi (`DEC-017`) mencakup:
+  - **Type (16 Kategori dalam 5 Kelompok):**
+    1. *Teknis & Sistem:* `TECHNICAL` (Teknis & Kode Program), `INFRA` (Server & Rilis Sistem), `HOSTING_DOMAIN` (Hosting, Cloud & Domain), `ACCESS_SECURITY` (Akses & Keamanan Digital).
+    2. *Kantor & Perangkat:* `NETWORK` (Jaringan & Koneksi), `WORK_DEVICE` (Perangkat Kerja), `OFFICE_FACILITY` (Fasilitas & Sarana Kantor).
+    3. *Orang & Keputusan:* `REQUIREMENT` (Kebutuhan & Arahan Kerja), `APPROVAL` (Persetujuan & Tanda Tangan), `CROSS_TEAM` (Menunggu Tim / Rekan Lain — disertai atribut opsional `waitingForFunction`), `RESOURCE` (Tenaga & Kapasitas Tim).
+    4. *Pihak Luar, Uang & Hukum:* `CLIENT` (Klien & Calon Klien), `VENDOR` (Vendor & Pihak Ketiga), `FINANCE` (Keuangan & Pembayaran), `LEGAL` (Hukum, Kontrak & Kepatuhan).
+    5. *Lainnya:* `OTHER` (Kendala Lainnya).
+  - **Severity (4 Tingkat):** `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`.
+  - **Impact (9 Jenis Dampak — dipilih 1 s/d maksimal 3 dampak melalui kotak centang):** `TASK` (Tugas Pribadi), `TEAM` (Satu Tim / Divisi), `MILESTONE` (Target & Tenggat Waktu), `PROJECT` (Jadwal Proyek Lintas Tim), `COMPANY_OPS` (Operasional Kantor), `PRODUCTION` (Layanan Langsung Pengguna), `CLIENT` (Kepuasan & Hubungan Klien), `FINANCIAL` (Keuangan & Kerugian Uang), `COMPLIANCE` (Hukum & Keamanan Data).
 - Prinsip pembedaan penanganan kasus (*Important Distinction*): (1) Pekerjaan tidak selesai karena kompleksitas teknis dengan eskalasi awal diperlakukan sebagai *Delivery Issue* (dukungan, penjadwalan ulang, *coaching*); (2) Mengetahui keterlambatan tetapi tidak mengeskalasi diperlakukan sebagai *Accountability Issue* (tinjauan tercatat, tindakan korektif jika berulang); (3) Mem-bypass proses wajib QA/rilis secara sengaja diperlakukan sebagai *Process Violation* (eskalasi penegakan disiplin); (4) Lupa mengisi satu kali diperlakukan sebagai *Administrative Miss* (pengingat); (5) Pengabaian pengisian berulang setelah pembinaan diperlakukan sebagai *Discipline Pattern* (peringatan tercatat menuju proses formal).
 - Availability target MVP adalah minimal 99% selama jam layanan operasional yang diumumkan, dihitung per bulan kalender; detail pengukuran dan monitoring ditetapkan dalam SAD.
 - No Surprise Rule: masalah boleh terjadi, tapi risiko yang sudah diketahui wajib dieskalasi sebelum menjadi kejutan
@@ -257,6 +268,11 @@ Pilihan teknologi dan desain internal belum ditetapkan pada tahap PDD ini dan ak
 | Delivery Model | Web-based, responsive, bukan mobile app di MVP |
 
 ---
+
+### Riwayat Revisi v1.6 (Pembaruan Taksonomi 16 Kategori, 9 Multi-Dampak & Penanggung Jawab Kategori — `DEC-017`)
+
+- Memperluas taksonomi kategori kendala (`BlockerType`) dari 10 menjadi **16 Kategori dalam 5 Kelompok** lintas divisi dan memperluas dampak kendala (`BlockerImpact`) dari 7 menjadi **9 Jenis Dampak** dengan dukungan pemilihan **multi-dampak (minimal 1, maksimal 3 dampak)** per tiket.
+- Menambahkan mekanisme **Penanggung Jawab Kategori Resmi (*Blocker Category Owner*, `DEC-017`)** yang tercatat dan berpenanggalan efektif untuk mengarahkan tiket kategori spesialis ke staf/unit penanggung jawab tanpa melanggar aturan larangan fallback ke bawahan/rekan (`DEC-014`) dan tanpa mengubah susunan pelaporan divisi Engineering (`CR-013`).
 
 ### Riwayat Revisi v1.5
 

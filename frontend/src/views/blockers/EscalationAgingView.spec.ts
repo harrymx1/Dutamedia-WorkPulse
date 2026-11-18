@@ -67,6 +67,9 @@ describe('EscalationAgingView.vue (WP-EP06 / Prototipe 14 - Keterlambatan Penang
     expect(wrapper.text()).not.toContain('SLA');
     expect(wrapper.text()).toContain('67%');
     expect(wrapper.text()).toContain('Sertifikat SSL expired');
+    expect(wrapper.text()).toContain('Server & Rilis Sistem');
+    expect(wrapper.text()).toContain('Layanan Langsung Pengguna');
+    expect(wrapper.find('.type-pill').exists()).toBe(false);
     expect(wrapper.text()).toContain('6 jam');
     expect(wrapper.text()).toContain('Terlewat (2j)');
   });

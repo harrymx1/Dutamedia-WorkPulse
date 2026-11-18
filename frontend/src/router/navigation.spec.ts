@@ -212,4 +212,25 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     expect(canAccessRoute('/admin/policies', { role: 'CEO_MANAGEMENT', isPolicyOwner: false, ownedPolicyCategories: [] })).toBe(true);
     expect(canAccessRoute('/admin/policies', { role: 'SYSTEM_ADMIN', isPolicyOwner: false, ownedPolicyCategories: [] })).toBe(true);
   });
+
+  it('staf EMPLOYEE dengan mandat Penanggung Jawab Kategori (isCategoryOwner=true) dapat mengakses /blockers dan /blockers/aging (DEC-017)', () => {
+    const categoryOwnerCtx: UserAccessContext = {
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+      isTemporaryReviewer: false,
+      isProjectLead: false,
+      isCategoryOwner: true,
+      ownedBlockerCategories: ['NETWORK', 'INFRA'],
+    };
+
+    const links = flatten(categoryOwnerCtx);
+    expect(links).toContain('/blockers');
+    expect(links).toContain('/blockers/aging');
+    expect(canAccessRoute('/blockers', categoryOwnerCtx)).toBe(true);
+    expect(canAccessRoute('/blockers/aging', categoryOwnerCtx)).toBe(true);
+    // Menu manajerial lain tetap terkunci bagi staf biasa
+    expect(links).not.toContain('/dashboard');
+    expect(links).not.toContain('/leave/queue');
+    expect(canAccessRoute('/dashboard', categoryOwnerCtx)).toBe(false);
+  });
 });

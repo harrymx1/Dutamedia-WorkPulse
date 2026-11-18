@@ -9,13 +9,18 @@ import {
   BLOCKER_IMPACT_OPTIONS,
   BLOCKER_SEVERITY_OPTIONS,
   BLOCKER_STATUS_FILTER_OPTIONS,
-  BLOCKER_TYPE_OPTIONS,
+  BLOCKER_TYPE_GROUPS,
+  WAITING_FOR_FUNCTION_OPTIONS,
   buildBlockerTicketHistory,
   composeBlockerDescription,
   getBlockerStatusLabel,
+  getBlockerTypeInfo,
+  getTicketImpactsList,
+  getWaitingForFunctionLabel,
   isActiveBlockerStatus,
   isHandlingBlockerStatus,
   sortBlockersByNewest,
+  toggleImpactSelection,
   type BlockerDeleteReasonCategory,
   type BlockerHistoryEntryType,
   type BlockerTicketStatus,
@@ -47,6 +52,8 @@ interface BlockerTicketItem {
   type: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   impact: string;
+  impacts?: string[];
+  waitingForFunction?: string | null;
   status: BlockerTicketStatus;
   raisedAt: string;
   acknowledgedAt?: string;
@@ -109,7 +116,8 @@ const submittingReopen = ref(false);
 const isQueueEditModalOpen = ref(false);
 const queueEditTitle = ref('');
 const queueEditType = ref('TECHNICAL');
-const queueEditImpact = ref('TASK');
+const queueEditImpacts = ref<string[]>([]);
+const queueEditWaitingForFunction = ref('');
 const queueEditSeverity = ref<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
 const queueEditDescription = ref('');
 const queueEditExpectedHelp = ref('');
@@ -517,12 +525,18 @@ async function handleSupportDecision(
   }
 }
 
+function toggleQueueEditImpact(code: string) {
+  queueEditImpacts.value = toggleImpactSelection(queueEditImpacts.value, code, 3);
+}
+
 function openQueueEditModal() {
   if (!selectedTicket.value) return;
   const parsed = parseTicketContent(selectedTicket.value.description);
   queueEditTitle.value = parsed.title === '-' ? '' : parsed.title;
   queueEditType.value = selectedTicket.value.type || 'TECHNICAL';
-  queueEditImpact.value = selectedTicket.value.impact || 'TASK';
+  const parsedImpacts = getTicketImpactsList(selectedTicket.value).map((i) => i.value);
+  queueEditImpacts.value = parsedImpacts.length > 0 ? parsedImpacts.slice(0, 3) : ['TASK'];
+  queueEditWaitingForFunction.value = selectedTicket.value.waitingForFunction || '';
   queueEditSeverity.value = selectedTicket.value.severity || 'HIGH';
   queueEditDescription.value = parsed.body || '';
   queueEditExpectedHelp.value = parsed.expectedHelp || '';
@@ -533,6 +547,18 @@ async function submitQueueEdit() {
   if (!selectedTicket.value) return;
   if (queueEditTitle.value.trim().length < 10) {
     showToast('Judul kendala wajib diisi minimal 10 karakter.', true);
+    return;
+  }
+  if (queueEditImpacts.value.length < 1 || queueEditImpacts.value.length > 3) {
+    showToast('Pilih minimal 1 dan maksimal 3 dampak kendala.', true);
+    return;
+  }
+  if (
+    queueEditType.value === 'CROSS_TEAM' &&
+    selectedTicket.value.ownerNeededType !== 'PROJECT_AUTHORITY' &&
+    !queueEditWaitingForFunction.value
+  ) {
+    showToast('Silakan pilih divisi yang sedang ditunggu untuk kategori Menunggu Tim / Rekan Lain.', true);
     return;
   }
   if (queueEditDescription.value.trim().length < 20) {
@@ -547,7 +573,11 @@ async function submitQueueEdit() {
       body: JSON.stringify({
         type: queueEditType.value,
         severity: queueEditSeverity.value,
-        impact: queueEditImpact.value,
+        impact: queueEditImpacts.value[0],
+        impacts: [...queueEditImpacts.value],
+        ...(queueEditType.value === 'CROSS_TEAM' && queueEditWaitingForFunction.value
+          ? { waitingForFunction: queueEditWaitingForFunction.value }
+          : {}),
         description: composeBlockerDescription(
           queueEditTitle.value,
           queueEditDescription.value,
@@ -708,13 +738,15 @@ onMounted(() => {
           <label>Kategori:</label>
           <select v-model="typeFilter">
             <option value="ALL">Semua Kategori</option>
-            <option value="TECHNICAL">Technical</option>
-            <option value="REQUIREMENT">Requirement</option>
-            <option value="INFRA">Infra</option>
-            <option value="APPROVAL">Approval</option>
-            <option value="CLIENT">Client</option>
-            <option value="VENDOR">Vendor</option>
-            <option value="RESOURCE">Resource</option>
+            <optgroup
+              v-for="group in BLOCKER_TYPE_GROUPS"
+              :key="group.groupLabel"
+              :label="group.groupLabel"
+            >
+              <option v-for="opt in group.options" :key="opt.value" :value="opt.value">
+                {{ opt.name }}
+              </option>
+            </optgroup>
           </select>
         </div>
 
@@ -753,7 +785,6 @@ onMounted(() => {
             <div class="ticket-row-1">
               <div class="badge-cluster">
                 <span class="sev-badge" :class="ticket.severity.toLowerCase()">{{ ticket.severity }}</span>
-                <span class="type-pill">{{ ticket.type }}</span>
                 <span v-if="ticket.projectCodeReference" class="proj-pill">{{ ticket.projectCodeReference }}</span>
               </div>
               <div class="status-wrap">
@@ -825,7 +856,7 @@ onMounted(() => {
                 <span class="ticket-id">Tiket #{{ selectedTicket.id.substring(0, 8) }}</span>
                 <div class="detail-badges">
                   <span class="sev-badge" :class="selectedTicket.severity.toLowerCase()">{{ selectedTicket.severity }}</span>
-                  <span class="type-pill">{{ selectedTicket.type }}</span>
+                  <span v-if="selectedTicket.projectCodeReference" class="proj-pill">{{ selectedTicket.projectCodeReference }}</span>
                   <span class="status-badge" :class="selectedTicket.status.toLowerCase()">
                     {{ getBlockerStatusLabel(selectedTicket.status) }}
                   </span>
@@ -944,6 +975,33 @@ onMounted(() => {
                   <div v-if="parsedSelectedTicket.expectedHelp" class="parsed-expectation">
                     <span class="exp-label">Ekspektasi Bantuan / Tindakan:</span>
                     <span>{{ parsedSelectedTicket.expectedHelp }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-grid-2" data-testid="detail-taxonomy-section">
+                <div class="info-block">
+                  <label>Kategori Kendala</label>
+                  <div class="taxonomy-detail-box">
+                    <strong class="taxonomy-detail-title">{{ getBlockerTypeInfo(selectedTicket.type).name }}</strong>
+                    <p v-if="getBlockerTypeInfo(selectedTicket.type).examples" class="taxonomy-detail-desc">
+                      {{ getBlockerTypeInfo(selectedTicket.type).examples }}
+                    </p>
+                    <p v-if="selectedTicket.waitingForFunction" class="taxonomy-waiting-div">
+                      Divisi yang Ditunggu: <strong>{{ getWaitingForFunctionLabel(selectedTicket.waitingForFunction) }}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="info-block">
+                  <label>Dampak Kendala</label>
+                  <div class="taxonomy-detail-box">
+                    <ul class="taxonomy-detail-impact-list">
+                      <li v-for="imp in getTicketImpactsList(selectedTicket)" :key="imp.value">
+                        <strong>{{ imp.name }}</strong>
+                        <span v-if="imp.meaning"> — {{ imp.meaning }}</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -1419,22 +1477,70 @@ onMounted(() => {
             </div>
             <input id="queueEditTitle" v-model="queueEditTitle" type="text" maxlength="140" />
           </div>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="queueEditType">Kategori Kendala <span class="req">*</span></label>
-              <select id="queueEditType" v-model="queueEditType">
-                <option v-for="opt in BLOCKER_TYPE_OPTIONS" :key="opt.value" :value="opt.value">
+          <div class="form-group">
+            <label for="queueEditType">Kategori Kendala <span class="req">*</span></label>
+            <select id="queueEditType" v-model="queueEditType">
+              <optgroup
+                v-for="group in BLOCKER_TYPE_GROUPS"
+                :key="group.groupLabel"
+                :label="group.groupLabel"
+              >
+                <option v-for="opt in group.options" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </option>
-              </select>
+              </optgroup>
+            </select>
+          </div>
+          <div
+            v-if="queueEditType === 'CROSS_TEAM' && selectedTicket.ownerNeededType !== 'PROJECT_AUTHORITY'"
+            class="form-group"
+          >
+            <label for="queueEditWaitingForFunction">Divisi yang Sedang Ditunggu <span class="req">*</span></label>
+            <select id="queueEditWaitingForFunction" v-model="queueEditWaitingForFunction">
+              <option value="" disabled>-- Pilih Divisi yang Sedang Ditunggu --</option>
+              <option
+                v-for="fnOpt in WAITING_FOR_FUNCTION_OPTIONS"
+                :key="fnOpt.value"
+                :value="fnOpt.value"
+              >
+                {{ fnOpt.label }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label>Dampak Kendala (Pilih 1–3 Dampak) <span class="req">*</span></label>
+              <span
+                class="char-count"
+                :class="{ ok: queueEditImpacts.length >= 1 && queueEditImpacts.length <= 3 }"
+              >
+                {{ queueEditImpacts.length }} / 3 dipilih
+              </span>
             </div>
-            <div class="form-group">
-              <label for="queueEditImpact">Dampak Kendala <span class="req">*</span></label>
-              <select id="queueEditImpact" v-model="queueEditImpact">
-                <option v-for="opt in BLOCKER_IMPACT_OPTIONS" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+            <p class="impact-hint-text">Pilih 1 sampai maksimal 3 dampak yang paling terasa.</p>
+            <div class="impact-checkbox-grid compact">
+              <label
+                v-for="opt in BLOCKER_IMPACT_OPTIONS"
+                :key="opt.value"
+                class="impact-checkbox-card"
+                :class="{
+                  selected: queueEditImpacts.includes(opt.value),
+                  disabled: !queueEditImpacts.includes(opt.value) && queueEditImpacts.length >= 3,
+                }"
+              >
+                <input
+                  type="checkbox"
+                  :value="opt.value"
+                  :checked="queueEditImpacts.includes(opt.value)"
+                  :disabled="!queueEditImpacts.includes(opt.value) && queueEditImpacts.length >= 3"
+                  :data-testid="`queue-edit-impact-checkbox-${opt.value}`"
+                  @change="toggleQueueEditImpact(opt.value)"
+                />
+                <div class="impact-checkbox-copy">
+                  <span class="impact-name">{{ opt.name }}</span>
+                  <span class="impact-meaning">{{ opt.meaning }}</span>
+                </div>
+              </label>
             </div>
           </div>
           <div class="form-group">
@@ -2709,6 +2815,107 @@ h1 {
 
 .toast-popup.success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 .toast-popup.error { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+
+.taxonomy-detail-box {
+  background: #F8FBFA;
+  border: 1px solid #E2ECE7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: #1F352E;
+}
+
+.taxonomy-detail-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0E211B;
+  margin-bottom: 4px;
+}
+
+.taxonomy-detail-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #475B54;
+  line-height: 1.45;
+}
+
+.taxonomy-waiting-div {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #00674D;
+}
+
+.taxonomy-detail-impact-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.impact-hint-text {
+  font-size: 12px;
+  color: #5C6E68;
+  margin: 0 0 8px;
+}
+
+.impact-checkbox-grid.compact {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.impact-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1.5px solid #DCE7E2;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.impact-checkbox-card input[type="checkbox"] {
+  width: auto;
+  margin-top: 3px;
+  accent-color: #00674D;
+  flex-shrink: 0;
+}
+
+.impact-checkbox-card.selected {
+  border-color: #00674D;
+  background: #F4FBF7;
+}
+
+.impact-checkbox-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.impact-checkbox-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.impact-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0E211B;
+}
+
+.impact-meaning {
+  font-size: 11.5px;
+  color: #5C6E68;
+  line-height: 1.35;
+}
 
 @media (max-width: 1024px) {
   .queue-split {

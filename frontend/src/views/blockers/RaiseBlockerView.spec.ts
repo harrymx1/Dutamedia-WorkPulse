@@ -352,7 +352,7 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     // Uji layar sukses pembuatan tiket memakai label resmi (bukan raw OPEN)
     await wrapper.find('#blockerTitle').setValue('Kendala Gateway Timeout Staging');
     await wrapper.find('#blockerType').setValue('INFRA');
-    await wrapper.find('#blockerImpact').setValue('TASK');
+    await wrapper.find('[data-testid="impact-checkbox-TASK"]').setValue(true);
     await wrapper.find('#blockerDesc').setValue('Endpoint API gateway staging mengembalikan HTTP 504 setelah deploy.');
     await wrapper.find('form.blocker-form').trigger('submit');
     await flushPromises();
@@ -710,6 +710,7 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
           type: 'INFRA',
           severity: 'HIGH',
           impact: 'MILESTONE',
+          impacts: ['MILESTONE'],
           description:
             '[Endpoint Error 500 Revisi] Revisi detail: transaksi database timeout pada staging cluster saat beban tinggi. (Ekspektasi: Perbaiki query transaksi)',
         }),
@@ -744,6 +745,131 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
         }),
       }),
     );
+
+    vi.unstubAllGlobals();
+  });
+
+  it('renders 16 categories in 5 optgroups, conditional waitingForFunction for CROSS_TEAM, 1-3 impact checkboxes with limit 3, and full taxonomy without raw code pill in Blocker Saya', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: any) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-tax-1',
+                type: 'NETWORK',
+                severity: 'HIGH',
+                impact: 'TASK',
+                impacts: ['TASK', 'COMPANY_OPS'],
+                description: '[WiFi Lantai 2 Mati] Koneksi kantor terputus sejak pagi',
+                status: 'OPEN',
+                raisedAt: '2026-11-18T08:00:00Z',
+                assignedOwner: { id: 'usr-fk', fullName: 'Fakhrizal Asshiddiq', email: 'network.infra@dutamedia.com' },
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/blockers/routing-preview')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              suggestedOwner: {
+                id: 'usr-dharma',
+                fullName: 'Dharma Putra',
+                jobTitle: 'Head of Delivery',
+              },
+              reason: 'DIVISION_HEAD',
+              divisionLabel: 'Delivery & Project Management',
+            },
+          }),
+        });
+      }
+      if (url.endsWith('/blockers')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: { id: 'blk-new-cross', status: 'OPEN' },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    // 1. 16 kategori dalam 5 optgroup
+    const optgroups = wrapper.findAll('#blockerType optgroup');
+    expect(optgroups).toHaveLength(5);
+    const options = wrapper.findAll('#blockerType optgroup option');
+    expect(options).toHaveLength(16);
+
+    // 2. CROSS_TEAM memunculkan pilihan waitingForFunction
+    expect(wrapper.find('#waitingForFunction').exists()).toBe(false);
+    await wrapper.find('#blockerType').setValue('CROSS_TEAM');
+    expect(wrapper.find('#waitingForFunction').exists()).toBe(true);
+    await wrapper.find('#waitingForFunction').setValue('Delivery');
+    await flushPromises();
+
+    // 3. Kotak centang 9 dampak dengan batas maksimal 3
+    expect(wrapper.text()).toContain('Pilih 1 sampai maksimal 3 dampak yang paling terasa.');
+    expect(wrapper.findAll('input[data-testid^="impact-checkbox-"]')).toHaveLength(9);
+    await wrapper.find('[data-testid="impact-checkbox-TASK"]').setValue(true);
+    await wrapper.find('[data-testid="impact-checkbox-TEAM"]').setValue(true);
+    await wrapper.find('[data-testid="impact-checkbox-PROJECT"]').setValue(true);
+    expect(wrapper.find('[data-testid="impact-selection-count"]').text()).toBe('3 / 3 dipilih');
+    // Pilihan ke-4 otomatis disabled
+    const fourthCheckbox = wrapper.find('[data-testid="impact-checkbox-MILESTONE"]').element as HTMLInputElement;
+    expect(fourthCheckbox.disabled).toBe(true);
+
+    await wrapper.find('#blockerTitle').setValue('Menunggu Hasil Pengujian Modul Navigasi');
+    await wrapper.find('#blockerDesc').setValue('Fitur navigasi mobile sudah selesai dan menunggu konfirmasi tim QA Delivery.');
+    await wrapper.find('form.blocker-form').trigger('submit');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/blockers$/),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'CROSS_TEAM',
+          severity: 'HIGH',
+          impact: 'TASK',
+          impacts: ['TASK', 'TEAM', 'PROJECT'],
+          waitingForFunction: 'Delivery',
+          description: '[Menunggu Hasil Pengujian Modul Navigasi] Fitur navigasi mobile sudah selesai dan menunggu konfirmasi tim QA Delivery.',
+          ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+        }),
+      }),
+    );
+
+    // 4. Tab Blocker Saya tidak memiliki pill-neutral kode mentah & menampilkan kalimat lengkap kategori + multi-dampak
+    await wrapper.find('[data-testid="btn-view-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    const taxCard = wrapper.find('[data-ticket-id="blk-tax-1"]');
+    expect(taxCard.find('.blocker-item-head .pill-neutral').exists()).toBe(false);
+    const taxonomyBox = wrapper.find('[data-testid="my-blocker-taxonomy-blk-tax-1"]');
+    expect(taxonomyBox.text()).toContain('Jaringan & Koneksi');
+    expect(taxonomyBox.text()).toContain('Tugas Pribadi');
+    expect(taxonomyBox.text()).toContain('Operasional Kantor');
 
     vi.unstubAllGlobals();
   });

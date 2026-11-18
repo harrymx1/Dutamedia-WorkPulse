@@ -116,6 +116,41 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
       expect(result.csrfToken).toBeDefined();
       expect(result.user.id).toBe('usr-active');
       expect(result.user.role).toBe('EMPLOYEE');
+      expect(result.user.isCategoryOwner).toBe(false);
+    });
+
+    it('sets isCategoryOwner=true and ownedBlockerCategories when user holds BlockerCategoryOwner mandates (DEC-017)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'staff-fakhrizal',
+        email: 'network.infra@dutamedia.com',
+        fullName: 'Fakhrizal Asshiddiq',
+        status: 'ACTIVE',
+        passwordHash: '$argon2id$valid',
+      });
+      mockPasswordHasher.verify.mockResolvedValue(true);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+        jobTitle: 'Network & Infrastructure Engineer',
+        function: 'OperationsInfrastructure',
+      });
+      mockPrisma.blockerCategoryOwner = {
+        findMany: vi.fn().mockResolvedValue([
+          { blockerType: 'INFRA' },
+          { blockerType: 'NETWORK' },
+        ]),
+      };
+      mockPrisma.session.create.mockResolvedValue({
+        id: 'sess-cat-owner',
+        expiresAt: new Date(Date.now() + 86400000),
+      });
+
+      const result = await authService.login({
+        email: 'network.infra@dutamedia.com',
+        password: 'Password123!',
+      });
+
+      expect(result.user.isCategoryOwner).toBe(true);
+      expect(result.user.ownedBlockerCategories).toEqual(['INFRA', 'NETWORK']);
     });
   });
 

@@ -170,15 +170,20 @@ User dengan multi-role (mis. Head yang juga mengisi check-in sendiri) tetap puny
 - Untuk menjaga struktur menu sidebar tetap ramping sesuai Section 2 (tanpa menambah menu terpisah di sidebar), halaman `/today/raise-blocker` menyediakan **2 Sub-Tab**:
   1. **`Buat Laporan Baru`:** Formulir pelaporan kendala baru dengan opsi mengaitkan ke komitmen/pekerjaan hari ini.
   2. **`Blocker Saya`:** Daftar kendala yang dilaporkan oleh pengguna sendiri beserta filter pil (`Semua`, `Aktif`, `Menunggu Konfirmasi Saya [Resolved]`, `Selesai`), sehingga pelapor memiliki akses langsung yang jelas untuk memverifikasi solusi (`Confirm Closed` atau `Reopen`, lihat `UF-18`).
-- Form Blocker mewajibkan field taksonomi resmi sesuai PRD `FR-16` & `AC-55`:
-  - **Type (10 enum resmi PRD):** `Technical`, `Requirement`, `Client`, `Vendor`, `Resource`, `Approval`, `Infra`, `Finance`, `Legal`, `Other` (UI menyertakan label deskriptif Bahasa Indonesia yang membantu).
-  - **Severity (4 enum resmi PRD):** `Critical`, `High`, `Medium`, `Low` (disajikan sebagai kartu pilihan radio yang jelas).
-  - **Impact (7 enum resmi PRD):** `Task`, `Milestone`, `Project`, `Production`, `Client`, `Financial`, `Compliance`.
+- Form Blocker mewajibkan field taksonomi resmi sesuai PRD `FR-16`, `AC-55`, & `DEC-017`:
+  - **Type (16 enum resmi PRD dalam 5 `<optgroup>`):**
+    1. *Teknis & Sistem:* `TECHNICAL`, `INFRA`, `HOSTING_DOMAIN`, `ACCESS_SECURITY`
+    2. *Kantor & Perangkat:* `NETWORK`, `WORK_DEVICE`, `OFFICE_FACILITY`
+    3. *Orang & Keputusan:* `REQUIREMENT`, `APPROVAL`, `CROSS_TEAM` (memunculkan dropdown kondisional **Divisi yang Ditunggu / `waitingForFunction`**), `RESOURCE`
+    4. *Pihak Luar, Uang & Hukum:* `CLIENT`, `VENDOR`, `FINANCE`, `LEGAL`
+    5. *Lainnya:* `OTHER`
+  - **Severity (4 enum resmi PRD):** `Critical`, `High`, `Medium`, `Low` (disajikan sebagai pilihan yang jelas beserta target SLA).
+  - **Impact (9 enum resmi PRD — kotak centang pilih minimal 1 s/d maksimal 3 dampak):** `TASK`, `TEAM`, `MILESTONE`, `PROJECT`, `COMPANY_OPS`, `PRODUCTION`, `CLIENT`, `FINANCIAL`, `COMPLIANCE`, dilengkapi teks panduan *"Pilih 1 sampai maksimal 3 dampak yang paling terasa."*
   - **Authority Context:** `Organizational Authority` (default) atau `Project Authority` (eksplisit).
-  - **Pilihan orang tertentu (opsional):** default kosong (*"Tidak memilih orang tertentu"* — jangan menambahkan opsi terpisah *"Biarkan sistem menentukan"*).
+  - **Pilihan orang tertentu (opsional):** default otomatis berdasarkan kategori & konteks.
   - **Deskripsi Masalah (wajib, dengan penghitung karakter minimum)** dan **Expected Resolution (opsional)**.
 - Seksi `Authority Context` menampilkan **`LiveRoutePreviewBox`** yang memperlihatkan secara langsung siapa `Owner Needed` kandidat hasil resolusi sistem beserta `AuthorityTag` sebelum tombol kirim ditekan:
-  - Untuk `Organizational Authority` (default), `Direct Manager` aktif (Level 1) menjadi kandidat awal; jika tidak tersedia, menggunakan fallback organisasi yang dikonfigurasi.
+  - Untuk `Organizational Authority` (default), sistem menyelesaikan ke **Penanggung Jawab Kategori (`DEC-017`)**, pimpinan divisi yang ditunggu (`CROSS_TEAM`), atau `Direct Manager` aktif (Level 1), dengan fallback cuti vertikal ke atas (`DEC-014`).
   - Untuk `Project Authority` (dipilih eksplisit ketika berkaitan dengan proyek/referensi tertentu), form mewajibkan identifikasi scope proyek/referensi dan menyelesaikan penerima berdasarkan `Project Authority Mapping` aktif yang cocok.
 - Matriks eskalasi bawaan mengikuti hierarki 4 jenjang Dutamedia: Level 1 (Direct Manager/Lead) → Level 2 (Head of Department) → Level 3 (Department Head of Operations / General Management) → Level 4 (CEO / Board of Directors). Penentuan `Owner Needed` awal dibedakan secara tegas dari *escalation chain*.
 - Jika pengguna memilih orang tertentu secara manual, sistem memvalidasi keaktifan akun, kesesuaian `Authority Context`, dan scope mapping. Pilihan tidak valid atau ketiadaan penerima sah pasca-fallback ditolak dengan pesan perbaikan yang jelas tanpa menampilkan status sukses palsu (`AC-60`, `AC-61`). Setelah berhasil dikirim, tampilkan kartu ringkasan tiket resmi (`#BLK-...`, status awal `Open`, pemilik tujuan, dan pintasan ke sub-tab `Blocker Saya`).
@@ -233,8 +238,8 @@ Pola sama di ketiga level (scope berbeda: team/scoped, function, company-wide):
 
 ### 4.9 Blocker & Escalation Queue
 - Diakses melalui `/team/blockers` atau `/function/escalations`, menampilkan 3 `InteractiveMetricFilterCard` di atas (`Butuh Respons [Open]`, `Sedang Ditangani [Acknowledged / In Progress]`, `Menunggu Konfirmasi Pelapor [Resolved]`) dan tata letak **`MasterDetailSplitWorkbench`** (`42% : 58%` di desktop; berubah menjadi panel *drawer/bottom-sheet* responsif pada tablet/mobile agar bebas tabel bergulir horizontal):
-  - **Panel Kiri (Daftar Antrean):** Tab filter cepat (`Semua`, `Tanggung Jawab Saya`, `Belum Di-acknowledge`, `Critical/High`, `Menunggu Konfirmasi Pelapor`), `FilterBar` taksonomi lengkap (Type 10 enum, Severity 4 enum, Impact 7 enum, Status 6 state), dan daftar kartu ringkas 3 baris terurut urgensi (mendukung *deep-link* tiket/owner dan *positive empty state* saat 0 hambatan aktif).
-  - **Panel Kanan (Detail & Tindakan):** Rincian masalah, `AuthorityTag` eksplisit (`Organizational Authority` default vs `Project Authority` eksplisit, beserta keterangan penunjukan otomatis vs manual), `ActionPanel` kontekstual, daftar `SupportContributionCard`, serta `AuditTrailTimeline` siklus hidup tiket.
+  - **Panel Kiri (Daftar Antrean):** Tab filter cepat (`Semua`, `Tanggung Jawab Saya`, `Belum Di-acknowledge`, `Critical/High`, `Menunggu Konfirmasi Pelapor`), `FilterBar` taksonomi lengkap (Type 16 kategori dalam 5 `<optgroup>`, Severity 4 enum, Status), dan daftar kartu ringkas terurut urgensi tanpa badge singkatan kode kategori yang kaku.
+  - **Panel Kanan (Detail & Tindakan):** Rincian masalah lengkap dengan bagian **Kategori Kendala** (beserta divisi yang ditunggu bila `CROSS_TEAM`) dan susunan **Dampak Kendala** (1–3 dampak lengkap dengan penjelasannya), `AuthorityTag` eksplisit (`Organizational Authority` default vs `Project Authority` eksplisit, beserta keterangan penunjukan otomatis vs manual), `ActionPanel` kontekstual, daftar `SupportContributionCard`, serta `AuditTrailTimeline` siklus hidup tiket. Menu `/blockers` dan `/blockers/aging` juga terbuka bagi staf pemegang mandat **Penanggung Jawab Kategori (`isCategoryOwner`, `DEC-017`)**.
 - **Action button pada `ActionPanel` tampil ketat sesuai state blocker dan kewenangan aktor saat ini (dengan validasi modal inline tanpa `window.alert`):**
   - `Open` → Tombol `Acknowledge` bagi assigned support owner atau hierarki di atasnya.
   - `Acknowledged` → Tombol `Start Progress` / `Update` memindahkan ke `In Progress`.
@@ -1302,7 +1307,7 @@ Traceability berikut diperiksa dan disinkronkan penuh terhadap **PDD v1.5 FINAL*
 | FR-13 | 4.2, 4.4, UF-09, UF-12 — Deterministic Status Suggestion Engine + saran minimal AMBER pada carry-over ke-2 tanpa mengunci opsi GREEN (`DEC-003`) |
 | FR-14 | 4.4, 6, UF-13 — ValidationPromptModal saat status pilihan berbeda dari saran sistem; tanpa silent mutation |
 | FR-15 | 4.5, UF-15 — Pembuatan instant blocker kapan saja |
-| FR-16 | 4.5, 4.9, UF-15, UF-16 — Taksonomi Blocker lengkap (10 Type, 4 Severity, 7 Impact resmi PRD) |
+| FR-16 | 4.5, 4.9, UF-15, UF-16 — Taksonomi Blocker lengkap (16 Type dalam 5 kelompok, 4 Severity, 9 Impact pilih 1–3 dampak resmi PRD, `DEC-017`) |
 | FR-17 | 4.9, UF-16, UF-17, UF-18 — Siklus hidup blocker & konfirmasi Closed / Reopen oleh pelapor |
 | FR-18 | 4.9, UF-17, UF-18, UF-20 — Wewenang Resolve (support owner), Close (pelapor), dan Accepted Risk (manajerial) |
 | FR-19 | 4.5, 4.9, 4.13, 4.15, UF-15, UF-40 — Authority Context (Organizational default vs Project eksplisit) |
@@ -1439,7 +1444,7 @@ Traceability berikut diperiksa dan disinkronkan penuh terhadap **PDD v1.5 FINAL*
 | AC-52 | 4.7, 4.9, 4.14, 5, UF-15, UF-16, UF-38 |
 | AC-53 | 2, 3, 4.1, 4.8–4.25, 9.1; visibilitas UI tidak menggantikan otorisasi server-side |
 | AC-54 | 4.15, 4.24, 6, UF-40, UF-43 — CRUD akun/role/function/direct manager/reviewer/project authority dengan `effectiveDate >= today` (`DEC-008`) |
-| AC-55 | 4.5, 4.9, UF-15, UF-16 — Taksonomi Blocker lengkap (10 Type, 4 Severity, 7 Impact) |
+| AC-55 | 4.5, 4.9, UF-15, UF-16 — Taksonomi Blocker lengkap (16 Type dalam 5 kelompok, 4 Severity, 9 Impact pilih 1–3 dampak, `DEC-017`) |
 | AC-56 | 4.3, UF-11 |
 | AC-57 | 4.2, 4.4, 5, UF-10, UF-14 — Klasifikasi On-Time, Late, dan penolakan penuh pasca Cut-Off (`DEC-002`) |
 | AC-58 | 4.5, 4.15, UF-15, UF-40 — Organizational Authority sebagai default; Project Authority saat dipilih eksplisit; resolusi otomatis Owner Needed sesuai mapping efektif |

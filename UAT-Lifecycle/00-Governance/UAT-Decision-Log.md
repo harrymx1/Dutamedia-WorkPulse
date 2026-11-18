@@ -335,3 +335,25 @@
        4. `OTHER` — `Alasan Lainnya` *(kolom teks **`Detail Alasan Penghapusan`** hanya muncul dan wajib diisi minimal 10 karakter ketika pilihan ini dipilih; 3 pilihan di atas dapat langsung dikonfirmasi tanpa input teks tambahan)*
      - Saat dikonfirmasi: sistem mencatat salinan tiket dan alasan ke `audit_logs` (`BLOCKER_DELETED_BY_REPORTER`), membersihkan notifikasi lama tiket terkait agar antrean bersih, menghapus tiket dari `blocker_tickets`, dan mengirim notifikasi `BLOCKER_DELETED_BY_REPORTER` berisi alasan penghapusan ke seluruh pihak berwenang terkait (PIC, atasan langsung, Lead, Head, Pengarah Proyek, dan pemberi bantuan).
 - **Dampak Implementasi & Dokumentasi:** Mengikat `backend/src/daily/` (`raise-blocker.dto.ts`, `blocker.controller.ts`, `blocker.service.ts`), `frontend/src/views/blockers/` (`RaiseBlockerView.vue`, `BlockerQueueView.vue`), `NotificationCenterView.vue`, serta Buku Panduan Penggunaan Sistem WorkPulse.
+
+---
+
+### [DEC-014-UAT / DEC-017] Penetapan "Penanggung Jawab Kategori" Resmi untuk Pengarahan Tiket Kendala (16 Kategori) dan Penegasan Susunan Pelaporan Developer
+- **Decision ID:** `DEC-014-UAT` (Referensi Arsitektur: `DEC-017`)
+- **Tanggal:** 18/11/2026 — 08:30 WIB
+- **Pengambil Keputusan (Decision Maker):** Harry (Acceptance Owner)
+- **Konteks:** Daftar 16 Kategori Kendala dan 9 Dampak telah dikunci (Tahap 1) dan disetujui Lead. Kolom "Diarahkan ke" pada daftar itu mengirim tiket langsung ke staf spesialis (Network & Infrastructure, Specialist IT, IT Support, Tim GA, Tim Finance, Sales/BD), bukan ke Head. Hal ini tampak bertentangan dengan `DEC-014` yang melarang sistem menunjuk `SUPERVISOR` / `EMPLOYEE` secara otomatis tanpa mandat resmi. Setelah dianalisis, `DEC-014` mengatur **pengganti dadakan saat pejabat utama cuti**, sedangkan kebutuhan baru adalah **penerima tetap yang memang bertugas resmi atas jenis masalah tertentu**. Perbedaannya terletak pada ada tidaknya penunjukan resmi.
+- **Opsi yang Dipertimbangkan:**
+  1. *Opsi A (Batalkan `DEC-014`):* Ditolak karena membuka kembali hal yang telah ditolak (beban SLA sepihak tanpa mandat) dan berisiko merusak skenario UAT yang sudah lulus (UAT-A1 s.d. UAT-C6).
+  2. *Opsi B (Pertahankan `DEC-014` + tambah Penanggung Jawab Kategori resmi):* **Dipilih.**
+  3. *Opsi C (Semua tiket tetap ke Head):* Ditolak karena Head menjadi satu-satunya pintu masuk seluruh kendala dan bertentangan dengan daftar yang sudah disetujui Lead.
+- **Keputusan Resmi yang Mengikat:**
+  1. **`DEC-014` tetap berlaku penuh.** Tidak ada pengurangan atas larangan penunjukan rekan/bawahan sebagai pengganti saat pejabat cuti.
+  2. **Penanggung Jawab Kategori:** Kategori kendala tertentu memiliki satu penanggung jawab utama yang **ditetapkan resmi dan tercatat** (tabel khusus, berlaku dengan tanggal mulai/berakhir). Penetapan resmi ini adalah "mandat resmi" yang dimaksud `DEC-014`.
+  3. **Bila penanggung jawab kategori sedang Cuti Resmi:** tiket hanya boleh naik vertikal ke atasan langsungnya (`N+1 → N+2 → CEO_MANAGEMENT`), atau ke Reviewer Sementara aktif bila ada. Tidak pernah turun ke rekan atau bawahan.
+  4. **Bila kategori belum punya penanggung jawab:** sistem memakai perilaku lama (Head divisi terkait / atasan langsung) agar skenario UAT yang sudah lulus tidak berubah.
+  5. **Kategori tanpa penerima tetap** (Persetujuan, Menunggu Tim/Rekan Lain, Vendor, Tenaga & Kapasitas, Lainnya, serta Kebutuhan & Klien bila tidak terkait proyek/penawaran) memakai aturan situasional yang ditetapkan pada rencana Tahap 2B/Tahap 3.
+  6. **Susunan pelaporan developer dipertahankan** sesuai bagan resmi (`CR-013`): developer melapor langsung ke Head of Engineering, sejajar dengan Technical Lead. Tiket kategori Teknis diarahkan ke Technical Lead melalui Penanggung Jawab Kategori, bukan melalui perubahan susunan atasan. Kalimat Tahap 2 pada aturan permanen yang menyebut developer melapor ke Technical Lead dikoreksi.
+- **Dampak Implementasi:** Menambah Tahap 2B (tabel Penanggung Jawab Kategori + data awal), mengubah `backend/src/daily/services/blocker.service.ts` (`resolveSuggestedOwner`), `backend/src/auth/guards/auth.guard.ts` (penanda `isCategoryOwner` agar staf penanggung jawab dapat membuka Antrean Blocker), serta menu/rute `frontend/src/router/` pada Tahap 4. Tidak mengubah susunan atasan akun yang sudah ada.
+
+---

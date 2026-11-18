@@ -97,6 +97,8 @@ model User {
   managedProjects            ProjectAuthorityMapping[]    @relation("ProjectManagerAuthority")
   reviewedProjects           ProjectAuthorityMapping[]    @relation("EscalationReviewerAuthority")
   createdProjectAuthorities  ProjectAuthorityMapping[]    @relation("CreatedProjectAuthorities")
+  ownedBlockerCategories     BlockerCategoryOwner[]       @relation("BlockerCategoryOwnerUser")
+  createdBlockerCategoryOwners BlockerCategoryOwner[]     @relation("BlockerCategoryOwnerCreator")
   delegatedReviewAssignments TemporaryReviewerAssignment[] @relation("DelegateReviewAssignments")
   createdReviewAssignments   TemporaryReviewerAssignment[] @relation("CreatedReviewAssignments")
   createdPolicies            Policy[]                     @relation("CreatedPolicies")
@@ -199,6 +201,25 @@ model ProjectAuthorityMapping {
 
   @@index([projectCode, effectiveDate, endDate], map: "idx_pa_active_lookup")
   @@map("project_authority_mappings")
+}
+
+model BlockerCategoryOwner {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockerType      BlockerType @map("blocker_type")
+  ownerUserId      String      @map("owner_user_id") @db.Uuid
+  effectiveDate    DateTime    @map("effective_date") @db.Date
+  endDate          DateTime?   @map("end_date") @db.Date
+  assignmentReason String      @map("assignment_reason") @db.Text
+  createdByUserId  String      @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  owner     User @relation("BlockerCategoryOwnerUser", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  createdBy User @relation("BlockerCategoryOwnerCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([blockerType, effectiveDate, endDate], map: "idx_bco_active_lookup")
+  @@index([ownerUserId], map: "idx_bco_owner")
+  @@map("blocker_category_owners")
 }
 
 model TemporaryReviewerAssignment {
@@ -339,12 +360,18 @@ enum AdditionalWorkReason {
 
 enum BlockerType {
   TECHNICAL
+  INFRA
+  HOSTING_DOMAIN
+  ACCESS_SECURITY
+  NETWORK
+  WORK_DEVICE
+  OFFICE_FACILITY
   REQUIREMENT
+  APPROVAL
+  CROSS_TEAM
+  RESOURCE
   CLIENT
   VENDOR
-  RESOURCE
-  APPROVAL
-  INFRA
   FINANCE
   LEGAL
   OTHER
@@ -363,8 +390,10 @@ enum BlockerSeverity {
 
 enum BlockerImpact {
   TASK
+  TEAM
   MILESTONE
   PROJECT
+  COMPANY_OPS
   PRODUCTION
   CLIENT
   FINANCIAL
@@ -488,6 +517,8 @@ model BlockerTicket {
   type                          BlockerType
   severity                      BlockerSeverity
   impact                        BlockerImpact
+  impacts                       BlockerImpact[]  @default([])
+  waitingForFunction            CanonicalFunction? @map("waiting_for_function")
   description                   String           @db.Text
   ownerNeededType               AuthorityContext @map("owner_needed_type")
   assignedOwnerId               String           @map("assigned_owner_id") @db.Uuid

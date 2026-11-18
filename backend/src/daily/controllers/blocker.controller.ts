@@ -22,7 +22,7 @@ import {
 } from '../dto/raise-blocker.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
-import { AuthorityContext, BlockerStatus } from '@prisma/client';
+import { AuthorityContext, BlockerStatus, CanonicalFunction } from '@prisma/client';
 
 @Controller(['blockers', 'api/blockers'])
 @UseGuards(AuthGuard, CsrfGuard)
@@ -40,10 +40,16 @@ export class BlockerController {
     @Query('type') type?: string,
     @Query('ownerNeededType') ownerNeededType?: AuthorityContext,
     @Query('projectCode') projectCode?: string,
+    @Query('waitingForFunction') waitingForFunction?: CanonicalFunction,
   ) {
     const [slaMinutes, suggestion] = await Promise.all([
       this.blockerService.getSlaMinutesMap(),
-      this.blockerService.resolveSuggestedOwner(req.user.id, { type, ownerNeededType, projectCode }),
+      this.blockerService.resolveSuggestedOwner(req.user.id, {
+        type,
+        ownerNeededType,
+        projectCode,
+        waitingForFunction,
+      }),
     ]);
     return {
       slaMinutes,

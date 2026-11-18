@@ -59,6 +59,8 @@ export class NotificationService {
             n.message?.split('\n')[0]?.includes('"') ||
             n.message?.includes('Tindak Lanjut Anda:') ||
             n.message?.includes('Kategori & Keparahan:') ||
+            /^Kategori Kendala:[ \t]*[A-Z_]+[ \t]*\r?$/m.test(n.message || '') ||
+            /^Dampak Kendala:[ \t]*[A-Z_, ]+[ \t]*\r?$/m.test(n.message || '') ||
             !n.message?.includes('Pelapor:') ||
             n.title?.startsWith('Bantuan Ditolak Pelapor:') ||
             n.title?.startsWith('Bantuan Belum Mengatasi Kendala:') ||

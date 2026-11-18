@@ -12,6 +12,7 @@ import { ErrorCode } from '../../common/constants/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import { ensurePolicyOwnersBaselineSynced } from '../../policy/policy-owner-sync.util';
+import { resolveOwnedBlockerCategories } from '../utils/category-owner.util';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -143,6 +144,8 @@ export class AuthGuard implements CanActivate {
       new Set((policyOwnerRecords || []).map((r: any) => String(r.policyCategory))),
     );
 
+    const ownedBlockerCategories = await resolveOwnedBlockerCategories(this.prisma, session.user.id, today);
+
     request.user = {
       ...payload,
       id: session.user.id,
@@ -158,6 +161,8 @@ export class AuthGuard implements CanActivate {
       isProjectLead: projectLeadCount > 0,
       isPolicyOwner: ownedPolicyCategories.length > 0,
       ownedPolicyCategories,
+      isCategoryOwner: ownedBlockerCategories.length > 0,
+      ownedBlockerCategories,
     };
     request.sessionId = session.id;
 
