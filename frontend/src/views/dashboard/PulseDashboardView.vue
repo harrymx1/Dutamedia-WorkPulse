@@ -222,7 +222,7 @@ async function loadDashboardData() {
 
     const [metricRes, feedRes] = await Promise.all([
       apiClient<any>(`/dashboard/metrics?${query.toString()}`),
-      apiClient<SupportFeedItem[]>('/dashboard/feed'),
+      apiClient<SupportFeedItem[]>(`/dashboard/feed?${query.toString()}`),
     ]);
     if (metricRes?.data) {
       const d = metricRes.data;

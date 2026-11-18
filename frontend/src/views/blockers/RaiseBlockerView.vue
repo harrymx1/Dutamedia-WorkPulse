@@ -472,6 +472,35 @@ function appendExpectedHelp(chipText: string) {
   }
 }
 
+let toastAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+let errorAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(toastMessage, (msg) => {
+  if (toastAutoDismissTimer) {
+    clearTimeout(toastAutoDismissTimer);
+    toastAutoDismissTimer = null;
+  }
+  if (msg) {
+    toastAutoDismissTimer = setTimeout(() => {
+      toastMessage.value = null;
+      toastAutoDismissTimer = null;
+    }, 6000);
+  }
+});
+
+watch(errorMessage, (msg) => {
+  if (errorAutoDismissTimer) {
+    clearTimeout(errorAutoDismissTimer);
+    errorAutoDismissTimer = null;
+  }
+  if (msg) {
+    errorAutoDismissTimer = setTimeout(() => {
+      errorMessage.value = null;
+      errorAutoDismissTimer = null;
+    }, 6000);
+  }
+});
+
 function resetForm() {
   title.value = '';
   linkedCommitmentId.value = '';
@@ -488,9 +517,6 @@ function resetForm() {
   errorMessage.value = null;
   submittedTicket.value = null;
   toastMessage.value = 'Formulir berhasil dibersihkan.';
-  setTimeout(() => {
-    toastMessage.value = null;
-  }, 3000);
 }
 
 function resetFormForAnother() {
@@ -498,7 +524,11 @@ function resetFormForAnother() {
   resetForm();
 }
 
-function switchToMyBlockers() {
+function switchToMyBlockers(resetFilter = false) {
+  if (resetFilter) {
+    blockerFilter.value = 'all';
+    submittedTicket.value = null;
+  }
   activeTab.value = 'mine';
   loadMyBlockers();
 }
@@ -1026,7 +1056,7 @@ onBeforeUnmount(() => {
           role="tab"
           :aria-selected="activeTab === 'mine'"
           data-testid="tab-my-blockers"
-          @click="switchToMyBlockers"
+          @click="switchToMyBlockers(false)"
         >
           <Layers :size="16" />
           <span>Blocker Saya</span>
@@ -1056,7 +1086,7 @@ onBeforeUnmount(() => {
               type="button"
               class="btn-secondary"
               data-testid="btn-view-my-blockers"
-              @click="switchToMyBlockers"
+              @click="switchToMyBlockers(true)"
             >
               Lihat di Blocker Saya
             </button>

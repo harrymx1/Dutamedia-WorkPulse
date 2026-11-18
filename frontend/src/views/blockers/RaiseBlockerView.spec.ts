@@ -881,4 +881,96 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     vi.unstubAllGlobals();
   });
+
+  it('auto-dismisses success toast after 6s and resets Blocker Saya filter to Semua when clicking Lihat di Blocker Saya', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/blockers') && init?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: { id: 'blk-new-open', status: 'OPEN', severity: 'HIGH' },
+          }),
+        });
+      }
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-new-open',
+                type: 'APPROVAL',
+                severity: 'HIGH',
+                impact: 'MILESTONE',
+                impacts: ['MILESTONE'],
+                status: 'OPEN',
+                description: '[Tiket Baru Uji Reset Filter] Deskripsi lengkap tiket baru yang masih menunggu respons.',
+                raisedAt: '2026-11-18T08:00:00Z',
+                assignedOwner: { id: 'owner-1', fullName: 'Arif Budiman' },
+              },
+              {
+                id: 'blk-handling-1',
+                type: 'TECHNICAL',
+                severity: 'MEDIUM',
+                impact: 'TASK',
+                impacts: ['TASK'],
+                status: 'ACKNOWLEDGED',
+                description: '[Tiket Lama Sedang Ditangani] Deskripsi tiket yang sedang ditangani.',
+                raisedAt: '2026-11-18T07:00:00Z',
+                assignedOwner: { id: 'owner-1', fullName: 'Arif Budiman' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    // 1. Pindah ke Blocker Saya dan pilih filter "Sedang Ditangani"
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+    const filterButtons = wrapper.findAll('.filter-pills button');
+    const handlingFilterBtn = filterButtons.find((b) => b.text().includes('Sedang Ditangani'));
+    expect(handlingFilterBtn).toBeTruthy();
+    await handlingFilterBtn!.trigger('click');
+    expect(wrapper.find('[data-ticket-id="blk-new-open"]').exists()).toBe(false);
+
+    // 2. Kembali buat tiket baru & submit -> toast muncul lalu hilang otomatis setelah 6 detik
+    await wrapper.find('[data-testid="tab-create-blocker"]').trigger('click');
+    await wrapper.find('#blockerType').setValue('APPROVAL');
+    await wrapper.find('[data-testid="impact-checkbox-MILESTONE"]').setValue(true);
+    await wrapper.find('#blockerTitle').setValue('Tiket Baru Uji Reset Filter');
+    await wrapper.find('#blockerDesc').setValue('Deskripsi lengkap tiket baru untuk menguji reset filter dan auto-dismiss toast.');
+    await wrapper.find('form.blocker-form').trigger('submit');
+    await flushPromises();
+
+    expect(wrapper.find('.toast-popup.success').exists()).toBe(true);
+    vi.advanceTimersByTime(6100);
+    await flushPromises();
+    expect(wrapper.find('.toast-popup.success').exists()).toBe(false);
+
+    // 3. Klik "Lihat di Blocker Saya" -> filter otomatis kembali ke "Semua" sehingga tiket OPEN baru langsung tampil!
+    await wrapper.find('[data-testid="btn-view-my-blockers"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-ticket-id="blk-new-open"]').exists()).toBe(true);
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 });

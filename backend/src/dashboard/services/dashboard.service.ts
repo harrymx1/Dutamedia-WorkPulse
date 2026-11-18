@@ -569,6 +569,244 @@ export class DashboardService {
     });
   }
 
+  /**
+   * Mengambil Feed Dukungan Lintas Fungsi hari ini (WIB) dari tabel support_contributions.
+   * Hanya menampilkan kontribusi bantuan nyata (PEER_SUPPORT), tidak mencampur entri sistem
+   * (seperti penutupan tiket, pengembalian tiket, solusi PIC, atau terima risiko), serta
+   * menyaring sesuai cakupan (team / function / management) & filter proyek/divisi.
+   */
+  async getSupportFeed(options?: PulseQueryOptions) {
+    if (!(this.prisma as any).supportContribution?.findMany) {
+      return [];
+    }
+
+    const todayStr = this.clockService?.todayString
+      ? this.clockService.todayString('Asia/Jakarta')
+      : new Date().toISOString().slice(0, 10);
+    const startOfToday = new Date(`${todayStr}T00:00:00+07:00`);
+    const endOfToday = new Date(`${todayStr}T23:59:59.999+07:00`);
+    const today = this.clockService?.currentDate
+      ? this.clockService.currentDate()
+      : new Date(todayStr);
+
+    const rows =
+      (await this.prisma.supportContribution.findMany({
+        where: {
+          createdAt: {
+            gte: startOfToday,
+            lte: endOfToday,
+          },
+        },
+        include: {
+          supporter: { select: { id: true, fullName: true } },
+          blocker: {
+            select: {
+              id: true,
+              description: true,
+              raisedByUserId: true,
+              assignedOwnerId: true,
+              projectCodeReference: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })) || [];
+
+    const SYSTEM_ACTION_LABELS = new Set([
+      'Dikembalikan oleh Pelapor (Belum Memadai)',
+      'Solusi Diberikan oleh Penanggung Jawab',
+      'Dikonfirmasi & Ditutup oleh Pelapor',
+    ]);
+
+    const peerRows = rows.filter((row: any) => {
+      const act = String(row?.actionTaken || '').trim();
+      if (!act) return false;
+      if (SYSTEM_ACTION_LABELS.has(act)) return false;
+      if (act.startsWith('[PIC_ACCEPTED_RISK]')) return false;
+      return true;
+    });
+
+    if (peerRows.length === 0) {
+      return [];
+    }
+
+    let activeAssignments: any[] = [];
+    if ((this.prisma as any).organizationalAssignment?.findMany) {
+      activeAssignments =
+        (await (this.prisma as any).organizationalAssignment.findMany({
+          where: {
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+            user: { status: UserStatus.ACTIVE },
+          },
+          select: { userId: true, function: true, role: true },
+        })) || [];
+    }
+
+    let projectMappings: any[] = [];
+    if ((this.prisma as any).projectAuthorityMapping?.findMany) {
+      projectMappings =
+        (await (this.prisma as any).projectAuthorityMapping.findMany({
+          where: {
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+          select: { projectCode: true, projectManagerId: true, involvedFunction: true },
+        })) || [];
+    }
+
+    const callerAssignment = options?.userId
+      ? activeAssignments.find((a) => a.userId === options.userId)
+      : null;
+    const callerFunction = callerAssignment?.function || options?.userFunction || null;
+    const callerRole = callerAssignment?.role || options?.userRole || null;
+    const effectiveScope =
+      options?.scope ||
+      (callerRole === CanonicalRole.HEAD
+        ? 'function'
+        : callerRole === CanonicalRole.CEO_MANAGEMENT ||
+            callerRole === CanonicalRole.SYSTEM_ADMIN ||
+            callerRole === CanonicalRole.HRGA
+          ? 'management'
+          : 'team');
+
+    const normalizeFn = (val?: string | null) => String(val || '').trim().toLowerCase();
+    const targetProject =
+      options?.projectCode && options.projectCode !== 'ALL'
+        ? options.projectCode.trim().toUpperCase()
+        : null;
+
+    let filteredRows = peerRows;
+
+    // Filter per proyek eksplisit jika dipilih
+    if (targetProject) {
+      filteredRows = filteredRows.filter(
+        (r: any) =>
+          String(r.blocker?.projectCodeReference || '')
+            .trim()
+            .toUpperCase() === targetProject,
+      );
+    }
+
+    if (effectiveScope === 'function') {
+      const targetDiv =
+        callerRole === CanonicalRole.HEAD
+          ? callerFunction
+          : options?.filterFunction && options.filterFunction !== 'ALL'
+            ? options.filterFunction
+            : callerFunction;
+      if (targetDiv && activeAssignments.length > 0) {
+        const divUserIds = new Set(
+          activeAssignments
+            .filter((a) => normalizeFn(a.function) === normalizeFn(targetDiv))
+            .map((a) => a.userId),
+        );
+        if (options?.userId) divUserIds.add(options.userId);
+        filteredRows = filteredRows.filter(
+          (r: any) =>
+            divUserIds.has(r.supporterUserId) ||
+            divUserIds.has(r.blocker?.raisedByUserId) ||
+            divUserIds.has(r.blocker?.assignedOwnerId),
+        );
+      }
+    } else if (effectiveScope === 'management') {
+      if (options?.filterFunction && options.filterFunction !== 'ALL' && activeAssignments.length > 0) {
+        const divUserIds = new Set(
+          activeAssignments
+            .filter((a) => normalizeFn(a.function) === normalizeFn(options.filterFunction))
+            .map((a) => a.userId),
+        );
+        filteredRows = filteredRows.filter(
+          (r: any) =>
+            divUserIds.has(r.supporterUserId) ||
+            divUserIds.has(r.blocker?.raisedByUserId) ||
+            divUserIds.has(r.blocker?.assignedOwnerId),
+        );
+      }
+    } else if (effectiveScope === 'team' && options?.userId) {
+      const ledProjectCodes = new Set(
+        projectMappings
+          .filter((m) => m.projectManagerId === options.userId && m.projectCode)
+          .map((m) => String(m.projectCode).trim().toUpperCase()),
+      );
+      const callerDivUserIds = new Set(
+        callerFunction
+          ? activeAssignments
+              .filter((a) => normalizeFn(a.function) === normalizeFn(callerFunction))
+              .map((a) => a.userId)
+          : [],
+      );
+      callerDivUserIds.add(options.userId);
+
+      if (ledProjectCodes.size > 0 || callerDivUserIds.size > 0) {
+        filteredRows = filteredRows.filter((r: any) => {
+          const pCode = String(r.blocker?.projectCodeReference || '')
+            .trim()
+            .toUpperCase();
+          if (pCode && ledProjectCodes.has(pCode)) return true;
+          return (
+            r.supporterUserId === options.userId ||
+            r.blocker?.raisedByUserId === options.userId ||
+            r.blocker?.assignedOwnerId === options.userId ||
+            (ledProjectCodes.size === 0 &&
+              (callerDivUserIds.has(r.supporterUserId) ||
+                callerDivUserIds.has(r.blocker?.raisedByUserId) ||
+                callerDivUserIds.has(r.blocker?.assignedOwnerId)))
+          );
+        });
+      }
+    }
+
+    const cleanActionTaken = (raw?: string | null): string => {
+      let text = String(raw || '').trim();
+      for (const prefix of [
+        '[SUPPORT_RESOLVED_CLOSED]',
+        '[SUPPORT_ACCEPTED_PROGRESS]',
+        '[SUPPORT_REJECTED]',
+      ]) {
+        if (text.startsWith(prefix)) {
+          text = text.slice(prefix.length).trim();
+        }
+      }
+      return text;
+    };
+
+    const cleanResultNote = (raw?: string | null): string => {
+      let text = String(raw || '').trim();
+      for (const marker of ['\n[CATATAN_PROGRES_PELAPOR]: ', '\n[CATATAN_PENOLAKAN_PELAPOR]: ']) {
+        const idx = text.indexOf(marker);
+        if (idx !== -1) {
+          text = text.slice(0, idx).trim();
+        }
+      }
+      return text;
+    };
+
+    const extractBlockerTitle = (rawDescription?: string | null): string => {
+      const raw = String(rawDescription || '').trim();
+      if (!raw) return 'Tiket Kendala';
+      const withoutExpectation = raw.replace(/\s*\(Ekspektasi:\s*[^)]*\)\s*$/i, '').trim();
+      const match = withoutExpectation.match(/^\[(.+?)\]\s*(.*)$/s);
+      if (match && match[1]?.trim()) {
+        return match[1].trim();
+      }
+      return withoutExpectation.slice(0, 120);
+    };
+
+    return filteredRows.slice(0, 20).map((row: any) => ({
+      id: row.id,
+      supporterName: row.supporter?.fullName || 'Rekan Tim',
+      blockerTitle: extractBlockerTitle(row.blocker?.description),
+      actionTaken: cleanActionTaken(row.actionTaken),
+      resultNote: cleanResultNote(row.resultNote),
+      createdAt:
+        row.createdAt instanceof Date
+          ? row.createdAt.toISOString()
+          : String(row.createdAt || new Date().toISOString()),
+    }));
+  }
+
   private formatBlockerSummaryText(rawDescription?: string | null): string {
     const raw = (rawDescription || '').trim();
     if (!raw) return '';

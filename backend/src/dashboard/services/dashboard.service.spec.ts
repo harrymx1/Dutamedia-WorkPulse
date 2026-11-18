@@ -248,4 +248,111 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
 
     expect(deliveryPulse.totalEmployees).toBe(1);
   });
+
+  it('returns today genuine peer support contributions in getSupportFeed, excluding system lifecycle entries and stripping internal tags', async () => {
+    mockPrisma.organizationalAssignment = {
+      findMany: vi.fn().mockResolvedValue([
+        { userId: 'user-aditya', function: 'Engineering', role: 'EMPLOYEE' },
+        { userId: 'user-bambang', function: 'Engineering', role: 'SUPERVISOR' },
+        { userId: 'user-arif', function: 'Engineering', role: 'HEAD' },
+        { userId: 'user-sales', function: 'BusinessDevelopment', role: 'EMPLOYEE' },
+      ]),
+    };
+    mockPrisma.projectAuthorityMapping = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          projectCode: 'WP-CORE',
+          projectName: 'WorkPulse Platform Core 2026',
+          involvedFunction: 'Engineering',
+          projectManagerId: 'user-bambang',
+        },
+      ]),
+    };
+    mockPrisma.supportContribution = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'sup-real-1',
+          supporterUserId: 'user-arif',
+          actionTaken: '[SUPPORT_RESOLVED_CLOSED] Menambahkan composite index pada userId dan workDate',
+          resultNote:
+            'Uji beban 20 request selesai 45ms\n[CATATAN_PROGRES_PELAPOR]: Sudah terverifikasi lancar',
+          createdAt: new Date('2026-11-18T07:58:00.000Z'),
+          supporter: { id: 'user-arif', fullName: 'Arif Budiman' },
+          blocker: {
+            id: 'blk-1',
+            description: '[Deadlock Query WP-CORE] Query deadlock saat beban tinggi (Ekspektasi: Index)',
+            raisedByUserId: 'user-aditya',
+            assignedOwnerId: 'user-bambang',
+            projectCodeReference: 'WP-CORE',
+          },
+        },
+        {
+          id: 'sup-sys-close',
+          supporterUserId: 'user-aditya',
+          actionTaken: 'Dikonfirmasi & Ditutup oleh Pelapor',
+          resultNote: 'Tiket ditutup permanen.',
+          createdAt: new Date('2026-11-18T08:06:00.000Z'),
+          supporter: { id: 'user-aditya', fullName: 'Aditya Nugroho' },
+          blocker: {
+            id: 'blk-1',
+            description: '[Deadlock Query WP-CORE] Query deadlock',
+            raisedByUserId: 'user-aditya',
+            assignedOwnerId: 'user-bambang',
+            projectCodeReference: 'WP-CORE',
+          },
+        },
+        {
+          id: 'sup-sys-risk',
+          supporterUserId: 'user-arif',
+          actionTaken: '[PIC_ACCEPTED_RISK] Lanjut dengan workaround sementara',
+          resultNote: 'Mitigasi dicatat.',
+          createdAt: new Date('2026-11-18T08:00:00.000Z'),
+          supporter: { id: 'user-arif', fullName: 'Arif Budiman' },
+          blocker: {
+            id: 'blk-2',
+            description: '[API Vendor Limit] Limit harian penuh',
+            raisedByUserId: 'user-aditya',
+            assignedOwnerId: 'user-arif',
+            projectCodeReference: null,
+          },
+        },
+      ]),
+    };
+
+    // 1. Project Lead (Bambang — WP-CORE) melihat kontribusi Arif secara bersih
+    const leadFeed = await service.getSupportFeed({
+      userId: 'user-bambang',
+      userRole: 'SUPERVISOR',
+      userFunction: 'Engineering',
+      scope: 'team',
+    });
+    expect(leadFeed).toHaveLength(1);
+    expect(leadFeed[0]).toEqual({
+      id: 'sup-real-1',
+      supporterName: 'Arif Budiman',
+      blockerTitle: 'Deadlock Query WP-CORE',
+      actionTaken: 'Menambahkan composite index pada userId dan workDate',
+      resultNote: 'Uji beban 20 request selesai 45ms',
+      createdAt: '2026-11-18T07:58:00.000Z',
+    });
+
+    // 2. Head of Engineering (Arif — scope function) melihat kontribusi divisi Engineering
+    const headFeed = await service.getSupportFeed({
+      userId: 'user-arif',
+      userRole: 'HEAD',
+      userFunction: 'Engineering',
+      scope: 'function',
+    });
+    expect(headFeed).toHaveLength(1);
+    expect(headFeed[0].supporterName).toBe('Arif Budiman');
+
+    // 3. Management filter Divisi BusinessDevelopment -> tidak melihat kontribusi Engineering
+    const bdFeed = await service.getSupportFeed({
+      userId: 'user-ceo',
+      userRole: 'CEO_MANAGEMENT',
+      scope: 'management',
+      filterFunction: 'BusinessDevelopment',
+    });
+    expect(bdFeed).toHaveLength(0);
+  });
 });

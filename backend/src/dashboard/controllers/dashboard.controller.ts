@@ -69,8 +69,20 @@ export class DashboardController {
     return this.dashboardService.getProjectRiskOverview();
   }
 
-  @Get(['dashboard/feed', 'api/dashboard/feed'])
-  async getDashboardFeed() {
-    return [];
+  @Get(['dashboard/feed', 'api/dashboard/feed', 'api/v1/dashboard/feed'])
+  async getDashboardFeed(
+    @Req() req: any,
+    @Query('scope') scope?: string,
+    @Query('function') filterFunction?: string,
+    @Query('projectCode') projectCode?: string,
+  ) {
+    return this.dashboardService.getSupportFeed({
+      userId: req.user?.id,
+      userRole: req.user?.role,
+      userFunction: req.user?.function,
+      scope,
+      filterFunction,
+      projectCode,
+    });
   }
 }

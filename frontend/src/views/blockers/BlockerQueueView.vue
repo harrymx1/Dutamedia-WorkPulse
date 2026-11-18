@@ -166,13 +166,24 @@ function setModalValidationError(msg: string) {
   showToast(msg, true);
 }
 
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+let errorTimer: ReturnType<typeof setTimeout> | null = null;
+
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    setTimeout(() => { errorMessage.value = null; }, 4000);
+    if (errorTimer) clearTimeout(errorTimer);
+    errorTimer = setTimeout(() => {
+      errorMessage.value = null;
+      errorTimer = null;
+    }, 6000);
   } else {
     toastMessage.value = msg;
-    setTimeout(() => { toastMessage.value = null; }, 3500);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toastMessage.value = null;
+      toastTimer = null;
+    }, 6000);
   }
 }
 

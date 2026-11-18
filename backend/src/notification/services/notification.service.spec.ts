@@ -402,5 +402,52 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
       },
     });
   });
+
+  it('auto-cleans previously stored (CODE) and [CODE] suffixes in blocker notifications', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([
+      {
+        id: 'notif-suffix-codes-1',
+        recipientUserId: 'owner-ab',
+        triggerType: 'BLOCKER_RAISED',
+        title: 'Kendala Baru Dialokasikan: Verifikasi Label',
+        message: [
+          'Aditya Nugroho melaporkan kendala baru yang ditugaskan kepada Anda sebagai Penanggung Jawab (PIC).',
+          'Judul Kendala: Verifikasi Label',
+          'Pelapor: Aditya Nugroho',
+          'Kategori Kendala: Persetujuan & Tanda Tangan (APPROVAL)',
+          'Tingkat Keparahan: HIGH',
+          'Dampak Kendala: Target & Tenggat Waktu (Mengancam jadwal tenggat penting yang sudah disepakati) [MILESTONE]; Satu Tim / Divisi (Menghambat pekerjaan beberapa rekan kerja dalam satu tim) [TEAM]',
+          'Deskripsi Kendala: Menunggu tanda tangan.',
+        ].join('\n'),
+        relatedEntityType: 'blocker_tickets',
+        relatedEntityId: 'blk-suffix-1',
+        readAt: null,
+      },
+    ]);
+    mockPrisma.notification.count.mockResolvedValue(1);
+    mockPrisma.blockerTicket = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'blk-suffix-1',
+          type: 'APPROVAL',
+          severity: 'HIGH',
+          impact: 'MILESTONE',
+          impacts: ['MILESTONE', 'TEAM'],
+          description: '[Verifikasi Label] Menunggu tanda tangan.',
+          raisedBy: { id: 'emp-1', fullName: 'Aditya Nugroho' },
+          assignedOwner: { id: 'owner-ab', fullName: 'Arif Budiman' },
+          supportContributions: [],
+        },
+      ]),
+    };
+
+    const res = await service.getUserNotifications('owner-ab');
+    const cleaned = res.notifications[0].message;
+    expect(cleaned).toContain('Kategori Kendala: Persetujuan & Tanda Tangan');
+    expect(cleaned).not.toContain('(APPROVAL)');
+    expect(cleaned).not.toContain('[MILESTONE]');
+    expect(cleaned).not.toContain('[TEAM]');
+    expect(mockPrisma.notification.update).toHaveBeenCalledTimes(1);
+  });
 });
 
