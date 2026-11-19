@@ -763,4 +763,43 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(text).toContain('AMBER — Terkendala Sebagian / Butuh Penyesuaian');
     expect(text).toContain('Fokus selesaikan integrasi webhook pagi hari.');
   });
+
+  it('shows approved leave banner, CUTI RESMI status, and hides EOD form when activeLeave is present (DEC-008)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-19',
+          currentTime: '20:15',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: null,
+          activeLeave: {
+            id: 'lv-1',
+            leaveType: 'SICK',
+            startDate: '2026-11-19',
+            endDate: '2026-11-19',
+            reason: 'Istirahat sesuai surat dokter klinik.',
+          },
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.find('[data-testid="leave-active-banner"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="leave-notice-box"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('CUTI RESMI (APPROVED LEAVE)');
+    expect(wrapper.text()).toContain('CUTI (DIKECUALIKAN)');
+    expect(wrapper.text()).toContain('Masa Cuti Resmi Disetujui (Cuti Sakit):');
+    expect(wrapper.text()).not.toContain('LATE (Lembur Fleksibel)');
+    expect(wrapper.text()).not.toContain('Kirim Evaluasi EOD');
+  });
 });

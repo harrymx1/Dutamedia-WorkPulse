@@ -8,7 +8,16 @@ import {
   AlertCircle,
   Lock,
   AlertTriangle,
+  CalendarCheck,
 } from 'lucide-vue-next';
+
+interface ActiveLeave {
+  id: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
 
 interface CommitmentOutcomeItem {
   id: string;
@@ -42,11 +51,36 @@ const isLate = ref(false);
 const eodOnTimeCutoff = ref('17:00');
 const eodLockCutoff = ref('21:00');
 const eodSubmittedAt = ref<string | null>(null);
+const activeLeave = ref<ActiveLeave | null>(null);
 
 const hasSubmittedEod = computed(() => {
   return eodSubmittedAt.value !== null && eodSubmittedAt.value !== '';
 });
-const isFormLocked = computed(() => isEodLocked.value || hasSubmittedEod.value);
+const isFormLocked = computed(() => isEodLocked.value || hasSubmittedEod.value || Boolean(activeLeave.value));
+
+function formatLeaveType(type?: string): string {
+  switch (type) {
+    case 'ANNUAL':
+      return 'Cuti Tahunan';
+    case 'SICK':
+      return 'Cuti Sakit';
+    case 'SPECIAL_LEAVE':
+      return 'Cuti Khusus';
+    case 'MATERNITY':
+      return 'Cuti Melahirkan';
+    case 'UNPAID':
+      return 'Cuti di Luar Tanggungan';
+    default:
+      return type || 'Cuti Resmi';
+  }
+}
+
+function formatLeaveDateRange(startStr?: string, endStr?: string): string {
+  if (!startStr || !endStr) return '';
+  const s = new Date(startStr);
+  const e = new Date(endStr);
+  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+}
 
 function formatTime(isoStr: string | null) {
   if (!isoStr) return '';
@@ -190,9 +224,11 @@ async function loadTodayState() {
         isEodLocked: boolean;
       };
       record: any;
+      activeLeave?: ActiveLeave | null;
     }>('/daily/today');
 
     const data = res.data;
+    activeLeave.value = (data as any).activeLeave || null;
     workDate.value = data.workDate;
     currentTime.value = data.currentTime;
     eodOnTimeCutoff.value = data.cutoffTimings.eodOnTimeCutoff;
@@ -406,7 +442,8 @@ onMounted(() => {
             <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
-                <span v-if="hasSubmittedEod" class="badge badge-active">SUBMITTED (Terkunci)</span>
+                <span v-if="activeLeave" class="badge badge-active">CUTI RESMI (APPROVED LEAVE)</span>
+                <span v-else-if="hasSubmittedEod" class="badge badge-active">SUBMITTED (Terkunci)</span>
                 <span v-else-if="isEodLocked" class="badge badge-danger">LOCKED (Pasca {{ eodLockCutoff }} WIB)</span>
                 <span v-else-if="isLate" class="badge badge-late">LATE (Lembur Fleksibel)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
@@ -414,14 +451,37 @@ onMounted(() => {
             </div>
             <div class="context-item" data-testid="context-item-eval-count">
               <span class="context-label">Total Item Evaluasi</span>
-              <span class="context-value mono">{{ commitments.length + additionalWorks.length }} Tugas</span>
+              <span v-if="activeLeave" class="badge badge-neutral">CUTI (DIKECUALIKAN)</span>
+              <span v-else class="context-value mono">{{ commitments.length + additionalWorks.length }} Tugas</span>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- Alert Banner jika sedang dalam masa cuti resmi disetujui (DEC-008) -->
+      <div v-if="activeLeave" class="alert-banner leave" role="status" data-testid="leave-active-banner">
+        <CalendarCheck :size="20" class="text-green" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
+            <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.
+          </p>
+          <div v-if="activeLeave.reason" class="leave-banner-reason">
+            Keterangan: {{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}
+          </div>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/leave/my" class="btn btn-secondary btn-sm">
+              Lihat Riwayat Cuti Saya
+            </AccessLink>
+          </div>
+        </div>
+      </div>
+
       <!-- Alert Banner jika EOD sudah disubmit (EOD Closed / Locked) -->
-      <div v-if="hasSubmittedEod" class="alert-banner submitted" role="status">
+      <div v-else-if="hasSubmittedEod" class="alert-banner submitted" role="status">
         <CheckCircle2 :size="20" class="text-green" />
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
@@ -458,6 +518,30 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Leave Notice Box saat cuti resmi aktif (DEC-008) -->
+      <div v-if="activeLeave" class="leave-notice-box" data-testid="leave-notice-box">
+        <div class="leave-notice-content">
+          <CalendarCheck :size="32" class="text-green" />
+          <div class="leave-notice-text">
+            <h3>Hari Bebas Evaluasi Akhir Hari (Cuti Disetujui)</h3>
+            <p>
+              Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Disetujui (Bebas Kewajiban Check-In)</strong>. Anda tidak perlu mengisi evaluasi hasil sore maupun refleksi harian hari ini.
+            </p>
+            <div class="leave-notice-meta">
+              <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
+              <span>Periode: <strong>{{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</strong></span>
+              <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}"</em></span>
+            </div>
+          </div>
+        </div>
+        <div class="leave-notice-actions">
+          <AccessLink to="/leave/my" class="btn btn-secondary">
+            Lihat Permohonan Cuti Saya
+          </AccessLink>
+        </div>
+      </div>
+
+      <template v-else>
       <!-- Daftar Komitmen Pagi untuk Dievaluasi -->
       <section class="panel">
         <div class="panel-head">
@@ -848,6 +932,7 @@ onMounted(() => {
           <span>Lihat Ringkasan Riwayat Akuntabilitas &rarr;</span>
         </AccessLink>
       </div>
+      </template>
     </main>
   </div>
 </template>
@@ -1669,5 +1754,68 @@ textarea.input-control {
 .tomorrow-priority-value.muted {
   color: var(--color-text-secondary);
   font-style: italic;
+}
+
+.alert-banner.leave {
+  background: var(--color-status-green-bg, #E6F4EE);
+  border: 1px solid var(--color-status-green-border, #A7F3D0);
+  color: var(--color-status-green-fg, #065F46);
+}
+
+.leave-banner-reason {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+
+.leave-notice-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.leave-notice-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.leave-notice-text h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.leave-notice-text p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.leave-notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.leave-notice-actions {
+  display: flex;
+  gap: 10px;
 }
 </style>

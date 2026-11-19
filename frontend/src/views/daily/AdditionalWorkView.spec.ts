@@ -295,4 +295,46 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     const textarea = wrapper.find('textarea');
     expect(textarea.attributes('disabled')).toBeDefined();
   });
+
+  it('shows approved leave banner and hides morning warning and form when activeLeave is present (DEC-008)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/daily/today')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              success: true,
+              data: {
+                workDate: '2026-11-19',
+                record: null,
+                activeLeave: {
+                  id: 'lv-1',
+                  leaveType: 'SICK',
+                  startDate: '2026-11-19',
+                  endDate: '2026-11-19',
+                  reason: 'Istirahat sesuai surat dokter klinik.',
+                },
+              },
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.find('[data-testid="leave-active-banner"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="leave-notice-box"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Masa Cuti Resmi Disetujui (Cuti Sakit):');
+    expect(wrapper.text()).not.toContain('Belum Mengisi Morning Commitment');
+    expect(wrapper.find('form').exists()).toBe(false);
+  });
 });

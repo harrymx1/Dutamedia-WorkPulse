@@ -11,7 +11,16 @@ import {
   AlertTriangle,
   Briefcase,
   ChevronDown,
+  CalendarCheck,
 } from 'lucide-vue-next';
+
+interface ActiveLeave {
+  id: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
 
 interface AdditionalWorkItem {
   id: string;
@@ -49,6 +58,7 @@ const loading = ref(false);
 const submitting = ref(false);
 const recordId = ref<string | null>(null);
 const workDate = ref('');
+const activeLeave = ref<ActiveLeave | null>(null);
 const additionalWorks = ref<AdditionalWorkItem[]>([]);
 const availableManagers = ref<SimpleUser[]>([]);
 const availableProjects = ref<ProjectOption[]>([
@@ -82,6 +92,30 @@ function formatReason(reason: string): string {
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
+function formatLeaveType(type?: string): string {
+  switch (type) {
+    case 'ANNUAL':
+      return 'Cuti Tahunan';
+    case 'SICK':
+      return 'Cuti Sakit';
+    case 'SPECIAL_LEAVE':
+      return 'Cuti Khusus';
+    case 'MATERNITY':
+      return 'Cuti Melahirkan';
+    case 'UNPAID':
+      return 'Cuti di Luar Tanggungan';
+    default:
+      return type || 'Cuti Resmi';
+  }
+}
+
+function formatLeaveDateRange(startStr?: string, endStr?: string): string {
+  if (!startStr || !endStr) return '';
+  const s = new Date(startStr);
+  const e = new Date(endStr);
+  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+}
+
 async function loadTodayState() {
   loading.value = true;
   try {
@@ -90,9 +124,11 @@ async function loadTodayState() {
       record: any;
       availableProjects?: ProjectOption[];
       activeBlockers?: ActiveBlockerOption[];
+      activeLeave?: ActiveLeave | null;
     }>('/daily/today');
 
     workDate.value = res.data.workDate;
+    activeLeave.value = (res.data as any).activeLeave || null;
     if (Array.isArray(res.data.availableProjects) && res.data.availableProjects.length > 0) {
       availableProjects.value = res.data.availableProjects;
     }
@@ -256,8 +292,54 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Alert Banner & Notice Box jika sedang dalam masa cuti resmi disetujui (DEC-008) -->
+      <template v-if="activeLeave">
+        <div class="alert-banner leave" role="status" data-testid="leave-active-banner">
+          <CalendarCheck :size="20" class="text-green" />
+          <div class="submitted-banner-content">
+            <div class="submitted-banner-title">
+              <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
+              <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
+            </div>
+            <p class="submitted-banner-desc">
+              Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.
+            </p>
+            <div v-if="activeLeave.reason" class="leave-banner-reason">
+              Keterangan: {{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}
+            </div>
+            <div class="submitted-banner-actions">
+              <AccessLink to="/leave/my" class="btn btn-secondary btn-sm">
+                Lihat Riwayat Cuti Saya
+              </AccessLink>
+            </div>
+          </div>
+        </div>
+
+        <div class="leave-notice-box" data-testid="leave-notice-box">
+          <div class="leave-notice-content">
+            <CalendarCheck :size="32" class="text-green" />
+            <div class="leave-notice-text">
+              <h3>Hari Bebas Pekerjaan Tambahan (Cuti Disetujui)</h3>
+              <p>
+                Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Disetujui (Bebas Kewajiban Check-In)</strong>. Anda tidak perlu mencatat pekerjaan tambahan hari ini.
+              </p>
+              <div class="leave-notice-meta">
+                <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
+                <span>Periode: <strong>{{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</strong></span>
+                <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}"</em></span>
+              </div>
+            </div>
+          </div>
+          <div class="leave-notice-actions">
+            <AccessLink to="/leave/my" class="btn btn-secondary">
+              Lihat Permohonan Cuti Saya
+            </AccessLink>
+          </div>
+        </div>
+      </template>
+
       <!-- Warning jika belum Morning Check-in -->
-      <div v-if="!recordId && !loading" class="alert-box" role="alert">
+      <div v-else-if="!recordId && !loading" class="alert-box" role="alert">
         <AlertCircle :size="20" />
         <div>
           <strong>Belum Mengisi Morning Commitment:</strong>
@@ -267,7 +349,7 @@ onMounted(() => {
       </div>
 
       <!-- Form Tambah Additional Work -->
-      <section v-if="recordId" class="panel">
+      <section v-if="!activeLeave && recordId" class="panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Input Pekerjaan Tambahan</div>
@@ -417,7 +499,7 @@ onMounted(() => {
       </section>
 
       <!-- Daftar Pekerjaan Tambahan Hari Ini -->
-      <section class="panel">
+      <section v-if="!activeLeave" class="panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Daftar Hari Ini</div>
@@ -1045,5 +1127,103 @@ select.input-control {
 .badge-mini.in-prog {
   background: var(--color-status-green-bg);
   color: var(--color-status-green-fg);
+}
+
+.alert-banner.leave {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  background: var(--color-status-green-bg, #E6F4EE);
+  border: 1px solid var(--color-status-green-border, #A7F3D0);
+  color: var(--color-status-green-fg, #065F46);
+}
+
+.text-green {
+  color: var(--color-status-green-fg, #065F46);
+  flex-shrink: 0;
+}
+
+.submitted-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.submitted-banner-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13.5px;
+}
+
+.submitted-banner-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.submitted-banner-actions {
+  margin-top: 4px;
+}
+
+.leave-banner-reason {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+
+.leave-notice-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.leave-notice-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.leave-notice-text h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.leave-notice-text p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.leave-notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.leave-notice-actions {
+  display: flex;
+  gap: 10px;
 }
 </style>
