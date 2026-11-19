@@ -300,14 +300,15 @@ onMounted(() => {
               </div>
 
               <div class="field">
-                <label for="reason">Alasan <span class="opt-label">(opsional)</span></label>
+                <label for="reason">Alasan <span class="required">*</span></label>
                 <textarea
                   id="reason"
                   v-model="reason"
                   class="textarea"
                   rows="3"
                   maxlength="1000"
-                  placeholder="Tambahkan alasan pengajuan cuti atau keterangan darurat bila diperlukan."
+                  required
+                  placeholder="Tuliskan alasan pengajuan cuti secara singkat dan jelas (minimal 5 karakter)."
                 ></textarea>
               </div>
 
@@ -669,6 +670,10 @@ h1 {
 .select-input {
   cursor: pointer;
   background-color: #FFFFFF;
+  padding-right: 36px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .pill-type {

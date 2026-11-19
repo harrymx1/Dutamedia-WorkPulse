@@ -94,5 +94,31 @@ describe('MyLeaveRequestView.vue (Prototipe 20 / EP10 - Pengajuan Cuti Mandiri)'
 
     expect(wrapper.text()).toContain('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
   });
+
+  it('marks reason field as required (not opsional) and enforces minimum 5 characters', async () => {
+    const wrapper = mount(MyLeaveRequestView, {
+      global: {
+        plugins: [router],
+        stubs: {
+          RouterLink: true,
+        },
+      },
+    });
+
+    const reasonLabel = wrapper.find('label[for="reason"]');
+    expect(reasonLabel.text()).toContain('Alasan *');
+    expect(reasonLabel.text()).not.toContain('opsional');
+
+    const reasonTextarea = wrapper.find('#reason');
+    expect(reasonTextarea.attributes('required')).toBeDefined();
+    expect(reasonTextarea.attributes('placeholder')).toContain('minimal 5 karakter');
+
+    await wrapper.find('#startDate').setValue('2026-10-25');
+    await wrapper.find('#endDate').setValue('2026-10-26');
+    await reasonTextarea.setValue('Izin');
+    await wrapper.find('form').trigger('submit');
+
+    expect(wrapper.text()).toContain('Alasan permohonan cuti minimal 5 karakter.');
+  });
 });
 
