@@ -77,5 +77,71 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(wrapper.text()).toContain('Perubahan Material');
     expect(wrapper.text()).toContain('AUTO_APPLIED');
   });
+
+  it('filters out EOD_OUTCOME entries from morning correction history', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  {
+                    id: 'com-1',
+                    sequenceNo: 1,
+                    taskText: 'Menyelesaikan endpoint authenikasi',
+                    initialRisk: 'GREEN',
+                    referenceLink: null,
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'cr-morning',
+              scopeType: 'MORNING_COMMITMENT',
+              classification: 'MINOR',
+              reason: 'Perbaikan typo kata autentikasi',
+              status: 'AUTO_APPLIED',
+              valueBefore: { taskText: 'Menyelesaikan endpoint authenikasi' },
+              valueRequested: { taskText: 'Menyelesaikan endpoint autentikasi' },
+              createdAt: '2026-11-19T08:00:00.000Z',
+            },
+            {
+              id: 'cr-eod',
+              scopeType: 'EOD_OUTCOME',
+              classification: 'MATERIAL',
+              reason: 'Lupa input EOD',
+              status: 'REJECTED',
+              valueBefore: { outcome: 'COMPLETED' },
+              valueRequested: { outcome: 'DONE' },
+              createdAt: '2026-11-19T08:10:00.000Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(MorningCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Perbaikan typo kata autentikasi');
+    expect(wrapper.text()).not.toContain('Lupa input EOD');
+    expect(wrapper.text()).not.toContain('"outcome"');
+  });
 });
 

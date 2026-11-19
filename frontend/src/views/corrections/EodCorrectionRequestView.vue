@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
+import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import {
@@ -176,7 +177,17 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="split-layout">
+      <!-- State: No commitments to correct -->
+      <div v-if="todayCommitments.length === 0 && !loading" class="no-baseline-card">
+        <AlertCircle :size="32" class="empty-icon" />
+        <h2>Tidak Ada Komitmen Hari Ini</h2>
+        <p>Anda belum mengisi komitmen pagi hari ini, sehingga belum ada tugas evaluasi sore yang dapat dikoreksi.</p>
+        <AccessLink to="/daily/morning" class="btn-primary" style="margin-top: 14px;">
+          Buka Morning Commitment
+        </AccessLink>
+      </div>
+
+      <div v-else class="split-layout">
         <!-- Panel Form Koreksi EOD -->
         <section class="panel form-panel">
           <div class="panel-head">
@@ -293,7 +304,7 @@ onMounted(() => {
             <button
               type="submit"
               class="btn-submit"
-              :disabled="submitting || reason.trim().length < 10"
+              :disabled="submitting || !selectedCommitmentId || reason.trim().length < 10"
             >
               <span v-if="submitting">Mengajukan...</span>
               <span v-else>Kirim Permohonan Koreksi EOD</span>
@@ -686,6 +697,16 @@ textarea {
   padding: 60px 20px;
   text-align: center;
   color: #5C6E68;
+}
+
+.no-baseline-card {
+  background: #fff;
+  border: 1px solid #DCE7E2;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  max-width: 500px;
+  margin: 40px auto;
 }
 
 .empty-icon { color: #00674D; margin-bottom: 8px; }

@@ -89,7 +89,9 @@ async function loadData() {
     }
 
     if (historyRes.data) {
-      myCorrections.value = historyRes.data;
+      myCorrections.value = historyRes.data.filter(
+        (h: any) => !h.scopeType || h.scopeType === 'MORNING_COMMITMENT',
+      );
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat baseline komitmen.', true);
@@ -689,9 +691,9 @@ textarea {
   font-size: 12px;
 }
 
-.diff-before, .diff-after { flex: 1; }
+.diff-before, .diff-after { flex: 1; min-width: 0; }
 .diff-before small, .diff-after small { color: #5C6E68; font-weight: 700; display: block; }
-.diff-before p, .diff-after p { margin: 2px 0 0; }
+.diff-before p, .diff-after p { margin: 2px 0 0; overflow-wrap: anywhere; word-break: break-word; }
 .diff-arrow { color: #5C6E68; flex-shrink: 0; }
 
 .hist-reason {

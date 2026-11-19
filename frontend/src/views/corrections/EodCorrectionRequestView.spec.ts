@@ -50,6 +50,7 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
         { path: '/corrections/eod', component: EodCorrectionRequestView },
         { path: '/corrections/morning', component: { template: '<div>Morning</div>' } },
         { path: '/daily/eod', component: { template: '<div>EOD</div>' } },
+        { path: '/daily/morning', component: { template: '<div>Morning</div>' } },
       ],
     });
   });
@@ -67,6 +68,36 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
     expect(wrapper.text()).toContain('DONE (Tuntas)');
     expect(wrapper.text()).toContain('IN_PROGRESS');
     expect(wrapper.text()).toContain('BLOCKED');
+  });
+
+  it('shows empty state card when user has no commitments today', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: { record: null },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const wrapper = mount(EodCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Tidak Ada Komitmen Hari Ini');
+    expect(wrapper.text()).toContain('Buka Morning Commitment');
+    expect(wrapper.find('form').exists()).toBe(false);
   });
 });
 
