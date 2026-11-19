@@ -90,7 +90,10 @@ export class CorrectionService {
     ) {
       const siblingCommitments = await tx.commitment.findMany({
         where: { dailyRecordId },
-        select: { initialRisk: true, linkedBlockerId: true },
+        select: {
+          initialRisk: true,
+          blockers: { select: { id: true } },
+        },
       });
 
       if (siblingCommitments.length > 0) {
@@ -98,7 +101,10 @@ export class CorrectionService {
           (c: any) => c.initialRisk === CommitmentRisk.RED,
         );
         const hasAmber = siblingCommitments.some(
-          (c: any) => c.initialRisk === CommitmentRisk.AMBER || !!c.linkedBlockerId,
+          (c: any) =>
+            c.initialRisk === CommitmentRisk.AMBER ||
+            (Array.isArray(c.blockers) && c.blockers.length > 0) ||
+            !!c.linkedBlockerId,
         );
         const recalculatedStatus = hasRed
           ? DailyRiskStatus.RED

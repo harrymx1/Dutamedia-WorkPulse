@@ -237,8 +237,8 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
 
     it('recalculates initialDailyStatus on dailyAccountabilityRecord when material risk correction is APPROVED', async () => {
       mockPrisma.commitment.findMany = vi.fn().mockResolvedValue([
-        { initialRisk: CommitmentRisk.GREEN, linkedBlockerId: null },
-        { initialRisk: CommitmentRisk.RED, linkedBlockerId: null },
+        { initialRisk: CommitmentRisk.GREEN, blockers: [] },
+        { initialRisk: CommitmentRisk.RED, blockers: [] },
       ]);
       mockPrisma.dailyAccountabilityRecord = {
         update: vi.fn().mockResolvedValue({}),
@@ -283,7 +283,7 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
         dailyRecord: { userId: 'usr-1' },
       });
       mockPrisma.commitment.findMany = vi.fn().mockResolvedValue([
-        { initialRisk: CommitmentRisk.AMBER, linkedBlockerId: null },
+        { initialRisk: CommitmentRisk.AMBER, blockers: [] },
       ]);
       mockPrisma.dailyAccountabilityRecord = {
         update: vi.fn().mockResolvedValue({}),
