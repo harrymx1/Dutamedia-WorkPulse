@@ -6,6 +6,7 @@ import {
   CorrectionClassification,
   CorrectionScopeType,
   CorrectionStatus,
+  DailyRiskStatus,
 } from '@prisma/client';
 import { AppException } from '../../common/exceptions/app.exception';
 
@@ -232,6 +233,81 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
       expect(queue).toHaveLength(1);
       expect(queue[0].id).toBe('cr-1');
       expect(mockScopeResolver.canAccessUser).toHaveBeenCalledTimes(2);
+    });
+
+    it('recalculates initialDailyStatus on dailyAccountabilityRecord when material risk correction is APPROVED', async () => {
+      mockPrisma.commitment.findMany = vi.fn().mockResolvedValue([
+        { initialRisk: CommitmentRisk.GREEN, linkedBlockerId: null },
+        { initialRisk: CommitmentRisk.RED, linkedBlockerId: null },
+      ]);
+      mockPrisma.dailyAccountabilityRecord = {
+        update: vi.fn().mockResolvedValue({}),
+      };
+
+      mockPrisma.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-red',
+        targetCommitmentId: 'com-2',
+        requestedByUserId: 'usr-1',
+        reason: 'Eskalasi risiko ke kritis',
+        status: CorrectionStatus.PENDING,
+        valueBefore: { taskText: 'Tugas B', initialRisk: CommitmentRisk.AMBER },
+        valueRequested: { taskText: 'Tugas B Revisi', initialRisk: CommitmentRisk.RED },
+        targetCommitment: { sequenceNo: 2, dailyRecordId: 'dr-1' },
+      });
+
+      mockPrisma.correctionRequest.update.mockResolvedValue({
+        id: 'cr-red',
+        status: CorrectionStatus.APPROVED,
+      });
+
+      const res = await service.reviewCorrectionRequest('mgr-1', 'cr-red', {
+        decision: 'APPROVE',
+        reviewNote: 'Risiko kritis disahkan oleh Head',
+      });
+
+      expect(res.status).toBe(CorrectionStatus.APPROVED);
+      expect(mockPrisma.dailyAccountabilityRecord.update).toHaveBeenCalledWith({
+        where: { id: 'dr-1' },
+        data: { initialDailyStatus: DailyRiskStatus.RED },
+      });
+    });
+
+    it('recalculates initialDailyStatus immediately on MINOR risk correction', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-1',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 1,
+        taskText: 'Tugas A',
+        referenceLink: null,
+        initialRisk: CommitmentRisk.GREEN,
+        dailyRecord: { userId: 'usr-1' },
+      });
+      mockPrisma.commitment.findMany = vi.fn().mockResolvedValue([
+        { initialRisk: CommitmentRisk.AMBER, linkedBlockerId: null },
+      ]);
+      mockPrisma.dailyAccountabilityRecord = {
+        update: vi.fn().mockResolvedValue({}),
+      };
+      mockPrisma.correctionRequest.create.mockResolvedValue({
+        id: 'cr-minor-amber',
+        status: CorrectionStatus.AUTO_APPLIED,
+      });
+
+      await service.createCorrectionRequest('usr-1', {
+        targetCommitmentId: 'com-1',
+        scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+        classification: CorrectionClassification.MINOR,
+        reason: 'Menyesuaikan status risiko menjadi waspada',
+        requestedChange: {
+          taskText: 'Tugas A',
+          initialRisk: CommitmentRisk.AMBER,
+        },
+      });
+
+      expect(mockPrisma.dailyAccountabilityRecord.update).toHaveBeenCalledWith({
+        where: { id: 'dr-1' },
+        data: { initialDailyStatus: DailyRiskStatus.AMBER },
+      });
     });
   });
 });

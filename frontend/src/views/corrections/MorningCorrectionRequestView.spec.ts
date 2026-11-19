@@ -143,5 +143,63 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(wrapper.text()).not.toContain('Lupa input EOD');
     expect(wrapper.text()).not.toContain('"outcome"');
   });
+
+  it('applies rejected styling class to reviewer note on REJECTED morning correction cards', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  {
+                    id: 'com-1',
+                    sequenceNo: 1,
+                    taskText: 'Menyelesaikan endpoint autentikasi',
+                    initialRisk: 'GREEN',
+                    referenceLink: null,
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'cr-rej',
+              scopeType: 'MORNING_COMMITMENT',
+              classification: 'MATERIAL',
+              reason: 'Naik risiko ke RED',
+              status: 'REJECTED',
+              reviewNote: 'Wajib lampirkan nomor tiket blocker aktif.',
+              valueBefore: { taskText: 'Tugas Lama' },
+              valueRequested: { taskText: 'Tugas Baru' },
+              createdAt: '2026-11-19T08:00:00.000Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(MorningCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    const reviewNoteBox = wrapper.find('.hist-review-note');
+    expect(reviewNoteBox.exists()).toBe(true);
+    expect(reviewNoteBox.classes()).toContain('rejected');
+    expect(reviewNoteBox.text()).toContain('Wajib lampirkan nomor tiket blocker aktif.');
+  });
 });
 

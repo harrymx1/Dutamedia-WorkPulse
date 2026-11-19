@@ -8,10 +8,12 @@ import { ErrorCode } from '../../common/constants/error-codes';
 import {
   CanonicalRole,
   CommitmentOutcome,
+  CommitmentRisk,
   ContinuationStatus,
   CorrectionClassification,
   CorrectionScopeType,
   CorrectionStatus,
+  DailyRiskStatus,
   NotificationChannel,
 } from '@prisma/client';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
@@ -44,6 +46,73 @@ export class CorrectionService {
     private readonly policyService: PolicyService,
     private readonly scopeResolverService: ScopeResolverService,
   ) {}
+
+  /**
+   * Menerapkan perubahan koreksi pada komitmen sekaligus menyelaraskan ulang
+   * initialDailyStatus catatan harian jika tingkat risiko komitmen berubah.
+   */
+  private async applyCommitmentUpdateAndSyncDailyStatus(
+    tx: any,
+    commitmentId: string,
+    dailyRecordId: string | undefined,
+    requestedChange: Record<string, any>,
+    fallbackReason: string,
+  ) {
+    const mappedOutcome = mapRequestedOutcome(requestedChange.outcome);
+    const mappedContinuation = mapRequestedContinuation(requestedChange.continuation);
+
+    await tx.commitment.update({
+      where: { id: commitmentId },
+      data: {
+        ...(requestedChange.taskText && { taskText: requestedChange.taskText.trim() }),
+        ...(requestedChange.referenceLink !== undefined && {
+          referenceLink: requestedChange.referenceLink?.trim() || null,
+        }),
+        ...(requestedChange.initialRisk && {
+          initialRisk: requestedChange.initialRisk,
+          ...(['AMBER', 'RED'].includes(requestedChange.initialRisk) && {
+            knownBlockerNote: requestedChange.knownBlockerNote || fallbackReason,
+          }),
+        }),
+        ...(mappedOutcome && { outcome: mappedOutcome }),
+        ...(requestedChange.outcomeReason !== undefined && {
+          outcomeReason: requestedChange.outcomeReason?.trim() || null,
+        }),
+        ...(mappedContinuation && { continuation: mappedContinuation }),
+      },
+    });
+
+    if (
+      requestedChange.initialRisk &&
+      dailyRecordId &&
+      tx.commitment?.findMany &&
+      tx.dailyAccountabilityRecord?.update
+    ) {
+      const siblingCommitments = await tx.commitment.findMany({
+        where: { dailyRecordId },
+        select: { initialRisk: true, linkedBlockerId: true },
+      });
+
+      if (siblingCommitments.length > 0) {
+        const hasRed = siblingCommitments.some(
+          (c: any) => c.initialRisk === CommitmentRisk.RED,
+        );
+        const hasAmber = siblingCommitments.some(
+          (c: any) => c.initialRisk === CommitmentRisk.AMBER || !!c.linkedBlockerId,
+        );
+        const recalculatedStatus = hasRed
+          ? DailyRiskStatus.RED
+          : hasAmber
+            ? DailyRiskStatus.AMBER
+            : DailyRiskStatus.GREEN;
+
+        await tx.dailyAccountabilityRecord.update({
+          where: { id: dailyRecordId },
+          data: { initialDailyStatus: recalculatedStatus },
+        });
+      }
+    }
+  }
 
   /**
    * Mengajukan koreksi komitmen/EOD pasca-cutoff (DEC-002, Prototipe 16a, 16b).
@@ -109,30 +178,14 @@ export class CorrectionService {
           },
         });
 
-        // Update komitmen seketika
-        const autoMappedOutcome = mapRequestedOutcome(dto.requestedChange.outcome);
-        const autoMappedContinuation = mapRequestedContinuation(dto.requestedChange.continuation);
-
-        await tx.commitment.update({
-          where: { id: dto.targetCommitmentId },
-          data: {
-            ...(dto.requestedChange.taskText && { taskText: dto.requestedChange.taskText.trim() }),
-            ...(dto.requestedChange.referenceLink !== undefined && {
-              referenceLink: dto.requestedChange.referenceLink?.trim() || null,
-            }),
-            ...(dto.requestedChange.initialRisk && {
-              initialRisk: dto.requestedChange.initialRisk,
-              ...(['AMBER', 'RED'].includes(dto.requestedChange.initialRisk) && {
-                knownBlockerNote: dto.requestedChange.knownBlockerNote || dto.reason.trim(),
-              }),
-            }),
-            ...(autoMappedOutcome && { outcome: autoMappedOutcome }),
-            ...(dto.requestedChange.outcomeReason !== undefined && {
-              outcomeReason: dto.requestedChange.outcomeReason?.trim() || null,
-            }),
-            ...(autoMappedContinuation && { continuation: autoMappedContinuation }),
-          },
-        });
+        // Update komitmen seketika & selaraskan status risiko harian jika berubah
+        await this.applyCommitmentUpdateAndSyncDailyStatus(
+          tx,
+          dto.targetCommitmentId,
+          commitment.dailyRecordId,
+          dto.requestedChange,
+          (dto.reason || '').trim(),
+        );
 
         // Rekam Audit Log (DEC-008)
         await tx.auditLog.create({
@@ -346,30 +399,15 @@ export class CorrectionService {
     return this.prisma.$transaction(async (tx) => {
       if (dto.decision === 'APPROVE') {
         const valReq = req.valueRequested as Record<string, any>;
-        const approveMappedOutcome = mapRequestedOutcome(valReq.outcome);
-        const approveMappedContinuation = mapRequestedContinuation(valReq.continuation);
 
-        // Terapkan perubahan pada komitmen
-        await tx.commitment.update({
-          where: { id: req.targetCommitmentId },
-          data: {
-            ...(valReq.taskText && { taskText: valReq.taskText.trim() }),
-            ...(valReq.referenceLink !== undefined && {
-              referenceLink: valReq.referenceLink?.trim() || null,
-            }),
-            ...(valReq.initialRisk && {
-              initialRisk: valReq.initialRisk,
-              ...(['AMBER', 'RED'].includes(valReq.initialRisk) && {
-                knownBlockerNote: valReq.knownBlockerNote || req.reason.trim(),
-              }),
-            }),
-            ...(approveMappedOutcome && { outcome: approveMappedOutcome }),
-            ...(valReq.outcomeReason !== undefined && {
-              outcomeReason: valReq.outcomeReason?.trim() || null,
-            }),
-            ...(approveMappedContinuation && { continuation: approveMappedContinuation }),
-          },
-        });
+        // Terapkan perubahan pada komitmen & selaraskan status risiko harian jika berubah
+        await this.applyCommitmentUpdateAndSyncDailyStatus(
+          tx,
+          req.targetCommitmentId,
+          req.targetCommitment?.dailyRecordId,
+          valReq,
+          (req.reason || '').trim(),
+        );
 
         const updatedReq = await tx.correctionRequest.update({
           where: { id },

@@ -363,7 +363,7 @@ onMounted(() => {
                   <strong>Alasan:</strong> {{ item.reason }}
                 </div>
 
-                <div v-if="item.reviewNote" class="hist-review-note">
+                <div v-if="item.reviewNote" class="hist-review-note" :class="item.status.toLowerCase()">
                   <strong>Catatan Peninjau:</strong> {{ item.reviewNote }}
                 </div>
               </div>
@@ -708,6 +708,11 @@ textarea {
   padding: 4px 8px;
   border-radius: 4px;
   margin-top: 6px;
+}
+
+.hist-review-note.rejected {
+  color: #991B1B;
+  background: #FEE2E2;
 }
 
 .no-baseline-card {
