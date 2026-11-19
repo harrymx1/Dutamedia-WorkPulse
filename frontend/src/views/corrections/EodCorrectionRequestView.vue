@@ -65,11 +65,30 @@ const selectedCommitment = computed(() => {
   return todayCommitments.value.find((c) => c.id === selectedCommitmentId.value) || null;
 });
 
+const DB_TO_FORM_OUTCOME: Record<string, 'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'DROPPED'> = {
+  DONE: 'DONE',
+  COMPLETED: 'DONE',
+  IN_PROGRESS: 'IN_PROGRESS',
+  PARTIALLY_COMPLETED: 'IN_PROGRESS',
+  BLOCKED: 'BLOCKED',
+  NOT_COMPLETED: 'BLOCKED',
+  DROPPED: 'DROPPED',
+  CANCELLED: 'DROPPED',
+};
+
+const DB_TO_FORM_CONTINUATION: Record<string, 'CONTINUE_TOMORROW' | 'ARCHIVE' | 'HANDOVER'> = {
+  CONTINUE_TOMORROW: 'CONTINUE_TOMORROW',
+  CONTINUE: 'CONTINUE_TOMORROW',
+  ARCHIVE: 'ARCHIVE',
+  DO_NOT_CONTINUE: 'ARCHIVE',
+  HANDOVER: 'HANDOVER',
+};
+
 function handleCommitmentSelect() {
   if (selectedCommitment.value) {
-    newOutcome.value = selectedCommitment.value.outcome || 'DONE';
+    newOutcome.value = DB_TO_FORM_OUTCOME[selectedCommitment.value.outcome || ''] || 'DONE';
     newOutcomeReason.value = selectedCommitment.value.outcomeReason || '';
-    newContinuation.value = selectedCommitment.value.continuation || 'ARCHIVE';
+    newContinuation.value = DB_TO_FORM_CONTINUATION[selectedCommitment.value.continuation || ''] || 'ARCHIVE';
   }
 }
 
@@ -356,6 +375,10 @@ onMounted(() => {
 
                 <div class="hist-reason">
                   <strong>Alasan:</strong> {{ item.reason }}
+                </div>
+
+                <div v-if="item.reviewNote" class="hist-review-note" :class="item.status.toLowerCase()">
+                  <strong>Catatan Peninjau:</strong> {{ item.reviewNote }}
                 </div>
               </div>
             </div>
@@ -683,14 +706,28 @@ textarea {
   font-size: 12px;
 }
 
-.diff-before, .diff-after { flex: 1; }
+.diff-before, .diff-after { flex: 1; min-width: 0; }
 .diff-before small, .diff-after small { color: #5C6E68; font-weight: 700; display: block; }
-.diff-before p, .diff-after p { margin: 2px 0 0; }
+.diff-before p, .diff-after p { margin: 2px 0 0; overflow-wrap: anywhere; word-break: break-word; }
 .diff-arrow { color: #5C6E68; flex-shrink: 0; }
 
 .hist-reason {
   font-size: 12px;
   color: #0E211B;
+}
+
+.hist-review-note {
+  font-size: 11.5px;
+  color: #00674D;
+  background: #E6F4EE;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.hist-review-note.rejected {
+  color: #991B1B;
+  background: #FEE2E2;
 }
 
 .empty-feed {

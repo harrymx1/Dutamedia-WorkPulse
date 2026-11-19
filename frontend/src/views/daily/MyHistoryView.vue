@@ -295,7 +295,7 @@ onMounted(() => {
                               <span v-if="c.outcome" class="badge badge-active">{{ c.outcome }}</span>
                             </div>
                             <div v-if="c.continuation === 'CONTINUE'" class="sub-item-meta">
-                              <strong>Kelanjutan Besok:</strong> {{ c.continuationReason }}
+                              <strong>Kelanjutan Besok:</strong> {{ c.continuationReason || (c as any).outcomeReason || 'Dilanjutkan ke hari kerja berikutnya' }}
                             </div>
                           </div>
                         </div>

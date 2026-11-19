@@ -72,5 +72,40 @@ describe('CorrectionReviewView.vue (WP-EP09 / Prototipe 22 - Review Koreksi & Je
 
     expect(wrapper.text()).toContain('Setujui Permohonan Koreksi');
   });
+
+  it('displays Belum diisi instead of raw JSON when EOD valueBefore outcome is null', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        success: true,
+        data: [
+          {
+            id: 'cr-eod-null',
+            scopeType: 'EOD_OUTCOME',
+            classification: 'MATERIAL',
+            reason: 'Koreksi hasil akhir tugas pertama',
+            valueBefore: { outcome: null, continuation: null, outcomeReason: null },
+            valueRequested: { outcome: 'IN_PROGRESS' },
+            status: 'PENDING',
+            objectionWindowEndsAt: '2026-11-20T10:00:00.000Z',
+            createdAt: '2026-11-19T10:00:00.000Z',
+            requestedByUser: { id: 'u-1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+            targetCommitment: { sequenceNo: 1, taskText: 'Navigasi mobile' },
+          },
+        ],
+      }),
+    }));
+
+    const wrapper = mount(CorrectionReviewView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Belum diisi');
+    expect(wrapper.text()).toContain('IN_PROGRESS');
+    expect(wrapper.text()).not.toContain('"outcome":null');
+  });
 });
 

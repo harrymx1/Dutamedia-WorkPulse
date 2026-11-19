@@ -99,5 +99,68 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
     expect(wrapper.text()).toContain('Buka Morning Commitment');
     expect(wrapper.find('form').exists()).toBe(false);
   });
+
+  it('maps DB outcome/continuation enums to form controls and renders reviewer notes in history', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  {
+                    id: 'com-1',
+                    sequenceNo: 1,
+                    taskText: 'Perbaikan pipeline CI',
+                    outcome: 'NOT_COMPLETED',
+                    outcomeReason: 'Sertifikat runner kedaluwarsa',
+                    continuation: 'CONTINUE',
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'cr-eod-rej',
+              scopeType: 'EOD_OUTCOME',
+              classification: 'MATERIAL',
+              reason: 'Usul dibatalkan',
+              status: 'REJECTED',
+              reviewNote: 'Tugas tetap harus dikerjakan.',
+              valueBefore: { outcome: 'NOT_COMPLETED' },
+              valueRequested: { outcome: 'DROPPED' },
+              createdAt: '2026-11-19T12:00:00.000Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(EodCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    const blockedRadio = wrapper.find('input[type="radio"][value="BLOCKED"]') as any;
+    const continuationSelect = wrapper.find('#continuationSelect') as any;
+    expect((blockedRadio.element as HTMLInputElement).checked).toBe(true);
+    expect((continuationSelect.element as HTMLSelectElement).value).toBe('CONTINUE_TOMORROW');
+
+    const reviewNoteBox = wrapper.find('.hist-review-note.rejected');
+    expect(reviewNoteBox.exists()).toBe(true);
+    expect(reviewNoteBox.text()).toContain('Tugas tetap harus dikerjakan.');
+  });
 });
 

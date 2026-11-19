@@ -309,5 +309,45 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
         data: { initialDailyStatus: DailyRiskStatus.AMBER },
       });
     });
+
+    it('populates continuationReason when EOD correction sets continuation to CONTINUE', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-2',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 2,
+        taskText: 'Perbaikan pipeline CI',
+        outcome: null,
+        outcomeReason: null,
+        continuation: null,
+        dailyRecord: { userId: 'usr-1' },
+      });
+      mockPrisma.correctionRequest.create.mockResolvedValue({
+        id: 'cr-eod-cont',
+        status: CorrectionStatus.AUTO_APPLIED,
+      });
+
+      await service.createCorrectionRequest('usr-1', {
+        targetCommitmentId: 'com-2',
+        scopeType: CorrectionScopeType.EOD_OUTCOME,
+        classification: CorrectionClassification.MINOR,
+        reason: 'Mencatat kelanjutan tugas karena sertifikat TLS kedaluwarsa.',
+        requestedChange: {
+          outcome: 'BLOCKED',
+          outcomeReason: 'Menunggu pembaruan sertifikat TLS dari tim infra.',
+          continuation: 'CONTINUE_TOMORROW',
+        },
+      });
+
+      expect(mockPrisma.commitment.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'com-2' },
+          data: expect.objectContaining({
+            outcome: CommitmentOutcome.NOT_COMPLETED,
+            continuation: 'CONTINUE',
+            continuationReason: 'Menunggu pembaruan sertifikat TLS dari tim infra.',
+          }),
+        }),
+      );
+    });
   });
 });

@@ -78,7 +78,16 @@ export class CorrectionService {
         ...(requestedChange.outcomeReason !== undefined && {
           outcomeReason: requestedChange.outcomeReason?.trim() || null,
         }),
-        ...(mappedContinuation && { continuation: mappedContinuation }),
+        ...(mappedContinuation && {
+          continuation: mappedContinuation,
+          continuationReason:
+            mappedContinuation === ContinuationStatus.CONTINUE
+              ? requestedChange.continuationReason?.trim() ||
+                requestedChange.outcomeReason?.trim() ||
+                fallbackReason ||
+                null
+              : null,
+        }),
       },
     });
 

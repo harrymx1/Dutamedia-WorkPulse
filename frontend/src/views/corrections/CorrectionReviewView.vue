@@ -118,6 +118,19 @@ function isWindowExpired(endsAt?: string) {
   return new Date() > new Date(endsAt);
 }
 
+function formatDiffValue(
+  val: Record<string, any> | null | undefined,
+  scopeType: string,
+  isBefore = false,
+): string {
+  if (!val) return isBefore ? 'Belum diisi' : '-';
+  if (val.taskText) return val.taskText;
+  if (scopeType === 'EOD_OUTCOME') {
+    return val.outcome || (isBefore ? 'Belum diisi' : '-');
+  }
+  return JSON.stringify(val);
+}
+
 onMounted(() => {
   loadRequests();
 });
@@ -210,12 +223,12 @@ onMounted(() => {
                   <div class="diff-box">
                     <div class="diff-item before">
                       <span class="diff-tag">Sebelum:</span>
-                      <p>{{ item.valueBefore?.taskText || item.valueBefore?.outcome || JSON.stringify(item.valueBefore) }}</p>
+                      <p>{{ formatDiffValue(item.valueBefore, item.scopeType, true) }}</p>
                     </div>
                     <ArrowRight :size="13" class="diff-arrow" />
                     <div class="diff-item after">
                       <span class="diff-tag">Diajukan:</span>
-                      <p>{{ item.valueRequested?.taskText || item.valueRequested?.outcome || JSON.stringify(item.valueRequested) }}</p>
+                      <p>{{ formatDiffValue(item.valueRequested, item.scopeType) }}</p>
                     </div>
                   </div>
                 </td>
@@ -505,9 +518,9 @@ h1 {
   max-width: 320px;
 }
 
-.diff-item { flex: 1; }
+.diff-item { flex: 1; min-width: 0; }
 .diff-tag { font-size: 10px; font-weight: 700; color: #5C6E68; display: block; }
-.diff-item p { margin: 2px 0 0; font-weight: 600; }
+.diff-item p { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; word-break: break-word; }
 .diff-arrow { color: #5C6E68; flex-shrink: 0; }
 
 .reason-text {
