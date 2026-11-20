@@ -290,12 +290,14 @@ async function handleActivate() {
                 {{ getUserInitials(invitationPreview.account.fullName, invitationPreview.account.email) }}
               </div>
               <div class="account-info">
-                <div class="account-name-txt">{{ invitationPreview.account.fullName }}</div>
+                <div class="account-head-row">
+                  <div class="account-name-txt">{{ invitationPreview.account.fullName }}</div>
+                  <span class="role-badge-tag">UNDANGAN AKTIF</span>
+                </div>
                 <div class="account-detail-txt">
                   {{ invitationPreview.account.email }}<span v-if="invitationPreview.account.department"> · {{ invitationPreview.account.department }}</span>
                 </div>
               </div>
-              <span class="role-badge-tag">UNDANGAN AKTIF</span>
             </div>
 
             <!-- Peringatan Token Tidak Berlaku / Kedaluwarsa / Sudah Dipakai -->
@@ -794,7 +796,7 @@ input[aria-invalid="true"] {
 
 .account-preview-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   border: 1px solid var(--color-border-subtle);
   background: var(--color-surface-subtle);
@@ -821,6 +823,14 @@ input[aria-invalid="true"] {
   flex: 1;
 }
 
+.account-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 8px;
+  flex-wrap: wrap;
+}
+
 .account-name-txt {
   font-size: 14px;
   font-weight: 800;
@@ -830,19 +840,20 @@ input[aria-invalid="true"] {
 .account-detail-txt {
   font-size: 12px;
   color: var(--color-text-secondary);
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 .role-badge-tag {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   background: #FFFFFF;
   border: 1px solid var(--color-border-strong);
   color: var(--color-brand-primary);
-  padding: 4px 8px;
+  padding: 3px 7px;
   border-radius: 6px;
   white-space: nowrap;
   flex-shrink: 0;
@@ -986,6 +997,19 @@ input[aria-invalid="true"] {
   }
   .mobile-brand-header {
     display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .interactive-main {
+    padding: 20px 14px;
+  }
+  .form-card {
+    padding: 24px 18px;
+  }
+  .account-preview-card {
+    padding: 12px;
+    gap: 10px;
   }
 }
 </style>

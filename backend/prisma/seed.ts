@@ -134,7 +134,7 @@ async function main() {
       fullName: 'Fajar Ramadhan',
       status: UserStatus.INVITED,
       passwordHash: null,
-      preserveStatusOnUpdate: true, // Pertahankan status jika sudah diaktivasi saat UAT TC-AUTH-003
+      preserveStatusOnUpdate: false, // Reset kembali ke INVITED saat seed dijalankan agar tautan undangan demo 72 jam selalu siap diuji
     },
     // Divisi Delivery
     {
@@ -278,8 +278,10 @@ async function main() {
       where: { email: u.email },
       update: {
         fullName: u.fullName,
-        ...(!u.preserveStatusOnUpdate && { status: u.status }),
-        ...(u.passwordHash && { passwordHash: u.passwordHash }),
+        ...(!u.preserveStatusOnUpdate && {
+          status: u.status,
+          passwordHash: u.passwordHash,
+        }),
       },
       create: {
         email: u.email,
@@ -888,6 +890,7 @@ async function main() {
 
   // 5b. Token Undangan 72 Jam untuk Calon Karyawan
   if (newHireUser.status === UserStatus.INVITED) {
+    await prisma.session.deleteMany({ where: { userId: newHireUser.id } });
     const rawActivationToken = 'wp_seed_invite_token_72h_demo_secret';
     const tokenHash = crypto.createHash('sha256').update(rawActivationToken).digest('hex');
     const freshExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
