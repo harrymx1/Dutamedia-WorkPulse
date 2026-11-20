@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
 import { formatDateWib, getTodayIsoWib } from '../../utils/dateTime';
+import { isInternStatus } from '../../utils/employmentStatus';
 import {
   Plus,
   CheckCircle2,
@@ -43,6 +44,7 @@ interface SimpleUser {
   currentRole?: string;
   currentFunction?: string;
   currentJobTitle?: string;
+  employmentStatus?: string;
 }
 
 const authStore = useAuthStore();
@@ -84,10 +86,13 @@ function isDelegationActive(d: TemporaryReviewerRow): boolean {
   return eff <= today && exp >= today;
 }
 
-// Karyawan lini operasional yang berhak didelegasikan atau digantikan (mengecualikan SYSTEM_ADMIN untuk Separation of Duties)
+// Karyawan lini operasional yang berhak didelegasikan atau digantikan (mengecualikan SYSTEM_ADMIN dan karyawan Intern)
 const operationalUsers = computed(() => {
   return availableUsers.value.filter(
-    (u) => u.currentRole !== 'SYSTEM_ADMIN' && u.email !== 'admin@dutamedia.com',
+    (u) =>
+      u.currentRole !== 'SYSTEM_ADMIN' &&
+      u.email !== 'admin@dutamedia.com' &&
+      !isInternStatus(u.employmentStatus),
   );
 });
 

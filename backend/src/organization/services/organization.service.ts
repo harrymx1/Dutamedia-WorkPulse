@@ -4,8 +4,9 @@ import { AssignOrgDto } from '../dto/assign-org.dto';
 import { HierarchyCycleDetector } from '../utils/hierarchy-cycle.detector';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
-import { CanonicalFunction, CanonicalRole } from '@prisma/client';
+import { CanonicalFunction, CanonicalRole, EmploymentStatus } from '@prisma/client';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
+import { assertUserIsNotIntern } from '../utils/employment-status.util';
 
 @Injectable()
 export class OrganizationService {
@@ -21,6 +22,35 @@ export class OrganizationService {
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'Pengguna yang akan ditugaskan tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    const targetEmploymentStatus = dto.employmentStatus || EmploymentStatus.PERMANENT;
+    const effectiveDate = new Date(dto.effectiveDate);
+    const parsedEndDate = dto.endDate ? new Date(dto.endDate) : null;
+
+    if (targetEmploymentStatus === EmploymentStatus.INTERN) {
+      if (dto.role !== CanonicalRole.EMPLOYEE) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Karyawan berstatus Intern hanya dapat menggunakan peran Staff / Employee.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      if (!parsedEndDate || isNaN(parsedEndDate.getTime())) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Tanggal selesai magang wajib diisi untuk karyawan berstatus Intern.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+    }
+
+    if (parsedEndDate && parsedEndDate < effectiveDate) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Tanggal selesai penugasan tidak boleh lebih awal dari tanggal efektif.',
+        statusCode: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -44,6 +74,13 @@ export class OrganizationService {
           statusCode: HttpStatus.NOT_FOUND,
         });
       }
+
+      await assertUserIsNotIntern(
+        this.prisma,
+        dto.directManagerId,
+        'atasan langsung',
+        effectiveDate,
+      );
 
       // Deteksi Siklus Pelaporan Hierarki (WP-EP03-TK003)
       const effectiveDateParsed = new Date(dto.effectiveDate);
@@ -70,8 +107,6 @@ export class OrganizationService {
         });
       }
     }
-
-    const effectiveDate = new Date(dto.effectiveDate);
 
     // Eksekusi Effective-Dating dalam Satu Transaksi (WP-EP03-TK002)
     return await this.prisma.$transaction(async (tx) => {
@@ -109,8 +144,10 @@ export class OrganizationService {
           jobTitle: dto.jobTitle.trim(),
           role: dto.role,
           function: dto.function,
+          employmentStatus: targetEmploymentStatus,
           directManagerId: dto.directManagerId || null,
           effectiveDate,
+          endDate: parsedEndDate,
           assignmentReason: dto.assignmentReason.trim(),
           createdByUserId: adminUserId,
         },
@@ -194,8 +231,11 @@ export class OrganizationService {
     jobTitle?: string | null;
     role?: CanonicalRole | null;
     function?: CanonicalFunction | null;
+    employmentStatus?: EmploymentStatus;
+    assignmentEndDate?: string | null;
     directManagerId?: string | null;
   }>> {
+    const today = toJakartaDateOnly();
     const users = await this.prisma.user.findMany({
       where: { status: 'ACTIVE' },
       select: {
@@ -203,13 +243,18 @@ export class OrganizationService {
         fullName: true,
         email: true,
         orgAssignments: {
-          where: { endDate: null },
-          orderBy: { createdAt: 'desc' },
+          where: {
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+          orderBy: { effectiveDate: 'desc' },
           take: 1,
           select: {
             jobTitle: true,
             role: true,
             function: true,
+            employmentStatus: true,
+            endDate: true,
             directManagerId: true,
           },
         },
@@ -217,15 +262,22 @@ export class OrganizationService {
       orderBy: { fullName: 'asc' },
     });
 
-    return users.map((u) => ({
-      id: u.id,
-      fullName: u.fullName,
-      email: u.email,
-      jobTitle: u.orgAssignments?.[0]?.jobTitle || null,
-      role: u.orgAssignments?.[0]?.role || null,
-      function: u.orgAssignments?.[0]?.function || null,
-      directManagerId: u.orgAssignments?.[0]?.directManagerId || null,
-    }));
+    return users.map((u) => {
+      const activeOrg = u.orgAssignments?.[0];
+      return {
+        id: u.id,
+        fullName: u.fullName,
+        email: u.email,
+        jobTitle: activeOrg?.jobTitle || null,
+        role: activeOrg?.role || null,
+        function: activeOrg?.function || null,
+        employmentStatus: (activeOrg as any)?.employmentStatus || EmploymentStatus.PERMANENT,
+        assignmentEndDate: activeOrg?.endDate
+          ? new Date(activeOrg.endDate).toISOString().split('T')[0]
+          : null,
+        directManagerId: activeOrg?.directManagerId || null,
+      };
+    });
   }
 }
 

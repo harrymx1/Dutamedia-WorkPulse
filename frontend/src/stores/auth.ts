@@ -10,6 +10,8 @@ export interface UserProfile {
   status: string;
   jobTitle?: string | null;
   function?: string | null;
+  employmentStatus?: 'PERMANENT' | 'CONTRACT' | 'INTERN' | null;
+  assignmentEndDate?: string | null;
   managerName?: string | null;
   hasSubordinates?: boolean;
   isTemporaryReviewer?: boolean;

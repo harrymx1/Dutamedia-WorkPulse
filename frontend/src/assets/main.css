@@ -116,3 +116,61 @@ a:hover {
   white-space: nowrap;
 }
 
+/* Employment Status Badges (Paket #1 — Status Karyawan & Intern) */
+.badge-intern {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #EDE9FE;
+  color: #5B21B6;
+  border: 1px solid #C4B5FD;
+  white-space: nowrap;
+}
+
+.badge-contract {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #E0F2FE;
+  color: #075985;
+  border: 1px solid #7DD3FC;
+  white-space: nowrap;
+}
+
+.badge-permanent {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #EFF5F2;
+  color: #00674D;
+  border: 1px solid #A9C7BC;
+  white-space: nowrap;
+}
+
+.badge-intern-expired {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  white-space: nowrap;
+}
+

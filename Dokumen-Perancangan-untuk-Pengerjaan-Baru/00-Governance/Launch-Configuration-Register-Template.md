@@ -43,7 +43,7 @@
 
 Dengan menandatangani dokumen ini, seluruh nilai operasional di atas dinyatakan **Sah, Mengikat, dan Berlaku Resmi** sebagai konfigurasi produksi sistem WorkPulse Dutamedia.
 
-Ditetapkan di : **Semarang**  
+Ditetapkan di : **Malang**  
 Pada tanggal  : ............................................ 2026  
 
 <br><br>

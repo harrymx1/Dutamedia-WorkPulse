@@ -3,7 +3,9 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { useAuthStore } from '../../stores/auth';
 import { formatDateWib, formatDateRangeWib } from '../../utils/dateTime';
+import { isInternStatus } from '../../utils/employmentStatus';
 import {
   Calendar,
   Clock,
@@ -35,14 +37,51 @@ interface LeaveRequestItem {
   createdAt: string;
 }
 
+interface LeaveQuotaInfo {
+  year: number;
+  employmentStatus: 'PERMANENT' | 'CONTRACT' | 'INTERN';
+  hasAnnualQuota: boolean;
+  annualQuotaDays: number;
+  usedDays: number;
+  pendingDays: number;
+  remainingDays: number;
+  allowedLeaveTypes: string[];
+}
+
+const authStore = useAuthStore();
 const loading = ref(false);
 const submitting = ref(false);
 const leaveRequests = ref<LeaveRequestItem[]>([]);
+const leaveQuota = ref<LeaveQuotaInfo | null>(null);
+
+const isInternAccount = computed(() => {
+  if (leaveQuota.value?.employmentStatus) {
+    return leaveQuota.value.employmentStatus === 'INTERN';
+  }
+  return isInternStatus(authStore.user?.employmentStatus);
+});
+
+const leaveTypeOptions = computed(() => {
+  if (isInternAccount.value) {
+    return [
+      { value: 'PERMIT', label: 'Izin (Keperluan Mendesak / Kampus / Alasan Logis)' },
+      { value: 'SICK', label: 'Sakit' },
+    ];
+  }
+  return [
+    { value: 'ANNUAL', label: 'Cuti Tahunan' },
+    { value: 'PERMIT', label: 'Izin (Keperluan Mendesak / Alasan Logis)' },
+    { value: 'SICK', label: 'Sakit' },
+    { value: 'SPECIAL_LEAVE', label: 'Cuti Khusus (Pernikahan, Duka Cita, Keluarga)' },
+    { value: 'MATERNITY', label: 'Cuti Melahirkan / Keguguran' },
+    { value: 'UNPAID', label: 'Cuti di Luar Tanggungan (Tanpa Upah)' },
+  ];
+});
 
 // Form inputs
 const startDate = ref('');
 const endDate = ref('');
-const leaveType = ref('ANNUAL');
+const leaveType = ref(isInternStatus(authStore.user?.employmentStatus) ? 'PERMIT' : 'ANNUAL');
 const reason = ref('');
 const formError = ref('');
 
@@ -72,8 +111,17 @@ function showToast(msg: string, isError = false) {
 async function loadLeaveRequests() {
   loading.value = true;
   try {
-    const res = await apiClient<LeaveRequestItem[]>('/leave/my');
+    const [res, quotaRes] = await Promise.all([
+      apiClient<LeaveRequestItem[]>('/leave/my'),
+      apiClient<LeaveQuotaInfo>('/leave/quota').catch(() => null),
+    ]);
     leaveRequests.value = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+    if (quotaRes?.data && typeof quotaRes.data.hasAnnualQuota === 'boolean') {
+      leaveQuota.value = quotaRes.data;
+    }
+    if (isInternAccount.value && !['PERMIT', 'SICK'].includes(leaveType.value)) {
+      leaveType.value = 'PERMIT';
+    }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat riwayat pengajuan cuti.', true);
   } finally {
@@ -102,7 +150,9 @@ function formatLeaveType(type?: string): string {
     case 'ANNUAL':
       return 'Cuti Tahunan';
     case 'SICK':
-      return 'Cuti Sakit';
+      return 'Sakit';
+    case 'PERMIT':
+      return 'Izin';
     case 'SPECIAL_LEAVE':
       return 'Cuti Khusus';
     case 'MATERNITY':
@@ -172,7 +222,7 @@ async function handleSubmit() {
 }
 
 function handleReset() {
-  leaveType.value = 'ANNUAL';
+  leaveType.value = isInternAccount.value ? 'PERMIT' : 'ANNUAL';
   startDate.value = '';
   endDate.value = '';
   reason.value = '';
@@ -238,14 +288,43 @@ onMounted(() => {
         <section class="panel form-panel" aria-labelledby="form-title">
           <div class="panel-head">
             <div>
-              <h2 id="form-title">Ajukan Permohonan Cuti</h2>
-              <p class="panel-subtitle">Tentukan rentang tanggal cuti yang diajukan.</p>
+              <h2 id="form-title">{{ isInternAccount ? 'Ajukan Permohonan Izin / Sakit' : 'Ajukan Permohonan Cuti' }}</h2>
+              <p class="panel-subtitle">
+                {{ isInternAccount ? 'Tentukan rentang tanggal izin atau sakit yang diajukan.' : 'Tentukan rentang tanggal cuti yang diajukan.' }}
+              </p>
             </div>
           </div>
           <div class="panel-body">
+            <!-- Kartu Informasi Status Intern vs Jatah Cuti Tahunan 12 Hari (Paket #1) -->
+            <div v-if="isInternAccount" class="intern-leave-banner" data-testid="intern-leave-info">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="badge-intern">Intern</span>
+                <strong>Aturan Izin Karyawan Magang</strong>
+              </div>
+              <p>
+                Karyawan berstatus Intern tidak memiliki jatah cuti tahunan, namun tetap dapat mengajukan <strong>Izin</strong> (dengan alasan yang jelas dan logis) atau <strong>Sakit</strong>.
+              </p>
+            </div>
+
+            <div
+              v-else-if="leaveQuota && leaveQuota.hasAnnualQuota"
+              class="annual-quota-box"
+              data-testid="annual-leave-quota"
+            >
+              <div class="quota-top">
+                <span class="quota-title">Jatah Cuti Tahunan {{ leaveQuota.year }}</span>
+                <strong class="quota-remaining">Tersisa {{ leaveQuota.remainingDays }} dari {{ leaveQuota.annualQuotaDays }} hari kerja</strong>
+              </div>
+              <div class="quota-meta">
+                <span>Disetujui: {{ leaveQuota.usedDays }} hari</span>
+                <span>·</span>
+                <span>Menunggu Review: {{ leaveQuota.pendingDays }} hari</span>
+              </div>
+            </div>
+
             <form @submit.prevent="handleSubmit" novalidate>
               <div class="field">
-                <label for="leaveType">Jenis Cuti <span class="required">*</span></label>
+                <label for="leaveType">{{ isInternAccount ? 'Jenis Pengajuan' : 'Jenis Cuti / Izin' }} <span class="required">*</span></label>
                 <div class="input-wrap">
                   <Tag :size="16" class="field-icon" />
                   <select
@@ -254,11 +333,13 @@ onMounted(() => {
                     class="input select-input"
                     required
                   >
-                    <option value="ANNUAL">Cuti Tahunan</option>
-                    <option value="SICK">Cuti Sakit</option>
-                    <option value="SPECIAL_LEAVE">Cuti Khusus (Pernikahan, Duka Cita, Keluarga)</option>
-                    <option value="MATERNITY">Cuti Melahirkan / Keguguran</option>
-                    <option value="UNPAID">Cuti di Luar Tanggungan (Tanpa Upah)</option>
+                    <option
+                      v-for="opt in leaveTypeOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -484,6 +565,57 @@ onMounted(() => {
   min-height: 100vh;
   background: var(--color-canvas, #F7FAF9);
   color: var(--color-text-primary, #0E211B);
+}
+
+.annual-quota-box {
+  background: #EFF5F2;
+  border: 1px solid #A9C7BC;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.quota-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quota-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0E211B;
+}
+
+.quota-remaining {
+  font-size: 13px;
+  color: #00674D;
+}
+
+.quota-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #5C6E68;
+}
+
+.intern-leave-banner {
+  background: #F5F3FF;
+  border: 1px solid #C4B5FD;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: #4C1D95;
+  line-height: 1.5;
+}
+
+.intern-leave-banner p {
+  margin: 0;
 }
 
 .topbar {

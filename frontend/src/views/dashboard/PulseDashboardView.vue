@@ -6,6 +6,10 @@ import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
 import { formatTimeWib } from '../../utils/dateTime';
 import {
+  EMPLOYMENT_STATUS_FILTER_OPTIONS,
+  isInternStatus,
+} from '../../utils/employmentStatus';
+import {
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -19,6 +23,7 @@ interface AttentionItem {
   userName: string;
   jobTitle: string;
   function: string;
+  employmentStatus?: string;
   projectCode: string | null;
   level: 'RED' | 'AMBER';
   badgeLabel: string;
@@ -107,6 +112,7 @@ const loading = ref(false);
 const activeScope = ref<ScopeType>(getDefaultScope(auth.user?.role));
 const selectedDivision = ref('ALL');
 const selectedProject = ref('ALL');
+const selectedEmploymentStatus = ref('ALL');
 const selectedPeriod = ref('today');
 
 const divisionOptions = [
@@ -219,6 +225,9 @@ async function loadDashboardData() {
       selectedProject.value !== 'ALL'
     ) {
       query.set('projectCode', selectedProject.value);
+    }
+    if (selectedEmploymentStatus.value !== 'ALL') {
+      query.set('employmentStatus', selectedEmploymentStatus.value);
     }
 
     const [metricRes, feedRes] = await Promise.all([
@@ -419,6 +428,23 @@ onMounted(() => {
             </option>
           </select>
 
+          <!-- Filter Status Karyawan (Paket #1: Tetap / Kontrak / Intern) -->
+          <select
+            v-model="selectedEmploymentStatus"
+            class="filter-select"
+            data-testid="filter-employment-status-select"
+            aria-label="Filter Status Karyawan"
+            @change="loadDashboardData"
+          >
+            <option
+              v-for="opt in EMPLOYMENT_STATUS_FILTER_OPTIONS"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </option>
+          </select>
+
           <select v-model="selectedPeriod" class="filter-select">
             <option value="today">Hari Ini</option>
             <option value="yesterday">Kemarin</option>
@@ -524,7 +550,10 @@ onMounted(() => {
                   <Clock v-else :size="18" />
                 </div>
                 <div class="item-info">
-                  <div class="item-title">{{ item.userName }} · {{ item.jobTitle }}</div>
+                  <div class="item-title" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span>{{ item.userName }} · {{ item.jobTitle }}</span>
+                    <span v-if="isInternStatus(item.employmentStatus)" class="badge-intern">Intern</span>
+                  </div>
                   <div class="item-desc">{{ item.description }}</div>
                   <div class="item-meta">
                     <span class="pill" :class="item.level === 'RED' ? 'red' : 'amber'">

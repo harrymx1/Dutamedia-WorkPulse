@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { formatTimeWib, formatShortDateTimeWib } from '../../utils/dateTime';
+import { isInternStatus } from '../../utils/employmentStatus';
 import {
   BLOCKER_DELETE_REASON_OPTIONS,
   BLOCKER_IMPACT_OPTIONS,
@@ -144,6 +145,7 @@ export interface AvailableUser {
   jobTitle?: string | null;
   role?: string | null;
   function?: string | null;
+  employmentStatus?: string | null;
   directManagerId?: string | null;
 }
 
@@ -214,11 +216,12 @@ const eligibleOwners = computed(() => {
     (authStore.user as any)?.directManagerId ||
     null;
 
-  // 1. Filter dasar: singkirkan akun diri sendiri, SYSTEM_ADMIN, dan calon karyawan/non-aktif
+  // 1. Filter dasar: singkirkan akun diri sendiri, SYSTEM_ADMIN, karyawan Intern, dan calon karyawan/non-aktif
   const cleanUsers = availableUsers.value.filter(
     (u) =>
       u.id !== currentUserId &&
       u.role !== 'SYSTEM_ADMIN' &&
+      !isInternStatus(u.employmentStatus) &&
       !u.email.includes('admin@') &&
       !u.email.includes('calon.karyawan@')
   );

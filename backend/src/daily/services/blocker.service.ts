@@ -4,6 +4,7 @@ import { ClockService } from '../../common/time/clock.service';
 import { PolicyService } from '../../policy/services/policy.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { assertUserIsNotIntern } from '../../organization/utils/employment-status.util';
 import {
   AuthorityContext,
   BlockerImpact,
@@ -754,6 +755,10 @@ export class BlockerService {
         message: 'Pengguna yang ditunjuk sebagai pemilik eskalasi tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
       });
+    }
+
+    if (dto.assignedOwnerId) {
+      await assertUserIsNotIntern(this.prisma, targetOwnerId, 'Penanggung Jawab (PIC) Kendala');
     }
 
     // Target batas waktu respons kendala ditentukan oleh tingkat keparahan (satu sumber kebijakan)

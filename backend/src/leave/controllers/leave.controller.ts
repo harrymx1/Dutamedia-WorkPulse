@@ -32,6 +32,11 @@ export class LeaveController {
     return this.leaveService.getMyLeaveRequests(req.user.id);
   }
 
+  @Get('quota')
+  async getMyLeaveQuota(@Req() req: any) {
+    return this.leaveService.getMyLeaveQuota(req.user.id);
+  }
+
   @Get('queue')
   async getApprovalQueue(@Req() req: any, @Query('status') status?: LeaveStatus) {
     return this.leaveService.getApprovalQueue(req.user?.id, status);

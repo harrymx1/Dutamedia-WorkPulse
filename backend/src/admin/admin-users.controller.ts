@@ -18,7 +18,7 @@ import { CsrfGuard } from '../auth/guards/csrf.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { CanonicalRole, UserStatus } from '@prisma/client';
+import { CanonicalRole, EmploymentStatus, UserStatus } from '@prisma/client';
 
 @Controller('api/v1/admin/users')
 @UseGuards(AuthGuard, CsrfGuard, RolesGuard)
@@ -32,12 +32,14 @@ export class AdminUsersController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('status') status?: UserStatus,
+    @Query('employmentStatus') employmentStatus?: EmploymentStatus,
   ) {
     return await this.adminUsersService.listUsers({
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
       search,
       status,
+      employmentStatus,
     });
   }
 

@@ -414,20 +414,27 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
 
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'temp-1', fullName: 'Bambang Pratama' });
       mockPrisma.organizationalAssignment = {
-        findFirst: vi
-          .fn()
-          .mockResolvedValueOnce({
-            userId: 'temp-1',
-            role: 'SUPERVISOR',
-            function: 'Engineering',
-            directManagerId: 'head-on-leave',
-          })
-          .mockResolvedValueOnce({
-            userId: 'head-on-leave',
-            role: 'HEAD',
-            function: 'Engineering',
-            directManagerId: 'ceo-1',
-          }),
+        findFirst: vi.fn().mockImplementation(async ({ where }: any) => {
+          if (where?.userId === 'temp-1') {
+            return {
+              userId: 'temp-1',
+              role: 'SUPERVISOR',
+              function: 'Engineering',
+              employmentStatus: 'PERMANENT',
+              directManagerId: 'head-on-leave',
+            };
+          }
+          if (where?.userId === 'head-on-leave') {
+            return {
+              userId: 'head-on-leave',
+              role: 'HEAD',
+              function: 'Engineering',
+              employmentStatus: 'PERMANENT',
+              directManagerId: 'ceo-1',
+            };
+          }
+          return null;
+        }),
       };
       mockPrisma.leaveRequest = {
         findFirst: vi

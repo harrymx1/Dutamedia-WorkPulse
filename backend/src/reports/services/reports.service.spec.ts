@@ -32,13 +32,13 @@ describe('ReportsService (WP-EP13 - Laporan Eksekutif & Analitik Organisasi)', (
     expect(report.departmentBreakdown[0].department).toBe('Engineering & Tech');
   });
 
-  it('generates CSV export data with proper headers and rows', async () => {
-    const exportResult = await service.exportAuditData('month');
+  it('generates CSV export data with proper headers including Status Karyawan and rows', async () => {
+    const exportResult = await service.exportAuditData('month', 'INTERN');
 
-    expect(exportResult.filename).toContain('workpulse-report-month-');
+    expect(exportResult.filename).toContain('workpulse-report-month-intern-');
     expect(exportResult.contentType).toBe('text/csv');
-    expect(exportResult.data).toContain('Departemen,Jumlah Personil');
-    expect(exportResult.data).toContain('"Engineering & Tech"');
+    expect(exportResult.data).toContain('Departemen,Status Karyawan,Jumlah Personil');
+    expect(exportResult.data).toContain('"Engineering & Tech","Intern"');
   });
 });
 

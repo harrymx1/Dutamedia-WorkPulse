@@ -14,6 +14,7 @@ import { AssignPolicyOwnerDto } from '../dto/assign-policy-owner.dto';
 import { UpdatePolicyOwnerDto } from '../dto/update-policy-owner.dto';
 import { CANONICAL_POLICY_FALLBACKS } from '../policy.constants';
 import { ensurePolicyOwnersBaselineSynced } from '../policy-owner-sync.util';
+import { assertUserIsNotIntern } from '../../organization/utils/employment-status.util';
 
 @Injectable()
 export class PolicyService {
@@ -125,6 +126,7 @@ export class PolicyService {
                 role: true,
                 jobTitle: true,
                 function: true,
+                employmentStatus: true,
               },
             },
           },
@@ -132,7 +134,13 @@ export class PolicyService {
         });
         if (Array.isArray(rawUsers)) {
           availableUsers = rawUsers
-            .filter((u: any) => u && u.email && u.fullName)
+            .filter((u: any) => {
+              if (!u || !u.email || !u.fullName) return false;
+              const activeOrg = u.orgAssignments?.[0];
+              // Karyawan berstatus Intern tidak dapat menjadi Pemilik Kebijakan
+              if (activeOrg?.employmentStatus === 'INTERN') return false;
+              return true;
+            })
             .map((u: any) => {
               const activeOrg = u.orgAssignments?.[0];
               return {
@@ -683,6 +691,8 @@ export class PolicyService {
       const nextUserId = dto.userId || existing.userId;
       const nextCategory = dto.policyCategory || existing.policyCategory;
 
+      await assertUserIsNotIntern(this.prisma, nextUserId, 'Pemilik Kebijakan', nextEffectiveDate);
+
       if (nextCategory !== existing.policyCategory) {
         const today = new Date(todayStr);
         const remainingInOriginCategory = await tx.policyOwnerAssignment.count({
@@ -811,6 +821,8 @@ export class PolicyService {
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
+
+    await assertUserIsNotIntern(this.prisma, dto.userId, 'Pemilik Kebijakan', effectiveDate);
 
     const created = await this.prisma.$transaction(async (tx) => {
       // Periksa apakah personil ini sudah aktif ditugaskan pada kategori yang sama

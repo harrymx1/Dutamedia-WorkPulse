@@ -18,8 +18,11 @@ export class ReportsController {
     CanonicalRole.HEAD,
     CanonicalRole.HRGA,
   )
-  async getExecutiveReport(@Query('period') period?: string) {
-    return await this.reportsService.getExecutiveReport(period);
+  async getExecutiveReport(
+    @Query('period') period?: string,
+    @Query('employmentStatus') employmentStatus?: string,
+  ) {
+    return await this.reportsService.getExecutiveReport(period, employmentStatus);
   }
 
   @Get('export')
@@ -31,9 +34,10 @@ export class ReportsController {
   )
   async exportReport(
     @Query('period') period: string,
+    @Query('employmentStatus') employmentStatus: string,
     @Res() res: Response,
   ) {
-    const exportData = await this.reportsService.exportAuditData(period);
+    const exportData = await this.reportsService.exportAuditData(period, employmentStatus);
     res.setHeader('Content-Type', exportData.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${exportData.filename}"`);
     return res.send(exportData.data);

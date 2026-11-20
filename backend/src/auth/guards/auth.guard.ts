@@ -155,6 +155,10 @@ export class AuthGuard implements CanActivate {
       role: activeOrg?.role || payload.role || 'EMPLOYEE',
       jobTitle: activeOrg?.jobTitle || null,
       function: activeOrg?.function || null,
+      employmentStatus: activeOrg?.employmentStatus || 'PERMANENT',
+      assignmentEndDate: activeOrg?.endDate
+        ? new Date(activeOrg.endDate).toISOString().split('T')[0]
+        : null,
       managerName: activeOrg?.directManager?.fullName || null,
       hasSubordinates: subordinateCount > 0,
       isTemporaryReviewer: tempReviewerCount > 0,

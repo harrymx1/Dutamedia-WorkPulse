@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
-import { formatDateWib } from '../../utils/dateTime';
+import { formatDateWib, getTodayIsoWib } from '../../utils/dateTime';
+import {
+  EMPLOYMENT_STATUS_OPTIONS,
+  formatEmploymentStatusLabel,
+  isInternStatus,
+  type EmploymentStatusCode,
+} from '../../utils/employmentStatus';
 import {
   Building2,
   FolderGit2,
@@ -20,6 +26,7 @@ interface OrgAssignmentRow {
   jobTitle: string;
   role: string;
   function: string;
+  employmentStatus?: EmploymentStatusCode;
   directManagerId: string | null;
   effectiveDate: string;
   endDate: string | null;
@@ -46,6 +53,7 @@ interface SimpleUser {
   id: string;
   fullName: string;
   email: string;
+  employmentStatus?: EmploymentStatusCode;
 }
 
 const authStore = useAuthStore();
@@ -57,6 +65,11 @@ const currentTab = ref<'org' | 'project'>('org');
 const orgAssignments = ref<OrgAssignmentRow[]>([]);
 const projectAuthorities = ref<ProjectAuthorityRow[]>([]);
 const availableUsers = ref<SimpleUser[]>([]);
+
+// Karyawan Non-Intern yang memenuhi syarat untuk memegang peran wewenang (Atasan Langsung, PM, Reviewer)
+const eligibleAuthorityUsers = computed(() =>
+  availableUsers.value.filter((u) => !isInternStatus(u.employmentStatus)),
+);
 
 const isLoading = ref(false);
 const toastMessage = ref<string | null>(null);
@@ -71,10 +84,18 @@ const orgForm = ref({
   jobTitle: '',
   role: 'EMPLOYEE',
   function: 'Engineering',
+  employmentStatus: 'PERMANENT' as EmploymentStatusCode,
   directManagerId: '',
-  effectiveDate: new Date().toISOString().split('T')[0],
+  effectiveDate: getTodayIsoWib(),
+  endDate: '',
   assignmentReason: '',
 });
+
+function handleOrgEmploymentStatusChange() {
+  if (orgForm.value.employmentStatus === 'INTERN') {
+    orgForm.value.role = 'EMPLOYEE';
+  }
+}
 
 // Modal Project Authority State
 const isPaModalOpen = ref(false);
@@ -137,8 +158,10 @@ function openOrgModal() {
     jobTitle: '',
     role: 'EMPLOYEE',
     function: 'Engineering',
+    employmentStatus: 'PERMANENT',
     directManagerId: '',
-    effectiveDate: new Date().toISOString().split('T')[0],
+    effectiveDate: getTodayIsoWib(),
+    endDate: '',
     assignmentReason: '',
   };
   isOrgModalOpen.value = true;
@@ -149,10 +172,11 @@ function openPaModal() {
   paForm.value = {
     projectCode: '',
     projectName: '',
-    projectManagerId: availableUsers.value[0]?.id || '',
-    escalationReviewerId: availableUsers.value[1]?.id || availableUsers.value[0]?.id || '',
+    projectManagerId: eligibleAuthorityUsers.value[0]?.id || '',
+    escalationReviewerId:
+      eligibleAuthorityUsers.value[1]?.id || eligibleAuthorityUsers.value[0]?.id || '',
     involvedFunction: 'Engineering',
-    effectiveDate: new Date().toISOString().split('T')[0],
+    effectiveDate: getTodayIsoWib(),
     assignmentReason: '',
   };
   isPaModalOpen.value = true;
@@ -162,6 +186,10 @@ async function handleCreateOrgAssignment() {
   orgModalError.value = null;
   if (!orgForm.value.userId || !orgForm.value.jobTitle.trim() || !orgForm.value.assignmentReason.trim()) {
     orgModalError.value = 'Semua field wajib diisi.';
+    return;
+  }
+  if (orgForm.value.employmentStatus === 'INTERN' && !orgForm.value.endDate) {
+    orgModalError.value = 'Tanggal selesai magang wajib diisi untuk karyawan berstatus Intern.';
     return;
   }
   if (orgForm.value.userId === orgForm.value.directManagerId) {
@@ -175,7 +203,9 @@ async function handleCreateOrgAssignment() {
       method: 'POST',
       body: JSON.stringify({
         ...orgForm.value,
+        role: orgForm.value.employmentStatus === 'INTERN' ? 'EMPLOYEE' : orgForm.value.role,
         directManagerId: orgForm.value.directManagerId || null,
+        endDate: orgForm.value.endDate || undefined,
       }),
     });
     isOrgModalOpen.value = false;
@@ -315,12 +345,19 @@ function showToast(msg: string, isError = false) {
           <tbody>
             <tr v-for="asg in orgAssignments" :key="asg.id">
               <td>
-                <strong class="user-name">{{ asg.user?.fullName || '-' }}</strong>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <strong class="user-name">{{ asg.user?.fullName || '-' }}</strong>
+                  <span v-if="isInternStatus(asg.employmentStatus)" class="badge-intern">Intern</span>
+                  <span v-else-if="asg.employmentStatus === 'CONTRACT'" class="badge-contract">Kontrak</span>
+                </div>
                 <span class="user-email-text mono-num">{{ asg.user?.email || '-' }}</span>
               </td>
               <td>
                 <span class="role-badge">{{ asg.role }}</span>
                 <span class="job-title-text">{{ asg.jobTitle }}</span>
+                <span style="display: block; font-size: 11px; color: var(--color-text-secondary);">
+                  {{ formatEmploymentStatusLabel(asg.employmentStatus) }}
+                </span>
               </td>
               <td>
                 <span class="func-pill">{{ asg.function }}</span>
@@ -439,8 +476,26 @@ function showToast(msg: string, isError = false) {
 
           <div class="form-row">
             <div class="form-group">
+              <label for="asg-emp-status">Status Karyawan</label>
+              <select
+                id="asg-emp-status"
+                v-model="orgForm.employmentStatus"
+                @change="handleOrgEmploymentStatusChange"
+                required
+              >
+                <option v-for="opt in EMPLOYMENT_STATUS_OPTIONS" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
               <label for="asg-role">Peran Kanonikal</label>
-              <select id="asg-role" v-model="orgForm.role" required>
+              <select
+                id="asg-role"
+                v-model="orgForm.role"
+                :disabled="orgForm.employmentStatus === 'INTERN'"
+                required
+              >
                 <option value="EMPLOYEE">EMPLOYEE</option>
                 <option value="SUPERVISOR">SUPERVISOR</option>
                 <option value="HEAD">HEAD</option>
@@ -448,22 +503,26 @@ function showToast(msg: string, isError = false) {
                 <option value="HRGA">HRGA</option>
                 <option value="CEO_MANAGEMENT">CEO_MANAGEMENT</option>
               </select>
+              <span v-if="orgForm.employmentStatus === 'INTERN'" class="field-hint">
+                Karyawan Intern otomatis menggunakan peran EMPLOYEE.
+              </span>
             </div>
-            <div class="form-group">
-              <label for="asg-func">Fungsi / Divisi</label>
-              <select id="asg-func" v-model="orgForm.function" required>
-                <option value="Engineering">Engineering</option>
-                <option value="Quality">Quality</option>
-                <option value="Operations & Infrastructure">Operations & Infrastructure</option>
-                <option value="R&D">R&D</option>
-                <option value="Delivery">Delivery</option>
-                <option value="Business Development">Business Development</option>
-                <option value="Sales Enablement & Presales">Sales Enablement & Presales</option>
-                <option value="Finance">Finance</option>
-                <option value="HRGA">HRGA</option>
-                <option value="Management">Management</option>
-              </select>
-            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="asg-func">Fungsi / Divisi</label>
+            <select id="asg-func" v-model="orgForm.function" required>
+              <option value="Engineering">Engineering</option>
+              <option value="Quality">Quality</option>
+              <option value="Operations & Infrastructure">Operations & Infrastructure</option>
+              <option value="R&D">R&D</option>
+              <option value="Delivery">Delivery</option>
+              <option value="Business Development">Business Development</option>
+              <option value="Sales Enablement & Presales">Sales Enablement & Presales</option>
+              <option value="Finance">Finance</option>
+              <option value="HRGA">HRGA</option>
+              <option value="Management">Management</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -471,7 +530,7 @@ function showToast(msg: string, isError = false) {
             <select id="asg-mgr" v-model="orgForm.directManagerId">
               <option value="">-- Tanpa Atasan (Pucuk Pimpinan) --</option>
               <option
-                v-for="u in availableUsers.filter(x => x.id !== orgForm.userId)"
+                v-for="u in eligibleAuthorityUsers.filter(x => x.id !== orgForm.userId)"
                 :key="u.id"
                 :value="u.id"
               >
@@ -480,10 +539,27 @@ function showToast(msg: string, isError = false) {
             </select>
           </div>
 
-          <div class="form-group">
-            <label for="asg-date">Tanggal Efektif Penugasan</label>
-            <input id="asg-date" v-model="orgForm.effectiveDate" type="date" required />
-            <span class="field-hint">Penetapan tanggal lampau tidak diizinkan oleh sistem.</span>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="asg-date">Tanggal Efektif Penugasan</label>
+              <input id="asg-date" v-model="orgForm.effectiveDate" type="date" required />
+              <span class="field-hint">Penetapan tanggal lampau tidak diizinkan oleh sistem.</span>
+            </div>
+            <div class="form-group">
+              <label for="asg-end-date">
+                {{ orgForm.employmentStatus === 'INTERN' ? 'Tanggal Selesai Magang *' : 'Tanggal Berakhir (Opsional)' }}
+              </label>
+              <input
+                id="asg-end-date"
+                v-model="orgForm.endDate"
+                type="date"
+                :min="orgForm.effectiveDate"
+                :required="orgForm.employmentStatus === 'INTERN'"
+              />
+              <span class="field-hint">
+                {{ orgForm.employmentStatus === 'INTERN' ? 'Wajib diisi untuk karyawan Intern.' : 'Kosongkan bila tidak ada batas akhir.' }}
+              </span>
+            </div>
           </div>
 
           <div class="form-group">
@@ -528,7 +604,7 @@ function showToast(msg: string, isError = false) {
           <div class="form-group">
             <label for="pa-pm">Project Manager</label>
             <select id="pa-pm" v-model="paForm.projectManagerId" required>
-              <option v-for="u in availableUsers" :key="u.id" :value="u.id">
+              <option v-for="u in eligibleAuthorityUsers" :key="u.id" :value="u.id">
                 {{ u.fullName }} ({{ u.email }})
               </option>
             </select>
@@ -537,7 +613,7 @@ function showToast(msg: string, isError = false) {
           <div class="form-group">
             <label for="pa-rev">Escalation Reviewer</label>
             <select id="pa-rev" v-model="paForm.escalationReviewerId" required>
-              <option v-for="u in availableUsers" :key="u.id" :value="u.id">
+              <option v-for="u in eligibleAuthorityUsers" :key="u.id" :value="u.id">
                 {{ u.fullName }} ({{ u.email }})
               </option>
             </select>

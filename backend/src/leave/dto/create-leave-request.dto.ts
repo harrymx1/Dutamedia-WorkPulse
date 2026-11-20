@@ -11,10 +11,13 @@ import {
 export const CANONICAL_LEAVE_TYPES = [
   'ANNUAL',
   'SICK',
+  'PERMIT',
   'SPECIAL_LEAVE',
   'MATERNITY',
   'UNPAID',
 ] as const;
+
+export const INTERN_ALLOWED_LEAVE_TYPES = ['PERMIT', 'SICK'] as const;
 
 export type CanonicalLeaveType = (typeof CANONICAL_LEAVE_TYPES)[number];
 
@@ -29,7 +32,7 @@ export class CreateLeaveRequestDto {
   @IsNotEmpty({ message: 'Jenis cuti tidak boleh kosong' })
   @IsIn(CANONICAL_LEAVE_TYPES, {
     message:
-      'Jenis cuti tidak valid. Pilihan yang diizinkan: ANNUAL, SICK, SPECIAL_LEAVE, MATERNITY, UNPAID.',
+      'Jenis cuti tidak valid. Pilihan yang diizinkan: ANNUAL, SICK, PERMIT, SPECIAL_LEAVE, MATERNITY, UNPAID.',
   })
   leaveType!: string;
 

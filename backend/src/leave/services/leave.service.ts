@@ -4,12 +4,31 @@ import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
-import { CanonicalRole, LeaveStatus, NotificationChannel } from '@prisma/client';
+import { CanonicalRole, EmploymentStatus, LeaveStatus, NotificationChannel } from '@prisma/client';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import {
   CreateLeaveRequestDto,
+  INTERN_ALLOWED_LEAVE_TYPES,
   ReviewLeaveRequestDto,
 } from '../dto/create-leave-request.dto';
+
+export const ANNUAL_LEAVE_QUOTA_DAYS = 12;
+
+function countWorkingDaysInclusive(start: Date, end: Date): number {
+  const s = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  const e = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()));
+  if (e < s) return 0;
+  let count = 0;
+  const cursor = new Date(s);
+  while (cursor <= e) {
+    const day = cursor.getUTCDay();
+    if (day !== 0 && day !== 6) {
+      count += 1;
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return Math.max(1, count);
+}
 
 @Injectable()
 export class LeaveService {
@@ -54,6 +73,61 @@ export class LeaveService {
     }
 
     const now = this.clockService.now();
+    const todayDateOnly = toJakartaDateOnly(now);
+
+    // Periksa status kepegawaian aktif pemohon (Aturan Paket #1: Intern hanya boleh Izin & Sakit, Non-Intern batas 12 hari/tahun)
+    let activeEmploymentStatus: EmploymentStatus = EmploymentStatus.PERMANENT;
+    if (this.prisma.organizationalAssignment?.findFirst) {
+      const activeOrg = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId,
+          effectiveDate: { lte: todayDateOnly },
+          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
+      });
+      activeEmploymentStatus =
+        (activeOrg as any)?.employmentStatus || EmploymentStatus.PERMANENT;
+    }
+
+    const normalizedLeaveType = dto.leaveType.trim();
+    if (activeEmploymentStatus === EmploymentStatus.INTERN) {
+      if (!(INTERN_ALLOWED_LEAVE_TYPES as readonly string[]).includes(normalizedLeaveType)) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Karyawan berstatus Intern tidak memiliki hak cuti tahunan atau cuti khusus. Silakan pilih jenis pengajuan Izin (dengan alasan logis) atau Sakit.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+    } else if (normalizedLeaveType === 'ANNUAL' && this.prisma.leaveRequest?.findMany) {
+      const targetYear = start.getUTCFullYear();
+      const yearStart = new Date(Date.UTC(targetYear, 0, 1));
+      const yearEnd = new Date(Date.UTC(targetYear, 11, 31));
+      const existingAnnualLeaves = await this.prisma.leaveRequest.findMany({
+        where: {
+          userId,
+          leaveType: 'ANNUAL',
+          status: { in: [LeaveStatus.APPROVED, LeaveStatus.PENDING] },
+          startDate: { lte: yearEnd },
+          endDate: { gte: yearStart },
+        },
+      });
+      const usedOrPendingDays = (existingAnnualLeaves || []).reduce(
+        (acc: number, item: any) =>
+          acc + countWorkingDaysInclusive(new Date(item.startDate), new Date(item.endDate)),
+        0,
+      );
+      const requestedDays = countWorkingDaysInclusive(start, end);
+      if (usedOrPendingDays + requestedDays > ANNUAL_LEAVE_QUOTA_DAYS) {
+        const remaining = Math.max(0, ANNUAL_LEAVE_QUOTA_DAYS - usedOrPendingDays);
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: `Pengajuan melebihi batas jatah Cuti Tahunan ${ANNUAL_LEAVE_QUOTA_DAYS} hari kerja per tahun (terpakai/menunggu: ${usedOrPendingDays} hari, sisa: ${remaining} hari, diajukan: ${requestedDays} hari).`,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const leave = await tx.leaveRequest.create({
@@ -61,7 +135,7 @@ export class LeaveService {
           userId,
           startDate: start,
           endDate: end,
-          leaveType: dto.leaveType.trim(),
+          leaveType: normalizedLeaveType,
           reason: dto.reason.trim(),
           status: LeaveStatus.PENDING,
         },
@@ -70,10 +144,19 @@ export class LeaveService {
         },
       });
 
-      // Cari atasan langsung untuk notifikasi approval
+      // Cari atasan langsung untuk notifikasi approval (termasuk akun Intern yang memiliki endDate aktif)
       const assignment = await tx.organizationalAssignment.findFirst({
-        where: { userId, endDate: null },
+        where: {
+          userId,
+          effectiveDate: { lte: todayDateOnly },
+          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
       });
+
+      const isPermit = normalizedLeaveType === 'PERMIT';
+      const notifTitle = isPermit ? 'Pengajuan Izin Karyawan Baru' : 'Pengajuan Cuti Karyawan Baru';
+      const notifActionPhrase = isPermit ? 'mengajukan izin' : `mengajukan cuti ${normalizedLeaveType}`;
 
       if (assignment?.directManagerId) {
         await tx.notification.create({
@@ -81,8 +164,8 @@ export class LeaveService {
             recipientUserId: assignment.directManagerId,
             triggerType: 'LEAVE_REQUESTED',
             channel: NotificationChannel.IN_APP_CENTER,
-            title: 'Pengajuan Cuti Karyawan Baru',
-            message: `${leave.user.fullName} mengajukan cuti ${dto.leaveType} (${dto.startDate} s/d ${dto.endDate}).`,
+            title: notifTitle,
+            message: `${leave.user.fullName} ${notifActionPhrase} (${dto.startDate} s/d ${dto.endDate}).`,
             actionUrl: '/leave/queue',
             relatedEntityType: 'leave_requests',
             relatedEntityId: leave.id,
@@ -97,7 +180,6 @@ export class LeaveService {
         assignment.role !== CanonicalRole.CEO_MANAGEMENT &&
         tx.temporaryReviewerAssignment?.findMany
       ) {
-        const todayDateOnly = toJakartaDateOnly(now);
         const activeDelegations = await tx.temporaryReviewerAssignment.findMany({
           where: {
             targetFunction: assignment.function,
@@ -147,18 +229,133 @@ export class LeaveService {
   }
 
   /**
+   * Mengambil informasi jatah cuti tahunan & hak pengajuan sesuai status kepegawaian (Paket #1).
+   * - Karyawan Tetap & Kontrak: jatah 12 hari kerja per tahun (Cuti Tahunan).
+   * - Karyawan Intern: tidak memiliki jatah cuti tahunan, hanya diperbolehkan Izin & Sakit.
+   */
+  async getMyLeaveQuota(userId: string, year?: number) {
+    const now = this.clockService.now();
+    const todayDateOnly = toJakartaDateOnly(now);
+    const targetYear = year || todayDateOnly.getUTCFullYear();
+
+    let employmentStatus: EmploymentStatus = EmploymentStatus.PERMANENT;
+    if (this.prisma.organizationalAssignment?.findFirst) {
+      const activeOrg = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId,
+          effectiveDate: { lte: todayDateOnly },
+          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
+      });
+      employmentStatus =
+        (activeOrg as any)?.employmentStatus || EmploymentStatus.PERMANENT;
+    }
+
+    if (employmentStatus === EmploymentStatus.INTERN) {
+      return {
+        year: targetYear,
+        employmentStatus,
+        hasAnnualQuota: false,
+        annualQuotaDays: 0,
+        usedDays: 0,
+        pendingDays: 0,
+        remainingDays: 0,
+        allowedLeaveTypes: [...INTERN_ALLOWED_LEAVE_TYPES],
+      };
+    }
+
+    const yearStart = new Date(Date.UTC(targetYear, 0, 1));
+    const yearEnd = new Date(Date.UTC(targetYear, 11, 31));
+    const annualLeaves = this.prisma.leaveRequest?.findMany
+      ? await this.prisma.leaveRequest.findMany({
+          where: {
+            userId,
+            leaveType: 'ANNUAL',
+            status: { in: [LeaveStatus.APPROVED, LeaveStatus.PENDING] },
+            startDate: { lte: yearEnd },
+            endDate: { gte: yearStart },
+          },
+        })
+      : [];
+
+    let usedDays = 0;
+    let pendingDays = 0;
+    for (const item of annualLeaves || []) {
+      const days = countWorkingDaysInclusive(
+        new Date(item.startDate),
+        new Date(item.endDate),
+      );
+      if (item.status === LeaveStatus.APPROVED) usedDays += days;
+      else if (item.status === LeaveStatus.PENDING) pendingDays += days;
+    }
+
+    const remainingDays = Math.max(0, ANNUAL_LEAVE_QUOTA_DAYS - usedDays - pendingDays);
+
+    return {
+      year: targetYear,
+      employmentStatus,
+      hasAnnualQuota: true,
+      annualQuotaDays: ANNUAL_LEAVE_QUOTA_DAYS,
+      usedDays,
+      pendingDays,
+      remainingDays,
+      allowedLeaveTypes: [
+        'ANNUAL',
+        'SICK',
+        'PERMIT',
+        'SPECIAL_LEAVE',
+        'MATERNITY',
+        'UNPAID',
+      ],
+    };
+  }
+
+  /**
    * Mengambil antrean persetujuan cuti untuk Atasan / HRGA (Prototipe 21).
    */
   async getApprovalQueue(reviewerUserId?: string, status?: LeaveStatus) {
-    const list = await this.prisma.leaveRequest.findMany({
+    const todayDateOnly = toJakartaDateOnly(this.clockService.now());
+    const rawList = await this.prisma.leaveRequest.findMany({
       where: {
         ...(status ? { status } : { status: { not: LeaveStatus.CANCELLED } }),
       },
       include: {
-        user: { select: { id: true, fullName: true, email: true } },
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            orgAssignments: {
+              where: {
+                effectiveDate: { lte: todayDateOnly },
+                OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+              },
+              orderBy: { effectiveDate: 'desc' },
+              take: 1,
+              select: { role: true, jobTitle: true, employmentStatus: true },
+            },
+          },
+        },
         reviewedBy: { select: { id: true, fullName: true } },
       },
       orderBy: [{ createdAt: 'desc' }],
+    });
+
+    const list = (rawList || []).map((item: any) => {
+      const activeOrg = item.user?.orgAssignments?.[0];
+      if (!item.user) return item;
+      return {
+        ...item,
+        user: {
+          id: item.user.id,
+          fullName: item.user.fullName,
+          email: item.user.email,
+          role: activeOrg?.role || item.user.role,
+          jobTitle: activeOrg?.jobTitle || null,
+          employmentStatus: activeOrg?.employmentStatus || EmploymentStatus.PERMANENT,
+        },
+      };
     });
 
     if (!reviewerUserId) {

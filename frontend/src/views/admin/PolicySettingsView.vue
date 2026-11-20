@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateWib, formatDateTimeWib, getTodayIsoWib } from '../../utils/dateTime';
+import { isInternStatus } from '../../utils/employmentStatus';
 import {
   ShieldAlert,
   Clock,
@@ -70,6 +71,7 @@ interface SimpleUser {
   jobTitle?: string | null;
   role?: string | null;
   function?: string | null;
+  employmentStatus?: string | null;
 }
 
 // State
@@ -169,7 +171,9 @@ async function loadData() {
     policies.value = res.data.policies || [];
     policyOwners.value = res.data.owners || [];
     if (Array.isArray(res.data.availableUsers) && res.data.availableUsers.length > 0) {
-      availableUsers.value = res.data.availableUsers;
+      availableUsers.value = res.data.availableUsers.filter(
+        (u) => !isInternStatus(u.employmentStatus),
+      );
     }
 
     const auditRes = await apiClient<AuditLogItem[]>('/policies/audit');
@@ -180,13 +184,15 @@ async function loadData() {
         const usersRes = await apiClient<any>('/v1/organization/users');
         const uList = usersRes.data || [];
         if (Array.isArray(uList) && uList.length > 0) {
-          availableUsers.value = uList;
+          availableUsers.value = uList.filter((u: any) => !isInternStatus(u.employmentStatus));
         }
       } catch {
         try {
           const adminUsersRes = await apiClient<any>('/v1/admin/users?limit=500');
           const raw = adminUsersRes.data?.data || adminUsersRes.data || [];
-          if (Array.isArray(raw)) availableUsers.value = raw;
+          if (Array.isArray(raw)) {
+            availableUsers.value = raw.filter((u: any) => !isInternStatus(u.employmentStatus));
+          }
         } catch {}
       }
     }

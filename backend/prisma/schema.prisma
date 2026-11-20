@@ -35,6 +35,14 @@ enum CanonicalRole {
   @@map("canonical_role_enum")
 }
 
+enum EmploymentStatus {
+  PERMANENT
+  CONTRACT
+  INTERN
+
+  @@map("employment_status_enum")
+}
+
 enum CanonicalFunction {
   Engineering
   Quality
@@ -165,6 +173,7 @@ model OrganizationalAssignment {
   jobTitle         String            @map("job_title") @db.VarChar(150)
   role             CanonicalRole
   function         CanonicalFunction
+  employmentStatus EmploymentStatus  @default(PERMANENT) @map("employment_status")
   directManagerId  String?           @map("direct_manager_id") @db.Uuid
   effectiveDate    DateTime          @map("effective_date") @db.Date
   endDate          DateTime?         @map("end_date") @db.Date

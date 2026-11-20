@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { EMPLOYMENT_STATUS_FILTER_OPTIONS } from '../../utils/employmentStatus';
 import {
   Download,
   Clock,
@@ -22,6 +23,7 @@ interface SummaryData {
 
 interface DepartmentItem {
   department: string;
+  employmentStatus?: string;
   totalMembers: number;
   participationRate: number;
   onTimePercent: number;
@@ -33,12 +35,14 @@ interface DepartmentItem {
 
 interface ReportResponse {
   period: string;
+  employmentStatusFilter?: string;
   summary: SummaryData;
   departmentBreakdown: DepartmentItem[];
 }
 
 const loading = ref(false);
 const activePeriod = ref('today');
+const selectedEmploymentStatus = ref('ALL');
 
 const report = ref<ReportResponse>({
   period: 'today',
@@ -74,7 +78,11 @@ function showToast(msg: string, isError = false) {
 async function loadReport() {
   loading.value = true;
   try {
-    const res = await apiClient<ReportResponse>(`/v1/reports/executive?period=${activePeriod.value}`);
+    const query = new URLSearchParams({ period: activePeriod.value });
+    if (selectedEmploymentStatus.value !== 'ALL') {
+      query.set('employmentStatus', selectedEmploymentStatus.value);
+    }
+    const res = await apiClient<ReportResponse>(`/v1/reports/executive?${query.toString()}`);
     const data = res?.data || res;
     if (data && data.summary) {
       report.value = data;
@@ -95,7 +103,11 @@ async function handleExport() {
   try {
     showToast('Menyiapkan dan mengunduh berkas laporan CSV...');
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    const exportUrl = `${baseUrl}/v1/reports/export?period=${activePeriod.value}`;
+    const query = new URLSearchParams({ period: activePeriod.value });
+    if (selectedEmploymentStatus.value !== 'ALL') {
+      query.set('employmentStatus', selectedEmploymentStatus.value);
+    }
+    const exportUrl = `${baseUrl}/v1/reports/export?${query.toString()}`;
     const res = await fetch(exportUrl, {
       credentials: 'include',
     });
@@ -108,7 +120,8 @@ async function handleExport() {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.setAttribute('download', `workpulse-report-${activePeriod.value}-${new Date().toISOString().slice(0, 10)}.csv`);
+      const empSuffix = selectedEmploymentStatus.value !== 'ALL' ? `-${selectedEmploymentStatus.value.toLowerCase()}` : '';
+      link.setAttribute('download', `workpulse-report-${activePeriod.value}${empSuffix}-${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -159,9 +172,9 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Filter Bar with Time Presets -->
+      <!-- Filter Bar with Time Presets & Employment Status Filter -->
       <div class="filter-bar">
-        <div class="filter-row">
+        <div class="filter-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
           <div class="time-presets" role="group" aria-label="Pilih Periode Waktu">
             <button
               type="button"
@@ -195,6 +208,24 @@ onMounted(() => {
             >
               Kuartal Ini
             </button>
+          </div>
+
+          <div class="emp-filter-wrap">
+            <select
+              v-model="selectedEmploymentStatus"
+              class="emp-filter-select"
+              data-testid="reports-employment-status-filter"
+              aria-label="Filter Status Karyawan"
+              @change="loadReport"
+            >
+              <option
+                v-for="opt in EMPLOYMENT_STATUS_FILTER_OPTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </option>
+            </select>
           </div>
         </div>
       </div>
@@ -280,6 +311,7 @@ onMounted(() => {
             <thead>
               <tr>
                 <th scope="col">Departemen / Unit Kerja</th>
+                <th scope="col" class="text-center">Status Karyawan</th>
                 <th scope="col" class="text-center">Personil</th>
                 <th scope="col" class="text-center">Partisipasi</th>
                 <th scope="col" class="text-center">Tepat Waktu</th>
@@ -293,6 +325,13 @@ onMounted(() => {
               <tr v-for="dept in report.departmentBreakdown" :key="dept.department">
                 <td>
                   <strong>{{ dept.department }}</strong>
+                </td>
+                <td class="text-center">
+                  <span
+                    :class="dept.employmentStatus === 'Intern' ? 'badge-intern' : dept.employmentStatus === 'Kontrak' ? 'badge-contract' : 'pill neutral'"
+                  >
+                    {{ dept.employmentStatus || 'Semua Status' }}
+                  </span>
                 </td>
                 <td class="text-center">{{ dept.totalMembers }} Orang</td>
                 <td class="text-center">
@@ -426,6 +465,17 @@ h1 {
   background: #FFFFFF;
   color: var(--color-brand-primary, #00674D);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.emp-filter-select {
+  padding: 6px 34px 6px 12px;
+  border: 1px solid var(--color-border-subtle, #DCE7E2);
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  color: var(--color-text-primary, #0E211B);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .metrics-row {

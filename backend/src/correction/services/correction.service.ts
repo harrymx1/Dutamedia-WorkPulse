@@ -236,8 +236,14 @@ export class CorrectionService {
       });
 
       // Cari atasan langsung untuk dikirimi notifikasi review
+      const todayForOrg = toJakartaDateOnly(now);
       const assignment = await tx.organizationalAssignment.findFirst({
-        where: { userId: requesterUserId, endDate: null },
+        where: {
+          userId: requesterUserId,
+          effectiveDate: { lte: todayForOrg },
+          OR: [{ endDate: null }, { endDate: { gte: todayForOrg } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
       });
 
       if (assignment?.directManagerId) {

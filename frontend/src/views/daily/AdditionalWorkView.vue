@@ -5,6 +5,7 @@ import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { getBlockerStatusLabel } from '../../utils/blockerStatus';
 import { formatDateSpanWib } from '../../utils/dateTime';
+import { isInternStatus } from '../../utils/employmentStatus';
 import {
   Plus,
   CheckCircle2,
@@ -39,6 +40,7 @@ interface SimpleUser {
   id: string;
   fullName: string;
   email: string;
+  employmentStatus?: string;
 }
 
 interface ProjectOption {
@@ -106,6 +108,8 @@ function formatLeaveType(type?: string): string {
       return 'Cuti Tahunan';
     case 'SICK':
       return 'Cuti Sakit';
+    case 'PERMIT':
+      return 'Izin';
     case 'SPECIAL_LEAVE':
       return 'Cuti Khusus';
     case 'MATERNITY':
@@ -159,9 +163,11 @@ async function loadTodayState() {
       eodSubmittedAt.value = null;
     }
 
-    // Load available managers for NEWLY_ASSIGNED
+    // Load available managers for NEWLY_ASSIGNED (kecualikan karyawan Intern)
     const usersRes = await apiClient<SimpleUser[]>('/v1/organization/users');
-    availableManagers.value = usersRes.data || [];
+    availableManagers.value = (usersRes.data || []).filter(
+      (u) => !isInternStatus(u.employmentStatus),
+    );
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat pekerjaan tambahan.', true);
   } finally {

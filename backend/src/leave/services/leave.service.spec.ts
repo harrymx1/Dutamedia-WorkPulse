@@ -83,6 +83,121 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
         }),
       );
     });
+
+    it('rejects Intern requesting ANNUAL leave with 400 VALIDATION_FAILED', async () => {
+      mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'INTERN',
+        directManagerId: 'mgr-1',
+      });
+
+      await expect(
+        service.createLeaveRequest('usr-intern', {
+          startDate: '2026-10-29',
+          endDate: '2026-10-30',
+          leaveType: 'ANNUAL',
+          reason: 'Liburan bersama teman',
+        }),
+      ).rejects.toThrowError(/Intern tidak memiliki hak cuti/);
+    });
+
+    it('allows Intern requesting PERMIT (Izin) with valid reason', async () => {
+      mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'INTERN',
+        directManagerId: 'mgr-1',
+      });
+      mockPrisma.leaveRequest.create.mockResolvedValue({
+        id: 'lv-permit-1',
+        userId: 'usr-intern',
+        leaveType: 'PERMIT',
+        status: LeaveStatus.PENDING,
+        user: { id: 'usr-intern', fullName: 'Raka Pratama' },
+      });
+
+      const res = await service.createLeaveRequest('usr-intern', {
+        startDate: '2026-10-29',
+        endDate: '2026-10-29',
+        leaveType: 'PERMIT',
+        reason: 'Bimbingan skripsi wajib di kampus',
+      });
+
+      expect(res.id).toBe('lv-permit-1');
+      expect(mockPrisma.leaveRequest.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ leaveType: 'PERMIT' }),
+        }),
+      );
+    });
+
+    it('rejects Non-Intern ANNUAL leave when exceeding 12 working days quota per year', async () => {
+      mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'PERMANENT',
+        directManagerId: 'mgr-1',
+      });
+      mockPrisma.leaveRequest.findMany.mockResolvedValue([
+        {
+          startDate: new Date('2026-03-02'),
+          endDate: new Date('2026-03-13'), // 10 hari kerja
+          status: LeaveStatus.APPROVED,
+        },
+        {
+          startDate: new Date('2026-05-04'),
+          endDate: new Date('2026-05-05'), // 2 hari kerja -> total sudah 12 hari kerja
+          status: LeaveStatus.APPROVED,
+        },
+      ]);
+
+      await expect(
+        service.createLeaveRequest('usr-perm', {
+          startDate: '2026-11-02',
+          endDate: '2026-11-03',
+          leaveType: 'ANNUAL',
+          reason: 'Cuti tambahan melebihi kuota',
+        }),
+      ).rejects.toThrowError(/melebihi batas jatah Cuti Tahunan 12 hari kerja/);
+    });
+  });
+
+  describe('getMyLeaveQuota (Paket #1)', () => {
+    it('returns hasAnnualQuota false and PERMIT/SICK only for Intern', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'INTERN',
+      });
+
+      const quota = await service.getMyLeaveQuota('usr-intern', 2026);
+      expect(quota.hasAnnualQuota).toBe(false);
+      expect(quota.annualQuotaDays).toBe(0);
+      expect(quota.allowedLeaveTypes).toEqual(['PERMIT', 'SICK']);
+    });
+
+    it('calculates remaining annual quota from 12 working days for Permanent staff', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'PERMANENT',
+      });
+      mockPrisma.leaveRequest.findMany.mockResolvedValue([
+        {
+          startDate: new Date('2026-06-01'),
+          endDate: new Date('2026-06-03'), // 3 hari kerja (Sen-Rab)
+          status: LeaveStatus.APPROVED,
+        },
+        {
+          startDate: new Date('2026-07-06'),
+          endDate: new Date('2026-07-07'), // 2 hari kerja (Sen-Sel)
+          status: LeaveStatus.PENDING,
+        },
+      ]);
+
+      const quota = await service.getMyLeaveQuota('usr-perm', 2026);
+      expect(quota.hasAnnualQuota).toBe(true);
+      expect(quota.annualQuotaDays).toBe(12);
+      expect(quota.usedDays).toBe(3);
+      expect(quota.pendingDays).toBe(2);
+      expect(quota.remainingDays).toBe(7);
+      expect(quota.allowedLeaveTypes).toContain('ANNUAL');
+      expect(quota.allowedLeaveTypes).toContain('PERMIT');
+    });
   });
 
   describe('reviewLeaveRequest (DEC-007)', () => {

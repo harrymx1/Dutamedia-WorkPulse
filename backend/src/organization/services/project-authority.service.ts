@@ -4,6 +4,7 @@ import { CreateProjectAuthorityDto } from '../dto/project-authority.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
+import { assertUserIsNotIntern } from '../utils/employment-status.util';
 
 @Injectable()
 export class ProjectAuthorityService {
@@ -35,6 +36,19 @@ export class ProjectAuthorityService {
     }
 
     const effectiveDate = new Date(dto.effectiveDate);
+
+    await assertUserIsNotIntern(
+      this.prisma,
+      dto.projectManagerId,
+      'Pimpinan Proyek (Project Manager)',
+      effectiveDate,
+    );
+    await assertUserIsNotIntern(
+      this.prisma,
+      dto.escalationReviewerId,
+      'Peninjau Eskalasi Proyek',
+      effectiveDate,
+    );
 
     // Tutup wewenang aktif proyek sebelumnya jika ada dalam satu transaksi
     return await this.prisma.$transaction(async (tx) => {

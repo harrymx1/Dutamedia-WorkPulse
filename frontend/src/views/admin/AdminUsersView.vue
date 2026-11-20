@@ -3,7 +3,14 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
-import { formatDateWib } from '../../utils/dateTime';
+import { formatDateWib, getTodayIsoWib } from '../../utils/dateTime';
+import {
+  EMPLOYMENT_STATUS_OPTIONS,
+  EMPLOYMENT_STATUS_FILTER_OPTIONS,
+  formatEmploymentStatusLabel,
+  isInternStatus,
+  type EmploymentStatusCode,
+} from '../../utils/employmentStatus';
 import {
   UserPlus,
   Search,
@@ -25,6 +32,9 @@ interface AdminUserRow {
   currentRole: string;
   currentFunction: string | null;
   currentJobTitle: string | null;
+  employmentStatus?: EmploymentStatusCode;
+  assignmentEndDate?: string | null;
+  isInternExpired?: boolean;
   createdAt: string;
   invitation?: {
     id: string;
@@ -40,6 +50,7 @@ const users = ref<AdminUserRow[]>([]);
 const isLoading = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref('');
+const employmentStatusFilter = ref<'ALL' | EmploymentStatusCode>('ALL');
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
@@ -55,15 +66,26 @@ const form = ref({
   role: 'EMPLOYEE',
   function: 'Engineering',
   jobTitle: '',
+  employmentStatus: 'PERMANENT' as EmploymentStatusCode,
+  endDate: '',
 });
+
+function handleEmploymentStatusChange() {
+  if (form.value.employmentStatus === 'INTERN') {
+    form.value.role = 'EMPLOYEE';
+  }
+}
 
 async function loadUsers() {
   isLoading.value = true;
   errorMessage.value = null;
   try {
-    let url = '/v1/admin/users?';
+    let url = '/v1/admin/users?limit=100&';
     if (searchQuery.value) url += `search=${encodeURIComponent(searchQuery.value)}&`;
     if (statusFilter.value) url += `status=${encodeURIComponent(statusFilter.value)}&`;
+    if (employmentStatusFilter.value && employmentStatusFilter.value !== 'ALL') {
+      url += `employmentStatus=${encodeURIComponent(employmentStatusFilter.value)}&`;
+    }
 
     const res = await apiClient<{ data: AdminUserRow[] }>(url);
     users.value = res.data.data || (res.data as any) || [];
@@ -103,6 +125,8 @@ function openModal() {
     role: 'EMPLOYEE',
     function: 'Engineering',
     jobTitle: '',
+    employmentStatus: 'PERMANENT',
+    endDate: '',
   };
   isModalOpen.value = true;
 }
@@ -118,15 +142,24 @@ async function handleCreateUser() {
     modalError.value = 'Nama lengkap dan email wajib diisi.';
     return;
   }
+  if (form.value.employmentStatus === 'INTERN' && !form.value.endDate) {
+    modalError.value = 'Tanggal selesai magang wajib diisi untuk karyawan berstatus Intern.';
+    return;
+  }
 
   isSubmitting.value = true;
   try {
+    const payload = {
+      ...form.value,
+      role: form.value.employmentStatus === 'INTERN' ? 'EMPLOYEE' : form.value.role,
+      endDate: form.value.endDate || undefined,
+    };
     const res = await apiClient<{
       user: any;
       invitation: { token: string; expiresAt: string };
     }>('/v1/admin/users', {
       method: 'POST',
-      body: JSON.stringify(form.value),
+      body: JSON.stringify(payload),
     });
 
     createdToken.value = res.data.invitation.token;
@@ -250,6 +283,20 @@ function copyToClipboard(text: string) {
           <option value="ACTIVE">ACTIVE (Aktif)</option>
           <option value="INACTIVE">INACTIVE (Nonaktif)</option>
         </select>
+        <select
+          v-model="employmentStatusFilter"
+          class="status-select"
+          data-testid="filter-employment-status"
+          @change="loadUsers"
+        >
+          <option
+            v-for="opt in EMPLOYMENT_STATUS_FILTER_OPTIONS"
+            :key="opt.value"
+            :value="opt.value"
+          >
+            {{ opt.label }}
+          </option>
+        </select>
       </div>
 
       <!-- Table Card -->
@@ -283,14 +330,26 @@ function copyToClipboard(text: string) {
                 <div class="user-meta">
                   <div class="avatar-sm">{{ u.fullName.charAt(0) }}</div>
                   <div>
-                    <strong class="user-name">{{ u.fullName }}</strong>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                      <strong class="user-name">{{ u.fullName }}</strong>
+                      <span v-if="isInternStatus(u.employmentStatus)" class="badge-intern">Intern</span>
+                      <span v-else-if="u.employmentStatus === 'CONTRACT'" class="badge-contract">Kontrak</span>
+                      <span v-if="u.isInternExpired" class="badge-intern-expired">Masa Magang Berakhir</span>
+                    </div>
                     <span class="user-email-text mono-num">{{ u.email }}</span>
+                    <div
+                      v-if="isInternStatus(u.employmentStatus) && u.assignmentEndDate"
+                      style="font-size: 11px; color: var(--color-text-secondary); margin-top: 2px;"
+                    >
+                      Selesai magang: <span class="wp-datetime">{{ formatDateWib(u.assignmentEndDate) }}</span>
+                    </div>
                   </div>
                 </div>
               </td>
               <td>
                 <span class="role-badge">{{ u.currentRole }}</span>
-                <span v-if="u.currentFunction" class="func-text">{{ u.currentFunction }}</span>
+                <span v-if="u.currentJobTitle" class="func-text" style="font-weight: 600; color: var(--color-text-primary);">{{ u.currentJobTitle }}</span>
+                <span v-if="u.currentFunction" class="func-text">{{ u.currentFunction }} · {{ formatEmploymentStatusLabel(u.employmentStatus) }}</span>
               </td>
               <td>
                 <span :class="['status-badge', u.status.toLowerCase()]">
@@ -407,8 +466,22 @@ function copyToClipboard(text: string) {
 
           <div class="form-row">
             <div class="form-group">
+              <label for="new-emp-status">Status Karyawan</label>
+              <select
+                id="new-emp-status"
+                v-model="form.employmentStatus"
+                data-testid="input-employment-status"
+                @change="handleEmploymentStatusChange"
+              >
+                <option v-for="opt in EMPLOYMENT_STATUS_OPTIONS" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
               <label for="new-role">Peran (Role)</label>
-              <select id="new-role" v-model="form.role">
+              <select id="new-role" v-model="form.role" :disabled="form.employmentStatus === 'INTERN'">
                 <option value="EMPLOYEE">EMPLOYEE</option>
                 <option value="SUPERVISOR">SUPERVISOR</option>
                 <option value="HEAD">HEAD</option>
@@ -416,8 +489,13 @@ function copyToClipboard(text: string) {
                 <option value="HRGA">HRGA</option>
                 <option value="CEO_MANAGEMENT">CEO_MANAGEMENT</option>
               </select>
+              <small v-if="form.employmentStatus === 'INTERN'" style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
+                Karyawan Intern otomatis menggunakan peran EMPLOYEE.
+              </small>
             </div>
+          </div>
 
+          <div class="form-row">
             <div class="form-group">
               <label for="new-func">Fungsi / Divisi</label>
               <select id="new-func" v-model="form.function">
@@ -433,16 +511,33 @@ function copyToClipboard(text: string) {
                 <option value="Management">Management</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label for="new-title">Jabatan (Job Title)</label>
+              <input
+                id="new-title"
+                v-model="form.jobTitle"
+                type="text"
+                placeholder="Contoh: Frontend Developer"
+              />
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="new-title">Jabatan (Job Title)</label>
+          <div v-if="form.employmentStatus === 'INTERN' || form.employmentStatus === 'CONTRACT'" class="form-group">
+            <label for="new-end-date">
+              {{ form.employmentStatus === 'INTERN' ? 'Tanggal Selesai Magang *' : 'Tanggal Berakhir Kontrak (Opsional)' }}
+            </label>
             <input
-              id="new-title"
-              v-model="form.jobTitle"
-              type="text"
-              placeholder="Contoh: Frontend Developer"
+              id="new-end-date"
+              v-model="form.endDate"
+              type="date"
+              :min="getTodayIsoWib()"
+              :required="form.employmentStatus === 'INTERN'"
+              data-testid="input-end-date"
             />
+            <small v-if="form.employmentStatus === 'INTERN'" style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
+              Wajib diisi. Sistem akan menampilkan pengingat otomatis jika masa magang telah melewati tanggal ini.
+            </small>
           </div>
 
           <div class="modal-footer">

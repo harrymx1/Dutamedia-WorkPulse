@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatDateWib, formatDateRangeWib } from '../../utils/dateTime';
+import { isInternStatus } from '../../utils/employmentStatus';
 import {
   CalendarDays,
   Clock,
@@ -32,6 +33,7 @@ interface LeaveQueueItem {
     fullName: string;
     email: string;
     role?: string;
+    employmentStatus?: string;
   };
 }
 
@@ -106,7 +108,9 @@ function formatLeaveType(type?: string): string {
     case 'ANNUAL':
       return 'Cuti Tahunan';
     case 'SICK':
-      return 'Cuti Sakit';
+      return 'Sakit';
+    case 'PERMIT':
+      return 'Izin';
     case 'SPECIAL_LEAVE':
       return 'Cuti Khusus';
     case 'MATERNITY':
@@ -304,7 +308,10 @@ onMounted(() => {
                   <div class="employee-meta">
                     <div class="avatar">{{ item.user?.fullName?.charAt(0) || 'U' }}</div>
                     <div>
-                      <div class="emp-name">{{ item.user?.fullName || 'Pengguna' }}</div>
+                      <div class="emp-name" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span>{{ item.user?.fullName || 'Pengguna' }}</span>
+                        <span v-if="isInternStatus(item.user?.employmentStatus)" class="badge-intern">Intern</span>
+                      </div>
                       <div class="emp-role">{{ item.user?.role || 'Karyawan' }} · {{ item.user?.email }}</div>
                     </div>
                   </div>
@@ -384,12 +391,13 @@ onMounted(() => {
                   <div class="detail-val-user">
                     <strong>{{ selectedRequest.user?.fullName }}</strong>
                     <span class="user-role-badge">{{ selectedRequest.user?.role || 'Karyawan' }}</span>
+                    <span v-if="isInternStatus(selectedRequest.user?.employmentStatus)" class="badge-intern">Intern</span>
                   </div>
                 </div>
 
                 <div class="detail-item">
-                  <span class="detail-label">Jenis Cuti</span>
-                  <span class="leave-type-chip">{{ selectedRequest.leaveType || 'Cuti Tahunan' }}</span>
+                  <span class="detail-label">Jenis Pengajuan</span>
+                  <span class="leave-type-chip">{{ formatLeaveType(selectedRequest.leaveType) }}</span>
                 </div>
 
                 <div class="detail-item">

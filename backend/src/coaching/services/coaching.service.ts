@@ -195,11 +195,13 @@ export class CoachingService {
    * Mengambil ringkasan pembinaan tim bagi atasan langsung / Head.
    */
   async getTeamOverview(managerUserId: string) {
-    // Ambil karyawan yang dibawahi oleh manager ini
+    // Ambil karyawan yang dibawahi oleh manager ini (termasuk Intern yang memiliki tanggal selesai aktif)
+    const today = toJakartaDateOnly();
     const subordinates = await this.prisma.organizationalAssignment.findMany({
       where: {
         directManagerId: managerUserId,
-        endDate: null,
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
       },
       include: {
         user: { select: { id: true, fullName: true, email: true, status: true } },

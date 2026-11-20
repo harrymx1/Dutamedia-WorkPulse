@@ -23,6 +23,8 @@ export interface LoginResult {
     status: string;
     jobTitle?: string | null;
     function?: string | null;
+    employmentStatus?: string | null;
+    assignmentEndDate?: string | null;
     managerName?: string | null;
     hasSubordinates?: boolean;
     isTemporaryReviewer?: boolean;
@@ -118,6 +120,10 @@ export class AuthService {
     const role: string = activeOrg?.role || CanonicalRole.EMPLOYEE;
     const jobTitle: string | null = (activeOrg as any)?.jobTitle || null;
     const orgFunction: string | null = (activeOrg as any)?.function || null;
+    const employmentStatus: string = (activeOrg as any)?.employmentStatus || 'PERMANENT';
+    const assignmentEndDate: string | null = (activeOrg as any)?.endDate
+      ? new Date((activeOrg as any).endDate).toISOString().split('T')[0]
+      : null;
     const managerName: string | null =
       (activeOrg as any)?.directManager?.fullName || null;
 
@@ -207,6 +213,8 @@ export class AuthService {
         status: user.status,
         jobTitle,
         function: orgFunction,
+        employmentStatus,
+        assignmentEndDate,
         managerName,
         hasSubordinates: subordinateCount > 0,
         isTemporaryReviewer: tempReviewerCount > 0,

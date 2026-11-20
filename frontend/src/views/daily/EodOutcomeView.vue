@@ -65,6 +65,8 @@ function formatLeaveType(type?: string): string {
       return 'Cuti Tahunan';
     case 'SICK':
       return 'Cuti Sakit';
+    case 'PERMIT':
+      return 'Izin';
     case 'SPECIAL_LEAVE':
       return 'Cuti Khusus';
     case 'MATERNITY':

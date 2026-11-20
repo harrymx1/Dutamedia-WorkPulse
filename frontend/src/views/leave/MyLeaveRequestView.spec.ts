@@ -120,5 +120,86 @@ describe('MyLeaveRequestView.vue (Prototipe 20 / EP10 - Pengajuan Cuti Mandiri)'
 
     expect(wrapper.text()).toContain('Alasan permohonan cuti minimal 5 karakter.');
   });
+
+  it('restricts Intern users to only Izin (PERMIT) & Sakit (SICK) and hides annual quota box', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/leave/quota')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              year: 2026,
+              employmentStatus: 'INTERN',
+              hasAnnualQuota: false,
+              annualQuotaDays: 0,
+              usedDays: 0,
+              pendingDays: 0,
+              remainingDays: 0,
+              allowedLeaveTypes: ['PERMIT', 'SICK'],
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const wrapper = mount(MyLeaveRequestView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('[data-testid="intern-leave-info"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="annual-leave-quota"]').exists()).toBe(false);
+    const options = wrapper.findAll('#leaveType option').map((o) => o.element.getAttribute('value'));
+    expect(options).toEqual(['PERMIT', 'SICK']);
+  });
+
+  it('shows 12-day annual quota box and all 6 leave/permit options for Non-Intern users', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/leave/quota')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              year: 2026,
+              employmentStatus: 'PERMANENT',
+              hasAnnualQuota: true,
+              annualQuotaDays: 12,
+              usedDays: 2,
+              pendingDays: 0,
+              remainingDays: 10,
+              allowedLeaveTypes: ['ANNUAL', 'SICK', 'PERMIT', 'SPECIAL_LEAVE', 'MATERNITY', 'UNPAID'],
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const wrapper = mount(MyLeaveRequestView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('[data-testid="annual-leave-quota"]').text()).toContain('Tersisa 10 dari 12 hari kerja');
+    const options = wrapper.findAll('#leaveType option').map((o) => o.element.getAttribute('value'));
+    expect(options).toContain('ANNUAL');
+    expect(options).toContain('PERMIT');
+    expect(options).toContain('SICK');
+  });
 });
 

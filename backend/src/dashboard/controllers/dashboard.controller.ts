@@ -24,6 +24,7 @@ export class DashboardController {
     @Query('scope') scope?: string,
     @Query('function') filterFunction?: string,
     @Query('projectCode') projectCode?: string,
+    @Query('employmentStatus') employmentStatus?: string,
   ) {
     const userRole = req.user?.role;
     if (scope === 'management') {
@@ -61,6 +62,7 @@ export class DashboardController {
       scope,
       filterFunction,
       projectCode,
+      employmentStatus,
     });
   }
 
@@ -75,6 +77,7 @@ export class DashboardController {
     @Query('scope') scope?: string,
     @Query('function') filterFunction?: string,
     @Query('projectCode') projectCode?: string,
+    @Query('employmentStatus') employmentStatus?: string,
   ) {
     return this.dashboardService.getSupportFeed({
       userId: req.user?.id,
@@ -83,6 +86,7 @@ export class DashboardController {
       scope,
       filterFunction,
       projectCode,
+      employmentStatus,
     });
   }
 }

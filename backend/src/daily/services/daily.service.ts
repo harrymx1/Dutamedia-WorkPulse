@@ -5,6 +5,7 @@ import { PolicyService } from '../../policy/services/policy.service';
 import { WorkdayService } from './workday.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { assertUserIsNotIntern } from '../../organization/utils/employment-status.util';
 import {
   CommitmentOutcome,
   CommitmentRisk,
@@ -718,6 +719,10 @@ export class DailyService {
         message: 'Pekerjaan dengan alasan Penugasan Baru (NEWLY_ASSIGNED) wajib menyertakan atasan yang menugaskan.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
+    }
+
+    if (dto.assignedByUserId) {
+      await assertUserIsNotIntern(this.prisma, dto.assignedByUserId, 'atasan penugas');
     }
 
     const createdAw = await this.prisma.additionalWork.create({

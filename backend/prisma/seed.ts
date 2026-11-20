@@ -10,6 +10,7 @@ import {
   PrismaClient,
   CanonicalRole,
   CanonicalFunction,
+  EmploymentStatus,
   PolicyCategory,
   BlockerSeverity,
   BlockerType,
@@ -251,6 +252,21 @@ async function main() {
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
     },
+    // Karyawan Magang / Intern (Paket #1 — tetap masuk divisi masing-masing, jabatan bersih tanpa kata "Intern")
+    {
+      email: 'intern.frontend@dutamedia.com',
+      fullName: 'Raka Pratama',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
+    {
+      email: 'intern.finance@dutamedia.com',
+      fullName: 'Nisa Amelia',
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      preserveStatusOnUpdate: false,
+    },
   ];
 
   const userMap: Record<string, any> = {};
@@ -296,6 +312,11 @@ async function main() {
   const staffFinanceUser = userMap['staff.finance@dutamedia.com'];
   const hrgaUser = userMap['hrga@dutamedia.com'];
   const gaUser = userMap['ga@dutamedia.com'];
+  const internFrontendUser = userMap['intern.frontend@dutamedia.com'];
+  const internFinanceUser = userMap['intern.finance@dutamedia.com'];
+
+  const internEndDate = new Date(todayDate);
+  internEndDate.setDate(internEndDate.getDate() + 90);
 
   // =========================================================================
   // 2. SEED ORGANIZATIONAL ASSIGNMENTS (Pohon Hierarki Resmi PT Dutamedia)
@@ -541,16 +562,49 @@ async function main() {
       assignmentReason: 'Penugasan General Affairs (GA) Officer di bawah HRGA & Corporate Legal',
       createdByUserId: hrgaUser.id,
     },
+    // Karyawan Magang (Intern) — nama jabatan bersih tanpa kata "Intern", wajib memiliki endDate
+    {
+      userId: internFrontendUser.id,
+      jobTitle: 'Frontend Developer',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.Engineering,
+      employmentStatus: EmploymentStatus.INTERN,
+      directManagerId: headEngUser.id,
+      effectiveDate: todayDate,
+      endDate: internEndDate,
+      assignmentReason: 'Penempatan program magang Divisi Engineering (berakhir otomatis sesuai jadwal magang)',
+      createdByUserId: hrgaUser.id,
+    },
+    {
+      userId: internFinanceUser.id,
+      jobTitle: 'Finance Staff',
+      role: CanonicalRole.EMPLOYEE,
+      function: CanonicalFunction.Finance,
+      employmentStatus: EmploymentStatus.INTERN,
+      directManagerId: financeUser.id,
+      effectiveDate: todayDate,
+      endDate: internEndDate,
+      assignmentReason: 'Penempatan program magang Divisi Finance (berakhir otomatis sesuai jadwal magang)',
+      createdByUserId: hrgaUser.id,
+    },
   ];
 
   for (const assignment of orgAssignments) {
+    const targetEmploymentStatus = (assignment as any).employmentStatus || EmploymentStatus.PERMANENT;
+    const targetEndDate = (assignment as any).endDate ?? null;
     const allRows = await prisma.organizationalAssignment.findMany({
       where: { userId: assignment.userId },
       orderBy: [{ endDate: 'asc' }, { effectiveDate: 'desc' }],
     });
 
     if (allRows.length === 0) {
-      await prisma.organizationalAssignment.create({ data: assignment });
+      await prisma.organizationalAssignment.create({
+        data: {
+          ...assignment,
+          employmentStatus: targetEmploymentStatus,
+          endDate: targetEndDate,
+        },
+      });
     } else {
       const [primaryRow, ...extraRows] = allRows;
       await prisma.organizationalAssignment.update({
@@ -559,8 +613,9 @@ async function main() {
           jobTitle: assignment.jobTitle,
           role: assignment.role,
           function: assignment.function,
+          employmentStatus: targetEmploymentStatus,
           directManagerId: assignment.directManagerId,
-          endDate: null,
+          endDate: targetEndDate,
           assignmentReason: assignment.assignmentReason,
         },
       });

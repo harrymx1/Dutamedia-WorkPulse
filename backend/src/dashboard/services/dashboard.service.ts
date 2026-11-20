@@ -19,6 +19,7 @@ export interface PulseQueryOptions {
   scope?: string;
   filterFunction?: string;
   projectCode?: string;
+  employmentStatus?: string;
 }
 
 @Injectable()
@@ -261,6 +262,27 @@ export class DashboardService {
       effectiveUserIds = projectUserIds;
     }
 
+    // 3B. Filter Status Karyawan (Paket #1: ALL / PERMANENT / CONTRACT / INTERN)
+    const targetEmploymentStatus =
+      options?.employmentStatus && options.employmentStatus !== 'ALL'
+        ? options.employmentStatus.toUpperCase()
+        : null;
+    if (targetEmploymentStatus && activeAssignments.length > 0) {
+      const empStatusUserIds = new Set(
+        activeAssignments
+          .filter(
+            (a) =>
+              String((a as any).employmentStatus || 'PERMANENT').toUpperCase() ===
+              targetEmploymentStatus,
+          )
+          .map((a) => a.userId),
+      );
+      effectiveUserIds =
+        effectiveUserIds !== null
+          ? new Set([...effectiveUserIds].filter((id) => empStatusUserIds.has(id)))
+          : empStatusUserIds;
+    }
+
     if (effectiveUserIds !== null) {
       totalEmployees = effectiveUserIds.size;
       todayRecords = todayRecords.filter((r: any) => effectiveUserIds!.has(r.userId));
@@ -342,12 +364,16 @@ export class DashboardService {
     const noSubmissionCount = Math.max(0, totalEmployees - checkedInCount);
 
     // Susun daftar personil butuh perhatian secara dinamis dari record & blocker nyata
-    const userJobMap = new Map<string, { fullName: string; jobTitle: string; function: string }>();
+    const userJobMap = new Map<
+      string,
+      { fullName: string; jobTitle: string; function: string; employmentStatus: string }
+    >();
     for (const a of activeAssignments) {
       userJobMap.set(a.userId, {
         fullName: a.user?.fullName || 'Karyawan',
         jobTitle: a.jobTitle || a.function,
         function: a.function,
+        employmentStatus: (a as any).employmentStatus || 'PERMANENT',
       });
     }
 
@@ -356,6 +382,7 @@ export class DashboardService {
       userName: string;
       jobTitle: string;
       function: string;
+      employmentStatus: string;
       projectCode: string | null;
       level: 'RED' | 'AMBER';
       badgeLabel: string;
@@ -371,6 +398,7 @@ export class DashboardService {
       const userName = b.raisedBy?.fullName || uInfo?.fullName || 'Anggota Tim';
       const jobTitle = uInfo?.jobTitle || 'Staf';
       const funcName = uInfo?.function || 'ENGINEERING';
+      const empStatus = uInfo?.employmentStatus || 'PERMANENT';
       const isRed =
         b.severity === BlockerSeverity.CRITICAL || b.severity === BlockerSeverity.HIGH;
 
@@ -379,6 +407,7 @@ export class DashboardService {
         userName,
         jobTitle,
         function: funcName,
+        employmentStatus: empStatus,
         projectCode: b.projectCodeReference || null,
         level: isRed ? 'RED' : 'AMBER',
         badgeLabel:
@@ -407,6 +436,7 @@ export class DashboardService {
       const userName = r.user?.fullName || uInfo?.fullName || 'Anggota Tim';
       const jobTitle = uInfo?.jobTitle || (r.orgContextSnapshot as any)?.jobTitle || 'Staf';
       const funcName = uInfo?.function || (r.orgContextSnapshot as any)?.function || 'ENGINEERING';
+      const empStatus = uInfo?.employmentStatus || 'PERMANENT';
       const cMeta = (r.orgContextSnapshot as any)?.commitmentMeta || {};
 
       for (const c of r.commitments || []) {
@@ -421,6 +451,7 @@ export class DashboardService {
             userName,
             jobTitle,
             function: funcName,
+            employmentStatus: empStatus,
             projectCode: pCode,
             level: c.initialRisk === CommitmentRisk.RED ? 'RED' : 'AMBER',
             badgeLabel:
@@ -640,7 +671,7 @@ export class DashboardService {
             OR: [{ endDate: null }, { endDate: { gte: today } }],
             user: { status: UserStatus.ACTIVE },
           },
-          select: { userId: true, function: true, role: true },
+          select: { userId: true, function: true, role: true, employmentStatus: true },
         })) || [];
     }
 
@@ -686,6 +717,27 @@ export class DashboardService {
           String(r.blocker?.projectCodeReference || '')
             .trim()
             .toUpperCase() === targetProject,
+      );
+    }
+
+    // Filter per Status Karyawan jika dipilih
+    const targetEmpStatus =
+      options?.employmentStatus && options.employmentStatus !== 'ALL'
+        ? options.employmentStatus.toUpperCase()
+        : null;
+    if (targetEmpStatus && activeAssignments.length > 0) {
+      const empIds = new Set(
+        activeAssignments
+          .filter(
+            (a) =>
+              String((a as any).employmentStatus || 'PERMANENT').toUpperCase() ===
+              targetEmpStatus,
+          )
+          .map((a) => a.userId),
+      );
+      filteredRows = filteredRows.filter(
+        (r: any) =>
+          empIds.has(r.supporterUserId) || empIds.has(r.blocker?.raisedByUserId),
       );
     }
 

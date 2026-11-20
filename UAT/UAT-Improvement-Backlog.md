@@ -6,7 +6,7 @@
 > **UAT Co-Pilot:** Senior Software Quality Assurance Engineer  
 > **Status Dokumen:** ACTIVE — LIVING REGISTER  
 > **Tanggal Inisialisasi:** 30 Oktober 2026  
-> **Total Temuan:** 69 Calon Perbaikan (IMP-001 s.d. IMP-069)
+> **Total Temuan:** 70 Calon Perbaikan (IMP-001 s.d. IMP-070)
 
 ---
 
@@ -115,6 +115,7 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 | **IMP-067** | Perbaikan Resolusi Rute Controller & Mekanisme Pengunduhan Berkas Audit CSV pada Laporan Eksekutif (`/reports`) | Backend Routing & Frontend Blob Download | `/reports`, `reports.controller.ts` | `TC-DASH-003`, `TC-CEO-001` | High | Resolved / Implemented |
 | **IMP-068** | Presisi Interseksi Matematis Filter Divisi-Proyek & Integrasi Tiket Kendala Aktif ke Widget Personil Butuh Bantuan | Backend Aggregation & Dashboard UI Integration | `/dashboard`, `dashboard.service.ts`, `PulseDashboardView.vue` | `TC-CEO-001` | High | Resolved / Implemented |
 | **IMP-069** | Implementasi Panel UI & Dialog Modal Penugasan Pemilik Kebijakan (Policy Owners) pada Halaman Pengaturan Kebijakan | UI Panel, Modal Form & Policy Governance | `/admin/policies`, `PolicySettingsView.vue` | `TC-CEO-001`, `TC-ADMN-003` | High | Resolved / Implemented |
+| **IMP-070** | Alur Persetujuan Cuti Berjenjang 3 Tahap (`HRGA → Head Divisi → Direktur`) sesuai Kebijakan Perusahaan | Business Workflow & Leave Approval | `/leave/my`, `/leave/queue`, `LeaveService` | `TC-LEAV-001`, `TC-LEAV-002` | High | Candidate (Scheduled for Pilot / Post-Presentation) |
 
 ---
 
@@ -1510,6 +1511,28 @@ Setiap temuan diklasifikasikan ke dalam salah satu kategori baku berikut:
 - **Priority:** High
 - **Evidence / Screenshot Reference:** Temuan Acceptance Owner (Harry) pada Sesi UAT `TC-CEO-001` (12–13 Nov 2026): `media_1794466740383_efd19ca7.jpg`, `media_1794468651217_4361407d.jpg`, serta verifikasi final Poin 1–4 pada 13 Nov 2026.
 - **Status:** Resolved / Verified Pass (13 Nov 2026 — TC-CEO-001 Pass)
+
+---
+
+### [IMP-070] Alur Persetujuan Cuti Berjenjang 3 Tahap (`HRGA → Head Divisi → Direktur`)
+- **Finding ID:** IMP-070
+- **Title:** Alur Persetujuan Cuti Berjenjang 3 Tahap (`HRGA → Head Divisi → Direktur`) sesuai Kebijakan Resmi Perusahaan
+- **Category:** Feature Enhancement / Leave Approval Workflow
+- **Page / Module:** `/leave/my`, `/leave/queue`, `LeaveService`, `schema.prisma` (`leave_requests` & tabel tahapan persetujuan)
+- **Related Test Case:** `TC-LEAV-001`, `TC-LEAV-002`, `TC-LEAV-003`, `TC-E2E-004`
+- **Current Condition:** Pada versi presentasi saat ini (Paket #1 Opsi 1 — 20 Nov 2026), jatah cuti tahunan 12 hari/tahun untuk karyawan Tetap/Kontrak serta pembatasan Intern (hanya Izin & Sakit) telah aktif. Namun alur persetujuan cuti di sistem masih menggunakan 1 tahap persetujuan (Atasan Langsung / HRGA / Reviewer Sementara) agar tidak mengganggu hasil UAT yang sudah lulus 100% menjelang presentasi.
+- **Confirmed Policy from HRGA (20 Nov 2026):**
+  1. Pengajuan cuti karyawan melalui **3 tahap persetujuan berurutan**: **Tahap 1: HRGA** → **Tahap 2: Head Divisi** → **Tahap 3: Direktur (CEO)**.
+  2. Jika ditolak pada tahap mana pun, pengajuan langsung berhenti dan berstatus `REJECTED`.
+  3. **Pertanyaan terbuka untuk dikonfirmasi ke HRGA sebelum mulai pengerjaan:** Apakah pengajuan **Izin / Sakit** untuk karyawan **Intern** juga melewati 3 tahap penuh (`HRGA → Head → Direktur`), atau cukup 1–2 tahap (misal HRGA dan Head Divisi)?
+- **Proposed Improvement (Scheduled for Pilot / Post-Presentation):**
+  1. Menambah status tahapan persetujuan (`PENDING_HRGA` → `PENDING_HEAD` → `PENDING_DIRECTOR` → `APPROVED` / `REJECTED`) dan riwayat persetujuan per tahap (siapa menyetujui, kapan, dan catatan per tahap).
+  2. Menyesuaikan antrean `/leave/queue` agar setiap pejabat (HRGA, Head Divisi, Direktur) hanya melihat tiket yang memang sedang menunggu gilirannya.
+  3. Menampilkan indikator progres 3 tahap (Stepper: `HRGA ✓ → Head ⏳ → Direktur`) di halaman `/leave/my` dan `/leave/queue`.
+  4. Mengirim notifikasi otomatis ke pejabat tahap berikutnya setiap kali satu tahap disetujui.
+- **Rationale / Expected Benefit:** Menyelaraskan proses persetujuan cuti digital WorkPulse 100% dengan prosedur operasional baku (SOP) persetujuan cuti di PT Dutamedia Mandiri Pratama saat memasuki tahap uji coba lapangan (Pilot).
+- **Priority:** High (Wajib dikerjakan pada fase Pilot / Pasca-Presentasi, jangan sampai terlewat)
+- **Status:** Candidate (Scheduled for Pilot / Post-Presentation — Disepakati Harry 20 Nov 2026)
 
 ---
 

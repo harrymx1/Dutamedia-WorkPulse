@@ -4,6 +4,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getUserInitials } from '../../utils/initials';
+import { formatDateWib } from '../../utils/dateTime';
+import { formatEmploymentStatusLabel, isInternStatus } from '../../utils/employmentStatus';
 import {
   KeyRound,
   CheckCircle2,
@@ -167,6 +169,18 @@ const formattedEffectiveDate = computed(() => {
   return '05 Januari 2026';
 });
 
+const isInternUser = computed(() => isInternStatus(authStore.user?.employmentStatus));
+
+const formattedEmploymentStatus = computed(() =>
+  formatEmploymentStatusLabel(authStore.user?.employmentStatus),
+);
+
+const formattedInternEndDate = computed(() => {
+  const raw = authStore.user?.assignmentEndDate;
+  if (!raw) return '-';
+  return formatDateWib(raw);
+});
+
 const formattedExemption = computed(() => {
   const r = authStore.user?.role;
   if (r === 'CEO_MANAGEMENT' || r === 'CEO') {
@@ -311,6 +325,7 @@ async function handleLogout() {
         <div class="hero-info">
           <div class="hero-title-row">
             <span class="hero-name" data-testid="profile-hero-name">{{ sanitizedFullName }}</span>
+            <span v-if="isInternUser" class="badge-intern" data-testid="profile-intern-badge">Intern</span>
             <span class="pill neutral mono-id" data-testid="profile-hero-id">{{ formattedNik }}</span>
             <span class="status-badge" data-testid="profile-status-badge">
               <span class="status-indicator-dot"></span>
@@ -354,6 +369,20 @@ async function handleLogout() {
             <div class="info-item">
               <span class="info-label">Jabatan Fungsional (Job Title)</span>
               <span class="info-value" data-testid="info-jobtitle">{{ formattedJobTitle }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Status Karyawan</span>
+              <span class="info-value" data-testid="info-employment-status">
+                <span
+                  :class="isInternUser ? 'badge-intern' : authStore.user?.employmentStatus === 'CONTRACT' ? 'badge-contract' : 'badge-permanent'"
+                >
+                  {{ formattedEmploymentStatus }}
+                </span>
+              </span>
+            </div>
+            <div v-if="isInternUser && authStore.user?.assignmentEndDate" class="info-item">
+              <span class="info-label">Masa Magang Berakhir</span>
+              <span class="info-value wp-datetime" data-testid="info-intern-enddate">{{ formattedInternEndDate }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Peran Otorisasi Sistem (System RBAC Role)</span>

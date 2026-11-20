@@ -130,6 +130,14 @@ export class TemporaryReviewerService {
       });
     }
 
+    if ((user.orgAssignments?.[0] as any)?.employmentStatus === 'INTERN') {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Karyawan berstatus Intern tidak dapat ditetapkan sebagai Reviewer Sementara.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const effectiveDate = new Date(dto.effectiveDate);
     const expiryDate = new Date(dto.expiryDate);
 

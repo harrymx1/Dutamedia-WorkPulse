@@ -1,5 +1,12 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
-import { CanonicalFunction, CanonicalRole } from '@prisma/client';
+import {
+  IsDateString,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  MaxLength,
+} from 'class-validator';
+import { CanonicalFunction, CanonicalRole, EmploymentStatus } from '@prisma/client';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Nama lengkap pengguna wajib diisi' })
@@ -17,6 +24,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(CanonicalFunction, { message: 'Fungsi kanonikal tidak valid' })
   function?: CanonicalFunction;
+
+  @IsOptional()
+  @IsEnum(EmploymentStatus, { message: 'Status karyawan tidak valid (PERMANENT, CONTRACT, INTERN)' })
+  employmentStatus?: EmploymentStatus;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Format tanggal selesai harus YYYY-MM-DD' })
+  endDate?: string;
 
   @IsOptional()
   jobTitle?: string;

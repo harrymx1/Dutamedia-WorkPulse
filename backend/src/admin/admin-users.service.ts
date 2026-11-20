@@ -5,7 +5,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserStatusDto } from './dto/user-status.dto';
 import { AppException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
-import { CanonicalRole, UserStatus } from '@prisma/client';
+import { CanonicalRole, EmploymentStatus, UserStatus } from '@prisma/client';
+import { toJakartaDateOnly } from '../common/time/date-only.util';
 
 export interface UserListItem {
   id: string;
@@ -15,6 +16,9 @@ export interface UserListItem {
   currentRole: string;
   currentFunction: string | null;
   currentJobTitle: string | null;
+  employmentStatus: EmploymentStatus;
+  assignmentEndDate: string | null;
+  isInternExpired: boolean;
   createdAt: Date;
   invitation?: {
     id: string;
@@ -36,6 +40,7 @@ export class AdminUsersService {
     limit?: number;
     search?: string;
     status?: UserStatus;
+    employmentStatus?: EmploymentStatus;
   }): Promise<{ data: UserListItem[]; pagination: any }> {
     const page = Math.max(1, Number(options.page) || 1);
     const limit = Math.max(1, Math.min(500, Number(options.limit) || 20));
@@ -52,6 +57,13 @@ export class AdminUsersService {
         { email: { contains: search, mode: 'insensitive' } },
       ];
     }
+    if (options.employmentStatus) {
+      where.orgAssignments = {
+        some: {
+          employmentStatus: options.employmentStatus,
+        },
+      };
+    }
 
     const [totalRecords, users] = await Promise.all([
       this.prisma.user.count({ where }),
@@ -66,9 +78,6 @@ export class AdminUsersService {
             take: 1,
           },
           orgAssignments: {
-            where: {
-              OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
-            },
             orderBy: { effectiveDate: 'desc' },
             take: 1,
           },
@@ -76,9 +85,18 @@ export class AdminUsersService {
       }),
     ]);
 
+    const today = toJakartaDateOnly();
     const data: UserListItem[] = users.map((u) => {
       const latestOrg = u.orgAssignments[0];
       const latestInv = u.invitation[0];
+      const empStatus: EmploymentStatus =
+        (latestOrg as any)?.employmentStatus || EmploymentStatus.PERMANENT;
+      const endDateObj = latestOrg?.endDate ? new Date(latestOrg.endDate) : null;
+      const assignmentEndDate = endDateObj ? endDateObj.toISOString().split('T')[0] : null;
+      const isInternExpired =
+        empStatus === EmploymentStatus.INTERN &&
+        Boolean(endDateObj) &&
+        endDateObj! < today;
 
       return {
         id: u.id,
@@ -88,6 +106,9 @@ export class AdminUsersService {
         currentRole: latestOrg?.role || CanonicalRole.EMPLOYEE,
         currentFunction: latestOrg?.function || null,
         currentJobTitle: latestOrg?.jobTitle || null,
+        employmentStatus: empStatus,
+        assignmentEndDate,
+        isInternExpired,
         createdAt: u.createdAt,
         invitation: latestInv
           ? {
@@ -132,6 +153,34 @@ export class AdminUsersService {
       });
     }
 
+    const targetEmploymentStatus = dto.employmentStatus || EmploymentStatus.PERMANENT;
+    const today = toJakartaDateOnly();
+
+    if (targetEmploymentStatus === EmploymentStatus.INTERN) {
+      if (dto.role && dto.role !== CanonicalRole.EMPLOYEE) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Karyawan berstatus Intern hanya dapat menggunakan peran Staff / Employee.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      if (!dto.endDate) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Tanggal selesai magang wajib diisi untuk karyawan berstatus Intern.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      const parsedEnd = new Date(dto.endDate);
+      if (isNaN(parsedEnd.getTime()) || parsedEnd < today) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Tanggal selesai magang tidak boleh lebih awal dari hari ini.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+    }
+
     const rawToken = this.tokenService.generateRandomToken(32);
     const tokenHash = this.tokenService.hashToken(rawToken);
     // Token kedaluwarsa dalam 72 jam (DEC-005)
@@ -162,9 +211,11 @@ export class AdminUsersService {
           data: {
             userId: newUser.id,
             jobTitle: dto.jobTitle || `${dto.function} Specialist`,
-            role: dto.role,
+            role: targetEmploymentStatus === EmploymentStatus.INTERN ? CanonicalRole.EMPLOYEE : dto.role,
             function: dto.function,
-            effectiveDate: new Date(),
+            employmentStatus: targetEmploymentStatus,
+            effectiveDate: today,
+            endDate: dto.endDate ? new Date(dto.endDate) : null,
             assignmentReason: 'Initial Organizational Onboarding via Invitation',
             createdByUserId: creatorUserId,
           },

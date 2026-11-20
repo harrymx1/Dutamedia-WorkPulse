@@ -6,7 +6,7 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
-import { CanonicalFunction, CanonicalRole } from '@prisma/client';
+import { CanonicalFunction, CanonicalRole, EmploymentStatus } from '@prisma/client';
 
 export class AssignOrgDto {
   @IsUUID('4', { message: 'ID pengguna harus berupa format UUID yang valid' })
@@ -26,12 +26,20 @@ export class AssignOrgDto {
   function!: CanonicalFunction;
 
   @IsOptional()
+  @IsEnum(EmploymentStatus, { message: 'Status karyawan tidak valid (PERMANENT, CONTRACT, INTERN)' })
+  employmentStatus?: EmploymentStatus;
+
+  @IsOptional()
   @IsUUID('4', { message: 'ID atasan langsung harus berupa format UUID' })
   directManagerId?: string | null;
 
   @IsDateString({}, { message: 'Format tanggal efektif harus YYYY-MM-DD' })
   @IsNotEmpty({ message: 'Tanggal efektif penugasan wajib diisi' })
   effectiveDate!: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Format tanggal selesai harus YYYY-MM-DD' })
+  endDate?: string | null;
 
   @IsNotEmpty({ message: 'Alasan penugasan wajib diisi untuk rekam audit' })
   assignmentReason!: string;
