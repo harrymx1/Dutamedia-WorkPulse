@@ -4,6 +4,7 @@ import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
+import { formatTimeWib } from '../../utils/dateTime';
 import {
   Clock,
   CheckCircle2,
@@ -305,8 +306,7 @@ const scopeSubtitle = computed(() => {
 });
 
 function formatRelativeTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+  return formatTimeWib(dateStr);
 }
 
 onMounted(() => {
@@ -566,7 +566,7 @@ onMounted(() => {
                 <div class="feed-content">
                   <div class="feed-header">
                     <strong>{{ item.supporterName }}</strong>
-                    <span class="feed-time">{{ formatRelativeTime(item.createdAt) }}</span>
+                    <span class="feed-time wp-datetime">{{ formatRelativeTime(item.createdAt) }}</span>
                   </div>
                   <div class="feed-blocker-title">Membantu: {{ item.blockerTitle }}</div>
                   <p class="feed-action">{{ item.actionTaken }}</p>

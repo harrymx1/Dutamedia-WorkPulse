@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatDateWib } from '../../utils/dateTime';
 import {
   CheckCircle2,
   AlertCircle,
@@ -342,8 +343,8 @@ onMounted(() => {
                     </span>
                     <span class="class-pill">{{ item.classification }}</span>
                   </div>
-                  <span class="hist-date">
-                    {{ new Date(item.createdAt).toLocaleDateString('id-ID', { dateStyle: 'short' }) }}
+                  <span class="hist-date wp-datetime">
+                    {{ formatDateWib(item.createdAt) }}
                   </span>
                 </div>
 

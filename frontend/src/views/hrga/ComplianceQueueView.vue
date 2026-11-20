@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatDateWib } from '../../utils/dateTime';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -254,8 +255,8 @@ onMounted(() => {
                     </div>
                   </div>
                 </td>
-                <td class="col-date">
-                  {{ new Date(item.eventDate).toLocaleDateString('id-ID', { dateStyle: 'medium' }) }}
+                <td class="col-date wp-datetime">
+                  {{ formatDateWib(item.eventDate) }}
                 </td>
                 <td class="col-stage">
                   <span class="stage-badge" :class="item.stage.toLowerCase()">

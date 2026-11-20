@@ -109,3 +109,10 @@ a:hover {
   font-feature-settings: "tnum" 1;
 }
 
+/* Unified WIB Date & Time Typography (Paket #4 — Satu Kesatuan Sedikit Lebih Tebal Merata) */
+.wp-datetime {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+

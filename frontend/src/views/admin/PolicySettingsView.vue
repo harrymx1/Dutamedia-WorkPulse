@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '@/stores/auth';
+import { formatDateWib, formatDateTimeWib, getTodayIsoWib } from '../../utils/dateTime';
 import {
   ShieldAlert,
   Clock,
@@ -149,14 +150,7 @@ const formMorningReminderMinutes = ref(60);
 const formEodReminderMinutes = ref(60);
 const formSlaWarningPercent = ref(75);
 
-const todayStr = computed(() => {
-  try {
-    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
-  } catch {
-    const d = new Date();
-    return d.toISOString().split('T')[0];
-  }
-});
+const todayStr = computed(() => getTodayIsoWib());
 
 // Policies dictionary by category
 const policyMap = computed(() => {
@@ -570,32 +564,11 @@ async function submitNewVersion() {
 
 function formatDateDisplay(val?: string | null): string {
   if (!val) return '-';
-  try {
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    return d.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch {
-    return val;
-  }
+  return formatDateWib(val, val);
 }
 
 function formatTimestampDisplay(val: string): string {
-  try {
-    const d = new Date(val);
-    return d.toLocaleString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return val;
-  }
+  return formatDateTimeWib(val, val);
 }
 
 function formatCategoryLabel(cat?: string): string {
@@ -722,7 +695,7 @@ function exportAuditCSV() {
   const headers = ['ID', 'Waktu', 'Pengubah', 'Email', 'Kategori', 'Tanggal Efektif', 'Alasan Perubahan', 'Perubahan Parameter'];
   const rows = auditLogs.value.map((log) => [
     log.id,
-    new Date(log.timestamp).toLocaleString('id-ID'),
+    `"${formatTimestampDisplay(log.timestamp)}"`,
     log.actor?.fullName || 'System',
     log.actor?.email || '-',
     formatCategoryLabel(log.category),
@@ -1224,7 +1197,7 @@ onUnmounted(() => {
                           {{ getUserSubtext(owner.user?.id) }}
                         </div>
                         <div class="owner-chip-date">
-                          Mulai: {{ formatDateDisplay(owner.effectiveDate) }}
+                          Mulai: <span class="wp-datetime">{{ formatDateDisplay(owner.effectiveDate) }}</span>
                         </div>
                       </div>
                       <div v-if="canManagePolicyOwners" class="owner-chip-action">
@@ -1303,11 +1276,11 @@ onUnmounted(() => {
                 </td>
               </tr>
               <tr v-for="log in auditLogs" :key="log.id">
-                <td class="mono-text">{{ formatTimestampDisplay(log.timestamp) }}</td>
+                <td class="mono-text wp-datetime">{{ formatTimestampDisplay(log.timestamp) }}</td>
                 <td>
                   <span class="badge badge-info">{{ formatCategoryLabel(log.category) }}</span>
                 </td>
-                <td class="mono-text">{{ formatDateDisplay(log.effectiveDate) }}</td>
+                <td class="mono-text wp-datetime">{{ formatDateDisplay(log.effectiveDate) }}</td>
                 <td>
                   <div class="user-meta">
                     <span class="user-name">{{ log.actor?.fullName || 'System' }}</span>

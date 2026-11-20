@@ -4,6 +4,7 @@ import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { getBlockerTypeInfo, getTicketImpactsList } from '../../utils/blockerStatus';
+import { formatTimeWib, formatShortDateTimeWib } from '../../utils/dateTime';
 import {
   Clock,
   AlertTriangle,
@@ -123,7 +124,7 @@ onMounted(() => {
         </div>
         <div class="heading-side">
           <span v-if="data?.evaluatedAt" class="eval-pill">
-            Evaluasi: {{ new Date(data.evaluatedAt).toLocaleTimeString('id-ID') }} WIB
+            Evaluasi: <span class="wp-datetime">{{ formatTimeWib(data.evaluatedAt) }}</span>
           </span>
         </div>
       </div>
@@ -225,7 +226,7 @@ onMounted(() => {
                     <User :size="14" />
                     <span>{{ item.raisedBy.fullName }}</span>
                   </div>
-                  <small class="time-sub">{{ new Date(item.raisedAt).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) }}</small>
+                  <small class="time-sub wp-datetime">{{ formatShortDateTimeWib(item.raisedAt) }}</small>
                 </td>
 
                 <!-- Kolom 3: PIC -->

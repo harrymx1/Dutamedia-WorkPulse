@@ -5,6 +5,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { canAccessRoute } from '../../router/navigation';
+import { formatTimeWib, formatDateTimeWib } from '../../utils/dateTime';
 import {
   Bell,
   CheckCheck,
@@ -299,8 +300,7 @@ async function requestPushPermission() {
 }
 
 function formatTime(isoStr: string) {
-  const d = new Date(isoStr);
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+  return formatTimeWib(isoStr);
 }
 
 function isDelegationNotification(notifOrType?: NotificationItem | string | null): boolean {
@@ -837,7 +837,7 @@ onUnmounted(() => {
                 <p class="item-desc">{{ getNotificationPreview(item.message) }}</p>
                 <div class="item-meta">
                   <span class="context-chip">{{ formatNotificationTypeLabel(item.type) }}</span>
-                  <span class="item-time">{{ formatTime(item.createdAt) }}</span>
+                  <span class="item-time wp-datetime">{{ formatTime(item.createdAt) }}</span>
                 </div>
               </div>
             </div>
@@ -947,7 +947,7 @@ onUnmounted(() => {
             <div class="modal-detail-box">
               <div class="detail-row">
                 <span>Waktu Diterima:</span>
-                <span>{{ formatTime(selectedNotification.createdAt) }} ({{ new Date(selectedNotification.createdAt).toLocaleDateString('id-ID') }})</span>
+                <span class="wp-datetime">{{ formatDateTimeWib(selectedNotification.createdAt) }}</span>
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { getBlockerStatusLabel } from '../../utils/blockerStatus';
+import { formatDateSpanWib } from '../../utils/dateTime';
 import {
   Plus,
   CheckCircle2,
@@ -117,10 +118,7 @@ function formatLeaveType(type?: string): string {
 }
 
 function formatLeaveDateRange(startStr?: string, endStr?: string): string {
-  if (!startStr || !endStr) return '';
-  const s = new Date(startStr);
-  const e = new Date(endStr);
-  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return formatDateSpanWib(startStr, endStr, '');
 }
 
 async function loadTodayState() {
@@ -330,7 +328,7 @@ onMounted(() => {
           <div class="submitted-banner-content">
             <div class="submitted-banner-title">
               <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
-              <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
+              <span class="wp-datetime"> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
             </div>
             <p class="submitted-banner-desc">
               Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.

@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
+import { formatDateWib, getTodayIsoWib } from '../../utils/dateTime';
 import {
   Plus,
   CheckCircle2,
@@ -67,12 +68,7 @@ const form = ref({
 });
 
 function getTodayDateString(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
+  return getTodayIsoWib();
 }
 
 function toDateOnlyString(val: string | Date): string {
@@ -529,10 +525,10 @@ function showToast(msg: string) {
                 <span class="auth-scope-text">Persetujuan Cuti &amp; Koreksi</span>
               </td>
               <td>
-                <span class="date-text mono-num">
-                  {{ new Date(d.effectiveDate).toLocaleDateString('id-ID') }}
+                <span class="date-text mono-num wp-datetime">
+                  {{ formatDateWib(d.effectiveDate) }}
                   s/d
-                  {{ new Date(d.expiryDate).toLocaleDateString('id-ID') }}
+                  {{ formatDateWib(d.expiryDate) }}
                 </span>
               </td>
               <td>

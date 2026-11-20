@@ -4,6 +4,7 @@ import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
+import { formatTimeWib, formatDateTimeWib } from '../../utils/dateTime';
 import {
   BLOCKER_DELETE_REASON_OPTIONS,
   BLOCKER_IMPACT_OPTIONS,
@@ -687,8 +688,7 @@ async function submitQueueDelete() {
 }
 
 function formatRelativeTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+  return formatTimeWib(dateStr);
 }
 
 function isSlaBreached(targetStr?: string) {
@@ -862,7 +862,7 @@ onMounted(() => {
               <div class="ticket-meta">
                 <span class="meta-item"><User :size="13" /> {{ ticket.raisedBy.fullName }}</span>
                 <span class="meta-sep">·</span>
-                <span class="meta-time">{{ formatRelativeTime(ticket.raisedAt) }}</span>
+                <span class="meta-time wp-datetime">{{ formatRelativeTime(ticket.raisedAt) }}</span>
               </div>
               <div class="ticket-side-info">
                 <span
@@ -1103,7 +1103,7 @@ onMounted(() => {
                   <label>Target Batas Penanganan</label>
                   <div class="context-val">
                     <Clock :size="14" />
-                    <span>{{ selectedTicket.targetResolutionAt ? new Date(selectedTicket.targetResolutionAt).toLocaleString('id-ID') : 'Tidak ditentukan' }}</span>
+                    <span :class="{ 'wp-datetime': Boolean(selectedTicket.targetResolutionAt) }">{{ selectedTicket.targetResolutionAt ? formatDateTimeWib(selectedTicket.targetResolutionAt) : 'Tidak ditentukan' }}</span>
                   </div>
                 </div>
               </div>
@@ -1127,7 +1127,7 @@ onMounted(() => {
                 <span>
                   Tiket telah dikonfirmasi selesai dan ditutup permanen oleh pelapor
                   <template v-if="selectedTicket.closedAt">
-                    ({{ new Date(selectedTicket.closedAt).toLocaleString('id-ID') }})
+                    (<span class="wp-datetime">{{ formatDateTimeWib(selectedTicket.closedAt) }}</span>)
                   </template>.
                 </span>
               </div>
@@ -1199,7 +1199,7 @@ onMounted(() => {
                           {{ entry.badgeLabel }}
                         </span>
                       </div>
-                      <span class="sup-time">{{ new Date(entry.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</span>
+                      <span class="sup-time wp-datetime">{{ formatTimeWib(entry.createdAt) }}</span>
                     </div>
                     <div v-if="entry.primaryLabel" class="sup-action">
                       <strong>{{ entry.primaryLabel }}:</strong> {{ entry.primaryText }}

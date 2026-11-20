@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatTimeWib, formatDateSpanWib, formatWeekdayDateWib } from '../../utils/dateTime';
 import {
   CheckCircle2,
   AlertCircle,
@@ -76,16 +77,11 @@ function formatLeaveType(type?: string): string {
 }
 
 function formatLeaveDateRange(startStr?: string, endStr?: string): string {
-  if (!startStr || !endStr) return '';
-  const s = new Date(startStr);
-  const e = new Date(endStr);
-  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return formatDateSpanWib(startStr, endStr, '');
 }
 
 function formatTime(isoStr: string | null) {
-  if (!isoStr) return '';
-  const d = new Date(isoStr);
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return formatTimeWib(isoStr, '');
 }
 
 function formatReason(reason: string): string {
@@ -187,20 +183,7 @@ function getFinalStatusInfo(status: 'GREEN' | 'AMBER' | 'RED' | null | undefined
 // Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-033)
 const formattedWorkDate = computed(() => {
   if (!workDate.value) return '';
-  const parts = workDate.value.split('-');
-  if (parts.length === 3) {
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const day = parseInt(parts[2], 10);
-    const dateObj = new Date(year, month, day);
-    return dateObj.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
-  return workDate.value;
+  return formatWeekdayDateWib(workDate.value, workDate.value);
 });
 
 const commitments = ref<CommitmentOutcomeItem[]>([]);
@@ -433,11 +416,11 @@ onMounted(() => {
           <div class="context-grid">
             <div class="context-item" data-testid="context-item-ontime">
               <span class="context-label">Batas On-Time</span>
-              <span class="context-value mono">{{ eodOnTimeCutoff }} WIB</span>
+              <span class="context-value mono wp-datetime">{{ eodOnTimeCutoff }} WIB</span>
             </div>
             <div class="context-item" data-testid="context-item-cutoff">
               <span class="context-label">Batas Cut-Off</span>
-              <span class="context-value mono">{{ eodLockCutoff }} WIB</span>
+              <span class="context-value mono wp-datetime">{{ eodLockCutoff }} WIB</span>
             </div>
             <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
@@ -464,7 +447,7 @@ onMounted(() => {
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
             <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
-            <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
+            <span class="wp-datetime"> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
           </div>
           <p class="submitted-banner-desc">
             Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.
@@ -486,7 +469,7 @@ onMounted(() => {
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
             <strong>Evaluasi EOD Telah Terkunci (EOD Closed):</strong>
-            <span> Disubmit pada {{ formatTime(eodSubmittedAt) }} WIB.</span>
+            <span> Disubmit pada <span class="wp-datetime">{{ formatTime(eodSubmittedAt) }}</span>.</span>
           </div>
           <p class="submitted-banner-desc">
             Evaluasi capaian akhir hari telah dicatat secara resmi. Form evaluasi ini dikunci untuk menjaga integritas data akuntabilitas. Perubahan data EOD hanya dapat diajukan melalui mekanisme koreksi resmi.

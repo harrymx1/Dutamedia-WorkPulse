@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatDateWib } from '../../utils/dateTime';
 import {
   Calendar,
   CheckCircle2,
@@ -265,10 +266,10 @@ onMounted(() => {
                     </div>
                   </td>
                   <td class="col-period">
-                    <span class="period-text">
-                      {{ new Date(item.startDate).toLocaleDateString('id-ID', { dateStyle: 'short' }) }}
+                    <span class="period-text wp-datetime">
+                      {{ formatDateWib(item.startDate) }}
                       s/d
-                      {{ new Date(item.endDate).toLocaleDateString('id-ID', { dateStyle: 'short' }) }}
+                      {{ formatDateWib(item.endDate) }}
                     </span>
                   </td>
                   <td class="col-cat">

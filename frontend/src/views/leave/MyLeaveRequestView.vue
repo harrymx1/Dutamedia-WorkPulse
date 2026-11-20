@@ -3,6 +3,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatDateWib, formatDateRangeWib } from '../../utils/dateTime';
 import {
   Calendar,
   Clock,
@@ -197,13 +198,7 @@ async function handleCancel(id: string) {
 }
 
 function formatDateRange(startStr: string, endStr: string) {
-  const s = new Date(startStr);
-  const e = new Date(endStr);
-  const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-  if (startStr === endStr) {
-    return s.toLocaleDateString('id-ID', options);
-  }
-  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} – ${e.toLocaleDateString('id-ID', options)}`;
+  return formatDateRangeWib(startStr, endStr);
 }
 
 onMounted(() => {
@@ -423,13 +418,13 @@ onMounted(() => {
                 <tr v-for="req in filteredRequests" :key="req.id">
                   <td>
                     <span class="pill-type">{{ formatLeaveType(req.leaveType) }}</span>
-                    <div class="date-main">{{ formatDateRange(req.startDate, req.endDate) }}</div>
+                    <div class="date-main wp-datetime">{{ formatDateRange(req.startDate, req.endDate) }}</div>
                     <div class="date-sub">{{ calculateDuration(req.startDate, req.endDate) }} hari kerja</div>
                   </td>
                   <td>
                     <div class="reason-text">{{ formatReason(req.reason) }}</div>
                     <div class="request-id">
-                      #{{ req.id }} · Diajukan {{ new Date(req.createdAt).toLocaleDateString('id-ID') }}
+                      #{{ req.id }} · Diajukan <span class="wp-datetime">{{ formatDateWib(req.createdAt) }}</span>
                     </div>
                     <div v-if="req.reconciled || req.reconciliationNote" class="reconcile-note">
                       <strong>Pemutihan Kehadiran Otomatis:</strong> {{ req.reconciliationNote || 'Catatan belum check-in pagi otomatis diputihkan menjadi Cuti Disetujui.' }}

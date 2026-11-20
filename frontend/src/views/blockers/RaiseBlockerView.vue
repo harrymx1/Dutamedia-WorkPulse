@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
+import { formatTimeWib, formatShortDateTimeWib } from '../../utils/dateTime';
 import {
   BLOCKER_DELETE_REASON_OPTIONS,
   BLOCKER_IMPACT_OPTIONS,
@@ -701,18 +702,7 @@ function getSeverityClass(severity: string): string {
 }
 
 function formatDate(isoDate?: string): string {
-  if (!isoDate) return 'Hari ini';
-  try {
-    const d = new Date(isoDate);
-    return d.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return 'Hari ini';
-  }
+  return formatShortDateTimeWib(isoDate, 'Hari ini');
 }
 
 function getTicketTitle(ticket: any): string {
@@ -790,17 +780,7 @@ function getTicketHistory(ticket: any) {
 }
 
 function formatHistoryTime(dateStr: string): string {
-  if (!dateStr) return '-';
-  try {
-    return (
-      new Date(dateStr).toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }) + ' WIB'
-    );
-  } catch {
-    return '-';
-  }
+  return formatTimeWib(dateStr);
 }
 
 function openSupportAcceptForm(supportId: string) {
@@ -1714,7 +1694,7 @@ onBeforeUnmount(() => {
                 </span>
                 <span class="pill" :class="getSeverityClass(b.severity)">Tingkat {{ b.severity }}</span>
                 <span class="date-sep"></span>
-                <span class="blocker-date">{{ formatDate(b.raisedAt) }}</span>
+                <span class="blocker-date wp-datetime">{{ formatDate(b.raisedAt) }}</span>
               </div>
             </div>
 
@@ -1849,7 +1829,7 @@ onBeforeUnmount(() => {
                         {{ entry.badgeLabel }}
                       </span>
                     </div>
-                    <span class="my-hist-time">{{ formatHistoryTime(entry.createdAt) }}</span>
+                    <span class="my-hist-time wp-datetime">{{ formatHistoryTime(entry.createdAt) }}</span>
                   </div>
                   <div v-if="entry.primaryLabel" class="my-hist-line">
                     <strong>{{ entry.primaryLabel }}:</strong> {{ entry.primaryText }}

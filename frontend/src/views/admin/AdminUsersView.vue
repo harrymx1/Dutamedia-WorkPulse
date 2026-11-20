@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
+import { formatDateWib } from '../../utils/dateTime';
 import {
   UserPlus,
   Search,
@@ -302,7 +303,7 @@ function copyToClipboard(text: string) {
                     {{ u.invitation.status }}
                   </span>
                   <span v-if="u.invitation.status === 'PENDING'" class="exp-hint">
-                    Exp: {{ new Date(u.invitation.expiresAt).toLocaleDateString('id-ID') }}
+                    Exp: <span class="wp-datetime">{{ formatDateWib(u.invitation.expiresAt) }}</span>
                   </span>
                 </template>
                 <span v-else class="text-muted">-</span>

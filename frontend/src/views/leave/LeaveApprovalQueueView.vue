@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatDateWib, formatDateRangeWib } from '../../utils/dateTime';
 import {
   CalendarDays,
   Clock,
@@ -132,13 +133,7 @@ function calculateDuration(start: string, end: string): number {
 }
 
 function formatDateRange(startStr: string, endStr: string) {
-  const s = new Date(startStr);
-  const e = new Date(endStr);
-  const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-  if (startStr === endStr) {
-    return s.toLocaleDateString('id-ID', options);
-  }
-  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} – ${e.toLocaleDateString('id-ID', options)}`;
+  return formatDateRangeWib(startStr, endStr);
 }
 
 function openReviewModal(item: LeaveQueueItem, defaultDecision: 'APPROVED' | 'REJECTED' = 'APPROVED') {
@@ -316,13 +311,13 @@ onMounted(() => {
                 </td>
                 <td>
                   <span class="pill-type">{{ formatLeaveType(item.leaveType) }}</span>
-                  <div class="date-main">{{ formatDateRange(item.startDate, item.endDate) }}</div>
+                  <div class="date-main wp-datetime">{{ formatDateRange(item.startDate, item.endDate) }}</div>
                   <div class="date-sub">{{ calculateDuration(item.startDate, item.endDate) }} hari kerja</div>
                 </td>
                 <td>
                   <div class="reason-text">{{ formatReason(item.reason) }}</div>
                   <div class="ticket-id">
-                    #{{ item.id }} · Diajukan {{ new Date(item.createdAt).toLocaleDateString('id-ID') }}
+                    #{{ item.id }} · Diajukan <span class="wp-datetime">{{ formatDateWib(item.createdAt) }}</span>
                   </div>
                   <div v-if="item.reconciled || item.reconciliationNote" class="reconcile-chip">
                     {{ item.reconciliationNote || 'Kehadiran diputihkan otomatis (Cuti Disetujui)' }}
@@ -401,7 +396,7 @@ onMounted(() => {
                   <span class="detail-label">Rentang Tanggal</span>
                   <div class="detail-val-date">
                     <CalendarDays :size="14" class="date-icon" />
-                    <span>{{ formatDateRange(selectedRequest.startDate, selectedRequest.endDate) }}</span>
+                    <span class="wp-datetime">{{ formatDateRange(selectedRequest.startDate, selectedRequest.endDate) }}</span>
                     <span class="duration-badge">{{ calculateDuration(selectedRequest.startDate, selectedRequest.endDate) }} hari kerja</span>
                   </div>
                 </div>

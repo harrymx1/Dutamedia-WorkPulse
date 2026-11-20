@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/auth';
 import { getPromptHintForFunction, resolveUserFunction } from '../../config/prompts';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatTimeWib, formatDateSpanWib, formatWeekdayDateWib } from '../../utils/dateTime';
 import { getBlockerStatusLabel } from '../../utils/blockerStatus';
 import {
   Clock,
@@ -135,16 +136,11 @@ function formatLeaveType(type?: string): string {
 }
 
 function formatLeaveDateRange(startStr?: string, endStr?: string): string {
-  if (!startStr || !endStr) return '';
-  const s = new Date(startStr);
-  const e = new Date(endStr);
-  return `${s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} s/d ${e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return formatDateSpanWib(startStr, endStr, '');
 }
 
 function formatTime(isoStr: string | null) {
-  if (!isoStr) return '';
-  const d = new Date(isoStr);
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return formatTimeWib(isoStr, '');
 }
 
 function getProjectName(code?: string | null): string {
@@ -162,27 +158,7 @@ function getBlockerCode(id?: string | null): string {
 // Format hari dan tanggal dinamis bahasa Indonesia untuk header konteks (IMP-027)
 const formattedWorkDate = computed(() => {
   if (!workDate.value) return '';
-  const parts = workDate.value.split('-');
-  if (parts.length === 3) {
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const day = parseInt(parts[2], 10);
-    const d = new Date(year, month, day);
-    return d.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
-  const d = new Date(workDate.value);
-  if (isNaN(d.getTime())) return workDate.value;
-  return d.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  return formatWeekdayDateWib(workDate.value, workDate.value);
 });
 
 // Role-Based Output Prompt & Responsive Placeholder (PRD v1.6 FR-12 / AC-37)
@@ -575,11 +551,11 @@ onMounted(() => {
           <div class="context-grid">
             <div class="context-item" data-testid="context-item-ontime">
               <span class="context-label">Batas On-Time</span>
-              <span class="context-value mono">{{ morningOnTimeCutoff }} WIB</span>
+              <span class="context-value mono wp-datetime">{{ morningOnTimeCutoff }} WIB</span>
             </div>
             <div class="context-item" data-testid="context-item-cutoff">
               <span class="context-label">Batas Cut-Off</span>
-              <span class="context-value mono">{{ morningLockCutoff }} WIB</span>
+              <span class="context-value mono wp-datetime">{{ morningLockCutoff }} WIB</span>
             </div>
             <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
@@ -611,7 +587,7 @@ onMounted(() => {
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
             <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
-            <span> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
+            <span class="wp-datetime"> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
           </div>
           <p class="submitted-banner-desc">
             Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.
@@ -633,7 +609,7 @@ onMounted(() => {
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
             <strong>Morning Commitment Telah Terkunci (Baseline Locked):</strong>
-            <span> Disubmit pada {{ formatTime(morningSubmittedAt) }} WIB.</span>
+            <span> Disubmit pada <span class="wp-datetime">{{ formatTime(morningSubmittedAt) }}</span>.</span>
           </div>
           <p class="submitted-banner-desc">
             Komitmen harian telah dicatat secara resmi sebagai baseline kerja hari ini. Form ini dikunci untuk menjaga integritas data akuntabilitas. Perubahan komitmen hanya dapat diajukan melalui mekanisme koreksi resmi.

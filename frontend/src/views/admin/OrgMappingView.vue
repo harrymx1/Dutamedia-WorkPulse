@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { apiClient } from '../../api/client';
+import { formatDateWib } from '../../utils/dateTime';
 import {
   Building2,
   FolderGit2,
@@ -332,10 +333,10 @@ function showToast(msg: string, isError = false) {
                 <span v-else class="text-muted">(Pucuk Pimpinan / Tidak Ada)</span>
               </td>
               <td>
-                <span class="date-text mono-num">
-                  {{ new Date(asg.effectiveDate).toLocaleDateString('id-ID') }}
+                <span class="date-text mono-num wp-datetime">
+                  {{ formatDateWib(asg.effectiveDate) }}
                   s/d
-                  {{ asg.endDate ? new Date(asg.endDate).toLocaleDateString('id-ID') : 'Sekarang' }}
+                  {{ asg.endDate ? formatDateWib(asg.endDate) : 'Sekarang' }}
                 </span>
               </td>
               <td>
@@ -387,10 +388,10 @@ function showToast(msg: string, isError = false) {
                 <span class="func-pill">{{ pa.involvedFunction }}</span>
               </td>
               <td>
-                <span class="date-text mono-num">
-                  {{ new Date(pa.effectiveDate).toLocaleDateString('id-ID') }}
+                <span class="date-text mono-num wp-datetime">
+                  {{ formatDateWib(pa.effectiveDate) }}
                   s/d
-                  {{ pa.endDate ? new Date(pa.endDate).toLocaleDateString('id-ID') : 'Aktif' }}
+                  {{ pa.endDate ? formatDateWib(pa.endDate) : 'Aktif' }}
                 </span>
               </td>
               <td>

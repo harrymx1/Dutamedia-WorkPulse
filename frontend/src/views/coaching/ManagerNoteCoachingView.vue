@@ -3,6 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
+import { formatDateWib } from '../../utils/dateTime';
 import {
   CheckCircle2,
   AlertCircle,
@@ -413,8 +414,8 @@ onMounted(() => {
                       {{ note.visibility === 'SHARED_WITH_EMPLOYEE' ? 'Dibagikan' : 'Rahasia Manajemen' }}
                     </span>
                   </div>
-                  <div class="note-date">
-                    {{ new Date(note.createdAt).toLocaleDateString('id-ID', { dateStyle: 'medium' }) }}
+                  <div class="note-date wp-datetime">
+                    {{ formatDateWib(note.createdAt) }}
                   </div>
                 </div>
 
