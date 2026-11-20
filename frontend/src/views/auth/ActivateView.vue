@@ -77,6 +77,16 @@ watch(token, (newToken) => {
   }, 300);
 });
 
+watch(password, () => {
+  passwordError.value = null;
+  errorMessage.value = null;
+});
+
+watch(confirmPassword, () => {
+  confirmError.value = null;
+  errorMessage.value = null;
+});
+
 // Password criteria & strength calculation
 const hasMinLength = computed(() => password.value.length >= 8);
 const hasLetterAndNumber = computed(
@@ -855,6 +865,9 @@ input[aria-invalid="true"] {
   color: var(--color-text-secondary);
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 6px;
 }
 
