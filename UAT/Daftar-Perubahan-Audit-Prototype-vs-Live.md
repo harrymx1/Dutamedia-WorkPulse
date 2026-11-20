@@ -24,7 +24,7 @@ Dokumen ini mencatat seluruh hasil audit tersebut dengan jujur:
 
 | No | File Prototype HTML (`UI-UX-Design/...`) | Halaman & Rute di Situs Live | Status Audit | Catatan Singkat |
 |---|---|---|---|---|
-| 1 | **`01-Login-Activation.html`** | **Login (`/login`) & Aktivasi (`/activate`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada `7f20e60` & `3904826` (`01-B1` s/d `01-B5`: logo mobile, ingat email, 3 syarat sandi + huruf & angka, pratinjau akun undangan, banner lockout & pasca-aktivasi). Lihat **Audit #2** di bawah. |
+| 1 | **`01-Login-Activation.html`** | **Login (`/login`) & Aktivasi (`/activate`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada `7f20e60`, `3904826`, `7a373e2`, & `389a47f` (`01-B1` s/d `01-B5`: logo mobile, ingat email, 3 syarat sandi + huruf & angka, pratinjau akun undangan Desktop & HP `375px` tanpa meluap, banner lockout & pasca-aktivasi). Lihat **Audit #2** di bawah. |
 | 2 | **`02-Morning-Commitment.html`** | **Komitmen Pagi (`/daily/morning`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada `dabb266` & `69bb068` (`1a`, `1b`, `1c`, tata letak footer 1 baris, & data `H-1`/`H-2` di `seed.ts`). Lihat rincian **Audit #1** di bawah. |
 | 3 | `03-Additional-Work.html` | Tugas Tambahan (`/daily/additional-work`) | `Menunggu Audit Detail` | Sudah mencakup Paket #2 kunci pasca-EOD; menunggu audit 6 dimensi lengkap. |
 | 4 | `04-EOD-Outcome.html` | Evaluasi Sore EOD (`/daily/eod`) | `Menunggu Audit Detail` | — |
@@ -71,10 +71,10 @@ Dokumen ini mencatat seluruh hasil audit tersebut dengan jujur:
 
 ### Audit #2: `01-Login-Activation.html` → Halaman Masuk (`/login`) & Aktivasi Akun (`/activate`)
 
-- **Tanggal Selesai & Verifikasi Live:** 20 November 2026 (`commit 7f20e60` & `3904826`)
-- **Bukti Verifikasi Chrome Live:** `A1` s/d `A9` di folder artefak `screenshots/verifikasi-login-activate/`
+- **Tanggal Selesai & Verifikasi Live:** 20 November 2026 (`commit 7f20e60`, `3904826`, `7a373e2`, & `389a47f`)
+- **Bukti Verifikasi Chrome Live:** `A1` s/d `A11` di folder artefak `screenshots/verifikasi-login-activate/` (termasuk `A10`–`A11`: kartu pratinjau **`UNDANGAN AKTIF`** milik **Fajar Ramadhan** tampil utuh & rapi di Desktop serta layar HP `375px` tanpa meluap ke samping, dan akun tetap berstatus menunggu aktivasi agar siap diuji)
 
-| Kode Temuan | Bagian yang Diaudit | Kondisi Sebelumnya di Sistem Live | Akar Penyebab | Penyesuaian yang Diterapkan (`7f20e60` & `3904826`) | Alasan / Keputusan |
+| Kode Temuan | Bagian yang Diaudit | Kondisi Sebelumnya di Sistem Live | Akar Penyebab | Penyesuaian yang Diterapkan (`7f20e60`, `3904826`, `7a373e2`, & `389a47f`) | Alasan / Keputusan |
 |---|---|---|---|---|---|
 | **`01-B1`** | **Logo & Identitas WorkPulse di Layar HP/Tablet (`<= 900px`)** | Saat dibuka di HP/tablet, kotak hijau kiri disembunyikan sehingga nama dan logo **WorkPulse hilang total** dari `/login` dan `/activate`. | Elemen `.mobile-brand-header` pada prototype `01` terlupa dibuat di komponen Vue `LoginView.vue` dan `ActivateView.vue`. | Menambahkan `.mobile-brand-header` (logo `WP` + **`WorkPulse`** + **`Dutamedia Accountability`**) tepat di atas kartu formulir yang otomatis tampil pada layar `<= 900px`. | **Diperbaiki (Wajib):** Karyawan yang membuka aplikasi dari HP harus langsung melihat identitas aplikasi dengan jelas. |
 | **`01-B2`** | **Kotak Centang `"Ingat email di perangkat ini"`** | Variabel centangnya sudah ada di kode, tetapi belum melakukan apa-apa (hanya pajangan mati). | Fungsi simpan/muat email ke `localStorage` terlewat saat implementasi awal. | Menghidupkan fungsi centang **`Ingat email di perangkat ini`**: email otomatis tersimpan saat login berhasil dan langsung terisi saat membuka `/login` lagi (lalu otomatis terhapus bila centang dilepas). | **Diperbaiki (Wajib):** Menghemat waktu karyawan saat masuk ulang pada perangkat pribadi/kantornya. |
