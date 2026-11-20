@@ -2,8 +2,10 @@
 
 > **Sistem:** WorkPulse — Sistem Pencatatan Komitmen Harian & Penanganan Kendala Kerja  
 > **Organisasi:** PT Dutamedia Mandiri Pratama (Malang — WIB / UTC+7)  
-> **Versi Dokumen:** `v1.0 — Edisi Mandiri Lengkap` (Mencakup 100% Kondisi Aktif Saat Ini + Penanda Evolusi `[Target v1.1 — Pasca-UAT]`)  
+> **Versi Dokumen:** `v1.1 — Edisi Sistem Live Pasca-UAT` (Seluruh **4 Paket Pasca-UAT + Perbaikan Uji Chrome `commit 56cbead`** sudah aktif 100% di `https://dutamedia-workpulse.vercel.app`)  
 > **Pemilik Proyek:** Harry  
+> **Dokumen Pendamping Wajib untuk Auditor:** Baca juga [Daftar-Perubahan-Pasca-UAT-4-Paket.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Pasca-UAT-4-Paket.md) untuk melihat rincian **Dulu di Prototype/Baseline vs Sekarang di Situs Live**, agar perbedaan yang memang disengaja tidak membingungkan saat audit prototype & layar responsif.  
+> *(Catatan Lokasi File Prototype HTML: Seluruh 26 file HTML yang diacu singkat `UI-UX-Design/...html` di bawah ini berada lengkap di folder `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/`).*
 > **4 Fungsi Utama Dokumen Ini:**
 > 1. **Panduan Skenario Prosedural Mandiri dari A sampai Z:** Memandu siapa saja (penguji, teman auditor, maupun pengguna baru) untuk mencoba **seluruh kemampuan, halaman, jendela pop-up, dan aturan sistem** secara berurutan tanpa merusak/mengunci data lebih dulu, lengkap dengan **Aksi Klik/Ketik Siap Salin (*Copy-Paste*)** dan ***Hasil yang Diharapkan*** di setiap langkah.
 > 2. **Dasar Langsung Pembuatan 2 Versi Buku Panduan (*User Manual*):**
@@ -14,35 +16,38 @@
 
 ---
 
-## 0. Daftar Lengkap 23 Akun Resmi Sistem (`Password123!`) & Peta Wewenang
+## 0. Daftar Lengkap 25 Akun Resmi Sistem (`Password123!`) & Peta Wewenang
 
-Seluruh langkah di dokumen ini menggunakan 23 akun resmi yang sudah disiapkan di database awal (`seed.ts`). Kata sandi awal untuk semua akun aktif adalah **`Password123!`**.
+Seluruh langkah di dokumen ini menggunakan **25 akun resmi** yang sudah disiapkan di database awal (`seed.ts`). Kata sandi awal untuk semua akun aktif adalah **`Password123!`**.
+- **Komposisi Populasi Live di Dashboard & Laporan (`/dashboard` & `/reports`):** Dari 25 akun, terdapat **25 personil operasional terhitung** (*23 Karyawan Tetap + 0 Kontrak + 2 Anak Magang / Intern*). *(Akun `Fajar Ramadhan / calon.karyawan@dutamedia.com` tetap berada pada status akun belum diaktifkan `INVITED`, sementara seluruh akun yang memiliki penugasan organisasi aktif tercatat sebagai populasi laporan).*
 
 | No | Nama Lengkap | Email Login | Peran Sistem & Status Akun | Divisi & Jabatan | Atasan Langsung | Wewenang Khusus yang Dimiliki |
 |---|---|---|---|---|---|---|
-| 1 | **Sistem Administrator** | `admin@dutamedia.com` | `SYSTEM_ADMIN` (`ACTIVE`) | Management — System Administrator | — | Mengelola seluruh menu `Administration`. **Pemisahan Tugas (`IMP-026`):** Tidak punya menu kerja harian (`Workspace` diblokir `403`) dan tidak boleh ditunjuk menjadi peninjau cuti/koreksi. |
-| 2 | **Hendra Wijaya** | `direktur@dutamedia.com` | `CEO_MANAGEMENT` (`ACTIVE`) | Management — Chief Executive Officer | — | Memantau `Seluruh Perusahaan`, Pemilik Kebijakan di semua 5 kategori, pengelola daftar Pemilik Kebijakan, tujuan akhir eskalasi. |
-| 3 | **Dewi Lestari** | `hrga@dutamedia.com` | `HRGA` (`ACTIVE`) | HRGA — HRGA & Corporate Legal Manager | Hendra Wijaya | Mengelola `Antrean Kepatuhan`, `Manajemen Dispensasi`, `Kelola Pengguna`, `Struktur Organisasi`, `Reviewer Sementara`, Penanggung Jawab Kategori **`LEGAL`**, Pemilik Kebijakan kategori Kepatuhan/Koreksi, `[Target v1.1]` Tahap 1 Persetujuan Cuti. |
-| 4 | **Sugito Erik Fajar** | `ga@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | HRGA — General Affairs (GA) Specialist | Dewi Lestari | Staf HRGA yang ditunjuk resmi sebagai **Penanggung Jawab Kategori `OFFICE_FACILITY` (Fasilitas & Sarana Kantor)** → otomatis bisa membuka menu `Antrean Blocker` (`/blockers`) & `Penuaan & Eskalasi` (`/blockers/aging`). |
+| 1 | **Sistem Administrator** | `admin@dutamedia.com` | `SYSTEM_ADMIN` (`ACTIVE`) | Management — Infrastructure & System Administrator | — | Mengelola seluruh menu `Administration`. **Pemisahan Tugas (`IMP-026`):** Tidak punya menu kerja harian (`Workspace` diblokir `403`) dan tidak boleh ditunjuk menjadi peninjau cuti/koreksi. |
+| 2 | **Hendra Wijaya** | `direktur@dutamedia.com` | `CEO_MANAGEMENT` (`ACTIVE`) | Management — Chief Executive Officer (CEO) | — | Memantau `Seluruh Perusahaan`, Pemilik Kebijakan di semua 5 kategori, pengelola daftar Pemilik Kebijakan, tujuan akhir eskalasi. |
+| 3 | **Dewi Lestari** | `hrga@dutamedia.com` | `HRGA` (`ACTIVE`) | HRGA — HRGA & Corporate Legal Administration | Hendra Wijaya | Mengelola `Antrean Kepatuhan`, `Manajemen Dispensasi`, `Kelola Pengguna`, `Struktur Organisasi`, `Reviewer Sementara`, penerima kategori **`LEGAL`** (via pengarahan divisi HRGA & Legal), Pemilik Kebijakan, `[Backlog v1.2]` Tahap 1 Persetujuan Cuti 3 Tahap. |
+| 4 | **Sugito Erik Fajar** | `ga@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | HRGA — General Affairs (GA) Officer | Dewi Lestari | Staf HRGA yang ditunjuk resmi sebagai **Penanggung Jawab Kategori `OFFICE_FACILITY` (Fasilitas & Sarana Kantor)** → otomatis bisa membuka menu `Antrean Blocker` (`/blockers`) & `Penuaan & Eskalasi` (`/blockers/aging`). |
 | 5 | **Arif Budiman** | `head.eng@dutamedia.com` | `HEAD` (`ACTIVE`) | Engineering — Head of Engineering | Hendra Wijaya | Kepala Divisi Engineering (memantau tab `Divisi Saya`), Sponsor Proyek `WP-CORE`, menyetujui cuti & koreksi tim Engineering, membuat `Catatan Coaching` untuk bawahan langsungnya. |
 | 6 | **Bambang Pratama** | `lead.tech@dutamedia.com` | `SUPERVISOR` (`ACTIVE`) | Engineering — Technical Lead 1 | Arif Budiman | Pimpinan Proyek **`WP-CORE`** & **`PRJ-CORE`**, serta **Penanggung Jawab Kategori `TECHNICAL` (Teknis & Kode Program)**. Memantau tab `Tim (Proyek)` di dasbor. |
-| 7 | **Aditya Nugroho** | `dev.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Engineering — Frontend Developer | Arif Budiman | Staf operasional murni (tidak punya bawahan dan bukan penanggung jawab kategori → menu `Management` dan `Administration` tertutup & diblokir `403`). |
+| 7 | **Aditya Nugroho** | `dev.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Engineering — Frontend Developer | Arif Budiman | Staf operasional murni (`Karyawan Tetap`) — tidak punya bawahan dan bukan penanggung jawab kategori → menu `Management` dan `Administration` tertutup & diblokir `403`. |
 | 8 | **Siti Rahma** | `dev.backend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Engineering — Backend Developer | Arif Budiman | Staf operasional Engineering (memiliki data contoh pola tidak melapor 3x berturut-turut di `/compliance`). |
 | 9 | **Fajar Ramadhan** | `calon.karyawan@dutamedia.com` | `EMPLOYEE` (`INVITED`) | Engineering — Junior Developer | Arif Budiman | Akun karyawan baru yang **belum aktif** (untuk menguji penolakan login `INVITED` dan aktivasi akun dengan token 72 jam `wp_seed_invite_token_72h_demo_secret`). |
 | 10 | **Dharma Putra** | `head.delivery@dutamedia.com` | `HEAD` (`ACTIVE`) | Delivery — Head of Delivery | Hendra Wijaya | Kepala Divisi Delivery, menyetujui cuti/koreksi & coaching Divisi Delivery. |
-| 11 | **Dimas Prakoso** | `pm@dutamedia.com` | `PROJECT_MANAGER` (`ACTIVE`) | Delivery — Project Manager | Dharma Putra | Manajer Proyek, serta **Penanggung Jawab Kategori `REQUIREMENT` (Kebutuhan & Arahan Kerja)** dan **`CLIENT` (Klien & Calon Klien)**. |
+| 11 | **Dimas Prakoso** | `pm@dutamedia.com` | `PROJECT_MANAGER` (`ACTIVE`) | Delivery — Project Manager | Dharma Putra | Manajer Proyek (`PRJ-PORTAL`, `PRJ-MOBILE`), memantau `/dashboard` & `/projects/risk` proyeknya; pada jalur Proyek menangani kendala proyek kategori `REQUIREMENT` / `CLIENT`. |
 | 12 | **Dio Bayu Bagaskara** | `product@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Delivery — Product Manager | Dharma Putra | Staf Product Manager di bawah Head Delivery (cocok dipakai untuk menguji kondisi belum isi komitmen pagi). |
-| 13 | **Nadia Kusuma** | `qa@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Quality — QA Engineer | Dharma Putra | Staf QA (cocok dipakai untuk menguji pengiriman `0 Komitmen` dan simulasi penonaktifan akun `INACTIVE`). |
+| 13 | **Nadia Kusuma** | `qa@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Quality — Software QA Specialist | Dharma Putra | Staf QA (cocok dipakai untuk menguji pengiriman `0 Komitmen` dan simulasi penonaktifan akun `INACTIVE`). |
 | 14 | **Gunawan Setiawan** | `head.ops@dutamedia.com` | `HEAD` (`ACTIVE`) | Operations & Infrastructure — Head of Ops & Infra | Hendra Wijaya | Kepala Divisi Operations & Infrastructure, tujuan pengarahan kendala lintas divisi (`CROSS_TEAM`) ke Ops & Infra, serta atasan langsung Fakhrizal/Achmad/Rahian. |
 | 15 | **Rian Kurniawan** | `lead.creative@dutamedia.com` | `SUPERVISOR` (`ACTIVE`) | Operations & Infrastructure — Ops Supervisor | Gunawan Setiawan | Supervisor Ops & Infra (dipakai untuk menguji pendelegasian **Reviewer Sementara** lintas divisi). |
 | 16 | **Fakhrizal Asshiddiq** | `network.infra@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Operations & Infrastructure — Network & Infrastructure | Gunawan Setiawan | Staf spesialis yang ditunjuk resmi sebagai **Penanggung Jawab Kategori `INFRA` (Server & Rilis Sistem)** dan **`NETWORK` (Jaringan & Koneksi)** → punya akses `/blockers` & `/blockers/aging`. |
 | 17 | **Achmad Noer Wahid** | `specialist.it@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Operations & Infrastructure — Specialist IT | Gunawan Setiawan | Staf spesialis yang ditunjuk resmi sebagai **Penanggung Jawab Kategori `HOSTING_DOMAIN` (Hosting, Cloud & Domain)** → punya akses `/blockers` & `/blockers/aging`. |
 | 18 | **Rahian M. Suari** | `it.support@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Operations & Infrastructure — IT Support | Gunawan Setiawan | Staf spesialis yang ditunjuk resmi sebagai **Penanggung Jawab Kategori `ACCESS_SECURITY` (Akses & Keamanan Digital)** dan **`WORK_DEVICE` (Perangkat Kerja)** → punya akses `/blockers` & `/blockers/aging`. |
-| 19 | **Maya Putri** | `designer@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | R&D — Principal Designer & R&D Advisory | Hendra Wijaya | Staf R&D Advisory (melapor langsung ke Direktur; dipakai untuk menguji batas isolasi lintas divisi). |
-| 20 | **Lukman Hakim** | `head.sales@dutamedia.com` | `HEAD` (`ACTIVE`) | Business Development — Head of Sales | Hendra Wijaya | Kepala Divisi Business Development / Sales. |
-| 21 | **Hari Wibowo** | `sales.bd@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Business Development — Sales & BD Executive | Lukman Hakim | Staf Sales & Business Development. |
-| 22 | **Ratna Sari** | `finance@dutamedia.com` | `HEAD` (`ACTIVE`) | Finance — Senior Finance Manager | Hendra Wijaya | Kepala Divisi Finance sekaligus **Penanggung Jawab Kategori `FINANCE` (Keuangan & Pembayaran)**. |
-| 23 | **Oivi Deasepta** | `staff.finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Finance — Finance Staff | Ratna Sari | Staf Finance (`[Target v1.1 Paket #1]: digunakan sebagai contoh akun berstatus Intern / Magang`). |
+| 19 | **Maya Putri** | `designer@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | R&D — Principal Engineer (R&D & Technical Advisory) | Hendra Wijaya | Staf R&D Advisory (melapor langsung ke Direktur; dipakai untuk menguji batas isolasi lintas divisi). |
+| 20 | **Lukman Hakim** | `head.sales@dutamedia.com` | `HEAD` (`ACTIVE`) | Commercial — Head of Sales Enablement & Presales | Hendra Wijaya | Kepala Divisi Sales Enablement & Presales (atasan langsung Hari Wibowo). |
+| 21 | **Hari Wibowo** | `sales.bd@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Commercial — Business Development Executive | Lukman Hakim | Staf Sales & Business Development sekaligus **Penanggung Jawab Kategori `CLIENT`** (untuk kendala calon klien/penawaran jalur Struktural) → punya akses `/blockers` & `/blockers/aging`. |
+| 22 | **Ratna Sari** | `finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Finance — Senior Finance Staff | Hendra Wijaya | Penanggung jawab senior Divisi Finance (atasan langsung Oivi Deasepta & Nisa Amelia; memiliki menu `Coaching` bagi bawahannya). |
+| 23 | **Oivi Deasepta** | `staff.finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Finance — Finance & Invoicing Staff | Ratna Sari | Staf Finance berstatus **`Karyawan Tetap` (`PERMANENT`)** dan **Penanggung Jawab Kategori `FINANCE` (Keuangan & Pembayaran)** → punya akses `/blockers` & `/blockers/aging`. |
+| 24 | **Raka Pratama** | `intern.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) · **Status: `Intern`** | Engineering — Frontend Developer | Arif Budiman | **`[Aktif v1.1 — Paket #1]`** Akun **Karyawan Magang (`Intern`)** Divisi Engineering (masa magang 90 hari: `20 Nov 2026 s/d 18 Feb 2027`). Tidak punya kuota cuti tahunan (hanya Izin & Sakit) dan dikecualikan dari seluruh daftar atasan/PIC. |
+| 25 | **Nisa Amelia** | `intern.finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) · **Status: `Intern`** | Finance — Finance Staff | Ratna Sari | **`[Aktif v1.1 — Paket #1]`** Akun **Karyawan Magang (`Intern`)** Divisi Finance (masa magang 90 hari: `20 Nov 2026 s/d 18 Feb 2027`). Dipakai menguji isolasi `Intern` dan pelaporan kerja magang lintas divisi. |
 
 ---
 
@@ -194,26 +199,32 @@ flowchart TD
 #### Skenario Prosedural `SP-01.3` — Menyisir Halaman Profil (`/profile`), Ubah Kata Sandi Mandiri, Layar 403 & 404, Pemisahan Tugas Admin (`IMP-026`), & Sesi Habis Lintas 2 Tab
 - **Acuan Prototype & Baseline:** `UI-UX-Design/24-Profile-Settings.html` · `TC-AUTH-005..008`, `TC-ADMN-003`, `CH-EXP-04`
 
-1. **Langkah 1.3.1 — Inspeksi 3 Bagian Halaman Profil & Uji Lengkap Ubah Kata Sandi Mandiri (`ST-PROF-01..04`):**
-   - **Aksi:** Login sebagai **Aditya Nugroho** (`dev.frontend@dutamedia.com` / `Password123!`), klik lingkaran inisial **`AN`** di pojok kanan atas untuk membuka `/profile`:
-     1. Periksa 3 kartu informasi di halaman Profil.
-     2. Pada formulir **Ubah Kata Sandi**, uji 5 kondisi salah secara berurutan:
-        - Kosongkan **Kata Sandi Saat Ini**, isi sandi baru `Baru1234!` → klik simpan.
-        - Isi **Kata Sandi Saat Ini:** `Password123!`, **Kata Sandi Baru:** `abc12` (kurang dari 8 karakter) → klik simpan.
-        - Ubah **Kata Sandi Baru:** `semuahurufsaja` (tanpa angka) → klik simpan.
-        - Ubah **Kata Sandi Baru:** `Baru1234!`, **Konfirmasi Kata Sandi Baru:** `Beda9999!` → klik simpan.
-        - Isi **Kata Sandi Saat Ini:** `SandiLamaSalah1!`, **Kata Sandi Baru:** `Baru1234!`, **Konfirmasi:** `Baru1234!` → klik simpan.
-     3. Sekarang isi data yang benar: **Kata Sandi Saat Ini:** `Password123!`, **Kata Sandi Baru:** `PasswordBaru123!`, **Konfirmasi:** `PasswordBaru123!` → klik simpan.
-     4. **Pemulihan Wajib:** Segera ubah kembali kata sandi Aditya dari `PasswordBaru123!` kembali ke **`Password123!`**.
+1. **Langkah 1.3.1 — Inspeksi 3 Bagian Halaman Profil (`/profile`), Tampilan Khusus Akun `Intern`, & Uji Lengkap Ubah Kata Sandi Mandiri (`ST-PROF-01..04`):**
+   - **Aksi:**
+     1. Login terlebih dahulu sebagai akun magang **Raka Pratama** (`intern.frontend@dutamedia.com` / `Password123!`), klik lingkaran inisial **`RP`** di pojok kanan atas untuk membuka `/profile`, lalu periksa lencana di samping nama serta baris **`Status Karyawan`** dan **`Masa Magang Berakhir`** pada Panel 1. Setelah itu klik tombol **`Keluar Sesi`** pada Panel 2.
+     2. Login sebagai karyawan tetap **Aditya Nugroho** (`dev.frontend@dutamedia.com` / `Password123!`), klik lingkaran inisial **`AN`** di pojok kanan atas untuk membuka `/profile`:
+        - Periksa 3 panel utama di halaman Profil (Panel 1 Identitas, Panel 2 Keamanan & Kata Sandi beserta kotak centang **`Akhiri seluruh sesi aktif di perangkat/peramban lain setelah kata sandi diperbarui`**, dan Panel 3 Ringkasan Kanal Notifikasi beserta tombol **`Kelola Kanal & Uji Perangkat di Pusat Notifikasi →`**).
+     3. Pada formulir **Panel 2: Keamanan & Kata Sandi — Pembaruan Mandiri**, uji 5 kondisi salah secara berurutan:
+        - Kosongkan **Kata Sandi Saat Ini**, isi sandi baru `Baru1234!` → klik **`Simpan Kata Sandi Baru`**.
+        - Isi **Kata Sandi Saat Ini:** `Password123!`, **Kata Sandi Baru:** `abc12` (kurang dari 8 karakter) → klik **`Simpan Kata Sandi Baru`**.
+        - Ubah **Kata Sandi Baru:** `semuahurufsaja` (tanpa angka) → klik **`Simpan Kata Sandi Baru`**.
+        - Ubah **Kata Sandi Baru:** `Baru1234!`, **Konfirmasi Kata Sandi Baru:** `Beda9999!` → klik **`Simpan Kata Sandi Baru`**.
+        - Isi **Kata Sandi Saat Ini:** `SandiLamaSalah1!`, **Kata Sandi Baru:** `Baru1234!`, **Konfirmasi:** `Baru1234!` → klik **`Simpan Kata Sandi Baru`**.
+     4. Sekarang isi data yang benar: **Kata Sandi Saat Ini:** `Password123!`, **Kata Sandi Baru:** `PasswordBaru123!`, **Konfirmasi:** `PasswordBaru123!` → klik **`Simpan Kata Sandi Baru`**.
+     5. **Pemulihan Wajib:** Segera ubah kembali kata sandi Aditya dari `PasswordBaru123!` kembali ke **`Password123!`**.
    - **Hasil yang Diharapkan:**
-     1. Halaman Profil menampilkan: (a) Kartu Identitas & Organisasi (`Aditya Nugroho`, `dev.frontend@dutamedia.com`, `Frontend Developer`, `Engineering`, `EMPLOYEE`, Atasan `Arif Budiman`, Status `ACTIVE`, `+ [Target v1.1] Status Karyawan`), (b) Kartu Hak Otoritas & Jadwal Pengingat (`08:00 WIB` & `16:00 WIB`), dan (c) Formulir Ubah Kata Sandi dengan 3 baris syarat yang berubah menjadi ikon centang hijau saat terpenuhi.
-     2. Kelima percobaan salah menampilkan kotak peringatan merah di atas form dengan pesan persis:
+     1. Pada akun magang **Raka Pratama**: tampil pil ungu **`Intern`** di sebelah nama, baris **Status Karyawan** menampilkan **`Intern`**, dan muncul baris **`Masa Magang Berakhir: 18 Feb 2027`**.
+     2. Pada akun tetap **Aditya Nugroho**:
+        - **Panel 1:** Menampilkan `Aditya Nugroho`, `dev.frontend@dutamedia.com`, `Frontend Engineer`, `Engineering`, `Employee`, `Status Karyawan: Karyawan Tetap` (tanpa baris Masa Magang Berakhir), Atasan `Bambang Pratama` / `Arif Budiman`, dan Status `Aktif · Terdaftar`.
+        - **Panel 2:** Menampilkan 4 balok pengukur kekuatan kata sandi (`Belum diisi` → `Sangat Lemah` → `Cukup` → `Kuat` → `Sangat Kuat`) dan 3 baris syarat yang berubah menjadi ikon centang hijau saat terpenuhi.
+        - **Panel 3:** Menampilkan kartu `Browser Push Perangkat Ini`, kartu `Aturan Tetap Pengingat` (`08:00 WIB` & `16:00 WIB`, kalimat Bahasa Indonesia jelas tanpa rumus kurung siku `[Deadline - 60m, Deadline)`), dan kartu `Web Center & Email Resmi`.
+     3. Kelima percobaan salah menampilkan kotak peringatan merah di atas form dengan pesan persis:
         - **`"Kata sandi saat ini wajib diisi."`**
         - **`"Kata sandi baru minimal 8 karakter."`**
         - **`"Kata sandi baru harus kombinasi huruf dan angka."`**
         - **`"Konfirmasi kata sandi baru tidak cocok dengan kata sandi baru."`**
         - **`"Kata sandi lama yang Anda masukkan tidak sesuai."`**
-     3. Saat semua benar: muncul kotak hijau **`"Kata sandi berhasil diperbarui dengan aman."`**
+     4. Saat semua benar: muncul kotak hijau **`"Kata sandi berhasil diperbarui."`**
 
 2. **Langkah 1.3.2 — Uji Pencegatan Alamat Terlarang (`403`), Alamat Tidak Dikenal (`404`), Pemisahan Admin (`IMP-026`), & Sesi Berakhir Lintas 2 Tab (`ST-ERR-01`, `ST-ERR-02`):**
    - **Aksi:**
@@ -259,7 +270,7 @@ flowchart TD
     G & C1 --> H["Buka Tahap 2: Tugas Tambahan (/daily/additional-work)"]
     H --> I{"Pemeriksaan Syarat & Batas Tugas Tambahan?"}
     I -- "Belum Kirim Komitmen Pagi Hari Ini" --> I1["Formulir Disembunyikan + Kotak Peringatan: Silakan kirimkan komitmen pagi terlebih dahulu"]
-    I -- "[Target v1.1 Paket #2] EOD Sudah Dikirim ATAU Jam > 21:00 WIB" --> I2["Formulir Terkunci + Banner Ramah Panduan Lembur Pasca-EOD & Info Lapor Blocker 24 Jam (Ditolak 422 di Server)"]
+    I -- "[Aktif v1.1 — Paket #2] EOD Sudah Dikirim ATAU Jam > 21:00 WIB" --> I2["Formulir Terkunci ('Evaluasi Sore (EOD) Hari Ini Telah Ditutup — Formulir Terkunci' / Tombol 'Terkunci Pasca-EOD') + Panduan Lembur & Tautan 'Lapor Blocker'"]
     I -- "Sudah Mencapai 5 Tugas Tambahan" --> I3["Formulir & Tombol Terkunci: Batas 5 Tugas Tercapai + Banner Peringatan Kuning"]
     I -- "Terbuka (< 5 Tugas)" --> J["Isi Deskripsi ≥ 5 huruf + Pilih 1 dari 5 Alasan (Jika 'Penugasan Baru' wajib pilih Atasan; jika 'Lainnya' wajib keterangan ≥ 3 huruf) -> Simpan & Otomatis Masuk ke EOD"]
 
@@ -303,12 +314,15 @@ flowchart TD
      3. Saat dikirim tanpa mengisi Potensi Kendala: ditolak dengan pesan melayang merah persis: **`"Slot #1: Komitmen dengan risiko AMBER wajib menyertakan potensi kendala."`**
      4. Saat `Pilih Blocker Aktif` diklik: muncul daftar tiket kendala aktif untuk ditautkan ke komitmen pagi (atau keterangan `"Tidak ada tiket blocker aktif saat ini."`).
 
-3. **Langkah 2.1.3 — Uji Fitur Salin Komitmen Kemarin (*Copy-Forward* `DEC-011` — `ST-DLYM-06`):**
-   - **Aksi:** Jika di bagian atas formulir terdapat panel **Koleksi Draf Carry-Over dari Hari Kerja Sebelumnya** (tugas kemarin yang dievaluasi dengan status `Lanjutkan Besok / CONTINUE`):
-     1. Periksa informasi pada kartu draf tersebut (lencana `Carry-Over #N` dan catatan alasan kelanjutan dari EOD kemarin).
-     2. Klik tombol **`Terapkan ke Slot`** pada kartu draf tersebut.
+3. **Langkah 2.1.3 — Uji Spanduk Pengingat `Prioritas Utama Hari Ini` & Fitur Salin Komitmen Kemarin (*Copy-Forward* `DEC-011` — `ST-DLYM-06`):**
+   - **Aksi:**
+     1. Periksa bagian atas halaman `/daily/morning`: jika pada Evaluasi Sore (EOD) hari kerja sebelumnya pengguna mengisi kolom **Prioritas Utama Besok**, amati spanduk pengingat yang muncul di atas formulir.
+     2. Jika di bagian atas formulir terdapat panel **Koleksi Draf Carry-Over dari Hari Kerja Sebelumnya** (tugas kemarin yang dievaluasi dengan status `Lanjutkan Besok / CONTINUE`):
+        - Periksa informasi pada kartu draf tersebut (lencana `Carry-Over #N` dan catatan alasan kelanjutan dari EOD kemarin).
+        - Klik tombol **`Terapkan ke Slot`** pada kartu draf tersebut.
    - **Hasil yang Diharapkan:**
-     - Muncul pesan melayang hijau **`"Draf tugas carry-over #1 diterapkan ke slot #..."`**, teks tugas otomatis masuk ke slot kosong yang tersedia tanpa menimpa slot yang sudah terisi, dan tombol pada kartu draf berubah menjadi **`Sudah Tersalin`** (terkunci agar tidak disalin dua kali).
+     1. Spanduk pengingat menampilkan kembali teks rencana prioritas yang ditulis pengguna pada sore kemarin sebagai acuan mengisi komitmen pagi.
+     2. Saat `Terapkan ke Slot` diklik: muncul pesan melayang hijau **`"Draf tugas carry-over #1 diterapkan ke slot #..."`**, teks tugas otomatis masuk ke slot kosong yang tersedia tanpa menimpa slot yang sudah terisi, dan tombol pada kartu draf berubah menjadi **`Sudah Tersalin`** (terkunci agar tidak disalin dua kali).
 
 4. **Langkah 2.1.4 — Uji Pengiriman `1–3 Komitmen` Valid & Pengaman Anti-Dobel 2 Tab (`DEF-001` — `ST-DLYM-04`, `ST-DLYM-10`):**
    - **Aksi:**
@@ -351,7 +365,7 @@ flowchart TD
      2. Ketik deskripsi 3 huruf `Cek` → klik **`Tambahkan Pekerjaan`**.
      3. Ketik deskripsi `Perbaikan bug validasi token kadaluarsa di halaman aktivasi`, pilih alasan **`Penugasan Baru dari Atasan`**, biarkan pilihan **`Ditugaskan Oleh (Atasan Langsung/Lead) *`** kosong → coba klik **`Tambahkan Pekerjaan`**.
      4. Ubah alasan menjadi **`Lainnya`**, isi kotak **`Keterangan Alasan Lainnya *`** dengan 2 huruf `Ya` → klik **`Tambahkan Pekerjaan`**.
-     5. Pilih kembali alasan **`Penugasan Baru dari Atasan`**, pilih atasan **`Bambang Pratama`**, pilih proyek **`[PRJ-CORE] Enterprise Core Engine & Identity Sync`**, lalu klik **`Tambahkan Pekerjaan`**.
+     5. Pilih kembali alasan **`Penugasan Baru dari Atasan`**, buka dropdown **`Ditugaskan Oleh (Atasan Langsung/Lead) *`** dan pastikan **tidak ada nama karyawan `Intern`** (*Raka Pratama* / *Nisa Amelia*) di dalamnya (`[Aktif v1.1 — Paket #1]`), lalu pilih atasan **`Bambang Pratama`**, pilih proyek **`[PRJ-CORE] Enterprise Core Engine & Identity Sync`**, dan klik **`Tambahkan Pekerjaan`**.
      6. Tambahkan lagi 4 tugas tambahan singkat lainnya (misalnya alasan `Perbaikan Error / Bug Kritis` atau `Pengalihan Prioritas Kerja`) hingga total tugas tambahan hari ini mencapai **5 tugas**.
    - **Hasil yang Diharapkan:**
      1. Saat belum ada tugas: panel bawah menampilkan tampilan kosong berikon tas kerja (`Briefcase`).
@@ -363,7 +377,7 @@ flowchart TD
 
 ---
 
-#### Skenario Prosedural `SP-02.3` — Menyisir Halaman Evaluasi Sore (`/daily/eod`) & Riwayat Saya (`/daily/history`): Wajib Alasan Batal/Lanjut, Hak Pilih Hijau (`DEC-003`), Kunci Atomik (`DEF-002`), Kunci Additional Work Pasca-EOD (`[Target v1.1]`), & Buka Rincian Riwayat
+#### Skenario Prosedural `SP-02.3` — Menyisir Halaman Evaluasi Sore (`/daily/eod`) & Riwayat Saya (`/daily/history`): Wajib Alasan Batal/Lanjut, Hak Pilih Hijau (`DEC-003`), Kunci Atomik (`DEF-002`), Kunci Additional Work Pasca-EOD (`[Aktif v1.1 — Paket #2]`), & Buka Rincian Riwayat
 - **Acuan Prototype & Baseline:** `UI-UX-Design/04-EOD-Outcome.html` · `06-My-History-Weekly-Summary.html` · `DEC-003` · `TC-DLYE-001..005`
 
 1. **Langkah 2.3.1 — Uji Validasi Wajib Alasan pada Status `Dibatalkan` & `Lanjutkan Besok` (`ST-DLYE-01..03`):**
@@ -375,26 +389,29 @@ flowchart TD
      1. Saat `Dibatalkan` tanpa alasan: ditolak dengan pesan merah persis: **`"Komitmen #1: Alasan pembatalan wajib diisi bila status Dibatalkan."`**
      2. Saat `Lanjutkan Besok` tanpa alasan: ditolak dengan pesan merah persis: **`"Komitmen #1: Alasan kelanjutan (Continuation) wajib diisi bila tugas dilanjutkan."`**
 
-2. **Langkah 2.3.2 — Uji Hak Pilih Status Hijau (`DEC-003`), Penguncian Permanen Pasca-Kirim (`DEF-002`), & Penguncian `Additional Work` Pasca-EOD (`[Target v1.1 Paket #2]` — `ST-DLYE-02`, `ST-DLYE-04`, `ST-DLYA-06`):**
+2. **Langkah 2.3.2 — Uji Hak Pilih Status Hijau (`DEC-003`), Penguncian Permanen Pasca-Kirim (`DEF-002`), & Penguncian `Additional Work` Pasca-EOD (`[Aktif v1.1 — Paket #2]` — `ST-DLYE-02`, `ST-DLYE-04`, `ST-DLYA-06`):**
    - **Aksi:**
      1. Isi alasan kelanjutan pada Komitmen #1 (`CONTINUE`): `Menunggu penggabungan cabang kode utama besok pagi`, dan pilih **`Selesai Penuh`** (`COMPLETED`) untuk tugas lainnya.
      2. Pada bagian **Status Akhir Hari (`Final Daily Status`)**, klik pilihan **`GREEN` (Hijau — Terkendali)**.
      3. Isi kolom opsional **Prioritas Utama Besok (`Tomorrow Priority`)**: `Menjalankan verifikasi integrasi tabel waktu WIB pada pukul 09:00 WIB`.
      4. Klik **`Kirim Evaluasi EOD`**, lalu tekan `F5` (Refresh).
-     5. **`[Target v1.1 Paket #2]`:** Buka kembali tab `/daily/additional-work` setelah EOD terkunci.
+     5. **`[Aktif v1.1 — Paket #2]`:** Buka kembali halaman `/daily/additional-work` setelah EOD terkunci, dan periksa juga lencana status waktu di `/daily/eod` jika mengirim antara pukul `17:01–21:00 WIB`.
    - **Hasil yang Diharapkan:**
      - Pilihan **`GREEN` tetap aktif dan dapat dikirim** meskipun Komitmen #1 belum selesai penuh (`DEC-003`).
-     - Setelah dikirim: muncul pesan hijau **`"Evaluasi EOD Outcome berhasil dikirim dan dicatat."`**, lencana atas menjadi **`SUBMITTED (Terkunci)`**, muncul banner hijau waktu kirim + tombol **`Ajukan Koreksi EOD`**, dan seluruh item berubah menjadi **Kartu Ringkasan Evaluasi** yang tetap terkunci setelah `F5`.
-     - **`[Target v1.1 Paket #2]`:** Saat membuka `/daily/additional-work` setelah EOD terkunci, formulir tugas tambahan ikut terkunci (*read-only*) dengan banner panduan ramah lembur pasca-EOD & informasi bahwa menu `Lapor Blocker` tetap terbuka 24 jam.
+     - Setelah dikirim: muncul pesan hijau **`"Evaluasi EOD Outcome berhasil dikirim dan dicatat."`**, lencana atas menjadi **`SUBMITTED (Terkunci)`**, muncul banner hijau waktu kirim (`HH:mm WIB` tanpa detik) + tombol **`Ajukan Koreksi EOD`**, dan seluruh item berubah menjadi **Kartu Ringkasan Evaluasi** yang tetap terkunci setelah `F5`.
+     - Jika mengisi EOD pada jam `17:01–21:00 WIB`, lencana waktu bertuliskan **`Di Luar Jam Normal (Lembur Fleksibel)`** (bukan `LATE`).
+     - **`[Aktif v1.1 — Paket #2]`:** Saat membuka `/daily/additional-work` setelah EOD terkunci, seluruh kotak input tidak aktif (`disabled`), tombol berubah menjadi **`Terkunci Pasca-EOD`**, dan tampil banner **`"Evaluasi Sore (EOD) Hari Ini Telah Ditutup — Formulir Terkunci"`** dengan panduan mencatat lembur mendadak di hari kerja berikutnya serta tautan **`Lapor Blocker`** yang tetap bisa diklik 24 jam.
 
 3. **Langkah 2.3.3 — Menyisir Halaman Riwayat Saya (`/daily/history` — `ST-HIST-01..03`):**
    - **Aksi:**
      1. Buka menu **Riwayat Saya (`/daily/history`)**.
-     2. Klik baris catatan hari ini pada tabel untuk membuka rinciannya, lalu klik sekali lagi untuk menutupnya.
-     3. Atur filter tanggal awal & akhir ke tanggal masa depan yang belum punya catatan (misal `2027-01-01` s/d `2027-01-05`), klik terapkan, lalu klik tombol unduh.
+     2. Klik baris catatan hari ini pada tabel untuk membuka rinciannya (`Tutup ^`), lalu klik sekali lagi untuk menutupnya.
+     3. Saat tabel sedang menampilkan data hari kerja, klik tombol **`Unduh CSV`** di kanan atas.
+     4. Atur filter **Dari Tanggal** & **Sampai Tanggal** ke tanggal masa depan yang belum punya catatan (misal `01/01/2027` s/d `05/01/2027`), klik **`Terapkan Rentang`**, lalu klik kembali tombol **`Unduh CSV`**.
    - **Hasil yang Diharapkan:**
-     1. Saat baris diklik: baris melebar menampilkan rincian seluruh Komitmen Pagi (beserta hasil evaluasi & alasan kelanjutan) dan seluruh Tugas Tambahan hari tersebut. (Pada baris milik Nadia Kusuma dari Langkah 2.1.5, rincian menampilkan alasan `0 Komitmen`).
-     2. Saat filter tanggal kosong: tabel menampilkan keterangan kosong (`empty-cell`), dan klik tombol unduh memunculkan pesan merah: **`"Tidak ada data riwayat untuk diunduh."`**
+     1. Saat baris diklik: baris melebar menampilkan rincian seluruh **Komitmen Pagi** (beserta hasil evaluasi & alasan kelanjutan) dan seluruh **Pekerjaan Tambahan Siang** hari tersebut. (Pada baris milik Nadia Kusuma dari Langkah 2.1.5, rincian menampilkan alasan `0 Komitmen`).
+     2. Saat tombol `Unduh CSV` diklik ketika data ada: browser langsung mengunduh file `.csv` berisi riwayat kerja pengguna.
+     3. Saat filter tanggal kosong: tabel menampilkan keterangan kosong (`empty-cell`), dan klik tombol `Unduh CSV` memunculkan pesan merah: **`"Tidak ada data riwayat untuk diunduh."`**
 
 ---
 
@@ -404,11 +421,11 @@ flowchart TD
 |---|---|---|---|:---:|:---:|:---:|:---:|
 | `ST-AUTH-01..09` | **1. Login** (`/login`) | `01-Login-Activation.html` | Tampilan awal 2 panel, validasi kosong/format email, tombol ikon mata sandi, error `401` sandi salah, error akun `INVITED`, error akun `INACTIVE`, kunci hitung mundur `429`, login sukses, & pengalihan balik bila sudah login. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-ACTV-01..06` | **2. Aktivasi Akun** (`/activate`) | `01-Login-Activation.html` | Auto-isi `?token=`, garis indikator kekuatan sandi, error token salah / bekas pakai (`USED`) / dicabut (`REVOKED`) / kedaluwarsa (`EXPIRED`), & kartu sukses aktivasi. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-PROF-01..04` | **3. Profil Pribadi** (`/profile`) | `24-Profile-Settings.html` | 3 kartu profil (`+ [Target v1.1] Status Karyawan & lencana Intern`), 3 indikator centang hijau sandi baru, 5 pesan error merah validasi sandi, & banner hijau sukses. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-PROF-01..04` | **3. Profil Pribadi** (`/profile`) | `24-Profile-Settings.html` | 3 kartu profil (`[Aktif v1.1]` Status Karyawan & lencana `Intern` + Panel 3 bebas rumus kurung siku), 3 indikator centang hijau sandi baru, 5 pesan error merah validasi sandi, & banner hijau sukses. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-ERR-01..02` | **4. Error 403 & 404** (`/forbidden`, `/*`) | Standar Design System | Layar `403 — Akses Dibatasi` (menampilkan nama peran & alamat yang diblokir + tombol kembali ke beranda peran `IMP-023`) & layar `404 — Halaman Tidak Ditemukan`. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-DLYM-01..10` | **5. Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | `ON-TIME` vs `Terlambat (LATE)` vs `LOCKED` (>09:30) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, draf *Carry-Over* (`DEC-011`), banner `Prioritas Besok`, risiko `AMBER/RED`, menu `Pilih Blocker Aktif`, opsi `0 Komitmen` (`DEC-004`), batas 3 slot, & pengaman anti-dobel 2 tab (`DEF-001`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-DLYA-01..06` | **6. Tugas Tambahan** (`/daily/additional-work`) | `03-Additional-Work.html` | Peringatan belum isi pagi, tampilan daftar kosong, 5 alasan kondisional (pilih atasan pada `Penugasan Baru` & teks wajib pada `Lainnya`), pemilih proyek & blocker, kunci batas maksimum 5 tugas, & `[Target v1.1 Paket #2]` kunci pasca-EOD. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-DLYE-01..06` | **7. Evaluasi Sore EOD** (`/daily/eod`) | `04-EOD-Outcome.html` | `ON-TIME` vs `Lembur Fleksibel` (`17:01–21:00`) vs `LOCKED` (>21:00) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, alasan wajib `Dibatalkan` & `Lanjutkan Besok`, hak pilih `GREEN` (`DEC-003`), & pengaman anti-dobel (`DEF-002`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-DLYM-01..10` | **5. Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | `ON-TIME` vs `Terlambat (LATE)` vs `LOCKED` (>09:30) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, format `HH:mm WIB`, draf *Carry-Over* (`DEC-011`), banner `Prioritas Besok`, risiko `AMBER/RED`, menu `Pilih Blocker Aktif`, opsi `0 Komitmen` (`DEC-004`), batas 3 slot, & pengaman anti-dobel 2 tab (`DEF-001`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-DLYA-01..06` | **6. Tugas Tambahan** (`/daily/additional-work`) | `03-Additional-Work.html` | Peringatan belum isi pagi, tampilan daftar kosong, 5 alasan kondisional (pilih atasan bebas `Intern` pada `Penugasan Baru` & teks wajib pada `Lainnya`), pemilih proyek & blocker, kunci batas maksimum 5 tugas, & `[Aktif v1.1 — Paket #2]` kunci pasca-EOD (`Terkunci Pasca-EOD` + tautan `Lapor Blocker`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-DLYE-01..06` | **7. Evaluasi Sore EOD** (`/daily/eod`) | `04-EOD-Outcome.html` | `ON-TIME` vs **`Di Luar Jam Normal (Lembur Fleksibel)`** (`17:01–21:00 WIB`) vs `LOCKED` (>21:00 WIB) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, alasan wajib `Dibatalkan` & `Lanjutkan Besok`, hak pilih `GREEN` (`DEC-003`), & pengaman anti-dobel (`DEF-002`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-HIST-01..03` | **8. Riwayat Saya** (`/daily/history`) | `06-My-History-Weekly-Summary.html` | Filter tanggal, 4 kartu KPI mingguan, buka/tutup rincian baris (komitmen + tugas tambahan + 0 komitmen), baris kosong, & pesan merah tolak unduh saat kosong. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
@@ -460,14 +477,14 @@ flowchart TD
 | **2. Kantor & Perangkat** | `NETWORK` — **Jaringan & Koneksi** | Penanggung Jawab Kategori `NETWORK` | **Fakhrizal Asshiddiq** *(Jika cuti/melapor → naik ke **Gunawan Setiawan**)* |
 | | `WORK_DEVICE` — **Perangkat Kerja** | Penanggung Jawab Kategori `WORK_DEVICE` | **Rahian M. Suari** *(Jika cuti/melapor → naik ke **Gunawan Setiawan**)* |
 | | `OFFICE_FACILITY` — **Fasilitas & Sarana Kantor** | Penanggung Jawab Kategori `OFFICE_FACILITY` | **Sugito Erik Fajar** *(Jika cuti/melapor → naik ke **Dewi Lestari**)* |
-| **3. Orang & Keputusan** | `REQUIREMENT` — **Kebutuhan & Arahan Kerja** | Penanggung Jawab Kategori `REQUIREMENT` | **Dimas Prakoso** *(Jika cuti/melapor → naik ke **Dharma Putra**)* |
+| **3. Orang & Keputusan** | `REQUIREMENT` — **Kebutuhan & Arahan Kerja** | Struktural: Atasan Langsung Pelapor (`directManagerId`); Jalur Proyek: Pimpinan Proyek | **Arif Budiman** *(Jika pilih jalur Proyek: Pimpinan Proyek)* |
 | | `APPROVAL` — **Persetujuan & Tanda Tangan** | Atasan Langsung Pelapor (`directManagerId`) | **Arif Budiman** (Atasan Langsung Aditya) |
 | | `CROSS_TEAM` — **Menunggu Tim / Rekan Lain** | Kepala Divisi (`HEAD`) dari **Divisi yang Sedang Ditunggu** | Sesuai divisi yang dipilih (contoh: pilih Ops & Infra → **Gunawan Setiawan**; pilih Delivery → **Dharma Putra**; pilih Sales → **Lukman Hakim**) |
 | | `RESOURCE` — **Tenaga & Kapasitas Tim** | Atasan Langsung Pelapor (`directManagerId`) | **Arif Budiman** (Atasan Langsung Aditya) |
-| **4. Pihak Luar, Uang & Hukum** | `CLIENT` — **Klien & Calon Klien** | Penanggung Jawab Kategori `CLIENT` | **Dimas Prakoso** *(Jika cuti/melapor → naik ke **Dharma Putra**)* |
+| **4. Pihak Luar, Uang & Hukum** | `CLIENT` — **Klien & Calon Klien** | Penanggung Jawab Kategori `CLIENT` (atau Pimpinan Proyek jika jalur Proyek) | **Hari Wibowo** *(Jika cuti/melapor → naik ke **Lukman Hakim**)* |
 | | `VENDOR` — **Vendor & Pihak Ketiga** | Atasan Langsung Pelapor (`directManagerId`) | **Arif Budiman** (Atasan Langsung Aditya) |
-| | `FINANCE` — **Keuangan & Pembayaran** | Penanggung Jawab Kategori `FINANCE` | **Ratna Sari** *(Jika cuti/melapor → naik ke **Hendra Wijaya / Direktur**)* |
-| | `LEGAL` — **Hukum, Kontrak & Kepatuhan** | Penanggung Jawab Kategori `LEGAL` | **Dewi Lestari** *(Jika cuti/melapor → naik ke **Hendra Wijaya / Direktur**)* |
+| | `FINANCE` — **Keuangan & Pembayaran** | Penanggung Jawab Kategori `FINANCE` | **Oivi Deasepta** *(Jika cuti/melapor → naik ke **Ratna Sari**)* |
+| | `LEGAL` — **Hukum, Kontrak & Kepatuhan** | Tujuan Divisi `HRGA & Legal` (`BLOCKER_TYPE_DIVISION_ROUTING`) | **Dewi Lestari** *(Jika cuti/melapor → naik ke **Hendra Wijaya / Direktur**)* |
 | **5. Lainnya** | `OTHER` — **Kendala Lainnya** | Atasan Langsung Pelapor (`directManagerId`) | **Arif Budiman** (Atasan Langsung Aditya) |
 
 ---
@@ -501,7 +518,8 @@ flowchart TD
      9. Pilih **`Persetujuan & Tanda Tangan`** (`APPROVAL`) (atau `RESOURCE` / `VENDOR` / `OTHER`).
    - **Hasil yang Diharapkan:**
      - Dropdown menampilkan 16 kategori yang terbagi rapi dalam 5 kelompok judul (`1. Teknis & Sistem`, `2. Kantor & Perangkat`, `3. Orang & Keputusan`, `4. Pihak Luar, Uang & Hukum`, `5. Lainnya`).
-     - Kotak hijau `Jalur Penanganan Otomatis` langsung berganti menunjuk penanggung jawab yang sesuai dengan **Tabel 16 Kategori** di atas (`Bambang Pratama`, `Fakhrizal Asshiddiq`, `Achmad Noer Wahid`, `Rahian M. Suari`, `Sugito Erik Fajar`, `Dimas Prakoso`, `Ratna Sari`, `Dewi Lestari`).
+     - Kotak hijau `Jalur Penanganan Otomatis` langsung berganti menunjuk penanggung jawab yang sesuai dengan **Tabel 16 Kategori** di atas (`Bambang Pratama`, `Fakhrizal Asshiddiq`, `Achmad Noer Wahid`, `Rahian M. Suari`, `Sugito Erik Fajar`, `Hari Wibowo`, `Oivi Deasepta`, `Dewi Lestari`).
+     - Selain itu, pada dropdown **Penanggung Jawab Khusus (opsional)** (`#assignedOwner`), akun berstatus **`Intern`** (*Raka Pratama* & *Nisa Amelia*) **otomatis disaring keluar dari seluruh opsi termasuk kelompok `── Lainnya ──`** (`[Aktif v1.1 — Perbaikan Chrome B3]`).
      - Khusus saat memilih **`Menunggu Tim / Rekan Lain` (`CROSS_TEAM`)**: muncul dropdown wajib **`Divisi yang Sedang Ditunggu *`** (selama belum dipilih, tombol kirim terkunci); begitu dipilih `Divisi Operations & Infrastructure`, kotak hijau menunjuk **`Gunawan Setiawan`**.
      - Saat dikembalikan ke **`Persetujuan & Tanda Tangan` (`APPROVAL`)**: dropdown divisi tunggu otomatis hilang dan kotak hijau menampilkan: **`"Tiket akan langsung diteruskan otomatis ke Atasan Langsung Anda: Arif Budiman."`**
 
@@ -699,10 +717,10 @@ flowchart TD
 
 | ID Kondisi | Halaman & Rute | Acuan Prototype | Ringkasan Kondisi yang Diaudit | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) |
 |---|---|---|---|:---:|:---:|:---:|:---:|
-| `ST-BLKR-01..05` | **9A. Lapor Blocker — Tab 1: Buat Laporan** (`/raise-blockers`) | `05-Raise-Instant-Blocker.html` | Form 2 bagian, judul < 10 huruf (tombol terkunci), tombol format terstruktur & chip cepat, 16 kategori (5 kelompok), dropdown wajib `Divisi yang Sedang Ditunggu *` (`CROSS_TEAM`), 9 dampak (`0/3` peringatan merah `"Minimal pilih 1 dampak kendala."` vs `3/3` kunci 6 kotak lain), peringatan merah `CRITICAL`, `Project Authority` vs `Organizational Authority`, pratinjau kotak hijau 16 kategori + pengalihan cuti vertikal, & panel sukses pasca-kirim. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-BLKM-01..05` | **9B. Lapor Blocker — Tab 2: Blocker Saya** (`/raise-blockers?tab=mine`) | `05-Raise-Instant-Blocker.html` | 5 pil filter status, tampilan kosong, kartu tiket tanpa lencana singkatan kaku, kotak Kategori + 1–3 Dampak lengkap kalimat penjelas, pop-up Edit (dengan pratinjau *Dynamic Re-Routing* & error merah di dalam pop-up), pop-up Hapus (3 alasan preset vs `Alasan Lainnya` wajib ≥ 10 huruf), 3 tombol respons bantuan (`Terima sbg Penyelesaian`, `Terima Bantuan Membantu Sebagian` wajib ≥ 10 huruf, `Bantuan Belum Membantu` wajib ≥ 10 huruf), serta kotak konfirmasi `Solusi Diberikan` / `Risiko Diterima` & *Kembalikan*. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-BLKQ-01..05` | **10. Antrean Eskalasi Blocker** (`/blockers`) | `09-Blocker-Escalation-Queue.html` | 3 kartu metrik atas, filter Status/Kepemilikan/16 Kategori, layout 2 kolom (responsif di `≤ 1024px`), perbedaan tombol PIC saat `Menunggu Respons` (`Terima & Tangani`) vs PIC saat `Sedang Ditangani` (`Beri Bantuan`, `Terima Risiko`, `Selesaikan`) vs Non-PIC (hanya `Beri Bantuan` dengan pop-up `Salurkan Kontribusi Bantuan` tanpa lencana `PIC Rekan`) vs Pelapor sendiri (`Laporan Anda Sendiri` + Edit/Hapus/Konfirmasi), ke-6 jendela pop-up dengan kotak error merah persisten di dalam pop-up, akses staf `isCategoryOwner` (Fakhrizal/Sugito/Rahian/Achmad), & blokir `403` staf biasa. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-AGNG-01..02` | **11. Radar Penuaan & Eskalasi** (`/blockers/aging`) | `14-Escalation-Aging.html` | Waktu evaluasi (`[Target v1.1: 14:14 WIB]`), tombol `Segarkan Data`, 4 kartu KPI (`Total Aktif`, `Melewati Batas Waktu`, `Critical Aktif`, `Kepatuhan %`), filter `Hanya yang Lewat Batas Waktu` + `Keparahan`, tabel penuaan dengan pil merah `Lewat Batas Waktu` vs hijau `Dalam Target`, & tampilan kosong hijau saat semua tepat waktu. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-BLKR-01..05` | **9A. Lapor Blocker — Tab 1: Buat Laporan** (`/raise-blockers`) | `05-Raise-Instant-Blocker.html` | Form 2 bagian, judul < 10 huruf (tombol terkunci), tombol format terstruktur & chip cepat, 16 kategori (5 kelompok), dropdown wajib `Divisi yang Sedang Ditunggu *` (`CROSS_TEAM`), 9 dampak (`0/3` peringatan merah `"Minimal pilih 1 dampak kendala."` vs `3/3` kunci 6 kotak lain), peringatan merah `CRITICAL`, `Project Authority` vs `Organizational Authority`, dropdown `#assignedOwner` bebas `Intern` (termasuk `── Lainnya ──`), pratinjau kotak hijau 16 kategori + pengalihan cuti vertikal, & panel sukses pasca-kirim. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-BLKM-01..05` | **9B. Lapor Blocker — Tab 2: Blocker Saya** (`/raise-blockers?tab=mine`) | `05-Raise-Instant-Blocker.html` | 5 pil filter status, tampilan kosong, kartu tiket tanpa lencana singkatan kaku, `0` kata `SLA` & cap waktu `HH:mm WIB` (`[Aktif v1.1 Paket #3/#4]`), kotak Kategori + 1–3 Dampak lengkap kalimat penjelas, pop-up Edit (dengan pratinjau *Dynamic Re-Routing* & error merah di dalam pop-up), pop-up Hapus (3 alasan preset vs `Alasan Lainnya` wajib ≥ 10 huruf), 3 tombol respons bantuan (`Terima sbg Penyelesaian`, `Terima Bantuan Membantu Sebagian` wajib ≥ 10 huruf, `Bantuan Belum Membantu` wajib ≥ 10 huruf), serta kotak konfirmasi `Solusi Diberikan` / `Risiko Diterima` & *Kembalikan*. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-BLKQ-01..05` | **10. Antrean Eskalasi Blocker** (`/blockers`) | `09-Blocker-Escalation-Queue.html` | 3 kartu metrik atas, filter Status/Kepemilikan/16 Kategori, layout 2 kolom (responsif di `≤ 1024px`), `0` kata `SLA` & cap waktu `HH:mm WIB` (`[Aktif v1.1 Paket #3/#4]`), perbedaan tombol PIC saat `Menunggu Respons` (`Terima & Tangani`) vs PIC saat `Sedang Ditangani` (`Beri Bantuan`, `Terima Risiko`, `Selesaikan`) vs Non-PIC (hanya `Beri Bantuan` dengan pop-up `Salurkan Kontribusi Bantuan` tanpa lencana `PIC Rekan`) vs Pelapor sendiri (`Laporan Anda Sendiri` + Edit/Hapus/Konfirmasi), ke-6 jendela pop-up dengan kotak error merah persisten di dalam pop-up, akses staf `isCategoryOwner` (Fakhrizal/Sugito/Rahian/Achmad/Oivi/Hari), & blokir `403` staf biasa. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-AGNG-01..02` | **11. Radar Penuaan & Eskalasi** (`/blockers/aging`) | `14-Escalation-Aging.html` | Waktu evaluasi (`[Aktif v1.1 Paket #4]`: `HH:mm WIB`, bebas `SLA`), tombol `Segarkan Data`, 4 kartu KPI (`Total Kendala Tertahan`, `Lewat Batas Waktu`, `Prioritas Kritis (Critical)`, `Tingkat Ketepatan Waktu`), filter `Hanya Lewat Batas Waktu` + `Keparahan`, tabel penuaan dengan pil merah `Terlewat (...)` vs hijau `Sisa ...`, & tampilan kosong hijau saat semua tepat waktu. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 ---
 
 # BAGIAN III: KOREKSI LAPORAN, CUTI & IZIN, SERTA PENGAWASAN KEPATUHAN & COACHING
@@ -714,11 +732,11 @@ flowchart TD
 ### 4.A. Lapisan 1 — Peta Alur & Percabangan (`Journey 4`)
 ```mermaid
 flowchart TD
-    A["Karyawan Buka /corrections/submit"] --> B{"Hari Ini Sudah Kirim Pagi/Sore?"}
+    A["Karyawan Buka /corrections/morning (Pagi) atau /corrections/eod (EOD)"] --> B{"Hari Ini Sudah Kirim Pagi/Sore?"}
     B -- "Belum Ada Laporan Hari Ini" --> B1["Tampil Kartu Info: Tidak Bisa Koreksi Karena Belum Ada Laporan Dasar"]
     B -- "Sudah Ada Laporan Pagi/Sore" --> C["Pilih Jenis Koreksi & Tulis Alasan (Min. 10 Huruf)"]
     C --> D{"Jenis Koreksi?"}
-    D -- "MINOR (Perbaikan Salah Ketik / Kalimat Tanpa Ubah Target)" --> E["Langsung Berlaku Otomatis (AUTO_APPLIED)"]
+    D -- "MINOR (Perbaikan Salah Ketik / Kalimat Tanpa Ubah Target)" --> E["Langsung Berlaku Otomatis (AUTO_APPLIED) -> Tampil di Tabel Riwayat Bawah Halaman"]
     D -- "MATERIAL (Ubah Hasil Sore / Target Penting)" --> F{"Masih Dalam Batas 24 Jam?"}
     F -- "Lewat 24 Jam" --> F1["Ditolak 422: Jendela Koreksi 24 Jam Sudah Habis"]
     F -- "Masih < 24 Jam" --> G["Status: PENDING_REVIEW -> Kirim Notifikasi ke Atasan / Reviewer Sementara"]
@@ -729,79 +747,87 @@ flowchart TD
 ```
 
 - **Intisari untuk User Manual Versi Pengguna Umum:**
-  - *Beda Koreksi Ringan (Minor) vs Koreksi Isi Penting (Material):* Jika hanya salah ketik kata atau memperjelas kalimat tanpa mengubah jumlah komitmen atau status hasil sore, pilih **Koreksi Ringan (Minor)** — perubahan langsung diterapkan otomatis saat itu juga. Jika ingin mengubah status hasil sore (misal dari *Belum Selesai* menjadi *Selesai*) atau mengganti target utama, pilih **Koreksi Isi Penting (Material)** maksimal dalam **24 jam** setelah laporan dikirim — perubahan ini butuh persetujuan atasan.
+  - *Beda Perubahan Minor vs Perubahan Material:* Jika hanya memperbaiki salah ketik (*typo*) atau menambahkan tautan referensi tanpa mengubah target utama/hasil capaian, pilih **Perubahan Minor (`MINOR`)** — perubahan langsung berlaku otomatis (`AUTO_APPLIED`) saat itu juga. Jika ingin mengubah target komitmen, tingkat risiko, atau mengubah status hasil evaluasi sore (misalnya dari `BLOCKED` menjadi `DONE`), pilih **Perubahan Material (`MATERIAL`)** maksimal dalam **24 jam** setelah laporan terkunci — perubahan ini masuk ke antrean peninjauan atasan.
 - **Intisari untuk User Manual Stakeholder & Skrip Demo:**
-  - *Integritas Data Tanpa Kaku:* Karyawan tetap manusia yang bisa salah ketik atau salah klik, tapi sistem menjaga kejujuran data: perubahan besar tidak langsung mengubah rapor, melainkan lewat meja persetujuan atasan (`/corrections/review`) dan selalu meninggalkan jejak sebelum-sesudah (*Diff*).
+  - *Kejujuran Data yang Tetap Manusiawi:* Karyawan bisa saja mengalami salah ketik atau salah pilih tombol setelah jam kunci lewat, namun sistem menjaga keaslian data: perubahan penting tidak langsung mengubah catatan resmi, melainkan wajib melalui persetujuan atasan di `/corrections/review` dengan menampilkan perbandingan nilai **Sebelum** dan **Diajukan** secara berdampingan.
 
 ---
 
 ### 4.B. Lapisan 2 — Panduan Skenario Prosedural Langkah demi Langkah (`Journey 4`)
 
-#### Skenario Prosedural `SP-04.1`: Uji Belum Ada Laporan Dasar, Validasi Form, Kirim Koreksi Ringan (`MINOR`) & Koreksi Penting (`MATERIAL`), serta Persetujuan Atasan
+#### Skenario Prosedural `SP-04.1`: Uji Belum Ada Laporan Dasar (`Tidak Ada Komitmen Hari Ini`), Validasi Form, Kirim Koreksi Pagi (`/corrections/morning`) & Koreksi Sore (`/corrections/eod`), serta Uji Tolak (`REJECTED`) & Setujui (`APPROVED`) oleh Atasan di `/corrections/review`
 - **Akun Uji:**
   1. `product@dutamedia.com` (Dio Bayu Bagaskara — Staf yang belum kirim komitmen pagi hari ini)
   2. `dev.frontend@dutamedia.com` (Aditya Nugroho — Staf yang sudah kirim laporan pagi & sore di `Journey 2`)
   3. `head.eng@dutamedia.com` (Arif Budiman — Head of Engineering, atasan langsung Aditya)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Kondisi Belum Ada Laporan Hari Ini (`No Baseline`):**
-     - **Aksi:** Masuk (*Login*) sebagai **`product@dutamedia.com`** (sandi `Password123!`), lalu klik menu kiri **Ajukan Koreksi** (`/corrections/submit`).
+  1. **Uji Kondisi Belum Ada Laporan Hari Ini (`Tidak Ada Komitmen Hari Ini`):**
+     - **Aksi:** Masuk (*Login*) sebagai **`product@dutamedia.com`** (sandi `Password123!`), lalu klik menu kiri **Koreksi Komitmen Pagi** (`/corrections/morning`) dan **Koreksi Evaluasi Sore** (`/corrections/eod`).
      - ***Hasil yang Diharapkan:***
-       - Karena Dio belum mengirim Komitmen Pagi hari ini, sistem menampilkan pesan informasi yang jelas bahwa **koreksi belum dapat diajukan sebelum ada laporan pagi atau sore yang dikirim hari ini**, atau pilihan target koreksi kosong sehingga pengguna tidak bisa mengirim koreksi palsu (`422 BUSINESS_RULE_CORRECTION_NO_BASELINE`).
-  2. **Uji Validasi Batas Minimal Karakter di Formulir Koreksi:**
-     - **Aksi:** Keluar (*Logout*) dari akun Dio, lalu masuk sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho) dan buka menu **Ajukan Koreksi** (`/corrections/submit`).
-     - **Aksi:** Pilih Sasaran Koreksi: **Komitmen Pagi (`MORNING`)** dan Kategori Koreksi: **Koreksi Ringan (`MINOR`)**.
-     - **Aksi:** Isi kolom *Ringkasan Perubahan / Data Baru* hanya 2 huruf (`OK`) dan kolom *Alasan Koreksi* hanya 5 huruf (`Salah`), lalu coba klik **Kirim Pengajuan Koreksi**.
+       - Karena Dio belum mengirim Komitmen Pagi hari ini, kedua halaman menyembunyikan formulir koreksi dan menampilkan kartu informasi **`"Tidak Ada Komitmen Hari Ini"`** beserta tombol **`Buka Morning Commitment`** (mencegah pengajuan koreksi saat belum ada laporan dasar; di server juga dijaga dengan kode `422`).
+  2. **Uji Validasi Batas Minimal Karakter di Formulir Koreksi Komitmen Pagi (`/corrections/morning`):**
+     - **Aksi:** Keluar (*Logout*) dari akun Dio, lalu masuk sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho) dan buka menu **Koreksi Komitmen Pagi** (`/corrections/morning`).
+     - **Aksi:** Pada panel kiri **Formulir Pengajuan Koreksi Komparatif**:
+       - Pilih komitmen pada dropdown **`Pilih Komitmen yang Ingin Dikoreksi *`** (`#comSelect`), lalu periksa kotak **`Baseline Tersimpan (Locked)`** di bawahnya.
+       - Pilih kartu **`Perubahan Minor`** (`MINOR`).
+       - Isi **`Deskripsi Komitmen Baru yang Diajukan *`** (`#newTaskInput`) hanya 2 huruf (`OK`) dan **`Alasan Resmi Permohonan Koreksi *`** (`#reasonInput`) hanya 5 huruf (`Salah`).
      - ***Hasil yang Diharapkan:***
-       - Sistem menahan pengiriman: ringkasan perubahan wajib minimal **3 huruf** dan alasan koreksi wajib minimal **10 huruf** agar riwayat audit jelas.
-  3. **Kirim Koreksi Ringan (`MINOR` — Langsung Berlaku Otomatis):**
-     - **Aksi:** Masih di `/corrections/submit` sebagai Aditya, ubah isian menjadi:
-       - **Sasaran Koreksi:** `Komitmen Pagi (MORNING)`
-       - **Kategori Koreksi:** `Koreksi Ringan / Salah Ketik (MINOR)`
-       - **Isi Perubahan / Perbaikan Kalimat:** `Finalisasi komponen tabel riwayat blocker dan filter status responsif (revisi ejaan judul tugas #1)`
-       - **Alasan Koreksi:** `Memperbaiki salah ketik pada penamaan komponen tabel agar sesuai standar dokumentasi tim.`
-     - **Aksi:** Klik **Kirim Pengajuan Koreksi**, lalu klik menu kiri **Riwayat Koreksi** (`/corrections/history`).
+       - Selama alasan kurang dari 10 karakter, tombol **`Kirim Permohonan Koreksi`** otomatis terkunci (`disabled`). Deskripsi komitmen baru juga wajib minimal **3 karakter**.
+  3. **Kirim Koreksi Pagi `Perubahan Minor` (`MINOR` — Langsung Berlaku Otomatis) & `Perubahan Material` (`MATERIAL` — Menunggu Atasan):**
+     - **Aksi (Kirim Minor):** Masih di `/corrections/morning` sebagai Aditya, isi:
+       - **Klasifikasi Perubahan \*:** Klik kartu **`Perubahan Minor`**
+       - **Deskripsi Komitmen Baru yang Diajukan \*:** `Optimasi komponen tabel riwayat komitmen harian dan penyesuaian format jam WIB`
+       - **Tautan Referensi Baru (opsional):** `https://github.com/dutamedia/workpulse/pull/104`
+       - **Tingkat Risiko Baru:** `AMBER (Waspada)`
+       - **Alasan Resmi Permohonan Koreksi \*:** `Memperbaiki salah ketik penamaan komponen tabel dan menambahkan tautan PR referensi.`
+       - Klik **`Kirim Permohonan Koreksi`**, lalu periksa panel kanan **Riwayat Permohonan Koreksi**.
+     - **Aksi (Kirim Material Pagi untuk Diuji Penolakan):** Masih di `/corrections/morning`, pilih **`[Komitmen #2]`** pada `#comSelect`, klik kartu **`Perubahan Material`**, ubah deskripsi komitmen baru menjadi `Mengganti seluruh cakupan tugas #2 menjadi eksplorasi desain halaman baru`, isi alasan `Ingin mengganti target komitmen kedua setelah diskusi singkat tadi pagi`, lalu klik **`Kirim Permohonan Koreksi`**.
      - ***Hasil yang Diharapkan:***
-       - Muncul pesan sukses bahwa koreksi ringan telah langsung diterapkan.
-       - Di tabel `/corrections/history`, baris koreksi `MINOR` tersebut langsung berstatus **`DITERAPKAN OTOMATIS (AUTO_APPLIED)`** tanpa perlu menunggu persetujuan atasan.
-  4. **Kirim Koreksi Isi Penting (`MATERIAL` — Butuh Persetujuan Atasan dalam 24 Jam):**
-     - **Aksi:** Kembali ke menu **Ajukan Koreksi** (`/corrections/submit`).
-     - **Aksi:** Isi formulir berikut:
-       - **Sasaran Koreksi:** `Hasil Sore (EOD)`
-       - **Kategori Koreksi:** `Koreksi Isi Penting / Material (MATERIAL)`
-       - **Isi Perubahan / Perbaikan Data:** `Mengubah status tugas #2 (Perbaikan tampilan modal detail blocker) menjadi SELESAI (DONE) karena perbaikan CSS berhasil diunggah tepat sebelum pukul 17:30 WIB.`
-       - **Alasan Koreksi:** `Salah memilih tombol status Sebagian saat mengisi laporan sore tadi padahal PR sudah digabungkan.`
-     - **Aksi:** Klik **Kirim Pengajuan Koreksi**, lalu buka **Riwayat Koreksi** (`/corrections/history`).
+       - Saat kirim Minor: muncul pesan hijau **`"Koreksi minor berhasil diterapkan seketika (AUTO_APPLIED)."`** dan di panel kanan muncul kartu riwayat berstatus **`AUTO_APPLIED`** dengan cap waktu `HH:mm WIB`.
+       - Saat kirim Material: muncul pesan hijau **`"Permohonan koreksi material telah diajukan. Jendela keberatan aktif 24 jam."`** dan di panel kanan muncul kartu riwayat berstatus **`PENDING`**.
+  4. **Kirim Koreksi Evaluasi Sore (`MATERIAL` EOD) di `/corrections/eod`:**
+     - **Aksi:** Klik menu kiri **Koreksi Evaluasi Sore** (`/corrections/eod`).
+     - **Aksi:** Pada panel kiri **Formulir Pengajuan Koreksi Evaluasi Sore**, isi:
+       - **Pilih Komitmen / Tugas Target \*:** Pilih `[Tugas #1] ...` pada dropdown `#eodSelect` (periksa kotak `Baseline EOD Tersimpan` di bawahnya).
+       - **Klasifikasi Perubahan \*:** Klik kartu **`Perubahan Material`** (`MATERIAL`).
+       - **Hasil Baru yang Diajukan (Outcome) \*:** Klik kartu **`DONE (Tuntas)`**.
+       - **Keterangan Hasil yang Diajukan:** `Cabang kode utama sudah digabungkan pada pukul 17:25 WIB sehingga tugas selesai tuntas hari ini.`
+       - **Status Kelanjutan Tugas:** Pilih **`Arsipkan / Tuntas`** (`ARCHIVE`) pada dropdown `#continuationSelect`.
+       - **Alasan Resmi Permohonan Koreksi \*:** `Salah memilih tombol status Selesai Sebagian saat mengisi evaluasi sore tadi padahal PR sudah selesai digabungkan.`
+     - **Aksi:** Klik **`Kirim Permohonan Koreksi EOD`**, lalu periksa panel kanan **Riwayat Permohonan Koreksi EOD**.
      - ***Hasil yang Diharapkan:***
-       - Baris koreksi `MATERIAL` tampil di `/corrections/history` dengan lencana status **`MENUNGGU PERSETUJUAN (PENDING_REVIEW)`**.
-       - *Catatan Kondisi Khusus:* Jika karyawan mencoba mengirim koreksi kedua dengan sasaran yang sama saat koreksi pertama masih menunggu persetujuan, atau jika laporan sudah lewat **24 jam**, sistem menolak dengan pesan jelas (`409` / `422`).
+       - Muncul pesan hijau **`"Permohonan koreksi material EOD diajukan. Jendela sanggahan 24 jam dibuka."`** dan kartu riwayat di panel kanan tampil berstatus **`PENDING`**.
+       - *Kondisi Khusus Bentrok & Batas Waktu:* Jika karyawan mengirim koreksi material kedua pada tugas yang sama saat pengajuan pertama masih `PENDING`, sistem menolak (`409 Conflict`). Jika sudah melewati batas jendela koreksi, sistem menolak (`422`).
   5. **Uji Blokir Akses Halaman Review Koreksi bagi Staf Biasa (`403`):**
      - **Aksi:** Masih menggunakan akun Aditya (`dev.frontend@dutamedia.com`), ketik alamat `/corrections/review` secara manual di browser.
      - ***Hasil yang Diharapkan:***
-       - Sistem memblokir akses dan mengalihkan Aditya dari halaman tersebut karena staf biasa tidak berwenang menyetujui koreksi.
-  6. **Review, Uji Tolak Tanpa Alasan, Tolak Resmi, & Setujui Koreksi oleh Atasan (`/corrections/review`):**
-     - **Aksi:** Keluar dari akun Aditya, lalu masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman — Head of Engineering).
-     - **Aksi:** Buka menu kiri **Review Koreksi** (`/corrections/review`).
+       - Sistem memblokir akses dan mengalihkan Aditya ke layar **`403 — Akses Dibatasi`** karena staf biasa tidak berwenang menyetujui koreksi.
+  6. **Review di `/corrections/review`: Uji Tolak Tanpa Alasan, Tolak Resmi (`REJECTED`), Setujui Resmi (`APPROVED`), & Filter Riwayat:**
+     - **Aksi:** Keluar dari akun Aditya, lalu masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman — Head of Engineering) dan buka menu kiri **Review Koreksi & Cuti** (`/corrections/review`).
      - ***Hasil yang Diharapkan:***
-       - Kartu pengajuan koreksi `MATERIAL` milik Aditya Nugroho muncul di antrean lengkap dengan perbandingan nilai lama vs nilai baru (*Diff*), alasan pengajuan, dan waktu kirim (`WIB`).
-       - *Aturan Keamanan:* Jika yang login adalah pemohon itu sendiri atau pimpinan dari divisi lain yang tidak berwenang, sistem menolak tindakan review (`403 AUTH_FORBIDDEN`).
-     - **Aksi (Uji Validasi Penolakan):** Klik tombol **Tolak**, kosongkan kolom catatan penolakan, lalu coba klik konfirmasi tolak.
+       - Tabel **Permohonan Koreksi Material** menampilkan pengajuan `MATERIAL` milik Aditya lengkap dengan kotak **PERBANDINGAN NILAI (DIFF)** (`Sebelum:` vs `Diajukan:`), alasan permohonan, dan sisa waktu jendela sanggahan.
+     - **Aksi (Cabang 1 — Uji Validasi Penolakan & Tolak Resmi `REJECTED` pada Koreksi Pagi):**
+       1. Pada baris koreksi pagi (`MORNING_COMMITMENT`) milik Aditya, klik tombol **`Tolak`**.
+       2. Kosongkan kolom catatan penolakan, lalu coba klik konfirmasi tolak.
+       3. Isi catatan penolakan: `Target komitmen pagi yang sudah dikunci tidak boleh diganti ke topik lain; silakan catat sebagai Pekerjaan Tambahan.` lalu klik konfirmasi tolak.
+     - **Aksi (Cabang 2 — Setujui Resmi `APPROVED` pada Koreksi EOD & Cek Filter Status):**
+       1. Pada baris koreksi sore (`EOD_OUTCOME`) milik Aditya, klik tombol **`Setujui`**, isi catatan: `Disetujui sesuai bukti penggabungan kode sebelum pukul 17:30 WIB`, lalu konfirmasi setuju.
+       2. Ubah dropdown filter di kanan atas tabel dari `Menunggu Review (PENDING)` menjadi **`Semua Status`**.
+     - **Aksi (Verifikasi Catatan Penolakan & Persetujuan di Akun Aditya):** Keluar dari Arif, masuk kembali sebagai **Aditya Nugroho** (`dev.frontend@dutamedia.com`), lalu buka `/corrections/morning` dan `/corrections/eod`.
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak memproses jika alasan penolakan kosong (wajib diisi agar karyawan tahu alasan penolakannya).
-     - **Aksi (Setujui Koreksi):** Tutup modal tolak, lalu klik tombol **Setujui (Approve)** pada pengajuan koreksi Aditya, isi catatan: `Disetujui sesuai bukti PR yang sudah masuk sebelum batas waktu`, dan konfirmasi.
-     - ***Hasil yang Diharapkan:***
-       - Pengajuan koreksi Aditya berubah status menjadi **`DISETUJUI (APPROVED)`** dan berpindah dari tab antrean aktif ke riwayat keputusan.
-       - Aditya Nugroho menerima notifikasi bahwa pengajuan koreksinya telah disetujui oleh Arif Budiman.
+       - Saat menolak tanpa alasan: sistem menahan penolakan karena alasan penolakan wajib diisi.
+       - Setelah koreksi pagi ditolak dan koreksi EOD disetujui: pada filter `Semua Status` di `/corrections/review`, kedua baris tampil berstatus **`REJECTED`** dan **`APPROVED`**.
+       - Di akun Aditya: panel kanan `/corrections/morning` menampilkan kartu berstatus **`REJECTED`** lengkap dengan kotak merah catatan penolakan dari Arif Budiman, sedangkan panel kanan `/corrections/eod` menampilkan kartu berstatus **`APPROVED`** lengkap dengan catatan persetujuan Arif Budiman (dan Aditya menerima kedua notifikasinya di `/notifications`).
 
 ---
 
 ### 4.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian III-A (Halaman 12–14)
 
-| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | Cek 375px (HP) | Cek 768/1024px (Tablet) | Cek 1440/1920px (Desktop) | Cek Prototype & Baseline |
-|---|---|---|---|---|---|---|---|
-| **K-12.1** | **Ajukan Koreksi** (`/corrections/submit`) | Belum ada laporan pagi/sore hari ini (`No Baseline` info card) | `EMPLOYEE` (`product@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-12.2** | **Ajukan Koreksi** (`/corrections/submit`) | Form koreksi `MINOR` vs `MATERIAL` + validasi min. 3 & 10 karakter | `EMPLOYEE` (`dev.frontend@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-13.1** | **Riwayat Koreksi** (`/corrections/history`) | Tabel riwayat: lencana `AUTO_APPLIED`, `PENDING_REVIEW`, `APPROVED`, `REJECTED` | `EMPLOYEE` | [ ] | [ ] | [ ] | [ ] |
-| **K-14.1** | **Review Koreksi** (`/corrections/review`) | Kartu perbandingan nilai lama vs baru (*Diff*) + modal Setujui / Tolak wajib alasan | `HEAD` / `Reviewer Sementara` | [ ] | [ ] | [ ] | [ ] |
+| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
+|---|---|---|---|---|---|---|---|---|
+| **K-12.1** | **Koreksi Komitmen Pagi** (`/corrections/morning`) · *(Acuan `16a-Morning-Correction-Request.html`)* | Belum ada laporan pagi hari ini (`No Baseline`), form `MINOR` vs `MATERIAL` + validasi min. 10 huruf, & tabel riwayat bawah halaman (`AUTO_APPLIED`, `PENDING`, `APPROVED`, `REJECTED`) berformat `HH:mm WIB` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-13.1** | **Koreksi Evaluasi Sore** (`/corrections/eod`) · *(Acuan `16b-EOD-Correction-Request.html`)* | Belum ada laporan EOD, form `MINOR` vs `MATERIAL` koreksi hasil sore, jendela 24 jam, & tabel riwayat bawah halaman berformat `HH:mm WIB` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-14.1** | **Review Koreksi** (`/corrections/review`) · *(Acuan `22-Correction-and-Leave-Review.html`)* | Kartu perbandingan nilai Sebelum vs Diajukan (*Diff*) + modal Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
 
@@ -810,102 +836,111 @@ flowchart TD
 ### 5.A. Lapisan 1 — Peta Alur & Percabangan (`Journey 5`)
 ```mermaid
 flowchart TD
-    A["Karyawan Buka /leave/request"] --> B{"Status Karyawan? [Target v1.1]"}
-    B -- "Karyawan Tetap / Kontrak" --> B1["Tampil Kartu Kuota Cuti Tahunan 12 Hari/Tahun + Semua Jenis Cuti/Izin"]
-    B -- "Intern (Anak Magang)" --> B2["Sembunyikan Kuota 12 Hari; Hanya Bisa Pilih: Izin Alasan Logis & Sakit"]
-    B1 --> C["Isi Tanggal Mulai, Tanggal Selesai, & Alasan (Min. 5 Huruf)"]
+    A["Karyawan Buka Cuti Saya (/leave/my)"] --> B{"Status Karyawan? [Aktif v1.1 — Paket #1]"}
+    B -- "Karyawan Tetap / Kontrak" --> B1["Tampil Kartu 'Jatah Cuti Tahunan 12 Hari Kerja' + Semua 6 Jenis Cuti/Izin + Hitung Hari Kerja Senin-Jumat"]
+    B -- "Intern (Anak Magang)" --> B2["Sembunyikan Kuota 12 Hari; Tampil Kotak Ungu Aturan Magang + Hanya Pilih: 'Izin (Keperluan Mendesak / Alasan Logis)' & 'Sakit'"]
+    B1 --> C["Isi Tanggal Mulai, Selesai (Hitung Hari Kerja Sen-Jum), & Alasan (Min. 5 Huruf)"]
     B2 --> C
-    C --> D{"Cek Validasi Tanggal"}
+    C --> D{"Cek Validasi Tanggal & Kuota"}
     D -- "Tanggal Selesai < Mulai" --> D1["Ditolak 400: Rentang Tanggal Tidak Valid"]
-    D -- "Bentrok dgn Cuti Lain yg Aktif" --> D2["Ditolak 409: Tanggal Sudah Terpakai Pengajuan Lain"]
+    D -- "Bentrok dgn Pengajuan Lain yg Aktif" --> D2["Ditolak 409: Tanggal Sudah Terpakai Pengajuan Lain"]
+    D -- "Melebihi Sisa Kuota 12 Hari Kerja" --> D3["Ditolak 400: Pengajuan Melebihi Batas Jatah Cuti Tahunan 12 Hari Kerja"]
     D -- "Valid" --> E["Status: PENDING -> Karyawan Masih Bisa Klik Batalkan (CANCELLED)"]
     E --> F{"Alur Persetujuan"}
-    F -- "Kondisi Saat Ini v1.0" --> F1["1 Tahap: Atasan / Head / HRGA / Reviewer Sementara Setujui di /leave/queue"]
-    F -- "Target Pasca-UAT v1.1" --> F2["3 Tahap Berurutan SOP HRGA: Tahap 1 HRGA -> Tahap 2 Head Divisi -> Tahap 3 Direktur"]
+    F -- "Aktif v1.1 (Saat Ini di Live)" --> F1["1 Tahap: Atasan / Head / HRGA / CEO / Reviewer Sementara Setujui di /leave/queue"]
+    F -- "Backlog v1.2 (Jadwal Berikutnya)" --> F2["3 Tahap Berurutan SOP HRGA: Tahap 1 HRGA -> Tahap 2 Head Divisi -> Tahap 3 Direktur"]
     F1 --> G["Status Final: APPROVED"]
-    F2 --> G
     G --> H["Mesin Rekonsiliasi Otomatis (DEC-008): Hari Cuti/Izin Resmi Diputihkan dari Pelanggaran & Form Harian Menampilkan Banner CUTI RESMI"]
 ```
 
 - **Intisari untuk User Manual Versi Pengguna Umum:**
-  - *Karyawan Tetap/Kontrak vs Anak Magang (`Intern`):* Karyawan memiliki hak Cuti Tahunan **12 hari per tahun**, sedangkan anak magang (`Intern`) tidak memiliki kuota Cuti Tahunan namun tetap wajib mengajukan **Izin (dengan alasan logis)** atau **Sakit** lewat halaman yang sama agar tidak tercatat mangkir dari laporan harian.
+  - *Karyawan Tetap/Kontrak vs Anak Magang (`Intern`):* Karyawan memiliki hak Cuti Tahunan **12 hari kerja per tahun** (Sabtu dan Minggu tidak mengurangi kuota), sedangkan anak magang (`Intern`) tidak memiliki kuota Cuti Tahunan namun tetap wajib mengajukan **Izin (`Izin (Keperluan Mendesak / Alasan Logis)`)** atau **Sakit** lewat halaman **`/leave/my`** agar tidak tercatat mangkir dari laporan harian.
   - *Bebas Denda Laporan Saat Cuti/Izin Resmi:* Begitu pengajuan cuti atau izin Anda berstatus **Disetujui (`APPROVED`)** — bahkan jika baru disetujui siang hari setelah batas pukul 09:00 WIB lewat — sistem otomatis memutihkan catatan keterlambatan/alpha hari itu.
 - **Intisari untuk User Manual Stakeholder & Skrip Demo:**
-  - *Otomasi Kepatuhan Cerdas (`DEC-008`) & Kepatuhan SOP HRGA 3 Pintu:* Tunjukkan bahwa HRGA tidak perlu menghapus denda karyawan yang sakit mendadak secara manual satu per satu — begitu cuti/izin disetujui, daftar pelanggaran di `/compliance` otomatis bersih sendiri!
+  - *Otomasi Kepatuhan Cerdas (`DEC-008`) & Pemisahan Hak `Intern` (`Paket #1`):* Tunjukkan bahwa HRGA tidak perlu menghapus denda karyawan yang sakit mendadak secara manual satu per satu — begitu cuti/izin disetujui, daftar pelanggaran di `/compliance` otomatis bersih sendiri; sekaligus buktikan pembatasan kuota 12 hari kerja dan perbedaan aturan anak magang! *(Catatan transparan untuk penguji/stakeholder: di versi v1.1 saat ini persetujuan cuti/izin masih 1 tahap; pengembangan alur 3 tahap HRGA → Head → Direktur dijadwalkan pada v1.2).*
 
 ---
 
 ### 5.B. Lapisan 2 — Panduan Skenario Prosedural Langkah demi Langkah (`Journey 5`)
 
-#### Skenario Prosedural `SP-05.1`: Uji Validasi Tanggal Terbalik & Bentrok (`409`), Batal Mandiri (`CANCELLED`), Persetujuan Cuti Hari Ini & Pembuktian Pemutihan Kepatuhan Otomatis (`DEC-008`), serta Aturan `Intern` & 3 Tahap HRGA (`[Target v1.1]`)
+#### Skenario Prosedural `SP-05.1`: Uji Validasi Tanggal Terbalik & Bentrok (`409`), Batal Mandiri (`CANCELLED`), Kuota 12 Hari Kerja Senin–Jumat, Aturan `Intern` (`Raka Pratama`), Persetujuan Atasan & Pemutihan Kepatuhan Otomatis (`DEC-008`)
 - **Akun Uji:**
-  1. `product@dutamedia.com` (Dio Bayu Bagaskara — Staf yang belum kirim komitmen pagi hari ini, dipakai untuk membuktikan pemutihan otomatis hari berjalan)
-  2. `head.delivery@dutamedia.com` (Dharma Putra — Head of Delivery, atasan langsung Dio)
-  3. `hrga@dutamedia.com` (Dewi Lestari — HRGA, untuk mengecek pemutihan di `/compliance`)
+  1. `product@dutamedia.com` (Dio Bayu Bagaskara — Staf Tetap yang belum kirim komitmen pagi hari ini, untuk pembuktian pemutihan otomatis hari berjalan & batas kuota 12 hari kerja)
+  2. `intern.frontend@dutamedia.com` (Raka Pratama — Akun resmi **`Intern`** untuk pembuktian aturan izin magang)
+  3. `head.delivery@dutamedia.com` (Dharma Putra — Head of Delivery, atasan langsung Dio)
+  4. `head.eng@dutamedia.com` (Arif Budiman — Head of Engineering, atasan langsung Raka Pratama)
+  5. `hrga@dutamedia.com` (Dewi Lestari — HRGA, untuk mengecek pemutihan di `/compliance`)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Validasi Tanggal Terbalik (`400`) & Alasan Kurang dari 5 Huruf:**
-     - **Aksi:** Masuk (*Login*) sebagai **`product@dutamedia.com`** (Dio Bayu Bagaskara, sandi `Password123!`), lalu buka menu kiri **Pengajuan Cuti** (`/leave/request`).
-     - **Aksi:** Pilih Jenis Cuti: **Cuti Tahunan (`ANNUAL`)**, isi *Tanggal Mulai*: besok, *Tanggal Selesai*: kemarin (tanggal selesai lebih awal dari tanggal mulai), dan *Alasan*: `Cuti` (4 huruf), lalu klik **Ajukan Cuti**.
+  1. **Uji Validasi Tanggal Terbalik (`400`), Hitungan Hari Kerja Senin–Jumat, Alasan Kurang dari 5 Huruf, & Penolakan Melebihi Kuota 12 Hari Kerja (`Over-Quota 400`):**
+     - **Aksi:** Masuk (*Login*) sebagai **`product@dutamedia.com`** (Dio Bayu Bagaskara, sandi `Password123!`), lalu buka menu kiri **Cuti Saya** (`/leave/my`).
+     - **Aksi (Cek Tanggal Terbalik & Alasan Pendek):** Periksa kotak **Jatah Cuti Tahunan 12 Hari Kerja** di atas formulir. Pilih Jenis Cuti **Cuti Tahunan (`ANNUAL`)**, *Tanggal Mulai*: besok, *Tanggal Selesai*: kemarin (terbalik), dan *Alasan*: `Cuti` (4 huruf), kemudian klik **Ajukan Permohonan**.
+     - **Aksi (Uji Pengajuan Melebihi Jatah 12 Hari Kerja):** Pilih Jenis Cuti **Cuti Tahunan (`ANNUAL`)**, isi rentang tanggal melintasi 3 akhir pekan (`03/12/2026` s/d `22/12/2026`), isi *Alasan*: `Mengambil cuti akhir tahun panjang melebihi batas kuota tahunan`, lalu klik **Ajukan Permohonan**.
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak pengiriman karena tanggal selesai tidak boleh lebih awal dari tanggal mulai (`400`) dan alasan wajib minimal **5 karakter**.
-  2. **Uji Pengajuan Pertama & Batal Mandiri oleh Karyawan (`CANCELLED`):**
-     - **Aksi:** Ubah *Tanggal Mulai* dan *Tanggal Selesai* menjadi **7 hari dari sekarang**, isi *Alasan*: `Mengurus perpanjangan dokumen kependudukan keluarga di luar kota`, lalu klik **Ajukan Cuti**.
+       - Saat tanggal terbalik atau alasan < 5 huruf, sistem menolak pengiriman (`"Tanggal selesai tidak boleh lebih awal dari tanggal mulai."` / `"Alasan permohonan cuti minimal 5 karakter."`).
+       - Saat mengisi `03/12/2026` s/d `22/12/2026`, di bawah kolom tanggal langsung muncul **`Durasi cuti: 14 hari kerja`** (Sabtu dan Minggu tidak ikut dihitung), dan saat dikirim server menolak dengan pesan merah: **`"Pengajuan melebihi batas jatah Cuti Tahunan 12 hari kerja per tahun..."`**
+  2. **Uji Pengajuan Pertama, Bentrok Tanggal (`409`), Batal Mandiri (`CANCELLED`), serta Filter & Pencarian:**
+     - **Aksi:** Ubah *Tanggal Mulai* dan *Tanggal Selesai* menjadi **7 hari kerja dari sekarang** (1 hari), isi *Alasan*: `Mengurus perpanjangan dokumen kependudukan keluarga di luar kota`, lalu klik **Ajukan Permohonan**.
      - ***Hasil yang Diharapkan:***
-       - Pengajuan berhasil masuk ke tabel **Riwayat Pengajuan Cuti Saya** di bawah formulir dengan status **`MENUNGGU PERSETUJUAN (PENDING)`**.
-     - **Aksi (Uji Bentrok Tanggal `409 Conflict`):** Coba kirim pengajuan cuti kedua dengan tanggal yang **sama persis (7 hari dari sekarang)**.
+       - Pengajuan berhasil masuk ke tabel **Riwayat Permohonan Cuti** di sebelah kanan dengan status **`Menunggu Review` (`PENDING`)**, dan angka `Menunggu Review` pada kotak kuota bertambah 1 hari.
+     - **Aksi (Uji Bentrok Tanggal `409 Conflict`):** Coba kirim pengajuan cuti kedua dengan tanggal yang **sama persis (7 hari kerja dari sekarang)**.
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak dengan pesan jelas bahwa sudah ada pengajuan cuti aktif pada rentang tanggal tersebut (`409 Conflict`).
-     - **Aksi (Uji Batal Mandiri):** Pada baris pengajuan cuti 7 hari mendatang yang masih berstatus `PENDING` di tabel riwayat, klik tombol **Batalkan**.
+       - Sistem menolak dengan pesan jelas bahwa sudah ada permohonan cuti aktif pada rentang tanggal tersebut (`409 Conflict`).
+     - **Aksi (Uji Batal Mandiri & Filter Riwayat):** Pada baris pengajuan cuti 7 hari mendatang yang masih berstatus `Menunggu Review` di tabel riwayat, klik tombol **Batalkan** lalu konfirmasi. Setelah itu uji tombol filter (`Semua`, `Menunggu`, `Disetujui`, `Ditolak`) dan kotak pencarian (`Cari alasan, ID tiket, atau tanggal...`).
      - ***Hasil yang Diharapkan:***
-       - Status pengajuan tersebut langsung berubah menjadi **`DIBATALKAN (CANCELLED)`** dan tombol Batalkan hilang.
-  3. **Ajukan Cuti/Sakit untuk Hari Ini (Pembuktian Rekonsiliasi Otomatis `DEC-008`):**
-     - **Aksi:** Masih sebagai Dio (`product@dutamedia.com`), buat pengajuan baru di `/leave/request`:
-       - **Jenis Cuti/Izin:** `Sakit / Izin Medis (SICK)`
-       - **Tanggal Mulai:** **Hari Ini**
-       - **Tanggal Selesai:** **Hari Ini**
-       - **Alasan:** `Demam tinggi mendadak sejak pagi dan harus pemeriksaan dokter di klinik.`
-     - **Aksi:** Klik **Ajukan Cuti**.
+       - Status pengajuan langsung berubah menjadi **`Dibatalkan` (`CANCELLED`)**, tombol Batalkan hilang, dan sisa kuota tahunan kembali utuh.
+  3. **Ajukan 2 Permohonan (1 untuk Diuji Penolakan `REJECTED`, 1 Sakit Hari Ini untuk Diuji Pemutihan Otomatis `DEC-008`):**
+     - **Aksi:** Masih sebagai Dio (`product@dutamedia.com`) di `/leave/my`:
+       1. Buat pengajuan ke-1 (untuk diuji Tolak): **Jenis Cuti:** `Cuti Tahunan`, **Tanggal Mulai & Selesai:** **14 hari kerja dari sekarang**, **Alasan:** `Pengajuan cuti tahunan saat jadwal rilis produk utama` → klik **Ajukan Permohonan**.
+       2. Buat pengajuan ke-2 (untuk diuji Setuju & Pemutihan Hari Ini): **Jenis Cuti / Izin:** `Sakit` (`SICK`), **Tanggal Mulai & Selesai:** **Hari Ini**, **Alasan:** `Demam tinggi mendadak sejak pagi dan harus pemeriksaan dokter di klinik.` → klik **Ajukan Permohonan**.
      - ***Hasil yang Diharapkan:***
-       - Pengajuan sakit untuk hari ini tercatat berstatus **`PENDING`**.
+       - Kedua pengajuan tercatat berstatus **`Menunggu Review` (`PENDING`)**.
   4. **Uji Blokir Akses Antrean Persetujuan Cuti bagi Staf Biasa (`403`):**
      - **Aksi:** Masih sebagai Dio, ketik alamat `/leave/queue` di browser.
      - ***Hasil yang Diharapkan:***
-       - Sistem memblokir akses dan mengalihkan Dio karena staf biasa tidak berwenang membuka antrean persetujuan cuti.
-  5. **Review, Uji Tolak Wajib Alasan, & Setujui Cuti Hari Ini di `/leave/queue`:**
-     - **Aksi:** Keluar dari akun Dio, lalu masuk sebagai **`head.delivery@dutamedia.com`** (Dharma Putra — Head of Delivery) atau **`hrga@dutamedia.com`** (Dewi Lestari — HRGA).
-     - **Aksi:** Buka menu kiri **Persetujuan Cuti** (`/leave/queue`).
+       - Sistem memblokir akses (`403 — Akses Dibatasi`) karena staf biasa tidak berwenang membuka antrean persetujuan cuti.
+  5. **Review di `/leave/queue`: Uji 4 Kartu Filter Metrik, Tolak Wajib Alasan (`REJECTED`), & Setujui Cuti Hari Ini (`APPROVED`):**
+     - **Aksi:** Keluar dari akun Dio, lalu masuk sebagai **`head.delivery@dutamedia.com`** (Dharma Putra — Head of Delivery) atau **`hrga@dutamedia.com`** (Dewi Lestari — HRGA) dan buka menu kiri **Persetujuan Cuti** (`/leave/queue`).
      - ***Hasil yang Diharapkan:***
-       - Pengajuan sakit hari ini milik Dio Bayu Bagaskara tampil di daftar antrean.
-       - *Aturan Keamanan:* Sistem menolak jika seseorang mencoba menyetujui pengajuan cuti miliknya sendiri (`403`).
-     - **Aksi:** Klik tombol **Setujui (Approve)** pada pengajuan Dio Bayu Bagaskara, isi catatan: `Semoga lekas sembuh, izin sakit hari ini disetujui`, lalu konfirmasi.
+       - Tampil 4 kartu metrik filter di bagian atas (`Total Permohonan`, `Menunggu Review`, `Telah Disetujui`, `Ditolak`), kotak pencarian, dan kedua pengajuan milik Dio Bayu Bagaskara.
+       - *Aturan Keamanan:* Sistem menolak jika seseorang mencoba menyetujui pengajuan miliknya sendiri (`403`).
+     - **Aksi (Cabang 1 — Uji Tolak Tanpa Alasan & Tolak Resmi `REJECTED`):**
+       1. Pada baris `Pengajuan cuti tahunan saat jadwal rilis produk utama` milik Dio, klik tombol merah **`Tolak`**.
+       2. Biarkan kolom **Catatan Reviewer** (`Wajib diisi untuk penolakan`) kosong, lalu klik **`Tolak Permohonan`**.
+       3. Isi catatan alasan penolakan: `Tanggal tersebut bertepatan dengan jadwal rilis utama divisi Delivery, mohon dijadwalkan ulang pekan berikutnya` → klik **`Tolak Permohonan`**.
+     - **Aksi (Cabang 2 — Setujui Resmi `APPROVED` pada Sakit Hari Ini):**
+       1. Pada baris `Demam tinggi mendadak...` (Hari Ini) milik Dio, klik tombol hijau **`Setujui`**, periksa kotak biru **`Kebijakan Rekonsiliasi Kehadiran`**, isi catatan: `Semoga lekas sembuh, izin sakit hari ini disetujui`, lalu klik **`Setujui Permohonan`**.
      - ***Hasil yang Diharapkan:***
-       - Status pengajuan berubah menjadi **`DISETUJUI (APPROVED)`**.
-       - Mesin rekonsiliasi kepatuhan otomatis (`DEC-008`) langsung berjalan di latar belakang untuk tanggal hari ini.
-  6. **Verifikasi Hasil Pemutihan Otomatis di `/compliance` (HRGA) & Banner `CUTI RESMI` di Akun Dio:**
-     - **Aksi:** Masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari) dan buka menu **Pengawasan Kepatuhan** (`/compliance`). Cari nama **Dio Bayu Bagaskara** untuk tanggal hari ini.
+       - Saat menolak tanpa catatan: sistem menahan proses dengan pesan merah **`"Catatan alasan penolakan wajib diisi."`**
+       - Setelah pengajuan ke-1 ditolak: statusnya menjadi **`Ditolak` (`REJECTED`)**, sisa kuota 12 hari kerja Dio kembali pulih (tidak terpotong), dan di `/leave/my` Dio tampil keterangan `"Ditolak · Check-in harian tetap berlaku"` beserta kotak merah catatan reviewer.
+       - Setelah pengajuan sakit hari ini disetujui: statusnya menjadi **`Disetujui` (`APPROVED`)** disertai lencana `Rekonsiliasi Sah`, dan mesin pemutihan kehadiran otomatis (`DEC-008`) langsung berjalan untuk tanggal hari ini.
+  6. **Verifikasi Hasil Pemutihan Otomatis di `/compliance` (HRGA) & Banner `Masa Cuti Resmi Disetujui` di Akun Dio:**
+     - **Aksi:** Masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari) dan buka menu **Antrean Kepatuhan** (`/compliance`). Cari nama **Dio Bayu Bagaskara** untuk tanggal hari ini.
      - ***Hasil yang Diharapkan:***
        - Dio Bayu Bagaskara **tidak tercatat sebagai pelanggar/mangkir aktif**, melainkan berstatus dikecualikan otomatis karena cuti/izin resmi (`LEAVE_APPROVED` / `EXEMPT`).
-     - **Aksi:** Masuk kembali sebagai **`product@dutamedia.com`** (Dio) dan buka halaman **Komitmen Pagi** (`/daily/morning`), **Pekerjaan Tambahan** (`/daily/additional-work`), serta **Hasil Sore (EOD)** (`/daily/eod`).
+     - **Aksi:** Masuk kembali sebagai **`product@dutamedia.com`** (Dio) dan buka halaman **Komitmen Pagi** (`/daily/morning`), **Pekerjaan Tambahan** (`/daily/additional-work`), serta **Evaluasi Sore** (`/daily/eod`).
      - ***Hasil yang Diharapkan:***
-       - Ketiga halaman harian tersebut menampilkan **Banner `CUTI / IZIN RESMI DISETUJUI`** dan formulir dalam keadaan terkunci tenang (Dio tidak ditagih mengisi laporan harian pada hari cuti/sakitnya).
-  7. **Ceklis Tambahan Khusus `[Target Pasca-UAT v1.1 — Paket #1 HRGA Dutamedia]`:**
-     - ***Hasil yang Diharapkan Setelah Paket #1 Diterapkan:***
-       - Saat login menggunakan akun berstatus **`Intern` (Anak Magang)** dan membuka `/leave/request`: kartu kuota **Cuti Tahunan 12 Hari disembunyikan**, pilihan `Cuti Tahunan (ANNUAL)` dan `Cuti Melahirkan (MATERNITY)` tidak tersedia/ditolak (`422`), dan hanya tersedia pilihan **Izin (dengan alasan logis)** serta **Sakit**.
-       - Saat pengajuan cuti/izin dikirim, status persetujuan berjalan **3 tahap berurutan sesuai SOP HRGA Dutamedia**:
-         1. **Tahap 1 (`PENDING_HRGA`):** Diverifikasi oleh **HRGA** (`hrga@dutamedia.com`).
-         2. **Tahap 2 (`PENDING_HEAD`):** Disetujui oleh **Head Divisi** terkait.
-         3. **Tahap 3 (`PENDING_DIRECTOR`):** Disahkan final oleh **Direktur / CEO** (`direktur@dutamedia.com`) menjadi `APPROVED`.
+       - Ketiga halaman harian tersebut menampilkan **Banner `Masa Cuti Resmi Disetujui`** dan formulir terkunci otomatis (Dio tidak ditagih mengisi laporan harian pada hari cuti/sakitnya).
+  7. **Ceklis Aktif Khusus Karyawan Magang (`Intern`) & Pembatasan Izin (`[Aktif v1.1 — Paket #1 & Perbaikan Chrome B1/B2]`):**
+     - **Aksi (Akun `Intern`):** Keluar dari akun Dio, lalu masuk sebagai **`intern.frontend@dutamedia.com`** (Raka Pratama, sandi `Password123!`), dan buka `/leave/my`.
+     - **Aksi:** Periksa isi kotak info atas, buka dropdown **Jenis Pengajuan**, isi tanggal melintasi akhir pekan (`03/12/2026` s/d `07/12/2026`), uji alasan pendek 3 huruf (`Tes`) → klik **Ajukan Permohonan**, lalu perbaiki menjadi permohonan **`Izin (Keperluan Mendesak / Alasan Logis)`** dengan alasan valid (misal: `Bimbingan skripsi di kampus sesuai jadwal dosen pembimbing`) dan ajukan.
+     - **Aksi (Peninjauan oleh Atasan):** Keluar dari Raka, masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman) dan buka `/leave/queue`, lalu klik **Setujui** pada baris Raka Pratama.
+     - ***Hasil yang Diharapkan:***
+       - Di `/leave/my` Raka Pratama: kartu kuota **Jatah Cuti Tahunan 12 Hari disembunyikan** dan diganti kotak ungu **`Aturan Izin Karyawan Magang`**; pilihan dropdown hanya **`Izin (Keperluan Mendesak / Alasan Logis)`** (utuh tanpa terpotong `...`) dan **`Sakit`** (tidak ada `Cuti Tahunan`, dan pengiriman `ANNUAL` via API ditolak `400`).
+       - Rentang `03/12/2026` s/d `07/12/2026` (Kamis–Senin) menampilkan **`Durasi izin: 3 hari kerja`**.
+       - Alasan pendek (`Tes`) menampilkan pesan merah **`"Alasan permohonan izin minimal 5 karakter."`** (memakai kata *"izin"*, bukan *"cuti"*).
+       - Di `/leave/queue` Arif Budiman: di samping nama Raka tampil pil ungu **`Intern`**, jendela tinjauan menampilkan label **`Alasan Izin / Pengajuan`**, dan setelah disetujui muncul pesan hijau **`"Permohonan izin berhasil disetujui."`**
+       - *(Catatan Jadwal `Backlog v1.2` — SOP HRGA 3 Tahap):* Pada versi live `v1.1` saat ini persetujuan berjalan **1 tahap** langsung ke `APPROVED`. Alur **3 tahap berurutan** (`Tahap 1: HRGA → Tahap 2: Head Divisi → Tahap 3: Direktur`) dijadwalkan untuk tahap pengembangan berikutnya (`v1.2`).
 
 ---
 
-### 5.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian III-B (Halaman 15–16)
+### 5.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian III-B (Halaman 18–19)
 
-| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | Cek 375px (HP) | Cek 768/1024px (Tablet) | Cek 1440/1920px (Desktop) | Cek Prototype & Baseline |
-|---|---|---|---|---|---|---|---|
-| **K-15.1** | **Pengajuan Cuti** (`/leave/request`) | Kartu kuota 12 hari (`[Target v1.1]`) + form pengajuan + validasi tanggal terbalik (`400`) & bentrok (`409`) | `EMPLOYEE` (`product@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-15.2** | **Pengajuan Cuti** (`/leave/request`) | `[Target v1.1]` Tampilan khusus `Intern`: sembunyikan kuota 12 hari, hanya Izin Alasan Logis & Sakit | `EMPLOYEE` (`Intern`) | [ ] | [ ] | [ ] | [ ] |
-| **K-15.3** | **Pengajuan Cuti** (`/leave/request`) | Tabel riwayat cuti pribadi + aksi **Batalkan (`CANCELLED`)** + indikator tahapan persetujuan (`1 Tahap v1.0` / `3 Tahap v1.1`) | `EMPLOYEE` | [ ] | [ ] | [ ] | [ ] |
-| **K-16.1** | **Persetujuan Cuti** (`/leave/queue`) | Antrean persetujuan cuti divisi/perusahaan + modal Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | [ ] | [ ] | [ ] | [ ] |
+| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
+|---|---|---|---|---|---|---|---|---|
+| **K-15.1** | **Cuti Saya** (`/leave/my`) · *(Acuan `20-My-Leave-Request.html`)* | Kartu **Jatah Cuti Tahunan 12 hari kerja** + 6 jenis cuti + hitung hari kerja Senin–Jumat (`03/12–22/12` = `14 hari kerja`) + tolak tanggal terbalik (`400`), bentrok (`409`), & over-kuota (`400`) | `EMPLOYEE` (`product@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-15.2** | **Cuti Saya** (`/leave/my`) | `[Aktif v1.1 — Paket #1]` Tampilan khusus `Intern`: kotak ungu `Aturan Izin Karyawan Magang`, sembunyikan kuota 12 hari, pilihan utuh `Izin (Keperluan Mendesak / Alasan Logis)` & `Sakit`, hitung `Durasi izin: X hari kerja`, & validasi kata `izin` | `EMPLOYEE` (`intern.frontend@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-15.3** | **Cuti Saya** (`/leave/my`) | Tabel riwayat cuti/izin pribadi + catatan reviewer + aksi **Batalkan (`CANCELLED`)** | `EMPLOYEE` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-16.1** | **Persetujuan Cuti** (`/leave/queue`) · *(Acuan `21-Leave-Approval-Queue.html`)* | Antrean persetujuan (1 tahap aktif `v1.1`) + pil ungu `Intern` + hitung hari kerja Senin–Jumat + label modal dinamis `Alasan Izin / Pengajuan` + Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
 
@@ -930,49 +965,51 @@ flowchart TD
 - **Intisari untuk User Manual Versi Pengguna Umum:**
   - *Menerima Catatan Pembinaan (Coaching) dari Atasan:* Jika atasan membagikan catatan evaluasi atau arahan kerja kepada Anda (*Dibagikan ke Karyawan*), Anda akan menerima notifikasi di ikon lonceng (`/notifications`). Klik notifikasi tersebut untuk membaca isi lengkap pesan pembinaan dari atasan Anda.
 - **Intisari untuk User Manual Stakeholder & Skrip Demo:**
-  - *Pembinaan Berbasis Data, Bukan Perasaan:* Tunjukkan kombinasi 3 fitur pengawasan pimpinan: (1) `/compliance` otomatis menandai karyawan yang terlambat/bolos **3 kali berturut-turut** (seperti data contoh Siti Rahma), (2) `/exemptions` memberi jalan resmi yang tercatat audit (`DEC-013`) bila karyawan sedang dinas luar tanpa sinyal sehingga tidak bisa semaunya dihapus tanpa jejak, dan (3) `/coaching` menyediakan buku catatan pembinaan dengan 2 mode kerahasiaan (*Dibagikan ke Karyawan* vs *Rahasia Manajemen*).
+  - *Pembinaan Berdasarkan Catatan Kehadiran Nyata:* Tunjukkan kombinasi 3 fitur pengawasan pimpinan: (1) `/compliance` otomatis menandai karyawan yang tidak melapor **3 kali berturut-turut** (seperti data contoh Siti Rahma), (2) `/exemptions` memberi jalur pencatatan resmi yang terikat rentang tanggal (`DEC-013`) bila karyawan sedang dinas luar tanpa sinyal sehingga tidak bisa dihapus tanpa catatan, dan (3) `/coaching` menyediakan buku catatan pembinaan dengan 2 mode kerahasiaan (*Dibagikan ke Karyawan* vs *Rahasia Manajemen*).
 
 ---
 
 ### 6.B. Lapisan 2 — Panduan Skenario Prosedural Langkah demi Langkah (`Journey 6`)
 
-#### Skenario Prosedural `SP-06.1`: Tindak Lanjut Pola 3x di `/compliance`, Buat Dispensasi Resmi di `/exemptions`, serta Uji 2 Mode Kerahasiaan Catatan Coaching di `/coaching`
+#### Skenario Prosedural `SP-06.1`: Tindak Lanjut Pola 3x di `/compliance`, Daftarkan Dispensasi Resmi di `/exemptions`, serta Uji 2 Mode Kerahasiaan Catatan Coaching & Pembinaan Karyawan `Intern` di `/coaching`
 - **Akun Uji:**
-  1. `dev.frontend@dutamedia.com` (Aditya Nugroho — untuk uji blokir `403` dan menerima coaching *Dibagikan ke Karyawan*)
-  2. `head.eng@dutamedia.com` (Arif Budiman — Head of Engineering, membuat 2 jenis coaching)
+  1. `dev.frontend@dutamedia.com` (Aditya Nugroho) & `intern.frontend@dutamedia.com` (Raka Pratama — `Intern`) — untuk uji blokir `403` dan menerima coaching *Dibagikan ke Karyawan*
+  2. `head.eng@dutamedia.com` (Arif Budiman — Head of Engineering, membuat catatan coaching)
   3. `dev.backend@dutamedia.com` (Siti Rahma — memiliki data contoh 3x pelanggaran kepatuhan & target coaching *Rahasia Manajemen*)
-  4. `hrga@dutamedia.com` (Dewi Lestari — HRGA, menindaklanjuti pola 3x di `/compliance` & membuat dispensasi di `/exemptions`)
+  4. `hrga@dutamedia.com` (Dewi Lestari — HRGA, menindaklanjuti pola 3x di `/compliance` & mendaftarkan dispensasi di `/exemptions`)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Blokir Akses `/compliance`, `/exemptions`, dan `/coaching` bagi Staf Biasa (`403`):**
-     - **Aksi:** Masuk (*Login*) sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho), lalu coba buka alamat `/compliance`, `/exemptions`, dan `/coaching` satu per satu di browser.
+  1. **Uji Blokir Akses `/compliance`, `/exemptions`, dan `/coaching` bagi Staf Biasa & Akun `Intern` (`403`):**
+     - **Aksi:** Masuk (*Login*) sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho) atau **`intern.frontend@dutamedia.com`** (Raka Pratama), lalu coba buka alamat `/compliance`, `/exemptions`, dan `/coaching` satu per satu di browser.
      - ***Hasil yang Diharapkan:***
-       - Ketiga halaman tersebut menolak akses Aditya dan mengalihkannya kembali ke beranda karena staf tanpa bawahan tidak berwenang membuka halaman kepatuhan maupun coaching.
+       - Ketiga halaman tersebut menolak akses dan mengalihkan pengguna ke layar **`403 — Akses Dibatasi`** karena staf tanpa bawahan maupun karyawan magang tidak berwenang membuka halaman kepatuhan atau membuat catatan coaching.
   2. **Tindak Lanjuti Pola Pelanggaran 3x Berturut-turut di `/compliance` (HRGA):**
-     - **Aksi:** Keluar dari akun Aditya, lalu masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari — HRGA) dan buka menu kiri **Pengawasan Kepatuhan** (`/compliance`).
+     - **Aksi:** Keluar dari akun staf, lalu masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari — HRGA) dan buka menu kiri **Antrean Kepatuhan** (`/compliance`).
      - ***Hasil yang Diharapkan:***
-       - Tampil kartu ringkasan kepatuhan dan tabel daftar pelanggaran disiplin harian.
-       - Terlihat data contoh **Siti Rahma** (`dev.backend@dutamedia.com`) dengan penanda peringatan merah **Pola Pelanggaran Berulang (`3x` / *Repeat Offender*)** berstatus **`TERBUKA (OPEN)`**.
-     - **Aksi:** Klik tombol **Tindak Lanjuti (Address)** pada baris pelanggaran Siti Rahma, isi catatan tindak lanjut: `Sudah dilakukan panggilan pengingat disiplin pelaporan harian bersama Head of Engineering`, lalu klik **Simpan Tindak Lanjut**.
+       - Tampil kartu ringkasan kepatuhan, filter status/divisi, dan tabel daftar ketidakpatuhan harian.
+       - Terlihat data contoh **Siti Rahma** (`dev.backend@dutamedia.com`) dengan penanda peringatan merah **Pola Pelanggaran Berulang (`3x`)** berstatus **`OPEN`**.
+     - **Aksi:** Klik tombol **Tindak Lanjuti** pada baris pelanggaran Siti Rahma, isi catatan tindak lanjut: `Sudah dilakukan panggilan pengingat disiplin pelaporan harian bersama Head of Engineering`, lalu klik simpan.
      - ***Hasil yang Diharapkan:***
-       - Status baris kepatuhan tersebut berubah dari `OPEN` menjadi **`DITINDAKLANJUTI (ADDRESSED)`** lengkap dengan nama penindak lanjut (Dewi Lestari) dan jam tindakan (`WIB`).
-  3. **Buat Dispensasi Resmi Terikat Tanggal di `/exemptions` (`DEC-013`):**
-     - **Aksi:** Masih sebagai Dewi Lestari (`hrga@dutamedia.com`), klik menu kiri **Dispensasi Kepatuhan** (`/exemptions`).
-     - **Aksi (Uji Validasi Tanggal Terbalik):** Klik **Buat Dispensasi Baru**, pilih karyawan **Siti Rahma**, isi *Tanggal Mulai*: besok, *Tanggal Selesai*: hari ini (terbalik), lalu coba simpan.
+       - Status baris kepatuhan tersebut berubah dari `OPEN` menjadi **`ADDRESSED`** lengkap dengan nama penindak lanjut (Dewi Lestari) dan jam tindakan (`HH:mm WIB`).
+  3. **Daftarkan Dispensasi Resmi Terikat Tanggal di `/exemptions` (`DEC-013`):**
+     - **Aksi:** Masih sebagai Dewi Lestari (`hrga@dutamedia.com`), klik menu kiri **Manajemen Dispensasi** (`/exemptions`).
+     - **Aksi (Uji Validasi Tanggal Terbalik pada Panel Kiri `Daftarkan Dispensasi Baru`):**
+       - Pilih **`Karyawan Penerima Dispensasi *`** (`#empSelect`): **Siti Rahma (`dev.backend@dutamedia.com`)**.
+       - Isi **`Tanggal Mulai *`** (`#startDateInput`): besok, dan **`Tanggal Selesai *`** (`#endDateInput`): hari ini (terbalik), isi alasan, lalu klik **`Daftarkan Dispensasi`**.
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak penyimpanan karena tanggal selesai tidak boleh mendahului tanggal mulai (`400`).
-     - **Aksi (Simpan Dispensasi Resmi):** Perbaiki *Tanggal Mulai* dan *Tanggal Selesai* menjadi **Kemarin** (atau salah satu tanggal kerja minggu ini), pilih Kategori Dispensasi: **Dinas Luar / Kunjungan Klien Tanpa Akses Jaringan**, isi *Alasan Resmi*: `Pendampingan instalasi server on-premise di lokasi klien dari pukul 07:30 sampai 20:00 WIB`, lalu klik **Simpan Dispensasi**.
+       - Sistem menolak penyimpanan (`400`) karena tanggal selesai tidak boleh mendahului tanggal mulai.
+     - **Aksi (Simpan Dispensasi Resmi):** Perbaiki **`Tanggal Mulai *`** dan **`Tanggal Selesai *`** menjadi **Kemarin** (atau salah satu tanggal kerja minggu ini), pilih **`Kategori Pengecualian *`** (`#catSelect`): **`Dinas Luar (Penugasan Luar Kantor / Klien)`**, isi **`Nomor Surat Tugas / Referensi (opsional)`** (`#refNoInput`): `ST/HRGA/2026/XI/042`, isi **`Alasan Resmi Dispensasi *`** (`#reasonInput`): `Pendampingan instalasi server on-premise di lokasi klien dari pukul 07:30 sampai 20:00 WIB`, lalu klik **`Daftarkan Dispensasi`**.
      - ***Hasil yang Diharapkan:***
-       - Dispensasi baru tampil di tabel daftar dispensasi resmi lengkap dengan pembuat, rentang tanggal, dan alasan audit (`DEC-013`).
+       - Dispensasi baru langsung muncul di panel kanan **Daftar Pengecualian Resmi Aktif** lengkap dengan nama karyawan, periode tanggal WIB, pil kategori `Dinas Luar`, nomor referensi `ST/HRGA/2026/XI/042`, alasan, dan nama pencatat (`Dewi Lestari`).
        - Catatan ketidakhadiran laporan pada tanggal tersebut otomatis diputihkan menjadi `EXEMPT`.
-  4. **Buat 2 Jenis Catatan Pembinaan (`SHARED_WITH_EMPLOYEE` vs `MANAGER_PRIVATE`) di `/coaching`:**
+  4. **Buat 2 Jenis Catatan Pembinaan (`SHARED_WITH_EMPLOYEE` vs `MANAGER_PRIVATE`) & Uji Tombol Template Cepat di `/coaching`:**
      - **Aksi:** Keluar dari akun HRGA, lalu masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman — Head of Engineering) dan buka menu kiri **Catatan Coaching** (`/coaching`).
      - ***Hasil yang Diharapkan:***
-       - Dropdown karyawan hanya menampilkan bawahan di dalam ruang lingkup Arif Budiman (sistem menolak `400` jika atasan mencoba membuat catatan coaching untuk dirinya sendiri).
-       - Tombol template cepat di atas kolom catatan menggunakan bahasa sehari-hari yang jelas (`[Target v1.1 Paket #3]`: bertuliskan **`(waktu respon < 45 menit)`**, bukan istilah teknis `SLA`).
+       - Dropdown karyawan hanya menampilkan bawahan di dalam ruang lingkup Arif Budiman (termasuk staf tetap *Aditya Nugroho*, *Siti Rahma*, maupun bawahan magang *Raka Pratama*; sistem menolak `400` jika atasan mencoba membuat catatan coaching untuk dirinya sendiri).
+       - Tombol template cepat di atas kolom catatan menggunakan bahasa sehari-hari yang jelas (`[Aktif v1.1 — Paket #3]`: bertuliskan **`[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit)`**, tanpa istilah teknis `SLA`).
      - **Aksi (Coaching #1 — Dibagikan ke Karyawan):**
        - Pilih Karyawan: **Aditya Nugroho** (`dev.frontend@dutamedia.com`)
        - Pilih Visibilitas: **Dibagikan ke Karyawan (`SHARED_WITH_EMPLOYEE`)**
-       - Isi Catatan: `Apresiasi untuk ketepatan waktu pengisian komitmen pagi minggu ini. Pertahankan rincian kriteria selesai yang sudah sangat jelas.`
+       - Klik salah satu tombol template cepat atau isi Catatan: `Apresiasi untuk ketepatan waktu pengisian komitmen pagi minggu ini. Pertahankan rincian kriteria selesai yang sudah sangat jelas.`
        - Klik **Simpan Catatan Coaching**.
      - **Aksi (Coaching #2 — Rahasia Manajemen):**
        - Pilih Karyawan: **Siti Rahma** (`dev.backend@dutamedia.com`)
@@ -980,7 +1017,7 @@ flowchart TD
        - Isi Catatan: `Catatan evaluasi internal: perlu pemantauan khusus kedisiplinan pengisian laporan pagi selama 2 minggu ke depan pasca teguran HRGA.`
        - Klik **Simpan Catatan Coaching**.
      - ***Hasil yang Diharapkan:***
-       - Kedua catatan tampil di daftar riwayat coaching Arif Budiman dengan lencana pembeda yang jelas: **`Dibagikan ke Karyawan`** (untuk Aditya) dan **`Rahasia Manajemen`** (untuk Siti Rahma).
+       - Kedua catatan tampil di daftar riwayat coaching Arif Budiman dengan lencana pembeda yang jelas: **`Dibagikan ke Karyawan`** (untuk Aditya) dan **`Rahasia Manajemen`** (untuk Siti Rahma), serta dapat difilter per anggota tim.
   5. **Verifikasi Isolasi Kerahasiaan Catatan Coaching pada Akun Karyawan:**
      - **Aksi (Cek Akun Aditya):** Masuk sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho) dan buka **Pusat Notifikasi** (`/notifications`). Klik notifikasi **Catatan Pembinaan (Coaching) Baru**.
      - ***Hasil yang Diharapkan:***
@@ -991,13 +1028,13 @@ flowchart TD
 
 ---
 
-### 6.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian III-C (Halaman 17–19)
+### 6.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian III-C (Halaman 12–14)
 
-| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | Cek 375px (HP) | Cek 768/1024px (Tablet) | Cek 1440/1920px (Desktop) | Cek Prototype & Baseline |
-|---|---|---|---|---|---|---|---|
-| **K-17.1** | **Pengawasan Kepatuhan** (`/compliance`) | Kartu ringkasan + filter + lencana merah pola 3x (`Repeat Offender`) + modal Tindak Lanjuti (`OPEN` → `ADDRESSED`) | `HRGA` / `HEAD` / `CEO` | [ ] | [ ] | [ ] | [ ] |
-| **K-18.1** | **Dispensasi Kepatuhan** (`/exemptions`) | Form buat dispensasi terikat tanggal (`DEC-013`) + tabel riwayat jejak audit dispensasi | `HRGA` / `HEAD` / `CEO` | [ ] | [ ] | [ ] | [ ] |
-| **K-19.1** | **Catatan Coaching** (`/coaching`) | Form coaching + chip template cepat (`[Target v1.1]` tanpa kata `SLA`) + lencana `Dibagikan ke Karyawan` vs `Rahasia Manajemen` | `HEAD` / `SUPERVISOR` / `HRGA` / `CEO` | [ ] | [ ] | [ ] | [ ] |
+| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
+|---|---|---|---|---|---|---|---|---|
+| **K-17.1** | **Pengawasan Kepatuhan** (`/compliance`) · *(Acuan `11-Compliance-Queue-HRGA.html`)* | Kartu ringkasan + filter + lencana merah pola 3x (`Repeat Offender`) + modal Tindak Lanjuti (`OPEN` → `ADDRESSED`) + format `HH:mm WIB` | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-18.1** | **Dispensasi Kepatuhan** (`/exemptions`) · *(Acuan `12-Exemption-Management.html`)* | Form buat dispensasi terikat tanggal (`DEC-013`) + tabel riwayat jejak audit dispensasi berformat tanggal WIB | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-19.1** | **Catatan Coaching** (`/coaching`) · *(Acuan `10-Manager-Note-Coaching-Record.html`)* | Form coaching + chip template cepat (`[Aktif v1.1 Paket #3]` tanpa kata `SLA`: `(waktu respon < 45 menit)`) + lencana `Dibagikan ke Karyawan` vs `Rahasia Manajemen` | `HEAD` / `SUPERVISOR` / `HRGA` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
 
@@ -1017,38 +1054,37 @@ flowchart TD
     A --> C{"Peran Pimpinan Membuka /dashboard"}
     C -- "SUPERVISOR / PROJECT_MANAGER" --> C1["Scope PROJECT: Hanya Melihat Metrik Proyek yang Dipimpin (Misal: WP-CORE)"]
     C -- "HEAD Divisi" --> C2["Scope DIVISION: Hanya Melihat Divisi Sendiri (Tolak 403 Jika Minta Divisi Lain)"]
-    C -- "CEO / HRGA / SYSTEM_ADMIN" --> C3["Scope COMPANY: Melihat Seluruh Perusahaan + Filter Divisi x Proyek + [Target v1.1] Filter Status Karyawan (Intern)"]
+    C -- "CEO / HRGA / SYSTEM_ADMIN" --> C3["Scope COMPANY: Melihat Seluruh Perusahaan + Filter Divisi x Proyek + [Aktif v1.1] Filter Status Karyawan (Tetap/Kontrak/Intern)"]
     C1 --> D["Radar Risiko Proyek (/projects/risk): Klik Kartu Proyek -> Modal Rincian Blocker & Anggota"]
     C2 --> D
     C3 --> E["Laporan Eksekutif (/reports): Tabel Rekap Lintas Divisi + Unduh File CSV"]
 ```
 
 - **Intisari untuk User Manual Versi Pengguna Umum:**
-  - *Cara Menggunakan Pusat Notifikasi (`/notifications`):* Angka merah pada lonceng di pojok kanan atas menunjukkan jumlah pemberitahuan yang belum dibaca. Saat Anda mengeklik salah satu pemberitahuan, angka otomatis berkurang 1. Jika pemberitahuan berasal dari perubahan aturan oleh Admin (halaman yang tidak boleh dibuka staf), sistem tetap menampilkan isi perubahannya namun menyembunyikan tombol menuju halaman Admin agar Anda tidak tersesat ke halaman terlarang.
+  - *Cara Menggunakan Pusat Notifikasi (`/notifications`):* Angka merah pada lonceng di pojok kanan atas menunjukkan jumlah pemberitahuan yang belum dibaca. Saat Anda mengeklik salah satu pemberitahuan, angka otomatis berkurang 1. Jika pemberitahuan berasal dari perubahan aturan oleh Admin (halaman yang tidak boleh dibuka staf), sistem tetap menampilkan isi perubahannya namun menyembunyikan tombol menuju halaman Admin agar Anda tidak diarahkan ke halaman yang dibatasi.
 - **Intisari untuk User Manual Stakeholder & Skrip Demo:**
-  - *Satu Layar Pantau sesuai Jabatan (3 Scope Dashboard):* Ini adalah puncak presentasi untuk manajemen! Tunjukkan perbandingan nyata: saat `PROJECT_MANAGER` (Dimas Prakoso) membuka `/dashboard`, ia fokus pada proyeknya; saat `HEAD` (Arif Budiman) membuka `/dashboard`, ia fokus pada divisinya; dan saat `CEO` (Hendra Wijaya) membuka `/dashboard`, `/projects/risk`, serta `/reports`, beliau bisa memfilter seluruh divisi, proyek, hingga memisahkan kinerja karyawan tetap vs anak magang (`Intern`) lalu mengunduh laporan CSV dalam satu klik.
+  - *Satu Layar Pantau sesuai Jabatan (3 Scope Dashboard):* Bagian penting presentasi untuk manajemen — tunjukkan perbandingan nyata: saat `PROJECT_MANAGER` (Dimas Prakoso) membuka `/dashboard`, ia fokus pada proyeknya; saat `HEAD` (Arif Budiman) membuka `/dashboard`, ia fokus pada divisinya; dan saat `CEO` (Hendra Wijaya) membuka `/dashboard`, `/projects/risk`, serta `/reports`, beliau bisa memfilter seluruh divisi, proyek, hingga memisahkan kinerja karyawan tetap vs anak magang (`Intern`) lalu mengunduh laporan CSV dalam satu klik.
 
 ---
 
 ### 7.B. Lapisan 2 — Panduan Skenario Prosedural Langkah demi Langkah (`Journey 7`)
 
-#### Skenario Prosedural `SP-07.1`: Uji Lengkap Pusat Notifikasi (`/notifications`) & Pengaman Tombol Tujuan (`canUserAccess`)
+#### Skenario Prosedural `SP-07.1`: Uji Lengkap Pusat Notifikasi (`/notifications`), 4 Tab Kategori & Pencarian, serta Pengaman Tombol Tujuan (`canUserAccess`)
 - **Akun Uji:** `dev.frontend@dutamedia.com` (Aditya Nugroho — Staf yang sudah menerima berbagai notifikasi dari Journey 2–6)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Klik 1 Notifikasi & Pengurangan Angka Lencana Lonceng:**
+  1. **Uji 4 Tab Filter Kategori, Pencarian, Klik 1 Notifikasi, & Pengurangan Angka Lencana Lonceng:**
      - **Aksi:** Masuk (*Login*) sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho). Perhatikan angka pada lencana lonceng di baris atas (*TopBar*) dan di menu kiri **Notifikasi**, lalu klik menu **Notifikasi** (`/notifications`).
-     - **Aksi:** Gunakan filter **Belum Dibaca (Unread)**, lalu klik salah satu kartu notifikasi yang masih memiliki titik biru (belum dibaca).
+     - **Aksi:** Klik secara berurutan 4 tombol tab filter kategori (**`Semua`**, **`Belum Dibaca`**, **`Blocker & Eskalasi`**, **`Komitmen & Pengingat`**), ketik kata kunci di kotak **`Cari notifikasi...`**, lalu pada tab **Belum Dibaca** klik salah satu kartu notifikasi yang masih memiliki titik hijau/biru (belum dibaca).
      - ***Hasil yang Diharapkan:***
-       - Status kartu notifikasi tersebut berubah menjadi sudah dibaca, dan angka pada lonceng berkurang **1** secara langsung tanpa perlu memuat ulang halaman.
-       - Jika notifikasi adalah *Catatan Coaching* atau *Perubahan Kebijakan*, muncul jendela modal berisi rincian pesannya.
-       - *Pengaman Akses Tujuan (`canUserAccess`):* Pada notifikasi yang asalnya dari halaman khusus Admin/Pimpinan (misal perubahan kebijakan `/admin/policies`), sistem **menyembunyikan tombol "Buka Halaman Terkait"** bagi akun staf Aditya agar staf tidak diarahkan ke halaman yang akan memblokirnya.
-  2. **Uji Tombol `Tandai Semua Dibaca` & Tab `Pengaturan Push Perangkat`:**
-     - **Aksi:** Klik tombol **Tandai Semua Dibaca (Mark All as Read)** di bagian kanan atas daftar notifikasi.
+       - Daftar notifikasi tersaring sesuai tab dan kata kunci pencarian; seluruh cap waktu tampil dalam format `HH:mm WIB` tanpa detik dan bebas kata `SLA`.
+       - Saat satu notifikasi belum dibaca diklik: status kartu berubah menjadi sudah dibaca dan angka pada lonceng berkurang **1** secara langsung tanpa perlu memuat ulang halaman.
+       - Jika notifikasi adalah *Catatan Coaching*, *Blocker*, atau *Perubahan Kebijakan*, muncul jendela pop-up berisi rincian pesannya.
+       - *Pengaman Akses Tujuan (`canUserAccess`):* Pada notifikasi yang asalnya dari halaman khusus Admin/Pimpinan (misal perubahan kebijakan `/admin/policies`), sistem **menyembunyikan tombol "Buka Halaman Terkait"** bagi akun staf Aditya agar staf tidak diarahkan ke halaman yang diblokir `403`.
+  2. **Uji Tombol `Tandai semua dibaca` & Tab `Pengaturan Kanal & Perangkat`:**
+     - **Aksi:** Klik tombol **`Tandai semua dibaca`** di bagian atas daftar notifikasi, lalu klik tab **`Pengaturan Kanal & Perangkat`**.
      - ***Hasil yang Diharapkan:***
        - Seluruh notifikasi berubah menjadi sudah dibaca dan lencana angka merah pada lonceng menjadi **0 / hilang**.
-     - **Aksi:** Klik tab **Pengaturan Push Perangkat** di halaman `/notifications`.
-     - ***Hasil yang Diharapkan:***
-       - Tampil kartu status langganan notifikasi browser (*Web Push*) lengkap dengan tombol aktifkan/nonaktifkan notifikasi perangkat.
+       - Pada tab `Pengaturan Kanal & Perangkat`: tampil kartu status langganan notifikasi browser (*Web Push*) lengkap dengan tombol aktifkan/uji/cabut notifikasi perangkat.
 
 ---
 
@@ -1079,27 +1115,28 @@ flowchart TD
      - ***Hasil yang Diharapkan:***
        - Dashboard menampilkan lencana **Seluruh Perusahaan (`COMPANY`)**.
        - Hendra Wijaya dapat mengubah filter **Divisi** (misal: *Semua Divisi* → *Engineering* → *Ops & Infra*) dan filter **Proyek** secara bebas, serta angka kepatuhan pagi, sore, dan jumlah blocker kritis ikut berubah secara akurat.
-       - `[Target Pasca-UAT v1.1 — Paket #1]:` Tersedia filter **Status Karyawan** (*Semua*, *Karyawan Tetap*, *Kontrak*, *Intern*) sehingga Direktur dapat memisahkan tingkat kepatuhan karyawan tetap dari anak magang.
+       - `[Aktif v1.1 — Paket #1]:` Tersedia filter **Status Karyawan** (*Semua Status*, *Karyawan Tetap*, *Kontrak*, *Intern*) sehingga Direktur dapat memisahkan tingkat kepatuhan karyawan tetap (`23 orang`) dari anak magang (`2 orang`) dengan total perusahaan **25 orang** (pil ungu `Intern` tampil pada baris anggota magang).
      - **Aksi (Radar Risiko Proyek):** Klik menu kiri **Radar Risiko Proyek** (`/projects/risk`), lalu klik kartu proyek **WorkPulse Core Platform (`WP-CORE`)**.
      - ***Hasil yang Diharapkan:***
        - Kartu proyek menampilkan lencana tingkat risiko (*Normal / Waspada / Kritis*), skor kesehatan proyek, jumlah blocker aktif, dan saat diklik membuka **Modal Rincian Risiko Proyek** secara utuh.
-     - **Aksi (Laporan Eksekutif & Unduh CSV):** Klik menu kiri **Laporan Eksekutif** (`/reports`), pilih rentang tanggal minggu ini, periksa tabel rekapitulasi lintas divisi, lalu klik tombol **Unduh CSV (Export CSV)**.
+     - **Aksi (Laporan Eksekutif & Unduh CSV):** Klik menu kiri **Laporan Eksekutif** (`/reports`), pilih rentang tanggal hari ini/minggu ini, uji filter **Status Karyawan** (`Semua` → `Intern` → `Kontrak`), periksa tabel rekapitulasi lintas divisi, lalu klik tombol **Export Data (CSV)**.
      - ***Hasil yang Diharapkan:***
-       - Tabel menampilkan rekap persentase ketepatan komitmen pagi, penyelesaian hasil sore, waktu respon penanganan kendala, dan skor kesehatan per divisi.
-       - Browser berhasil mengunduh file `.csv` berisi data laporan eksekutif yang rapi (dan pada `[Target v1.1 Paket #1]` menyertakan kolom/filter Status Karyawan `Intern`).
+       - Tabel menampilkan rekap persentase ketepatan komitmen pagi, penyelesaian hasil sore, waktu respon penanganan kendala, kolom **Status Karyawan**, dan skor kesehatan per divisi.
+       - Saat memilih filter **`Kontrak`** yang saat ini berjumlah **0 orang (`0 Unit Kerja`)**, isi tabel tidak kosong melompong melainkan menampilkan pesan penjelas: **`"Belum ada data karyawan untuk status karyawan yang dipilih."`** (`[Aktif v1.1 — Perbaikan Polesan Chrome]`).
+       - Browser berhasil mengunduh file `.csv` berisi data laporan eksekutif yang rapi termasuk kolom **`Status Karyawan`**.
 
 ---
 
-### 7.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian IV-A (Halaman 20–23)
+### 7.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian IV-A (Halaman 15–18)
 
-| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | Cek 375px (HP) | Cek 768/1024px (Tablet) | Cek 1440/1920px (Desktop) | Cek Prototype & Baseline |
-|---|---|---|---|---|---|---|---|
-| **K-20.1** | **Pusat Notifikasi** (`/notifications`) | Daftar notifikasi + filter Belum Dibaca + klik item kurangi counter + modal detail coaching/kebijakan | Semua Peran (`dev.frontend@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-20.2** | **Pusat Notifikasi** (`/notifications`) | Pengaman `canUserAccess` (sembunyikan tombol halaman Admin bagi staf) + tab **Pengaturan Push Perangkat** | `EMPLOYEE` | [ ] | [ ] | [ ] | [ ] |
-| **K-21.1** | **Pulse Dashboard** (`/dashboard`) | `Scope: PROJECT` (`SUPERVISOR` & `PROJECT_MANAGER`) vs `Scope: DIVISION` (`HEAD`) vs `Scope: COMPANY` (`CEO`/`HRGA`/`ADMIN`) | `lead.tech`, `pm`, `head.eng`, `direktur` | [ ] | [ ] | [ ] | [ ] |
-| **K-21.2** | **Pulse Dashboard** (`/dashboard`) | Filter silang Divisi × Proyek + `[Target v1.1 Paket #1]` Filter Status Karyawan (`Tetap/Kontrak/Intern`) | `CEO_MANAGEMENT` (`direktur@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-22.1** | **Radar Risiko Proyek** (`/projects/risk`) | Grid kartu kesehatan proyek + lencana risiko + **Modal Rincian Proyek** saat kartu diklik | `PROJECT_MANAGER` / `HEAD` / `CEO` | [ ] | [ ] | [ ] | [ ] |
-| **K-23.1** | **Laporan Eksekutif** (`/reports`) | Tabel rekapitulasi kepatuhan lintas divisi + filter rentang tanggal + tombol **Unduh CSV** | `HEAD` / `HRGA` / `CEO` / `SYSTEM_ADMIN` | [ ] | [ ] | [ ] | [ ] |
+| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
+|---|---|---|---|---|---|---|---|---|
+| **K-20.1** | **Pusat Notifikasi** (`/notifications`) · *(Acuan `07-Notification-Center-Browser-Push.html`)* | Daftar notifikasi + filter Belum Dibaca + klik item kurangi counter + modal detail coaching/kebijakan (`0` kata `SLA` & waktu `HH:mm WIB`) | Semua Peran (`dev.frontend@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-20.2** | **Pusat Notifikasi** (`/notifications`) | Pengaman `canUserAccess` (sembunyikan tombol halaman Admin bagi staf) + tab **Pengaturan Push Perangkat** | `EMPLOYEE` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-21.1** | **Pulse Dashboard** (`/dashboard`) · *(Acuan `08-Pulse-Dashboard.html`)* | `Scope: PROJECT` (`SUPERVISOR` & `PROJECT_MANAGER`) vs `Scope: DIVISION` (`HEAD`) vs `Scope: COMPANY` (`CEO`/`HRGA`/`ADMIN`) | `lead.tech`, `pm`, `head.eng`, `direktur` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-21.2** | **Pulse Dashboard** (`/dashboard`) | Filter silang Divisi × Proyek + `[Aktif v1.1 — Paket #1]` Filter Status Karyawan (`Tetap/Kontrak/Intern`, total `23 + 0 + 2 = 25`, pil ungu `Intern`) | `CEO_MANAGEMENT` (`direktur@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-22.1** | **Radar Risiko Proyek** (`/projects/risk`) · *(Acuan `13-Project-Risk-View.html`)* | Grid kartu kesehatan proyek + lencana risiko + **Modal Rincian Proyek** saat kartu diklik | `PROJECT_MANAGER` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-23.1** | **Laporan Eksekutif** (`/reports`) · *(Acuan `23-Reports.html`)* | Tabel rekapitulasi lintas divisi + filter rentang tanggal + filter Status Karyawan + pesan kosong filter `0 Unit Kerja` + tombol **Export Data (CSV)** berkolom Status Karyawan | `HEAD` / `HRGA` / `CEO` / `SYSTEM_ADMIN` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
 
@@ -1113,7 +1150,7 @@ flowchart TD
     B --> B2["Ubah Peran & Aktifkan/Nonaktifkan Akun (Status INACTIVE Ditolak Login)"]
     A --> C["2. Struktur Organisasi & Proyek (/admin/organization)"]
     C --> C1["Tab 1: Atasan Langsung -> Tolak Atasan Diri Sendiri (400) & Tolak Siklus Melingkar A->B->A (422)"]
-    C --> C2["[Target v1.1 Paket #1] Status Karyawan (Tetap/Kontrak/Intern Wajib Tanggal Selesai & Blokir Intern Jadi Atasan)"]
+    C --> C2["[Aktif v1.1 — Paket #1] Status Karyawan (Tetap/Kontrak/Intern Wajib Tanggal Selesai, Pop-up Scroll Rapi, & Blokir Intern Jadi Atasan)"]
     C --> C3["Tab 2: Kewenangan Proyek (Project Lead & Project Sponsor)"]
     A --> D["3. Reviewer Sementara (/admin/temporary-reviewers)"]
     D --> D1["Tolak Tanggal Terbalik (400), Tolak SYSTEM_ADMIN (422), Tolak Tanggal Bersinggungan (409)"]
@@ -1128,45 +1165,47 @@ flowchart TD
 - **Intisari untuk User Manual Versi Pengguna Umum:**
   - *Ketika Anda Ditunjuk Sebagai Reviewer Sementara atau Pemilik Kebijakan:* Jika atasan Anda sedang cuti dan Admin menunjuk Anda sebagai **Reviewer Sementara**, menu **Persetujuan Cuti** (`/leave/queue`), **Review Koreksi** (`/corrections/review`), dan **Antrean Blocker** (`/blockers`) akan otomatis muncul di menu kiri Anda selama masa tugas tersebut. Begitu pula jika Direktur/Admin menunjuk Anda sebagai **Pemilik Kebijakan**, menu **Pengaturan Kebijakan** (`/admin/policies`) akan muncul di menu kiri Anda khusus untuk kategori aturan yang dipercayakan kepada Anda.
 - **Intisari untuk User Manual Stakeholder & Skrip Demo:**
-  - *Tata Kelola Perusahaan yang Aman dari Kesalahan Manusia:* Tunjukkan kepada penguji bagaimana sistem mencegah kesalahan fatal: tidak bisa membuat struktur atasan melingkar (`A bawahannya B, B bawahannya A`), tidak bisa menghapus pemilik kebijakan terakhir sampai aturan menjadi yatim piatu, tidak bisa mengubah jam batas laporan tanpa alasan minimal 15 huruf atau berlaku surut ke masa lalu (*anti-backdating*), dan setiap perubahan aturan otomatis mengirim pengumuman ke seluruh pihak terkait!
+  - *Tata Kelola Perusahaan yang Aman dari Kesalahan Manusia:* Tunjukkan kepada penguji bagaimana sistem mencegah kesalahan fatal: tidak bisa membuat struktur atasan melingkar (`A bawahannya B, B bawahannya A`), tidak bisa mencabut pemilik kebijakan terakhir sampai suatu kategori kosong tanpa penanggung jawab, tidak bisa mengubah jam batas laporan tanpa alasan minimal 15 huruf atau berlaku surut ke masa lalu (*anti-backdating*), tidak bisa menunjuk karyawan magang (`Intern`) menjadi atasan/penanggung jawab, dan setiap perubahan aturan otomatis mengirim pengumuman ke seluruh pihak terkait!
 
 ---
 
 ### 8.B. Lapisan 2 — Panduan Skenario Prosedural Langkah demi Langkah (`Journey 8`)
 
-#### Skenario Prosedural `SP-08.1`: Kelola Pengguna (`/admin/users`), Siklus Undangan (`/admin/invitations`), & Struktur Organisasi Anti-Siklus Melingkar (`/admin/organization`)
+#### Skenario Prosedural `SP-08.1`: Kelola Pengguna (`/admin/users`), Siklus Undangan (`/admin/invitations`), Pengaman Peran `Intern`, & Struktur Organisasi Anti-Siklus Melingkar (`/admin/organization`)
 - **Akun Uji:** `admin@dutamedia.com` (System Administrator, sandi `Password123!`)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Undang Pengguna Baru, Tolak Email Kembar (`409`), & Kelola Undangan:**
+  1. **Uji Undang Pengguna Baru, Pengaman Otomatis Status `Intern`, Tolak Email Kembar (`409`), Ubah Peran, & Kelola Undangan (`/admin/users` & `/admin/invitations`):**
      - **Aksi:** Masuk (*Login*) sebagai **`admin@dutamedia.com`**, lalu buka menu kiri **Kelola Pengguna** (`/admin/users`).
-     - **Aksi (Uji Email Kembar `409`):** Klik tombol **Undang Pengguna Baru**, masukkan email yang sudah terdaftar: `dev.frontend@dutamedia.com`, isi nama dan peran, lalu klik **Kirim Undangan**.
+     - **Aksi (Inspeksi Tabel 25 Pengguna & Baris `Intern`):** Periksa baris **`Raka Pratama`** (`intern.frontend@dutamedia.com`) dan **`Nisa Amelia`** (`intern.finance@dutamedia.com`) pada tabel pengguna.
+     - **Aksi (Uji Pengaman Status `Intern` di Pop-up `+ Undang Pengguna Baru`):** Klik tombol **`+ Undang Pengguna Baru`**, ubah dropdown **`Status Karyawan`** (`#new-emp-status`) menjadi **`Intern`**, lalu amati perubahan pada dropdown **`Peran (Role)`** (`#new-role`) dan kemunculan kolom **`Tanggal Selesai Magang *`** (`#new-end-date`).
+     - **Aksi (Uji Email Kembar `409`):** Kembalikan `Status Karyawan` ke `Karyawan Tetap`, masukkan email yang sudah terdaftar: `dev.frontend@dutamedia.com`, isi Nama Lengkap, lalu klik **`Terbitkan Undangan (72 Jam)`**.
+     - **Aksi (Undang Email Baru & Kelola di `/admin/invitations`):** Ubah email menjadi `staf.baru.uji@dutamedia.com`, Nama Lengkap: `Raka Prasetya`, Status Karyawan: `Karyawan Tetap`, Peran: `EMPLOYEE`, Fungsi/Divisi: `Engineering`, Jabatan: `Junior Frontend Developer`, lalu klik **`Terbitkan Undangan (72 Jam)`** → klik **`Salin Tautan Aktivasi`** → klik **`Selesai`**. Setelah itu buka menu kiri **Undangan Karyawan** (`/admin/invitations`), cari baris `staf.baru.uji@dutamedia.com`, klik tombol **Kirim Ulang (Resend)**, lalu klik tombol **Cabut (Revoke)**.
+     - **Aksi (Uji Larangan Mengubah Peran `Intern` ke Peran Manajerial):** Kembali ke `/admin/users`, pada baris **`Raka Pratama`** (`Intern`), coba ubah perannya dari `EMPLOYEE` ke peran atasan (`SUPERVISOR` / `HEAD`).
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak pembuatan undangan dengan kode **`409 Conflict`** karena email tersebut sudah terdaftar di sistem.
-     - **Aksi (Undang Email Baru):** Ubah email menjadi `staf.baru.uji@dutamedia.com`, Nama Lengkap: `Raka Prasetya`, Peran: `EMPLOYEE`, Divisi: `Engineering`, Jabatan: `Junior Frontend Developer`, lalu klik **Kirim Undangan**.
-     - ***Hasil yang Diharapkan:***
-       - Muncul modal/kotak informasi berisi **Tautan & Token Undangan (berlaku 72 jam)** lengkap dengan tombol **Salin Tautan/Token**.
-       - Di tabel `/admin/users`, Raka Prasetya tampil dengan status **`DIUNDANG (INVITED)`**.
-     - **Aksi (Kelola di `/admin/invitations`):** Klik menu kiri **Undangan Pengguna** (`/admin/invitations`), cari baris `staf.baru.uji@dutamedia.com`, klik tombol **Kirim Ulang (Resend)**, lalu klik tombol **Cabut (Revoke)**.
-     - ***Hasil yang Diharapkan:***
-       - Saat diklik *Kirim Ulang*, masa berlaku token diperbarui 72 jam ke depan.
-       - Saat diklik *Cabut (Revoke)*, status undangan berubah menjadi **`DICABUT (REVOKED)`** dan tokennya tidak bisa lagi dipakai di `/activate`.
+       - Pada tabel `/admin/users`: baris Raka Pratama & Nisa Amelia menampilkan pil ungu **`Intern`**, keterangan `Engineering · Intern` / `Finance · Intern`, dan tanggal `Selesai magang: 18 Feb 2027` (atau lencana merah **`Masa Magang Berakhir`** bila tanggal selesai magang sudah terlewati).
+       - Di pop-up `+ Undang Pengguna Baru` saat memilih `Intern`: dropdown **`Peran (Role)` otomatis terkunci pada `EMPLOYEE`** disertai keterangan `"Karyawan Intern otomatis menggunakan peran EMPLOYEE."`, dan kolom **`Tanggal Selesai Magang *`** muncul serta wajib diisi.
+       - Saat email kembar dikirim: sistem menolak dengan kode **`409 Conflict`**.
+       - Saat email baru dikirim: muncul tautan aktivasi 72 jam dan statusnya **`INVITED`**. Di `/admin/invitations`, tombol *Kirim Ulang* memperbarui masa berlaku token 72 jam ke depan, sedangkan tombol *Cabut* mengubah status undangan menjadi **`REVOKED`**.
+       - Saat mencoba mengubah peran akun `Intern` menjadi peran manajerial (`SUPERVISOR`/`HEAD`): ditolak oleh sistem (`422`) karena karyawan magang hanya boleh memegang peran `EMPLOYEE`.
   2. **Uji Pencegahan Atasan Diri Sendiri (`400`) & Siklus Melingkar (`422 BUSINESS_RULE_REPORTING_CYCLE`) di `/admin/organization`:**
-     - **Aksi:** Klik menu kiri **Struktur Organisasi** (`/admin/organization`). Pastikan berada di **Tab 1: Penugasan Organisasi & Atasan Langsung**.
-     - **Aksi (Uji Atasan Diri Sendiri):** Pilih karyawan **Arif Budiman** (`head.eng@dutamedia.com`), coba atur kolom *Atasan Langsung (Direct Manager)* menjadi **Arif Budiman** sendiri, lalu simpan.
+     - **Aksi:** Klik menu kiri **Struktur Organisasi** (`/admin/organization`). Pastikan berada di **Tab 1: Struktur & Penugasan Organisasi**.
+     - **Aksi (Uji Atasan Diri Sendiri):** Klik **`+ Atur Penugasan Baru`**, pilih karyawan **Arif Budiman** (`head.eng@dutamedia.com`), coba atur kolom *Atasan Langsung (Direct Manager)* menjadi **Arif Budiman** sendiri, lalu simpan.
      - ***Hasil yang Diharapkan:***
        - Sistem menolak penyimpanan (`400`) karena seseorang tidak boleh menjadi atasan langsung bagi dirinya sendiri (atau opsi dirinya sendiri sudah otomatis dikecualikan dari dropdown).
      - **Aksi (Uji Siklus Melingkar `A -> B -> A`):**
        - Diketahui di data awal: **Bambang Pratama** (`lead.tech@dutamedia.com`) memiliki atasan langsung **Arif Budiman** (`head.eng@dutamedia.com`).
-       - Sekarang buka pengaturan organisasi milik **Arif Budiman** (`head.eng@dutamedia.com`), ubah *Atasan Langsung*-nya dari Hendra Wijaya menjadi **Bambang Pratama** (bawahan Arif sendiri), lalu klik **Simpan Penugasan**.
+       - Pilih karyawan **Arif Budiman** (`head.eng@dutamedia.com`), ubah *Atasan Langsung*-nya dari Hendra Wijaya menjadi **Bambang Pratama** (bawahan Arif sendiri), isi alasan penugasan, lalu klik **`Simpan Penugasan`**.
      - ***Hasil yang Diharapkan:***
        - Mesin pendeteksi pohon organisasi menolak penyimpanan dengan kode **`422 BUSINESS_RULE_REPORTING_CYCLE`** dan menampilkan pesan jelas bahwa perubahan tersebut menciptakan **siklus pelaporan melingkar** (atasan tidak boleh melapor kepada bawahannya sendiri).
-  3. **Uji Tab 2 Kewenangan Proyek & Ceklis `[Target Pasca-UAT v1.1 — Paket #1 Status Karyawan Intern]`:**
-     - **Aksi:** Klik **Tab 2: Kewenangan Proyek (Project Authority)** di halaman `/admin/organization`.
-     - ***Hasil yang Diharapkan:***
-       - Tampil daftar proyek aktif (seperti `WP-CORE`) beserta siapa **Pemimpin Proyek (*Project Lead*)** dan **Sponsor Proyek (*Project Sponsor*)**-nya, yang dapat diperbarui oleh Admin.
-       - ***Hasil yang Diharapkan pada `[Target v1.1 Paket #1]`:* **
-         - Di Tab 1 `/admin/organization`, terdapat pilihan **Status Karyawan**: `Karyawan Tetap`, `Kontrak`, dan `Intern`.
-         - Saat memilih `Intern`, kolom **Tanggal Selesai Magang (`endDate`) wajib diisi**, lencana `Intern` tampil otomatis tanpa perlu menulis kata `"Intern"` di nama jabatan, dan akun berstatus `Intern` otomatis diblokir/dikecualikan dari daftar pilihan Atasan Langsung, Project Lead, Project Sponsor, Penanggung Jawab Kategori, Reviewer Sementara, maupun Pemilik Kebijakan.
+  3. **Uji Tab 1 Pengaman Status `Intern` & Tab 2 Kewenangan Proyek (Termasuk `Akhiri` Kewenangan Proyek) (`[Aktif v1.1 — Paket #1]`):**
+     - **Aksi:**
+       1. Di Tab 1 `/admin/organization`, klik **`+ Atur Penugasan Baru`**, pilih **`Intern`** pada kolom **Status Karyawan**, periksa kewajiban kolom **`Tanggal Selesai Magang *`**, coba pilih peran selain `EMPLOYEE` (misal `HEAD`), dan periksa seluruh daftar nama pada dropdown **`Atasan Langsung (Direct Manager)`**. Tutup pop-up.
+       2. Klik **Tab 2: Kewenangan Proyek (Project Authority)**, periksa tabel proyek aktif (`WP-CORE`, `PRJ-CORE`, dll.) beserta tombol **`Akhiri`** di kolom aksi, lalu klik **`+ Tetapkan Kewenangan Proyek`** dan periksa isi dropdown **`Project Manager`** (`#pa-pm`) serta **`Escalation Reviewer`** (`#pa-rev`).
+     - ***Hasil yang Diharapkan (`[Aktif v1.1 — Paket #1]`):***
+       - Jendela pop-up Tab 1 memiliki jarak aman dari tepi layar dan dapat digulir (*scroll*) sampai tombol **`Simpan Penugasan`** tanpa terpotong di layar standar.
+       - Saat memilih status **`Intern`**: kolom **`Tanggal Selesai Magang *`** wajib diisi, pemilihan peran selain `EMPLOYEE` ditolak (`422`), dan pil ungu `Intern` tampil otomatis di tabel tanpa perlu menulis kata `"Intern"` di nama jabatan.
+       - Akun berstatus `Intern` (*Raka Pratama* & *Nisa Amelia*) **0 kali muncul** di dropdown `Atasan Langsung` (Tab 1) maupun dropdown `Project Manager` dan `Escalation Reviewer` (Tab 2).
+       - Pada Tab 2: Admin dapat menambahkan kewenangan proyek baru maupun menekan tombol **`Akhiri`** untuk mengakhiri masa berlaku kewenangan proyek yang sedang aktif.
 
 ---
 
@@ -1216,37 +1255,41 @@ flowchart TD
   2. `hrga@dutamedia.com` (Dewi Lestari — `HRGA`, contoh **Pemilik Kebijakan Non-Admin / Non-CEO** untuk membuktikan tampilan terkunci sebagian)
   3. `admin@dutamedia.com` (System Administrator — untuk uji `/admin/notifications`)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Tab 1 Pengaturan Kebijakan sebagai Direktur (`direktur@dutamedia.com`) — Validasi Anti-Iseng (*No-Op*), Alasan `< 15` Huruf, & Larangan Tanggal Mundur (*Anti-Backdating*):**
-     - **Aksi:** Masuk sebagai **`direktur@dutamedia.com`** (Hendra Wijaya) dan buka menu kiri **Pengaturan Kebijakan** (`/admin/policies`).
+  1. **Uji Pembuatan Versi Kebijakan Baru (`+ Buat Versi Kebijakan Baru`) sebagai Direktur (`direktur@dutamedia.com`) — Inspeksi 5 Kategori, Tolak Simpan Tanpa Perubahan Nilai, Alasan `< 15` Huruf, Larangan Tanggal Mundur (*Anti-Backdating*), & Unduh Audit CSV:**
+     - **Aksi:** Masuk sebagai **`direktur@dutamedia.com`** (Hendra Wijaya) dan buka menu kiri **Kebijakan & Cut-off** (`/admin/policies`).
+     - **Aksi (Inspeksi 5 Seksi Kebijakan & Modal `+ Buat Versi Kebijakan Baru`):** Periksa kartu ringkasan atas dan Seksi 1 s/d 5 di halaman utama, lalu klik tombol **`+ Buat Versi Kebijakan Baru`** di kanan atas. Di dalam pop-up, ganti pilihan dropdown **`Kategori Kebijakan *`** (`#select-cat`) satu per satu dari kategori ke-1 sampai kategori ke-5 untuk memeriksa seluruh kolom pengaturannya.
      - ***Hasil yang Diharapkan:***
-       - `[Target Pasca-UAT v1.1 — Paket #3]:` Seluruh nama kategori kebijakan tampil dalam Bahasa Indonesia yang bersih tanpa istilah teknis `SLA` atau bahasa Inggris di dalam kurung — khususnya kategori ke-2 tampil sebagai **`Target Waktu Respon & Penanganan Kendala`** dan label inputnya tampil sebagai **`Ambang Peringatan Batas Waktu Kendala (%) *`**.
-     - **Aksi (Uji Simpan Tanpa Mengubah Nilai — *No-Op Guard* `400`):** Pilih salah satu kategori kebijakan (misal: *Batas Waktu Komitmen Pagi*), **jangan ubah angka jamnya sama sekali**, isi alasan 20 huruf, lalu klik **Simpan Perubahan Kebijakan**.
+       - `[Aktif v1.1 — Paket #3 + Fix]:` Seluruh nama kategori kebijakan tampil dalam Bahasa Indonesia yang bersih tanpa istilah teknis `SLA` atau akhiran kurung bahasa Inggris — pada kartu/tabel tampil sebagai **`Target Waktu Respon & Penanganan Kendala`** dan di dalam dropdown modal `#select-cat` tampil 5 opsi:
+         1. **`Jam Kerja & Batas Pengiriman (Cut-Off) — [Wewenang Anda Aktif]`** (kolom: `Batas Tepat Waktu Pagi *`, `Batas Kunci Pengisian Pagi (Cut-Off) *`, `Batas Tepat Waktu Sore (EOD) *`, `Batas Kunci Pengisian Sore (Cut-Off) *`)
+         2. **`Target Waktu Penanganan Kendala — [Wewenang Anda Aktif]`** (kolom: `Batas Respon Jenjang Pertama (Jam Kerja) *`, `Batas Penanganan Jenjang Lanjutan (Jam Kerja) *`, `Batas Waktu Naik ke Atasan Berikutnya (Jam Kerja) *`)
+         3. **`Ambang Batas Carry-Over Berulang — [Wewenang Anda Aktif]`** (kolom: `Ambang Saran Amber Carry-Over (Hari) *` & lencana `Proteksi Hak Hijau: Bebas Dipilih (Tidak Terkunci)`)
+         4. **`Jendela Pengajuan Koreksi — [Wewenang Anda Aktif]`** (kolom: `Batas Jendela Pengajuan Koreksi (Hari Kerja) *`)
+         5. **`Ambang Notifikasi & Pengingat — [Wewenang Anda Aktif]`** (kolom: `Pengingat Pagi (Menit Sebelum Deadline) *`, `Pengingat Sore EOD (Menit Sebelum Deadline) *`, `Ambang Peringatan Batas Waktu Kendala (%) *`)
+       - Kolom tanggal dan alasan di bagian bawah modal juga berbahasa Indonesia jelas: **`Tanggal Mulai Berlaku *`**, **`Tanggal Berakhir (Opsional)`**, dan **`Alasan Perubahan Kebijakan *`**.
+     - **Aksi (Uji Pencegahan Simpan Tanpa Mengubah Nilai):** Pilih kategori `Jam Kerja & Batas Pengiriman (Cut-Off)`, **jangan ubah angka jamnya sama sekali**, isi alasan 20 huruf, lalu klik **`Simpan & Terapkan Versi Baru`**.
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak penyimpanan (`400`) karena tidak ada nilai aturan yang berubah (mencegah riwayat audit sampah).
-     - **Aksi (Uji Alasan Kurang dari 15 Huruf & Tanggal Berlaku Mundur ke Kemarin `422`):** Ubah nilai batas waktu komitmen pagi dari `09:00` menjadi `09:15`, isi alasan hanya 8 huruf (`Diundur`), dan pilih *Tanggal Mulai Berlaku (Effective From)*: **Kemarin**, lalu klik **Simpan Perubahan Kebijakan**.
+       - Sistem menahan penyimpanan dengan pesan merah di dalam modal: **`"Tidak ada perubahan nilai parameter dibandingkan kebijakan yang sedang berlaku saat ini. Silakan ubah minimal satu parameter sebelum menyimpan."`** (mencegah terbentuknya riwayat audit tanpa perubahan nilai).
+     - **Aksi (Uji Alasan Kurang dari 15 Huruf & Tanggal Berlaku Mundur ke Kemarin `422`):** Ubah salah satu jam (misal `Batas Tepat Waktu Pagi *` dari `09:00` ke `09:15`), isi alasan hanya 8 huruf (`Diundur`) → klik **`Simpan & Terapkan Versi Baru`**. Lalu isi alasan ≥ 15 huruf tetapi pilih **`Tanggal Mulai Berlaku *`**: **Kemarin** → klik **`Simpan & Terapkan Versi Baru`**.
      - ***Hasil yang Diharapkan:***
-       - Sistem menahan pengiriman: alasan perubahan kebijakan wajib minimal **15 karakter** dan tanggal mulai berlaku dilarang mundur ke masa lalu (`422` *anti-backdating*).
-     - **Aksi (Simpan Perubahan Kebijakan Resmi & Kembalikan ke `09:00`):** Isi alasan lengkap: `Penyesuaian batas waktu komitmen pagi selama evaluasi triwulan berjalan`, pilih *Tanggal Mulai Berlaku*: **Hari Ini (Sekarang)**, lalu klik **Simpan Perubahan Kebijakan** (setelah berhasil, Anda boleh mengubahnya kembali ke `09:00` dengan cara yang sama agar pengaturan standar tetap terjaga).
+       - Sistem menahan pengiriman: alasan wajib minimal **15 karakter** (`"Alasan perubahan kebijakan minimal 15 karakter untuk kebutuhan jejak audit kepatuhan."`) dan tanggal mulai berlaku dilarang mundur ke masa lalu (`"Tanggal mulai berlaku tidak boleh di masa lampau (Dilarang Backdating / Ubah Surut)."`).
+     - **Aksi (Simpan Perubahan Kebijakan Resmi, Kembalikan ke Nilai Semula, & Unduh Audit CSV):** Isi alasan lengkap: `Penyesuaian batas waktu komitmen pagi selama evaluasi triwulan berjalan`, pilih **`Tanggal Mulai Berlaku *`**: **Hari Ini**, klik **`Simpan & Terapkan Versi Baru`** (setelah berhasil, kembalikan jam ke nilai semula dengan cara yang sama). Setelah itu gulir ke bagian bawah **Jejak Audit Perubahan Kebijakan (Policy Audit Trail)** dan klik tombol **`Unduh Audit CSV`**.
      - ***Hasil yang Diharapkan:***
-       - Versi kebijakan naik (misal `v1` → `v2`), tercatat di tabel **Riwayat Versi Kebijakan** di bagian bawah halaman lengkap dengan nilai lama vs nilai baru, dan sistem mengirim notifikasi pengumuman perubahan kebijakan ke pihak terkait.
-  2. **Uji Tab 2 Kelola Pemilik Kebijakan (`Policy Owners`) — Pengaman Pemilik Terakhir & Konfirmasi Cabut Diri Sendiri:**
-     - **Aksi:** Masih sebagai Hendra Wijaya (`direktur@dutamedia.com`) di `/admin/policies`, klik **Tab 2: Pemilik Kebijakan (Policy Owners)**.
-     - **Aksi (Uji Pengaman Pemilik Terakhir):** Pada kategori kebijakan yang saat ini hanya memiliki **1 orang pemilik aktif**, perhatikan tombol hapus/cabut di samping nama satu-satunya pemilik tersebut, atau coba hapus pemilik terakhir tersebut.
+       - Versi kebijakan baru tersimpan, tercatat di tabel **Jejak Audit Perubahan Kebijakan** lengkap dengan waktu `HH:mm WIB`, nilai sebelum vs sesudah, serta sistem mengirim notifikasi pengumuman perubahan kebijakan ke pihak terkait. Klik `Unduh Audit CSV` mengunduh file `.csv` jejak audit. *(Catatan untuk auditor: pada 2 baris log audit sejarah tanggal 11 Nov 2026 di bagian paling bawah tabel masih tersimpan kalimat lama yang memuat kata `"SLA"` karena catatan sejarah tidak boleh diubah surut).*
+  2. **Uji Seksi 6 `Penugasan Pemilik Kebijakan (Policy Owners)` — Bebas `Intern`, Tambah/Ubah Pemilik, Pengaman Pemilik Terakhir, & Konfirmasi Cabut Diri Sendiri:**
+     - **Aksi:** Masih sebagai Hendra Wijaya (`direktur@dutamedia.com`) di `/admin/policies`, gulir ke **Seksi 6: Penugasan Pemilik Kebijakan (Policy Owners)**.
+     - **Aksi (Cek Bebas `Intern` & Tambah/Ubah Pemilik):** Klik tombol **`Tetapkan Pemilik`** (atau `+ Tambah Pemilik` pada salah satu baris kategori), buka dropdown **`Pejabat Penanggung Jawab (Pemilik Kebijakan) *`** (`#owner-user`), pastikan **tidak ada nama karyawan `Intern`** (*Raka Pratama* / *Nisa Amelia*) di dalamnya, dan pastikan opsi yang sudah aktif memiliki tanda `— [Sudah Aktif Ditugaskan]`. Tutup modal, lalu klik tombol **`Ubah`** pada salah satu kartu pemilik untuk melihat mode `Ubah Penugasan Pemilik Kebijakan`.
+     - **Aksi (Uji Pengaman Pemilik Terakhir):** Pada kategori kebijakan yang saat ini hanya memiliki **1 orang pemilik aktif**, klik tombol **`Cabut`** pada satu-satunya pemilik tersebut.
      - ***Hasil yang Diharapkan:***
-       - Tombol cabut terkunci atau sistem menolak penghapusan (`422`) dengan penjelasan bahwa **setiap kategori kebijakan wajib memiliki minimal 1 Pemilik Kebijakan aktif** (tidak boleh yatim piatu).
-     - **Aksi (Tambah Pemilik Kebijakan Baru):** Pada kategori **Batas Waktu Komitmen Pagi (`MORNING_CUTOFF`)**, pastikan **Dewi Lestari** (`hrga@dutamedia.com`) terdaftar sebagai salah satu Pemilik Kebijakan aktif (tambahkan jika belum ada).
+       - Muncul kotak peringatan **`Tidak Dapat Mencabut Pemilik Terakhir`** dan tombol konfirmasi cabut terkunci (`disabled`) dengan penjelasan bahwa **setiap kategori kebijakan tidak boleh kosong tanpa penanggung jawab** (wajib menetapkan pemilik pengganti terlebih dahulu).
+     - **Aksi (Uji Konfirmasi Ekstra Cabut Diri Sendiri):** Pada kategori yang memiliki lebih dari 1 pemilik aktif (misal terdapat Hendra Wijaya dan Dewi Lestari), klik tombol **`Cabut`** pada kartu milik **Hendra Wijaya** sendiri.
      - ***Hasil yang Diharapkan:***
-       - Dewi Lestari tercatat sebagai Pemilik Kebijakan pada kategori tersebut dan menerima notifikasi penunjukan wewenang.
-     - **Aksi (Uji Konfirmasi Ekstra Cabut Diri Sendiri):** Jika Hendra Wijaya mencoba mencabut namanya sendiri dari salah satu kategori (yang masih memiliki pemilik lain), perhatikan pesan konfirmasi yang muncul.
-     - ***Hasil yang Diharapkan:***
-       - Muncul kotak peringatan ekstra yang menegaskan konsekuensi pencabutan akses diri sendiri sebelum benar-benar diproses.
+       - Muncul kotak peringatan ekstra **`"Peringatan: Anda Mencabut Wewenang Akun Anda Sendiri"`** dengan kotak centang wajib (`#confirm-self-revoke-checkbox`); tombol konfirmasi cabut tetap terkunci sebelum kotak centang tersebut dicentang. (Klik **Batal** setelah melihatnya agar wewenang Direktur tetap utuh).
   3. **Buktikan Tampilan Khusus Pemilik Kebijakan Non-Admin / Non-CEO (`Dewi Lestari — HRGA`):**
-     - **Aksi:** Keluar dari akun Hendra Wijaya, lalu masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari — HRGA, bukan CEO dan bukan System Admin).
-     - **Aksi:** Klik menu kiri **Pengaturan Kebijakan** (`/admin/policies`).
+     - **Aksi:** Keluar dari akun Hendra Wijaya, lalu masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari — HRGA, bukan CEO dan bukan System Admin) dan klik menu kiri **Kebijakan & Cut-off** (`/admin/policies`).
      - ***Hasil yang Diharapkan:***
        - Menu `/admin/policies` muncul di bilah navigasi kiri Dewi Lestari karena penanda `isPolicyOwner: true` aktif pada sesinya.
-       - Pada **Tab 1 (Daftar Kategori Kebijakan)**: dropdown kategori membedakan secara jelas antara kategori yang berada di bawah wewenang Dewi (bertuliskan **`— [Wewenang Anda Aktif]`**, formulir bisa diedit) dan kategori yang bukan wewenang Dewi (bertuliskan **`— [Terkunci: Bukan Pemilik]`**, formulir terkunci hanya-baca).
-       - Pada **Tab 2 (Pemilik Kebijakan)**: muncul lencana **`Hanya Lihat (Direktur/Admin)`** — Dewi dapat melihat daftar siapa saja pemilik tiap kebijakan secara transparan, namun tombol tambah/hapus pemilik kebijakan disembunyikan karena hanya Direktur (`CEO_MANAGEMENT`) dan `SYSTEM_ADMIN` yang boleh menunjuk atau mencabut Pemilik Kebijakan.
+       - Pada **Seksi 6 (Penugasan Pemilik Kebijakan)**: muncul lencana **`Dikelola Direktur & Admin`** dan **`Hanya Lihat (Direktur/Admin)`** — Dewi dapat melihat daftar siapa saja pemilik tiap kebijakan secara transparan, namun tombol `Tetapkan Pemilik`, `Ubah`, dan `Cabut` disembunyikan karena hanya Direktur (`CEO_MANAGEMENT`) dan `SYSTEM_ADMIN` yang boleh menunjuk atau mencabut Pemilik Kebijakan.
+       - Saat Dewi mengeklik **`+ Buat Versi Kebijakan Baru`**: dropdown `#select-cat` membedakan secara jelas antara kategori yang berada di bawah wewenang Dewi (bertuliskan **`— [Wewenang Anda Aktif]`**, formulir bisa disimpan) dan kategori yang bukan wewenang Dewi (bertuliskan **`— [Terkunci: Bukan Pemilik]`**, muncul kotak peringatan kuning bahwa ia tidak terdaftar sebagai pemilik aktif kategori tersebut).
   4. **Uji Halaman Pengaturan Saluran Notifikasi (`/admin/notifications`):**
      - **Aksi:** Keluar dari akun Dewi Lestari, masuk sebagai **`admin@dutamedia.com`** (atau `direktur@dutamedia.com`), lalu klik menu kiri **Saluran Notifikasi** (`/admin/notifications`).
      - **Aksi:** Periksa status ketiga kartu saluran pengiriman (**Notifikasi Dalam Aplikasi / In-App**, **Email SMTP**, dan **Web Push Browser**), lalu klik tombol **Kirim Uji Coba Notifikasi (Send Test Notification)**.
@@ -1255,42 +1298,45 @@ flowchart TD
 
 ---
 
-### 8.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian IV-B (Halaman 24–29)
+### 8.C. Lapisan 3 — Tabel Ceklis Katalog Kondisi per Halaman Bagian IV-B (Halaman 19–29)
 
-| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | Cek 375px (HP) | Cek 768/1024px (Tablet) | Cek 1440/1920px (Desktop) | Cek Prototype & Baseline |
-|---|---|---|---|---|---|---|---|
-| **K-24.1** | **Kelola Pengguna** (`/admin/users`) | Tabel 23 pengguna + filter status/peran + modal Undang Pengguna Baru + tolak email kembar (`409`) + toggle Aktif/Nonaktif | `SYSTEM_ADMIN` (`admin@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-25.1** | **Undangan Pengguna** (`/admin/invitations`) | Daftar undangan (`PENDING`, `ACCEPTED`, `EXPIRED`, `REVOKED`) + salin token 72 jam + Kirim Ulang + Cabut | `SYSTEM_ADMIN` | [ ] | [ ] | [ ] | [ ] |
-| **K-26.1** | **Struktur Organisasi** (`/admin/organization`) | Tab 1 Atasan Langsung: tolak diri sendiri (`400`) & siklus melingkar (`422`) + `[Target v1.1]` Status Karyawan `Intern` wajib tanggal selesai | `SYSTEM_ADMIN` | [ ] | [ ] | [ ] | [ ] |
-| **K-26.2** | **Struktur Organisasi** (`/admin/organization`) | Tab 2 Kewenangan Proyek (*Project Lead* & *Project Sponsor*) | `SYSTEM_ADMIN` | [ ] | [ ] | [ ] | [ ] |
-| **K-27.1** | **Reviewer Sementara** (`/admin/temporary-reviewers`) | Form delegasi: tolak tanggal terbalik (`400`), tolak `SYSTEM_ADMIN` (`422`), tolak bentrok (`409`) + Edit & Cabut + bukti login `Rian Kurniawan` | `SYSTEM_ADMIN` & `lead.creative@dutamedia.com` | [ ] | [ ] | [ ] | [ ] |
-| **K-28.1** | **Pengaturan Kebijakan** (`/admin/policies`) | Tab 1 Aturan: `[Target v1.1]` label bebas `SLA`, tolak tanpa ubah nilai (`400`), alasan `< 15` huruf, tanggal mundur (`422`), riwayat versi | `CEO_MANAGEMENT` (`direktur@dutamedia.com`) | [ ] | [ ] | [ ] | [ ] |
-| **K-28.2** | **Pengaturan Kebijakan** (`/admin/policies`) | Tab 2 Pemilik Kebijakan: pengaman pemilik terakhir (`422`), konfirmasi cabut diri sendiri, & tampilan khusus Pemilik Non-Admin (`Dewi Lestari`) | `CEO_MANAGEMENT` & `hrga@dutamedia.com` | [ ] | [ ] | [ ] | [ ] |
-| **K-29.1** | **Saluran Notifikasi** (`/admin/notifications`) | Kartu status 3 saluran (In-App, Email, Web Push) + tombol **Kirim Uji Coba Notifikasi** + tabel log pengiriman | `SYSTEM_ADMIN` / `CEO_MANAGEMENT` | [ ] | [ ] | [ ] | [ ] |
+| ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
+|---|---|---|---|---|---|---|---|---|
+| **K-24.1** | **Kelola Pengguna** (`/admin/users`) · *(Acuan `25-Admin-User-Invitation-Management.html`)* | Tabel 25 pengguna (`Intern` & `Karyawan Tetap`), tanggal `Selesai magang` `WIB`, filter status/peran, modal Undang Pengguna Baru (+ pilihan Status Karyawan), tolak email kembar (`409`), & toggle Aktif/Nonaktif | `SYSTEM_ADMIN` (`admin@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-25.1** | **Undangan Pengguna** (`/admin/invitations`) · *(Acuan `25-Admin-User-Invitation-Management.html`)* | Daftar undangan (`PENDING`, `ACCEPTED`, `EXPIRED`, `REVOKED`) + salin token 72 jam + Kirim Ulang + Cabut | `SYSTEM_ADMIN` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-26.1** | **Struktur Organisasi** (`/admin/organization`) · *(Acuan `15-Admin-Organizational-Mapping.html`)* | Tab 1 Atasan Langsung: tolak diri sendiri (`400`) & siklus melingkar (`422`) + `[Aktif v1.1]` Status Karyawan `Intern` wajib tanggal selesai, blokir `Intern` jadi atasan, & modal scroll tidak terpotong | `SYSTEM_ADMIN` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-26.2** | **Struktur Organisasi** (`/admin/organization`) | Tab 2 Kewenangan Proyek (*Project Lead* & *Project Sponsor*, bebas `Intern`) | `SYSTEM_ADMIN` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-27.1** | **Reviewer Sementara** (`/admin/temporary-reviewers`) · *(Acuan `17-Admin-Temporary-Reviewer.html`)* | Form delegasi: tolak tanggal terbalik (`400`), tolak `SYSTEM_ADMIN` (`422`), blokir `Intern`, tolak bentrok (`409`) + Edit & Cabut + bukti login `Rian Kurniawan` | `SYSTEM_ADMIN` & `lead.creative@dutamedia.com` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-28.1** | **Pengaturan Kebijakan** (`/admin/policies`) · *(Acuan `18-Policy-Settings.html`)* | Tab 1 Aturan: `[Aktif v1.1]` bebas `SLA` & kurung Inggris, 6 label modal Bahasa Indonesia, tolak tanpa ubah nilai (`400`), alasan `< 15` huruf, tanggal mundur (`422`), riwayat versi `HH:mm WIB` | `CEO_MANAGEMENT` (`direktur@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-28.2** | **Pengaturan Kebijakan** (`/admin/policies`) | Tab 2 Pemilik Kebijakan: pengaman pemilik terakhir (`422`), blokir `Intern`, konfirmasi cabut diri sendiri, & tampilan khusus Pemilik Non-Admin (`Dewi Lestari`) | `CEO_MANAGEMENT` & `hrga@dutamedia.com` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-29.1** | **Saluran Notifikasi** (`/admin/notifications`) · *(Acuan `19-Admin-Notification-Channel-Setup.html`)* | Kartu status 3 saluran (In-App, Email, Web Push) + tombol **Kirim Uji Coba Notifikasi** + tabel log pengiriman | `SYSTEM_ADMIN` / `CEO_MANAGEMENT` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
 
 # LAMPIRAN: VERIFIKASI KELENGKAPAN 100% & PAGAR PENGAMAN KERJA PARALEL
 
 ## A. Rekapitulasi Cakupan Dokumen Induk (Tidak Ada Satu pun yang Terlewat)
-1. **Seluruh 23 Akun Pengguna Resmi (`seed.ts`):** Tercantum lengkap dengan email, sandi, peran utama, divisi, dan wewenang khususnya di **Bagian 0.3**.
-2. **Seluruh 7 Peran Utama + 2 Status Akun + 5 Penanda Wewenang Dinamis + 1 Status Karyawan `Intern` (`[Target v1.1]`):**
+1. **Seluruh 25 Akun Pengguna Resmi (`seed.ts`):** Tercantum lengkap dengan email, sandi, peran utama, divisi, status karyawan (`23 Tetap + 2 Intern`), dan wewenang khususnya di **Bagian 0**.
+2. **Seluruh 7 Peran Utama + 2 Status Akun + 5 Penanda Wewenang Dinamis + 3 Status Karyawan (`[Aktif v1.1]`):**
    - `EMPLOYEE`, `SUPERVISOR`, `PROJECT_MANAGER`, `HEAD`, `HRGA`, `CEO_MANAGEMENT`, `SYSTEM_ADMIN`.
    - Status akun `INVITED` (`/activate` token 72 jam & `REVOKED`) dan `INACTIVE` (ditolak login setelah dinonaktifkan Admin).
    - Penanda dinamis `hasSubordinates`, `isProjectLead`, `isTemporaryReviewer` (dibuktikan dengan login `Rian Kurniawan`), `isCategoryOwner` (dibuktikan dengan login staf spesialis `Fakhrizal Asshiddiq`), dan `isPolicyOwner` (dibuktikan dengan login non-Admin `Dewi Lestari`).
-3. **Seluruh 29 Rute & Halaman Aplikasi (`K-01` s/d `K-29`):** Setiap halaman memiliki skenario prosedural langkah demi langkah beserta *Hasil yang Diharapkan* dan baris ceklis 3 ukuran layar (`375px`, `768/1024px`, `1440/1920px`) serta ceklis perbandingan *Prototype & Baseline*.
+   - Status Karyawan: `Karyawan Tetap (PERMANENT)`, `Kontrak (CONTRACT)`, dan `Intern` (dibuktikan dengan akun `intern.frontend@dutamedia.com` & `intern.finance@dutamedia.com`).
+3. **Seluruh 29 Rute & Halaman Aplikasi (`K-01` s/d `K-29`):** Setiap halaman memiliki skenario prosedural langkah demi langkah beserta *Hasil yang Diharapkan* dan baris ceklis **4 ukuran layar (`375px`, `768/1024px`, `1440px`, `1920px`)** serta ceklis perbandingan *Prototype & Baseline*.
 4. **Seluruh 16 Kategori Kendala (5 Kelompok) & 9 Dampak Kendala (Kotak Centang 1–3 Pilihan):** Terkunci lengkap dengan tabel pemetaan siapa staf/pejabat penerima otomatisnya di **Journey 3 (`Bagian II`)**.
-5. **Seluruh 4 Paket Penyesuaian Pasca-UAT (`[Kondisi Saat Ini v1.0]` → `[Target Pasca-UAT v1.1]`):**
-   - **Paket #1:** Status Karyawan `Intern` (Anak Magang), tanpa Cuti Tahunan 12 hari (hanya Izin alasan logis & Sakit), blokir otomatis dari jabatan atasan/PIC, alur cuti 3 tahap berurutan (`HRGA → Head Divisi → Direktur`), dan lokasi kantor **Malang**.
-   - **Paket #2:** Halaman `/daily/additional-work` langsung terkunci begitu Hasil Sore (EOD) dikirim atau lewat pukul `21:00 WIB`, disertai banner panduan lembur mendadak dan pelunakan lencana `LATE`.
-   - **Paket #3:** Penghapusan seluruh istilah teknis `"SLA"` dan bahasa Inggris di dalam kurung pada layar pengguna (`/admin/policies`, `/coaching`, dan notifikasi kebijakan).
-   - **Paket #4:** Penyeragaman format waktu **`Asia/Jakarta` (`14:14 WIB`)** dengan titik dua (`:`), tanpa detik, wajib diakhiri `WIB`, dan ketebalan huruf seragam (*Medium/SemiBold*).
+5. **Seluruh 4 Paket Penyesuaian Pasca-UAT (`[Aktif v1.1]` pasca `commit 56cbead`):**
+   - **Paket #1:** Status Karyawan (`Tetap/Kontrak/Intern`), kuota cuti `12 hari kerja/tahun` (hitungan Senin–Jumat), `Intern` tanpa cuti tahunan (hanya `Izin (Keperluan Mendesak / Alasan Logis)` & `Sakit`), blokir otomatis `Intern` dari 7 daftar atasan/PIC termasuk grup `── Lainnya ──`, filter Status Karyawan di `/dashboard` & `/reports` (beserta CSV dan pesan tabel kosong `0 Unit Kerja`), serta lokasi kantor **Malang**. *(Catatan jujur: **Alur Persetujuan Cuti 3 Tahap HRGA → Head Divisi → Direktur** masuk **`[Backlog v1.2]`**; di situs live saat ini persetujuan berjalan 1 tahap).*
+   - **Paket #2:** Halaman `/daily/additional-work` langsung terkunci begitu Evaluasi Sore (EOD) dikirim atau lewat pukul `21:00 WIB` (`Evaluasi Sore (EOD) Hari Ini Telah Ditutup — Formulir Terkunci` & tombol `Terkunci Pasca-EOD`), disertai panduan lembur mendadak & tautan `Lapor Blocker` serta lencana **`Di Luar Jam Normal (Lembur Fleksibel)`** di `/daily/eod`.
+   - **Paket #3:** Penghapusan seluruh istilah teknis `"SLA"` dan akhiran bahasa Inggris kategori di layar operasional (`/raise-blockers`, `/blockers`, `/blockers/aging`, `/coaching`, `/notifications`, dan `/admin/policies` + 6 label input modal kebijakan dalam Bahasa Indonesia).
+   - **Paket #4:** Penyeragaman format waktu **`Asia/Jakarta` (`HH:mm WIB`, misal `10:45 WIB`)** dengan titik dua (`:`), tanpa detik, wajib diakhiri `WIB`, angka sejajar rapi, serta penghapusan rumus kurung siku di Panel 3 `/profile`.
 
 ## B. Aturan Pagar Pengaman untuk Teman Auditor (Saat Bekerja Paralel)
-1. **Hanya Menguji & Mencatat (Dilarang Mengubah Kode Sendiri Tanpa Koordinasi):**
-   - Teman auditor menjalankan skenario `SP-01.1` sampai `SP-08.3` secara berurutan di browser menggunakan Chrome DevTools (*Device Toolbar*) pada 3 ukuran layar: **HP (`375px`)**, **Tablet (`768px` & `1024px`)**, dan **Layar Lebar (`1440px` & `1920px`)**.
-2. **Cara Mencatat Temuan Tampilan atau Perbedaan Prototype:**
+1. **Baca Dokumen Pembanding Dulu Sebelum Menilai Perbedaan Prototype:**
+   - Buka [Daftar-Perubahan-Pasca-UAT-4-Paket.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Pasca-UAT-4-Paket.md) dan pahami folder prototype asli di `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/`.
+2. **Hanya Menguji & Mencatat (Dilarang Mengubah Kode Sendiri Tanpa Koordinasi):**
+   - Teman auditor menjalankan skenario `SP-01.1` sampai `SP-08.3` secara berurutan di browser menggunakan Chrome DevTools (*Device Toolbar*) pada **4 ukuran layar**: **HP (`375px`)**, **Tablet (`768px` & `1024px`)**, **Desktop (`1440px`)**, dan **Layar Lebar (`1920px`)**.
+3. **Cara Mencatat Temuan Tampilan atau Perbedaan Prototype:**
    - Centang kotak `[x]` pada tabel **Lapisan 3 (`K-01` s/d `K-29`)** jika tampilan dan perilaku sudah 100% sesuai dengan *Hasil yang Diharapkan*.
-   - Jika menemukan teks terpotong, tombol bertumpuk di layar HP, atau bagian yang berbeda dari 26 file HTML Prototype, catat dengan format: **`[ID Kondisi, misal K-10.3] — [Ukuran Layar, misal 375px] — [Penjelasan singkat apa yang kurang pas & tangkapan layar]`**.
-3. **File yang Dilarang Keras Diubah:**
+   - Jika menemukan teks terpotong, tombol bertumpuk di layar HP, atau bagian yang berbeda di luar daftar perubahan resmi pada 26 file HTML Prototype, catat dengan format: **`[ID Kondisi, misal K-10.3] — [Ukuran Layar, misal 375px] — [Penjelasan singkat apa yang kurang pas & tangkapan layar]`**.
+4. **File yang Dilarang Keras Diubah:**
    - Jangan pernah mengubah atau menimpa file `UAT/UAT-Execution-Checklist.md` dan `UAT/UAT-Execution-Log.csv` karena kedua file tersebut adalah bukti rekam jejak UAT resmi yang sudah lulus.
