@@ -294,6 +294,7 @@ async function handleLogin() {
                   id="login-password"
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
+                  class="has-trailing-icon"
                   placeholder="••••••••"
                   autocomplete="current-password"
                   :aria-invalid="!!passwordError"
@@ -594,6 +595,10 @@ input:not([type="checkbox"]) {
   color: var(--color-text-primary);
   font-size: 14px;
   transition: border-color 0.15s;
+}
+
+input.has-trailing-icon {
+  padding-right: 44px;
 }
 
 input:not([type="checkbox"]):focus {

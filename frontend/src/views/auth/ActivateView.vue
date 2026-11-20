@@ -347,6 +347,7 @@ async function handleActivate() {
                     id="activate-password"
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
+                    class="has-trailing-icon"
                     placeholder="Minimal 8 karakter kombinasi huruf & angka"
                     :aria-invalid="!!passwordError"
                     required
@@ -417,6 +418,7 @@ async function handleActivate() {
                     id="activate-confirm"
                     v-model="confirmPassword"
                     :type="showConfirmPassword ? 'text' : 'password'"
+                    class="has-trailing-icon"
                     placeholder="Ketik ulang kata sandi baru"
                     :aria-invalid="!!confirmError"
                     required
@@ -702,6 +704,10 @@ input:not([type="checkbox"]) {
   color: var(--color-text-primary);
   font-size: 14px;
   transition: border-color 0.15s;
+}
+
+input.has-trailing-icon {
+  padding-right: 44px;
 }
 
 input:not([type="checkbox"]):focus {

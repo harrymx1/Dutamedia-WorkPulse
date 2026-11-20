@@ -68,17 +68,20 @@ flowchart TD
     B -- "Tidak" --> C["Akun dibuat berstatus INVITED (Belum Aktif) + Terbit Tautan Aktivasi 72 Jam (Status: PENDING)"]
 
     C --> D["Calon Karyawan membuka halaman /activate"]
-    D --> E{"Pemeriksaan Tautan Token & Kata Sandi Baru?"}
-    E -- "Kolom kosong / sandi < 8 huruf / tanpa kombinasi huruf+angka / konfirmasi tidak sama" --> E1["Ditolak di Layar: Pesan merah di bawah kolom input"]
+    D --> D0{"Cek Status Tautan Token Secara Otomatis"}
+    D0 -- "Token valid & aktif (PENDING)" --> D1["Tampil Kartu Pratinjau Akun (Inisial, Nama Lengkap, Email, Divisi, Lencana UNDANGAN AKTIF)"]
+    D0 -- "Token salah / USED / REVOKED / EXPIRED" --> D2["Tampil Banner Kuning 'Undangan Tidak Berlaku' sesuai statusnya"]
+    D1 & D2 --> E{"Pemeriksaan Kata Sandi Baru (3 Syarat Checklist)?"}
+    E -- "Kolom kosong / sandi < 8 huruf / tanpa kombinasi huruf+angka / konfirmasi tidak sama" --> E1["Ditolak di Layar: Pesan merah di bawah kolom + 3 Syarat Checklist belum hijau penuh (error otomatis hilang saat ketik ulang)"]
     E -- "Token salah / tidak terdaftar" --> E2["Ditolak Server (400): Token aktivasi tidak valid atau tidak ditemukan"]
     E -- "Token sudah pernah dipakai (USED)" --> E3["Ditolak Server (400): Tautan aktivasi ini telah digunakan sebelumnya. Silakan login langsung"]
     E -- "Token sudah dibatalkan Admin (REVOKED)" --> E4["Ditolak Server (400): Tautan aktivasi ini telah dibatalkan atau dicabut oleh administrator"]
     E -- "Token lewat 72 jam (EXPIRED)" --> E5["Status diubah ke EXPIRED + Ditolak Server (400): Tautan aktivasi telah kedaluwarsa"]
-    E -- "Token Valid & Kata Sandi Memenuhi Syarat" --> F["Disimpan Satu Paket Utuh: Akun menjadi ACTIVE + Token menjadi USED + Tampil Kartu Sukses"]
+    E -- "Token Valid & Kata Sandi Memenuhi Syarat" --> F["Disimpan Satu Paket Utuh: Akun menjadi ACTIVE + Token menjadi USED + Tampil Kartu Sukses (+ Tombol Lanjut ke Login dengan Banner Hijau & Email Terisi)"]
 
-    F --> G["Pengguna membuka halaman /login"]
+    F --> G["Pengguna membuka halaman /login (+ Isi Email Otomatis bila pernah centang 'Ingat email di perangkat ini')"]
     G --> H{"Pemeriksaan Percobaan Masuk (Login)?"}
-    H -- "Salah berkali-kali hingga terkunci sementara (429)" --> H1["Tombol Masuk Terkunci + Hitung Mundur Detik Tunggu"]
+    H -- "Salah berkali-kali hingga terkunci sementara (429)" --> H1["Banner Kuning 'Batas Percobaan Terlampaui' + Tombol Masuk Terkunci + Hitung Mundur Detik Tunggu"]
     H -- "Email kosong / format salah / sandi kosong" --> H2["Ditolak di Layar: Pesan merah di bawah kolom"]
     H -- "Email tidak ada / Kata sandi salah" --> H3["Ditolak Server (401): Alamat email atau kata sandi tidak valid"]
     H -- "Status akun masih INVITED" --> H4["Ditolak Server (401): Akun Anda belum diaktifkan. Silakan periksa tautan aktivasi..."]
@@ -111,37 +114,39 @@ flowchart TD
 #### Skenario Prosedural `SP-01.1` — Menyisir Seluruh Kondisi Halaman Login (`/login`): Kolom Kosong, Sandi Salah, Akun Belum Aktif (`INVITED`), Akun Dinonaktifkan (`INACTIVE`), Kunci Tunggu Percobaan Beruntun (`429`), & Login Sukses
 - **Acuan Prototype & Baseline:** `UI-UX-Design/01-Login-Activation.html` · `02-PRD.md` (`FR-01..04`) · `TC-AUTH-001`, `TC-AUTH-002`, `TC-AUTH-009`, `TC-AUTH-010`
 
-1. **Langkah 1.1.1 — Inspeksi Tampilan Awal & Pengalihan Otomatis Alamat Dasar `/` (`ST-AUTH-01`):**
+1. **Langkah 1.1.1 — Inspeksi Tampilan Awal, Logo Layar HP, & Pengalihan Otomatis Alamat Dasar `/` (`ST-AUTH-01`):**
    - **Aksi:** Pastikan belum login (jika sedang login, klik tombol **Keluar** di pojok kiri bawah). Buka alamat dasar `/` di browser.
    - **Hasil yang Diharapkan:**
      - Alamat otomatis berpindah ke **`/login`**.
-     - Bagian kiri layar menampilkan informasi pengenalan WorkPulse dengan 3 poin keunggulan beserta ikon gambarnya.
-     - Bagian kanan layar menampilkan formulir masuk berisi kolom **Alamat Email Kerja**, kolom **Kata Sandi** (dilengkapi tombol ikon mata untuk melihat/menyembunyikan ketikan sandi), tombol hijau **`Masuk ke WorkPulse`**, dan tautan menuju halaman aktivasi akun (`/activate`).
+     - Bagian kiri layar menampilkan informasi pengenalan WorkPulse (`Komitmen jelas, hambatan tuntas`) dengan 3 poin keunggulan beserta ikon gambarnya.
+     - Bagian kanan layar menampilkan tab **`Masuk Sistem`** | **`Aktivasi Akun`**, formulir masuk berisi kolom **Email Perusahaan**, kolom **Kata Sandi** (dilengkapi tombol ikon mata untuk melihat/menyembunyikan ketikan sandi), kotak centang **`Ingat email di perangkat ini`**, tautan **`Belum aktivasi akun?`**, dan tombol hijau **`Masuk ke Sistem`**.
    - **Pemeriksaan Tampilan 4 Ukuran Layar (`375px` · `768px` · `1440px` · `1920px`):**
-     - Ubah lebar layar di Chrome DevTools (F12): pastikan di layar lebar (`1440px` & `1920px`) panel kiri dan kanan tampil berdampingan rapi, sedangkan di layar HP (`375px`) dan Tablet (`768px`) formulir masuk menyesuaikan diri di tengah layar tanpa ada kotak input atau tombol yang terpotong ke samping.
+     - Ubah lebar layar di Chrome DevTools (F12): pastikan di layar lebar (`1440px` & `1920px`) panel kiri dan kanan tampil berdampingan rapi, sedangkan di layar HP (`375px`) dan Tablet (`768px`) panel hijau kiri disembunyikan dan **digantikan oleh header logo `WP · WorkPulse — DUTAMEDIA ACCOUNTABILITY` tepat di atas kartu formulir** tanpa ada kotak input atau tombol yang terpotong ke samping.
 
-2. **Langkah 1.1.2 — Uji Validasi Kolom Kosong, Format Email Salah, & Tombol Ikon Mata (`ST-AUTH-03`, `ST-AUTH-08`):**
+2. **Langkah 1.1.2 — Uji Validasi Kolom Kosong, Format Email Salah, Tombol Ikon Mata, & Fungsi `"Ingat email di perangkat ini"` (`ST-AUTH-03`, `ST-AUTH-08`):**
    - **Aksi:**
-     1. Biarkan kolom Email dan Kata Sandi kosong, lalu langsung klik **`Masuk ke WorkPulse`**.
+     1. Biarkan kolom Email dan Kata Sandi kosong, lalu langsung klik **`Masuk ke Sistem`**.
      2. Ketik `bukan-format-email` pada kolom Email dan ketik `Rahasia123` pada kolom Kata Sandi, lalu klik tombol **ikon mata** di ujung kanan kolom Kata Sandi.
+     3. *(Uji Fungsi Ingat Email):* Centang **`Ingat email di perangkat ini`**, masukkan `product@dutamedia.com` + `Password123!`, masuk ke sistem, lalu klik **Keluar (Logout)** agar kembali ke `/login`. Kemudian coba lepas centangnya dan muat ulang halaman.
    - **Hasil yang Diharapkan:**
      1. Saat kosong: formulir tidak terkirim ke server dan muncul tulisan peringatan merah tepat di bawah kolom yang kosong.
-     2. Saat ikon mata diklik: tampilan titik-titik `••••••••••` pada kolom Kata Sandi berubah menjadi tulisan terbaca `Rahasia123` (dan kembali menjadi titik-titik saat diklik sekali lagi).
+     2. Saat ikon mata diklik: tampilan titik-titik pada kolom Kata Sandi berubah menjadi tulisan terbaca `Rahasia123` (dan kembali tersembunyi saat diklik sekali lagi).
+     3. Setelah logout dalam keadaan tadi dicentang: alamat email `product@dutamedia.com` **otomatis terisi kembali** dan centang tetap aktif; saat centang dilepas, email tersimpan otomatis dihapus lagi.
 
 3. **Langkah 1.1.3 — Uji Penolakan Kata Sandi Salah / Email Tidak Terdaftar (`ST-AUTH-04`):**
    - **Aksi:**
-     - **Alamat Email Kerja:** `dev.frontend@dutamedia.com`
+     - **Email Perusahaan:** `dev.frontend@dutamedia.com`
      - **Kata Sandi:** `SandiSalah123!`
-     - Klik **`Masuk ke WorkPulse`**.
+     - Klik **`Masuk ke Sistem`**.
    - **Hasil yang Diharapkan:**
      - Muncul kotak peringatan merah di atas formulir dengan kalimat persis: **`"Alamat email atau kata sandi tidak valid."`**
      - Pengguna tetap tertahan di halaman `/login`.
 
 4. **Langkah 1.1.4 — Uji Penolakan Akun Belum Diaktifkan (`INVITED` — `ST-AUTH-05`):**
    - **Aksi:**
-     - **Alamat Email Kerja:** `calon.karyawan@dutamedia.com` (akun Fajar Ramadhan yang berstatus `INVITED`)
+     - **Email Perusahaan:** `calon.karyawan@dutamedia.com` (akun Fajar Ramadhan yang berstatus `INVITED`)
      - **Kata Sandi:** `Password123!`
-     - Klik **`Masuk ke WorkPulse`**.
+     - Klik **`Masuk ke Sistem`**.
    - **Hasil yang Diharapkan:**
      - Muncul kotak peringatan merah di atas formulir dengan kalimat persis: **`"Akun Anda belum diaktifkan. Silakan periksa tautan aktivasi pada email Anda atau hubungi administrator."`**
 
@@ -149,19 +154,19 @@ flowchart TD
    - **Aksi:**
      1. Login terlebih dahulu sebagai **Sistem Administrator** (`admin@dutamedia.com` / `Password123!`), buka menu **Kelola Pengguna (`/admin/users`)**.
      2. Cari baris **`Nadia Kusuma`** (`qa@dutamedia.com`), klik tombol **`Nonaktifkan`** hingga statusnya berubah menjadi **`INACTIVE`**, lalu klik **Keluar (Logout)**.
-     3. Di halaman `/login`, masukkan Email **`qa@dutamedia.com`** dan Kata Sandi **`Password123!`**, lalu klik **`Masuk ke WorkPulse`**.
+     3. Di halaman `/login`, masukkan Email **`qa@dutamedia.com`** dan Kata Sandi **`Password123!`**, lalu klik **`Masuk ke Sistem`**.
      4. **Pemulihan Wajib:** Login kembali sebagai **Sistem Administrator** (`admin@dutamedia.com`), buka `/admin/users`, klik **`Aktifkan`** pada baris **`Nadia Kusuma`** hingga statusnya kembali **`ACTIVE`**, lalu klik **Keluar**.
    - **Hasil yang Diharapkan:**
      - Saat `qa@dutamedia.com` mencoba login dalam keadaan `INACTIVE`, server menolak (`401`) dan muncul kotak peringatan merah di atas formulir dengan kalimat persis: **`"Akun Anda dinonaktifkan oleh administrator. Hubungi HRGA untuk informasi lebih lanjut."`**
 
 6. **Langkah 1.1.6 — Uji Penguncian Sementara Saat Terlalu Banyak Percobaan Masuk (`429` — `ST-AUTH-07`):**
-   - **Aksi:** Di halaman `/login`, masukkan email `dev.frontend@dutamedia.com` dan kata sandi salah `SalahTerus1!`, lalu klik **`Masuk ke WorkPulse`** berulang-ulang secara cepat (lebih dari 5–10 kali berturut-turut) hingga batas pengaman percobaan masuk terpicu. *(Tunggu hingga hitung mundur selesai sebelum lanjut ke langkah berikutnya).*
+   - **Aksi:** Di halaman `/login`, masukkan email `uji.salah@dutamedia.com` dan kata sandi salah `SalahTerus1!`, lalu klik **`Masuk ke Sistem`** 5 kali berturut-turut hingga batas pengaman percobaan masuk terpicu. *(Tunggu hingga hitung mundur selesai atau pindah halaman sebelum lanjut ke langkah berikutnya).*
    - **Hasil yang Diharapkan:**
-     - Tombol **`Masuk ke WorkPulse`** otomatis terkunci (tidak bisa diklik) dan muncul kotak peringatan merah dengan hitung mundur detik: **`"Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu X detik sebelum mencoba kembali."`**
+     - Tombol **`Masuk ke Sistem`** otomatis terkunci (`Terkunci (Xs)`) dan muncul **kotak peringatan kuning** berjudul **`Batas Percobaan Terlampaui`** dengan hitung mundur detik: `"Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu X detik sebelum mencoba kembali."`
 
 7. **Langkah 1.1.7 — Uji Login Sukses & Pendaratan Halaman Awal Sesuai Peran (`ST-AUTH-02`, `ST-AUTH-09`):**
    - **Aksi:**
-     1. Masukkan Email **`dev.frontend@dutamedia.com`** dan Kata Sandi **`Password123!`**, lalu klik **`Masuk ke WorkPulse`**.
+     1. Masukkan Email **`dev.frontend@dutamedia.com`** dan Kata Sandi **`Password123!`**, lalu klik **`Masuk ke Sistem`**.
      2. Setelah berhasil masuk, coba ketik manual `/login` di bilah alamat browser lalu tekan Enter.
    - **Hasil yang Diharapkan:**
      1. Sebagai staf operasional (`EMPLOYEE`), Aditya langsung diarahkan ke halaman **`/daily/morning`** (`My Today / Morning Commitment`). Di pojok kiri bawah menu samping (sidebar) tertulis **`Aditya Nugroho`** (`Frontend Developer`).
@@ -172,29 +177,33 @@ flowchart TD
 #### Skenario Prosedural `SP-01.2` — Menyisir Seluruh Kondisi Halaman Aktivasi Akun (`/activate`): Validasi Kata Sandi, Token Salah, Token Dicabut (`REVOKED`), Token Bekas Pakai (`USED`), & Aktivasi Sukses
 - **Acuan Prototype & Baseline:** `UI-UX-Design/01-Login-Activation.html` · `DEC-005` · `TC-AUTH-003`, `TC-AUTH-004`
 
-1. **Langkah 1.2.1 — Uji Validasi Kolom & Indikator Kekuatan Kata Sandi (`ST-ACTV-01`, `ST-ACTV-03`):**
-   - **Aksi:** Pastikan dalam keadaan **Keluar (Logout)**. Buka halaman `/activate`:
+1. **Langkah 1.2.1 — Uji Logo Layar HP, Kotak 3 Syarat Kata Sandi, Kombinasi Huruf & Angka, & Tombol Mata Konfirmasi (`ST-ACTV-01`, `ST-ACTV-03`):**
+   - **Aksi:** Pastikan dalam keadaan **Keluar (Logout)**. Buka halaman `/activate` (cek juga di layar HP `375px`):
      1. Klik **`Aktifkan Akun Saya`** saat semua kolom masih kosong.
-     2. Isi **Token Aktivasi:** `token_percobaan`, **Kata Sandi Baru:** `pendek` (6 huruf tanpa angka), dan **Konfirmasi Kata Sandi:** `tidak_sama_123`.
+     2. Isi **Token Aktivasi:** `token_percobaan`, **Kata Sandi Baru:** `hanyahuruf` (≥ 8 karakter tetapi tanpa angka), dan **Konfirmasi Kata Sandi:** `hanyahuruf`, lalu klik **`Aktifkan Akun Saya`**.
+     3. Setelah error muncul, ubah keduanya menjadi `FajarBaru123!`, lalu klik **tombol ikon mata** pada kolom **Konfirmasi Kata Sandi**.
    - **Hasil yang Diharapkan:**
-     - Muncul garis indikator kekuatan kata sandi saat mengetik, disertai pesan kesalahan merah tepat di bawah kolom yang belum memenuhi syarat (kata sandi wajib minimal 8 karakter kombinasi huruf & angka, dan konfirmasi wajib sama persis).
+     1. Di layar HP/tablet (`<= 900px`), tampil header logo **`WP · WorkPulse`** di atas kartu tanpa layar melebar ke samping.
+     2. Di bawah kolom **Kata Sandi Baru**, tampil 4 batang kekuatan sandi beserta **kotak daftar periksa 3 syarat** (`Minimal 8 karakter`, `Kombinasi huruf & angka`, `Konfirmasi kata sandi cocok`).
+     3. Ketikan `hanyahuruf` ditolak dengan pesan merah persis **`"Kata sandi wajib minimal 8 karakter dengan kombinasi huruf dan angka."`** (centang hijau hanya menyala pada syarat 1 & 3, bukan syarat 2).
+     4. Begitu sandi diubah menjadi `FajarBaru123!`, **pesan error merah langsung hilang otomatis**, ketiga syarat menyala hijau tercentang, dan klik tombol mata konfirmasi membuat teks `FajarBaru123!` terlihat/tersembunyi dengan benar.
 
-2. **Langkah 1.2.2 — Uji Token Tidak Ditemukan & Token yang Sudah Dicabut Admin (`REVOKED` — `ST-ACTV-04`, `ST-ACTV-06`):**
+2. **Langkah 1.2.2 — Uji Peringatan Token Tidak Berlaku (`NOT_FOUND` / `REVOKED` — `ST-ACTV-04`, `ST-ACTV-06`):**
    - **Aksi:**
-     1. Di `/activate`, isi **Token Aktivasi:** `token_tidak_terdaftar_999`, **Kata Sandi Baru:** `Password123!`, **Konfirmasi Kata Sandi:** `Password123!`, lalu klik **`Aktifkan Akun Saya`**.
-     2. Untuk menguji **Token Dicabut (`REVOKED`)**: Login sebagai **Admin** (`admin@dutamedia.com`), buka `/admin/users`, klik **`+ Undang Pengguna Baru`**, isi Nama `Tes Cabut Token` dan Email `tes.cabut@dutamedia.com`, klik simpan → salin kode tokennya → tutup pop-up → pada baris `Tes Cabut Token` klik tombol **`Cabut`** → Logout Admin → buka `/activate`, tempelkan token yang sudah dicabut tadi, isi kata sandi `Password123!`, lalu klik **`Aktifkan Akun Saya`**.
+     1. Buka `/activate?token=token_tidak_terdaftar_999000111222`.
+     2. Untuk menguji **Token Dicabut (`REVOKED`)**: Login sebagai **Admin** (`admin@dutamedia.com`), buka `/admin/users`, klik **`+ Undang Pengguna Baru`**, isi Nama `Tes Cabut Token` dan Email `tes.cabut@dutamedia.com`, klik simpan → salin kode tokennya → tutup pop-up → pada baris `Tes Cabut Token` klik tombol **`Cabut`** → Logout Admin → buka `/activate` dan tempelkan token yang sudah dicabut tadi.
    - **Hasil yang Diharapkan:**
-     1. Untuk token yang tidak terdaftar: muncul kotak peringatan merah di atas form: **`"Token aktivasi tidak valid atau tidak ditemukan."`**
-     2. Untuk token yang sudah dicabut Admin: muncul kotak peringatan merah di atas form: **`"Tautan aktivasi ini telah dibatalkan atau dicabut oleh administrator."`**
+     1. Begitu token tidak dikenal atau dicabut terdeteksi (atau dikirim), tampil **kotak peringatan kuning `Undangan Tidak Berlaku`** bertuliskan **`"Token aktivasi tidak valid atau tidak ditemukan."`** (atau `"Tautan aktivasi ini telah dibatalkan atau dicabut oleh administrator."`).
 
-3. **Langkah 1.2.3 — Uji Aktivasi Sukses Token 72 Jam & Penolakan Pemakaian Kedua Kali (`USED` — `ST-ACTV-02`, `ST-ACTV-05`):**
+3. **Langkah 1.2.3 — Uji Kartu Pratinjau Akun Token 72 Jam, Aktivasi Sukses + Banner Sambutan Login, & Penolakan Token Bekas Pakai (`USED` — `ST-ACTV-02`, `ST-ACTV-05`):**
    - **Aksi:**
-     1. Buka alamat `/activate?token=wp_seed_invite_token_72h_demo_secret` (milik akun `calon.karyawan@dutamedia.com` — Fajar Ramadhan).
-     2. Pastikan kolom Token Aktivasi otomatis terisi. Isi **Kata Sandi Baru:** `Password123!` dan **Konfirmasi Kata Sandi:** `Password123!`, lalu klik **`Aktifkan Akun Saya`**.
-     3. Setelah muncul kartu sukses, buka kembali `/activate?token=wp_seed_invite_token_72h_demo_secret`, isi kembali kata sandi `Password123!`, dan klik **`Aktifkan Akun Saya`** untuk kedua kalinya.
+     1. Buka alamat `/activate?token=wp_seed_invite_token_72h_demo_secret` *(memerlukan akun contoh berstatus `INVITED`, misal `calon.karyawan@dutamedia.com` — Fajar Ramadhan, jika belum terpakai)*. Periksa **Kartu Pratinjau Akun** di atas formulir.
+     2. Isi **Kata Sandi Baru:** `Password123!` dan **Konfirmasi Kata Sandi:** `Password123!`, klik **`Aktifkan Akun Saya`**, lalu klik **`Lanjut ke Halaman Masuk`**.
+     3. Buka kembali `/activate?token=wp_seed_invite_token_72h_demo_secret`.
    - **Hasil yang Diharapkan:**
-     1. Pada klik pertama: formulir berubah menjadi **Kartu Sukses Aktivasi** dengan kalimat persis: **`"Akun Anda berhasil diaktifkan dengan aman. Silakan masuk menggunakan kata sandi yang baru dibuat."`** beserta tombol menuju halaman `/login`.
-     2. Pada percobaan kedua dengan token yang sama: sistem menolak dengan kotak peringatan merah: **`"Tautan aktivasi ini telah digunakan sebelumnya. Silakan login langsung."`**
+     1. Saat token berstatus `PENDING` aktif: tampil **Kartu Pratinjau Akun** berisi inisial **`FR`**, nama **`Fajar Ramadhan`**, detail **`calon.karyawan@dutamedia.com · Engineering`**, dan lencana **`UNDANGAN AKTIF`**.
+     2. Setelah aktivasi berhasil: muncul **Kartu Sukses Aktivasi** (`"Akun Anda berhasil diaktifkan dengan aman. Silakan masuk menggunakan kata sandi yang baru dibuat."`), dan saat klik **`Lanjut ke Halaman Masuk`**, halaman `/login` terbuka dengan **banner info hijau** **`"Aktivasi berhasil! Silakan masuk dengan kata sandi baru Anda."`** beserta email otomatis terisi.
+     3. Pada kunjungan ulang token yang sudah dipakai (`USED`): langsung tampil **kotak peringatan kuning `Undangan Tidak Berlaku`** bertuliskan **`"Tautan aktivasi ini telah digunakan sebelumnya. Silakan login langsung."`**.
 
 ---
 
@@ -432,8 +441,8 @@ flowchart TD
 
 | ID Kondisi | Halaman & Rute | Acuan Prototype | Ringkasan Kondisi yang Diaudit | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) |
 |---|---|---|---|:---:|:---:|:---:|:---:|
-| `ST-AUTH-01..09` | **1. Login** (`/login`) | `01-Login-Activation.html` | Tampilan awal 2 panel, validasi kosong/format email, tombol ikon mata sandi, error `401` sandi salah, error akun `INVITED`, error akun `INACTIVE`, kunci hitung mundur `429`, login sukses, & pengalihan balik bila sudah login. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-ACTV-01..06` | **2. Aktivasi Akun** (`/activate`) | `01-Login-Activation.html` | Auto-isi `?token=`, garis indikator kekuatan sandi, error token salah / bekas pakai (`USED`) / dicabut (`REVOKED`) / kedaluwarsa (`EXPIRED`), & kartu sukses aktivasi. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-AUTH-01..09` | **1. Login** (`/login`) | `01-Login-Activation.html` | Tampilan awal 2 panel + **header logo HP/tablet (`<= 900px`)**, validasi kosong/format email, tombol ikon mata sandi, **fungsi centang `Ingat email di perangkat ini` (`localStorage`)**, error `401` sandi salah, error akun `INVITED`, error akun `INACTIVE`, **banner kuning kunci hitung mundur `Batas Percobaan Terlampaui` (`429`)**, **banner info hijau + email otomatis pasca-aktivasi (`?activated=1&email=...`)**, login sukses, & pengalihan balik bila sudah login. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-ACTV-01..07` | **2. Aktivasi Akun** (`/activate`) | `01-Login-Activation.html` | Auto-isi `?token=` + **header logo HP/tablet (`<= 900px`)**, **Kartu Pratinjau Akun undangan (`FR · Fajar Ramadhan · UNDANGAN AKTIF`)**, **kotak daftar periksa 3 syarat sandi (minimal 8 karakter, kombinasi huruf & angka, konfirmasi cocok) + auto-clear error saat mengetik ulang + tombol ikon mata kolom konfirmasi**, garis indikator kekuatan sandi, **banner kuning `Undangan Tidak Berlaku` (`NOT_FOUND`/`USED`/`REVOKED`/`EXPIRED`)**, & kartu sukses aktivasi menuju `/login`. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-PROF-01..04` | **3. Profil Pribadi** (`/profile`) | `24-Profile-Settings.html` | 3 kartu profil (`[Aktif v1.1]` Status Karyawan & lencana `Intern` + Panel 3 bebas rumus kurung siku), 3 indikator centang hijau sandi baru, 5 pesan error merah validasi sandi, & banner hijau sukses. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-ERR-01..02` | **4. Error 403 & 404** (`/forbidden`, `/*`) | Standar Design System | Layar `403 — Akses Dibatasi` (menampilkan nama peran & alamat yang diblokir + tombol kembali ke beranda peran `IMP-023`) & layar `404 — Halaman Tidak Ditemukan`. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-DLYM-01..11` | **5. Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | `ON-TIME` vs `Terlambat (LATE)` vs `LOCKED` (>09:30) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, format `HH:mm WIB`, panel **`Draf Tugas Berlanjut dari Kemarin`** (`Carry-Over #2+ Disarankan AMBER`, centang multi-item `Gunakan Item Terpilih ke Slot Hari Ini`, `Salin ke Slot`, auto-isi kendala dari `Catatan EOD Kemarin`), banner **`Prioritas Kemarin Sore`** (tampil baik saat terbuka maupun sesudah terkunci), fitur **`Simpan Draf` lokal tahan `F5` + `Reset Draf`**, tata letak footer **1 baris** (`Pastikan seluruh komitmen...` sejajar `Simpan Draf` & `Kirim`), risiko `AMBER/RED`, `Pilih Blocker Aktif`, opsi `0 Komitmen` (`DEC-004`), batas 3 slot, & pengaman 2 tab (`DEF-001`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
