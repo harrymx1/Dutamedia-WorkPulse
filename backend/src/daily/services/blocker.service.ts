@@ -756,7 +756,7 @@ export class BlockerService {
       });
     }
 
-    // Target respons SLA ditentukan oleh tingkat keparahan (satu sumber kebijakan)
+    // Target batas waktu respons kendala ditentukan oleh tingkat keparahan (satu sumber kebijakan)
     const slaMinutesMap = await this.getSlaMinutesMap();
     const slaMinutes = slaMinutesMap[dto.severity as keyof typeof slaMinutesMap];
     const slaLabel = slaMinutes % 60 === 0 ? `${slaMinutes / 60} jam` : `${slaMinutes} menit`;
@@ -1131,7 +1131,7 @@ export class BlockerService {
   }
 
   /**
-   * Peta target respons SLA (menit) per tingkat keparahan dari kebijakan aktif.
+   * Peta target batas waktu respons kendala (menit) per tingkat keparahan dari kebijakan aktif.
    */
   async getSlaMinutesMap(): Promise<Record<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW', number>> {
     const fallback = (CANONICAL_POLICY_FALLBACKS[PolicyCategory.BLOCKER_SLA] as BlockerSlaConfig).severityMinutes!;

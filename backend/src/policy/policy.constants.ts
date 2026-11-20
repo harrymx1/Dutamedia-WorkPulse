@@ -36,7 +36,7 @@ export interface CorrectionWindowConfig {
 export interface NotificationReminderConfig {
   morningReminderMinutesBefore: number; // 60 menit
   eodReminderMinutesBefore: number;     // 60 menit
-  slaWarningPercent: number;            // 75% durasi SLA
+  slaWarningPercent: number;            // 75% durasi target penanganan kendala
 }
 
 export const CANONICAL_POLICY_FALLBACKS: Record<PolicyCategory, any> = {

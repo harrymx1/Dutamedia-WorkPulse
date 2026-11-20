@@ -100,27 +100,27 @@ const ownerForm = ref({
 const policyCategoryOptions = [
   {
     value: 'CHECKIN_TIMING',
-    label: 'Jam Kerja & Waktu Komitmen (Check-in Timing)',
+    label: 'Jam Kerja & Waktu Komitmen',
     description: 'Jadwal morning check-in, batas on-time 09:00 WIB, dan penguncian formulir cut-off 09:30 WIB.',
   },
   {
     value: 'BLOCKER_SLA',
-    label: 'Target Waktu Respon & Penanganan Kendala (Blocker SLA)',
+    label: 'Target Waktu Respon & Penanganan Kendala',
     description: 'Target respon jenjang pertama, batas penanganan eskalasi, dan rute eskalasi kritis pimpinan.',
   },
   {
     value: 'COMPLIANCE_THRESHOLD',
-    label: 'Ambang Batas Kepatuhan & Disiplin Kerja (Compliance Threshold)',
+    label: 'Ambang Batas Kepatuhan & Disiplin Kerja',
     description: 'Batas tugas berlanjut (carry-over), ambang eskalasi pola ketidakpatuhan, dan pembinaan HRGA.',
   },
   {
     value: 'CORRECTION_WINDOW',
-    label: 'Jendela Waktu Koreksi Mandiri (Correction Window)',
+    label: 'Jendela Waktu Koreksi Mandiri',
     description: 'Batas waktu pengajuan sanggahan/koreksi komitmen pagi (24 jam) dan evaluasi sore EOD (48 jam).',
   },
   {
     value: 'NOTIFICATION_REMINDER_THRESHOLD',
-    label: 'Ambang Batas Pengingat & Notifikasi (Notification Reminder)',
+    label: 'Ambang Batas Pengingat & Notifikasi',
     description: 'Jadwal pengingat otomatis 60 menit sebelum batas waktu komitmen pagi dan evaluasi sore.',
   },
 ];
@@ -1439,7 +1439,7 @@ onUnmounted(() => {
               <input id="input-eod-reminder" v-model="formEodReminderMinutes" type="number" min="5" max="180" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-sla-warning">Ambang Peringatan SLA (%) *</label>
+              <label for="input-sla-warning">Ambang Peringatan Batas Waktu Kendala (%) *</label>
               <input id="input-sla-warning" v-model="formSlaWarningPercent" type="number" min="10" max="99" class="input-control" required />
             </div>
           </div>

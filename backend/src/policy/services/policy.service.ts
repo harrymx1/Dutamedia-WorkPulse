@@ -974,15 +974,15 @@ export class PolicyService {
   private formatPolicyCategoryLabel(category: PolicyCategory): string {
     switch (category) {
       case PolicyCategory.CHECKIN_TIMING:
-        return 'Jam Kerja & Waktu Komitmen (Check-in Timing)';
+        return 'Jam Kerja & Waktu Komitmen';
       case PolicyCategory.BLOCKER_SLA:
-        return 'Target Waktu Respon & Penanganan Kendala (Blocker SLA)';
+        return 'Target Waktu Respon & Penanganan Kendala';
       case PolicyCategory.COMPLIANCE_THRESHOLD:
-        return 'Ambang Batas Kepatuhan & Disiplin Kerja (Compliance Threshold)';
+        return 'Ambang Batas Kepatuhan & Disiplin Kerja';
       case PolicyCategory.CORRECTION_WINDOW:
-        return 'Jendela Waktu Koreksi Mandiri (Correction Window)';
+        return 'Jendela Waktu Koreksi Mandiri';
       case PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD:
-        return 'Ambang Batas Pengingat & Notifikasi (Notification Reminder)';
+        return 'Ambang Batas Pengingat & Notifikasi';
       default:
         return String(category);
     }

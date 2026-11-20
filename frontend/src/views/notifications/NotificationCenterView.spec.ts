@@ -401,7 +401,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
               title: 'Penugasan Baru sebagai Pemilik Kebijakan',
               message: [
                 'Anda kini ditetapkan sebagai Pemilik Kebijakan menggantikan pejabat sebelumnya.',
-                'Kategori Kebijakan: Target Waktu Respon & Penanganan Kendala (Blocker SLA)',
+                'Kategori Kebijakan: Target Waktu Respon & Penanganan Kendala',
                 'Pejabat Sebelumnya: Arif Budiman (Head of Engineering)',
                 'Status Wewenang Anda: Aktif (Dapat menerbitkan versi kebijakan baru pada kategori ini)',
                 'Mulai Berlaku: 13 November 2026',
@@ -429,7 +429,8 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     // Preview shows multiple lines separated by newlines
     const previewEl = wrapper.find('.item-desc');
     expect(previewEl.text()).toContain('Anda kini ditetapkan sebagai Pemilik Kebijakan menggantikan pejabat sebelumnya.');
-    expect(previewEl.text()).toContain('Kategori Kebijakan: Target Waktu Respon & Penanganan Kendala (Blocker SLA)');
+    expect(previewEl.text()).toContain('Kategori Kebijakan: Target Waktu Respon & Penanganan Kendala');
+    expect(previewEl.text()).not.toContain('SLA');
     expect(previewEl.text()).toContain('Pejabat Sebelumnya: Arif Budiman (Head of Engineering)');
 
     await wrapper.find('.notif-item').trigger('click');

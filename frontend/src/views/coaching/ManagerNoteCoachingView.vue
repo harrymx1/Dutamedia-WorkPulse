@@ -120,7 +120,7 @@ function applyTemplate(templateType: 'coaching' | 'recognition' | 'corrective') 
     formNoteType.value = 'RECOGNITION';
     formVisibility.value = 'SHARED_WITH_EMPLOYEE';
     formContent.value =
-`[Apresiasi Prestasi]: Penanganan cepat blocker kritis production (SLA < 45 menit).
+`[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit).
 [Dampak Positif]: Klien tidak mengalami gangguan transaksi pembayaran.
 [Umpan Balik]: Inisiatif kolaborasi lintas tim berjalan sangat baik. Terima kasih atas dedikasinya!`;
   } else {

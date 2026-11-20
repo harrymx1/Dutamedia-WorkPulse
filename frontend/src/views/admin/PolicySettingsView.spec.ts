@@ -122,8 +122,10 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(wrapper.text()).toContain('Penugasan Pemilik Kebijakan (Policy Owners)');
-    expect(wrapper.text()).toContain('Jam Kerja & Waktu Komitmen (Check-in Timing)');
-    expect(wrapper.text()).toContain('Target Waktu Respon & Penanganan Kendala (Blocker SLA)');
+    expect(wrapper.text()).toContain('Jam Kerja & Waktu Komitmen');
+    expect(wrapper.text()).toContain('Target Waktu Respon & Penanganan Kendala');
+    expect(wrapper.text()).not.toContain('SLA');
+    expect(wrapper.text()).not.toContain('(Check-in Timing)');
 
     const ownerBtn = wrapper.findAll('button').find(b => b.text().includes('Tetapkan Pemilik'));
     expect(ownerBtn).toBeDefined();
@@ -218,7 +220,8 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.text()).toContain('Ambang Batas Pengingat & Notifikasi (Notification Reminder)');
+    expect(wrapper.text()).toContain('Ambang Batas Pengingat & Notifikasi');
+    expect(wrapper.text()).not.toContain('(Notification Reminder)');
 
     const editButtons = wrapper.findAll('.btn-edit-owner');
     expect(editButtons.length).toBe(1);

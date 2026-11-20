@@ -529,7 +529,8 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       const arifAssignNotif = assignNotifs.find((n: any) => n.recipientUserId === 'usr-arif');
       const hrgaAssignNotif = assignNotifs.find((n: any) => n.recipientUserId === 'usr-hrga');
       expect(arifAssignNotif.message).toContain('Anda telah ditetapkan sebagai Pemilik Kebijakan');
-      expect(arifAssignNotif.message).toContain('\nKategori Kebijakan:');
+      expect(arifAssignNotif.message).toContain('\nKategori Kebijakan: Target Waktu Respon & Penanganan Kendala');
+      expect(arifAssignNotif.message).not.toContain('SLA');
       expect(hrgaAssignNotif.message).toContain('Pemilik Kebijakan Baru: Arif Budiman (Head of Engineering)');
 
       // 2. UPDATE Arif -> Dharma on BLOCKER_SLA

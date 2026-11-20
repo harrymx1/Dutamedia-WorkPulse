@@ -152,4 +152,21 @@ describe('ManagerNoteCoachingView.vue (WP-EP07 / Prototipe 10 - Catatan Evaluasi
 
     expect(wrapper.find('textarea').element.value).toContain('[Fokus Pengembangan]');
   });
+
+  it('applies recognition quick template in clean Indonesian without SLA or production jargon', async () => {
+    const wrapper = mount(ManagerNoteCoachingView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    const recognitionBtn = wrapper.findAll('.btn-template').find(b => b.text().includes('Apresiasi'));
+    expect(recognitionBtn).toBeDefined();
+    await recognitionBtn!.trigger('click');
+
+    const val = wrapper.find('textarea').element.value;
+    expect(val).toContain('[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit).');
+    expect(val).not.toContain('SLA');
+    expect(val).not.toContain('production');
+  });
 });
