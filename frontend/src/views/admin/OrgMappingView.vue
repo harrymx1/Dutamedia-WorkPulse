@@ -963,11 +963,15 @@ function showToast(msg: string, isError = false) {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
   z-index: 1000;
 }
 
 .modal-box {
   width: min(100%, 540px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: 28px;

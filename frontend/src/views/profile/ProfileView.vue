@@ -631,7 +631,7 @@ async function handleLogout() {
                 <span class="pill blue tabular-nums">60 Menit Sebelum Deadline</span>
               </div>
               <div class="device-channel-desc tabular-nums">
-                Pengingat Morning Commitment (<span class="mono-id">08:00 WIB</span>) dan EOD Update (<span class="mono-id">16:00 WIB</span>) dikirim tepat <strong>60 menit sebelum On-Time Deadline</strong> (<span class="mono-id">[Deadline - 60m, Deadline)</span>) dan berhenti tepat saat On-Time Deadline.
+                Pengingat Morning Commitment (<span class="mono-id">08:00 WIB</span>) dan EOD Update (<span class="mono-id">16:00 WIB</span>) dikirim tepat <strong>60 menit sebelum batas waktu tepat waktu</strong> dan berhenti tepat saat batas waktu tiba.
               </div>
             </div>
 

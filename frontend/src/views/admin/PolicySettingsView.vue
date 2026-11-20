@@ -1358,19 +1358,19 @@ onUnmounted(() => {
           <!-- Dynamic inputs based on category -->
           <div v-if="formCategory === 'CHECKIN_TIMING'" class="form-row">
             <div class="form-group">
-              <label for="input-morning-ontime">Morning On-Time Deadline *</label>
+              <label for="input-morning-ontime">Batas Tepat Waktu Pagi *</label>
               <input id="input-morning-ontime" v-model="formMorningOntime" type="time" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-morning-cutoff">Morning Cut-Off (Locking) *</label>
+              <label for="input-morning-cutoff">Batas Kunci Pengisian Pagi (Cut-Off) *</label>
               <input id="input-morning-cutoff" v-model="formMorningCutoff" type="time" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-eod-ontime">EOD On-Time Deadline *</label>
+              <label for="input-eod-ontime">Batas Tepat Waktu Sore (EOD) *</label>
               <input id="input-eod-ontime" v-model="formEodOntime" type="time" class="input-control" required />
             </div>
             <div class="form-group">
-              <label for="input-eod-cutoff">EOD Cut-Off (Locking) *</label>
+              <label for="input-eod-cutoff">Batas Kunci Pengisian Sore (Cut-Off) *</label>
               <input id="input-eod-cutoff" v-model="formEodCutoff" type="time" class="input-control" required />
             </div>
           </div>
@@ -1425,7 +1425,7 @@ onUnmounted(() => {
 
           <div class="form-row">
             <div class="form-group">
-              <label for="input-effective-date">Tanggal Mulai Berlaku (Effective Date) *</label>
+              <label for="input-effective-date">Tanggal Mulai Berlaku *</label>
               <input
                 id="input-effective-date"
                 v-model="formEffectiveDate"
@@ -1450,7 +1450,7 @@ onUnmounted(() => {
           </div>
 
           <div class="form-group">
-            <label for="input-reason">Alasan Perubahan Kebijakan (Change Justification) *</label>
+            <label for="input-reason">Alasan Perubahan Kebijakan *</label>
             <textarea
               id="input-reason"
               v-model="formJustification"

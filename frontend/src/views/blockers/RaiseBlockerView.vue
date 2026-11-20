@@ -353,6 +353,7 @@ const otherOwners = computed(() => {
       (u) =>
         u.id !== currentUserId &&
         u.role !== 'SYSTEM_ADMIN' &&
+        !isInternStatus(u.employmentStatus) &&
         !u.email.includes('admin@') &&
         !u.email.includes('calon.karyawan@') &&
         !shown.has(u.id)

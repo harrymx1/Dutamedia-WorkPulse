@@ -1047,4 +1047,44 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     vi.unstubAllGlobals();
   });
+
+  it('excludes INTERN users from #assignedOwner dropdown including "── Lainnya ──" group (B3)', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.includes('/v1/organization/users')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              { id: 'usr-mgr', fullName: 'Arif Budiman', email: 'head.eng@dutamedia.com', role: 'HEAD', employmentStatus: 'PERMANENT' },
+              { id: 'usr-peer', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com', role: 'HRGA', employmentStatus: 'PERMANENT' },
+              { id: 'usr-intern-1', fullName: 'Raka Pratama', email: 'intern.frontend@dutamedia.com', role: 'EMPLOYEE', employmentStatus: 'INTERN' },
+              { id: 'usr-intern-2', fullName: 'Nisa Amelia', email: 'intern.finance@dutamedia.com', role: 'EMPLOYEE', employmentStatus: 'INTERN' },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    const ownerSelectText = wrapper.find('#assignedOwner').text();
+    expect(ownerSelectText).toContain('Arif Budiman');
+    expect(ownerSelectText).toContain('Dewi Lestari');
+    expect(ownerSelectText).not.toContain('Raka Pratama');
+    expect(ownerSelectText).not.toContain('Nisa Amelia');
+
+    vi.unstubAllGlobals();
+  });
 });

@@ -201,5 +201,18 @@ describe('MyLeaveRequestView.vue (Prototipe 20 / EP10 - Pengajuan Cuti Mandiri)'
     expect(options).toContain('PERMIT');
     expect(options).toContain('SICK');
   });
+
+  it('calculates working days (Mon-Fri) excluding weekends for leave duration hint', async () => {
+    const wrapper = mount(MyLeaveRequestView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+
+    await wrapper.find('#startDate').setValue('2026-12-03');
+    await wrapper.find('#endDate').setValue('2026-12-22');
+
+    const hint = wrapper.find('.duration-hint');
+    expect(hint.exists()).toBe(true);
+    expect(hint.text()).toContain('14 hari kerja');
+  });
 });
 

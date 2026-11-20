@@ -64,7 +64,7 @@ const isInternAccount = computed(() => {
 const leaveTypeOptions = computed(() => {
   if (isInternAccount.value) {
     return [
-      { value: 'PERMIT', label: 'Izin (Keperluan Mendesak / Kampus / Alasan Logis)' },
+      { value: 'PERMIT', label: 'Izin (Keperluan Mendesak / Alasan Logis)' },
       { value: 'SICK', label: 'Sakit' },
     ];
   }
@@ -173,19 +173,30 @@ function calculateDuration(start: string, end: string): number {
   if (!start || !end) return 0;
   const d1 = new Date(start);
   const d2 = new Date(end);
-  const diffTime = d2.getTime() - d1.getTime();
-  if (diffTime < 0) return 0;
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  if (Number.isNaN(d1.getTime()) || Number.isNaN(d2.getTime())) return 0;
+  const s = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate()));
+  const e = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate()));
+  if (e < s) return 0;
+  let count = 0;
+  const cursor = new Date(s);
+  while (cursor <= e) {
+    const day = cursor.getUTCDay();
+    if (day !== 0 && day !== 6) {
+      count += 1;
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return Math.max(1, count);
 }
 
 async function handleSubmit() {
   formError.value = '';
   if (!startDate.value) {
-    formError.value = 'Pilih tanggal mulai cuti.';
+    formError.value = isInternAccount.value ? 'Pilih tanggal mulai izin.' : 'Pilih tanggal mulai cuti.';
     return;
   }
   if (!endDate.value) {
-    formError.value = 'Pilih tanggal selesai cuti.';
+    formError.value = isInternAccount.value ? 'Pilih tanggal selesai izin.' : 'Pilih tanggal selesai cuti.';
     return;
   }
   if (new Date(endDate.value) < new Date(startDate.value)) {
@@ -193,7 +204,9 @@ async function handleSubmit() {
     return;
   }
   if (reason.value.trim().length < 5) {
-    formError.value = 'Alasan permohonan cuti minimal 5 karakter.';
+    formError.value = isInternAccount.value
+      ? 'Alasan permohonan izin minimal 5 karakter.'
+      : 'Alasan permohonan cuti minimal 5 karakter.';
     return;
   }
 
@@ -208,7 +221,7 @@ async function handleSubmit() {
         reason: reason.value.trim(),
       }),
     });
-    showToast('Permohonan cuti berhasil diajukan.');
+    showToast(isInternAccount.value ? 'Permohonan izin berhasil diajukan.' : 'Permohonan cuti berhasil diajukan.');
     startDate.value = '';
     endDate.value = '';
     reason.value = '';
@@ -371,7 +384,7 @@ onMounted(() => {
                   />
                 </div>
                 <div v-if="startDate && endDate" class="duration-hint">
-                  Durasi cuti: <strong>{{ calculateDuration(startDate, endDate) }} hari kerja</strong>
+                  {{ isInternAccount ? 'Durasi izin:' : 'Durasi cuti:' }} <strong>{{ calculateDuration(startDate, endDate) }} hari kerja</strong>
                 </div>
               </div>
 
@@ -384,7 +397,7 @@ onMounted(() => {
                   rows="3"
                   maxlength="1000"
                   required
-                  placeholder="Tuliskan alasan pengajuan cuti secara singkat dan jelas (minimal 5 karakter)."
+                  :placeholder="isInternAccount ? 'Tuliskan alasan pengajuan izin/sakit secara singkat dan jelas (minimal 5 karakter).' : 'Tuliskan alasan pengajuan cuti secara singkat dan jelas (minimal 5 karakter).'"
                 ></textarea>
               </div>
 

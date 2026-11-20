@@ -131,9 +131,20 @@ function calculateDuration(start: string, end: string): number {
   if (!start || !end) return 0;
   const d1 = new Date(start);
   const d2 = new Date(end);
-  const diffTime = d2.getTime() - d1.getTime();
-  if (diffTime < 0) return 0;
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  if (Number.isNaN(d1.getTime()) || Number.isNaN(d2.getTime())) return 0;
+  const s = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate()));
+  const e = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate()));
+  if (e < s) return 0;
+  let count = 0;
+  const cursor = new Date(s);
+  while (cursor <= e) {
+    const day = cursor.getUTCDay();
+    if (day !== 0 && day !== 6) {
+      count += 1;
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return Math.max(1, count);
 }
 
 function formatDateRange(startStr: string, endStr: string) {
@@ -171,7 +182,11 @@ async function submitReview() {
         reviewNote: reviewNotes.value.trim() || undefined,
       }),
     });
-    showToast(`Permohonan cuti berhasil ${reviewDecision.value === 'APPROVED' ? 'disetujui' : 'ditolak'}.`);
+    const isPermitOrIntern =
+      selectedRequest.value.leaveType === 'PERMIT' ||
+      isInternStatus(selectedRequest.value.user?.employmentStatus);
+    const labelStr = isPermitOrIntern ? 'Permohonan izin' : 'Permohonan cuti';
+    showToast(`${labelStr} berhasil ${reviewDecision.value === 'APPROVED' ? 'disetujui' : 'ditolak'}.`);
     closeReviewModal();
     await loadQueue();
   } catch (err: any) {
@@ -410,7 +425,7 @@ onMounted(() => {
                 </div>
 
                 <div class="detail-item detail-item-full">
-                  <span class="detail-label">Alasan Cuti</span>
+                  <span class="detail-label">{{ selectedRequest.leaveType === 'PERMIT' || isInternStatus(selectedRequest.user?.employmentStatus) ? 'Alasan Izin / Pengajuan' : 'Alasan Cuti' }}</span>
                   <p class="detail-reason">{{ formatReason(selectedRequest.reason) }}</p>
                 </div>
               </div>

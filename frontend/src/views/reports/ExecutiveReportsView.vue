@@ -322,6 +322,11 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
+              <tr v-if="report.departmentBreakdown.length === 0">
+                <td colspan="9" class="text-center" style="padding: 28px 16px; color: var(--color-text-secondary, #5C6E68);">
+                  Belum ada data karyawan untuk status karyawan yang dipilih.
+                </td>
+              </tr>
               <tr v-for="dept in report.departmentBreakdown" :key="dept.department">
                 <td>
                   <strong>{{ dept.department }}</strong>
