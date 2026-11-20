@@ -2,9 +2,11 @@
 
 > **Sistem:** WorkPulse — Sistem Pencatatan Komitmen Harian & Penanganan Kendala Kerja  
 > **Organisasi:** PT Dutamedia Mandiri Pratama (Malang — WIB / UTC+7)  
-> **Versi Dokumen:** `v1.1 — Edisi Sistem Live Pasca-UAT` (Seluruh **4 Paket Pasca-UAT + Perbaikan Uji Chrome `commit 56cbead`** sudah aktif 100% di `https://dutamedia-workpulse.vercel.app`)  
+> **Versi Dokumen:** `v1.2 — Edisi Sistem Live Pasca-UAT & Penyelarasan Audit Prototype` (Seluruh **4 Paket Pasca-UAT + Perbaikan Uji Chrome `commit 56cbead` + Pembaruan Morning Commitment `commit dabb266` & `69bb068`** sudah aktif 100% di `https://dutamedia-workpulse.vercel.app`)  
 > **Pemilik Proyek:** Harry  
-> **Dokumen Pendamping Wajib untuk Auditor:** Baca juga [Daftar-Perubahan-Pasca-UAT-4-Paket.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Pasca-UAT-4-Paket.md) untuk melihat rincian **Dulu di Prototype/Baseline vs Sekarang di Situs Live**, agar perbedaan yang memang disengaja tidak membingungkan saat audit prototype & layar responsif.  
+> **Dokumen Pendamping Wajib untuk Auditor:**
+> - [Daftar-Perubahan-Pasca-UAT-4-Paket.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Pasca-UAT-4-Paket.md) — Rincian perbedaan resmi **4 Paket Pasca-UAT** (*Dulu vs Sekarang di Live*) agar tidak dianggap kesalahan.
+> - [Daftar-Perubahan-Audit-Prototype-vs-Live.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Audit-Prototype-vs-Live.md) — Peta status audit **26 File Prototype HTML** dan catatan perbaikan hasil perbandingan sistem vs prototype (`Audit #1: Morning Commitment` selesai).  
 > *(Catatan Lokasi File Prototype HTML: Seluruh 26 file HTML yang diacu singkat `UI-UX-Design/...html` di bawah ini berada lengkap di folder `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/`).*
 > **4 Fungsi Utama Dokumen Ini:**
 > 1. **Panduan Skenario Prosedural Mandiri dari A sampai Z:** Memandu siapa saja (penguji, teman auditor, maupun pengguna baru) untuk mencoba **seluruh kemampuan, halaman, jendela pop-up, dan aturan sistem** secara berurutan tanpa merusak/mengunci data lebih dulu, lengkap dengan **Aksi Klik/Ketik Siap Salin (*Copy-Paste*)** dan ***Hasil yang Diharapkan*** di setiap langkah.
@@ -29,12 +31,12 @@ Seluruh langkah di dokumen ini menggunakan **25 akun resmi** yang sudah disiapka
 | 4 | **Sugito Erik Fajar** | `ga@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | HRGA — General Affairs (GA) Officer | Dewi Lestari | Staf HRGA yang ditunjuk resmi sebagai **Penanggung Jawab Kategori `OFFICE_FACILITY` (Fasilitas & Sarana Kantor)** → otomatis bisa membuka menu `Antrean Blocker` (`/blockers`) & `Penuaan & Eskalasi` (`/blockers/aging`). |
 | 5 | **Arif Budiman** | `head.eng@dutamedia.com` | `HEAD` (`ACTIVE`) | Engineering — Head of Engineering | Hendra Wijaya | Kepala Divisi Engineering (memantau tab `Divisi Saya`), Sponsor Proyek `WP-CORE`, menyetujui cuti & koreksi tim Engineering, membuat `Catatan Coaching` untuk bawahan langsungnya. |
 | 6 | **Bambang Pratama** | `lead.tech@dutamedia.com` | `SUPERVISOR` (`ACTIVE`) | Engineering — Technical Lead 1 | Arif Budiman | Pimpinan Proyek **`WP-CORE`** & **`PRJ-CORE`**, serta **Penanggung Jawab Kategori `TECHNICAL` (Teknis & Kode Program)**. Memantau tab `Tim (Proyek)` di dasbor. |
-| 7 | **Aditya Nugroho** | `dev.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Engineering — Frontend Developer | Arif Budiman | Staf operasional murni (`Karyawan Tetap`) — tidak punya bawahan dan bukan penanggung jawab kategori → menu `Management` dan `Administration` tertutup & diblokir `403`. |
+| 7 | **Aditya Nugroho** | `dev.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Engineering — Frontend Developer | Arif Budiman | Staf operasional murni (`Karyawan Tetap`) — tidak punya bawahan dan bukan penanggung jawab kategori → menu `Management` dan `Administration` tertutup & diblokir `403`. Di `seed.ts` sudah ditanam **data H-1 selesai + `Prioritas Kemarin Sore`** agar kotak referensi prioritas kemarin tetap tampil saat komitmen hari ini sudah terkunci (`SUBMITTED`). |
 | 8 | **Siti Rahma** | `dev.backend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Engineering — Backend Developer | Arif Budiman | Staf operasional Engineering (memiliki data contoh pola tidak melapor 3x berturut-turut di `/compliance`). |
 | 9 | **Fajar Ramadhan** | `calon.karyawan@dutamedia.com` | `EMPLOYEE` (`INVITED`) | Engineering — Junior Developer | Arif Budiman | Akun karyawan baru yang **belum aktif** (untuk menguji penolakan login `INVITED` dan aktivasi akun dengan token 72 jam `wp_seed_invite_token_72h_demo_secret`). |
 | 10 | **Dharma Putra** | `head.delivery@dutamedia.com` | `HEAD` (`ACTIVE`) | Delivery — Head of Delivery | Hendra Wijaya | Kepala Divisi Delivery, menyetujui cuti/koreksi & coaching Divisi Delivery. |
 | 11 | **Dimas Prakoso** | `pm@dutamedia.com` | `PROJECT_MANAGER` (`ACTIVE`) | Delivery — Project Manager | Dharma Putra | Manajer Proyek (`PRJ-PORTAL`, `PRJ-MOBILE`), memantau `/dashboard` & `/projects/risk` proyeknya; pada jalur Proyek menangani kendala proyek kategori `REQUIREMENT` / `CLIENT`. |
-| 12 | **Dio Bayu Bagaskara** | `product@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Delivery — Product Manager | Dharma Putra | Staf Product Manager di bawah Head Delivery (cocok dipakai untuk menguji kondisi belum isi komitmen pagi). |
+| 12 | **Dio Bayu Bagaskara** | `product@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Delivery — Product Manager | Dharma Putra | Staf Product Manager di bawah Head Delivery (formulir komitmen pagi hari ini **terbuka / belum disubmit**). Di `seed.ts` sudah ditanam rantai **`H-2 → H-1` lengkap** sehingga langsung menampilkan kotak **`Prioritas Kemarin Sore`** dan panel **`Draf Tugas Berlanjut dari Kemarin (2 Tersedia: Carry-Over #2 AMBER & Carry-Over #1 GREEN)`**. |
 | 13 | **Nadia Kusuma** | `qa@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Quality — Software QA Specialist | Dharma Putra | Staf QA (cocok dipakai untuk menguji pengiriman `0 Komitmen` dan simulasi penonaktifan akun `INACTIVE`). |
 | 14 | **Gunawan Setiawan** | `head.ops@dutamedia.com` | `HEAD` (`ACTIVE`) | Operations & Infrastructure — Head of Ops & Infra | Hendra Wijaya | Kepala Divisi Operations & Infrastructure, tujuan pengarahan kendala lintas divisi (`CROSS_TEAM`) ke Ops & Infra, serta atasan langsung Fakhrizal/Achmad/Rahian. |
 | 15 | **Rian Kurniawan** | `lead.creative@dutamedia.com` | `SUPERVISOR` (`ACTIVE`) | Operations & Infrastructure — Ops Supervisor | Gunawan Setiawan | Supervisor Ops & Infra (dipakai untuk menguji pendelegasian **Reviewer Sementara** lintas divisi). |
@@ -46,7 +48,7 @@ Seluruh langkah di dokumen ini menggunakan **25 akun resmi** yang sudah disiapka
 | 21 | **Hari Wibowo** | `sales.bd@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Commercial — Business Development Executive | Lukman Hakim | Staf Sales & Business Development sekaligus **Penanggung Jawab Kategori `CLIENT`** (untuk kendala calon klien/penawaran jalur Struktural) → punya akses `/blockers` & `/blockers/aging`. |
 | 22 | **Ratna Sari** | `finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Finance — Senior Finance Staff | Hendra Wijaya | Penanggung jawab senior Divisi Finance (atasan langsung Oivi Deasepta & Nisa Amelia; memiliki menu `Coaching` bagi bawahannya). |
 | 23 | **Oivi Deasepta** | `staff.finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) | Finance — Finance & Invoicing Staff | Ratna Sari | Staf Finance berstatus **`Karyawan Tetap` (`PERMANENT`)** dan **Penanggung Jawab Kategori `FINANCE` (Keuangan & Pembayaran)** → punya akses `/blockers` & `/blockers/aging`. |
-| 24 | **Raka Pratama** | `intern.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) · **Status: `Intern`** | Engineering — Frontend Developer | Arif Budiman | **`[Aktif v1.1 — Paket #1]`** Akun **Karyawan Magang (`Intern`)** Divisi Engineering (masa magang 90 hari: `20 Nov 2026 s/d 18 Feb 2027`). Tidak punya kuota cuti tahunan (hanya Izin & Sakit) dan dikecualikan dari seluruh daftar atasan/PIC. |
+| 24 | **Raka Pratama** | `intern.frontend@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) · **Status: `Intern`** | Engineering — Frontend Developer | Arif Budiman | **`[Aktif v1.1 — Paket #1]`** Akun **Karyawan Magang (`Intern`)** Divisi Engineering (masa magang 90 hari: `20 Nov 2026 s/d 18 Feb 2027`). Tidak punya kuota cuti tahunan (hanya Izin & Sakit) dan dikecualikan dari seluruh daftar atasan/PIC. Formulir pagi hari ini terbuka lengkap dengan data **H-1 (`Prioritas Kemarin Sore` + `1 Tersedia Carry-Over #1`)**. |
 | 25 | **Nisa Amelia** | `intern.finance@dutamedia.com` | `EMPLOYEE` (`ACTIVE`) · **Status: `Intern`** | Finance — Finance Staff | Ratna Sari | **`[Aktif v1.1 — Paket #1]`** Akun **Karyawan Magang (`Intern`)** Divisi Finance (masa magang 90 hari: `20 Nov 2026 s/d 18 Feb 2027`). Dipakai menguji isolasi `Intern` dan pelaporan kerja magang lintas divisi. |
 
 ---
@@ -250,22 +252,23 @@ flowchart TD
     B -- "Ya (DEC-008)" --> B1["Halaman Pagi, Tugas Tambahan, & EOD Otomatis Terkunci + Banner Hijau Cuti Resmi (Bebas Catatan Mangkir)"]
     B -- "Tidak" --> C{"Apakah Komitmen Pagi Hari Ini Sudah Dikirim?"}
 
-    C -- "Sudah Dikirim" --> C1["Tampil Kartu Ringkasan Terkunci (Hanya Lihat) + Banner Hijau + Tombol Ajukan Koreksi Pagi"]
+    C -- "Sudah Dikirim" --> C1["Tampil Kartu Ringkasan Terkunci + Prioritas Kemarin Sore (Jika Ada) + Banner Hijau + Tombol Ajukan Koreksi Pagi"]
     C -- "Belum Dikirim" --> D{"Jam Server WIB vs Batas Pagi (Default 09:00 / 09:30 WIB)?"}
     D -- "Lewat 09:30 WIB" --> D1["Formulir Terkunci (LOCKED) + Banner Merah DEC-002 + Tombol Ajukan Koreksi Pagi"]
-    D -- "09:01 – 09:30 WIB" --> D2["Formulir Terbuka + Lencana & Banner Kuning: Terlambat (LATE)"]
-    D -- "Sebelum/Tepat 09:00 WIB" --> D3["Formulir Terbuka + Lencana Hijau: ON-TIME"]
+    D -- "09:01 – 09:30 WIB" --> D2["Formulir Terbuka + Lencana & Banner Kuning: Terlambat (LATE) (+ Pulihkan Draf Lokal Jika Ada)"]
+    D -- "Sebelum/Tepat 09:00 WIB" --> D3["Formulir Terbuka + Lencana Hijau: ON-TIME (+ Pulihkan Draf Lokal Jika Ada)"]
 
-    D2 & D3 --> E{"Cara Mengisi Komitmen Pagi"}
-    E -- "Salin dari Tugas Kemarin yang Berlanjut (DEC-011)" --> E1["Klik 'Terapkan ke Slot' pada Draf Carry-Over -> Masuk ke Slot Kosong & Tombol Draf Terkunci Jadi 'Sudah Tersalin'"]
+    D2 & D3 --> E{"Cara Mengisi Komitmen Pagi (+ Banner 'Prioritas Kemarin Sore')"}
+    E -- "Salin dari Tugas Kemarin (DEC-011 / Draf Carry-Over H-1)" --> E1["Buka 'Lihat Draf' -> Klik 'Salin ke Slot' per item ATAU centang banyak + 'Gunakan Item Terpilih ke Slot Hari Ini' (Carry-Over #2+ disarankan AMBER & otomatis isi Potensi Kendala dari Catatan EOD Kemarin)"]
     E -- "Isi 1 s/d 3 Tugas Rencana" --> E2{"Cek Syarat Tiap Slot: Teks ≥ 3 huruf & Jika Risiko AMBER/RED Wajib Isi Potensi Kendala"}
     E -- "Centang Opsi 0 Komitmen (DEC-004)" --> E3{"Cek Syarat: Alasan 0 Komitmen ≥ 10 Huruf?"}
+    E -- "Klik 'Simpan Draf' Sementara" --> E5["Simpan Draf ke Browser (localStorage per Akun & Tanggal) -> Tahan Refresh F5 + Tampil Jam Simpan & Tombol 'Reset Draf' (Sebaris Footer)"]
 
     E2 -- "Belum Memenuhi Syarat" --> E4["Ditolak + Pesan Melayang Merah"]
     E3 -- "Belum Memenuhi Syarat" --> E4
-    E2 & E3 -- "Memenuhi Syarat" --> F{"Klik Kirim (Pengaman Anti-Dobel 2 Tab DEF-001)"}
+    E2 & E3 -- "Memenuhi Syarat" --> F{"Klik 'Kirim Morning Commitment' (Pengaman Anti-Dobel 2 Tab DEF-001)"}
     F -- "Sudah Terkirim Duluan dari Tab Lain" --> F1["Ditolak Server (422) + Layar Otomatis Menyamakan ke Tampilan Kartu Ringkasan Terkunci"]
-    F -- "Berhasil" --> G["Tersimpan Permanen -> Berubah Menjadi Kartu Ringkasan Terkunci"]
+    F -- "Berhasil" --> G["Tersimpan Permanen + Hapus Draf Lokal Otomatis -> Kartu Ringkasan Terkunci"]
 
     G & C1 --> H["Buka Tahap 2: Tugas Tambahan (/daily/additional-work)"]
     H --> I{"Pemeriksaan Syarat & Batas Tugas Tambahan?"}
@@ -314,15 +317,25 @@ flowchart TD
      3. Saat dikirim tanpa mengisi Potensi Kendala: ditolak dengan pesan melayang merah persis: **`"Slot #1: Komitmen dengan risiko AMBER wajib menyertakan potensi kendala."`**
      4. Saat `Pilih Blocker Aktif` diklik: muncul daftar tiket kendala aktif untuk ditautkan ke komitmen pagi (atau keterangan `"Tidak ada tiket blocker aktif saat ini."`).
 
-3. **Langkah 2.1.3 — Uji Spanduk Pengingat `Prioritas Utama Hari Ini` & Fitur Salin Komitmen Kemarin (*Copy-Forward* `DEC-011` — `ST-DLYM-06`):**
-   - **Aksi:**
-     1. Periksa bagian atas halaman `/daily/morning`: jika pada Evaluasi Sore (EOD) hari kerja sebelumnya pengguna mengisi kolom **Prioritas Utama Besok**, amati spanduk pengingat yang muncul di atas formulir.
-     2. Jika di bagian atas formulir terdapat panel **Koleksi Draf Carry-Over dari Hari Kerja Sebelumnya** (tugas kemarin yang dievaluasi dengan status `Lanjutkan Besok / CONTINUE`):
-        - Periksa informasi pada kartu draf tersebut (lencana `Carry-Over #N` dan catatan alasan kelanjutan dari EOD kemarin).
-        - Klik tombol **`Terapkan ke Slot`** pada kartu draf tersebut.
+3. **Langkah 2.1.3 — Uji Spanduk `Prioritas Kemarin Sore` (`1a`), Draf Pekerjaan Berlanjut dari Kemarin (`1b`: *Copy-Forward* H-1 → H & `Carry-Over #2+ AMBER`), serta Fitur `Simpan Draf` Lokal & Footer 1 Baris (`1c`) — Akun Nyata Dio Bayu (`product@dutamedia.com`):**
+   - **Aksi:** *(Sangat disarankan menggunakan akun **Dio Bayu Bagaskara — `product@dutamedia.com`**, sandi `Password123!`, karena `seed.ts` sudah menanam data evaluasi sore H-2 & H-1 nyata pada akun ini tanpa menyentuh form komitmen hari ini).* Buka `/daily/morning` (pada layar desktop `1280px+` & pastikan belum mengirim komitmen hari ini):
+     1. **Cek `Prioritas Kemarin Sore`:** Amati kotak referensi di bagian atas panel daftar slot komitmen. *(Catatan: setelah nanti dikirim pun, pada akun seperti **Aditya Nugroho** `dev.frontend@dutamedia.com`, kotak `Prioritas Kemarin Sore` tetap tampil di atas Kartu Ringkasan Terkunci).*
+     2. **Buka Panel `Draf Tugas Berlanjut dari Kemarin`:** Klik **`Lihat Draf`** pada panel berjudul **`Draf Tugas Berlanjut dari Kemarin`** (`2 Tersedia`). Periksa isi kedua kartu draf (`Carry-Over #2` dan `Carry-Over #1`), lalu centang kedua kotak centang (*checkbox*) dan klik tombol **`Gunakan Item Terpilih ke Slot Hari Ini`** (atau uji tombol **`Salin ke Slot`** per item).
+     3. **Uji Tombol `Simpan Draf`, Tata Letak Footer 1 Baris, Refresh `F5`, & `Reset Draf`:**
+        - Periksa baris bagian paling bawah formulir (`.action-footer`). Pastikan tulisan **`Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off.`** di sebelah kiri berada **dalam satu baris horizontal yang sama** dengan tombol **`Simpan Draf`** dan **`Kirim Morning Commitment`** di sebelah kanan.
+        - Tambahkan catatan uji di Slot #2 (misal tambahkan kata ` — Revisi draf pagi`), lalu klik tombol **`Simpan Draf`**.
+        - Setelah muncul pemberitahuan simpan & lencana waktu simpan draf, tekan **`F5` (Refresh Halaman)**.
+        - Terakhir, klik tombol **`Reset Draf`** agar formulir akun Dio kembali bersih (jangan tekan `Kirim Morning Commitment` jika masih ingin memakai akun Dio untuk uji ulang terbuka).
    - **Hasil yang Diharapkan:**
-     1. Spanduk pengingat menampilkan kembali teks rencana prioritas yang ditulis pengguna pada sore kemarin sebagai acuan mengisi komitmen pagi.
-     2. Saat `Terapkan ke Slot` diklik: muncul pesan melayang hijau **`"Draf tugas carry-over #1 diterapkan ke slot #..."`**, teks tugas otomatis masuk ke slot kosong yang tersedia tanpa menimpa slot yang sudah terisi, dan tombol pada kartu draf berubah menjadi **`Sudah Tersalin`** (terkunci agar tidak disalin dua kali).
+     1. **`Prioritas Kemarin Sore`:** Tampil spanduk kuning bertuliskan **`"Prioritas Kemarin Sore: Selesaikan spesifikasi penagihan PRJ-PORTAL dan validasi kriteria UAT bersama QA sebelum pukul 14:00 WIB"`** dengan lencana **`Hanya Referensi`**.
+     2. **`Draf Tugas Berlanjut dari Kemarin`:**
+        - Menampilkan **2 item**: item #1 berlabel **`Carry-Over #2`** dan peringatan **`Carry-over 2+ hari berturut-turut — Disarankan AMBER`** (lengkap dengan `Sumber: Komitmen Pagi Kemarin`, `Keputusan EOD: Dilanjutkan`, `Proyek: PRJ-PORTAL`, & `Catatan EOD Kemarin`), serta item #2 berlabel **`Carry-Over #1`** (`PRJ-CORE`).
+        - Setelah klik **`Gunakan Item Terpilih ke Slot Hari Ini`**: muncul toast **`"2 draf tugas berlanjut diterapkan ke slot komitmen hari ini."`**, Slot #1 & Slot #2 terisi otomatis tanpa menimpa slot yang sudah diisi manual, **Slot #1 (`Carry-Over #2`) otomatis terpilih berisiko `AMBER` dan kotak `Uraian Resiko atau Potensi Kendala *` otomatis terisi dari `Catatan EOD Kemarin`**, dan tombol pada kedua item draf berubah menjadi **`Sudah Tersalin`** (kotak centang ikut nonaktif agar tidak tersalin ganda). Jika Slot #2 kemudian dihapus, tombol draf item tersebut kembali aktif.
+     3. **`Simpan Draf` & Footer 1 Baris:**
+        - Di layar komputer/laptop (`> 768px`), tulisan footer dan kedua tombol (`Simpan Draf` dan `Kirim Morning Commitment`) tampil sejajar pada **1 baris yang sama**.
+        - Klik **`Simpan Draf`** memunculkan pesan hijau **`"Draf Morning Commitment berhasil disimpan secara lokal."`**, lencana biru **`Draf tersimpan pukul HH:mm WIB`**, dan tautan tombol **`Reset Draf`**.
+        - Setelah menekan **`F5`**, seluruh slot hasil salinan, pilihan proyek/risiko `AMBER`, serta ketikan tambahan di Slot #2 tetap **utuh tidak hilang**, dan lencana jam simpan draf masih tampil.
+        - Setelah klik **`Reset Draf`**, muncul pesan **`"Draf lokal berhasil dihapus."`** dan formulir kembali kosong ke 1 slot bersih *(dan jika nantinya komitmen resmi dikirim lewat `Kirim Morning Commitment`, draf lokal otomatis terhapus dari browser).*
 
 4. **Langkah 2.1.4 — Uji Pengiriman `1–3 Komitmen` Valid & Pengaman Anti-Dobel 2 Tab (`DEF-001` — `ST-DLYM-04`, `ST-DLYM-10`):**
    - **Aksi:**
@@ -423,7 +436,7 @@ flowchart TD
 | `ST-ACTV-01..06` | **2. Aktivasi Akun** (`/activate`) | `01-Login-Activation.html` | Auto-isi `?token=`, garis indikator kekuatan sandi, error token salah / bekas pakai (`USED`) / dicabut (`REVOKED`) / kedaluwarsa (`EXPIRED`), & kartu sukses aktivasi. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-PROF-01..04` | **3. Profil Pribadi** (`/profile`) | `24-Profile-Settings.html` | 3 kartu profil (`[Aktif v1.1]` Status Karyawan & lencana `Intern` + Panel 3 bebas rumus kurung siku), 3 indikator centang hijau sandi baru, 5 pesan error merah validasi sandi, & banner hijau sukses. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-ERR-01..02` | **4. Error 403 & 404** (`/forbidden`, `/*`) | Standar Design System | Layar `403 — Akses Dibatasi` (menampilkan nama peran & alamat yang diblokir + tombol kembali ke beranda peran `IMP-023`) & layar `404 — Halaman Tidak Ditemukan`. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-DLYM-01..10` | **5. Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | `ON-TIME` vs `Terlambat (LATE)` vs `LOCKED` (>09:30) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, format `HH:mm WIB`, draf *Carry-Over* (`DEC-011`), banner `Prioritas Besok`, risiko `AMBER/RED`, menu `Pilih Blocker Aktif`, opsi `0 Komitmen` (`DEC-004`), batas 3 slot, & pengaman anti-dobel 2 tab (`DEF-001`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-DLYM-01..11` | **5. Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | `ON-TIME` vs `Terlambat (LATE)` vs `LOCKED` (>09:30) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, format `HH:mm WIB`, panel **`Draf Tugas Berlanjut dari Kemarin`** (`Carry-Over #2+ Disarankan AMBER`, centang multi-item `Gunakan Item Terpilih ke Slot Hari Ini`, `Salin ke Slot`, auto-isi kendala dari `Catatan EOD Kemarin`), banner **`Prioritas Kemarin Sore`** (tampil baik saat terbuka maupun sesudah terkunci), fitur **`Simpan Draf` lokal tahan `F5` + `Reset Draf`**, tata letak footer **1 baris** (`Pastikan seluruh komitmen...` sejajar `Simpan Draf` & `Kirim`), risiko `AMBER/RED`, `Pilih Blocker Aktif`, opsi `0 Komitmen` (`DEC-004`), batas 3 slot, & pengaman 2 tab (`DEF-001`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-DLYA-01..06` | **6. Tugas Tambahan** (`/daily/additional-work`) | `03-Additional-Work.html` | Peringatan belum isi pagi, tampilan daftar kosong, 5 alasan kondisional (pilih atasan bebas `Intern` pada `Penugasan Baru` & teks wajib pada `Lainnya`), pemilih proyek & blocker, kunci batas maksimum 5 tugas, & `[Aktif v1.1 — Paket #2]` kunci pasca-EOD (`Terkunci Pasca-EOD` + tautan `Lapor Blocker`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-DLYE-01..06` | **7. Evaluasi Sore EOD** (`/daily/eod`) | `04-EOD-Outcome.html` | `ON-TIME` vs **`Di Luar Jam Normal (Lembur Fleksibel)`** (`17:01–21:00 WIB`) vs `LOCKED` (>21:00 WIB) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, alasan wajib `Dibatalkan` & `Lanjutkan Besok`, hak pilih `GREEN` (`DEC-003`), & pengaman anti-dobel (`DEF-002`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-HIST-01..03` | **8. Riwayat Saya** (`/daily/history`) | `06-My-History-Weekly-Summary.html` | Filter tanggal, 4 kartu KPI mingguan, buka/tutup rincian baris (komitmen + tugas tambahan + 0 komitmen), baris kosong, & pesan merah tolak unduh saat kosong. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
@@ -1324,15 +1337,16 @@ flowchart TD
    - Status Karyawan: `Karyawan Tetap (PERMANENT)`, `Kontrak (CONTRACT)`, dan `Intern` (dibuktikan dengan akun `intern.frontend@dutamedia.com` & `intern.finance@dutamedia.com`).
 3. **Seluruh 29 Rute & Halaman Aplikasi (`K-01` s/d `K-29`):** Setiap halaman memiliki skenario prosedural langkah demi langkah beserta *Hasil yang Diharapkan* dan baris ceklis **4 ukuran layar (`375px`, `768/1024px`, `1440px`, `1920px`)** serta ceklis perbandingan *Prototype & Baseline*.
 4. **Seluruh 16 Kategori Kendala (5 Kelompok) & 9 Dampak Kendala (Kotak Centang 1–3 Pilihan):** Terkunci lengkap dengan tabel pemetaan siapa staf/pejabat penerima otomatisnya di **Journey 3 (`Bagian II`)**.
-5. **Seluruh 4 Paket Penyesuaian Pasca-UAT (`[Aktif v1.1]` pasca `commit 56cbead`):**
+5. **Seluruh 4 Paket Penyesuaian Pasca-UAT + Audit Prototype (`[Aktif v1.2]` pasca `commit 69bb068`):**
    - **Paket #1:** Status Karyawan (`Tetap/Kontrak/Intern`), kuota cuti `12 hari kerja/tahun` (hitungan Senin–Jumat), `Intern` tanpa cuti tahunan (hanya `Izin (Keperluan Mendesak / Alasan Logis)` & `Sakit`), blokir otomatis `Intern` dari 7 daftar atasan/PIC termasuk grup `── Lainnya ──`, filter Status Karyawan di `/dashboard` & `/reports` (beserta CSV dan pesan tabel kosong `0 Unit Kerja`), serta lokasi kantor **Malang**. *(Catatan jujur: **Alur Persetujuan Cuti 3 Tahap HRGA → Head Divisi → Direktur** masuk **`[Backlog v1.2]`**; di situs live saat ini persetujuan berjalan 1 tahap).*
    - **Paket #2:** Halaman `/daily/additional-work` langsung terkunci begitu Evaluasi Sore (EOD) dikirim atau lewat pukul `21:00 WIB` (`Evaluasi Sore (EOD) Hari Ini Telah Ditutup — Formulir Terkunci` & tombol `Terkunci Pasca-EOD`), disertai panduan lembur mendadak & tautan `Lapor Blocker` serta lencana **`Di Luar Jam Normal (Lembur Fleksibel)`** di `/daily/eod`.
    - **Paket #3:** Penghapusan seluruh istilah teknis `"SLA"` dan akhiran bahasa Inggris kategori di layar operasional (`/raise-blockers`, `/blockers`, `/blockers/aging`, `/coaching`, `/notifications`, dan `/admin/policies` + 6 label input modal kebijakan dalam Bahasa Indonesia).
    - **Paket #4:** Penyeragaman format waktu **`Asia/Jakarta` (`HH:mm WIB`, misal `10:45 WIB`)** dengan titik dua (`:`), tanpa detik, wajib diakhiri `WIB`, angka sejajar rapi, serta penghapusan rumus kurung siku di Panel 3 `/profile`.
+   - **Audit Prototype vs Live — Audit #1 (`02-Morning-Commitment.html`, `commit dabb266` & `69bb068`):** Kotak **`Prioritas Kemarin Sore`** tampil persisten baik sebelum maupun sesudah kirim; data `H-2 → H-1` nyata tertanam di `seed.ts` (`product@dutamedia.com`, `intern.frontend@dutamedia.com`, `dev.frontend@dutamedia.com`); panel **`Draf Tugas Berlanjut dari Kemarin`** mendukung `Carry-Over #2+ (Disarankan AMBER)`, centang multi-item **`Gunakan Item Terpilih ke Slot Hari Ini`**, dan auto-isi `Potensi Kendala` dari `Catatan EOD Kemarin`; fitur **`Simpan Draf` lokal tahan `F5` + `Reset Draf`** aktif; serta tata letak footer **1 baris sejajar** sesuai prototype. Rincian lengkap di [Daftar-Perubahan-Audit-Prototype-vs-Live.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Audit-Prototype-vs-Live.md).
 
 ## B. Aturan Pagar Pengaman untuk Teman Auditor (Saat Bekerja Paralel)
 1. **Baca Dokumen Pembanding Dulu Sebelum Menilai Perbedaan Prototype:**
-   - Buka [Daftar-Perubahan-Pasca-UAT-4-Paket.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Pasca-UAT-4-Paket.md) dan pahami folder prototype asli di `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/`.
+   - Buka [Daftar-Perubahan-Pasca-UAT-4-Paket.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Pasca-UAT-4-Paket.md) beserta [Daftar-Perubahan-Audit-Prototype-vs-Live.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Audit-Prototype-vs-Live.md), dan pahami folder prototype asli di `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/`.
 2. **Hanya Menguji & Mencatat (Dilarang Mengubah Kode Sendiri Tanpa Koordinasi):**
    - Teman auditor menjalankan skenario `SP-01.1` sampai `SP-08.3` secara berurutan di browser menggunakan Chrome DevTools (*Device Toolbar*) pada **4 ukuran layar**: **HP (`375px`)**, **Tablet (`768px` & `1024px`)**, **Desktop (`1440px`)**, dan **Layar Lebar (`1920px`)**.
 3. **Cara Mencatat Temuan Tampilan atau Perbedaan Prototype:**

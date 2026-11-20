@@ -3,7 +3,8 @@
 > **Ditujukan untuk:** Harry (Pemilik Proyek) & Rekan Auditor  
 > **Situs Live yang Diaudit:** `https://dutamedia-workpulse.vercel.app`  
 > **Acuan Sebelumnya (Baseline & Prototype HTML):** 26 file gambar rancangan awal di folder `Dokumen-Perancangan-untuk-Pengerjaan-Baru/UI-UX-Design/*.html` dan dokumen spesifikasi `01-PDD.md` s/d `05-SAD.md`  
-> **Versi Kondisi Sistem Live Saat Ini:** **`v1.1`** (Seluruh 4 Paket Pasca-UAT & perbaikan uji Chrome sudah aktif)
+> **Versi Kondisi Sistem Live Saat Ini:** **`v1.2`** (Seluruh 4 Paket Pasca-UAT, perbaikan uji Chrome, dan penyesuaian awal audit prototype sudah aktif)  
+> **Catatan Lanjutan:** Untuk perubahan hasil **Audit Halaman demi Halaman Prototype vs Sistem Live**, baca juga dokumen pendamping terbaru: [Daftar-Perubahan-Audit-Prototype-vs-Live.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Audit-Prototype-vs-Live.md).
 
 ---
 
@@ -95,7 +96,7 @@ Gunakan tabel ini saat mengecek setiap halaman di Chrome (`375px`, `768/1024px`,
 | 2 | **Aktivasi Akun** (`/activate`) | `01-Login-Activation.html` | Sesuai baseline (`DEC-005`) | Garis kekuatan kata sandi + penolakan token bekas pakai / dicabut / kedaluwarsa. |
 | 3 | **Profil Pribadi** (`/profile`) | `24-Profile-Settings.html` | **Berubah (Paket #1, #4, Fix)** | Ada baris **Status Karyawan** (dan **Masa Magang Berakhir** jika `Intern`). Panel 3 bersih tanpa rumus kurung siku. |
 | 4 | **Error 403 / 404** (`/forbidden`, `/*`) | Standar sistem | Baru setelah prototype | Menampilkan peran saat ini, halaman yang ditolak, & tombol kembali ke halaman awal peran. |
-| 5 | **Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | **Berubah (Paket #4 + Cuti)** | Format jam `HH:mm WIB`, spanduk hijau Cuti/Izin Resmi disetujui, draf Carry-Over kemarin (`DEC-011`), dan opsi `0 Komitmen` (`DEC-004`). |
+| 5 | **Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | **Berubah (Paket #4 + Cuti + Audit #1)** | Format jam `HH:mm WIB`, spanduk hijau Cuti/Izin Resmi disetujui, opsi `0 Komitmen` (`DEC-004`), serta **Audit #1 (`dabb266`, `69bb068`)**: `Prioritas Kemarin Sore` persisten sebelum & sesudah submit, data H-1/H-2 nyata (`Carry-Over #2+ AMBER` + centang multi-item), `Simpan Draf` lokal tahan `F5`, & footer 1 baris. Detail lihat [Daftar-Perubahan-Audit-Prototype-vs-Live.md](file:///d:/PKL%20Duta%20Media/Dutamedia-WorkPulse/UAT/Daftar-Perubahan-Audit-Prototype-vs-Live.md). |
 | 6 | **Tugas Tambahan** (`/daily/additional-work`) | `03-Additional-Work.html` | **Berubah (Paket #1, #2, #4)** | **Terkunci otomatis setelah EOD dikirim atau > 21:00 WIB** dengan tombol `Terkunci Pasca-EOD` dan tautan `Lapor Blocker`. Pilihan atasan bebas `Intern`. |
 | 7 | **Evaluasi Sore EOD** (`/daily/eod`) | `04-EOD-Outcome.html` | **Berubah (Paket #2, #4)** | Lencana sore `17:01–21:00 WIB` tertulis **`Di Luar Jam Normal (Lembur Fleksibel)`**. Tombol `GREEN` tetap bisa dipilih (`DEC-003`). |
 | 8 | **Riwayat Saya** (`/daily/history`) | `06-My-History-Weekly-Summary.html` | **Berubah ringan (Paket #3/#4)** | Kolom `Waktu Pagi` & `Waktu EOD` menampilkan status ketepatan (`ON_TIME`/`LATE`), rincian bisa dibuka–tutup, tolak unduh CSV jika kosong. |
