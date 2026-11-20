@@ -215,6 +215,67 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
         }),
       );
     });
+
+    it('should reject password without combination of letters and digits', async () => {
+      await expect(
+        authService.activate({ token: 'valid_token', password: 'onlyletters' }),
+      ).rejects.toThrowError(AppException);
+
+      await expect(
+        authService.activate({ token: 'valid_token', password: '12345678' }),
+      ).rejects.toThrowError(AppException);
+    });
+  });
+
+  describe('getInvitationPreview (Kartu Pratinjau Akun Undangan)', () => {
+    it('returns valid account details for active PENDING token', async () => {
+      mockPrisma.userInvitation.findUnique.mockResolvedValue({
+        id: 'inv-active',
+        userId: 'usr-fajar',
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
+        user: {
+          id: 'usr-fajar',
+          fullName: 'Fajar Ramadhan',
+          email: 'calon.karyawan@dutamedia.com',
+          status: 'INVITED',
+        },
+      });
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        function: 'Engineering',
+        jobTitle: 'Junior Developer',
+      });
+
+      const preview = await authService.getInvitationPreview('wp_seed_invite_token_72h_demo_secret');
+
+      expect(preview.valid).toBe(true);
+      expect(preview.status).toBe('PENDING');
+      expect(preview.account).toEqual({
+        fullName: 'Fajar Ramadhan',
+        email: 'calon.karyawan@dutamedia.com',
+        department: 'Engineering',
+        jobTitle: 'Junior Developer',
+      });
+    });
+
+    it('returns valid=false and EXPIRED or USED status cleanly without throwing', async () => {
+      mockPrisma.userInvitation.findUnique.mockResolvedValueOnce({
+        id: 'inv-exp',
+        userId: 'usr-1',
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() - 5000),
+        user: { id: 'usr-1', fullName: 'Test', email: 'test@dutamedia.com', status: 'INVITED' },
+      });
+
+      const expResult = await authService.getInvitationPreview('expired_tok');
+      expect(expResult.valid).toBe(false);
+      expect(expResult.status).toBe('EXPIRED');
+
+      mockPrisma.userInvitation.findUnique.mockResolvedValueOnce(null);
+      const missingResult = await authService.getInvitationPreview('unknown_tok');
+      expect(missingResult.valid).toBe(false);
+      expect(missingResult.status).toBe('NOT_FOUND');
+    });
   });
 });
 

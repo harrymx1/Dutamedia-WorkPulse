@@ -22,6 +22,18 @@ export interface UserProfile {
   ownedBlockerCategories?: string[];
 }
 
+export interface InvitationPreviewResult {
+  valid: boolean;
+  status: 'PENDING' | 'USED' | 'REVOKED' | 'EXPIRED' | 'NOT_FOUND';
+  message?: string;
+  account?: {
+    fullName: string;
+    email: string;
+    department: string | null;
+    jobTitle: string | null;
+  };
+}
+
 function sanitizeUserProfile(u: UserProfile | null | undefined): UserProfile | null {
   if (!u) return null;
   return {
@@ -86,6 +98,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function previewInvitation(token: string): Promise<InvitationPreviewResult> {
+    const res = await apiClient<InvitationPreviewResult>(
+      `/v1/auth/invitation-preview?token=${encodeURIComponent(token.trim())}`,
+    );
+    return res.data;
+  }
+
   async function fetchMe(): Promise<UserProfile | null> {
     isLoading.value = true;
     try {
@@ -127,6 +146,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     activate,
+    previewInvitation,
     fetchMe,
     changePassword,
   };

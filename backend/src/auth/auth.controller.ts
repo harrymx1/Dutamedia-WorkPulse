@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -98,6 +99,12 @@ export class AuthController {
     return {
       message: 'Anda telah berhasil keluar dari sistem.',
     };
+  }
+
+  @Public()
+  @Get('invitation-preview')
+  async getInvitationPreview(@Query('token') token: string) {
+    return await this.authService.getInvitationPreview(token || '');
   }
 
   @Public()

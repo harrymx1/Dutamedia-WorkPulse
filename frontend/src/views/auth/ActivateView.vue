@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAuthStore } from '../../stores/auth';
-import { Eye, EyeOff, CheckCircle2, AlertCircle, KeyRound, Target, Flag, Users } from 'lucide-vue-next';
+import { useAuthStore, type InvitationPreviewResult } from '../../stores/auth';
+import { getUserInitials } from '../../utils/initials';
+import { Eye, EyeOff, CheckCircle2, AlertCircle, AlertTriangle, Check, KeyRound, Target, Flag, Users } from 'lucide-vue-next';
 import { APP_CONFIG } from '../../config/app';
 
 const route = useRoute();
@@ -12,6 +13,7 @@ const token = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 const errorMessage = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 
@@ -19,13 +21,71 @@ const tokenError = ref<string | null>(null);
 const passwordError = ref<string | null>(null);
 const confirmError = ref<string | null>(null);
 
+const invitationPreview = ref<InvitationPreviewResult | null>(null);
+const openedWithQueryToken = ref(false);
+let lastPreviewedToken = '';
+let previewTimer: any = null;
+
+async function fetchInvitationPreview(rawToken: string) {
+  const clean = (rawToken || '').trim();
+  if (!clean) {
+    invitationPreview.value = null;
+    lastPreviewedToken = '';
+    return;
+  }
+  lastPreviewedToken = clean;
+  try {
+    const data = await authStore.previewInvitation(clean);
+    if (token.value.trim() === clean) {
+      invitationPreview.value = data;
+    }
+  } catch {
+    if (token.value.trim() === clean) {
+      invitationPreview.value = null;
+    }
+  }
+}
+
 onMounted(() => {
   if (route.query.token && typeof route.query.token === 'string') {
     token.value = route.query.token;
+    openedWithQueryToken.value = true;
+    fetchInvitationPreview(route.query.token);
   }
 });
 
-// Password strength calculation
+onUnmounted(() => {
+  if (previewTimer) clearTimeout(previewTimer);
+});
+
+watch(token, (newToken) => {
+  if (previewTimer) clearTimeout(previewTimer);
+  const clean = (newToken || '').trim();
+  if (!clean) {
+    invitationPreview.value = null;
+    openedWithQueryToken.value = false;
+    lastPreviewedToken = '';
+    return;
+  }
+  if (clean === lastPreviewedToken) return;
+  if (clean.length < 10) {
+    invitationPreview.value = null;
+    return;
+  }
+  previewTimer = setTimeout(() => {
+    fetchInvitationPreview(clean);
+  }, 300);
+});
+
+// Password criteria & strength calculation
+const hasMinLength = computed(() => password.value.length >= 8);
+const hasLetterAndNumber = computed(
+  () => /[A-Za-z]/.test(password.value) && /[0-9]/.test(password.value),
+);
+const isConfirmMatch = computed(
+  () => password.value.length > 0 && password.value === confirmPassword.value,
+);
+
 const passwordScore = computed(() => {
   const p = password.value;
   if (!p) return 0;
@@ -38,6 +98,7 @@ const passwordScore = computed(() => {
 });
 
 const strengthLabel = computed(() => {
+  if (!password.value) return 'Belum diisi';
   switch (passwordScore.value) {
     case 1:
       return 'Sangat Lemah';
@@ -51,6 +112,27 @@ const strengthLabel = computed(() => {
       return 'Minimal 8 karakter';
   }
 });
+
+const showInvalidTokenWarning = computed(() => {
+  if (!invitationPreview.value || invitationPreview.value.valid) return false;
+  if (['USED', 'REVOKED', 'EXPIRED'].includes(invitationPreview.value.status)) {
+    return true;
+  }
+  return (
+    invitationPreview.value.status === 'NOT_FOUND' &&
+    (openedWithQueryToken.value || token.value.trim().length >= 20)
+  );
+});
+
+const loginRedirectLocation = computed(() => ({
+  path: '/login',
+  query: {
+    activated: '1',
+    ...(invitationPreview.value?.account?.email
+      ? { email: invitationPreview.value.account.email }
+      : {}),
+  },
+}));
 
 function validate(): boolean {
   let valid = true;
@@ -67,8 +149,12 @@ function validate(): boolean {
   if (!password.value) {
     passwordError.value = 'Kata sandi baru wajib diisi.';
     valid = false;
-  } else if (password.value.length < 8) {
-    passwordError.value = 'Kata sandi minimal 8 karakter.';
+  } else if (
+    password.value.length < 8 ||
+    !/[A-Za-z]/.test(password.value) ||
+    !/[0-9]/.test(password.value)
+  ) {
+    passwordError.value = 'Kata sandi wajib minimal 8 karakter dengan kombinasi huruf dan angka.';
     valid = false;
   }
 
@@ -152,6 +238,13 @@ async function handleActivate() {
 
     <main class="interactive-main">
       <div class="card-wrapper">
+        <div class="mobile-brand-header" data-testid="mobile-brand-header">
+          <div class="brand-mark">WP</div>
+          <div>
+            <div class="mobile-brand-title">WorkPulse</div>
+            <div class="mobile-brand-sub">Dutamedia Accountability</div>
+          </div>
+        </div>
         <div class="form-card">
           <!-- Tab Switcher -->
           <div class="tab-switcher">
@@ -166,7 +259,7 @@ async function handleActivate() {
             </div>
             <h3>Aktivasi Berhasil!</h3>
             <p>{{ successMessage }}</p>
-            <router-link to="/login" class="btn btn-primary" style="margin-top: 20px;">
+            <router-link :to="loginRedirectLocation" class="btn btn-primary" data-testid="btn-goto-login-after-act" style="margin-top: 20px;">
               Lanjut ke Halaman Masuk
             </router-link>
           </div>
@@ -175,7 +268,39 @@ async function handleActivate() {
           <template v-else>
             <span class="screen-tag">UNDANGAN BARU</span>
             <h2>Aktivasi Akun</h2>
-            <p class="lead-text">Masukkan token aktivasi dari email dan tentukan kata sandi baru Anda.</p>
+            <p class="lead-text">Masukkan token aktivasi dari Admin/HRGA dan tentukan kata sandi baru Anda.</p>
+
+            <!-- Kartu Pratinjau Akun yang Diundang -->
+            <div
+              v-if="invitationPreview?.valid && invitationPreview.account"
+              class="account-preview-card"
+              data-testid="account-preview-card"
+            >
+              <div class="user-avatar-circle">
+                {{ getUserInitials(invitationPreview.account.fullName, invitationPreview.account.email) }}
+              </div>
+              <div class="account-info">
+                <div class="account-name-txt">{{ invitationPreview.account.fullName }}</div>
+                <div class="account-detail-txt">
+                  {{ invitationPreview.account.email }}<span v-if="invitationPreview.account.department"> · {{ invitationPreview.account.department }}</span>
+                </div>
+              </div>
+              <span class="role-badge-tag">UNDANGAN AKTIF</span>
+            </div>
+
+            <!-- Peringatan Token Tidak Berlaku / Kedaluwarsa / Sudah Dipakai -->
+            <div
+              v-else-if="showInvalidTokenWarning"
+              class="alert-banner warning"
+              data-testid="invalid-token-banner"
+              role="alert"
+            >
+              <AlertTriangle :size="18" class="alert-icon" />
+              <div>
+                <strong>Undangan Tidak Berlaku</strong><br />
+                {{ invitationPreview?.message }}
+              </div>
+            </div>
 
             <div v-if="errorMessage" class="alert-banner error" role="alert">
               <AlertCircle :size="18" class="alert-icon" />
@@ -186,14 +311,14 @@ async function handleActivate() {
               <!-- Field Token -->
               <div class="field-group">
                 <div class="field-label-row">
-                  <label for="activate-token">Token Aktivasi (64 Karakter)</label>
+                  <label for="activate-token">Token Aktivasi</label>
                 </div>
                 <div class="input-container">
                   <input
                     id="activate-token"
                     v-model="token"
                     type="text"
-                    placeholder="Tempel token aktivasi dari email"
+                    placeholder="Tempel token aktivasi dari email atau Admin"
                     class="mono-num"
                     :aria-invalid="!!tokenError"
                     required
@@ -212,13 +337,14 @@ async function handleActivate() {
                     id="activate-password"
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
-                    placeholder="Minimal 8 karakter aman"
+                    placeholder="Minimal 8 karakter kombinasi huruf & angka"
                     :aria-invalid="!!passwordError"
                     required
                   />
                   <button
                     type="button"
                     class="input-icon-btn"
+                    :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
                     @click="showPassword = !showPassword"
                   >
                     <EyeOff v-if="showPassword" :size="18" />
@@ -227,8 +353,8 @@ async function handleActivate() {
                 </div>
                 <p v-if="passwordError" class="field-error-msg show">{{ passwordError }}</p>
 
-                <!-- Password Strength Meter -->
-                <div v-if="password" class="strength-wrapper">
+                <!-- Password Strength Meter & Checklist 3 Syarat -->
+                <div class="strength-wrapper">
                   <div class="strength-bars">
                     <div
                       class="strength-bar"
@@ -247,7 +373,27 @@ async function handleActivate() {
                       :style="{ background: passwordScore >= 4 ? '#00875A' : undefined }"
                     ></div>
                   </div>
-                  <span class="strength-text">{{ strengthLabel }}</span>
+                  <div class="strength-caption">
+                    <span>Kekuatan: <strong>{{ strengthLabel }}</strong></span>
+                    <span>Standar Keamanan Akun</span>
+                  </div>
+                  <div class="strength-checklist" data-testid="password-criteria-checklist">
+                    <div class="strength-check-item" :class="{ met: hasMinLength }">
+                      <Check v-if="hasMinLength" :size="14" class="check-icon-met" />
+                      <span v-else class="check-dot" aria-hidden="true"></span>
+                      <span>Minimal 8 karakter</span>
+                    </div>
+                    <div class="strength-check-item" :class="{ met: hasLetterAndNumber }">
+                      <Check v-if="hasLetterAndNumber" :size="14" class="check-icon-met" />
+                      <span v-else class="check-dot" aria-hidden="true"></span>
+                      <span>Kombinasi huruf &amp; angka</span>
+                    </div>
+                    <div class="strength-check-item" :class="{ met: isConfirmMatch }">
+                      <Check v-if="isConfirmMatch" :size="14" class="check-icon-met" />
+                      <span v-else class="check-dot" aria-hidden="true"></span>
+                      <span>Konfirmasi kata sandi cocok</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -260,11 +406,21 @@ async function handleActivate() {
                   <input
                     id="activate-confirm"
                     v-model="confirmPassword"
-                    :type="showPassword ? 'text' : 'password'"
-                    placeholder="Ulangi kata sandi baru"
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    placeholder="Ketik ulang kata sandi baru"
                     :aria-invalid="!!confirmError"
                     required
                   />
+                  <button
+                    type="button"
+                    class="input-icon-btn"
+                    data-testid="toggle-confirm-password"
+                    :aria-label="showConfirmPassword ? 'Sembunyikan konfirmasi kata sandi' : 'Tampilkan konfirmasi kata sandi'"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                  >
+                    <EyeOff v-if="showConfirmPassword" :size="18" />
+                    <Eye v-else :size="18" />
+                  </button>
                 </div>
                 <p v-if="confirmError" class="field-error-msg show">{{ confirmError }}</p>
               </div>
@@ -573,10 +729,11 @@ input[aria-invalid="true"] {
 .alert-banner {
   display: flex;
   gap: 10px;
-  align-items: center;
+  align-items: flex-start;
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-size: 13px;
+  line-height: 1.5;
   margin-bottom: 18px;
 }
 
@@ -586,16 +743,105 @@ input[aria-invalid="true"] {
   color: var(--color-status-red-fg);
 }
 
+.alert-banner.warning {
+  background: var(--color-status-amber-bg);
+  border: 1px solid var(--color-status-amber-border);
+  color: var(--color-status-amber-fg);
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mobile-brand-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.mobile-brand-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--color-brand-primary);
+  line-height: 1.2;
+}
+
+.mobile-brand-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.account-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-subtle);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+}
+
+.user-avatar-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #D5EDE2;
+  color: var(--color-brand-primary);
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.account-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.account-name-txt {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.account-detail-txt {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.role-badge-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-brand-primary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .strength-wrapper {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .strength-bars {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  height: 4px;
-  margin-bottom: 4px;
+  height: 5px;
+  margin-bottom: 6px;
 }
 
 .strength-bar {
@@ -604,10 +850,48 @@ input[aria-invalid="true"] {
   transition: background 0.2s;
 }
 
-.strength-text {
-  font-size: 11px;
+.strength-caption {
+  font-size: 12px;
   color: var(--color-text-secondary);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.strength-checklist {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.strength-check-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.strength-check-item.met {
+  color: var(--color-status-green-fg);
   font-weight: 600;
+}
+
+.check-icon-met {
+  color: var(--color-status-green-fg);
+  flex-shrink: 0;
+}
+
+.check-dot {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .result-state-card {
@@ -680,6 +964,9 @@ input[aria-invalid="true"] {
   }
   .brand-story {
     display: none;
+  }
+  .mobile-brand-header {
+    display: flex;
   }
 }
 </style>

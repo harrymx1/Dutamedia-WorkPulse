@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getLandingRouteForRole } from '../../router/navigation';
-import { Eye, EyeOff, ShieldCheck, AlertCircle, Target, Flag, Users } from 'lucide-vue-next';
+import { Eye, EyeOff, ShieldCheck, AlertCircle, AlertTriangle, Info, Target, Flag, Users } from 'lucide-vue-next';
 import { APP_CONFIG } from '../../config/app';
+
+const REMEMBERED_EMAIL_KEY = 'wp_remembered_email';
 
 const router = useRouter();
 const route = useRoute();
@@ -15,24 +17,54 @@ const password = ref('');
 const rememberMe = ref(false);
 const showPassword = ref(false);
 const errorMessage = ref<string | null>(null);
+const noticeMessage = ref<string | null>(null);
 const emailError = ref<string | null>(null);
 const passwordError = ref<string | null>(null);
 
-// Client-side rate-limit lockout guard (Defense-in-depth: max 5 failed attempts per 60s)
+// Client-side rate-limit lockout guard (Defense-in-depth: max 5 failed attempts)
 const failedAttempts = ref(0);
 const lockoutSecondsRemaining = ref(0);
 let lockoutTimer: any = null;
 
+onMounted(() => {
+  if (route.query.activated === '1') {
+    noticeMessage.value = 'Aktivasi berhasil! Silakan masuk dengan kata sandi baru Anda.';
+  }
+
+  const queryEmail = typeof route.query.email === 'string' ? route.query.email.trim() : '';
+  if (queryEmail) {
+    email.value = queryEmail;
+  } else if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const remembered = window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
+      if (remembered) {
+        email.value = remembered;
+        rememberMe.value = true;
+      }
+    } catch {
+      // Abaikan error storage
+    }
+  }
+});
+
+watch(rememberMe, (checked) => {
+  if (!checked && typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    } catch {
+      // Abaikan error storage
+    }
+  }
+});
+
 function triggerLockout(durationSeconds = 30) {
   lockoutSecondsRemaining.value = durationSeconds;
-  errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
+  errorMessage.value = null;
 
   if (lockoutTimer) clearInterval(lockoutTimer);
   lockoutTimer = setInterval(() => {
     lockoutSecondsRemaining.value--;
-    if (lockoutSecondsRemaining.value > 0) {
-      errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
-    } else {
+    if (lockoutSecondsRemaining.value <= 0) {
       clearInterval(lockoutTimer);
       lockoutTimer = null;
       failedAttempts.value = 0;
@@ -74,7 +106,6 @@ function validate(): boolean {
 
 async function handleLogin() {
   if (lockoutSecondsRemaining.value > 0) {
-    errorMessage.value = `Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu ${lockoutSecondsRemaining.value} detik sebelum mencoba kembali.`;
     return;
   }
   if (!validate()) return;
@@ -82,7 +113,20 @@ async function handleLogin() {
   try {
     await authStore.login(email.value, password.value);
     failedAttempts.value = 0;
-    // Kembali ke halaman yang semula dituju (bila ada & aman), jika tidak ke /dashboard
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        if (rememberMe.value) {
+          window.localStorage.setItem(REMEMBERED_EMAIL_KEY, email.value.trim());
+        } else {
+          window.localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+        }
+      } catch {
+        // Abaikan error storage
+      }
+    }
+
+    // Kembali ke halaman yang semula dituju (bila ada & aman), jika tidak ke landing page peran
     const redirect = route.query.redirect;
     const safeRedirect =
       typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : null;
@@ -181,6 +225,13 @@ async function handleLogin() {
     <!-- Kolom Kanan: Interactive Form Area -->
     <main class="interactive-main">
       <div class="card-wrapper">
+        <div class="mobile-brand-header" data-testid="mobile-brand-header">
+          <div class="brand-mark">WP</div>
+          <div>
+            <div class="mobile-brand-title">WorkPulse</div>
+            <div class="mobile-brand-sub">Dutamedia Accountability</div>
+          </div>
+        </div>
         <div class="form-card">
           <!-- Tab Switcher -->
           <div class="tab-switcher">
@@ -192,8 +243,23 @@ async function handleLogin() {
           <h2>Masuk ke WorkPulse</h2>
           <p class="lead-text">Masukkan kredensial email Dutamedia dan kata sandi Anda.</p>
 
+          <!-- Banner Info Sambutan Pasca-Aktivasi -->
+          <div v-if="noticeMessage" class="alert-banner info" data-testid="login-notice-banner" role="status">
+            <Info :size="18" class="alert-icon" />
+            <div>{{ noticeMessage }}</div>
+          </div>
+
+          <!-- Banner Kuning Saat Terkunci Batas Percobaan -->
+          <div v-if="lockoutSecondsRemaining > 0" class="alert-banner warning" data-testid="login-lockout-banner" role="alert">
+            <AlertTriangle :size="18" class="alert-icon" />
+            <div>
+              <strong>Batas Percobaan Terlampaui</strong><br />
+              Terlalu banyak percobaan masuk. Demi keamanan sistem, silakan tunggu <span class="mono-num">{{ lockoutSecondsRemaining }}</span> detik sebelum mencoba kembali.
+            </div>
+          </div>
+
           <!-- Banner Galat Validasi/Autentikasi -->
-          <div v-if="errorMessage" class="alert-banner error" role="alert">
+          <div v-else-if="errorMessage" class="alert-banner error" role="alert">
             <AlertCircle :size="18" class="alert-icon" />
             <div>{{ errorMessage }}</div>
           </div>
@@ -249,8 +315,8 @@ async function handleLogin() {
             <!-- Opsi Tambahan -->
             <div class="form-options-row">
               <label class="checkbox-label">
-                <input v-model="rememberMe" type="checkbox" />
-                <span>Ingat sesi saya</span>
+                <input v-model="rememberMe" type="checkbox" data-testid="remember-email-checkbox" />
+                <span>Ingat email di perangkat ini</span>
               </label>
               <router-link to="/activate" class="forgot-link">Belum aktivasi akun?</router-link>
             </div>
@@ -569,10 +635,11 @@ input[aria-invalid="true"] {
 .alert-banner {
   display: flex;
   gap: 10px;
-  align-items: center;
+  align-items: flex-start;
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-size: 13px;
+  line-height: 1.5;
   margin-bottom: 18px;
 }
 
@@ -580,6 +647,46 @@ input[aria-invalid="true"] {
   background: var(--color-status-red-bg);
   border: 1px solid var(--color-status-red-border);
   color: var(--color-status-red-fg);
+}
+
+.alert-banner.warning {
+  background: var(--color-status-amber-bg);
+  border: 1px solid var(--color-status-amber-border);
+  color: var(--color-status-amber-fg);
+}
+
+.alert-banner.info {
+  background: var(--color-brand-tint);
+  border: 1px solid var(--color-brand-secondary);
+  color: var(--color-brand-primary);
+}
+
+.mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.mobile-brand-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.mobile-brand-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--color-brand-primary);
+  line-height: 1.2;
+}
+
+.mobile-brand-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .alert-icon {
@@ -648,6 +755,9 @@ input[aria-invalid="true"] {
   }
   .brand-story {
     display: none;
+  }
+  .mobile-brand-header {
+    display: flex;
   }
 }
 </style>

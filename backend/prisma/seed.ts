@@ -887,19 +887,26 @@ async function main() {
   }
 
   // 5b. Token Undangan 72 Jam untuk Calon Karyawan
-  const existingInvitation = await prisma.userInvitation.findFirst({
-    where: { userId: newHireUser.id, status: 'PENDING' },
-  });
-  if (!existingInvitation && newHireUser.status === UserStatus.INVITED) {
+  if (newHireUser.status === UserStatus.INVITED) {
     const rawActivationToken = 'wp_seed_invite_token_72h_demo_secret';
     const tokenHash = crypto.createHash('sha256').update(rawActivationToken).digest('hex');
+    const freshExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
 
-    await prisma.userInvitation.create({
-      data: {
+    await prisma.userInvitation.upsert({
+      where: { tokenHash },
+      update: {
+        userId: newHireUser.id,
+        status: 'PENDING',
+        expiresAt: freshExpiry,
+        usedAt: null,
+        revokedAt: null,
+        revocationReason: null,
+      },
+      create: {
         userId: newHireUser.id,
         tokenHash,
         status: 'PENDING',
-        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+        expiresAt: freshExpiry,
         createdByUserId: hrgaUser.id,
       },
     });

@@ -9,6 +9,7 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
   let router: any;
 
   beforeEach(() => {
+    window.localStorage.clear();
     setActivePinia(createPinia());
     router = createRouter({
       history: createWebHistory(),
@@ -124,7 +125,7 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
     );
   });
 
-  it('renders friendly Indonesian message without technical leakage when rate-limit 429 lockout occurs (IMP-013)', async () => {
+  it('renders friendly warning banner without technical leakage when rate-limit 429 lockout occurs (IMP-013 & Audit #2)', async () => {
     const wrapper = mount(LoginView, {
       global: {
         plugins: [router],
@@ -142,12 +143,15 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
     await wrapper.find('#login-password').setValue('ValidPassword123!');
     await wrapper.find('form').trigger('submit.prevent');
 
-    expect(wrapper.find('.alert-banner.error').exists()).toBe(true);
-    expect(wrapper.find('.alert-banner.error').text()).toContain('Terlalu banyak percobaan masuk');
+    const lockoutBanner = wrapper.find('[data-testid="login-lockout-banner"]');
+    expect(lockoutBanner.exists()).toBe(true);
+    expect(lockoutBanner.classes()).toContain('warning');
+    expect(lockoutBanner.text()).toContain('Batas Percobaan Terlampaui');
+    expect(lockoutBanner.text()).toContain('Terlalu banyak percobaan masuk');
     expect(wrapper.text()).not.toContain('ThrottlerException');
   });
 
-  it('triggers client-side rate limit lockout after 5 consecutive failed login attempts (IMP-013)', async () => {
+  it('triggers client-side warning lockout banner after 5 consecutive failed login attempts (IMP-013 & Audit #2)', async () => {
     const wrapper = mount(LoginView, {
       global: {
         plugins: [router],
@@ -169,12 +173,65 @@ describe('LoginView.vue (WP-EP02-TK005 / Prototipe 01)', () => {
       expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined();
     }
 
-    // 5th failed attempt: triggers lockout
+    // 5th failed attempt: triggers lockout banner warning
     await wrapper.find('form').trigger('submit.prevent');
 
-    expect(wrapper.find('.alert-banner.error').exists()).toBe(true);
-    expect(wrapper.find('.alert-banner.error').text()).toContain('Terlalu banyak percobaan masuk');
+    const lockoutBanner = wrapper.find('[data-testid="login-lockout-banner"]');
+    expect(lockoutBanner.exists()).toBe(true);
+    expect(lockoutBanner.classes()).toContain('warning');
+    expect(lockoutBanner.text()).toContain('Batas Percobaan Terlampaui');
+    expect(lockoutBanner.text()).toContain('Terlalu banyak percobaan masuk');
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined();
     expect(wrapper.find('button[type="submit"]').text()).toContain('Terkunci');
+  });
+
+  it('renders mobile brand header and supports remember-email & post-activation banner (Audit #2)', async () => {
+    await router.push('/login?activated=1&email=fajar%40dutamedia.com');
+    await router.isReady();
+
+    const wrapper = mount(LoginView, {
+      global: {
+        plugins: [router],
+      },
+    });
+
+    await new Promise((r) => setTimeout(r, 20));
+
+    // 1. Mobile brand header tersedia untuk layar <= 900px
+    const mobileHeader = wrapper.find('[data-testid="mobile-brand-header"]');
+    expect(mobileHeader.exists()).toBe(true);
+    expect(mobileHeader.text()).toContain('WorkPulse');
+
+    // 2. Banner info hijau pasca-aktivasi + email terisi otomatis
+    const noticeBanner = wrapper.find('[data-testid="login-notice-banner"]');
+    expect(noticeBanner.exists()).toBe(true);
+    expect(noticeBanner.text()).toContain('Aktivasi berhasil! Silakan masuk dengan kata sandi baru Anda.');
+    expect((wrapper.find('#login-email').element as HTMLInputElement).value).toBe('fajar@dutamedia.com');
+
+    // 3. Centang "Ingat email di perangkat ini" -> login -> tersimpan di localStorage -> pulih saat mount baru
+    const authStore = useAuthStore();
+    vi.spyOn(authStore, 'login').mockResolvedValueOnce({
+      id: 'usr-1',
+      email: 'fajar@dutamedia.com',
+      fullName: 'Fajar Ramadhan',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    });
+    await wrapper.find('[data-testid="remember-email-checkbox"]').setValue(true);
+    await wrapper.find('#login-password').setValue('Password123!');
+    await wrapper.find('form').trigger('submit.prevent');
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(window.localStorage.getItem('wp_remembered_email')).toBe('fajar@dutamedia.com');
+
+    // Simulasikan kembali ke /login (tanpa query) -> email tetap pulih otomatis
+    await router.push('/login');
+    const wrapper2 = mount(LoginView, {
+      global: {
+        plugins: [router],
+      },
+    });
+    await new Promise((r) => setTimeout(r, 20));
+    expect((wrapper2.find('#login-email').element as HTMLInputElement).value).toBe('fajar@dutamedia.com');
   });
 });

@@ -12,6 +12,34 @@ import { toJakartaDateOnly } from '../common/time/date-only.util';
 import { ensurePolicyOwnersBaselineSynced } from '../policy/policy-owner-sync.util';
 import { resolveOwnedBlockerCategories } from './utils/category-owner.util';
 
+export interface InvitationPreviewResult {
+  valid: boolean;
+  status: 'PENDING' | 'USED' | 'REVOKED' | 'EXPIRED' | 'NOT_FOUND';
+  message?: string;
+  account?: {
+    fullName: string;
+    email: string;
+    department: string | null;
+    jobTitle: string | null;
+  };
+}
+
+function formatFunctionLabel(fn?: string | null): string | null {
+  if (!fn) return null;
+  switch (fn) {
+    case 'OperationsInfrastructure':
+      return 'Operations & Infrastructure';
+    case 'BusinessDevelopment':
+      return 'Business Development';
+    case 'SalesEnablementPresales':
+      return 'Sales Enablement & Presales';
+    case 'RnD':
+      return 'R&D';
+    default:
+      return fn;
+  }
+}
+
 export interface LoginResult {
   accessToken: string;
   csrfToken: string;
@@ -238,7 +266,102 @@ export class AuthService {
     });
   }
 
+  async getInvitationPreview(rawToken: string): Promise<InvitationPreviewResult> {
+    const cleanToken = (rawToken || '').trim();
+    if (!cleanToken) {
+      return {
+        valid: false,
+        status: 'NOT_FOUND',
+        message: 'Token aktivasi tidak valid atau tidak ditemukan.',
+      };
+    }
+
+    const tokenHash = this.tokenService.hashToken(cleanToken);
+    const invitation = await this.prisma.userInvitation.findUnique({
+      where: { tokenHash },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (!invitation || !invitation.user) {
+      return {
+        valid: false,
+        status: 'NOT_FOUND',
+        message: 'Token aktivasi tidak valid atau tidak ditemukan.',
+      };
+    }
+
+    if (invitation.status === 'USED') {
+      return {
+        valid: false,
+        status: 'USED',
+        message: 'Tautan aktivasi ini telah digunakan sebelumnya. Silakan login langsung.',
+      };
+    }
+
+    if (invitation.status === 'REVOKED') {
+      return {
+        valid: false,
+        status: 'REVOKED',
+        message: 'Tautan aktivasi ini telah dibatalkan atau dicabut oleh administrator.',
+      };
+    }
+
+    if (invitation.status === 'EXPIRED' || new Date(invitation.expiresAt) <= new Date()) {
+      return {
+        valid: false,
+        status: 'EXPIRED',
+        message:
+          'Tautan aktivasi telah kedaluwarsa (melebihi batas waktu 72 jam). Hubungi administrator untuk mengirimkan ulang tautan undangan.',
+      };
+    }
+
+    const today = toJakartaDateOnly();
+    const activeOrg = this.prisma.organizationalAssignment?.findFirst
+      ? await this.prisma.organizationalAssignment.findFirst({
+          where: {
+            userId: invitation.userId,
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+          },
+          orderBy: { effectiveDate: 'desc' },
+          select: { function: true, jobTitle: true },
+        })
+      : null;
+
+    return {
+      valid: true,
+      status: 'PENDING',
+      account: {
+        fullName: invitation.user.fullName,
+        email: invitation.user.email,
+        department: formatFunctionLabel((activeOrg as any)?.function),
+        jobTitle: (activeOrg as any)?.jobTitle || null,
+      },
+    };
+  }
+
   async activate(activateDto: ActivateDto): Promise<{ message: string }> {
+    if (
+      activateDto.password.length < 8 ||
+      !/[A-Za-z]/.test(activateDto.password) ||
+      !/[0-9]/.test(activateDto.password)
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Kata sandi wajib minimal 8 karakter dengan kombinasi huruf dan angka.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const tokenHash = this.tokenService.hashToken(activateDto.token.trim());
 
     const invitation = await this.prisma.userInvitation.findUnique({
