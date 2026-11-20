@@ -12,6 +12,7 @@ import {
   Briefcase,
   ChevronDown,
   CalendarCheck,
+  Lock,
 } from 'lucide-vue-next';
 
 interface ActiveLeave {
@@ -59,6 +60,9 @@ const submitting = ref(false);
 const recordId = ref<string | null>(null);
 const workDate = ref('');
 const activeLeave = ref<ActiveLeave | null>(null);
+const eodSubmittedAt = ref<string | null>(null);
+const isEodLocked = ref(false);
+const eodLockCutoff = ref('21:00');
 const additionalWorks = ref<AdditionalWorkItem[]>([]);
 const availableManagers = ref<SimpleUser[]>([]);
 const availableProjects = ref<ProjectOption[]>([
@@ -69,6 +73,9 @@ const availableProjects = ref<ProjectOption[]>([
 const activeBlockers = ref<ActiveBlockerOption[]>([]);
 const isBlockerPickerOpen = ref(false);
 const isMaxReached = computed(() => additionalWorks.value.length >= 5);
+const hasSubmittedEod = computed(() => eodSubmittedAt.value !== null && eodSubmittedAt.value !== '');
+const isEodClosedOrLocked = computed(() => hasSubmittedEod.value || isEodLocked.value);
+const isFormDisabled = computed(() => isMaxReached.value || isEodClosedOrLocked.value);
 
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
@@ -121,6 +128,10 @@ async function loadTodayState() {
   try {
     const res = await apiClient<{
       workDate: string;
+      cutoffTimings?: {
+        eodLockCutoff?: string;
+        isEodLocked?: boolean;
+      };
       record: any;
       availableProjects?: ProjectOption[];
       activeBlockers?: ActiveBlockerOption[];
@@ -129,6 +140,8 @@ async function loadTodayState() {
 
     workDate.value = res.data.workDate;
     activeLeave.value = (res.data as any).activeLeave || null;
+    isEodLocked.value = Boolean(res.data.cutoffTimings?.isEodLocked);
+    eodLockCutoff.value = res.data.cutoffTimings?.eodLockCutoff || '21:00';
     if (Array.isArray(res.data.availableProjects) && res.data.availableProjects.length > 0) {
       availableProjects.value = res.data.availableProjects;
     }
@@ -138,6 +151,14 @@ async function loadTodayState() {
     if (res.data.record) {
       recordId.value = res.data.record.id;
       additionalWorks.value = res.data.record.additionalWorks || [];
+      eodSubmittedAt.value = res.data.record.eodSubmittedAt
+        ? new Date(res.data.record.eodSubmittedAt).toISOString()
+        : null;
+      if (res.data.record.eodCutoffLockedAt) {
+        isEodLocked.value = true;
+      }
+    } else {
+      eodSubmittedAt.value = null;
     }
 
     // Load available managers for NEWLY_ASSIGNED
@@ -165,6 +186,16 @@ function selectBlockerItem(blocker: ActiveBlockerOption) {
 async function addAdditionalWork() {
   if (!recordId.value) {
     showToast('Silakan isi Morning Commitment hari ini terlebih dahulu sebelum mencatat pekerjaan tambahan.', true);
+    return;
+  }
+
+  if (isEodClosedOrLocked.value) {
+    showToast(
+      hasSubmittedEod.value
+        ? 'Evaluasi Sore (EOD) hari ini sudah dikirim dan ditutup sehingga pekerjaan tambahan baru tidak dapat ditambahkan.'
+        : `Batas waktu EOD hari ini (${eodLockCutoff.value} WIB) telah berakhir sehingga pekerjaan tambahan baru tidak dapat ditambahkan.`,
+      true,
+    );
     return;
   }
 
@@ -357,7 +388,25 @@ onMounted(() => {
           </div>
         </div>
         <div class="panel-body">
-          <div v-if="isMaxReached" class="alert-banner warning" data-testid="max-limit-banner">
+          <div v-if="isEodClosedOrLocked" class="alert-banner locked" role="status" data-testid="eod-locked-banner">
+            <Lock :size="18" class="alert-icon" />
+            <div class="locked-banner-content">
+              <strong>
+                {{
+                  hasSubmittedEod
+                    ? 'Evaluasi Sore (EOD) Hari Ini Telah Ditutup — Formulir Terkunci'
+                    : `Batas Waktu EOD (${eodLockCutoff} WIB) Telah Berakhir — Formulir Terkunci`
+                }}
+              </strong>
+              <p class="locked-banner-desc">
+                Evaluasi Sore (EOD) hari ini telah ditutup/terkunci sehingga pekerjaan tambahan baru tidak dapat ditambahkan pada tanggal ini. Jika ada pekerjaan lembur mendadak setelah tutup buku, silakan catat pada hari kerja berikutnya. Untuk kendala darurat yang butuh bantuan segera, Anda tetap dapat menggunakan menu
+                <AccessLink to="/raise-blockers" class="alert-link-inline">Lapor Blocker</AccessLink>
+                kapan saja.
+              </p>
+            </div>
+          </div>
+
+          <div v-else-if="isMaxReached" class="alert-banner warning" data-testid="max-limit-banner">
             <AlertTriangle :size="18" class="alert-icon" />
             <span>Batas maksimum 5 tugas tambahan per hari telah tercapai. Anda tidak dapat menambahkan tugas baru lagi hari ini.</span>
           </div>
@@ -371,7 +420,7 @@ onMounted(() => {
                 class="input-control"
                 rows="2"
                 placeholder="Deskripsikan pekerjaan tambahan atau tugas baru yang dikerjakan..."
-                :disabled="isMaxReached"
+                :disabled="isFormDisabled"
                 required
               ></textarea>
             </div>
@@ -379,7 +428,7 @@ onMounted(() => {
             <div class="form-row" :class="{ 'single-col': formReason !== 'NEWLY_ASSIGNED' && formReason !== 'OTHER' }" data-testid="form-row-reason">
               <div class="form-group">
                 <label for="select-reason" class="form-label">Alasan Pekerjaan Tambahan *</label>
-                <select id="select-reason" v-model="formReason" class="input-control" :disabled="isMaxReached" required data-testid="select-reason">
+                <select id="select-reason" v-model="formReason" class="input-control" :disabled="isFormDisabled" required data-testid="select-reason">
                   <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan</option>
                   <option value="OPERATIONAL_INCIDENT">Perbaikan Error / Bug Kritis</option>
                   <option value="MISSED_IN_PLANNING">Tugas Terlewat Dicatat Pagi</option>
@@ -390,7 +439,7 @@ onMounted(() => {
 
               <div v-if="formReason === 'NEWLY_ASSIGNED'" class="form-group" data-testid="assigned-by-group">
                 <label for="select-assigned-by" class="form-label">Ditugaskan Oleh (Atasan Langsung/Lead) *</label>
-                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" :disabled="isMaxReached" required data-testid="select-assigned-by">
+                <select id="select-assigned-by" v-model="formAssignedBy" class="input-control" :disabled="isFormDisabled" required data-testid="select-assigned-by">
                   <option value="" disabled>-- Pilih Atasan Penugas --</option>
                   <option v-for="user in availableManagers" :key="user.id" :value="user.id">
                     {{ user.fullName }} ({{ user.email }})
@@ -406,6 +455,7 @@ onMounted(() => {
                   type="text"
                   class="input-control"
                   placeholder="Jelaskan alasan khusus pekerjaan ini..."
+                  :disabled="isFormDisabled"
                   required
                   data-testid="input-other-reason"
                 />
@@ -419,6 +469,7 @@ onMounted(() => {
                   id="select-project"
                   v-model="formProjectCode"
                   class="input-control"
+                  :disabled="isFormDisabled"
                   data-testid="select-additional-project"
                 >
                   <option value="">-- Non-Proyek / Operasional Rutin --</option>
@@ -441,6 +492,7 @@ onMounted(() => {
                     type="text"
                     class="input-control picker-input-flex"
                     placeholder="https://... atau pilih blocker"
+                    :disabled="isFormDisabled"
                   />
                   <div class="picker-dropdown-wrap">
                     <button
@@ -448,6 +500,7 @@ onMounted(() => {
                       class="btn-picker-trigger"
                       data-testid="select-additional-blocker"
                       title="Pilih tiket blocker aktif yang sedang ditangani"
+                      :disabled="isFormDisabled"
                       @click="isBlockerPickerOpen = !isBlockerPickerOpen"
                     >
                       <span>Pilih Blocker Aktif</span>
@@ -489,9 +542,9 @@ onMounted(() => {
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" :disabled="submitting || isMaxReached" data-testid="btn-add-additional-work">
+              <button type="submit" class="btn btn-primary" :disabled="submitting || isFormDisabled" data-testid="btn-add-additional-work">
                 <Plus :size="16" />
-                <span>{{ submitting ? 'Menambahkan...' : (isMaxReached ? 'Batas 5 Tugas Tercapai' : 'Tambahkan Pekerjaan') }}</span>
+                <span>{{ submitting ? 'Menambahkan...' : (isEodClosedOrLocked ? 'Terkunci Pasca-EOD' : (isMaxReached ? 'Batas 5 Tugas Tercapai' : 'Tambahkan Pekerjaan')) }}</span>
               </button>
             </div>
           </form>
@@ -1139,6 +1192,37 @@ select.input-control {
   background: var(--color-status-green-bg, #E6F4EE);
   border: 1px solid var(--color-status-green-border, #A7F3D0);
   color: var(--color-status-green-fg, #065F46);
+}
+
+.alert-banner.locked {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  background: var(--color-status-amber-bg, #FEF3C7);
+  border: 1px solid var(--color-status-amber-border, #FDE68A);
+  color: var(--color-status-amber-fg, #92400E);
+}
+
+.locked-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.locked-banner-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.alert-link-inline {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
 }
 
 .text-green {

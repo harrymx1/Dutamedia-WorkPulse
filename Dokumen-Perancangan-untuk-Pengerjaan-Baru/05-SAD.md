@@ -1572,7 +1572,7 @@ Pada saat migrasi awal (*database initialization*), skrip seed otomatis akan men
    Menerbitkan akun `admin@dutamedia.com` dengan status `ACTIVE` dan wewenang `SYSTEM_ADMIN` untuk memfasilitasi konfigurasi awal organisasi.
 3. **Nilai Kebijakan Operasional Awal (*Default Configurable Policies*):**
    - Batas Waktu Morning Check-in: `09:00 WIB` (On-Time Deadline), `Grace Period: 30 menit` (Cutoff: `09:30 WIB`).
-   - Batas Waktu EOD Check-in: `18:00 WIB` (On-Time Deadline), `Grace Period: 30 menit` (Cutoff: `18:30 WIB`).
+   - Batas Waktu EOD Check-in: `17:00 WIB` (On-Time Deadline), Jendela Lembur Fleksibel hingga `21:00 WIB` (Cutoff: `21:00 WIB`).
    - Hari Kerja Operasional: Senin s/d Jumat (1, 2, 3, 4, 5).
    - Ambang Eskalasi Blocker SLA: `2 jam kerja` tanpa respon (*unacknowledged*).
    - Ambang Batas Evaluasi Pola Kepatuhan: 3 kejadian No Submission dalam rentang `14 hari kalender`.

@@ -657,10 +657,45 @@ export class DailyService {
       });
     }
 
+    if (record.eodSubmittedAt) {
+      throw new AppException({
+        code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+        message:
+          'Evaluasi Sore (EOD) hari ini sudah dikirim dan ditutup sehingga pekerjaan tambahan baru tidak dapat ditambahkan. Jika ada pekerjaan lembur mendadak setelah tutup buku, silakan catat pada hari kerja berikutnya.',
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
+    }
+
     if (record.eodCutoffLockedAt) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_CUTOFF_LOCKED,
-        message: 'Tidak dapat menambahkan pekerjaan tambahan karena hari kerja telah terkunci (Locked pasca-EOD).',
+        message:
+          'Batas waktu EOD hari ini telah berakhir dan formulir terkunci sehingga pekerjaan tambahan baru tidak dapat ditambahkan.',
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
+    }
+
+    const todayStr = this.clockService.todayString('Asia/Jakarta');
+    const recordDateStr = record.workDate
+      ? new Date(record.workDate).toISOString().split('T')[0]
+      : todayStr;
+    const timingPolicy = await this.policyService.getActivePolicy(
+      PolicyCategory.CHECKIN_TIMING,
+      new Date(recordDateStr),
+    );
+    const timingConfig = timingPolicy.configurationValues;
+    const eodLockCutoff = timingConfig.eodLockCutoff || '21:00';
+    const currentTimeStr = this.clockService.now().toLocaleTimeString('en-GB', {
+      timeZone: timingConfig.timezone || 'Asia/Jakarta',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
+    if (recordDateStr < todayStr || (recordDateStr === todayStr && currentTimeStr > eodLockCutoff)) {
+      throw new AppException({
+        code: ErrorCode.BUSINESS_RULE_CUTOFF_LOCKED,
+        message: `Batas waktu EOD hari ini telah berakhir (${eodLockCutoff} WIB) dan formulir terkunci sehingga pekerjaan tambahan baru tidak dapat ditambahkan.`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }

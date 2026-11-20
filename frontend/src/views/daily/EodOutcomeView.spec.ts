@@ -799,7 +799,41 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(wrapper.text()).toContain('CUTI RESMI (APPROVED LEAVE)');
     expect(wrapper.text()).toContain('CUTI (DIKECUALIKAN)');
     expect(wrapper.text()).toContain('Masa Cuti Resmi Disetujui (Cuti Sakit):');
+    expect(wrapper.text()).not.toContain('Di Luar Jam Normal (Lembur Fleksibel)');
     expect(wrapper.text()).not.toContain('LATE (Lembur Fleksibel)');
     expect(wrapper.text()).not.toContain('Kirim Evaluasi EOD');
+  });
+
+  it('displays empathetic overtime label without punitive LATE prefix during flexible overtime window (Paket #2)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-20',
+          currentTime: '19:30',
+          cutoffTimings: {
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-overtime',
+            commitments: [],
+            additionalWorks: [],
+            eodSubmittedAt: null,
+          },
+          activeLeave: null,
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.text()).toContain('Di Luar Jam Normal (Lembur Fleksibel)');
+    expect(wrapper.text()).not.toContain('LATE (Lembur Fleksibel)');
   });
 });

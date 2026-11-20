@@ -337,4 +337,93 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     expect(wrapper.text()).not.toContain('Belum Mengisi Morning Commitment');
     expect(wrapper.find('form').exists()).toBe(false);
   });
+
+  it('locks form with empathetic overtime banner when EOD is already submitted while keeping recorded list visible (Paket #2)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/daily/today')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              success: true,
+              data: {
+                workDate: '2026-11-20',
+                cutoffTimings: { eodLockCutoff: '21:00', isEodLocked: false },
+                record: {
+                  id: 'rec-closed-eod',
+                  eodSubmittedAt: '2026-11-20T10:15:00.000Z',
+                  additionalWorks: [
+                    { id: 'aw-1', taskText: 'Tugas siang tercatat sebelum EOD', reason: 'OPERATIONAL_INCIDENT', createdAt: '2026-11-20T06:00:00Z' },
+                  ],
+                },
+              },
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const banner = wrapper.find('[data-testid="eod-locked-banner"]');
+    expect(banner.exists()).toBe(true);
+    expect(banner.text()).toContain('Evaluasi Sore (EOD) Hari Ini Telah Ditutup');
+    expect(banner.text()).toContain('Lapor Blocker');
+
+    expect(wrapper.find('textarea').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="select-reason"]').attributes('disabled')).toBeDefined();
+    const submitBtn = wrapper.find('[data-testid="btn-add-additional-work"]');
+    expect(submitBtn.attributes('disabled')).toBeDefined();
+    expect(submitBtn.text()).toContain('Terkunci Pasca-EOD');
+
+    // Recorded list remains visible (read-only)
+    expect(wrapper.text()).toContain('Tugas siang tercatat sebelum EOD');
+  });
+
+  it('locks form when EOD cutoff time has passed (isEodLocked = true) (Paket #2)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/daily/today')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              success: true,
+              data: {
+                workDate: '2026-11-20',
+                cutoffTimings: { eodLockCutoff: '21:00', isEodLocked: true },
+                record: {
+                  id: 'rec-cutoff-locked',
+                  eodSubmittedAt: null,
+                  additionalWorks: [],
+                },
+              },
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const banner = wrapper.find('[data-testid="eod-locked-banner"]');
+    expect(banner.exists()).toBe(true);
+    expect(banner.text()).toContain('Batas Waktu EOD (21:00 WIB) Telah Berakhir');
+    expect(wrapper.find('[data-testid="btn-add-additional-work"]').attributes('disabled')).toBeDefined();
+  });
 });

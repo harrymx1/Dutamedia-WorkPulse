@@ -34,6 +34,7 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         update: vi.fn(),
       },
       additionalWork: {
+        count: vi.fn().mockResolvedValue(0),
         create: vi.fn(),
         update: vi.fn(),
       },
@@ -331,6 +332,109 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         expect(err.code).toBe(ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED);
         expect(err.getStatus()).toBe(422);
       }
+    });
+  });
+
+  describe('submitAdditionalWork (Paket #2 — Kunci Pasca-EOD & Skenario Lembur)', () => {
+    it('throws 422 BUSINESS_RULE_ALREADY_SUBMITTED when EOD has already been submitted', async () => {
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: new Date('2026-10-28T10:05:00.000Z'),
+        eodCutoffLockedAt: null,
+      });
+
+      const dto: any = {
+        taskText: 'Perbaikan mendadak setelah EOD',
+        reason: 'OPERATIONAL_INCIDENT',
+      };
+
+      await expect(service.submitAdditionalWork('usr-1', 'rec-today', dto)).rejects.toThrowError(AppException);
+      try {
+        await service.submitAdditionalWork('usr-1', 'rec-today', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED);
+        expect(err.getStatus()).toBe(422);
+        expect(err.message).toContain('Evaluasi Sore (EOD) hari ini sudah dikirim dan ditutup');
+      }
+    });
+
+    it('throws 422 BUSINESS_RULE_CUTOFF_LOCKED when current WIB time passes eodLockCutoff (21:00)', async () => {
+      // 14:15 UTC = 21:15 WIB (melewati batas kunci 21:00 WIB)
+      mockClock.now.mockReturnValue(new Date('2026-10-28T14:15:00.000Z'));
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+        eodCutoffLockedAt: null,
+      });
+
+      const dto: any = {
+        taskText: 'Tugas lembur lewat jam 21:00 WIB',
+        reason: 'OPERATIONAL_INCIDENT',
+      };
+
+      await expect(service.submitAdditionalWork('usr-1', 'rec-today', dto)).rejects.toThrowError(AppException);
+      try {
+        await service.submitAdditionalWork('usr-1', 'rec-today', dto);
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.BUSINESS_RULE_CUTOFF_LOCKED);
+        expect(err.getStatus()).toBe(422);
+        expect(err.message).toContain('21:00 WIB');
+      }
+    });
+
+    it('throws 422 BUSINESS_RULE_CUTOFF_LOCKED when eodCutoffLockedAt is set', async () => {
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+        eodCutoffLockedAt: new Date('2026-10-28T14:00:00.000Z'),
+      });
+
+      const dto: any = {
+        taskText: 'Tugas saat eodCutoffLockedAt aktif',
+        reason: 'OPERATIONAL_INCIDENT',
+      };
+
+      try {
+        await service.submitAdditionalWork('usr-1', 'rec-today', dto);
+        expect.unreachable('Should have thrown AppException');
+      } catch (err: any) {
+        expect(err.code).toBe(ErrorCode.BUSINESS_RULE_CUTOFF_LOCKED);
+        expect(err.getStatus()).toBe(422);
+      }
+    });
+
+    it('allows submitting additional work during flexible overtime window (19:30 WIB) before EOD is submitted', async () => {
+      // 12:30 UTC = 19:30 WIB (lembur fleksibel sebelum 21:00 WIB dan belum kirim EOD)
+      mockClock.now.mockReturnValue(new Date('2026-10-28T12:30:00.000Z'));
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+        eodCutoffLockedAt: null,
+        orgContextSnapshot: {},
+      });
+      mockPrisma.additionalWork.create.mockResolvedValue({
+        id: 'aw-overtime-1',
+        dailyRecordId: 'rec-today',
+        taskText: 'Menangani hotfix modul invoice lembur',
+        reason: 'OPERATIONAL_INCIDENT',
+        assignedByUser: null,
+      });
+
+      const result = await service.submitAdditionalWork('usr-1', 'rec-today', {
+        taskText: 'Menangani hotfix modul invoice lembur',
+        reason: 'OPERATIONAL_INCIDENT' as any,
+      });
+
+      expect(result?.id).toBe('aw-overtime-1');
+      expect(mockPrisma.additionalWork.create).toHaveBeenCalledTimes(1);
     });
   });
 });

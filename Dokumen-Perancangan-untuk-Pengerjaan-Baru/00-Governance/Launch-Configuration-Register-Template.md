@@ -23,13 +23,13 @@
 |---|---|---|---|---|---|
 | **1** | **Zona Waktu** | Standar zona waktu rujukan organisasi | `Asia/Jakarta (WIB)` | [ ............................ ] | Wajib format IANA time zone valid |
 | **2** | **Hari Kerja** | Hari kerja wajib partisipasi reguler | `Senin s/d Jumat` | [ ............................ ] | Hari Sabtu/Minggu otomatis dikecualikan |
-| **3** | **Jam Layanan** | Jendela operasional sistem (`NFR-09`) | `07:00 – 19:00 WIB` | [ ............................ ] | Form submission aktif dalam jendela ini |
+| **3** | **Jam Layanan** | Jendela operasional sistem (`NFR-09`) | `07:00 – 21:00 WIB` | [ ............................ ] | Form submission aktif dalam jendela ini |
 | **4** | **Morning Deadline** | Batas waktu tepat waktu komitmen pagi | `09:00 WIB` | [ ............................ ] | Pengisian $\le$ jam ini berstatus `ON_TIME` |
 | **5** | **Morning Grace** | Masa tenggang pengisian pagi | `30 Menit` | [ ............................ ] | Pengisian s.d. 09:30 WIB berstatus `LATE` |
 | **6** | **Morning Cutoff** | Batas akhir mutlak pengisian pagi | `09:30 WIB` (Deadline + Grace) | [ ............................ ] | Lewat dari jam ini ditolak (`NO_SUBMISSION`) |
-| **7** | **EOD Deadline** | Batas waktu tepat waktu log progres sore | `18:00 WIB` | [ ............................ ] | Pengisian $\le$ jam ini berstatus `ON_TIME` |
-| **8** | **EOD Grace** | Masa tenggang pengisian sore | `30 Menit` | [ ............................ ] | Pengisian s.d. 18:30 WIB berstatus `LATE` |
-| **9** | **EOD Cutoff** | Batas akhir mutlak pengisian sore | `18:30 WIB` (Deadline + Grace) | [ ............................ ] | Lewat jam ini form terkunci |
+| **7** | **EOD Deadline** | Batas waktu tepat waktu log progres sore | `17:00 WIB` | [ ............................ ] | Pengisian $\le$ jam ini berstatus `ON_TIME` |
+| **8** | **EOD Grace / Lembur Fleksibel** | Jendela lembur fleksibel pengisian sore | `240 Menit` (s.d. 21:00 WIB) | [ ............................ ] | Pengisian 17:01–21:00 WIB diterima sebagai lembur fleksibel |
+| **9** | **EOD Cutoff** | Batas akhir mutlak pengisian sore | `21:00 WIB` (Deadline + Lembur Fleksibel) | [ ............................ ] | Lewat jam ini form EOD & Additional Work terkunci |
 | **10** | **Objection Window** | Durasi pengajuan keberatan koreksi Material | `24 Jam Kerja` | [ ............................ ] | Jika waktu habis tanpa sanggahan $\rightarrow$ auto-approved |
 | **11** | **Coaching Window** | Rentang evaluasi kepatuhan 3x NoSub | `14 Hari Kalender` | [ ............................ ] | Kejadian 3x NoSub dalam rentang ini memicu coaching |
 | **12** | **SLA Blocker Critical** | Batas respon awal tiket kendala Kritis | `4 Jam Kerja` | [ ............................ ] | Lewat dari batas waktu otomatis eskalasi ke Level 2 |

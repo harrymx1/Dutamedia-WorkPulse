@@ -445,7 +445,7 @@ onMounted(() => {
                 <span v-if="activeLeave" class="badge badge-active">CUTI RESMI (APPROVED LEAVE)</span>
                 <span v-else-if="hasSubmittedEod" class="badge badge-active">SUBMITTED (Terkunci)</span>
                 <span v-else-if="isEodLocked" class="badge badge-danger">LOCKED (Pasca {{ eodLockCutoff }} WIB)</span>
-                <span v-else-if="isLate" class="badge badge-late">LATE (Lembur Fleksibel)</span>
+                <span v-else-if="isLate" class="badge badge-late">Di Luar Jam Normal (Lembur Fleksibel)</span>
                 <span v-else class="badge badge-ontime">ON-TIME</span>
               </div>
             </div>
