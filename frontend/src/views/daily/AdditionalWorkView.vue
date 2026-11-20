@@ -399,7 +399,7 @@ onMounted(() => {
                 }}
               </strong>
               <p class="locked-banner-desc">
-                Evaluasi Sore (EOD) hari ini telah ditutup/terkunci sehingga pekerjaan tambahan baru tidak dapat ditambahkan pada tanggal ini. Jika ada pekerjaan lembur mendadak setelah tutup buku, silakan catat pada hari kerja berikutnya. Untuk kendala darurat yang butuh bantuan segera, Anda tetap dapat menggunakan menu
+                Evaluasi Sore (EOD) hari ini telah ditutup/terkunci sehingga pekerjaan tambahan baru tidak dapat ditambahkan pada tanggal ini. Jika ada pekerjaan lembur mendadak setelah Evaluasi Sore (EOD) ditutup, silakan catat pada hari kerja berikutnya. Untuk kendala darurat yang butuh bantuan segera, Anda tetap dapat menggunakan menu
                 <AccessLink to="/raise-blockers" class="alert-link-inline">Lapor Blocker</AccessLink>
                 kapan saja.
               </p>

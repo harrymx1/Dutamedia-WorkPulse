@@ -661,7 +661,7 @@ export class DailyService {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
         message:
-          'Evaluasi Sore (EOD) hari ini sudah dikirim dan ditutup sehingga pekerjaan tambahan baru tidak dapat ditambahkan. Jika ada pekerjaan lembur mendadak setelah tutup buku, silakan catat pada hari kerja berikutnya.',
+          'Evaluasi Sore (EOD) hari ini sudah dikirim dan ditutup sehingga pekerjaan tambahan baru tidak dapat ditambahkan. Jika ada pekerjaan lembur mendadak setelah Evaluasi Sore (EOD) ditutup, silakan catat pada hari kerja berikutnya.',
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
