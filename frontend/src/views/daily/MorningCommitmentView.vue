@@ -1325,6 +1325,9 @@ onMounted(() => {
         <!-- Action Footer -->
         <div v-if="!isFormLocked" class="action-footer">
           <div class="footer-info">
+            <span class="footer-info-text">
+              Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off.
+            </span>
             <div v-if="draftSavedAt" class="draft-status-row" data-testid="draft-saved-status">
               <span class="badge badge-info">
                 Draf tersimpan pukul {{ formatTime(draftSavedAt) }}
@@ -1337,9 +1340,6 @@ onMounted(() => {
               >
                 Reset Draf
               </button>
-            </div>
-            <div>
-              Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off {{ morningLockCutoff }} WIB.
             </div>
           </div>
           <div class="footer-btns">
@@ -2425,15 +2425,20 @@ select.input-control {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .footer-info {
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
   color: var(--color-text-secondary);
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.footer-info-text {
+  line-height: 1.4;
 }
 
 .draft-status-row {
@@ -2462,7 +2467,18 @@ select.input-control {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .action-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .footer-btns {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
 }
 
 .btn {

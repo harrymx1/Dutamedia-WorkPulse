@@ -902,6 +902,9 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     await new Promise((r) => setTimeout(r, 30));
 
     // 1. Isi teks komitmen & klik tombol "Simpan Draf"
+    expect(wrapper1.find('.footer-info-text').text()).toBe(
+      'Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off.',
+    );
     await wrapper1.find('.slots-body textarea.input-control').setValue(
       'Menyelesaikan draf UAT modul baru untuk sprint berjalan',
     );
