@@ -437,4 +437,90 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
       expect(mockPrisma.additionalWork.create).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('getTodayState (Tomorrow Priority & Carry-Over H-1 -> H)', () => {
+    it('returns tomorrowPriority and availableCarryOvers from previousWorkday when today record is null', async () => {
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.projectAuthorityMapping = { findMany: vi.fn().mockResolvedValue([]) };
+      mockPrisma.blockerTicket = { findMany: vi.fn().mockResolvedValue([]) };
+
+      mockPrisma.dailyAccountabilityRecord.findUnique
+        .mockResolvedValueOnce(null) // today record
+        .mockResolvedValueOnce({
+          id: 'rec-prev',
+          orgContextSnapshot: {
+            tomorrowPriority: 'Validasi spesifikasi modul billing bersama QA',
+            commitmentMeta: {
+              1: { projectCode: 'PRJ-PORTAL', linkedBlockerId: null },
+            },
+          },
+          commitments: [
+            {
+              id: 'c-prev-1',
+              sequenceNo: 1,
+              taskText: 'Finalisasi alur invoice otomatis',
+              referenceLink: 'https://github.com/dutamedia/workpulse/issues/214',
+              initialRisk: CommitmentRisk.GREEN,
+              carryOverDaysCount: 1,
+              continuation: ContinuationStatus.CONTINUE,
+              continuationReason: 'Menunggu konfirmasi tabel pajak',
+            },
+          ],
+        });
+
+      const result = await service.getTodayState('usr-1');
+
+      expect(result.tomorrowPriority).toBe('Validasi spesifikasi modul billing bersama QA');
+      expect(result.availableCarryOvers).toHaveLength(1);
+      expect(result.availableCarryOvers[0]).toMatchObject({
+        originCommitmentId: 'c-prev-1',
+        carryOverDaysCount: 2,
+        suggestedRisk: CommitmentRisk.AMBER,
+        isAmberWarningAdvised: true,
+        projectCode: 'PRJ-PORTAL',
+        continuationReason: 'Menunggu konfirmasi tabel pajak',
+      });
+    });
+
+    it('keeps returning tomorrowPriority from previousWorkday even after today morning commitments are submitted', async () => {
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.projectAuthorityMapping = { findMany: vi.fn().mockResolvedValue([]) };
+      mockPrisma.blockerTicket = { findMany: vi.fn().mockResolvedValue([]) };
+
+      mockPrisma.dailyAccountabilityRecord.findUnique
+        .mockResolvedValueOnce({
+          id: 'rec-today-submitted',
+          morningSubmittedAt: new Date('2026-10-28T01:45:00.000Z'),
+          orgContextSnapshot: { commitmentMeta: {} },
+          commitments: [
+            {
+              id: 'c-today-1',
+              sequenceNo: 1,
+              taskText: 'Melanjutkan review desain API',
+              initialRisk: CommitmentRisk.GREEN,
+              blockers: [],
+            },
+          ],
+          additionalWorks: [],
+        })
+        .mockResolvedValueOnce({
+          id: 'rec-prev',
+          orgContextSnapshot: {
+            tomorrowPriority: 'Tetap selesaikan prioritas kemarin pagi ini',
+          },
+          commitments: [
+            {
+              id: 'c-prev-1',
+              sequenceNo: 1,
+              continuation: ContinuationStatus.CONTINUE,
+            },
+          ],
+        });
+
+      const result = await service.getTodayState('usr-1');
+
+      expect(result.tomorrowPriority).toBe('Tetap selesaikan prioritas kemarin pagi ini');
+      expect(result.availableCarryOvers).toEqual([]);
+    });
+  });
 });

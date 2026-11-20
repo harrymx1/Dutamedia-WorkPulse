@@ -23,6 +23,7 @@ import {
   CalendarCheck,
   Check,
   Bookmark,
+  Save,
 } from 'lucide-vue-next';
 
 interface CommitmentSlot {
@@ -88,6 +89,8 @@ const zeroCommitmentReason = ref('');
 
 const isCopyForwardOpen = ref(false);
 const availableCarryOvers = ref<CarryOverDraft[]>([]);
+const selectedCarryOverIds = ref<string[]>([]);
+const draftSavedAt = ref<string | null>(null);
 const availableProjects = ref<ProjectOption[]>([
   { projectCode: 'PRJ-PORTAL', projectName: 'Website Customer Portal & Client Billing' },
   { projectCode: 'PRJ-CORE', projectName: 'Enterprise Core Engine & Identity Sync' },
@@ -253,6 +256,13 @@ async function loadTodayState() {
       morningSubmittedAt.value = null;
       isSubmittedSuccess.value = false;
     }
+
+    // Pemulihan atau pembersihan draf lokal sesuai status formulir
+    if (morningSubmittedAt.value || isMorningLocked.value || activeLeave.value) {
+      clearLocalDraft(true);
+    } else {
+      restoreLocalDraft();
+    }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat status komitmen hari ini.', true);
   } finally {
@@ -313,10 +323,12 @@ function isDraftApplied(originCommitmentId: string): boolean {
   );
 }
 
-function applyCarryOver(draft: CarryOverDraft) {
+function applyCarryOver(draft: CarryOverDraft, silent = false): boolean {
   if (isDraftApplied(draft.originCommitmentId)) {
-    showToast('Draf tugas ini sudah disalin ke komitmen hari ini.', true);
-    return;
+    if (!silent) {
+      showToast('Draf tugas ini sudah disalin ke komitmen hari ini.', true);
+    }
+    return false;
   }
 
   // Cari slot komitmen pertama yang belum mendapat masukan apapun dari pengguna
@@ -327,20 +339,153 @@ function applyCarryOver(draft: CarryOverDraft) {
   }
 
   if (targetIndex !== -1) {
+    const prefillBlockerNote =
+      (draft.suggestedRisk === 'AMBER' || draft.suggestedRisk === 'RED') && draft.continuationReason
+        ? draft.continuationReason
+        : '';
+
     commitmentSlots.value[targetIndex] = {
       taskText: draft.taskText,
       referenceLink: draft.referenceLink || '',
       projectCode: draft.projectCode || '',
       linkedBlockerId: draft.linkedBlockerId || '',
       initialRisk: draft.suggestedRisk,
-      knownBlockerNote: '',
+      knownBlockerNote: prefillBlockerNote,
       supportNeeded: '',
       originCommitmentId: draft.originCommitmentId,
       carryOverDaysCount: draft.carryOverDaysCount,
     };
-    showToast(`Draf tugas carry-over #${draft.carryOverDaysCount} diterapkan ke slot #${targetIndex + 1}.`);
-  } else {
+    selectedCarryOverIds.value = selectedCarryOverIds.value.filter(
+      (id) => id !== draft.originCommitmentId,
+    );
+    if (!silent) {
+      showToast(`Draf tugas carry-over #${draft.carryOverDaysCount} diterapkan ke slot #${targetIndex + 1}.`);
+    }
+    return true;
+  }
+
+  if (!silent) {
     showToast('Semua 3 slot telah terisi atau memiliki masukan. Hapus atau kosongkan salah satu slot terlebih dahulu.', true);
+  }
+  return false;
+}
+
+function applySelectedCarryOvers() {
+  if (selectedCarryOverIds.value.length === 0) return;
+  let appliedCount = 0;
+  let hitLimit = false;
+
+  for (const id of [...selectedCarryOverIds.value]) {
+    const draft = availableCarryOvers.value.find((item) => item.originCommitmentId === id);
+    if (!draft || isDraftApplied(id)) continue;
+    const ok = applyCarryOver(draft, true);
+    if (ok) {
+      appliedCount++;
+    } else {
+      hitLimit = true;
+      break;
+    }
+  }
+
+  if (appliedCount > 0 && hitLimit) {
+    showToast(`${appliedCount} item berhasil disalin. Sisa item dilewati karena maksimal 3 slot komitmen penuh.`, true);
+  } else if (appliedCount > 0) {
+    showToast(`${appliedCount} draf tugas berlanjut diterapkan ke slot komitmen hari ini.`);
+  } else if (hitLimit) {
+    showToast('Semua 3 slot telah terisi atau memiliki masukan. Hapus atau kosongkan salah satu slot terlebih dahulu.', true);
+  }
+}
+
+function getDraftStorageKey(): string {
+  const uid = authStore.user?.id || 'default';
+  const dateKey = workDate.value || 'today';
+  return `wp_morning_draft_${uid}_${dateKey}`;
+}
+
+function saveLocalDraft() {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  const savedAtIso = new Date().toISOString();
+  const draftPayload = {
+    isZeroCommitment: isZeroCommitment.value,
+    zeroCommitmentReason: zeroCommitmentReason.value,
+    commitmentSlots: commitmentSlots.value.map((s) => ({ ...s })),
+    savedAt: savedAtIso,
+  };
+  try {
+    window.localStorage.setItem(getDraftStorageKey(), JSON.stringify(draftPayload));
+    draftSavedAt.value = savedAtIso;
+    showToast('Draf Morning Commitment berhasil disimpan secara lokal.');
+  } catch {
+    showToast('Gagal menyimpan draf lokal pada peramban ini.', true);
+  }
+}
+
+function restoreLocalDraft() {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    const raw = window.localStorage.getItem(getDraftStorageKey());
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return;
+
+    if (typeof parsed.isZeroCommitment === 'boolean') {
+      isZeroCommitment.value = parsed.isZeroCommitment;
+    }
+    if (typeof parsed.zeroCommitmentReason === 'string') {
+      zeroCommitmentReason.value = parsed.zeroCommitmentReason;
+    }
+    if (Array.isArray(parsed.commitmentSlots) && parsed.commitmentSlots.length > 0) {
+      commitmentSlots.value = parsed.commitmentSlots.slice(0, 3).map((s: any) => ({
+        taskText: typeof s.taskText === 'string' ? s.taskText : '',
+        referenceLink: typeof s.referenceLink === 'string' ? s.referenceLink : '',
+        projectCode: typeof s.projectCode === 'string' ? s.projectCode : '',
+        linkedBlockerId: typeof s.linkedBlockerId === 'string' ? s.linkedBlockerId : '',
+        initialRisk:
+          s.initialRisk === 'AMBER' || s.initialRisk === 'RED' ? s.initialRisk : 'GREEN',
+        knownBlockerNote: typeof s.knownBlockerNote === 'string' ? s.knownBlockerNote : '',
+        supportNeeded: typeof s.supportNeeded === 'string' ? s.supportNeeded : '',
+        originCommitmentId:
+          typeof s.originCommitmentId === 'string' && s.originCommitmentId
+            ? s.originCommitmentId
+            : undefined,
+        carryOverDaysCount:
+          typeof s.carryOverDaysCount === 'number' ? s.carryOverDaysCount : 0,
+      }));
+    }
+    if (typeof parsed.savedAt === 'string') {
+      draftSavedAt.value = parsed.savedAt;
+    }
+  } catch {
+    // Abaikan draf rusak jika gagal diparsing
+  }
+}
+
+function clearLocalDraft(silent = false) {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.removeItem(getDraftStorageKey());
+    } catch {
+      // Abaikan kegagalan hapus storage
+    }
+  }
+  draftSavedAt.value = null;
+  if (!silent) {
+    isZeroCommitment.value = false;
+    zeroCommitmentReason.value = '';
+    selectedCarryOverIds.value = [];
+    commitmentSlots.value = [
+      {
+        taskText: '',
+        referenceLink: '',
+        projectCode: '',
+        linkedBlockerId: '',
+        initialRisk: 'GREEN',
+        knownBlockerNote: '',
+        supportNeeded: '',
+        carryOverDaysCount: 0,
+      },
+    ];
+    showToast('Draf lokal berhasil dihapus.');
   }
 }
 
@@ -443,6 +588,7 @@ async function submitMorningCheckin() {
       body: JSON.stringify(payload),
     });
 
+    clearLocalDraft(true);
     showToast('Morning Commitment berhasil dikirim dan dicatat.');
     morningSubmittedAt.value = res.data?.morningSubmittedAt
       ? new Date(res.data.morningSubmittedAt).toISOString()
@@ -707,6 +853,22 @@ onMounted(() => {
           </div>
 
           <div class="panel-body summary-body">
+            <!-- Context Hint: Tomorrow Priority dari EOD Kemarin (Non-Binding Context) -->
+            <div
+              v-if="tomorrowPriority && !isZeroCommitment"
+              class="tomorrow-priority-hint"
+              data-testid="tomorrow-priority-banner"
+            >
+              <div class="tomorrow-priority-hint-content">
+                <span class="tomorrow-priority-hint-label">
+                  <Bookmark :size="14" class="text-amber" />
+                  <span>Prioritas Kemarin Sore:</span>
+                </span>
+                <span class="tomorrow-priority-hint-text">"{{ tomorrowPriority }}"</span>
+              </div>
+              <span class="badge badge-warning">Hanya Referensi</span>
+            </div>
+
             <div
               v-for="(slot, idx) in commitmentSlots"
               :key="idx"
@@ -849,14 +1011,27 @@ onMounted(() => {
           </p>
           <div class="carry-list">
             <div v-for="item in availableCarryOvers" :key="item.originCommitmentId" class="carry-card">
+              <label class="carry-check-wrap" :title="isDraftApplied(item.originCommitmentId) ? 'Sudah disalin ke slot hari ini' : 'Pilih item untuk disalin'">
+                <input
+                  v-model="selectedCarryOverIds"
+                  type="checkbox"
+                  class="carry-checkbox"
+                  :value="item.originCommitmentId"
+                  :disabled="isFormLocked || isDraftApplied(item.originCommitmentId)"
+                  data-testid="carry-over-checkbox"
+                />
+              </label>
               <div class="carry-main">
                 <div class="carry-title">{{ item.taskText }}</div>
                 <div class="carry-meta">
-                  <span class="badge" :class="item.carryOverDaysCount >= 3 ? 'badge-warning' : 'badge-neutral'">
+                  <span class="carry-meta-text"><strong>Sumber:</strong> Komitmen Pagi Kemarin</span>
+                  <span class="carry-meta-text"><strong>Keputusan EOD:</strong> Dilanjutkan</span>
+                  <span v-if="item.projectCode" class="carry-meta-text"><strong>Proyek:</strong> {{ item.projectCode }}</span>
+                  <span class="badge" :class="item.carryOverDaysCount >= 2 ? 'badge-warning' : 'badge-neutral'">
                     Carry-Over #{{ item.carryOverDaysCount }}
                   </span>
-                  <span v-if="item.isAmberWarningAdvised" class="amber-advice">
-                    Carry-over 3+ hari berturut-turut — Disarankan AMBER
+                  <span v-if="item.isAmberWarningAdvised || item.carryOverDaysCount >= 2" class="amber-advice">
+                    Carry-over 2+ hari berturut-turut — Disarankan AMBER
                   </span>
                 </div>
                 <div v-if="item.continuationReason" class="carry-note">
@@ -875,6 +1050,18 @@ onMounted(() => {
                 <span>{{ isDraftApplied(item.originCommitmentId) ? 'Sudah Tersalin' : 'Salin ke Slot' }}</span>
               </button>
             </div>
+          </div>
+          <div class="carry-actions">
+            <button
+              type="button"
+              class="btn btn-secondary icon-text-btn"
+              data-testid="btn-apply-selected-carry-overs"
+              :disabled="isFormLocked || selectedCarryOverIds.length === 0"
+              @click="applySelectedCarryOvers"
+            >
+              <Copy :size="14" />
+              <span>Gunakan Item Terpilih ke Slot Hari Ini</span>
+            </button>
           </div>
         </div>
       </section>
@@ -1138,10 +1325,38 @@ onMounted(() => {
         <!-- Action Footer -->
         <div v-if="!isFormLocked" class="action-footer">
           <div class="footer-info">
-            Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off {{ morningLockCutoff }} WIB.
+            <div v-if="draftSavedAt" class="draft-status-row" data-testid="draft-saved-status">
+              <span class="badge badge-info">
+                Draf tersimpan pukul {{ formatTime(draftSavedAt) }}
+              </span>
+              <button
+                type="button"
+                class="btn-link-reset"
+                data-testid="btn-clear-draft"
+                @click="clearLocalDraft(false)"
+              >
+                Reset Draf
+              </button>
+            </div>
+            <div>
+              Pastikan seluruh komitmen telah diisi dengan akurat sebelum batas cut-off {{ morningLockCutoff }} WIB.
+            </div>
           </div>
           <div class="footer-btns">
             <button
+              id="btn-save-draft"
+              data-testid="btn-save-draft"
+              type="button"
+              class="btn btn-secondary"
+              :disabled="submitting"
+              @click="saveLocalDraft"
+            >
+              <Save :size="15" />
+              <span>Simpan Draf</span>
+            </button>
+            <button
+              id="btn-submit-morning"
+              data-testid="btn-submit-morning"
               type="button"
               class="btn btn-primary"
               :disabled="submitting"
@@ -1833,24 +2048,55 @@ onMounted(() => {
 .carry-card {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
   padding: 12px 16px;
   background: var(--color-canvas);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
 }
 
+.carry-check-wrap {
+  display: inline-flex;
+  align-items: center;
+  padding-top: 2px;
+  cursor: pointer;
+}
+
+.carry-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-brand-primary);
+}
+
 .carry-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .carry-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.carry-meta-text {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+
+.carry-meta-text strong {
+  color: var(--color-text-primary);
+}
+
+.carry-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
 }
 
 .amber-advice {
@@ -2178,11 +2424,45 @@ select.input-control {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .footer-info {
   font-size: 13px;
   color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.draft-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-link-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-status-red-fg);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.btn-link-reset:hover {
+  opacity: 0.8;
+}
+
+.footer-btns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn {

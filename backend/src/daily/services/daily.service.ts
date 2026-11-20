@@ -107,27 +107,27 @@ export class DailyService {
       },
     });
 
-    // Ambil komitmen carry-over yang tersedia dari previousWorkday (FR-11, DEC-013)
+    // Ambil prioritas esok hari (H-1) & komitmen carry-over dari previousWorkday (FR-11, DEC-013)
     let availableCarryOvers: any[] = [];
     let tomorrowPriority: string | null = null;
-    if (!record || record.commitments.length === 0) {
-      const prevWorkdayStr = await this.workdayService.getPreviousWorkday(userId, todayDate);
-      const prevRecord = await this.prisma.dailyAccountabilityRecord.findUnique({
-        where: {
-          userId_workDate: {
-            userId,
-            workDate: new Date(prevWorkdayStr),
-          },
+    const prevWorkdayStr = await this.workdayService.getPreviousWorkday(userId, todayDate);
+    const prevRecord = await this.prisma.dailyAccountabilityRecord.findUnique({
+      where: {
+        userId_workDate: {
+          userId,
+          workDate: new Date(prevWorkdayStr),
         },
-        include: {
-          commitments: true,
-        },
-      });
+      },
+      include: {
+        commitments: true,
+      },
+    });
 
-      if (prevRecord) {
-        tomorrowPriority = (prevRecord.orgContextSnapshot as any)?.tomorrowPriority || null;
+    if (prevRecord) {
+      tomorrowPriority = (prevRecord.orgContextSnapshot as any)?.tomorrowPriority || null;
+      if (!record || record.commitments.length === 0) {
         const prevMeta = (prevRecord.orgContextSnapshot as any)?.commitmentMeta || {};
-        availableCarryOvers = prevRecord.commitments
+        availableCarryOvers = (prevRecord.commitments || [])
           .filter((c) => c.continuation === ContinuationStatus.CONTINUE)
           .map((c) => {
             const nextCount = c.carryOverDaysCount + 1;

@@ -9,6 +9,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
   let router: any;
 
   beforeEach(() => {
+    window.localStorage.clear();
     setActivePinia(createPinia());
     router = createRouter({
       history: createWebHistory(),
@@ -720,5 +721,212 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     // View should have automatically loaded the locked baseline
     expect(wrapper.text()).toContain('Morning Commitment Telah Terkunci');
     expect(wrapper.text()).toContain('Submitted from Tab 1');
+  });
+
+  it('menampilkan Prioritas Kemarin Sore bahkan setelah Morning Commitment terkunci (Temuan 1a)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-20',
+          currentTime: '08:45',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          tomorrowPriority: 'Validasi kriteria UAT modul billing bersama QA',
+          record: {
+            id: 'rec-submitted-with-tp',
+            morningSubmittedAt: '2026-11-20T01:35:00.000Z',
+            initialDailyStatus: 'GREEN',
+            commitments: [
+              {
+                taskText: 'Finalisasi spesifikasi modul billing',
+                initialRisk: 'GREEN',
+                referenceLink: null,
+                carryOverDaysCount: 0,
+              },
+            ],
+          },
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+
+    const banner = wrapper.find('[data-testid="tomorrow-priority-banner"]');
+    expect(banner.exists()).toBe(true);
+    expect(banner.text()).toContain('Prioritas Kemarin Sore:');
+    expect(banner.text()).toContain('Validasi kriteria UAT modul billing bersama QA');
+  });
+
+  it('mendukung peringatan Carry-Over #2+, auto-isi Catatan EOD untuk AMBER, dan pemilihan multi-item via checkbox (Temuan 1b)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-20',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          record: null,
+          tomorrowPriority: 'Prioritas hari ini',
+          availableCarryOvers: [
+            {
+              originCommitmentId: 'co-2',
+              taskText: 'Finalisasi spesifikasi penagihan PRJ-PORTAL',
+              suggestedRisk: 'AMBER',
+              carryOverDaysCount: 2,
+              isAmberWarningAdvised: true,
+              projectCode: 'PRJ-PORTAL',
+              referenceLink: 'https://github.com/dutamedia/workpulse/issues/214',
+              continuationReason: 'Masih menunggu tabel tarif pajak final dari Finance',
+            },
+            {
+              originCommitmentId: 'co-1',
+              taskText: 'Menyusun dokumen Acceptance Criteria SSO Enterprise',
+              suggestedRisk: 'GREEN',
+              carryOverDaysCount: 1,
+              isAmberWarningAdvised: false,
+              projectCode: 'PRJ-CORE',
+              referenceLink: '',
+              continuationReason: 'Tinggal melengkapi skenario batas sesi paralel',
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+
+    const copyPanel = wrapper.find('.copy-forward-panel');
+    await copyPanel.find('.panel-head').trigger('click');
+
+    // 1. Peringatan amber muncul pada Carry-Over #2 dengan teks 2+ hari berturut-turut
+    expect(copyPanel.text()).toContain('Carry-Over #2');
+    expect(copyPanel.text()).toContain('Carry-over 2+ hari berturut-turut — Disarankan AMBER');
+    expect(copyPanel.text()).toContain('Sumber:');
+    expect(copyPanel.text()).toContain('Keputusan EOD:');
+
+    // 2. Centang kedua item dan klik tombol "Gunakan Item Terpilih ke Slot Hari Ini"
+    const checkboxes = copyPanel.findAll('[data-testid="carry-over-checkbox"]');
+    expect(checkboxes.length).toBe(2);
+    await checkboxes[0].setValue(true);
+    await checkboxes[1].setValue(true);
+
+    const applySelectedBtn = copyPanel.find('[data-testid="btn-apply-selected-carry-overs"]');
+    expect(applySelectedBtn.exists()).toBe(true);
+    await applySelectedBtn.trigger('click');
+
+    // 3. Kedua slot otomatis terisi dan slot AMBER otomatis mengisi Potensi Kendala dari Catatan EOD Kemarin
+    const slotCards = wrapper.findAll('.slot-card');
+    expect(slotCards.length).toBe(2);
+    expect(slotCards[0].find('textarea').element.value).toBe('Finalisasi spesifikasi penagihan PRJ-PORTAL');
+    const slot0Textareas = slotCards[0].findAll('textarea');
+    expect(slot0Textareas[1].element.value).toBe('Masih menunggu tabel tarif pajak final dari Finance');
+    expect(slotCards[1].find('textarea').element.value).toBe('Menyusun dokumen Acceptance Criteria SSO Enterprise');
+  });
+
+  it('menyimpan draf ke localStorage, memulihkan setelah refresh (F5), dan membersihkan draf setelah submit resmi (Temuan 1c)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-dio-1',
+      fullName: 'Dio Bayu Bagaskara',
+      email: 'product@dutamedia.com',
+      role: 'PROJECT_MANAGER',
+      status: 'ACTIVE',
+    };
+
+    let submitted = false;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string, opts?: any) => {
+      if (url.includes('/daily/morning') && opts?.method === 'POST') {
+        submitted = true;
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: { morningSubmittedAt: '2026-11-20T01:40:00.000Z' },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: {
+            workDate: '2026-11-20',
+            currentTime: '08:30',
+            cutoffTimings: {
+              morningOnTimeCutoff: '09:00',
+              morningLockCutoff: '09:30',
+              isMorningLocked: false,
+            },
+            record: submitted
+              ? {
+                  id: 'rec-new-1',
+                  morningSubmittedAt: '2026-11-20T01:40:00.000Z',
+                  initialDailyStatus: 'GREEN',
+                  commitments: [
+                    {
+                      taskText: 'Menyelesaikan draf UAT modul baru untuk sprint berjalan',
+                      initialRisk: 'GREEN',
+                      carryOverDaysCount: 0,
+                    },
+                  ],
+                }
+              : null,
+            availableCarryOvers: [],
+          },
+        }),
+      });
+    }));
+
+    const wrapper1 = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+
+    // 1. Isi teks komitmen & klik tombol "Simpan Draf"
+    await wrapper1.find('.slots-body textarea.input-control').setValue(
+      'Menyelesaikan draf UAT modul baru untuk sprint berjalan',
+    );
+    const saveDraftBtn = wrapper1.find('[data-testid="btn-save-draft"]');
+    expect(saveDraftBtn.exists()).toBe(true);
+    await saveDraftBtn.trigger('click');
+
+    expect(wrapper1.find('[data-testid="draft-saved-status"]').exists()).toBe(true);
+    expect(window.localStorage.getItem('wp_morning_draft_usr-dio-1_2026-11-20')).toBeTruthy();
+
+    // 2. Simulasikan refresh halaman (mount ulang komponen tanpa submit)
+    const wrapper2 = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect((wrapper2.find('.slots-body textarea.input-control').element as HTMLTextAreaElement).value).toBe(
+      'Menyelesaikan draf UAT modul baru untuk sprint berjalan',
+    );
+    expect(wrapper2.find('[data-testid="draft-saved-status"]').exists()).toBe(true);
+
+    // 3. Submit resmi -> draf lokal harus otomatis dibersihkan
+    await wrapper2.find('[data-testid="btn-submit-morning"]').trigger('click');
+    await new Promise((r) => setTimeout(r, 40));
+
+    expect(window.localStorage.getItem('wp_morning_draft_usr-dio-1_2026-11-20')).toBeNull();
   });
 });

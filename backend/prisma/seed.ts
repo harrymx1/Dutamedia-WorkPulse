@@ -17,6 +17,8 @@ import {
   BlockerImpact,
   AuthorityContext,
   CommitmentRisk,
+  CommitmentOutcome,
+  ContinuationStatus,
   TimingStatus,
   DailyRiskStatus,
   UserStatus,
@@ -1007,6 +1009,355 @@ async function main() {
       },
     });
   }
+
+  // =========================================================================
+  // 6a-2. SEED REKOR HARI KERJA KEMARIN (H-2 & H-1) UNTUK PENGUJIAN NYATA
+  //       Memastikan "Prioritas Kemarin Sore" & "Draf Pekerjaan Berlanjut"
+  //       langsung muncul dan bisa diuji nyata di halaman Komitmen Pagi.
+  // =========================================================================
+  const holidayStrSet = new Set(holidays2026.map((h) => h.date.toISOString().split('T')[0]));
+  const getPreviousWorkdayDate = (fromDate: Date): Date => {
+    const scan = new Date(fromDate.getTime());
+    scan.setUTCDate(scan.getUTCDate() - 1);
+    for (let i = 0; i < 30; i++) {
+      const day = scan.getUTCDay();
+      const ds = scan.toISOString().split('T')[0];
+      if (day !== 0 && day !== 6 && !holidayStrSet.has(ds)) {
+        return new Date(ds);
+      }
+      scan.setUTCDate(scan.getUTCDate() - 1);
+    }
+    const fallback = new Date(fromDate.getTime());
+    fallback.setUTCDate(fallback.getUTCDate() - 1);
+    return new Date(fallback.toISOString().split('T')[0]);
+  };
+
+  interface PastCommitmentSeedSpec {
+    sequenceNo: number;
+    taskText: string;
+    referenceLink?: string | null;
+    initialRisk: CommitmentRisk;
+    knownBlockerNote?: string | null;
+    supportNeeded?: string | null;
+    isCarryOver?: boolean;
+    carryOverDaysCount?: number;
+    originCommitmentId?: string | null;
+    outcome: CommitmentOutcome;
+    outcomeReason?: string | null;
+    continuation: ContinuationStatus;
+    continuationReason?: string | null;
+  }
+
+  async function upsertPastDailyRecordBypassTrigger(params: {
+    userId: string;
+    workDate: Date;
+    orgContextSnapshot: Record<string, any>;
+    initialDailyStatus: DailyRiskStatus;
+    finalDailyStatus: DailyRiskStatus;
+    morningSubmittedAt: Date;
+    eodSubmittedAt: Date;
+    commitments: PastCommitmentSeedSpec[];
+  }) {
+    const { userId, workDate: targetWorkDate } = params;
+    let record = await prisma.dailyAccountabilityRecord.findUnique({
+      where: { userId_workDate: { userId, workDate: targetWorkDate } },
+      include: { commitments: { orderBy: { sequenceNo: 'asc' } } },
+    });
+
+    const dummyFutureDate = new Date('2099-12-31');
+
+    if (!record) {
+      const orphanDummy = await prisma.dailyAccountabilityRecord.findUnique({
+        where: { userId_workDate: { userId, workDate: dummyFutureDate } },
+        select: { id: true },
+      });
+      if (orphanDummy) {
+        await prisma.dailyAccountabilityRecord.delete({ where: { id: orphanDummy.id } });
+      }
+
+      // Insert sementara pada tanggal masa depan untuk melewati trigger anti-backdating, lalu update ke H-1/H-2
+      const created = await prisma.dailyAccountabilityRecord.create({
+        data: {
+          userId,
+          workDate: dummyFutureDate,
+          orgContextSnapshot: params.orgContextSnapshot,
+          policySnapshot: { morningCutoff: '09:30', maxCommitments: 3 },
+          morningSubmittedAt: params.morningSubmittedAt,
+          eodSubmittedAt: params.eodSubmittedAt,
+          morningTiming: TimingStatus.ON_TIME,
+          eodTiming: TimingStatus.ON_TIME,
+          initialDailyStatus: params.initialDailyStatus,
+          finalDailyStatus: params.finalDailyStatus,
+          commitments: {
+            create: params.commitments.map((c) => ({
+              sequenceNo: c.sequenceNo,
+              taskText: c.taskText,
+              referenceLink: c.referenceLink ?? null,
+              initialRisk: c.initialRisk,
+              knownBlockerNote: c.knownBlockerNote ?? null,
+              supportNeeded: c.supportNeeded ?? null,
+              isCarryOver: Boolean(c.isCarryOver),
+              carryOverDaysCount: c.carryOverDaysCount ?? 0,
+              originCommitmentId: c.originCommitmentId ?? null,
+              outcome: c.outcome,
+              outcomeReason: c.outcomeReason ?? null,
+              continuation: c.continuation,
+              continuationReason: c.continuationReason ?? null,
+              isMorningLocked: true,
+              isEodLocked: true,
+            })),
+          },
+        },
+      });
+
+      await prisma.dailyAccountabilityRecord.update({
+        where: { id: created.id },
+        data: { workDate: targetWorkDate },
+      });
+
+      record = await prisma.dailyAccountabilityRecord.findUniqueOrThrow({
+        where: { id: created.id },
+        include: { commitments: { orderBy: { sequenceNo: 'asc' } } },
+      });
+    } else {
+      await prisma.dailyAccountabilityRecord.update({
+        where: { id: record.id },
+        data: {
+          orgContextSnapshot: params.orgContextSnapshot,
+          morningSubmittedAt: params.morningSubmittedAt,
+          eodSubmittedAt: params.eodSubmittedAt,
+          morningTiming: TimingStatus.ON_TIME,
+          eodTiming: TimingStatus.ON_TIME,
+          initialDailyStatus: params.initialDailyStatus,
+          finalDailyStatus: params.finalDailyStatus,
+        },
+      });
+
+      for (const spec of params.commitments) {
+        const existingC = record.commitments.find((c) => c.sequenceNo === spec.sequenceNo);
+        if (existingC) {
+          await prisma.commitment.update({
+            where: { id: existingC.id },
+            data: {
+              taskText: spec.taskText,
+              referenceLink: spec.referenceLink ?? null,
+              initialRisk: spec.initialRisk,
+              knownBlockerNote: spec.knownBlockerNote ?? null,
+              supportNeeded: spec.supportNeeded ?? null,
+              isCarryOver: Boolean(spec.isCarryOver),
+              carryOverDaysCount: spec.carryOverDaysCount ?? 0,
+              originCommitmentId: spec.originCommitmentId ?? null,
+              outcome: spec.outcome,
+              outcomeReason: spec.outcomeReason ?? null,
+              continuation: spec.continuation,
+              continuationReason: spec.continuationReason ?? null,
+              isMorningLocked: true,
+              isEodLocked: true,
+            },
+          });
+        } else {
+          await prisma.commitment.create({
+            data: {
+              dailyRecordId: record.id,
+              sequenceNo: spec.sequenceNo,
+              taskText: spec.taskText,
+              referenceLink: spec.referenceLink ?? null,
+              initialRisk: spec.initialRisk,
+              knownBlockerNote: spec.knownBlockerNote ?? null,
+              supportNeeded: spec.supportNeeded ?? null,
+              isCarryOver: Boolean(spec.isCarryOver),
+              carryOverDaysCount: spec.carryOverDaysCount ?? 0,
+              originCommitmentId: spec.originCommitmentId ?? null,
+              outcome: spec.outcome,
+              outcomeReason: spec.outcomeReason ?? null,
+              continuation: spec.continuation,
+              continuationReason: spec.continuationReason ?? null,
+              isMorningLocked: true,
+              isEodLocked: true,
+            },
+          });
+        }
+      }
+
+      record = await prisma.dailyAccountabilityRecord.findUniqueOrThrow({
+        where: { id: record.id },
+        include: { commitments: { orderBy: { sequenceNo: 'asc' } } },
+      });
+    }
+
+    return record;
+  }
+
+  const prevWorkdayDate = getPreviousWorkdayDate(todayDate);
+  const prev2WorkdayDate = getPreviousWorkdayDate(prevWorkdayDate);
+  const h2Morning = new Date(prev2WorkdayDate.getTime() + 1.5 * 3600 * 1000); // 08:30 WIB
+  const h2Eod = new Date(prev2WorkdayDate.getTime() + 10 * 3600 * 1000); // 17:00 WIB
+  const h1Morning = new Date(prevWorkdayDate.getTime() + 1.5 * 3600 * 1000); // 08:30 WIB
+  const h1Eod = new Date(prevWorkdayDate.getTime() + 10 * 3600 * 1000); // 17:00 WIB
+
+  // Pastikan formulir Hari H terbuka siap diisi untuk Dio Bayu Bagaskara & Raka Pratama
+  for (const openFormUserId of [productManagerUser.id, internFrontendUser.id]) {
+    const todayRec = await prisma.dailyAccountabilityRecord.findUnique({
+      where: { userId_workDate: { userId: openFormUserId, workDate } },
+      include: { commitments: { select: { id: true } } },
+    });
+    if (todayRec) {
+      const cIds = todayRec.commitments.map((c) => c.id);
+      if (cIds.length > 0) {
+        await prisma.correctionRequest.deleteMany({
+          where: { targetCommitmentId: { in: cIds } },
+        });
+      }
+      await prisma.dailyAccountabilityRecord.delete({ where: { id: todayRec.id } });
+    }
+  }
+
+  // 1) Dio Bayu Bagaskara (product@dutamedia.com): H-2 -> H-1 (memicu Carry-Over #2 AMBER & Carry-Over #1 + Tomorrow Priority)
+  const dioH2Record = await upsertPastDailyRecordBypassTrigger({
+    userId: productManagerUser.id,
+    workDate: prev2WorkdayDate,
+    orgContextSnapshot: {
+      department: 'Delivery',
+      jobTitle: 'Product Manager',
+      managerName: 'Dharma Putra',
+      commitmentMeta: {
+        1: { projectCode: 'PRJ-PORTAL', linkedBlockerId: null },
+      },
+    },
+    initialDailyStatus: DailyRiskStatus.AMBER,
+    finalDailyStatus: DailyRiskStatus.AMBER,
+    morningSubmittedAt: h2Morning,
+    eodSubmittedAt: h2Eod,
+    commitments: [
+      {
+        sequenceNo: 1,
+        taskText: 'Finalisasi spesifikasi alur penagihan otomatis modul PRJ-PORTAL',
+        referenceLink: 'https://github.com/dutamedia/workpulse/issues/214',
+        initialRisk: CommitmentRisk.AMBER,
+        knownBlockerNote: 'Skema diskon bertingkat belum dikonfirmasi tim Finance',
+        isCarryOver: false,
+        carryOverDaysCount: 0,
+        originCommitmentId: null,
+        outcome: CommitmentOutcome.PARTIALLY_COMPLETED,
+        continuation: ContinuationStatus.CONTINUE,
+        continuationReason: 'Menunggu konfirmasi skema diskon bertingkat dari tim Finance',
+      },
+    ],
+  });
+
+  const dioH2Commitment1 = dioH2Record.commitments.find((c) => c.sequenceNo === 1);
+  await upsertPastDailyRecordBypassTrigger({
+    userId: productManagerUser.id,
+    workDate: prevWorkdayDate,
+    orgContextSnapshot: {
+      department: 'Delivery',
+      jobTitle: 'Product Manager',
+      managerName: 'Dharma Putra',
+      tomorrowPriority:
+        'Selesaikan spesifikasi penagihan PRJ-PORTAL dan validasi kriteria UAT bersama QA sebelum pukul 14:00 WIB',
+      commitmentMeta: {
+        1: { projectCode: 'PRJ-PORTAL', linkedBlockerId: null },
+        2: { projectCode: 'PRJ-CORE', linkedBlockerId: null },
+      },
+    },
+    initialDailyStatus: DailyRiskStatus.AMBER,
+    finalDailyStatus: DailyRiskStatus.AMBER,
+    morningSubmittedAt: h1Morning,
+    eodSubmittedAt: h1Eod,
+    commitments: [
+      {
+        sequenceNo: 1,
+        taskText: 'Finalisasi spesifikasi alur penagihan otomatis modul PRJ-PORTAL',
+        referenceLink: 'https://github.com/dutamedia/workpulse/issues/214',
+        initialRisk: CommitmentRisk.AMBER,
+        knownBlockerNote: 'Menunggu konfirmasi skema diskon bertingkat dari tim Finance',
+        isCarryOver: true,
+        carryOverDaysCount: 1,
+        originCommitmentId: dioH2Commitment1?.id ?? null,
+        outcome: CommitmentOutcome.PARTIALLY_COMPLETED,
+        continuation: ContinuationStatus.CONTINUE,
+        continuationReason: 'Masih menunggu tabel tarif pajak final dari Finance, dilanjutkan pagi ini',
+      },
+      {
+        sequenceNo: 2,
+        taskText: 'Menyusun dokumen kriteria penerimaan (Acceptance Criteria) fitur SSO Enterprise',
+        referenceLink: 'https://github.com/dutamedia/workpulse/pull/219',
+        initialRisk: CommitmentRisk.GREEN,
+        isCarryOver: false,
+        carryOverDaysCount: 0,
+        originCommitmentId: null,
+        outcome: CommitmentOutcome.PARTIALLY_COMPLETED,
+        continuation: ContinuationStatus.CONTINUE,
+        continuationReason: 'Selesai 75%, tinggal melengkapi skenario batas sesi login paralel',
+      },
+    ],
+  });
+
+  // 2) Raka Pratama (intern.frontend@dutamedia.com): H-1 dengan Carry-Over #1 & Tomorrow Priority
+  await upsertPastDailyRecordBypassTrigger({
+    userId: internFrontendUser.id,
+    workDate: prevWorkdayDate,
+    orgContextSnapshot: {
+      department: 'Engineering',
+      jobTitle: 'Frontend Developer',
+      managerName: 'Arif Budiman',
+      tomorrowPriority:
+        'Merapikan komponen tabel responsif pada halaman riwayat harian dan memperbaiki batas margin layar ponsel',
+      commitmentMeta: {
+        1: { projectCode: 'WP-CORE', linkedBlockerId: null },
+      },
+    },
+    initialDailyStatus: DailyRiskStatus.GREEN,
+    finalDailyStatus: DailyRiskStatus.GREEN,
+    morningSubmittedAt: h1Morning,
+    eodSubmittedAt: h1Eod,
+    commitments: [
+      {
+        sequenceNo: 1,
+        taskText: 'Implementasi tata letak kartu responsif pada modul pengajuan izin',
+        referenceLink: 'https://github.com/dutamedia/workpulse/pull/225',
+        initialRisk: CommitmentRisk.GREEN,
+        isCarryOver: false,
+        carryOverDaysCount: 0,
+        originCommitmentId: null,
+        outcome: CommitmentOutcome.PARTIALLY_COMPLETED,
+        continuation: ContinuationStatus.CONTINUE,
+        continuationReason: 'Masih perlu menyesuaikan jarak tepi pada layar ponsel 375px',
+      },
+    ],
+  });
+
+  // 3) Aditya Nugroho (dev.frontend@dutamedia.com): H-1 selesai agar Prioritas Kemarin Sore tetap tampil di mode terkunci Hari H
+  await upsertPastDailyRecordBypassTrigger({
+    userId: frontendUser.id,
+    workDate: prevWorkdayDate,
+    orgContextSnapshot: {
+      department: 'Engineering',
+      jobTitle: 'Frontend Developer',
+      managerName: 'Arif Budiman',
+      tomorrowPriority:
+        'Pastikan investigasi CI runner OOM tereskalasi ke Tech Lead dan cek hasil build PR navigasi responsif',
+      commitmentMeta: {
+        1: { projectCode: 'WP-CORE', linkedBlockerId: null },
+      },
+    },
+    initialDailyStatus: DailyRiskStatus.GREEN,
+    finalDailyStatus: DailyRiskStatus.GREEN,
+    morningSubmittedAt: h1Morning,
+    eodSubmittedAt: h1Eod,
+    commitments: [
+      {
+        sequenceNo: 1,
+        taskText: 'Menyelesaikan komponen kerangka header dan sidebar navigasi responsif',
+        initialRisk: CommitmentRisk.GREEN,
+        isCarryOver: false,
+        carryOverDaysCount: 0,
+        originCommitmentId: null,
+        outcome: CommitmentOutcome.COMPLETED,
+        continuation: ContinuationStatus.DO_NOT_CONTINUE,
+      },
+    ],
+  });
 
   // Sinkronkan tiket contoh OOM agar selalu memiliki multi-dampak baru
   await prisma.blockerTicket.updateMany({
