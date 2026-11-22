@@ -217,6 +217,60 @@ export class CorrectionService {
           statusCode: HttpStatus.BAD_REQUEST,
         });
       }
+    } else if (dto.scopeType === CorrectionScopeType.EOD_OUTCOME) {
+      if (
+        commitment.dailyRecord.eodSubmittedAt === null &&
+        commitment.outcome == null
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Belum ada laporan evaluasi sore (EOD) yang dikirim untuk komitmen ini. Koreksi evaluasi sore tidak dapat digunakan untuk membuat laporan baru.',
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
+
+      const reqChange = dto.requestedChange || {};
+      if (
+        reqChange.outcome !== undefined &&
+        !mapRequestedOutcome(reqChange.outcome)
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Nilai hasil capaian (outcome) evaluasi sore tidak valid.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const currentOutcome = commitment.outcome ?? null;
+      const nextOutcome =
+        reqChange.outcome !== undefined
+          ? (mapRequestedOutcome(reqChange.outcome) ?? null)
+          : currentOutcome;
+      const currentReason = (commitment.outcomeReason || '').trim() || null;
+      const nextReason =
+        reqChange.outcomeReason !== undefined
+          ? String(reqChange.outcomeReason || '').trim() || null
+          : currentReason;
+      const currentContinuation = commitment.continuation ?? null;
+      const nextContinuation =
+        reqChange.continuation !== undefined
+          ? (mapRequestedContinuation(reqChange.continuation) ?? null)
+          : currentContinuation;
+
+      if (
+        nextOutcome === currentOutcome &&
+        nextReason === currentReason &&
+        nextContinuation === currentContinuation &&
+        reqChange.continuation !== 'HANDOVER'
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Perubahan yang diajukan masih sama dengan data evaluasi sore saat ini. Silakan ubah minimal satu isian evaluasi sore.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
     }
 
     // Ambil nilai sebelum (snapshot value before)

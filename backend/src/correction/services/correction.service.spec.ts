@@ -471,5 +471,70 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
         }),
       );
     });
+
+    it('rejects EOD_OUTCOME correction when EOD has not been submitted yet (422)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-no-eod',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 1,
+        taskText: 'Tugas pagi tanpa EOD',
+        outcome: null,
+        outcomeReason: null,
+        continuation: null,
+        dailyRecord: { userId: 'usr-1', eodSubmittedAt: null },
+      });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-no-eod',
+          scopeType: CorrectionScopeType.EOD_OUTCOME,
+          classification: CorrectionClassification.MATERIAL,
+          reason: 'Mencoba mengisi hasil EOD padahal belum pernah submit EOD.',
+          requestedChange: {
+            outcome: 'DONE',
+            continuation: 'ARCHIVE',
+          },
+        }),
+      ).rejects.toMatchObject({ status: 422, code: 'VALIDATION_FAILED' });
+    });
+
+    it('rejects EOD_OUTCOME correction when outcome is invalid or no field actually changed (400)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-eod',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 1,
+        taskText: 'Integrasi halaman EOD',
+        outcome: CommitmentOutcome.COMPLETED,
+        outcomeReason: 'Sudah selesai dan diuji.',
+        continuation: 'DO_NOT_CONTINUE',
+        dailyRecord: { userId: 'usr-1', eodSubmittedAt: new Date('2026-11-22T10:00:00.000Z') },
+      });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-eod',
+          scopeType: CorrectionScopeType.EOD_OUTCOME,
+          classification: CorrectionClassification.MINOR,
+          reason: 'Mencoba kirim nilai outcome tidak dikenal oleh sistem.',
+          requestedChange: {
+            outcome: 'UNKNOWN_STATUS',
+          },
+        }),
+      ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-eod',
+          scopeType: CorrectionScopeType.EOD_OUTCOME,
+          classification: CorrectionClassification.MINOR,
+          reason: 'Mengirim koreksi EOD tanpa mengubah satu pun data capaian.',
+          requestedChange: {
+            outcome: 'DONE',
+            outcomeReason: 'Sudah selesai dan diuji.',
+            continuation: 'ARCHIVE',
+          },
+        }),
+      ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
+    });
   });
 });

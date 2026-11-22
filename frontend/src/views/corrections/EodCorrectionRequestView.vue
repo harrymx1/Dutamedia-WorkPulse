@@ -12,19 +12,22 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowRight,
+  RotateCcw,
 } from 'lucide-vue-next';
 
 interface CommitmentItem {
   id: string;
   sequenceNo: number;
   taskText: string;
-  outcome?: 'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'DROPPED';
+  outcome?: string | null;
   outcomeReason?: string;
-  continuation?: 'CONTINUE_TOMORROW' | 'ARCHIVE' | 'HANDOVER';
+  continuation?: string | null;
 }
 
 interface CorrectionHistoryItem {
   id: string;
+  targetCommitmentId?: string;
+  scopeType?: 'MORNING_COMMITMENT' | 'EOD_OUTCOME';
   classification: 'MINOR' | 'MATERIAL';
   reason: string;
   status: 'PENDING' | 'AUTO_APPLIED' | 'APPROVED' | 'REJECTED';
@@ -32,6 +35,17 @@ interface CorrectionHistoryItem {
   valueRequested: any;
   createdAt: string;
   reviewNote?: string;
+  objectionWindowEndsAt?: string;
+  targetCommitment?: {
+    id?: string;
+    sequenceNo?: number;
+    taskText?: string;
+  };
+  reviewedByUser?: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+  };
 }
 
 // State
@@ -39,6 +53,8 @@ const loading = ref(false);
 const submitting = ref(false);
 const todayCommitments = ref<CommitmentItem[]>([]);
 const myCorrections = ref<CorrectionHistoryItem[]>([]);
+const eodSubmittedAt = ref<string | null>(null);
+const eodLockCutoff = ref('21:00');
 
 // Form fields
 const selectedCommitmentId = ref<string>('');
@@ -66,6 +82,32 @@ const selectedCommitment = computed(() => {
   return todayCommitments.value.find((c) => c.id === selectedCommitmentId.value) || null;
 });
 
+const hasSubmittedEod = computed(() => {
+  return Boolean(eodSubmittedAt.value) || todayCommitments.value.some((c) => Boolean(c.outcome));
+});
+
+const pendingRequestForSelected = computed(() => {
+  if (!selectedCommitmentId.value) return null;
+  return (
+    myCorrections.value.find(
+      (h) =>
+        h.status === 'PENDING' &&
+        (h.targetCommitmentId === selectedCommitmentId.value ||
+          h.targetCommitment?.id === selectedCommitmentId.value),
+    ) || null
+  );
+});
+
+const latestRejectedForSelected = computed(() => {
+  if (!selectedCommitmentId.value) return null;
+  const latest = myCorrections.value.find(
+    (h) =>
+      h.targetCommitmentId === selectedCommitmentId.value ||
+      h.targetCommitment?.id === selectedCommitmentId.value,
+  );
+  return latest?.status === 'REJECTED' ? latest : null;
+});
+
 const DB_TO_FORM_OUTCOME: Record<string, 'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'DROPPED'> = {
   DONE: 'DONE',
   COMPLETED: 'DONE',
@@ -85,6 +127,58 @@ const DB_TO_FORM_CONTINUATION: Record<string, 'CONTINUE_TOMORROW' | 'ARCHIVE' | 
   HANDOVER: 'HANDOVER',
 };
 
+const hasRequestedDiff = computed(() => {
+  const base = selectedCommitment.value;
+  if (!base) return false;
+  const baseOutcome = DB_TO_FORM_OUTCOME[base.outcome || ''] || 'DONE';
+  const baseReason = (base.outcomeReason || '').trim() || null;
+  const baseContinuation = DB_TO_FORM_CONTINUATION[base.continuation || ''] || 'ARCHIVE';
+  return (
+    newOutcome.value !== baseOutcome ||
+    (newOutcomeReason.value.trim() || null) !== baseReason ||
+    newContinuation.value !== baseContinuation
+  );
+});
+
+function formatOutcomeLabel(outcome?: string | null): string {
+  const normalized = DB_TO_FORM_OUTCOME[outcome || ''];
+  if (normalized === 'DONE') return 'DONE (Tuntas)';
+  if (normalized === 'IN_PROGRESS') return 'IN_PROGRESS (Sebagian)';
+  if (normalized === 'BLOCKED') return 'BLOCKED (Terhambat)';
+  if (normalized === 'DROPPED') return 'DROPPED (Dibatalkan)';
+  return 'Belum diisi';
+}
+
+function formatContinuationLabel(continuation?: string | null): string {
+  const normalized = DB_TO_FORM_CONTINUATION[continuation || ''];
+  if (normalized === 'CONTINUE_TOMORROW') return 'Lanjutkan Besok';
+  if (normalized === 'ARCHIVE') return 'Arsipkan / Tuntas';
+  if (normalized === 'HANDOVER') return 'Serah Terima ke Rekan Lain';
+  return 'Belum diatur';
+}
+
+function getCommitmentSequenceNo(item: CorrectionHistoryItem): number | null {
+  if (item.targetCommitment?.sequenceNo) {
+    return item.targetCommitment.sequenceNo;
+  }
+  const matched = todayCommitments.value.find(
+    (c) => c.id === item.targetCommitmentId || c.id === item.targetCommitment?.id,
+  );
+  return matched?.sequenceNo ?? null;
+}
+
+function hasContinuationDiff(item: CorrectionHistoryItem): boolean {
+  const beforeCont = DB_TO_FORM_CONTINUATION[item.valueBefore?.continuation || ''] || null;
+  const afterCont = DB_TO_FORM_CONTINUATION[item.valueRequested?.continuation || ''] || null;
+  return Boolean(afterCont && beforeCont !== afterCont);
+}
+
+function hasOutcomeReasonDiff(item: CorrectionHistoryItem): boolean {
+  const beforeReason = (item.valueBefore?.outcomeReason || '').trim();
+  const afterReason = (item.valueRequested?.outcomeReason || '').trim();
+  return beforeReason !== afterReason && Boolean(beforeReason || afterReason);
+}
+
 function handleCommitmentSelect() {
   if (selectedCommitment.value) {
     newOutcome.value = DB_TO_FORM_OUTCOME[selectedCommitment.value.outcome || ''] || 'DONE';
@@ -93,20 +187,53 @@ function handleCommitmentSelect() {
   }
 }
 
-async function loadData() {
+function resetForm() {
+  handleCommitmentSelect();
+  reason.value = '';
+  errorMessage.value = null;
+}
+
+function prefillFromRejected(item: CorrectionHistoryItem) {
+  const requested = item.valueRequested || {};
+  if (requested.outcome && DB_TO_FORM_OUTCOME[requested.outcome]) {
+    newOutcome.value = DB_TO_FORM_OUTCOME[requested.outcome];
+  }
+  if (requested.outcomeReason !== undefined) {
+    newOutcomeReason.value = requested.outcomeReason || '';
+  }
+  if (requested.continuation && DB_TO_FORM_CONTINUATION[requested.continuation]) {
+    newContinuation.value = DB_TO_FORM_CONTINUATION[requested.continuation];
+  }
+  if (!reason.value.trim()) {
+    reason.value = 'Penyesuaian permohonan atas arahan atasan: ';
+  }
+  showToast('Draf sebelumnya berhasil dimuat. Silakan sesuaikan kembali sebelum mengirim.');
+}
+
+async function loadData(syncSelectedForm = false) {
   loading.value = true;
   try {
     const [todayRes, historyRes] = await Promise.all([
-      apiClient<{ record?: { commitments?: CommitmentItem[] } }>('/daily/today'),
+      apiClient<{
+        cutoffTimings?: { eodLockCutoff?: string };
+        record?: { eodSubmittedAt?: string | null; commitments?: CommitmentItem[] } | null;
+      }>('/daily/today'),
       apiClient<CorrectionHistoryItem[]>('/correction-requests?mode=mine'),
     ]);
+
+    eodLockCutoff.value = todayRes.data?.cutoffTimings?.eodLockCutoff || '21:00';
+    eodSubmittedAt.value = todayRes.data?.record?.eodSubmittedAt ?? null;
 
     if (todayRes.data?.record?.commitments) {
       todayCommitments.value = todayRes.data.record.commitments;
       if (todayCommitments.value.length > 0 && !selectedCommitmentId.value) {
         selectedCommitmentId.value = todayCommitments.value[0].id;
         handleCommitmentSelect();
+      } else if (syncSelectedForm && selectedCommitment.value) {
+        handleCommitmentSelect();
       }
+    } else {
+      todayCommitments.value = [];
     }
 
     if (historyRes.data) {
@@ -124,6 +251,20 @@ async function submitCorrection() {
 
   if (!selectedCommitmentId.value) {
     showToast('Pilih tugas/komitmen yang ingin dikoreksi.', true);
+    return;
+  }
+  if (pendingRequestForSelected.value) {
+    showToast(
+      'Masih ada permohonan koreksi material yang sedang menunggu tinjauan atasan untuk tugas ini.',
+      true,
+    );
+    return;
+  }
+  if (!hasRequestedDiff.value) {
+    showToast(
+      'Perubahan yang diajukan masih sama dengan data evaluasi sore saat ini. Silakan ubah minimal satu isian evaluasi sore.',
+      true,
+    );
     return;
   }
   if (reason.value.trim().length < 10) {
@@ -157,7 +298,7 @@ async function submitCorrection() {
     }
 
     reason.value = '';
-    await loadData();
+    await loadData(true);
   } catch (err: any) {
     showToast(err.message || 'Gagal mengajukan koreksi EOD.', true);
   } finally {
@@ -192,10 +333,22 @@ onMounted(() => {
           <span class="eyebrow">Pengecualian Formal &amp; Hasil Akhir Harian</span>
           <h1>Permohonan Koreksi Evaluasi Sore (EOD)</h1>
           <p class="subtitle">
-            Koreksi hasil capaian EOD setelah batas waktu cut-off 21:00 WIB terkunci. Pilihan hasil akhir tetap memberikan ruang refleksi mandiri secara objektif.
+            Koreksi hasil capaian EOD setelah batas waktu cut-off {{ eodLockCutoff }} WIB terkunci. Pilihan hasil akhir tetap memberikan ruang refleksi mandiri secara objektif.
           </p>
         </div>
       </div>
+
+      <!-- Tab Perpindahan Konteks Pagi / Sore -->
+      <nav class="context-tabs-wrap" aria-label="Pilihan Jenis Koreksi">
+        <AccessLink to="/corrections/morning" class="context-tab">
+          <span>Koreksi Komitmen Pagi</span>
+          <span class="context-tab-tag">Alur Pagi</span>
+        </AccessLink>
+        <AccessLink to="/corrections/eod" class="context-tab active">
+          <span>Koreksi Evaluasi Sore (EOD)</span>
+          <span class="context-tab-tag">Alur Sore · Aktif</span>
+        </AccessLink>
+      </nav>
 
       <!-- State: No commitments to correct -->
       <div v-if="todayCommitments.length === 0 && !loading" class="no-baseline-card">
@@ -204,6 +357,18 @@ onMounted(() => {
         <p>Anda belum mengisi komitmen pagi hari ini, sehingga belum ada tugas evaluasi sore yang dapat dikoreksi.</p>
         <AccessLink to="/daily/morning" class="btn-primary" style="margin-top: 14px;">
           Buka Morning Commitment
+        </AccessLink>
+      </div>
+
+      <!-- State: Morning submitted, but EOD never submitted today -->
+      <div v-else-if="!hasSubmittedEod && !loading" class="no-baseline-card">
+        <AlertCircle :size="32" class="empty-icon" />
+        <h2>Belum Ada Evaluasi Sore Hari Ini</h2>
+        <p>
+          Formulir koreksi evaluasi sore hanya berlaku untuk memperbaiki laporan evaluasi sore yang sudah pernah dikirim. Pengajuan ini tidak dapat dipakai untuk membuat laporan baru atau menghapus status tidak lapor.
+        </p>
+        <AccessLink to="/daily/eod" class="btn-primary" style="margin-top: 14px;">
+          Buka Evaluasi Sore (EOD)
         </AccessLink>
       </div>
 
@@ -221,7 +386,7 @@ onMounted(() => {
               <label for="eodSelect">Pilih Komitmen / Tugas Target <span class="req">*</span></label>
               <select id="eodSelect" v-model="selectedCommitmentId" @change="handleCommitmentSelect" required>
                 <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
-                  [Tugas #{{ c.sequenceNo }}] {{ c.taskText }} (Hasil: {{ c.outcome || 'BELUM DIISI' }})
+                  [Tugas #{{ c.sequenceNo }}] {{ c.taskText }} (Hasil: {{ formatOutcomeLabel(c.outcome) }})
                 </option>
               </select>
             </div>
@@ -231,8 +396,49 @@ onMounted(() => {
               <span class="baseline-tag">Baseline EOD Tersimpan</span>
               <div class="base-task">{{ selectedCommitment.taskText }}</div>
               <div class="base-meta">
-                <span>Hasil: <strong>{{ selectedCommitment.outcome || 'Belum diisi' }}</strong></span>
-                <span v-if="selectedCommitment.outcomeReason">· Catatan: {{ selectedCommitment.outcomeReason }}</span>
+                <span>Hasil: <strong>{{ formatOutcomeLabel(selectedCommitment.outcome) }}</strong></span>
+                <span> · Kelanjutan: <strong>{{ formatContinuationLabel(selectedCommitment.continuation) }}</strong></span>
+                <span v-if="selectedCommitment.outcomeReason"> · Catatan: {{ selectedCommitment.outcomeReason }}</span>
+              </div>
+            </div>
+
+            <!-- Banner Pengajuan Menunggu Review pada Tugas Terpilih -->
+            <div v-if="pendingRequestForSelected" class="in-flight-banner" role="status">
+              <Clock :size="18" />
+              <div class="in-flight-body">
+                <strong>Permohonan Koreksi Material EOD Sedang Menunggu Tinjauan Atasan</strong>
+                <p>
+                  Tugas ini masih memiliki pengajuan perubahan hasil evaluasi sore yang menunggu keputusan atasan.
+                  <span v-if="pendingRequestForSelected.objectionWindowEndsAt">
+                    Batas waktu tinjauan 24 jam: <strong>{{ formatDateWib(pendingRequestForSelected.objectionWindowEndsAt) }}</strong>.
+                  </span>
+                  Anda tetap dapat memilih tugas nomor lain di atas jika ingin mengajukan koreksi berbeda.
+                </p>
+              </div>
+            </div>
+
+            <!-- Banner Arahan Revisi Saat Pengajuan Sebelumnya Ditolak -->
+            <div
+              v-else-if="latestRejectedForSelected"
+              class="post-objection-banner"
+              role="status"
+            >
+              <AlertCircle :size="18" />
+              <div class="post-objection-body">
+                <strong>Catatan Penolakan Atasan pada Pengajuan Sebelumnya</strong>
+                <p v-if="latestRejectedForSelected.reviewNote">
+                  "{{ latestRejectedForSelected.reviewNote }}"
+                </p>
+                <p v-else>
+                  Permohonan koreksi sebelumnya ditolak oleh atasan. Sesuaikan kembali usulan Anda sebelum mengirim ulang.
+                </p>
+                <button
+                  type="button"
+                  class="btn-prefill-revision"
+                  @click="prefillFromRejected(latestRejectedForSelected)"
+                >
+                  Gunakan Draf Sebelumnya &amp; Sesuaikan
+                </button>
               </div>
             </div>
 
@@ -272,17 +478,17 @@ onMounted(() => {
                 <label class="outcome-card in-progress" :class="{ selected: newOutcome === 'IN_PROGRESS' }">
                   <input type="radio" v-model="newOutcome" value="IN_PROGRESS" />
                   <Clock :size="16" />
-                  <span>IN_PROGRESS</span>
+                  <span>IN_PROGRESS (Sebagian)</span>
                 </label>
                 <label class="outcome-card blocked" :class="{ selected: newOutcome === 'BLOCKED' }">
                   <input type="radio" v-model="newOutcome" value="BLOCKED" />
                   <AlertTriangle :size="16" />
-                  <span>BLOCKED</span>
+                  <span>BLOCKED (Terhambat)</span>
                 </label>
                 <label class="outcome-card dropped" :class="{ selected: newOutcome === 'DROPPED' }">
                   <input type="radio" v-model="newOutcome" value="DROPPED" />
                   <AlertCircle :size="16" />
-                  <span>DROPPED</span>
+                  <span>DROPPED (Dibatalkan)</span>
                 </label>
               </div>
             </div>
@@ -310,7 +516,19 @@ onMounted(() => {
 
             <!-- Alasan Koreksi Resmi -->
             <div class="form-group">
-              <label for="eodReasonInput">Alasan Resmi Permohonan Koreksi <span class="req">*</span></label>
+              <div class="label-row">
+                <label for="eodReasonInput">Alasan Resmi Permohonan Koreksi <span class="req">*</span></label>
+                <span
+                  class="char-counter"
+                  :class="{ valid: reason.trim().length >= 10, invalid: reason.trim().length > 0 && reason.trim().length < 10 }"
+                >
+                  {{
+                    reason.trim().length >= 10
+                      ? `Alasan memenuhi syarat (${reason.trim().length} karakter)`
+                      : `${reason.trim().length} / 10 karakter minimum`
+                  }}
+                </span>
+              </div>
               <textarea
                 id="eodReasonInput"
                 v-model="reason"
@@ -321,14 +539,25 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <button
-              type="submit"
-              class="btn-submit"
-              :disabled="submitting || !selectedCommitmentId || reason.trim().length < 10"
-            >
-              <span v-if="submitting">Mengajukan...</span>
-              <span v-else>Kirim Permohonan Koreksi EOD</span>
-            </button>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-reset"
+                :disabled="submitting"
+                @click="resetForm"
+              >
+                <RotateCcw :size="14" />
+                <span>Reset Isian</span>
+              </button>
+              <button
+                type="submit"
+                class="btn-submit"
+                :disabled="submitting || !selectedCommitmentId || reason.trim().length < 10 || !!pendingRequestForSelected"
+              >
+                <span v-if="submitting">Mengajukan...</span>
+                <span v-else>Kirim Permohonan Koreksi EOD</span>
+              </button>
+            </div>
           </form>
         </section>
 
@@ -354,6 +583,9 @@ onMounted(() => {
               >
                 <div class="hist-head">
                   <div class="hist-badges">
+                    <span v-if="getCommitmentSequenceNo(item)" class="seq-pill">
+                      Tugas #{{ getCommitmentSequenceNo(item) }}
+                    </span>
                     <span class="status-badge" :class="item.status.toLowerCase()">{{ item.status }}</span>
                     <span class="class-pill">{{ item.classification }}</span>
                   </div>
@@ -365,12 +597,27 @@ onMounted(() => {
                 <div class="hist-diff">
                   <div class="diff-before">
                     <small>Sebelum:</small>
-                    <p>{{ item.valueBefore?.outcome || 'Belum diisi' }}</p>
+                    <p>{{ formatOutcomeLabel(item.valueBefore?.outcome) }}</p>
                   </div>
                   <div class="diff-arrow"><ArrowRight :size="14" /></div>
                   <div class="diff-after">
                     <small>Diajukan:</small>
-                    <p>{{ item.valueRequested?.outcome }}</p>
+                    <p>{{ formatOutcomeLabel(item.valueRequested?.outcome) }}</p>
+                  </div>
+                </div>
+
+                <div v-if="hasContinuationDiff(item) || hasOutcomeReasonDiff(item)" class="hist-extra-changes">
+                  <div v-if="hasContinuationDiff(item)" class="extra-change-row">
+                    <strong>Kelanjutan Tugas:</strong>
+                    <span>{{ formatContinuationLabel(item.valueBefore?.continuation) }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ formatContinuationLabel(item.valueRequested?.continuation) }}</span>
+                  </div>
+                  <div v-if="hasOutcomeReasonDiff(item)" class="extra-change-row">
+                    <strong>Keterangan Hasil:</strong>
+                    <span>{{ item.valueBefore?.outcomeReason || '(kosong)' }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ item.valueRequested?.outcomeReason || '(dihapus)' }}</span>
                   </div>
                 </div>
 
@@ -378,8 +625,13 @@ onMounted(() => {
                   <strong>Alasan:</strong> {{ item.reason }}
                 </div>
 
+                <div v-if="item.status === 'PENDING' && item.objectionWindowEndsAt" class="hist-window-note">
+                  <Clock :size="13" />
+                  <span>Batas Waktu Tinjauan 24 Jam: {{ formatDateWib(item.objectionWindowEndsAt) }}</span>
+                </div>
+
                 <div v-if="item.reviewNote" class="hist-review-note" :class="item.status.toLowerCase()">
-                  <strong>Catatan Peninjau:</strong> {{ item.reviewNote }}
+                  <strong>{{ item.reviewedByUser?.fullName ? `Catatan Peninjau (${item.reviewedByUser.fullName}):` : 'Catatan Peninjau:' }}</strong> {{ item.reviewNote }}
                 </div>
               </div>
             </div>
@@ -465,7 +717,52 @@ onMounted(() => {
 }
 
 .page-heading {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+.context-tabs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #DCE7E2;
+  margin-bottom: 20px;
+}
+
+.context-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5C6E68;
+  text-decoration: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s ease;
+}
+
+.context-tab:hover {
+  color: #0E211B;
+}
+
+.context-tab.active {
+  color: #00674D;
+  border-bottom-color: #00674D;
+}
+
+.context-tab-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #EFF5F2;
+  color: #5C6E68;
+}
+
+.context-tab.active .context-tab-tag {
+  background: #E6F4EE;
+  color: #00674D;
 }
 
 .eyebrow {
@@ -499,6 +796,7 @@ h1 {
   border: 1px solid #DCE7E2;
   border-radius: 12px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel-head {
@@ -553,6 +851,90 @@ textarea {
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 16px;
+}
+
+.in-flight-banner,
+.post-objection-banner {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.in-flight-banner {
+  background: #E0F2FE;
+  border: 1px solid #7DD3FC;
+  color: #075985;
+}
+
+.post-objection-banner {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+}
+
+.in-flight-banner svg,
+.post-objection-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.in-flight-body strong,
+.post-objection-body strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.in-flight-body p,
+.post-objection-body p {
+  margin: 0;
+}
+
+.btn-prefill-revision {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #FCA5A5;
+  background: #FFFFFF;
+  color: #991B1B;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-prefill-revision:hover {
+  background: #FEF2F2;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.label-row label {
+  margin-bottom: 0;
+}
+
+.char-counter {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #5C6E68;
+  font-variant-numeric: tabular-nums;
+}
+
+.char-counter.valid {
+  color: #166534;
+}
+
+.char-counter.invalid {
+  color: #991B1B;
 }
 
 .baseline-tag {
@@ -625,9 +1007,41 @@ textarea {
 .outcome-card.blocked.selected { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
 .outcome-card.dropped.selected { background: #F1F5F9; color: #334155; border-color: #CBD5E1; }
 
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #DCE7E2;
+  background: #FFFFFF;
+  color: #0E211B;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-reset:hover:not(:disabled) {
+  background: #EFF5F2;
+}
+
+.btn-reset:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-submit {
-  width: 100%;
-  padding: 10px;
+  flex: 1;
+  padding: 10px 14px;
   border-radius: 8px;
   border: none;
   background: #00674D;
@@ -635,7 +1049,6 @@ textarea {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 8px;
 }
 
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -691,6 +1104,15 @@ textarea {
   color: #5C6E68;
 }
 
+.seq-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #F1F5F9;
+  color: #334155;
+}
+
 .hist-date {
   font-size: 11px;
   color: #5C6E68;
@@ -715,6 +1137,39 @@ textarea {
 .hist-reason {
   font-size: 12px;
   color: #0E211B;
+}
+
+.hist-extra-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  background: #EFF5F2;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: #0E211B;
+}
+
+.extra-change-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+
+.hist-window-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #075985;
+  background: #E0F2FE;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
 }
 
 .hist-review-note {
@@ -743,8 +1198,31 @@ textarea {
   border-radius: 12px;
   padding: 40px 24px;
   text-align: center;
-  max-width: 500px;
+  max-width: 540px;
   margin: 40px auto;
+}
+
+.no-baseline-card p {
+  color: #5C6E68;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #00674D;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background: #00523D;
 }
 
 .empty-icon { color: #00674D; margin-bottom: 8px; }
@@ -769,6 +1247,77 @@ textarea {
 
 @media (max-width: 900px) {
   .split-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 14px 64px;
+  }
+
+  .context-tabs-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    border-bottom: none;
+  }
+
+  .context-tab {
+    border: 1px solid #DCE7E2;
+    border-radius: 8px;
+    justify-content: space-between;
+    margin-bottom: 0;
+  }
+
+  .context-tab.active {
+    border-color: #00674D;
+    background: #E6F4EE;
+    border-bottom-color: #00674D;
+  }
+
+  .class-grid,
+  .outcome-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-reset,
+  .btn-submit {
+    width: 100%;
+  }
+
+  .hist-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .hist-badges {
+    flex-wrap: wrap;
+  }
+
+  .hist-diff {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diff-arrow {
+    transform: rotate(90deg);
+  }
+
+  .toast-popup {
+    left: 14px;
+    right: 14px;
+    top: 64px;
+  }
 }
 </style>
 
