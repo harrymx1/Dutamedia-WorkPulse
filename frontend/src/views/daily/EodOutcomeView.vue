@@ -1180,7 +1180,7 @@ onMounted(() => {
           <div>
             <h3 id="mismatch-confirm-title">Konfirmasi Pilihan Status Akhir Hari</h3>
             <p>
-              Sistem menyarankan status <strong>{{ statusSuggestion.status }}</strong> ({{ statusSuggestion.reason }}), sedangkan Anda memilih <strong>{{ finalDailyStatus }}</strong>. Anda tetap dapat mengirim dengan status <strong>{{ finalDailyStatus }}</strong> jika sudah yakin, atau sesuaikan ke saran sistem.
+              Sistem menyarankan status <strong>{{ statusSuggestion.status }}</strong> ({{ statusSuggestion.reason.replace(/\.$/, '') }}), sedangkan Anda memilih <strong>{{ finalDailyStatus }}</strong>. Anda tetap dapat mengirim dengan status <strong>{{ finalDailyStatus }}</strong> jika sudah yakin, atau sesuaikan ke saran sistem.
             </p>
           </div>
         </div>
@@ -1241,6 +1241,8 @@ onMounted(() => {
 <style scoped>
 .daily-layout {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
   background-color: var(--color-canvas);
   display: flex;
   flex-direction: column;
@@ -2241,5 +2243,91 @@ textarea.input-control {
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .workflow-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 16px;
+  }
+
+  .step-items {
+    gap: 10px 16px;
+    flex-wrap: wrap;
+  }
+
+  .step-item {
+    padding: 6px 0;
+    font-size: 12.5px;
+  }
+
+  .workflow-actions {
+    justify-content: flex-start;
+  }
+
+  .main-content {
+    padding: 20px 16px 48px;
+  }
+
+  .panel {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  .context-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .context-item {
+    min-width: 0;
+  }
+
+  .eval-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .outcome-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .continuation-options {
+    flex-wrap: wrap;
+  }
+
+  .status-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-footer,
+  .post-submit-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .mismatch-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toast-popup {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
 }
 </style>
