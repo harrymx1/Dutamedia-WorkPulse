@@ -1036,8 +1036,10 @@ flowchart TD
   4. **Buat 2 Jenis Catatan Pembinaan (`SHARED_WITH_EMPLOYEE` vs `MANAGER_PRIVATE`) & Uji Tombol Template Cepat di `/coaching`:**
      - **Aksi:** Keluar dari akun HRGA, lalu masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman — Head of Engineering) dan buka menu kiri **Catatan Coaching** (`/coaching`).
      - ***Hasil yang Diharapkan:***
-       - Dropdown karyawan hanya menampilkan bawahan di dalam ruang lingkup Arif Budiman (termasuk staf tetap *Aditya Nugroho*, *Siti Rahma*, maupun bawahan magang *Raka Pratama*; sistem menolak `400` jika atasan mencoba membuat catatan coaching untuk dirinya sendiri).
-       - Tombol template cepat di atas kolom catatan menggunakan bahasa sehari-hari yang jelas (`[Aktif v1.1 — Paket #3]`: bertuliskan **`[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit)`**, tanpa istilah teknis `SLA`).
+       - Kartu dan daftar karyawan menampilkan seluruh anggota berstatus aktif sesuai cakupan peran pengguna (`HRGA` / `CEO` / `System Admin` melihat semua karyawan aktif perusahaan selain dirinya sendiri; `HEAD` melihat seluruh karyawan aktif divisinya beserta bawahan berjenjangnya; `SUPERVISOR` melihat bawahan langsung dan berjenjang yang aktif; sistem menolak `400` jika atasan mencoba membuat catatan coaching untuk dirinya sendiri).
+       - Jika mengganti pilihan **`Karyawan yang Dituju`** di formulir kiri, panel riwayat sebelah kanan otomatis ikut berpindah menampilkan catatan milik karyawan tersebut, dan inisial pada kartu anggota memakai huruf awal nama depan dan belakang (`getUserInitials`).
+       - Tombol template cepat di atas kolom catatan menggunakan bahasa sehari-hari yang jelas (`[Aktif v1.1 — Paket #3]`: bertuliskan **`[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit)`**, tanpa istilah teknis `SLA`), dan jika kolom isi sudah bertulisan maka tombol template memunculkan kotak konfirmasi (`Ya, Ganti Isi` / `Batal`) terlebih dahulu sebelum menimpa teks.
+       - Pilihan **`Dibagikan ke Karyawan`** menjelaskan secara akurat bahwa karyawan menerima notifikasi dan dapat membaca catatan tersebut di halaman **Notifikasi**.
      - **Aksi (Coaching #1 — Dibagikan ke Karyawan):**
        - Pilih Karyawan: **Aditya Nugroho** (`dev.frontend@dutamedia.com`)
        - Pilih Visibilitas: **Dibagikan ke Karyawan (`SHARED_WITH_EMPLOYEE`)**
@@ -1066,7 +1068,7 @@ flowchart TD
 |---|---|---|---|---|---|---|---|---|
 | **K-17.1** | **Pengawasan Kepatuhan** (`/compliance`) · *(Acuan `11-Compliance-Queue-HRGA.html`)* | Kartu ringkasan + filter + lencana merah pola 3x (`Repeat Offender`) + modal Tindak Lanjuti (`OPEN` → `ADDRESSED`) + format `HH:mm WIB` | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-18.1** | **Dispensasi Kepatuhan** (`/exemptions`) · *(Acuan `12-Exemption-Management.html`)* | Form buat dispensasi terikat tanggal (`DEC-013`) + tabel riwayat jejak audit dispensasi berformat tanggal WIB | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-19.1** | **Catatan Coaching** (`/coaching`) · *(Acuan `10-Manager-Note-Coaching-Record.html`)* | Form coaching + chip template cepat (`[Aktif v1.1 Paket #3]` tanpa kata `SLA`: `(waktu respon < 45 menit)`) + lencana `Dibagikan ke Karyawan` vs `Rahasia Manajemen` | `HEAD` / `SUPERVISOR` / `HRGA` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-19.1** | **Catatan Coaching** (`/coaching`) · *(Acuan `10-Manager-Note-Coaching-Record.html`)* | Cakupan daftar karyawan aktif sesuai peran (`HRGA`/`CEO`/`Admin`/`HEAD`/atasan berjenjang), sinkronisasi pilihan formulir ke panel riwayat + inisial avatar standar, chip template cepat bebas `SLA` dengan konfirmasi sebelum timpa ketikan, panduan visibilitas ke `/notifications`, lencana `Dibagikan` vs `Rahasia Manajemen`, & responsif HP `375px` (`scrollWidth = 375`) | `HEAD` / `SUPERVISOR` / `HRGA` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
 
