@@ -836,4 +836,331 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     expect(wrapper.text()).toContain('Di Luar Jam Normal (Lembur Fleksibel)');
     expect(wrapper.text()).not.toContain('LATE (Lembur Fleksibel)');
   });
+
+  // =========================================================================
+  // PENGUJIAN AUDIT #4 — 4 TEMUAN KRUSIAL EOD OUTCOME
+  // =========================================================================
+
+  it('Audit #4 (Temuan 1): menampilkan kolom wajib penjelasan risiko saat AMBER/RED, menolak < 10 karakter, dan tampil di Read-Only Summary', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-22',
+          currentTime: '17:15',
+          cutoffTimings: {
+            isMorningLocked: false,
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: {
+            id: 'rec-risk-1',
+            commitments: [
+              {
+                id: 'c-1',
+                sequenceNo: 1,
+                taskText: 'Rilis modul pembayaran',
+                initialRisk: 'GREEN',
+                carryOverDaysCount: 0,
+                outcome: 'COMPLETED',
+              },
+            ],
+            additionalWorks: [],
+            finalDailyStatus: 'GREEN',
+            eodSubmittedAt: null,
+          },
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Saat GREEN: kolom risiko tidak muncul
+    expect(wrapper.find('[data-testid="daily-risk-explanation-group"]').exists()).toBe(false);
+
+    // Pilih AMBER: kolom risiko muncul & wajib min 10 karakter
+    await wrapper.find('input[type="radio"][value="AMBER"]').setValue(true);
+    expect(wrapper.find('[data-testid="daily-risk-explanation-group"]').exists()).toBe(true);
+
+    const riskTextarea = wrapper.find('#daily-risk-explanation');
+    await riskTextarea.setValue('Singkat');
+    const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Kirim Evaluasi EOD'));
+    await submitBtn!.trigger('click');
+
+    expect(wrapper.text()).toContain('minimal 10 karakter');
+    expect(fetchMock).toHaveBeenCalledTimes(1); // Hanya GET /daily/today
+
+    // Isi >= 10 karakter lalu submit berhasil & muncul di Read-Only Summary View
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: { eodSubmittedAt: '2026-11-22T10:20:00.000Z' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            workDate: '2026-11-22',
+            currentTime: '17:20',
+            cutoffTimings: {
+              isMorningLocked: false,
+              eodOnTimeCutoff: '17:00',
+              eodLockCutoff: '21:00',
+              isEodLocked: false,
+            },
+            record: {
+              id: 'rec-risk-1',
+              eodSubmittedAt: '2026-11-22T10:20:00.000Z',
+              finalDailyStatus: 'AMBER',
+              orgContextSnapshot: {
+                dailyRiskExplanation: 'Menunggu approval gateway vendor untuk sandbox klien',
+              },
+              commitments: [
+                {
+                  id: 'c-1',
+                  sequenceNo: 1,
+                  taskText: 'Rilis modul pembayaran',
+                  initialRisk: 'GREEN',
+                  outcome: 'COMPLETED',
+                },
+              ],
+              additionalWorks: [],
+            },
+          },
+        }),
+      });
+
+    await riskTextarea.setValue('Menunggu approval gateway vendor untuk sandbox klien');
+    await submitBtn!.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    expect(wrapper.find('[data-testid="daily-risk-readonly"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Menunggu approval gateway vendor untuk sandbox klien');
+  });
+
+  it('Audit #4 (Temuan 2 Pra Cut-Off): menahan form EOD bila belum mengisi Morning Commitment sebelum batas pagi', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-22',
+          currentTime: '08:45',
+          cutoffTimings: {
+            isMorningLocked: false,
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: null,
+          activeLeave: null,
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.find('[data-testid="eod-morning-required-alert"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Belum Mengisi Morning Commitment');
+    expect(wrapper.findAll('button').find((b) => b.text().includes('Kirim Evaluasi EOD'))).toBeUndefined();
+  });
+
+  it('Audit #4 (Temuan 2 Pasca Cut-Off / Opsi A): membuka form EOD dengan info Komitmen Pagi Terlewat setelah batas pagi lewat', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-22',
+          currentTime: '17:10',
+          cutoffTimings: {
+            isMorningLocked: true,
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+            isEodLocked: false,
+          },
+          record: null,
+          activeLeave: null,
+        },
+      }),
+    }));
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.find('[data-testid="eod-morning-required-alert"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="eod-morning-missed-banner"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Komitmen pagi hari ini terlewat dari batas waktu pengisian.');
+    expect(wrapper.text()).not.toContain('(0 Komitmen)');
+    expect(wrapper.findAll('button').find((b) => b.text().includes('Kirim Evaluasi EOD'))).toBeDefined();
+  });
+
+  it('Audit #4 (Temuan 3): mengubah hasil dari Sebagian (Lanjutkan Besok tanpa alasan) menjadi Selesai tetap dapat disubmit tanpa error palsu', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            workDate: '2026-11-22',
+            currentTime: '17:00',
+            cutoffTimings: {
+              isMorningLocked: true,
+              eodOnTimeCutoff: '17:00',
+              eodLockCutoff: '21:00',
+              isEodLocked: false,
+            },
+            record: {
+              id: 'rec-switch',
+              commitments: [
+                {
+                  id: 'c-switch-1',
+                  sequenceNo: 1,
+                  taskText: 'Review integrasi layanan API',
+                  initialRisk: 'GREEN',
+                  carryOverDaysCount: 0,
+                  outcome: 'COMPLETED',
+                  continuation: 'DO_NOT_CONTINUE',
+                  continuationReason: '',
+                },
+              ],
+              additionalWorks: [],
+              finalDailyStatus: 'GREEN',
+              eodSubmittedAt: null,
+            },
+          },
+        }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: { eodSubmittedAt: '2026-11-22T10:05:00.000Z' },
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Simulasikan sempat pilih Sebagian + Lanjutkan Besok (tanpa mengisi alasan), lalu pindah ke Selesai
+    await wrapper.find('input[name="outcome-c-switch-1"][value="PARTIALLY_COMPLETED"]').setValue(true);
+    await wrapper.find('input[name="cont-c-switch-1"][value="CONTINUE"]').setValue(true);
+    await wrapper.find('input[name="outcome-c-switch-1"][value="COMPLETED"]').setValue(true);
+
+    const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Kirim Evaluasi EOD'));
+    await submitBtn!.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.text()).not.toContain('Alasan kelanjutan (Continuation) wajib diisi');
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/daily/eod'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('Audit #4 (Temuan 4): menampilkan Saran Status RED/AMBER & konfirmasi inline saat memilih GREEN tanpa mengunci hak GREEN (DEC-003)', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            workDate: '2026-11-22',
+            currentTime: '17:00',
+            cutoffTimings: {
+              isMorningLocked: true,
+              eodOnTimeCutoff: '17:00',
+              eodLockCutoff: '21:00',
+              isEodLocked: false,
+            },
+            myActiveBlockers: [
+              {
+                id: 'blk-crit-1',
+                code: '#BLK-112233',
+                description: 'Server gateway mati',
+                severity: 'CRITICAL',
+                type: 'INFRA',
+                status: 'OPEN',
+              },
+            ],
+            record: {
+              id: 'rec-suggest',
+              commitments: [
+                {
+                  id: 'c-1',
+                  sequenceNo: 1,
+                  taskText: 'Deploy gateway',
+                  initialRisk: 'AMBER',
+                  carryOverDaysCount: 0,
+                  outcome: 'COMPLETED',
+                },
+              ],
+              additionalWorks: [],
+              finalDailyStatus: 'GREEN',
+              eodSubmittedAt: null,
+            },
+          },
+        }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: { eodSubmittedAt: '2026-11-22T10:10:00.000Z' },
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Saran status RED muncul & radio GREEN tetap aktif
+    const suggestionBox = wrapper.find('[data-testid="status-suggestion-box"]');
+    expect(suggestionBox.exists()).toBe(true);
+    expect(suggestionBox.text()).toContain('RED');
+    expect(wrapper.find('input[type="radio"][value="GREEN"]').attributes('disabled')).toBeUndefined();
+
+    // Klik Kirim dengan pilihan GREEN -> muncul konfirmasi inline tanpa memblokir permanen
+    const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Kirim Evaluasi EOD'));
+    await submitBtn!.trigger('click');
+
+    const confirmBox = wrapper.find('[data-testid="status-mismatch-confirm"]');
+    expect(confirmBox.exists()).toBe(true);
+    expect(confirmBox.text()).toContain('Tetap Kirim sebagai GREEN');
+    expect(wrapper.find('.modal-backdrop').exists()).toBe(false); // Pastikan tetap bukan modal (IMP-040)
+
+    // Klik "Tetap Kirim sebagai GREEN" -> POST /daily/eod terkirim dengan GREEN
+    await wrapper.find('[data-testid="btn-confirm-keep-status"]').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/daily/eod'),
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"finalDailyStatus":"GREEN"'),
+      }),
+    );
+  });
 });

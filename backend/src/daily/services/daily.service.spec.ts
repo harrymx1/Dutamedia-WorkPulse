@@ -801,4 +801,183 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
       );
     });
   });
+
+  describe('Audit #4 — EOD Outcome (Risiko AMBER/RED, Pekerjaan Tambahan, & Blocker Aktif)', () => {
+    it('menolak submitEodOutcome dengan status AMBER atau RED tanpa dailyRiskExplanation min. 10 karakter', async () => {
+      mockClock.now.mockReturnValue(new Date('2026-10-28T10:00:00.000Z')); // 17:00 WIB
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+        orgContextSnapshot: {},
+      });
+
+      await expect(
+        service.submitEodOutcome('usr-1', {
+          workDate: '2026-10-28',
+          commitmentOutcomes: [],
+          finalDailyStatus: DailyRiskStatus.AMBER,
+          dailyRiskExplanation: 'Pendek',
+        }),
+      ).rejects.toMatchObject({
+        code: ErrorCode.VALIDATION_FAILED,
+      });
+    });
+
+    it('menyimpan dailyRiskExplanation ke orgContextSnapshot saat status AMBER/RED valid & membersihkannya saat GREEN', async () => {
+      mockClock.now.mockReturnValue(new Date('2026-10-28T10:00:00.000Z')); // 17:00 WIB
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+        orgContextSnapshot: { role: 'EMPLOYEE' },
+      });
+      mockPrisma.dailyAccountabilityRecord.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-today',
+        finalDailyStatus: DailyRiskStatus.RED,
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      await service.submitEodOutcome('usr-1', {
+        workDate: '2026-10-28',
+        commitmentOutcomes: [],
+        finalDailyStatus: DailyRiskStatus.RED,
+        dailyRiskExplanation: 'Gateway pembayaran klien masih gangguan hingga jam 17:00 WIB',
+      });
+
+      expect(mockPrisma.dailyAccountabilityRecord.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            finalDailyStatus: DailyRiskStatus.RED,
+            orgContextSnapshot: expect.objectContaining({
+              role: 'EMPLOYEE',
+              dailyRiskExplanation:
+                'Gateway pembayaran klien masih gangguan hingga jam 17:00 WIB',
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('memvalidasi CANCELLED/CONTINUE pada additionalWorkOutcomes dan membersihkan continuation usang saat COMPLETED', async () => {
+      mockClock.now.mockReturnValue(new Date('2026-10-28T10:00:00.000Z')); // 17:00 WIB
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-today',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        eodSubmittedAt: null,
+        orgContextSnapshot: {},
+      });
+      mockPrisma.additionalWork.update.mockResolvedValue({});
+      mockPrisma.commitment.update.mockResolvedValue({});
+      mockPrisma.dailyAccountabilityRecord.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-today',
+        finalDailyStatus: DailyRiskStatus.GREEN,
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      // Menolak additionalWork CANCELLED tanpa outcomeReason
+      await expect(
+        service.submitEodOutcome('usr-1', {
+          workDate: '2026-10-28',
+          commitmentOutcomes: [],
+          additionalWorkOutcomes: [
+            {
+              additionalWorkId: 'aw-1',
+              outcome: CommitmentOutcome.CANCELLED,
+            },
+          ],
+          finalDailyStatus: DailyRiskStatus.GREEN,
+        }),
+      ).rejects.toMatchObject({
+        code: ErrorCode.VALIDATION_FAILED,
+      });
+
+      // Normalisasi continuation & continuationReason menjadi null saat outcome COMPLETED
+      await service.submitEodOutcome('usr-1', {
+        workDate: '2026-10-28',
+        commitmentOutcomes: [
+          {
+            commitmentId: 'c-1',
+            outcome: CommitmentOutcome.COMPLETED,
+            continuation: ContinuationStatus.CONTINUE,
+            continuationReason: '',
+          },
+        ],
+        additionalWorkOutcomes: [
+          {
+            additionalWorkId: 'aw-1',
+            outcome: CommitmentOutcome.COMPLETED,
+            continuation: ContinuationStatus.CONTINUE,
+            continuationReason: '',
+          },
+        ],
+        finalDailyStatus: DailyRiskStatus.GREEN,
+      });
+
+      expect(mockPrisma.commitment.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'c-1' },
+          data: expect.objectContaining({
+            outcome: CommitmentOutcome.COMPLETED,
+            continuation: null,
+            continuationReason: null,
+            isEodLocked: true,
+          }),
+        }),
+      );
+      expect(mockPrisma.additionalWork.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'aw-1' },
+          data: expect.objectContaining({
+            outcome: CommitmentOutcome.COMPLETED,
+            continuation: null,
+            continuationReason: null,
+            isEodLocked: true,
+          }),
+        }),
+      );
+    });
+
+    it('getTodayState mengembalikan myActiveBlockers khusus pelapor yang aktif untuk Status Suggestion', async () => {
+      mockPrisma.blockerTicket = {
+        findMany: vi
+          .fn()
+          .mockResolvedValueOnce([
+            {
+              id: 'blk-other',
+              description: 'Blocker orang lain',
+              severity: 'CRITICAL',
+              projectCodeReference: 'PRJ-CORE',
+              status: 'OPEN',
+            },
+          ])
+          .mockResolvedValueOnce([
+            {
+              id: 'blk-mine',
+              description: 'Server API down',
+              severity: 'HIGH',
+              type: 'INFRA',
+              status: 'IN_PROGRESS',
+            },
+          ]),
+      };
+
+      const res = await service.getTodayState('usr-1');
+
+      expect(res.myActiveBlockers).toHaveLength(1);
+      expect(res.myActiveBlockers[0]).toMatchObject({
+        id: 'blk-mine',
+        severity: 'HIGH',
+        type: 'INFRA',
+        status: 'IN_PROGRESS',
+      });
+    });
+  });
 });

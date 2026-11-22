@@ -187,20 +187,52 @@ export class DailyService {
       projectCodeReference: string | null;
       status: string;
     }> = [];
+    let myActiveBlockers: Array<{
+      id: string;
+      code: string;
+      description: string;
+      severity: string;
+      type: string;
+      status: string;
+    }> = [];
     if ((this.prisma as any).blockerTicket?.findMany) {
-      const openBlockers = await (this.prisma as any).blockerTicket.findMany({
-        where: {
-          status: { in: ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'] },
-        },
-        orderBy: { raisedAt: 'desc' },
-        take: 30,
-      });
+      const [openBlockers, userBlockers] = await Promise.all([
+        (this.prisma as any).blockerTicket.findMany({
+          where: {
+            status: { in: ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'] },
+          },
+          orderBy: { raisedAt: 'desc' },
+          take: 30,
+        }),
+        (this.prisma as any).blockerTicket.findMany({
+          where: {
+            raisedByUserId: userId,
+            status: { in: ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'] },
+          },
+          orderBy: { raisedAt: 'desc' },
+          select: {
+            id: true,
+            description: true,
+            severity: true,
+            type: true,
+            status: true,
+          },
+        }),
+      ]);
       activeBlockers = (openBlockers || []).map((b: any) => ({
         id: b.id,
         code: `#BLK-${String(b.id).slice(0, 6).toUpperCase()}`,
         description: b.description,
         severity: b.severity,
         projectCodeReference: b.projectCodeReference || null,
+        status: b.status,
+      }));
+      myActiveBlockers = (userBlockers || []).map((b: any) => ({
+        id: b.id,
+        code: `#BLK-${String(b.id).slice(0, 6).toUpperCase()}`,
+        description: b.description,
+        severity: b.severity,
+        type: b.type,
         status: b.status,
       }));
     }
@@ -258,6 +290,7 @@ export class DailyService {
       availableCarryOvers,
       availableProjects,
       activeBlockers,
+      myActiveBlockers,
       tomorrowPriority,
     };
   }
@@ -1234,9 +1267,59 @@ export class DailyService {
     };
   }
 
+  private prepareEodOutcomeData(
+    item: {
+      outcome: CommitmentOutcome;
+      outcomeReason?: string;
+      continuation?: ContinuationStatus;
+      continuationReason?: string;
+    },
+    itemLabel: string,
+  ) {
+    if (
+      item.outcome === CommitmentOutcome.CANCELLED &&
+      (!item.outcomeReason || !item.outcomeReason.trim())
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: `${itemLabel} yang dibatalkan (CANCELLED) wajib menyertakan alasan pembatalan.`,
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const allowsContinuation =
+      item.outcome === CommitmentOutcome.PARTIALLY_COMPLETED ||
+      item.outcome === CommitmentOutcome.NOT_COMPLETED;
+
+    if (
+      allowsContinuation &&
+      item.continuation === ContinuationStatus.CONTINUE &&
+      (!item.continuationReason || !item.continuationReason.trim())
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: `${itemLabel} yang dilanjutkan (CONTINUE) wajib menyertakan alasan kelanjutan.`,
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    return {
+      outcome: item.outcome,
+      outcomeReason: item.outcomeReason?.trim() ? item.outcomeReason.trim() : null,
+      continuation: allowsContinuation ? item.continuation || null : null,
+      continuationReason:
+        allowsContinuation &&
+        item.continuation === ContinuationStatus.CONTINUE &&
+        item.continuationReason?.trim()
+          ? item.continuationReason.trim()
+          : null,
+      isEodLocked: true,
+    };
+  }
+
   /**
    * Mengirimkan evaluasi hasil akhir hari (EOD Outcome, Prototipe 04).
-   * Menegakkan DEC-002, DEC-003 (Larangan keras lock status GREEN!).
+   * Menegakkan DEC-002, DEC-003 (Larangan keras lock status GREEN!), FR-08..10.
    */
   async submitEodOutcome(userId: string, dto: SubmitEodOutcomeDto) {
     const todayStr = this.clockService.todayString('Asia/Jakarta');
@@ -1319,67 +1402,62 @@ export class DailyService {
       });
     }
 
+    // Penegakan FR-10: Penjelasan risiko harian wajib minimal 10 karakter bila status akhir AMBER atau RED
+    const requiresDailyRiskExplanation =
+      dto.finalDailyStatus === DailyRiskStatus.AMBER ||
+      dto.finalDailyStatus === DailyRiskStatus.RED;
+    const normalizedDailyRiskExplanation = dto.dailyRiskExplanation?.trim() || '';
+    if (requiresDailyRiskExplanation && normalizedDailyRiskExplanation.length < 10) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Penjelasan risiko atau kendala harian wajib diisi minimal 10 karakter ketika status akhir hari AMBER atau RED.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const preparedCommitments = dto.commitmentOutcomes.map((item) => ({
+      commitmentId: item.commitmentId,
+      data: this.prepareEodOutcomeData(item, 'Komitmen'),
+    }));
+    const preparedAdditionalWorks = (dto.additionalWorkOutcomes || []).map((item) => ({
+      additionalWorkId: item.additionalWorkId,
+      data: this.prepareEodOutcomeData(item, 'Pekerjaan tambahan'),
+    }));
+
     const eodTiming =
       currentTimeStr <= (timingConfig.eodOnTimeCutoff || '17:00')
         ? TimingStatus.ON_TIME
         : TimingStatus.LATE;
 
     return this.prisma.$transaction(async (tx) => {
-      // Update hasil komitmen
-      for (const item of dto.commitmentOutcomes) {
-        if (item.outcome === CommitmentOutcome.CANCELLED && !item.outcomeReason) {
-          throw new AppException({
-            code: ErrorCode.VALIDATION_FAILED,
-            message: 'Komitmen yang dibatalkan (CANCELLED) wajib menyertakan alasan pembatalan.',
-            statusCode: HttpStatus.BAD_REQUEST,
-          });
-        }
-
-        if (item.continuation === ContinuationStatus.CONTINUE && !item.continuationReason) {
-          throw new AppException({
-            code: ErrorCode.VALIDATION_FAILED,
-            message: 'Komitmen yang dilanjutkan (CONTINUE) wajib menyertakan alasan kelanjutan.',
-            statusCode: HttpStatus.BAD_REQUEST,
-          });
-        }
-
+      for (const item of preparedCommitments) {
         await tx.commitment.update({
           where: { id: item.commitmentId },
-          data: {
-            outcome: item.outcome,
-            outcomeReason: item.outcomeReason ? item.outcomeReason.trim() : null,
-            continuation: item.continuation || null,
-            continuationReason: item.continuationReason ? item.continuationReason.trim() : null,
-            isEodLocked: true,
-          },
+          data: item.data,
         });
       }
 
-      // Update pekerjaan tambahan jika ada
-      if (dto.additionalWorkOutcomes) {
-        for (const item of dto.additionalWorkOutcomes) {
-          await tx.additionalWork.update({
-            where: { id: item.additionalWorkId },
-            data: {
-              outcome: item.outcome,
-              outcomeReason: item.outcomeReason ? item.outcomeReason.trim() : null,
-              continuation: item.continuation || null,
-              continuationReason: item.continuationReason ? item.continuationReason.trim() : null,
-              isEodLocked: true,
-            },
-          });
-        }
+      for (const item of preparedAdditionalWorks) {
+        await tx.additionalWork.update({
+          where: { id: item.additionalWorkId },
+          data: item.data,
+        });
       }
 
       // Update record EOD secara atomic dengan conditional guard (eodSubmittedAt: null)
       // DEC-003: Hak opsi GREEN tetap sah dan dilarang dikunci
-      const currentOrgContext = (record.orgContextSnapshot as any) || {};
-      const updatedOrgContext = {
-        ...currentOrgContext,
-        ...(dto.tomorrowPriority && dto.tomorrowPriority.trim()
-          ? { tomorrowPriority: dto.tomorrowPriority.trim() }
-          : {}),
+      const updatedOrgContext: Record<string, any> = {
+        ...((record.orgContextSnapshot as any) || {}),
       };
+      if (requiresDailyRiskExplanation && normalizedDailyRiskExplanation) {
+        updatedOrgContext.dailyRiskExplanation = normalizedDailyRiskExplanation;
+      } else {
+        delete updatedOrgContext.dailyRiskExplanation;
+      }
+      if (dto.tomorrowPriority && dto.tomorrowPriority.trim()) {
+        updatedOrgContext.tomorrowPriority = dto.tomorrowPriority.trim();
+      }
 
       const updateResult = await tx.dailyAccountabilityRecord.updateMany({
         where: {

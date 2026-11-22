@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatTimeWib, formatDateSpanWib, formatWeekdayDateWib } from '../../utils/dateTime';
 import {
@@ -10,6 +10,7 @@ import {
   Lock,
   AlertTriangle,
   CalendarCheck,
+  Info,
 } from 'lucide-vue-next';
 
 interface ActiveLeave {
@@ -18,6 +19,15 @@ interface ActiveLeave {
   startDate: string;
   endDate: string;
   reason: string;
+}
+
+interface ActiveBlockerSummary {
+  id: string;
+  code: string;
+  description: string;
+  severity: string;
+  type?: string;
+  status: string;
 }
 
 interface CommitmentOutcomeItem {
@@ -47,16 +57,32 @@ const loading = ref(false);
 const submitting = ref(false);
 const workDate = ref('');
 const currentTime = ref('');
+const recordId = ref<string | null>(null);
+const isMorningLocked = ref(false);
+const morningTiming = ref<string | null>(null);
 const isEodLocked = ref(false);
 const isLate = ref(false);
 const eodOnTimeCutoff = ref('17:00');
 const eodLockCutoff = ref('21:00');
 const eodSubmittedAt = ref<string | null>(null);
 const activeLeave = ref<ActiveLeave | null>(null);
+const myActiveBlockers = ref<ActiveBlockerSummary[]>([]);
 
 const hasSubmittedEod = computed(() => {
   return eodSubmittedAt.value !== null && eodSubmittedAt.value !== '';
 });
+const hasRecord = computed(() => Boolean(recordId.value));
+const isMorningMissedPostCutoff = computed(
+  () => (!hasRecord.value && isMorningLocked.value) || morningTiming.value === 'NO_SUBMISSION',
+);
+const isBlockedBeforeMorningCutoff = computed(
+  () =>
+    !hasRecord.value &&
+    !isMorningLocked.value &&
+    !activeLeave.value &&
+    !isEodLocked.value &&
+    !loading.value,
+);
 const isFormLocked = computed(() => isEodLocked.value || hasSubmittedEod.value || Boolean(activeLeave.value));
 
 function formatLeaveType(type?: string): string {
@@ -192,11 +218,113 @@ const formattedWorkDate = computed(() => {
 const commitments = ref<CommitmentOutcomeItem[]>([]);
 const additionalWorks = ref<AdditionalWorkOutcomeItem[]>([]);
 const finalDailyStatus = ref<'GREEN' | 'AMBER' | 'RED'>('GREEN');
+const dailyRiskExplanation = ref('');
 const tomorrowPriority = ref('');
+const showMismatchConfirm = ref(false);
 
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 const isSubmittedSuccess = ref(false);
+
+function needsContinuation(outcome: CommitmentOutcomeItem['outcome']): boolean {
+  return outcome === 'PARTIALLY_COMPLETED' || outcome === 'NOT_COMPLETED';
+}
+
+const requiresRiskExplanation = computed(
+  () => finalDailyStatus.value === 'AMBER' || finalDailyStatus.value === 'RED',
+);
+
+const statusSuggestion = computed<{ status: 'GREEN' | 'AMBER' | 'RED'; reason: string } | null>(() => {
+  const items = [...commitments.value, ...additionalWorks.value];
+  const hasCriticalBlocker = myActiveBlockers.value.some((b) => b.severity === 'CRITICAL');
+  const hasUnresolvedIncident = additionalWorks.value.some(
+    (w) => w.reason === 'OPERATIONAL_INCIDENT' && w.outcome !== 'COMPLETED',
+  );
+
+  if (hasCriticalBlocker) {
+    return {
+      status: 'RED',
+      reason: 'Terdapat blocker aktif dengan tingkat keparahan Kritis (Critical).',
+    };
+  }
+  if (hasUnresolvedIncident) {
+    return {
+      status: 'RED',
+      reason: 'Terdapat perbaikan error/insiden kritis hari ini yang belum selesai penuh.',
+    };
+  }
+
+  if (items.length > 0) {
+    const failedCount = items.filter(
+      (i) => i.outcome === 'NOT_COMPLETED' || i.outcome === 'CANCELLED',
+    ).length;
+    if (failedCount / items.length >= 0.5) {
+      return {
+        status: 'RED',
+        reason: 'Minimal 50% target pekerjaan hari ini berstatus Belum Selesai atau Dibatalkan.',
+      };
+    }
+  }
+
+  if (commitments.value.some((c) => c.carryOverDaysCount >= 2)) {
+    return {
+      status: 'AMBER',
+      reason: 'Terdapat komitmen berlanjut 2 hari berturut-turut atau lebih (Carry-Over #2+).',
+    };
+  }
+
+  if (myActiveBlockers.value.some((b) => b.severity === 'HIGH')) {
+    return {
+      status: 'AMBER',
+      reason: 'Terdapat blocker aktif dengan prioritas Tinggi (High).',
+    };
+  }
+
+  if (
+    items.some(
+      (i) =>
+        i.outcome === 'PARTIALLY_COMPLETED' ||
+        i.outcome === 'NOT_COMPLETED' ||
+        i.outcome === 'CANCELLED',
+    )
+  ) {
+    return {
+      status: 'AMBER',
+      reason: 'Terdapat pekerjaan yang selesai sebagian, belum selesai, atau dibatalkan.',
+    };
+  }
+
+  if (myActiveBlockers.value.length > 0) {
+    return {
+      status: 'AMBER',
+      reason: 'Masih terdapat blocker aktif milik Anda yang sedang berjalan.',
+    };
+  }
+
+  if (items.length > 0 && items.every((i) => i.outcome === 'COMPLETED')) {
+    return {
+      status: 'GREEN',
+      reason: 'Seluruh pekerjaan hari ini selesai penuh dan tidak ada blocker aktif.',
+    };
+  }
+
+  return null;
+});
+
+const STATUS_WEIGHT: Record<'GREEN' | 'AMBER' | 'RED', number> = {
+  GREEN: 0,
+  AMBER: 1,
+  RED: 2,
+};
+
+const isStatusLighterThanSuggestion = computed(() => {
+  if (!statusSuggestion.value) return false;
+  return STATUS_WEIGHT[finalDailyStatus.value] < STATUS_WEIGHT[statusSuggestion.value.status];
+});
+
+watch([finalDailyStatus, () => statusSuggestion.value?.status], () => {
+  showMismatchConfirm.value = false;
+});
 
 async function loadTodayState() {
   loading.value = true;
@@ -205,24 +333,33 @@ async function loadTodayState() {
       workDate: string;
       currentTime: string;
       cutoffTimings: {
+        isMorningLocked?: boolean;
         eodOnTimeCutoff: string;
         eodLockCutoff: string;
         isEodLocked: boolean;
       };
       record: any;
       activeLeave?: ActiveLeave | null;
+      myActiveBlockers?: ActiveBlockerSummary[];
     }>('/daily/today');
 
     const data = res.data;
     activeLeave.value = (data as any).activeLeave || null;
     workDate.value = data.workDate;
     currentTime.value = data.currentTime;
+    isMorningLocked.value = Boolean(data.cutoffTimings?.isMorningLocked);
     eodOnTimeCutoff.value = data.cutoffTimings.eodOnTimeCutoff;
     eodLockCutoff.value = data.cutoffTimings.eodLockCutoff;
     isEodLocked.value = data.cutoffTimings.isEodLocked;
     isLate.value = data.currentTime > data.cutoffTimings.eodOnTimeCutoff && !data.cutoffTimings.isEodLocked;
+    myActiveBlockers.value = Array.isArray((data as any).myActiveBlockers)
+      ? (data as any).myActiveBlockers
+      : [];
+    showMismatchConfirm.value = false;
 
-        if (data.record) {
+    if (data.record) {
+      recordId.value = data.record.id || 'record';
+      morningTiming.value = data.record.morningTiming || null;
       eodSubmittedAt.value = data.record.eodSubmittedAt
         ? new Date(data.record.eodSubmittedAt).toISOString()
         : null;
@@ -256,9 +393,16 @@ async function loadTodayState() {
       if (data.record.finalDailyStatus && data.record.finalDailyStatus !== 'NOT_APPLICABLE_NO_COMMITMENT') {
         finalDailyStatus.value = data.record.finalDailyStatus;
       }
+      dailyRiskExplanation.value = (data.record.orgContextSnapshot as any)?.dailyRiskExplanation || '';
       tomorrowPriority.value = (data.record.orgContextSnapshot as any)?.tomorrowPriority || '';
       isSubmittedSuccess.value = !!eodSubmittedAt.value;
     } else {
+      recordId.value = null;
+      morningTiming.value = null;
+      commitments.value = [];
+      additionalWorks.value = [];
+      dailyRiskExplanation.value = '';
+      tomorrowPriority.value = '';
       eodSubmittedAt.value = null;
       isSubmittedSuccess.value = false;
     }
@@ -269,52 +413,83 @@ async function loadTodayState() {
   }
 }
 
-async function submitEod() {
+async function submitEod(bypassMismatchConfirm = false) {
   errorMessage.value = null;
 
-  // Validasi outcome komitmen
-  for (const c of commitments.value) {
-    if (c.outcome === 'CANCELLED' && c.outcomeReason.trim().length === 0) {
-      errorMessage.value = `Komitmen #${c.sequenceNo}: Alasan pembatalan wajib diisi bila status Dibatalkan.`;
+  // Validasi outcome & continuation (hanya wajib alasan kelanjutan jika outcome Sebagian / Belum Selesai)
+  const itemsToValidate = [
+    ...commitments.value.map((c) => ({
+      label: `Komitmen #${c.sequenceNo}`,
+      outcome: c.outcome,
+      outcomeReason: c.outcomeReason,
+      continuation: c.continuation,
+      continuationReason: c.continuationReason,
+    })),
+    ...additionalWorks.value.map((w) => ({
+      label: `Pekerjaan Tambahan "${w.taskText.slice(0, 20)}..."`,
+      outcome: w.outcome,
+      outcomeReason: w.outcomeReason,
+      continuation: w.continuation,
+      continuationReason: w.continuationReason,
+    })),
+  ];
+
+  for (const item of itemsToValidate) {
+    if (item.outcome === 'CANCELLED' && item.outcomeReason.trim().length === 0) {
+      errorMessage.value = `${item.label}: Alasan pembatalan wajib diisi bila status Dibatalkan.`;
       return;
     }
-    if (c.continuation === 'CONTINUE' && c.continuationReason.trim().length === 0) {
-      errorMessage.value = `Komitmen #${c.sequenceNo}: Alasan kelanjutan (Continuation) wajib diisi bila tugas dilanjutkan.`;
+    if (
+      needsContinuation(item.outcome) &&
+      item.continuation === 'CONTINUE' &&
+      item.continuationReason.trim().length === 0
+    ) {
+      errorMessage.value = `${item.label}: Alasan kelanjutan (Continuation) wajib diisi bila tugas dilanjutkan.`;
       return;
     }
   }
 
-  // Validasi outcome additional work
-  for (const w of additionalWorks.value) {
-    if (w.outcome === 'CANCELLED' && w.outcomeReason.trim().length === 0) {
-      errorMessage.value = `Pekerjaan Tambahan "${w.taskText.slice(0, 20)}...": Alasan pembatalan wajib diisi.`;
-      return;
-    }
-    if (w.continuation === 'CONTINUE' && w.continuationReason.trim().length === 0) {
-      errorMessage.value = `Pekerjaan Tambahan "${w.taskText.slice(0, 20)}...": Alasan kelanjutan wajib diisi.`;
-      return;
-    }
+  if (requiresRiskExplanation.value && dailyRiskExplanation.value.trim().length < 10) {
+    errorMessage.value =
+      'Penjelasan risiko atau kendala hari ini wajib diisi minimal 10 karakter ketika status akhir hari AMBER atau RED.';
+    return;
+  }
+
+  if (!bypassMismatchConfirm && isStatusLighterThanSuggestion.value) {
+    showMismatchConfirm.value = true;
+    return;
   }
 
   submitting.value = true;
+  showMismatchConfirm.value = false;
   try {
     const payload = {
       workDate: workDate.value,
       commitmentOutcomes: commitments.value.map((c) => ({
         commitmentId: c.id,
         outcome: c.outcome,
-        outcomeReason: c.outcomeReason.trim() ? c.outcomeReason.trim() : undefined,
-        continuation: c.outcome !== 'COMPLETED' ? c.continuation : undefined,
-        continuationReason: c.continuation === 'CONTINUE' ? c.continuationReason.trim() : undefined,
+        outcomeReason: c.outcome === 'CANCELLED' && c.outcomeReason.trim() ? c.outcomeReason.trim() : undefined,
+        continuation: needsContinuation(c.outcome) ? c.continuation : undefined,
+        continuationReason:
+          needsContinuation(c.outcome) && c.continuation === 'CONTINUE'
+            ? c.continuationReason.trim()
+            : undefined,
       })),
       additionalWorkOutcomes: additionalWorks.value.map((w) => ({
         additionalWorkId: w.id,
         outcome: w.outcome,
-        outcomeReason: w.outcomeReason.trim() ? w.outcomeReason.trim() : undefined,
-        continuation: w.outcome !== 'COMPLETED' ? w.continuation : undefined,
-        continuationReason: w.continuation === 'CONTINUE' ? w.continuationReason.trim() : undefined,
+        outcomeReason: w.outcome === 'CANCELLED' && w.outcomeReason.trim() ? w.outcomeReason.trim() : undefined,
+        continuation: needsContinuation(w.outcome) ? w.continuation : undefined,
+        continuationReason:
+          needsContinuation(w.outcome) && w.continuation === 'CONTINUE'
+            ? w.continuationReason.trim()
+            : undefined,
       })),
       finalDailyStatus: finalDailyStatus.value, // DEC-003: Hak konfirmasi status GREEN dijamin bebas
+      dailyRiskExplanation:
+        requiresRiskExplanation.value && dailyRiskExplanation.value.trim()
+          ? dailyRiskExplanation.value.trim()
+          : undefined,
       tomorrowPriority: tomorrowPriority.value.trim() ? tomorrowPriority.value.trim() : undefined,
     };
 
@@ -527,7 +702,38 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Peringatan Pra Cut-Off Pagi jika belum mengisi Morning Commitment (Opsi A) -->
+      <div
+        v-else-if="isBlockedBeforeMorningCutoff"
+        class="alert-box"
+        role="alert"
+        data-testid="eod-morning-required-alert"
+      >
+        <AlertCircle :size="20" />
+        <div>
+          <strong>Belum Mengisi Morning Commitment:</strong>
+          Silakan kirimkan komitmen pagi terlebih dahulu sebelum mengisi evaluasi akhir hari.
+          <AccessLink to="/daily/morning" class="alert-link">Buka Morning Commitment &rarr;</AccessLink>
+        </div>
+      </div>
+
       <template v-else>
+      <!-- Informasi jika pagi terlewat pasca Cut-Off (Opsi A) -->
+      <div
+        v-if="!isFormLocked && isMorningMissedPostCutoff"
+        class="alert-banner info"
+        role="status"
+        data-testid="eod-morning-missed-banner"
+      >
+        <Info :size="20" class="alert-icon-info" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Komitmen Pagi Hari Ini Terlewat:</strong>
+            <span>Catatan pagi tetap tercatat tidak mengisi komitmen, namun Anda tetap dapat menyelesaikan Evaluasi Sore untuk pekerjaan tambahan dan refleksi harian.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Daftar Komitmen Pagi untuk Dievaluasi -->
       <section class="panel">
         <div class="panel-head">
@@ -538,7 +744,11 @@ onMounted(() => {
         </div>
         <div class="panel-body">
           <div v-if="commitments.length === 0" class="empty-hint">
-            Tidak ada komitmen terencana yang tercatat untuk pagi hari ini (0 Komitmen).
+            {{
+              isMorningMissedPostCutoff
+                ? 'Komitmen pagi hari ini terlewat dari batas waktu pengisian.'
+                : 'Tidak ada komitmen terencana yang tercatat untuk pagi hari ini (0 Komitmen).'
+            }}
           </div>
           <div v-else-if="!isFormLocked" class="eval-list">
             <div v-for="c in commitments" :key="c.id" class="eval-card">
@@ -804,6 +1014,35 @@ onMounted(() => {
               Bagaimana penilaian mandiri Anda terhadap pencapaian kerja secara keseluruhan hari ini? Anda memiliki hak penuh untuk menentukan status refleksi hari ini secara jujur dan transparan demi pembelajaran bersama tim.
             </p>
 
+            <!-- Saran Status Sistem (FR-13, informasi non-pengunci) -->
+            <div
+              v-if="statusSuggestion"
+              class="suggestion-box"
+              :class="`suggestion-${statusSuggestion.status.toLowerCase()}`"
+              data-testid="status-suggestion-box"
+            >
+              <div class="suggestion-header">
+                <Info :size="16" />
+                <span>Saran Status Sistem:</span>
+                <span
+                  class="badge"
+                  :class="
+                    statusSuggestion.status === 'GREEN'
+                      ? 'badge-active'
+                      : statusSuggestion.status === 'AMBER'
+                        ? 'badge-warning'
+                        : 'badge-danger'
+                  "
+                >
+                  {{ statusSuggestion.status }}
+                </span>
+              </div>
+              <p class="suggestion-reason">
+                {{ statusSuggestion.reason }}
+                <span class="suggestion-note">Anda tetap bebas menentukan status refleksi akhir sesuai kondisi aktual.</span>
+              </p>
+            </div>
+
             <div class="status-selection-grid">
               <label class="status-select-card green" :class="{ selected: finalDailyStatus === 'GREEN' }">
                 <input type="radio" value="GREEN" v-model="finalDailyStatus" :disabled="isFormLocked" />
@@ -837,6 +1076,33 @@ onMounted(() => {
                   Kendala kritis tidak terselesaikan dan membutuhkan intervensi langsung atasan.
                 </p>
               </label>
+            </div>
+
+            <!-- Penjelasan Risiko / Kendala Hari Ini (Wajib jika AMBER atau RED, FR-10) -->
+            <div
+              v-if="requiresRiskExplanation"
+              class="field-group risk-explanation-group"
+              style="margin-top: 20px;"
+              data-testid="daily-risk-explanation-group"
+            >
+              <label class="form-label" for="daily-risk-explanation">
+                <span>Penjelasan Risiko / Kendala Hari Ini *</span>
+                <span class="field-sub-inline" style="font-weight: normal; font-size: 12px; color: var(--color-text-secondary); margin-left: 6px;">
+                  (Wajib minimal 10 karakter saat memilih AMBER / RED)
+                </span>
+              </label>
+              <textarea
+                id="daily-risk-explanation"
+                v-model="dailyRiskExplanation"
+                class="input-control"
+                rows="3"
+                placeholder="Jelaskan faktor kendala, hambatan, atau risiko utama yang memengaruhi hasil kerja hari ini secara keseluruhan..."
+                :disabled="isFormLocked"
+                required
+              ></textarea>
+              <span class="field-sub" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; display: block;">
+                Karakter terisi: {{ dailyRiskExplanation.trim().length }} / minimal 10 karakter. Catatan ini menjelaskan kondisi risiko tingkat harian dan terpisah dari catatan pagi per tugas.
+              </span>
             </div>
 
             <!-- Field Tomorrow Priority (Opsional) -->
@@ -880,6 +1146,17 @@ onMounted(() => {
               </p>
             </div>
 
+            <div
+              v-if="hasSubmittedEod && (finalDailyStatus === 'AMBER' || finalDailyStatus === 'RED' || dailyRiskExplanation.trim())"
+              class="tomorrow-priority-readonly"
+              data-testid="daily-risk-readonly"
+            >
+              <div class="tomorrow-priority-label">Penjelasan Risiko / Kendala Hari Ini</div>
+              <p class="tomorrow-priority-value" :class="{ muted: !dailyRiskExplanation.trim() }">
+                {{ dailyRiskExplanation.trim() || 'Tidak ada catatan penjelasan risiko yang tersimpan.' }}
+              </p>
+            </div>
+
             <div class="tomorrow-priority-readonly">
               <div class="tomorrow-priority-label">Prioritas Esok Hari (Tomorrow Priority)</div>
               <p class="tomorrow-priority-value" :class="{ muted: !tomorrowPriority.trim() }">
@@ -890,6 +1167,44 @@ onMounted(() => {
         </div>
       </section>
 
+      <!-- Konfirmasi Inline Ketidaksesuaian Saran Status (FR-14, tetap menjamin hak pilih GREEN DEC-003) -->
+      <div
+        v-if="!isFormLocked && showMismatchConfirm && statusSuggestion"
+        class="mismatch-confirm-box"
+        role="alertdialog"
+        aria-labelledby="mismatch-confirm-title"
+        data-testid="status-mismatch-confirm"
+      >
+        <div class="mismatch-confirm-content">
+          <AlertTriangle :size="20" class="text-amber" />
+          <div>
+            <h3 id="mismatch-confirm-title">Konfirmasi Pilihan Status Akhir Hari</h3>
+            <p>
+              Sistem menyarankan status <strong>{{ statusSuggestion.status }}</strong> ({{ statusSuggestion.reason }}), sedangkan Anda memilih <strong>{{ finalDailyStatus }}</strong>. Anda tetap dapat mengirim dengan status <strong>{{ finalDailyStatus }}</strong> jika sudah yakin, atau sesuaikan ke saran sistem.
+            </p>
+          </div>
+        </div>
+        <div class="mismatch-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="btn-apply-suggested-status"
+            @click="finalDailyStatus = statusSuggestion.status; showMismatchConfirm = false"
+          >
+            Ubah ke Saran ({{ statusSuggestion.status }})
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            :disabled="submitting"
+            data-testid="btn-confirm-keep-status"
+            @click="submitEod(true)"
+          >
+            Tetap Kirim sebagai {{ finalDailyStatus }}
+          </button>
+        </div>
+      </div>
+
       <!-- Action Footer -->
       <div v-if="!isFormLocked" class="action-footer">
         <div class="footer-info">
@@ -899,7 +1214,7 @@ onMounted(() => {
           type="button"
           class="btn btn-primary"
           :disabled="submitting"
-          @click="submitEod"
+          @click="submitEod(false)"
         >
           <span>{{ submitting ? 'Mengirim...' : 'Kirim Evaluasi EOD' }}</span>
         </button>
@@ -1803,5 +2118,128 @@ textarea.input-control {
 .leave-notice-actions {
   display: flex;
   gap: 10px;
+}
+
+.alert-box {
+  background: var(--color-status-amber-bg);
+  border: 1px solid var(--color-status-amber-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  color: var(--color-status-amber-fg);
+  font-size: 13px;
+}
+
+.alert-link {
+  margin-left: 8px;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
+}
+
+.alert-banner.info {
+  background: var(--color-timing-ontime-bg);
+  border: 1px solid var(--color-timing-ontime-border);
+  color: var(--color-timing-ontime-fg);
+}
+
+.alert-icon-info {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.suggestion-box {
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-box.suggestion-red {
+  background: var(--color-status-red-bg);
+  border-color: var(--color-status-red-border);
+  color: var(--color-status-red-fg);
+}
+
+.suggestion-box.suggestion-amber {
+  background: var(--color-status-amber-bg);
+  border-color: var(--color-status-amber-border);
+  color: var(--color-status-amber-fg);
+}
+
+.suggestion-box.suggestion-green {
+  background: var(--color-status-green-bg);
+  border-color: var(--color-status-green-border);
+  color: var(--color-status-green-fg);
+}
+
+.suggestion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.suggestion-reason {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.suggestion-note {
+  margin-left: 6px;
+  color: var(--color-text-secondary);
+}
+
+.risk-explanation-group {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+
+.mismatch-confirm-box {
+  background: var(--color-status-amber-bg);
+  border: 1px solid var(--color-status-amber-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mismatch-confirm-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mismatch-confirm-content h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-status-amber-fg);
+}
+
+.mismatch-confirm-content p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.mismatch-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 </style>

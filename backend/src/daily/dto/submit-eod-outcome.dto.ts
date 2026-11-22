@@ -118,6 +118,10 @@ export class SubmitEodOutcomeDto {
   finalDailyStatus!: DailyRiskStatus;
 
   @IsOptional()
+  @IsString()
+  dailyRiskExplanation?: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => InstantBlockerDto)
   instantBlocker?: InstantBlockerDto;
