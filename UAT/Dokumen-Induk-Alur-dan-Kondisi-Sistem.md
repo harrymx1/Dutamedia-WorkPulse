@@ -797,14 +797,17 @@ flowchart TD
      - **Aksi:** Masuk (*Login*) sebagai **`product@dutamedia.com`** (sandi `Password123!`), lalu klik menu kiri **Koreksi Komitmen Pagi** (`/corrections/morning`) dan **Koreksi Evaluasi Sore** (`/corrections/eod`).
      - ***Hasil yang Diharapkan:***
        - Karena Dio belum mengirim Komitmen Pagi hari ini, kedua halaman menyembunyikan formulir koreksi dan menampilkan kartu informasi **`"Tidak Ada Komitmen Hari Ini"`** beserta tombol **`Buka Morning Commitment`** (mencegah pengajuan koreksi saat belum ada laporan dasar; di server juga dijaga dengan kode `422`).
-  2. **Uji Validasi Batas Minimal Karakter di Formulir Koreksi Komitmen Pagi (`/corrections/morning`):**
+  2. **Uji Tab Pindah, Batas Minimal Karakter, Penolakan Pengajuan Tanpa Perubahan, `Reset Isian`, & Penahan Duplikat `PENDING` di `/corrections/morning` (`[Diperbarui Audit #16a]`):**
      - **Aksi:** Keluar (*Logout*) dari akun Dio, lalu masuk sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho) dan buka menu **Koreksi Komitmen Pagi** (`/corrections/morning`).
-     - **Aksi:** Pada panel kiri **Formulir Pengajuan Koreksi Komparatif**:
+     - **Aksi:** Periksa tab perpindahan **`Koreksi Komitmen Pagi`** / **`Koreksi Evaluasi Sore (EOD)`** di bawah judul, lalu pada panel kiri **Formulir Pengajuan Koreksi Komparatif**:
        - Pilih komitmen pada dropdown **`Pilih Komitmen yang Ingin Dikoreksi *`** (`#comSelect`), lalu periksa kotak **`Baseline Tersimpan (Locked)`** di bawahnya.
        - Pilih kartu **`Perubahan Minor`** (`MINOR`).
-       - Isi **`Deskripsi Komitmen Baru yang Diajukan *`** (`#newTaskInput`) hanya 2 huruf (`OK`) dan **`Alasan Resmi Permohonan Koreksi *`** (`#reasonInput`) hanya 5 huruf (`Salah`).
+       - Isi **`Deskripsi Komitmen Baru yang Diajukan *`** (`#newTaskInput`) hanya 2 huruf (`OK`) dan **`Alasan Resmi Permohonan Koreksi *`** (`#reasonInput`) hanya 5 huruf (`Salah`) sambil mengamati penghitung huruf alasan (`5 / 10 karakter minimum`).
+       - Klik **`Reset Isian`** untuk mengembalikan nilai baseline komitmen, isi alasan minimal 10 huruf tanpa mengubah komitmen, lalu coba tekan **`Kirim Permohonan Koreksi`**.
      - ***Hasil yang Diharapkan:***
-       - Selama alasan kurang dari 10 karakter, tombol **`Kirim Permohonan Koreksi`** otomatis terkunci (`disabled`). Deskripsi komitmen baru juga wajib minimal **3 karakter**.
+       - Selama deskripsi komitmen `< 3` karakter atau alasan `< 10` karakter, tombol **`Kirim Permohonan Koreksi`** otomatis terkunci (`disabled`). Penghitung huruf menampilkan `X / 10 karakter minimum` hingga berubah hijau **`Alasan memenuhi syarat (X karakter)`**.
+       - Menekan **`Reset Isian`** mengembalikan deskripsi, tautan referensi, dan tingkat risiko ke baseline tersimpan serta mengosongkan alasan. Mengirim tanpa mengubah satu pun isian komitmen ditolak baik di layar maupun server (`400 VALIDATION_FAILED`: `"Perubahan yang diajukan masih sama dengan data komitmen saat ini. Silakan ubah minimal satu isian komitmen."`).
+       - Jika komitmen yang dipilih masih memiliki pengajuan `PENDING`, banner biru muncul di atas formulir (disertai batas waktu tinjauan 24 jam) dan tombol kirim terkunci (server juga menolak ganda dengan `409 RESOURCE_CONFLICT`). Jika pengajuan terakhir berstatus `REJECTED`, banner merah menampilkan catatan penolakan beserta tombol **`Gunakan Draf Sebelumnya & Sesuaikan`**.
   3. **Kirim Koreksi Pagi `Perubahan Minor` (`MINOR` — Langsung Berlaku Otomatis) & `Perubahan Material` (`MATERIAL` — Menunggu Atasan):**
      - **Aksi (Kirim Minor):** Masih di `/corrections/morning` sebagai Aditya, isi:
        - **Klasifikasi Perubahan \*:** Klik kartu **`Perubahan Minor`**
@@ -849,7 +852,8 @@ flowchart TD
      - ***Hasil yang Diharapkan:***
        - Saat menolak tanpa alasan: sistem menahan penolakan karena alasan penolakan wajib diisi.
        - Setelah koreksi pagi ditolak dan koreksi EOD disetujui: pada filter `Semua Status` di `/corrections/review`, kedua baris tampil berstatus **`REJECTED`** dan **`APPROVED`**.
-       - Di akun Aditya: panel kanan `/corrections/morning` menampilkan kartu berstatus **`REJECTED`** lengkap dengan kotak merah catatan penolakan dari Arif Budiman, sedangkan panel kanan `/corrections/eod` menampilkan kartu berstatus **`APPROVED`** lengkap dengan catatan persetujuan Arif Budiman (dan Aditya menerima kedua notifikasinya di `/notifications`).
+       - Di akun Aditya: panel kanan `/corrections/morning` menampilkan kartu berstatus **`REJECTED`** lengkap dengan penanda **`Komitmen #...`**, perubahan **Tingkat Risiko** / **Tautan Referensi** bila ikut diubah, serta kotak merah catatan penolakan lengkap dengan nama peninjau (`Catatan Peninjau (Arif Budiman): ...`), sedangkan panel kanan `/corrections/eod` menampilkan kartu berstatus **`APPROVED`** lengkap dengan catatan persetujuan Arif Budiman. Notifikasi di `/notifications` membawa tombol langsung **`Buka Koreksi Komitmen Pagi`** (`/corrections/morning`) dan **`Buka Koreksi Evaluasi Sore`** (`/corrections/eod`).
+       - Di layar HP `375px`: tab Pagi/Sore, pilihan klasifikasi, pilihan tingkat risiko, tombol aksi formulir, dan perbandingan riwayat tersusun vertikal 1 kolom tanpa melebihi lebar layar.
 
 ---
 
@@ -857,7 +861,7 @@ flowchart TD
 
 | ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
 |---|---|---|---|---|---|---|---|---|
-| **K-12.1** | **Koreksi Komitmen Pagi** (`/corrections/morning`) · *(Acuan `16a-Morning-Correction-Request.html`)* | Belum ada laporan pagi hari ini (`No Baseline`), form `MINOR` vs `MATERIAL` + validasi min. 10 huruf, & tabel riwayat bawah halaman (`AUTO_APPLIED`, `PENDING`, `APPROVED`, `REJECTED`) berformat `HH:mm WIB` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-12.1** | **Koreksi Komitmen Pagi** (`/corrections/morning`) · *(Acuan `16a-Morning-Correction-Request.html`)* | Belum ada laporan pagi hari ini (`No Baseline`), tab Pagi/Sore, form `MINOR` vs `MATERIAL` + penghitung min. 10 huruf & `Reset Isian`, tolak tanpa perubahan (`400`) & tolak ganda saat `PENDING` (`409` + banner tunggu), bantuan `Gunakan Draf Sebelumnya & Sesuaikan` pasca-`REJECTED`, riwayat lengkap (`Komitmen #`, risiko/tautan, nama peninjau, `HH:mm WIB`), & responsif HP `375px` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-13.1** | **Koreksi Evaluasi Sore** (`/corrections/eod`) · *(Acuan `16b-EOD-Correction-Request.html`)* | Belum ada laporan EOD, form `MINOR` vs `MATERIAL` koreksi hasil sore, jendela 24 jam, & tabel riwayat bawah halaman berformat `HH:mm WIB` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-14.1** | **Review Koreksi** (`/corrections/review`) · *(Acuan `22-Correction-and-Leave-Review.html`)* | Kartu perbandingan nilai Sebelum vs Diajukan (*Diff*) + modal Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
