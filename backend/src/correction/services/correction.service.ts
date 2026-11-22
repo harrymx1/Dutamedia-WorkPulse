@@ -157,6 +157,68 @@ export class CorrectionService {
       });
     }
 
+    if (this.prisma.correctionRequest?.findFirst) {
+      const existingPending = await this.prisma.correctionRequest.findFirst({
+        where: {
+          targetCommitmentId: dto.targetCommitmentId,
+          scopeType: dto.scopeType,
+          status: CorrectionStatus.PENDING,
+        },
+      });
+
+      if (existingPending) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message:
+            'Masih ada permohonan koreksi material yang sedang menunggu tinjauan atasan untuk komitmen ini.',
+          statusCode: HttpStatus.CONFLICT,
+        });
+      }
+    }
+
+    if (dto.scopeType === CorrectionScopeType.MORNING_COMMITMENT) {
+      const reqChange = dto.requestedChange || {};
+      if (
+        reqChange.taskText !== undefined &&
+        String(reqChange.taskText).trim().length < 3
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: 'Deskripsi komitmen baru minimal 3 karakter.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const currentTask = (commitment.taskText || '').trim();
+      const nextTask =
+        reqChange.taskText !== undefined
+          ? String(reqChange.taskText).trim()
+          : currentTask;
+      const currentLink = (commitment.referenceLink || '').trim() || null;
+      const nextLink =
+        reqChange.referenceLink !== undefined
+          ? String(reqChange.referenceLink || '').trim() || null
+          : currentLink;
+      const currentRisk = commitment.initialRisk;
+      const nextRisk =
+        reqChange.initialRisk !== undefined
+          ? reqChange.initialRisk
+          : currentRisk;
+
+      if (
+        nextTask === currentTask &&
+        nextLink === currentLink &&
+        nextRisk === currentRisk
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Perubahan yang diajukan masih sama dengan data komitmen saat ini. Silakan ubah minimal satu isian komitmen.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+    }
+
     // Ambil nilai sebelum (snapshot value before)
     const valueBefore: Record<string, any> =
       dto.scopeType === CorrectionScopeType.MORNING_COMMITMENT
@@ -416,6 +478,10 @@ export class CorrectionService {
     }
 
     const now = this.clockService.now();
+    const targetActionUrl =
+      req.scopeType === CorrectionScopeType.EOD_OUTCOME
+        ? '/corrections/eod'
+        : '/corrections/morning';
 
     return this.prisma.$transaction(async (tx) => {
       if (dto.decision === 'APPROVE') {
@@ -461,7 +527,7 @@ export class CorrectionService {
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Permohonan Koreksi Disetujui',
             message: `Permohonan koreksi komitmen #${req.targetCommitment.sequenceNo} telah disetujui oleh atasan.`,
-            actionUrl: '/daily/history',
+            actionUrl: targetActionUrl,
             relatedEntityType: 'correction_requests',
             relatedEntityId: req.id,
           },
@@ -488,7 +554,7 @@ export class CorrectionService {
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Permohonan Koreksi Ditolak',
             message: `Permohonan koreksi komitmen #${req.targetCommitment.sequenceNo} ditolak: "${dto.reviewNote.trim()}".`,
-            actionUrl: '/daily/history',
+            actionUrl: targetActionUrl,
             relatedEntityType: 'correction_requests',
             relatedEntityId: req.id,
           },

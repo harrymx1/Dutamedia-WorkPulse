@@ -26,6 +26,7 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
       correctionRequest: {
         create: vi.fn(),
         findUnique: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue(null),
         update: vi.fn(),
         findMany: vi.fn(),
       },
@@ -345,6 +346,127 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
             outcome: CommitmentOutcome.NOT_COMPLETED,
             continuation: 'CONTINUE',
             continuationReason: 'Menunggu pembaruan sertifikat TLS dari tim infra.',
+          }),
+        }),
+      );
+    });
+
+    it('rejects duplicate submission when a PENDING correction already exists for the commitment (409)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-1',
+        sequenceNo: 1,
+        taskText: 'Menyelesaikan endpoint autentikasi',
+        referenceLink: null,
+        initialRisk: CommitmentRisk.GREEN,
+        dailyRecord: { userId: 'usr-1' },
+      });
+      mockPrisma.correctionRequest.findFirst.mockResolvedValueOnce({
+        id: 'cr-pending-1',
+        status: CorrectionStatus.PENDING,
+      });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-1',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          classification: CorrectionClassification.MATERIAL,
+          reason: 'Mengubah komitmen kedua kalinya saat pengajuan pertama masih menunggu.',
+          requestedChange: {
+            taskText: 'Mengubah ruang lingkup tugas yang berbeda',
+          },
+        }),
+      ).rejects.toMatchObject({ status: 409, code: 'RESOURCE_CONFLICT' });
+    });
+
+    it('rejects MORNING_COMMITMENT correction when no field actually changed or taskText < 3 chars (400)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-1',
+        sequenceNo: 1,
+        taskText: 'Menyelesaikan endpoint autentikasi',
+        referenceLink: 'https://github.com/dutamedia/pr/1',
+        initialRisk: CommitmentRisk.GREEN,
+        dailyRecord: { userId: 'usr-1' },
+      });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-1',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          classification: CorrectionClassification.MINOR,
+          reason: 'Kirim ulang tanpa mengubah satu pun isian komitmen.',
+          requestedChange: {
+            taskText: 'Menyelesaikan endpoint autentikasi',
+            referenceLink: 'https://github.com/dutamedia/pr/1',
+            initialRisk: CommitmentRisk.GREEN,
+          },
+        }),
+      ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-1',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          classification: CorrectionClassification.MINOR,
+          reason: 'Mengisi teks tugas terlalu pendek hanya dua huruf.',
+          requestedChange: {
+            taskText: 'OK',
+          },
+        }),
+      ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
+    });
+
+    it('routes APPROVED and REJECTED notifications to /corrections/morning or /corrections/eod', async () => {
+      mockPrisma.correctionRequest.findUnique
+        .mockResolvedValueOnce({
+          id: 'cr-morning-approve',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          targetCommitmentId: 'com-1',
+          requestedByUserId: 'usr-1',
+          reason: 'Ubah ruang lingkup komitmen',
+          status: CorrectionStatus.PENDING,
+          valueBefore: { taskText: 'Tugas Lama' },
+          valueRequested: { taskText: 'Tugas Baru' },
+          targetCommitment: { sequenceNo: 1, dailyRecordId: 'dr-1' },
+        })
+        .mockResolvedValueOnce({
+          id: 'cr-eod-reject',
+          scopeType: CorrectionScopeType.EOD_OUTCOME,
+          targetCommitmentId: 'com-2',
+          requestedByUserId: 'usr-1',
+          reason: 'Ubah status EOD',
+          status: CorrectionStatus.PENDING,
+          valueBefore: { outcome: 'NOT_COMPLETED' },
+          valueRequested: { outcome: 'DONE' },
+          targetCommitment: { sequenceNo: 2, dailyRecordId: 'dr-1' },
+        });
+      mockPrisma.correctionRequest.update
+        .mockResolvedValueOnce({ id: 'cr-morning-approve', status: CorrectionStatus.APPROVED })
+        .mockResolvedValueOnce({ id: 'cr-eod-reject', status: CorrectionStatus.REJECTED });
+
+      await service.reviewCorrectionRequest('mgr-1', 'cr-morning-approve', {
+        decision: 'APPROVE',
+        reviewNote: 'Disetujui sesuai perubahan ruang lingkup.',
+      });
+      await service.reviewCorrectionRequest('mgr-1', 'cr-eod-reject', {
+        decision: 'REJECT',
+        reviewNote: 'Bukti penggabungan kode belum dilampirkan.',
+      });
+
+      expect(mockPrisma.notification.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'CORRECTION_APPROVED',
+            actionUrl: '/corrections/morning',
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'CORRECTION_REJECTED',
+            actionUrl: '/corrections/eod',
           }),
         }),
       );

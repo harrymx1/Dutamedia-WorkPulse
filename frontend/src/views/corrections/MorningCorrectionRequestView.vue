@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowRight,
+  Clock,
+  RotateCcw,
 } from 'lucide-vue-next';
 
 interface CommitmentItem {
@@ -23,6 +25,8 @@ interface CommitmentItem {
 
 interface CorrectionHistoryItem {
   id: string;
+  targetCommitmentId?: string;
+  scopeType?: 'MORNING_COMMITMENT' | 'EOD_OUTCOME';
   classification: 'MINOR' | 'MATERIAL';
   reason: string;
   status: 'PENDING' | 'AUTO_APPLIED' | 'APPROVED' | 'REJECTED';
@@ -31,6 +35,16 @@ interface CorrectionHistoryItem {
   createdAt: string;
   reviewNote?: string;
   objectionWindowEndsAt?: string;
+  targetCommitment?: {
+    id?: string;
+    sequenceNo?: number;
+    taskText?: string;
+  };
+  reviewedByUser?: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+  };
 }
 
 // State
@@ -65,6 +79,70 @@ const selectedCommitment = computed(() => {
   return todayCommitments.value.find((c) => c.id === selectedCommitmentId.value) || null;
 });
 
+const pendingRequestForSelected = computed(() => {
+  if (!selectedCommitmentId.value) return null;
+  return (
+    myCorrections.value.find(
+      (h) =>
+        h.status === 'PENDING' &&
+        (h.targetCommitmentId === selectedCommitmentId.value ||
+          h.targetCommitment?.id === selectedCommitmentId.value),
+    ) || null
+  );
+});
+
+const latestRejectedForSelected = computed(() => {
+  if (!selectedCommitmentId.value) return null;
+  const latest = myCorrections.value.find(
+    (h) =>
+      h.targetCommitmentId === selectedCommitmentId.value ||
+      h.targetCommitment?.id === selectedCommitmentId.value,
+  );
+  return latest?.status === 'REJECTED' ? latest : null;
+});
+
+const hasRequestedDiff = computed(() => {
+  const base = selectedCommitment.value;
+  if (!base) return false;
+  const taskChanged = newTaskText.value.trim() !== (base.taskText || '').trim();
+  const linkChanged =
+    (newReferenceLink.value.trim() || null) !==
+    ((base.referenceLink || '').trim() || null);
+  const riskChanged = newInitialRisk.value !== base.initialRisk;
+  return taskChanged || linkChanged || riskChanged;
+});
+
+function formatRiskLabel(risk?: string): string {
+  if (risk === 'GREEN') return 'GREEN (Lancar)';
+  if (risk === 'AMBER') return 'AMBER (Waspada)';
+  if (risk === 'RED') return 'RED (Kritis)';
+  return risk || '-';
+}
+
+function getCommitmentSequenceNo(item: CorrectionHistoryItem): number | null {
+  if (item.targetCommitment?.sequenceNo) {
+    return item.targetCommitment.sequenceNo;
+  }
+  const matched = todayCommitments.value.find(
+    (c) => c.id === item.targetCommitmentId || c.id === item.targetCommitment?.id,
+  );
+  return matched?.sequenceNo ?? null;
+}
+
+function hasRiskDiff(item: CorrectionHistoryItem): boolean {
+  return Boolean(
+    item.valueBefore?.initialRisk &&
+    item.valueRequested?.initialRisk &&
+    item.valueBefore.initialRisk !== item.valueRequested.initialRisk,
+  );
+}
+
+function hasLinkDiff(item: CorrectionHistoryItem): boolean {
+  const beforeLink = (item.valueBefore?.referenceLink || '').trim();
+  const afterLink = (item.valueRequested?.referenceLink || '').trim();
+  return beforeLink !== afterLink && Boolean(beforeLink || afterLink);
+}
+
 function handleCommitmentSelect() {
   if (selectedCommitment.value) {
     newTaskText.value = selectedCommitment.value.taskText;
@@ -73,7 +151,40 @@ function handleCommitmentSelect() {
   }
 }
 
-async function loadData() {
+function resetForm() {
+  handleCommitmentSelect();
+  reason.value = '';
+  errorMessage.value = null;
+}
+
+function prefillFromRejected(item: CorrectionHistoryItem) {
+  const requested = item.valueRequested || {};
+  if (typeof requested.taskText === 'string' && requested.taskText.trim()) {
+    newTaskText.value = requested.taskText;
+  } else if (selectedCommitment.value) {
+    newTaskText.value = selectedCommitment.value.taskText;
+  }
+
+  if (requested.referenceLink !== undefined) {
+    newReferenceLink.value = requested.referenceLink || '';
+  }
+
+  if (
+    requested.initialRisk === 'GREEN' ||
+    requested.initialRisk === 'AMBER' ||
+    requested.initialRisk === 'RED'
+  ) {
+    newInitialRisk.value = requested.initialRisk;
+  }
+
+  if (!reason.value.trim()) {
+    reason.value = 'Penyesuaian permohonan atas arahan atasan: ';
+  }
+
+  showToast('Draf sebelumnya berhasil dimuat. Silakan sesuaikan kembali sebelum mengirim.');
+}
+
+async function loadData(syncSelectedForm = false) {
   loading.value = true;
   try {
     const [todayRes, historyRes] = await Promise.all([
@@ -85,6 +196,8 @@ async function loadData() {
       todayCommitments.value = todayRes.data.record.commitments;
       if (todayCommitments.value.length > 0 && !selectedCommitmentId.value) {
         selectedCommitmentId.value = todayCommitments.value[0].id;
+        handleCommitmentSelect();
+      } else if (syncSelectedForm && selectedCommitment.value) {
         handleCommitmentSelect();
       }
     }
@@ -108,8 +221,22 @@ async function submitCorrection() {
     showToast('Pilih komitmen yang ingin dikoreksi.', true);
     return;
   }
+  if (pendingRequestForSelected.value) {
+    showToast(
+      'Masih ada permohonan koreksi material yang sedang menunggu tinjauan atasan untuk komitmen ini.',
+      true,
+    );
+    return;
+  }
   if (newTaskText.value.trim().length < 3) {
     showToast('Deskripsi komitmen baru minimal 3 karakter.', true);
+    return;
+  }
+  if (!hasRequestedDiff.value) {
+    showToast(
+      'Perubahan yang diajukan masih sama dengan data komitmen saat ini. Silakan ubah minimal satu isian komitmen.',
+      true,
+    );
     return;
   }
   if (reason.value.trim().length < 10) {
@@ -146,7 +273,7 @@ async function submitCorrection() {
     }
 
     reason.value = '';
-    await loadData();
+    await loadData(true);
   } catch (err: any) {
     showToast(err.message || 'Gagal mengajukan koreksi.', true);
   } finally {
@@ -186,6 +313,18 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Tab Perpindahan Konteks Pagi / Sore -->
+      <nav class="context-tabs-wrap" aria-label="Pilihan Jenis Koreksi">
+        <AccessLink to="/corrections/morning" class="context-tab active">
+          <span>Koreksi Komitmen Pagi</span>
+          <span class="context-tab-tag">Alur Pagi · Aktif</span>
+        </AccessLink>
+        <AccessLink to="/corrections/eod" class="context-tab">
+          <span>Koreksi Evaluasi Sore (EOD)</span>
+          <span class="context-tab-tag">Alur Sore</span>
+        </AccessLink>
+      </nav>
+
       <!-- State: No commitments to correct -->
       <div v-if="todayCommitments.length === 0 && !loading" class="no-baseline-card">
         <AlertCircle :size="32" class="empty-icon" />
@@ -222,6 +361,46 @@ onMounted(() => {
               <div class="base-meta">
                 <span>Risiko Awal: <strong>{{ selectedCommitment.initialRisk }}</strong></span>
                 <span v-if="selectedCommitment.referenceLink">· Link: {{ selectedCommitment.referenceLink }}</span>
+              </div>
+            </div>
+
+            <!-- Banner Pengajuan Menunggu Review pada Komitmen Terpilih -->
+            <div v-if="pendingRequestForSelected" class="in-flight-banner" role="status">
+              <Clock :size="18" />
+              <div class="in-flight-body">
+                <strong>Permohonan Koreksi Material Sedang Menunggu Tinjauan Atasan</strong>
+                <p>
+                  Komitmen ini masih memiliki pengajuan perubahan penting yang menunggu keputusan atasan.
+                  <span v-if="pendingRequestForSelected.objectionWindowEndsAt">
+                    Batas waktu tinjauan 24 jam: <strong>{{ formatDateWib(pendingRequestForSelected.objectionWindowEndsAt) }}</strong>.
+                  </span>
+                  Anda tetap dapat memilih komitmen nomor lain di atas jika ingin mengajukan koreksi berbeda.
+                </p>
+              </div>
+            </div>
+
+            <!-- Banner Arahan Revisi Saat Pengajuan Sebelumnya Ditolak -->
+            <div
+              v-else-if="latestRejectedForSelected"
+              class="post-objection-banner"
+              role="status"
+            >
+              <AlertCircle :size="18" />
+              <div class="post-objection-body">
+                <strong>Catatan Penolakan Atasan pada Pengajuan Sebelumnya</strong>
+                <p v-if="latestRejectedForSelected.reviewNote">
+                  "{{ latestRejectedForSelected.reviewNote }}"
+                </p>
+                <p v-else>
+                  Permohonan koreksi sebelumnya ditolak oleh atasan. Sesuaikan kembali usulan Anda sebelum mengirim ulang.
+                </p>
+                <button
+                  type="button"
+                  class="btn-prefill-revision"
+                  @click="prefillFromRejected(latestRejectedForSelected)"
+                >
+                  Gunakan Draf Sebelumnya &amp; Sesuaikan
+                </button>
               </div>
             </div>
 
@@ -294,7 +473,19 @@ onMounted(() => {
 
             <!-- Alasan Koreksi Resmi -->
             <div class="form-group">
-              <label for="reasonInput">Alasan Resmi Permohonan Koreksi <span class="req">*</span></label>
+              <div class="label-row">
+                <label for="reasonInput">Alasan Resmi Permohonan Koreksi <span class="req">*</span></label>
+                <span
+                  class="char-counter"
+                  :class="{ valid: reason.trim().length >= 10, invalid: reason.trim().length > 0 && reason.trim().length < 10 }"
+                >
+                  {{
+                    reason.trim().length >= 10
+                      ? `Alasan memenuhi syarat (${reason.trim().length} karakter)`
+                      : `${reason.trim().length} / 10 karakter minimum`
+                  }}
+                </span>
+              </div>
               <textarea
                 id="reasonInput"
                 v-model="reason"
@@ -305,14 +496,25 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <button
-              type="submit"
-              class="btn-submit"
-              :disabled="submitting || reason.trim().length < 10"
-            >
-              <span v-if="submitting">Mengajukan...</span>
-              <span v-else>Kirim Permohonan Koreksi</span>
-            </button>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-reset"
+                :disabled="submitting"
+                @click="resetForm"
+              >
+                <RotateCcw :size="14" />
+                <span>Reset Isian</span>
+              </button>
+              <button
+                type="submit"
+                class="btn-submit"
+                :disabled="submitting || !selectedCommitmentId || newTaskText.trim().length < 3 || reason.trim().length < 10 || !!pendingRequestForSelected"
+              >
+                <span v-if="submitting">Mengajukan...</span>
+                <span v-else>Kirim Permohonan Koreksi</span>
+              </button>
+            </div>
           </form>
         </section>
 
@@ -338,6 +540,9 @@ onMounted(() => {
               >
                 <div class="hist-head">
                   <div class="hist-badges">
+                    <span v-if="getCommitmentSequenceNo(item)" class="seq-pill">
+                      Komitmen #{{ getCommitmentSequenceNo(item) }}
+                    </span>
                     <span class="status-badge" :class="item.status.toLowerCase()">
                       {{ item.status }}
                     </span>
@@ -360,12 +565,32 @@ onMounted(() => {
                   </div>
                 </div>
 
+                <div v-if="hasRiskDiff(item) || hasLinkDiff(item)" class="hist-extra-changes">
+                  <div v-if="hasRiskDiff(item)" class="extra-change-row">
+                    <strong>Tingkat Risiko:</strong>
+                    <span>{{ formatRiskLabel(item.valueBefore?.initialRisk) }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ formatRiskLabel(item.valueRequested?.initialRisk) }}</span>
+                  </div>
+                  <div v-if="hasLinkDiff(item)" class="extra-change-row">
+                    <strong>Tautan Referensi:</strong>
+                    <span>{{ item.valueBefore?.referenceLink || '(kosong)' }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ item.valueRequested?.referenceLink || '(dihapus)' }}</span>
+                  </div>
+                </div>
+
                 <div class="hist-reason">
                   <strong>Alasan:</strong> {{ item.reason }}
                 </div>
 
+                <div v-if="item.status === 'PENDING' && item.objectionWindowEndsAt" class="hist-window-note">
+                  <Clock :size="13" />
+                  <span>Batas Waktu Tinjauan 24 Jam: {{ formatDateWib(item.objectionWindowEndsAt) }}</span>
+                </div>
+
                 <div v-if="item.reviewNote" class="hist-review-note" :class="item.status.toLowerCase()">
-                  <strong>Catatan Peninjau:</strong> {{ item.reviewNote }}
+                  <strong>{{ item.reviewedByUser?.fullName ? `Catatan Peninjau (${item.reviewedByUser.fullName}):` : 'Catatan Peninjau:' }}</strong> {{ item.reviewNote }}
                 </div>
               </div>
             </div>
@@ -451,7 +676,52 @@ onMounted(() => {
 }
 
 .page-heading {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+.context-tabs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #DCE7E2;
+  margin-bottom: 20px;
+}
+
+.context-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5C6E68;
+  text-decoration: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s ease;
+}
+
+.context-tab:hover {
+  color: #0E211B;
+}
+
+.context-tab.active {
+  color: #00674D;
+  border-bottom-color: #00674D;
+}
+
+.context-tab-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #EFF5F2;
+  color: #5C6E68;
+}
+
+.context-tab.active .context-tab-tag {
+  background: #E6F4EE;
+  color: #00674D;
 }
 
 .eyebrow {
@@ -485,6 +755,7 @@ h1 {
   border: 1px solid #DCE7E2;
   border-radius: 12px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel-head {
@@ -541,6 +812,90 @@ textarea {
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 16px;
+}
+
+.in-flight-banner,
+.post-objection-banner {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.in-flight-banner {
+  background: #E0F2FE;
+  border: 1px solid #7DD3FC;
+  color: #075985;
+}
+
+.post-objection-banner {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+}
+
+.in-flight-banner svg,
+.post-objection-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.in-flight-body strong,
+.post-objection-body strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.in-flight-body p,
+.post-objection-body p {
+  margin: 0;
+}
+
+.btn-prefill-revision {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #FCA5A5;
+  background: #FFFFFF;
+  color: #991B1B;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-prefill-revision:hover {
+  background: #FEF2F2;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.label-row label {
+  margin-bottom: 0;
+}
+
+.char-counter {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #5C6E68;
+  font-variant-numeric: tabular-nums;
+}
+
+.char-counter.valid {
+  color: #166534;
+}
+
+.char-counter.invalid {
+  color: #991B1B;
 }
 
 .baseline-tag {
@@ -610,9 +965,41 @@ textarea {
 .risk-label.amber.selected { background: #FEF3C7; color: #92400E; border-color: #FCD34D; }
 .risk-label.red.selected { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
 
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #DCE7E2;
+  background: #FFFFFF;
+  color: #0E211B;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-reset:hover:not(:disabled) {
+  background: #EFF5F2;
+}
+
+.btn-reset:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-submit {
-  width: 100%;
-  padding: 10px;
+  flex: 1;
+  padding: 10px 14px;
   border-radius: 8px;
   border: none;
   background: #00674D;
@@ -620,7 +1007,6 @@ textarea {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 8px;
 }
 
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -676,6 +1062,15 @@ textarea {
   color: #5C6E68;
 }
 
+.seq-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #F1F5F9;
+  color: #334155;
+}
+
 .hist-date {
   font-size: 11px;
   color: #5C6E68;
@@ -702,6 +1097,39 @@ textarea {
   color: #0E211B;
 }
 
+.hist-extra-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  background: #EFF5F2;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: #0E211B;
+}
+
+.extra-change-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+
+.hist-window-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #075985;
+  background: #E0F2FE;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
 .hist-review-note {
   font-size: 11.5px;
   color: #00674D;
@@ -726,6 +1154,12 @@ textarea {
   margin: 40px auto;
 }
 
+.empty-feed {
+  padding: 48px 20px;
+  text-align: center;
+  color: #5C6E68;
+}
+
 .empty-icon { color: #00674D; margin-bottom: 8px; }
 
 .toast-popup {
@@ -748,5 +1182,79 @@ textarea {
 
 @media (max-width: 900px) {
   .split-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 14px 64px;
+  }
+
+  .context-tabs-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    border-bottom: none;
+  }
+
+  .context-tab {
+    border: 1px solid #DCE7E2;
+    border-radius: 8px;
+    justify-content: space-between;
+    margin-bottom: 0;
+  }
+
+  .context-tab.active {
+    border-color: #00674D;
+    background: #E6F4EE;
+    border-bottom-color: #00674D;
+  }
+
+  .class-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .risk-options {
+    flex-direction: column;
+  }
+
+  .label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-reset,
+  .btn-submit {
+    width: 100%;
+  }
+
+  .hist-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .hist-badges {
+    flex-wrap: wrap;
+  }
+
+  .hist-diff {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diff-arrow {
+    transform: rotate(90deg);
+  }
+
+  .toast-popup {
+    left: 14px;
+    right: 14px;
+    top: 64px;
+  }
 }
 </style>

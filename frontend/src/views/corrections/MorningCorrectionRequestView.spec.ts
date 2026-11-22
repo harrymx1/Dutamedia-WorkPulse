@@ -201,5 +201,159 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(reviewNoteBox.classes()).toContain('rejected');
     expect(reviewNoteBox.text()).toContain('Wajib lampirkan nomor tiket blocker aktif.');
   });
+
+  it('renders context switcher tabs, live reason counter, Reset Isian button, and blocks unchanged submissions', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  {
+                    id: 'com-1',
+                    sequenceNo: 1,
+                    taskText: 'Menyelesaikan endpoint autentikasi',
+                    initialRisk: 'GREEN',
+                    referenceLink: 'https://github.com/dutamedia/pr/10',
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(MorningCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Koreksi Komitmen Pagi');
+    expect(wrapper.text()).toContain('Koreksi Evaluasi Sore (EOD)');
+    expect(wrapper.find('.char-counter').text()).toContain('0 / 10 karakter minimum');
+
+    await wrapper.find('#reasonInput').setValue('Mencoba kirim tanpa mengubah satu data pun');
+    expect(wrapper.find('.char-counter').text()).toContain('Alasan memenuhi syarat');
+
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.find('.toast-popup.error').text()).toContain(
+      'Perubahan yang diajukan masih sama dengan data komitmen saat ini.',
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await wrapper.find('#newTaskInput').setValue('Teks sementara yang belum dikirim');
+    await wrapper.find('.btn-reset').trigger('click');
+    expect((wrapper.find('#newTaskInput').element as HTMLTextAreaElement).value).toBe(
+      'Menyelesaikan endpoint autentikasi',
+    );
+    expect((wrapper.find('#reasonInput').element as HTMLTextAreaElement).value).toBe('');
+  });
+
+  it('displays in-flight banner for PENDING commitment and post-rejection prefill + extra diff details', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  {
+                    id: 'com-1',
+                    sequenceNo: 1,
+                    taskText: 'Tugas Pertama',
+                    initialRisk: 'GREEN',
+                    referenceLink: null,
+                  },
+                  {
+                    id: 'com-2',
+                    sequenceNo: 2,
+                    taskText: 'Tugas Kedua',
+                    initialRisk: 'GREEN',
+                    referenceLink: null,
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'cr-pending',
+              targetCommitmentId: 'com-1',
+              scopeType: 'MORNING_COMMITMENT',
+              classification: 'MATERIAL',
+              reason: 'Menyesuaikan prioritas insiden produksi',
+              status: 'PENDING',
+              objectionWindowEndsAt: '2026-11-23T09:00:00.000Z',
+              valueBefore: { taskText: 'Tugas Pertama', initialRisk: 'GREEN', referenceLink: null },
+              valueRequested: { taskText: 'Tugas Pertama Darurat', initialRisk: 'RED', referenceLink: 'https://github.com/pr/99' },
+              createdAt: '2026-11-22T08:00:00.000Z',
+            },
+            {
+              id: 'cr-rejected',
+              targetCommitmentId: 'com-2',
+              scopeType: 'MORNING_COMMITMENT',
+              classification: 'MATERIAL',
+              reason: 'Ganti target kedua menjadi riset UI',
+              status: 'REJECTED',
+              reviewNote: 'Lampirkan nomor tiket terlebih dahulu.',
+              reviewedByUser: { fullName: 'Arif Budiman' },
+              valueBefore: { taskText: 'Tugas Kedua', initialRisk: 'GREEN', referenceLink: null },
+              valueRequested: { taskText: 'Tugas Kedua Revisi', initialRisk: 'AMBER', referenceLink: 'https://github.com/pr/55' },
+              createdAt: '2026-11-22T07:30:00.000Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(MorningCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    // Slot 1 sedang PENDING -> banner in-flight tampil & tombol submit disabled
+    expect(wrapper.find('.in-flight-banner').exists()).toBe(true);
+    expect((wrapper.find('.btn-submit').element as HTMLButtonElement).disabled).toBe(true);
+    expect(wrapper.text()).toContain('Komitmen #1');
+    expect(wrapper.text()).toContain('Komitmen #2');
+    expect(wrapper.text()).toContain('Tingkat Risiko:');
+    expect(wrapper.text()).toContain('Tautan Referensi:');
+    expect(wrapper.text()).toContain('Catatan Peninjau (Arif Budiman):');
+    expect(wrapper.text()).toContain('Batas Waktu Tinjauan 24 Jam:');
+
+    // Beralih ke Slot 2 yang terakhir REJECTED -> banner arahan & tombol prefill draf tampil
+    await wrapper.find('#comSelect').setValue('com-2');
+    expect(wrapper.find('.in-flight-banner').exists()).toBe(false);
+    expect(wrapper.find('.post-objection-banner').exists()).toBe(true);
+
+    await wrapper.find('.btn-prefill-revision').trigger('click');
+    expect((wrapper.find('#newTaskInput').element as HTMLTextAreaElement).value).toBe('Tugas Kedua Revisi');
+    expect((wrapper.find('#newLinkInput').element as HTMLInputElement).value).toBe('https://github.com/pr/55');
+  });
 });
 
