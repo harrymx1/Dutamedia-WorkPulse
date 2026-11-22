@@ -63,6 +63,12 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       };
 
       await expect(service.raiseBlocker('usr-1', dto as any)).rejects.toThrowError(AppException);
+      try {
+        await service.raiseBlocker('usr-1', dto as any);
+      } catch (err: any) {
+        expect(err.message).not.toContain('DEC-002');
+        expect(err.message).not.toContain('Prototipe 05');
+      }
     });
 
     it('creates blocker ticket and notifies assigned owner with 4-hour SLA target', async () => {

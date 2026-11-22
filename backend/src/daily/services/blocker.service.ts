@@ -704,7 +704,7 @@ export class BlockerService {
     ) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
-        message: 'Kendala dengan konteks Kewenangan Proyek WAJIB menyertakan kode proyek referensi (DEC-002, Prototipe 05).',
+        message: 'Kendala dengan konteks Kewenangan Proyek wajib menyertakan kode proyek referensi.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }

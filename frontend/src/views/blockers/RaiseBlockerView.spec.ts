@@ -1087,4 +1087,116 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     vi.unstubAllGlobals();
   });
+
+  it('Audit #5 (Temuan 1): menampilkan nomor urut komitmen (#1, #2) dari field sequenceNo di dropdown dan kartu Blocker Saya', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  { id: 'c-seq-1', taskText: 'Menyelesaikan API Akuntabilitas', sequenceNo: 1 },
+                  { id: 'c-seq-2', taskText: 'Review integrasi gateway', sequenceNo: 2 },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      if (url.includes('/blockers?mine=raised')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'blk-seq-1',
+                type: 'TECHNICAL',
+                severity: 'HIGH',
+                impact: 'TASK',
+                impacts: ['TASK'],
+                status: 'OPEN',
+                description: '[Bug Query] Terhambat query lambat',
+                raisedAt: '2026-11-22T02:00:00.000Z',
+                linkedCommitment: { id: 'c-seq-2', sequenceNo: 2 },
+                assignedOwner: { id: 'usr-2', fullName: 'Bambang Pratama' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    const commitOptionsText = wrapper.find('#linkedCommitment').text();
+    expect(commitOptionsText).toContain('[Komitmen #1] Menyelesaikan API Akuntabilitas');
+    expect(commitOptionsText).toContain('[Komitmen #2] Review integrasi gateway');
+
+    await wrapper.find('[data-testid="tab-my-blockers"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Terkait: Komitmen #2');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('Audit #5 (Temuan 2): langsung mengisi format terstruktur jika kosong, namun meminta konfirmasi sebelum menimpa teks yang sudah diketik', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      }),
+    );
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    const descInput = wrapper.find('#blockerDesc');
+    const templateBtn = wrapper.find('.btn-text-action');
+
+    // 1. Jika kosong -> langsung terisi tanpa konfirmasi
+    await templateBtn.trigger('click');
+    expect(wrapper.find('[data-testid="template-overwrite-confirm"]').exists()).toBe(false);
+    expect((descInput.element as HTMLTextAreaElement).value).toContain('[Fakta Kendala]:');
+
+    // 2. Jika sudah ada ketikan pengguna -> muncul kotak konfirmasi & ketikan tetap utuh saat Batal
+    const typedText = 'Saya sudah menulis rincian kendala server sejak pagi hari.';
+    await descInput.setValue(typedText);
+    await templateBtn.trigger('click');
+
+    expect(wrapper.find('[data-testid="template-overwrite-confirm"]').exists()).toBe(true);
+    expect((descInput.element as HTMLTextAreaElement).value).toBe(typedText);
+
+    await wrapper.find('[data-testid="btn-cancel-apply-template"]').trigger('click');
+    expect(wrapper.find('[data-testid="template-overwrite-confirm"]').exists()).toBe(false);
+    expect((descInput.element as HTMLTextAreaElement).value).toBe(typedText);
+
+    // 3. Jika klik Ganti dengan Format Terstruktur -> isi diganti kerangka terstruktur
+    await templateBtn.trigger('click');
+    await wrapper.find('[data-testid="btn-confirm-apply-template"]').trigger('click');
+    expect(wrapper.find('[data-testid="template-overwrite-confirm"]').exists()).toBe(false);
+    expect((descInput.element as HTMLTextAreaElement).value).toContain('[Kebutuhan Bantuan Konkret]:');
+
+    vi.unstubAllGlobals();
+  });
 });

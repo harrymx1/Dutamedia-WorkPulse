@@ -163,7 +163,16 @@ export interface ProjectAuthorityInfo {
 }
 
 // Options & Reference Data
-const todayCommitments = ref<Array<{ id: string; taskText: string; sequenceNumber: number }>>([]);
+const todayCommitments = ref<
+  Array<{ id: string; taskText: string; sequenceNo?: number; sequenceNumber?: number }>
+>([]);
+
+function getCommitmentSeqNo(
+  c?: { sequenceNo?: number; sequenceNumber?: number } | null,
+): string {
+  const seq = c?.sequenceNo ?? c?.sequenceNumber;
+  return seq !== undefined && seq !== null ? String(seq) : '';
+}
 const availableProjects = ref([
   { code: 'PRJ-PORTAL', name: 'Dutamedia Client Portal v2.4' },
   { code: 'PRJ-CORE', name: 'Core Banking Settlement Engine' },
@@ -461,12 +470,35 @@ const filteredBlockers = computed(() => {
   return sortBlockersByNewest(items);
 });
 
-function insertStructuredTemplate() {
-  description.value =
-`[Fakta Kendala]: 
+const STRUCTURED_TEMPLATE_TEXT = `[Fakta Kendala]: 
 [Dampak Nyata]: 
 [Upaya Mandiri yang Telah Dicoba]: 
 [Kebutuhan Bantuan Konkret]: `;
+
+const showTemplateConfirm = ref(false);
+
+watch(description, (val) => {
+  if (showTemplateConfirm.value && val.trim().length === 0) {
+    showTemplateConfirm.value = false;
+  }
+});
+
+function insertStructuredTemplate() {
+  if (description.value.trim().length === 0) {
+    description.value = STRUCTURED_TEMPLATE_TEXT;
+    showTemplateConfirm.value = false;
+    return;
+  }
+  showTemplateConfirm.value = true;
+}
+
+function confirmApplyTemplate() {
+  description.value = STRUCTURED_TEMPLATE_TEXT;
+  showTemplateConfirm.value = false;
+}
+
+function cancelApplyTemplate() {
+  showTemplateConfirm.value = false;
 }
 
 function appendExpectedHelp(chipText: string) {
@@ -515,6 +547,7 @@ function resetForm() {
   waitingForFunction.value = '';
   blockerSeverity.value = 'HIGH';
   description.value = '';
+  showTemplateConfirm.value = false;
   expectedHelp.value = '';
   authorityContext.value = 'ORGANIZATIONAL_AUTHORITY';
   projectCode.value = '';
@@ -1188,7 +1221,7 @@ onBeforeUnmount(() => {
                 <select id="linkedCommitment" v-model="linkedCommitmentId">
                   <option value="">— Tidak Terkait Komitmen Hari Ini —</option>
                   <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
-                    [Komitmen #{{ c.sequenceNumber }}] {{ c.taskText }}
+                    [Komitmen #{{ getCommitmentSeqNo(c) }}] {{ c.taskText }}
                   </option>
                 </select>
               </div>
@@ -1341,6 +1374,35 @@ onBeforeUnmount(() => {
                   <button type="button" class="btn-text-action" @click="insertStructuredTemplate">
                     + Gunakan Format Terstruktur
                   </button>
+                </div>
+                <div
+                  v-if="showTemplateConfirm"
+                  class="template-confirm-box"
+                  role="alertdialog"
+                  aria-label="Konfirmasi penggantian teks deskripsi"
+                  data-testid="template-overwrite-confirm"
+                >
+                  <p>
+                    Kolom deskripsi sudah berisi teks. Menerapkan format terstruktur akan mengganti isi yang sudah diketik.
+                  </p>
+                  <div class="template-confirm-actions">
+                    <button
+                      type="button"
+                      class="btn-template-cancel"
+                      data-testid="btn-cancel-apply-template"
+                      @click="cancelApplyTemplate"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-template-confirm"
+                      data-testid="btn-confirm-apply-template"
+                      @click="confirmApplyTemplate"
+                    >
+                      Ganti dengan Format Terstruktur
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   id="blockerDesc"
@@ -1745,7 +1807,7 @@ onBeforeUnmount(() => {
                 <Clock :size="12" /> <strong>{{ slaRemainingLabel(b)?.text }}</strong>
               </span>
               <span v-if="b.linkedCommitment" class="blocker-meta-item">
-                Terkait: <strong>Komitmen #{{ b.linkedCommitment.sequenceNumber }}</strong>
+                Terkait: <strong>Komitmen #{{ getCommitmentSeqNo(b.linkedCommitment) }}</strong>
               </span>
             </div>
 
@@ -3825,6 +3887,57 @@ textarea:focus {
   flex-direction: column;
   gap: 3px;
   line-height: 1.4;
+}
+
+.template-confirm-box {
+  background: var(--color-status-amber-bg, #FEF3C7);
+  border: 1px solid var(--color-status-amber-border, #FCD34D);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.template-confirm-box p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-status-amber-fg, #92400E);
+  line-height: 1.45;
+  flex: 1;
+  min-width: 220px;
+}
+
+.template-confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-template-cancel {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #DCE7E2;
+  background: #fff;
+  color: #0E211B;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-template-confirm {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #00674D;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {
