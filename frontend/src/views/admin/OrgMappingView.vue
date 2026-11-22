@@ -1403,6 +1403,10 @@ input, select, textarea {
     min-width: 0;
   }
 
+  .toolbar-search {
+    flex: none;
+  }
+
   .toolbar-count {
     margin-left: 0;
   }
