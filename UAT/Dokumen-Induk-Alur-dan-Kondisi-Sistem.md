@@ -910,33 +910,34 @@ flowchart TD
   4. `head.eng@dutamedia.com` (Arif Budiman — Head of Engineering, atasan langsung Raka Pratama)
   5. `hrga@dutamedia.com` (Dewi Lestari — HRGA, untuk mengecek pemutihan di `/compliance`)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Validasi Tanggal Terbalik (`400`), Hitungan Hari Kerja Senin–Jumat, Alasan Kurang dari 5 Huruf, & Penolakan Melebihi Kuota 12 Hari Kerja (`Over-Quota 400`):**
+  1. **Uji Validasi Tanggal Terbalik (`400`), Akhir Pekan `0 Hari Kerja` (`400`), Hitungan Hari Kerja Senin–Jumat, Alasan Kurang dari 5 Huruf + Penghitung Huruf, & Penolakan Melebihi Kuota 12 Hari Kerja (`Over-Quota 422`):**
      - **Aksi:** Masuk (*Login*) sebagai **`product@dutamedia.com`** (Dio Bayu Bagaskara, sandi `Password123!`), lalu buka menu kiri **Cuti Saya** (`/leave/my`).
-     - **Aksi (Cek Tanggal Terbalik & Alasan Pendek):** Periksa kotak **Jatah Cuti Tahunan 12 Hari Kerja** di atas formulir. Pilih Jenis Cuti **Cuti Tahunan (`ANNUAL`)**, *Tanggal Mulai*: besok, *Tanggal Selesai*: kemarin (terbalik), dan *Alasan*: `Cuti` (4 huruf), kemudian klik **Ajukan Permohonan**.
-     - **Aksi (Uji Pengajuan Melebihi Jatah 12 Hari Kerja):** Pilih Jenis Cuti **Cuti Tahunan (`ANNUAL`)**, isi rentang tanggal melintasi 3 akhir pekan (`03/12/2026` s/d `22/12/2026`), isi *Alasan*: `Mengambil cuti akhir tahun panjang melebihi batas kuota tahunan`, lalu klik **Ajukan Permohonan**.
+     - **Aksi (Cek Tanggal Terbalik, Akhir Pekan Saja, & Alasan Pendek):** Periksa kotak **Jatah Cuti Tahunan 12 Hari Kerja** di atas formulir dan catatan ketentuan biru (merujuk pada batas waktu laporan pagi yang berlaku tanpa angka jam statis). Pilih Jenis Cuti **Cuti Tahunan (`ANNUAL`)**, cek pembatas `:min` pada *Tanggal Selesai* saat *Tanggal Mulai* terisi, uji rentang akhir pekan saja (`28/11/2026` Sabtu s/d `29/11/2026` Minggu), lalu uji *Tanggal Selesai* < *Tanggal Mulai* dan *Alasan*: `Cuti` (4 huruf) sambil mengamati penghitung huruf (`4 / 5 karakter minimum`), kemudian klik **Ajukan Permohonan**.
+     - **Aksi (Uji Pengajuan Melebihi Jatah 12 Hari Kerja):** Pilih Jenis Cuti **Cuti Tahunan (`ANNUAL`)**, isi rentang tanggal melintasi 3 akhir pekan (`03/12/2026` s/d `22/12/2026`), isi *Alasan*: `Mengambil cuti akhir tahun panjang melebihi batas kuota tahunan`, lalu amati pratinjau sebelum klik **Ajukan Permohonan**.
      - ***Hasil yang Diharapkan:***
-       - Saat tanggal terbalik atau alasan < 5 huruf, sistem menolak pengiriman (`"Tanggal selesai tidak boleh lebih awal dari tanggal mulai."` / `"Alasan permohonan cuti minimal 5 karakter."`).
-       - Saat mengisi `03/12/2026` s/d `22/12/2026`, di bawah kolom tanggal langsung muncul **`Durasi cuti: 14 hari kerja`** (Sabtu dan Minggu tidak ikut dihitung), dan saat dikirim server menolak dengan pesan merah: **`"Pengajuan melebihi batas jatah Cuti Tahunan 12 hari kerja per tahun..."`**
-  2. **Uji Pengajuan Pertama, Bentrok Tanggal (`409`), Batal Mandiri (`CANCELLED`), serta Filter & Pencarian:**
+       - Rentang Sabtu–Minggu langsung menampilkan **`0 hari kerja (akhir pekan Sabtu/Minggu sudah hari libur)`** dan ditolak baik di form maupun oleh server (`400 VALIDATION_FAILED`) tanpa memotong kuota tahunan.
+       - Saat tanggal terbalik atau alasan < 5 huruf, penghitung huruf menampilkan `X / 5 karakter minimum` dan sistem menolak pengiriman (`"Tanggal selesai tidak boleh lebih awal dari tanggal mulai."` / `"Alasan permohonan cuti minimal 5 karakter."`).
+       - Saat mengisi `03/12/2026` s/d `22/12/2026`, di bawah kolom tanggal langsung muncul **`Durasi cuti: 14 hari kerja`** (Sabtu dan Minggu tidak ikut dihitung) disertai kotak peringatan kuning dini **`Melebihi sisa jatah Cuti Tahunan Anda (X hari kerja tersisa).`**, dan saat dikirim server menolak dengan pesan merah: **`"Pengajuan melebihi batas jatah Cuti Tahunan 12 hari kerja per tahun..."`**
+  2. **Uji Pengajuan Pertama, Bentrok Tanggal (`409`), Batal Mandiri (`CANCELLED` lewat Modal In-App), serta 5 Filter, Pencarian Luas, & Reset:**
      - **Aksi:** Ubah *Tanggal Mulai* dan *Tanggal Selesai* menjadi **7 hari kerja dari sekarang** (1 hari), isi *Alasan*: `Mengurus perpanjangan dokumen kependudukan keluarga di luar kota`, lalu klik **Ajukan Permohonan**.
      - ***Hasil yang Diharapkan:***
-       - Pengajuan berhasil masuk ke tabel **Riwayat Permohonan Cuti** di sebelah kanan dengan status **`Menunggu Review` (`PENDING`)**, dan angka `Menunggu Review` pada kotak kuota bertambah 1 hari.
+       - Pengajuan berhasil masuk ke tabel **Riwayat Permohonan Cuti** di sebelah kanan dengan kode pengajuan ringkas **`#LVR-...`** dan status **`Menunggu Review` (`PENDING`)**, dan angka `Menunggu Review` pada kotak kuota bertambah 1 hari.
      - **Aksi (Uji Bentrok Tanggal `409 Conflict`):** Coba kirim pengajuan cuti kedua dengan tanggal yang **sama persis (7 hari kerja dari sekarang)**.
      - ***Hasil yang Diharapkan:***
        - Sistem menolak dengan pesan jelas bahwa sudah ada permohonan cuti aktif pada rentang tanggal tersebut (`409 Conflict`).
-     - **Aksi (Uji Batal Mandiri & Filter Riwayat):** Pada baris pengajuan cuti 7 hari mendatang yang masih berstatus `Menunggu Review` di tabel riwayat, klik tombol **Batalkan** lalu konfirmasi. Setelah itu uji tombol filter (`Semua`, `Menunggu`, `Disetujui`, `Ditolak`) dan kotak pencarian (`Cari alasan, ID tiket, atau tanggal...`).
+     - **Aksi (Uji Batal Mandiri via Modal In-App & Filter/Cari Riwayat):** Pada baris pengajuan cuti 7 hari mendatang yang masih berstatus `Menunggu Review` di tabel riwayat, klik tombol **Batalkan**, periksa ringkasan jenis, tanggal + hari kerja, dan alasan pada jendela konfirmasi di dalam aplikasi, lalu klik **`Ya, Batalkan Permohonan`**. Setelah itu uji ke-5 tombol filter (`Semua`, `Menunggu`, `Disetujui`, `Ditolak`, **`Dibatalkan`**) dan kotak pencarian (`Cari alasan, jenis, peninjau, atau tanggal...`), serta tombol **`Tampilkan Semua`** saat hasil pencarian kosong.
      - ***Hasil yang Diharapkan:***
-       - Status pengajuan langsung berubah menjadi **`Dibatalkan` (`CANCELLED`)**, tombol Batalkan hilang, dan sisa kuota tahunan kembali utuh.
+       - Status pengajuan langsung berubah menjadi **`Dibatalkan` (`CANCELLED`)**, tombol Batalkan hilang, baris tetap terlihat di filter **`Dibatalkan`**, dan sisa kuota tahunan kembali utuh.
   3. **Ajukan 2 Permohonan (1 untuk Diuji Penolakan `REJECTED`, 1 Sakit Hari Ini untuk Diuji Pemutihan Otomatis `DEC-008`):**
      - **Aksi:** Masih sebagai Dio (`product@dutamedia.com`) di `/leave/my`:
        1. Buat pengajuan ke-1 (untuk diuji Tolak): **Jenis Cuti:** `Cuti Tahunan`, **Tanggal Mulai & Selesai:** **14 hari kerja dari sekarang**, **Alasan:** `Pengajuan cuti tahunan saat jadwal rilis produk utama` → klik **Ajukan Permohonan**.
        2. Buat pengajuan ke-2 (untuk diuji Setuju & Pemutihan Hari Ini): **Jenis Cuti / Izin:** `Sakit` (`SICK`), **Tanggal Mulai & Selesai:** **Hari Ini**, **Alasan:** `Demam tinggi mendadak sejak pagi dan harus pemeriksaan dokter di klinik.` → klik **Ajukan Permohonan**.
      - ***Hasil yang Diharapkan:***
-       - Kedua pengajuan tercatat berstatus **`Menunggu Review` (`PENDING`)**.
-  4. **Uji Blokir Akses Antrean Persetujuan Cuti bagi Staf Biasa (`403`):**
-     - **Aksi:** Masih sebagai Dio, ketik alamat `/leave/queue` di browser.
+       - Kedua pengajuan tercatat berstatus **`Menunggu Review` (`PENDING`)**, dan notifikasi ke atasan memakai label Bahasa Indonesia (*Cuti Tahunan* / *Sakit*) serta format tanggal ringkas.
+  4. **Uji Blokir Akses `/leave/queue` bagi Staf Biasa (`403`) & Pengaman `/leave` Mandiri bagi `SYSTEM_ADMIN` (`403`):**
+     - **Aksi:** Masih sebagai Dio, ketik alamat `/leave/queue` di browser; serta sebagai `admin@dutamedia.com` (`SYSTEM_ADMIN`) uji akses endpoint `/api/leave/my` & `/api/leave/quota`.
      - ***Hasil yang Diharapkan:***
-       - Sistem memblokir akses (`403 — Akses Dibatasi`) karena staf biasa tidak berwenang membuka antrean persetujuan cuti.
+       - Staf biasa diblokir mengakses `/leave/queue` (`403 — Akses Dibatasi`), dan `SYSTEM_ADMIN` ditolak HTTP **`403 AUTH_FORBIDDEN_ROLE`** pada jalur cuti mandiri.
   5. **Review di `/leave/queue`: Uji 4 Kartu Filter Metrik, Tolak Wajib Alasan (`REJECTED`), & Setujui Cuti Hari Ini (`APPROVED`):**
      - **Aksi:** Keluar dari akun Dio, lalu masuk sebagai **`head.delivery@dutamedia.com`** (Dharma Putra — Head of Delivery) atau **`hrga@dutamedia.com`** (Dewi Lestari — HRGA) dan buka menu kiri **Persetujuan Cuti** (`/leave/queue`).
      - ***Hasil yang Diharapkan:***
@@ -964,9 +965,9 @@ flowchart TD
      - **Aksi:** Periksa isi kotak info atas, buka dropdown **Jenis Pengajuan**, isi tanggal melintasi akhir pekan (`03/12/2026` s/d `07/12/2026`), uji alasan pendek 3 huruf (`Tes`) → klik **Ajukan Permohonan**, lalu perbaiki menjadi permohonan **`Izin (Keperluan Mendesak / Alasan Logis)`** dengan alasan valid (misal: `Bimbingan skripsi di kampus sesuai jadwal dosen pembimbing`) dan ajukan.
      - **Aksi (Peninjauan oleh Atasan):** Keluar dari Raka, masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman) dan buka `/leave/queue`, lalu klik **Setujui** pada baris Raka Pratama.
      - ***Hasil yang Diharapkan:***
-       - Di `/leave/my` Raka Pratama: kartu kuota **Jatah Cuti Tahunan 12 Hari disembunyikan** dan diganti kotak ungu **`Aturan Izin Karyawan Magang`**; pilihan dropdown hanya **`Izin (Keperluan Mendesak / Alasan Logis)`** (utuh tanpa terpotong `...`) dan **`Sakit`** (tidak ada `Cuti Tahunan`, dan pengiriman `ANNUAL` via API ditolak `400`).
+       - Di `/leave/my` Raka Pratama: judul halaman & riwayat seragam **`Pengajuan & Riwayat Izin / Sakit`** + **`Riwayat Permohonan Izin / Sakit`**, kolom **`Tanggal Izin / Sakit`**, kotak ketentuan biru merujuk batas waktu laporan pagi yang berlaku (tanpa angka mati `09:30 WIB`), kartu kuota **Jatah Cuti Tahunan 12 Hari disembunyikan** dan diganti kotak ungu **`Aturan Izin Karyawan Magang`**; pilihan dropdown hanya **`Izin (Keperluan Mendesak / Alasan Logis)`** (utuh tanpa terpotong `...`) dan **`Sakit`** (tidak ada `Cuti Tahunan`, dan pengiriman `ANNUAL` via API ditolak `400`).
        - Rentang `03/12/2026` s/d `07/12/2026` (Kamis–Senin) menampilkan **`Durasi izin: 3 hari kerja`**.
-       - Alasan pendek (`Tes`) menampilkan pesan merah **`"Alasan permohonan izin minimal 5 karakter."`** (memakai kata *"izin"*, bukan *"cuti"*).
+       - Alasan pendek (`Tes`) menampilkan penghitung `3 / 5 karakter minimum` dan pesan merah **`"Alasan permohonan izin minimal 5 karakter."`** (memakai kata *"izin"*, bukan *"cuti"*).
        - Di `/leave/queue` Arif Budiman: di samping nama Raka tampil pil ungu **`Intern`**, jendela tinjauan menampilkan label **`Alasan Izin / Pengajuan`**, dan setelah disetujui muncul pesan hijau **`"Permohonan izin berhasil disetujui."`**
        - *(Catatan Jadwal `Backlog v1.2` — SOP HRGA 3 Tahap):* Pada versi live `v1.1` saat ini persetujuan berjalan **1 tahap** langsung ke `APPROVED`. Alur **3 tahap berurutan** (`Tahap 1: HRGA → Tahap 2: Head Divisi → Tahap 3: Direktur`) dijadwalkan untuk tahap pengembangan berikutnya (`v1.2`).
 
@@ -976,9 +977,9 @@ flowchart TD
 
 | ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
 |---|---|---|---|---|---|---|---|---|
-| **K-15.1** | **Cuti Saya** (`/leave/my`) · *(Acuan `20-My-Leave-Request.html`)* | Kartu **Jatah Cuti Tahunan 12 hari kerja** + 6 jenis cuti + hitung hari kerja Senin–Jumat (`03/12–22/12` = `14 hari kerja`) + tolak tanggal terbalik (`400`), bentrok (`409`), & over-kuota (`400`) | `EMPLOYEE` (`product@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-15.2** | **Cuti Saya** (`/leave/my`) | `[Aktif v1.1 — Paket #1]` Tampilan khusus `Intern`: kotak ungu `Aturan Izin Karyawan Magang`, sembunyikan kuota 12 hari, pilihan utuh `Izin (Keperluan Mendesak / Alasan Logis)` & `Sakit`, hitung `Durasi izin: X hari kerja`, & validasi kata `izin` | `EMPLOYEE` (`intern.frontend@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-15.3** | **Cuti Saya** (`/leave/my`) | Tabel riwayat cuti/izin pribadi + catatan reviewer + aksi **Batalkan (`CANCELLED`)** | `EMPLOYEE` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-15.1** | **Cuti Saya** (`/leave/my`) · *(Acuan `20-My-Leave-Request.html` · `Audit #20`)* | Kartu **Jatah Cuti Tahunan 12 hari kerja** + 6 jenis cuti + `:min` tanggal selesai + hitung hari kerja Senin–Jumat (`03/12–22/12` = `14 hari kerja` + peringatan dini over-kuota) + penghitung huruf `X / 5` & `X / 1.000` + tolak tanggal terbalik/akhir pekan `0 hari kerja` (`400`), bentrok (`409`), & over-kuota (`422`) + pembatasan akses `SYSTEM_ADMIN` (`403`) | `EMPLOYEE` (`product@dutamedia.com`) | `[x]` | `[ ]` | `[x]` | `[ ]` | `[x]` |
+| **K-15.2** | **Cuti Saya** (`/leave/my`) · *(Acuan `20-My-Leave-Request.html` · `Audit #20`)* | `[Aktif v1.1 — Paket #1 & Audit #20]` Tampilan khusus `Intern`: judul/kolom seragam `Izin / Sakit`, kotak ungu `Aturan Izin Karyawan Magang`, kotak ketentuan bebas `09:30 WIB`, sembunyikan kuota 12 hari, pilihan utuh `Izin (Keperluan Mendesak / Alasan Logis)` & `Sakit`, hitung `Durasi izin: X hari kerja`, & validasi kata `izin` | `EMPLOYEE` (`intern.frontend@dutamedia.com`) | `[ ]` | `[ ]` | `[x]` | `[ ]` | `[x]` |
+| **K-15.3** | **Cuti Saya** (`/leave/my`) · *(Acuan `20-My-Leave-Request.html` · `Audit #20`)* | Tabel riwayat cuti/izin pribadi berkode `#LVR-...` + catatan reviewer + modal konfirmasi in-app **Batalkan (`CANCELLED`)** + 5 filter status (`Semua`, `Menunggu`, `Disetujui`, `Ditolak`, `Dibatalkan`) + pencarian luas + **`Tampilkan Semua`** | `EMPLOYEE` | `[x]` | `[ ]` | `[x]` | `[ ]` | `[x]` |
 | **K-16.1** | **Persetujuan Cuti** (`/leave/queue`) · *(Acuan `21-Leave-Approval-Queue.html`)* | Antrean persetujuan (1 tahap aktif `v1.1`) + pil ungu `Intern` + hitung hari kerja Senin–Jumat + label modal dinamis `Alasan Izin / Pengajuan` + Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
