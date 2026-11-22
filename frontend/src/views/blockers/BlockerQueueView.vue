@@ -198,12 +198,15 @@ async function loadBlockers() {
     const res = await apiClient<BlockerTicketItem[]>(url);
     if (res.data) {
       blockers.value = sortBlockersByNewest(res.data);
-      if (blockers.value.length > 0 && !selectedTicket.value) {
-        selectedTicket.value = blockers.value[0];
-      } else if (selectedTicket.value) {
+      const visible = filteredBlockers.value;
+      if (visible.length === 0) {
+        selectedTicket.value = null;
+      } else if (!selectedTicket.value) {
+        selectedTicket.value = visible[0];
+      } else {
         // Refresh selected ticket in place atau sinkronkan ke tiket pertama jika tiket terpilih kena filter
-        const updated = blockers.value.find((b) => b.id === selectedTicket.value?.id);
-        selectedTicket.value = updated || blockers.value[0] || null;
+        const updated = visible.find((b) => b.id === selectedTicket.value?.id);
+        selectedTicket.value = updated || visible[0] || null;
       }
     }
   } catch (err: any) {
@@ -314,6 +317,16 @@ const filteredBlockers = computed(() => {
       return true;
     }),
   );
+});
+
+watch(filteredBlockers, (visibleList) => {
+  if (visibleList.length === 0) {
+    selectedTicket.value = null;
+    return;
+  }
+  if (!selectedTicket.value || !visibleList.some((b) => b.id === selectedTicket.value?.id)) {
+    selectedTicket.value = visibleList[0];
+  }
 });
 
 const selectedTicketHistory = computed(() =>
@@ -761,8 +774,8 @@ onMounted(() => {
       <!-- Filter Toolbar -->
       <div class="toolbar">
         <div class="filter-group">
-          <label>Status:</label>
-          <select v-model="statusFilter" @change="loadBlockers">
+          <label for="status-filter">Status:</label>
+          <select id="status-filter" v-model="statusFilter" data-testid="status-filter-select" @change="loadBlockers">
             <option value="ALL">Semua Status</option>
             <option
               v-for="statusOpt in BLOCKER_STATUS_FILTER_OPTIONS"
@@ -775,8 +788,8 @@ onMounted(() => {
         </div>
 
         <div class="filter-group">
-          <label>Kepemilikan:</label>
-          <select v-model="mineFilter" @change="loadBlockers">
+          <label for="mine-filter">Kepemilikan:</label>
+          <select id="mine-filter" v-model="mineFilter" data-testid="mine-filter-select" @change="loadBlockers">
             <option value="ALL">Semua Tiket</option>
             <option value="assigned">Ditugaskan ke Saya</option>
             <option value="raised">Dilaporkan oleh Saya</option>
@@ -784,8 +797,8 @@ onMounted(() => {
         </div>
 
         <div class="filter-group">
-          <label>Kategori:</label>
-          <select v-model="typeFilter">
+          <label for="type-filter">Kategori:</label>
+          <select id="type-filter" v-model="typeFilter" data-testid="type-filter-select">
             <option value="ALL">Semua Kategori</option>
             <optgroup
               v-for="group in BLOCKER_TYPE_GROUPS"
@@ -881,8 +894,14 @@ onMounted(() => {
 
         <!-- Kolom Kanan: Detail & Aksi Tiket Terpilih -->
         <div ref="detailSectionRef" class="ticket-detail-col" data-testid="ticket-detail-panel">
-          <div v-if="!selectedTicket" class="detail-empty">
-            <p>Pilih tiket kendala di kolom sebelah kiri untuk melihat detail dan tindakan.</p>
+          <div v-if="!selectedTicket" class="detail-empty" data-testid="detail-empty-state">
+            <p>
+              {{
+                filteredBlockers.length === 0
+                  ? 'Tidak ada tiket kendala yang cocok dengan penyaring yang dipilih.'
+                  : 'Pilih tiket kendala di kolom sebelah kiri untuk melihat detail dan tindakan.'
+              }}
+            </p>
           </div>
 
           <div v-else class="detail-card">
@@ -1736,6 +1755,9 @@ onMounted(() => {
 <style scoped>
 .queue-layout {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
   background: var(--color-canvas, #F7FAF9);
   color: var(--color-text-primary, #0E211B);
   font-family: var(--font-sans, "Plus Jakarta Sans", system-ui, sans-serif);
@@ -1816,6 +1838,8 @@ onMounted(() => {
 
 .main-content {
   max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 24px 20px 80px;
 }
@@ -1899,12 +1923,16 @@ h1 {
   gap: 16px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .filter-group label {
@@ -1919,6 +1947,10 @@ h1 {
   border-radius: 6px;
   font-size: 12.5px;
   background: #fff;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .toolbar-spacer {
@@ -1940,7 +1972,7 @@ h1 {
 
 .queue-split {
   display: grid;
-  grid-template-columns: 460px 1fr;
+  grid-template-columns: 460px minmax(0, 1fr);
   gap: 20px;
 }
 
@@ -1952,6 +1984,8 @@ h1 {
   overflow-y: auto;
   padding-right: 4px;
   scroll-margin-top: 76px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ticket-card {
@@ -2137,6 +2171,9 @@ h1 {
   border-radius: 12px;
   overflow: hidden;
   scroll-margin-top: 76px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .detail-empty {
@@ -2165,6 +2202,7 @@ h1 {
 
 .detail-badges {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
 }
@@ -2223,6 +2261,12 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.info-block {
+  min-width: 0;
 }
 
 .info-block label {
@@ -3022,7 +3066,7 @@ h1 {
 
 @media (max-width: 1024px) {
   .queue-split {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .ticket-list-col {
     max-height: 440px;
@@ -3039,6 +3083,74 @@ h1 {
 @media (max-width: 900px) {
   .metrics-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 18px 14px 64px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .toolbar-spacer {
+    display: none;
+  }
+
+  .filter-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .filter-group select {
+    width: 100%;
+  }
+
+  .btn-create {
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+  }
+
+  .detail-head {
+    padding: 14px;
+  }
+
+  .detail-body {
+    padding: 14px;
+  }
+
+  .detail-actions {
+    width: 100%;
+  }
+
+  .info-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .toast-popup {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 20px;
+  }
+
+  .detail-actions .btn-action {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 </style>

@@ -9,6 +9,7 @@ import {
   CanonicalFunction,
 } from '@prisma/client';
 import { AppException } from '../../common/exceptions/app.exception';
+import { ErrorCode } from '../../common/constants/error-codes';
 
 describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', () => {
   let service: BlockerService;
@@ -2182,6 +2183,38 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
           }),
         }),
       );
+    });
+  });
+
+  describe('Audit #9: Filter status Sedang Ditangani & validasi server tindakan bantuan', () => {
+    it('includes both ACKNOWLEDGED and IN_PROGRESS when getBlockerQueue filters by status=ACKNOWLEDGED', async () => {
+      mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+
+      await service.getBlockerQueue({ status: BlockerStatus.ACKNOWLEDGED });
+
+      expect(mockPrisma.blockerTicket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: [BlockerStatus.ACKNOWLEDGED, BlockerStatus.IN_PROGRESS] },
+          }),
+        }),
+      );
+    });
+
+    it('rejects addSupportContribution when actionTaken is shorter than 5 trimmed characters (400 VALIDATION_FAILED)', async () => {
+      mockPrisma.supportContribution = { create: vi.fn() };
+
+      await expect(
+        service.addSupportContribution('usr-2', 'blk-1', 'Cek', 'Catatan'),
+      ).rejects.toMatchObject({
+        code: ErrorCode.VALIDATION_FAILED,
+      });
+
+      await expect(
+        service.addSupportContribution('usr-2', 'blk-1', '   ', 'Catatan'),
+      ).rejects.toThrowError(/minimal 5 karakter/i);
+
+      expect(mockPrisma.supportContribution.create).not.toHaveBeenCalled();
     });
   });
 });

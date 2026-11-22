@@ -836,4 +836,69 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('synchronizes right detail panel when category typeFilter changes to empty or matching category (Audit #9)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-tech-1',
+              description: '[Bug API] Error query laporan',
+              type: 'TECHNICAL',
+              severity: 'HIGH',
+              impact: 'TASK',
+              impacts: ['TASK'],
+              status: 'OPEN',
+              raisedAt: '2026-11-22T02:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'u-lead', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+              supportContributions: [],
+            },
+            {
+              id: 'blk-net-2',
+              description: '[WiFi Lantai 2] Koneksi putus-putus',
+              type: 'NETWORK',
+              severity: 'MEDIUM',
+              impact: 'COMPANY_OPS',
+              impacts: ['COMPANY_OPS'],
+              status: 'OPEN',
+              raisedAt: '2026-11-22T01:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u2', fullName: 'Siti Rahma', email: 'qa@dutamedia.com' },
+              assignedOwner: { id: 'u-net', fullName: 'Raka Ops', email: 'network.infra@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // Awalnya tiket pertama (TECHNICAL) terpilih di panel kanan
+    expect(wrapper.find('[data-testid="ticket-detail-panel"]').text()).toContain('Error query laporan');
+
+    // Ganti filter kategori ke LEGAL (0 tiket cocok) -> panel kanan kosong, tidak memajang tiket TECHNICAL lagi
+    await wrapper.find('[data-testid="type-filter-select"]').setValue('LEGAL');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="detail-empty-state"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="ticket-detail-panel"]').text()).not.toContain('Error query laporan');
+
+    // Ganti ke NETWORK -> otomatis memilih tiket pertama kategori NETWORK
+    await wrapper.find('[data-testid="type-filter-select"]').setValue('NETWORK');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="detail-empty-state"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="ticket-detail-panel"]').text()).toContain('Koneksi putus-putus');
+
+    vi.unstubAllGlobals();
+  });
 });

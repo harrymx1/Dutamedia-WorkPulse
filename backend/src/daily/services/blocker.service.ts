@@ -2369,9 +2369,16 @@ export class BlockerService {
     },
     viewerUserId?: string,
   ) {
+    const statusWhere =
+      filters?.status === BlockerStatus.ACKNOWLEDGED
+        ? { status: { in: [BlockerStatus.ACKNOWLEDGED, BlockerStatus.IN_PROGRESS] } }
+        : filters?.status
+          ? { status: filters.status }
+          : {};
+
     const rawTickets = await this.prisma.blockerTicket.findMany({
       where: {
-        ...(filters?.status && { status: filters.status }),
+        ...statusWhere,
         ...(filters?.assignedOwnerId && { assignedOwnerId: filters.assignedOwnerId }),
         ...(filters?.raisedByUserId && { raisedByUserId: filters.raisedByUserId }),
       },
@@ -2787,6 +2794,17 @@ export class BlockerService {
     actionTaken: string,
     resultNote: string,
   ) {
+    const trimmedAction = String(actionTaken || '').trim();
+    const trimmedResult = String(resultNote || '').trim();
+
+    if (trimmedAction.length < 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Tindakan bantuan minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const ticket = await this.prisma.blockerTicket.findUnique({
       where: { id: blockerId },
     });
@@ -2848,9 +2866,6 @@ export class BlockerService {
         statusCode: HttpStatus.CONFLICT,
       });
     }
-
-    const trimmedAction = actionTaken.trim();
-    const trimmedResult = resultNote.trim();
 
     const created = await this.prisma.supportContribution.create({
       data: {
