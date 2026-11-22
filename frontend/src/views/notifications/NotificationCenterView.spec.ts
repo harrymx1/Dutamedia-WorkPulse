@@ -62,6 +62,12 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
         { path: '/admin/notifications', component: { template: '<div>Admin Notif</div>' } },
         { path: '/admin/policies', component: { template: '<div>Admin Policies</div>' } },
         { path: '/daily/morning', component: { template: '<div>Morning</div>' } },
+        { path: '/daily/additional-work', component: { template: '<div>Additional Work</div>' } },
+        { path: '/daily/eod', component: { template: '<div>EOD</div>' } },
+        { path: '/corrections/morning', component: { template: '<div>Morning Correction</div>' } },
+        { path: '/corrections/eod', component: { template: '<div>EOD Correction</div>' } },
+        { path: '/corrections/review', component: { template: '<div>Correction Review</div>' } },
+        { path: '/leave/my', component: { template: '<div>My Leave</div>' } },
         { path: '/blockers', component: { template: '<div>Blocker Queue</div>' } },
       ],
     });
@@ -581,6 +587,185 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('Bantuan yang Dicoba:');
     expect(wrapper.text()).toContain('Catatan / Kendala yang Masih Terjadi:');
     expect(wrapper.text()).not.toContain('Tindak Lanjut Anda:');
+  });
+
+  it('switches from CHANNELS tab back to LIST tab with ALL or UNREAD filter when summary cards are clicked', async () => {
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Switch to CHANNELS tab via 3rd summary card
+    await wrapper.find('[data-testid="metric-card-push"]').trigger('click');
+    expect(wrapper.find('[data-testid="push-permission-status"]').exists()).toBe(true);
+
+    // Click "Belum Dibaca" card -> returns to LIST tab filtered to unread (1 item)
+    await wrapper.find('[data-testid="metric-card-unread"]').trigger('click');
+    expect(wrapper.find('[data-testid="push-permission-status"]').exists()).toBe(false);
+    expect(wrapper.findAll('.notif-item')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Blocker Kritis Dieskalasi');
+
+    // Back to CHANNELS, then click "Total Notifikasi" -> returns to LIST tab with all items (2 items)
+    await wrapper.find('[data-testid="metric-card-push"]').trigger('click');
+    await wrapper.find('[data-testid="metric-card-all"]').trigger('click');
+    expect(wrapper.findAll('.notif-item')).toHaveLength(2);
+  });
+
+  it('labels ADDITIONAL_WORK types cleanly, includes daily lifecycle types in Komitmen & Pengingat filter, and renders specific action button labels', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-emp',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          unreadCount: 3,
+          notifications: [
+            {
+              id: 'n-aw',
+              title: 'Pekerjaan Tambahan dari Anda Diubah',
+              message: 'Aditya mengubah tugas tambahan sebelum EOD.',
+              type: 'ADDITIONAL_WORK_UPDATED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/daily/additional-work',
+              createdAt: '2026-11-22T01:10:00Z',
+            },
+            {
+              id: 'n-corr',
+              title: 'Permohonan Koreksi Disetujui',
+              message: 'Atasan menyetujui koreksi komitmen Anda.',
+              type: 'CORRECTION_APPROVED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/corrections/morning',
+              createdAt: '2026-11-22T01:15:00Z',
+            },
+            {
+              id: 'n-leave',
+              title: 'Pengajuan Cuti Disetujui',
+              message: 'Pengajuan cuti tahunan Anda telah disetujui.',
+              type: 'LEAVE_APPROVED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/leave/my',
+              createdAt: '2026-11-22T01:20:00Z',
+            },
+            {
+              id: 'n-blk',
+              title: 'Kendala Baru',
+              message: 'Tiket kendala baru.',
+              type: 'BLOCKER_RAISED',
+              channel: 'IN_APP',
+              read: true,
+              actionUrl: '/blockers',
+              createdAt: '2026-11-22T01:00:00Z',
+            },
+          ],
+        },
+      }),
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Check chips before filtering
+    const chips = wrapper.findAll('.context-chip').map((c) => c.text());
+    expect(chips).toContain('Pekerjaan Tambahan');
+    expect(chips).toContain('Koreksi Komitmen');
+    expect(chips).toContain('Pengajuan Cuti');
+
+    // Click "Komitmen & Pengingat" filter pill -> keeps n-aw, n-corr, n-leave (3 items), excludes BLOCKER_RAISED
+    const dailyPill = wrapper.findAll('.filter-pill').find((b) => b.text().includes('Komitmen & Pengingat'));
+    expect(dailyPill).toBeTruthy();
+    await dailyPill!.trigger('click');
+
+    const visibleItems = wrapper.findAll('.notif-item');
+    expect(visibleItems).toHaveLength(3);
+    expect(wrapper.text()).toContain('Pekerjaan Tambahan dari Anda Diubah');
+    expect(wrapper.text()).toContain('Permohonan Koreksi Disetujui');
+    expect(wrapper.text()).toContain('Pengajuan Cuti Disetujui');
+    expect(wrapper.text()).not.toContain('Kendala Baru');
+
+    // Open modal on n-aw -> shows specific label "Buka Pekerjaan Tambahan"
+    await visibleItems[0].trigger('click');
+    expect(wrapper.text()).toContain('Buka Pekerjaan Tambahan');
+    await wrapper.find('.close-btn').trigger('click');
+
+    // Open modal on n-corr -> shows "Buka Koreksi Komitmen Pagi"
+    await visibleItems[1].trigger('click');
+    expect(wrapper.text()).toContain('Buka Koreksi Komitmen Pagi');
+    await wrapper.find('.close-btn').trigger('click');
+
+    // Open modal on n-leave -> shows "Buka Cuti Saya"
+    await visibleItems[2].trigger('click');
+    expect(wrapper.text()).toContain('Buka Cuti Saya');
+  });
+
+  it('disables Tandai semua dibaca when unreadCount is 0 and skips POST read-all', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          unreadCount: 0,
+          notifications: [
+            {
+              id: 'n-read',
+              title: 'Pengingat EOD',
+              message: 'Sudah dibaca.',
+              type: 'EOD_REMINDER',
+              channel: 'IN_APP',
+              read: true,
+              createdAt: '2026-11-22T09:00:00Z',
+            },
+          ],
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const btn = wrapper.find('[data-testid="mark-all-read-btn"]');
+    expect(btn.attributes('disabled')).toBeDefined();
+    await btn.trigger('click');
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/read-all'))).toBe(false);
+  });
+
+  it('displays Indonesian push permission labels across states and uses "Saluran Notifikasi" wording', async () => {
+    vi.stubGlobal('Notification', {
+      permission: 'denied',
+      requestPermission: vi.fn().mockResolvedValue('denied'),
+    });
+
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('[data-testid="push-permission-metric"]').text()).toBe('Ditolak Peramban');
+
+    await wrapper.find('[data-testid="metric-card-push"]').trigger('click');
+    expect(wrapper.find('[data-testid="push-permission-status"]').text()).toBe('Ditolak Peramban');
+    expect(wrapper.find('[data-testid="push-permission-desc"]').text()).toContain('pengaturan situs pada peramban Anda');
+    expect(wrapper.find('[data-testid="push-enable-btn"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="push-enable-btn"]').text()).toContain('Ditolak di Peramban');
+    expect(wrapper.text()).toContain('Saluran Notifikasi');
+    expect(wrapper.text()).not.toContain('Admin Notification Setup');
+
+    vi.unstubAllGlobals();
   });
 });
 

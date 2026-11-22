@@ -99,6 +99,7 @@ async function loadNotifications() {
 }
 
 async function handleMarkAllAsRead() {
+  if (unreadCount.value === 0) return;
   try {
     await apiClient('/notifications/read-all', { method: 'POST' });
     notifications.value.forEach((n) => {
@@ -108,6 +109,51 @@ async function handleMarkAllAsRead() {
     showToast('Seluruh notifikasi telah ditandai dibaca.');
   } catch (err: any) {
     showToast(err.message || 'Gagal menandai notifikasi.', true);
+  }
+}
+
+function selectListFilter(filter: 'ALL' | 'UNREAD') {
+  activeMainTab.value = 'LIST';
+  activeFilter.value = filter;
+}
+
+function formatPushPermissionLabel(permission: string): string {
+  switch (permission) {
+    case 'granted':
+      return 'Aktif';
+    case 'denied':
+      return 'Ditolak Peramban';
+    case 'unsupported':
+      return 'Tidak Didukung';
+    default:
+      return 'Belum Diatur';
+  }
+}
+
+function getPushPermissionDescription(permission: string): string {
+  switch (permission) {
+    case 'granted':
+      return 'Perangkat ini telah terdaftar menerima push notification.';
+    case 'denied':
+      return 'Izin notifikasi ditolak di peramban ini. Aktifkan izin notifikasi melalui pengaturan situs pada peramban Anda lalu muat ulang halaman.';
+    case 'unsupported':
+      return 'Peramban web pada perangkat ini belum mendukung push notification.';
+    default:
+      return 'Klik tombol di bawah untuk meminta izin push notification pada peramban Anda.';
+  }
+}
+
+function getPushButtonLabel(): string {
+  if (pushRegistering.value) return 'Memproses...';
+  switch (pushPermission.value) {
+    case 'granted':
+      return 'Izin Aktif';
+    case 'denied':
+      return 'Ditolak di Peramban';
+    case 'unsupported':
+      return 'Tidak Didukung';
+    default:
+      return 'Aktifkan Browser Push';
   }
 }
 
@@ -234,6 +280,9 @@ function formatNotificationTypeLabel(type?: string): string {
     case 'EOD_REMINDER':
     case 'MORNING_REMINDER':
       return 'Pengingat Harian';
+    case 'ADDITIONAL_WORK_UPDATED':
+    case 'ADDITIONAL_WORK_DELETED':
+      return 'Pekerjaan Tambahan';
     case 'COMPLIANCE_PATTERN_ALERT':
       return 'Peringatan Kepatuhan';
     case 'TEST_SIMULATION':
@@ -242,6 +291,7 @@ function formatNotificationTypeLabel(type?: string): string {
       if (!type) return 'Pemberitahuan Sistem';
       if (type.includes('ESCALAT')) return 'Eskalasi Kendala';
       if (type.startsWith('BLOCKER_')) return 'Tiket Kendala';
+      if (type.startsWith('ADDITIONAL_WORK_')) return 'Pekerjaan Tambahan';
       if (type.startsWith('POLICY_OWNER_')) return 'Tata Kelola Kebijakan';
       if (type.startsWith('POLICY_')) return 'Pembaruan Kebijakan';
       if (type.startsWith('TEMPORARY_REVIEWER_')) return 'Delegasi Wewenang';
@@ -255,11 +305,27 @@ function formatNotificationTypeLabel(type?: string): string {
   }
 }
 
+const DAILY_FILTER_KEYWORDS = [
+  'COMMITMENT',
+  'REMINDER',
+  'POLICY',
+  'ADDITIONAL_WORK',
+  'CORRECTION',
+  'LEAVE',
+  'MANAGER_NOTE',
+  'COACHING',
+];
+
 const filteredNotifications = computed(() => {
   return notifications.value.filter((n) => {
     if (activeFilter.value === 'UNREAD' && n.read) return false;
     if (activeFilter.value === 'BLOCKER' && !n.type.includes('BLOCKER')) return false;
-    if (activeFilter.value === 'DAILY' && !(n.type.includes('COMMITMENT') || n.type.includes('REMINDER') || n.type.includes('POLICY'))) return false;
+    if (
+      activeFilter.value === 'DAILY' &&
+      !DAILY_FILTER_KEYWORDS.some((keyword) => n.type.includes(keyword))
+    ) {
+      return false;
+    }
 
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase();
@@ -408,12 +474,23 @@ function getNotificationPreview(message: string): string {
   return message;
 }
 
+const ACTION_BUTTON_LABELS: Record<string, string> = {
+  '/leave/queue': 'Buka Antrean Persetujuan Cuti',
+  '/blockers': 'Buka Antrean Eskalasi Blocker',
+  '/daily/morning': 'Buka Morning Commitment',
+  '/daily/additional-work': 'Buka Pekerjaan Tambahan',
+  '/daily/eod': 'Buka Evaluasi Sore (EOD)',
+  '/admin/policies': 'Buka Pengaturan Kebijakan',
+  '/corrections/review': 'Buka Review Koreksi',
+  '/corrections/morning': 'Buka Koreksi Komitmen Pagi',
+  '/corrections/eod': 'Buka Koreksi Evaluasi Sore',
+  '/leave/my': 'Buka Cuti Saya',
+};
+
 function getActionButtonLabel(actionUrl?: string): string {
-  if (actionUrl === '/leave/queue') return 'Buka Antrean Persetujuan Cuti';
-  if (actionUrl === '/blockers') return 'Buka Antrean Eskalasi Blocker';
-  if (actionUrl?.startsWith('/raise-blockers')) return 'Lihat & Konfirmasi Tiket Saya';
-  if (actionUrl === '/daily/morning') return 'Buka Morning Commitment';
-  if (actionUrl === '/admin/policies') return 'Buka Pengaturan Kebijakan';
+  if (!actionUrl) return 'Buka Halaman Terkait';
+  if (ACTION_BUTTON_LABELS[actionUrl]) return ACTION_BUTTON_LABELS[actionUrl];
+  if (actionUrl.startsWith('/raise-blockers')) return 'Lihat & Konfirmasi Tiket Saya';
   return 'Buka Halaman Terkait';
 }
 
@@ -686,7 +763,13 @@ onUnmounted(() => {
             <span class="dot-sm"></span>
             {{ unreadCount }} belum dibaca
           </span>
-          <button type="button" class="btn btn-secondary" @click="handleMarkAllAsRead">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-testid="mark-all-read-btn"
+            :disabled="unreadCount === 0 || loading"
+            @click="handleMarkAllAsRead"
+          >
             <CheckCheck :size="15" />
             <span>Tandai semua dibaca</span>
           </button>
@@ -695,16 +778,16 @@ onUnmounted(() => {
 
       <!-- Metric Summary Cards -->
       <div class="summary-strip">
-        <div class="metric-card" @click="activeFilter = 'ALL'">
+        <div class="metric-card" data-testid="metric-card-all" @click="selectListFilter('ALL')">
           <div class="metric-head">
             <span class="metric-label">Total Notifikasi</span>
             <Bell :size="18" class="metric-icon" />
           </div>
           <div class="metric-value">{{ notifications.length }}</div>
-          <div class="metric-note">Tercatat dalam in-system</div>
+          <div class="metric-note">Tercatat dalam sistem</div>
         </div>
 
-        <div class="metric-card" @click="activeFilter = 'UNREAD'">
+        <div class="metric-card" data-testid="metric-card-unread" @click="selectListFilter('UNREAD')">
           <div class="metric-head">
             <span class="metric-label">Belum Dibaca</span>
             <AlertCircle :size="18" class="metric-icon text-amber" />
@@ -713,12 +796,12 @@ onUnmounted(() => {
           <div class="metric-note">Perlu peninjauan Anda</div>
         </div>
 
-        <div class="metric-card" @click="activeMainTab = 'CHANNELS'">
+        <div class="metric-card" data-testid="metric-card-push" @click="activeMainTab = 'CHANNELS'">
           <div class="metric-head">
             <span class="metric-label">Browser Push Perangkat</span>
             <Smartphone :size="18" class="metric-icon" />
           </div>
-          <div class="metric-value capitalize">{{ pushPermission }}</div>
+          <div class="metric-value" data-testid="push-permission-metric">{{ formatPushPermissionLabel(pushPermission) }}</div>
           <div class="metric-note">Status izin peramban</div>
         </div>
       </div>
@@ -861,26 +944,30 @@ onUnmounted(() => {
                 <Smartphone :size="24" />
               </div>
               <div>
-                <h3>Status Izin Peramban: <strong>{{ pushPermission.toUpperCase() }}</strong></h3>
-                <p class="panel-subtitle">
-                  {{ pushPermission === 'granted' ? 'Perangkat ini telah terdaftar menerima push notification.' : 'Klik tombol di bawah untuk meminta izin push notification pada peramban Anda.' }}
+                <h3>
+                  Status Izin Peramban:
+                  <strong data-testid="push-permission-status">{{ formatPushPermissionLabel(pushPermission) }}</strong>
+                </h3>
+                <p class="panel-subtitle" data-testid="push-permission-desc">
+                  {{ getPushPermissionDescription(pushPermission) }}
                 </p>
               </div>
               <button
                 type="button"
                 class="btn btn-primary"
-                :disabled="pushRegistering || pushPermission === 'granted'"
+                data-testid="push-enable-btn"
+                :disabled="pushRegistering || pushPermission === 'granted' || pushPermission === 'denied' || pushPermission === 'unsupported'"
                 @click="requestPushPermission"
               >
                 <Bell :size="15" />
-                <span>{{ pushRegistering ? 'Memproses...' : (pushPermission === 'granted' ? 'Izin Aktif' : 'Aktifkan Browser Push') }}</span>
+                <span>{{ getPushButtonLabel() }}</span>
               </button>
             </div>
 
             <div class="info-note">
               <Info :size="18" class="info-icon" />
               <div>
-                <strong>Konfigurasi Pengiriman:</strong> Notifikasi sistem akan dikirimkan secara serentak ke Web Notification Center (In-App) dan Browser Push Web (bila diizinkan). Pengaturan kanal tingkat lanjut tersedia di menu <strong>Admin Notification Setup</strong>.
+                <strong>Konfigurasi Pengiriman:</strong> Notifikasi sistem dikirim ke daftar notifikasi aplikasi ini dan ke notifikasi peramban web bila diizinkan. Pengaturan saluran lengkap tersedia pada menu <strong>Saluran Notifikasi</strong> (khusus Admin / Pimpinan).
               </div>
             </div>
           </div>
@@ -971,6 +1058,9 @@ onUnmounted(() => {
 <style scoped>
 .notif-layout {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
   background: var(--color-canvas, #F7FAF9);
   color: var(--color-text-primary, #0E211B);
 }
@@ -1027,6 +1117,8 @@ onUnmounted(() => {
 
 .main-content {
   max-width: 1080px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
@@ -1063,6 +1155,7 @@ h1 {
 .heading-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -1085,6 +1178,8 @@ h1 {
   border-radius: 12px;
   padding: 16px 18px;
   cursor: pointer;
+  min-width: 0;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
@@ -1129,6 +1224,7 @@ h1 {
 
 .view-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -1166,6 +1262,8 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 12px;
   overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-head {
@@ -1236,6 +1334,7 @@ h1 {
 
 .search-input {
   width: 100%;
+  box-sizing: border-box;
   padding: 6px 10px 6px 30px;
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 6px;
@@ -1282,6 +1381,7 @@ h1 {
 
 .item-content {
   flex: 1;
+  min-width: 0;
 }
 
 .item-title-row {
@@ -1294,6 +1394,7 @@ h1 {
 .unread-dot {
   width: 7px;
   height: 7px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--color-brand-primary, #00674D);
 }
@@ -1301,6 +1402,7 @@ h1 {
 .item-title {
   font-size: 14px;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .item-desc {
@@ -1309,11 +1411,13 @@ h1 {
   margin: 0;
   line-height: 1.45;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .item-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 6px;
 }
@@ -1502,6 +1606,11 @@ h1 {
   text-decoration: none;
 }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   background: #FFFFFF;
   border-color: var(--color-border-strong, #A9C7BC);
@@ -1653,6 +1762,55 @@ h1 {
   color: var(--color-brand-primary, #00674D);
 }
 
+@media (max-width: 768px) {
+  .main-content {
+    padding: 18px 14px 48px;
+  }
+
+  .heading-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .view-tab {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .filter-row {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-wrap {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .notif-item {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .push-status-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .push-status-card .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-popup {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}
+
 @media (max-width: 640px) {
   .delegation-row {
     flex-direction: column;
@@ -1662,6 +1820,21 @@ h1 {
     width: 100%;
     color: #6B7280;
     font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 20px;
+  }
+
+  .view-tabs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-tab {
+    width: 100%;
   }
 }
 
