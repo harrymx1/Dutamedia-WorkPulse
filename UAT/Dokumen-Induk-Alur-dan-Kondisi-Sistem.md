@@ -820,19 +820,22 @@ flowchart TD
      - ***Hasil yang Diharapkan:***
        - Saat kirim Minor: muncul pesan hijau **`"Koreksi minor berhasil diterapkan seketika (AUTO_APPLIED)."`** dan di panel kanan muncul kartu riwayat berstatus **`AUTO_APPLIED`** dengan cap waktu `HH:mm WIB`.
        - Saat kirim Material: muncul pesan hijau **`"Permohonan koreksi material telah diajukan. Jendela keberatan aktif 24 jam."`** dan di panel kanan muncul kartu riwayat berstatus **`PENDING`**.
-  4. **Kirim Koreksi Evaluasi Sore (`MATERIAL` EOD) di `/corrections/eod`:**
-     - **Aksi:** Klik menu kiri **Koreksi Evaluasi Sore** (`/corrections/eod`).
+  4. **Kirim Koreksi Evaluasi Sore (`MATERIAL` EOD) & Uji Pengaman di `/corrections/eod` (`[Diperbarui Audit #16b]`):**
+     - **Aksi:** Klik menu kiri **Koreksi Evaluasi Sore** (`/corrections/eod`) atau tab **`Koreksi Evaluasi Sore (EOD)`**. Pastikan subjudul menampilkan jam batas kunci kebijakan aktif (bawaan `21:00 WIB`).
+     - **Aksi (Cek Kondisi Belum Submit EOD & Penolakan Tanpa Perubahan):**
+       - Jika akun baru mengirim Komitmen Pagi tetapi **belum pernah mengirim Evaluasi Sore hari ini**, amati kartu **`Belum Ada Evaluasi Sore Hari Ini`** beserta tombol **`Buka Evaluasi Sore (EOD)`** (formulir disembunyikan; server juga menolak `422`).
+       - Pada akun yang sudah mengirim EOD: isi alasan >= 10 huruf tanpa mengubah nilai outcome/keterangan/kelanjutan, lalu klik **`Kirim Permohonan Koreksi EOD`** -> amati toast penolakan di UI (server juga menolak `400 VALIDATION_FAILED`). Klik **`Reset Isian`** bila ingin memulihkan isian form.
      - **Aksi:** Pada panel kiri **Formulir Pengajuan Koreksi Evaluasi Sore**, isi:
-       - **Pilih Komitmen / Tugas Target \*:** Pilih `[Tugas #1] ...` pada dropdown `#eodSelect` (periksa kotak `Baseline EOD Tersimpan` di bawahnya).
+       - **Pilih Komitmen / Tugas Target \*:** Pilih `[Tugas #1] ...` pada dropdown `#eodSelect` (periksa kotak `Baseline EOD Tersimpan` berlabel Bahasa Indonesia lengkap dengan `Kelanjutan: ...`).
        - **Klasifikasi Perubahan \*:** Klik kartu **`Perubahan Material`** (`MATERIAL`).
-       - **Hasil Baru yang Diajukan (Outcome) \*:** Klik kartu **`DONE (Tuntas)`**.
+       - **Hasil Baru yang Diajukan (Outcome) \*:** Klik kartu **`DONE (Tuntas)`** (tersedia bersama **`IN_PROGRESS (Sebagian)`**, **`BLOCKED (Terhambat)`**, dan **`DROPPED (Dibatalkan)`**).
        - **Keterangan Hasil yang Diajukan:** `Cabang kode utama sudah digabungkan pada pukul 17:25 WIB sehingga tugas selesai tuntas hari ini.`
        - **Status Kelanjutan Tugas:** Pilih **`Arsipkan / Tuntas`** (`ARCHIVE`) pada dropdown `#continuationSelect`.
-       - **Alasan Resmi Permohonan Koreksi \*:** `Salah memilih tombol status Selesai Sebagian saat mengisi evaluasi sore tadi padahal PR sudah selesai digabungkan.`
+       - **Alasan Resmi Permohonan Koreksi \*:** `Salah memilih tombol status Selesai Sebagian saat mengisi evaluasi sore tadi padahal PR sudah selesai digabungkan.` (amati penghitung huruf berubah hijau **`Alasan memenuhi syarat`**).
      - **Aksi:** Klik **`Kirim Permohonan Koreksi EOD`**, lalu periksa panel kanan **Riwayat Permohonan Koreksi EOD**.
      - ***Hasil yang Diharapkan:***
-       - Muncul pesan hijau **`"Permohonan koreksi material EOD diajukan. Jendela sanggahan 24 jam dibuka."`** dan kartu riwayat di panel kanan tampil berstatus **`PENDING`**.
-       - *Kondisi Khusus Bentrok & Batas Waktu:* Jika karyawan mengirim koreksi material kedua pada tugas yang sama saat pengajuan pertama masih `PENDING`, sistem menolak (`409 Conflict`). Jika sudah melewati batas jendela koreksi, sistem menolak (`422`).
+       - Muncul pesan hijau **`"Permohonan koreksi material EOD diajukan. Jendela sanggahan 24 jam dibuka."`** dan kartu riwayat di panel kanan tampil berstatus **`PENDING`** lengkap dengan pil **`Tugas #1`**, label Bahasa Indonesia (`IN_PROGRESS (Sebagian)` -> `DONE (Tuntas)`), diff **Kelanjutan Tugas** & **Keterangan Hasil**, serta batas waktu tinjauan 24 jam.
+       - *Kondisi Khusus Bentrok & Batas Waktu:* Jika karyawan mengirim koreksi material kedua pada tugas yang sama saat pengajuan pertama masih `PENDING`, banner biru muncul di atas formulir dan tombol kirim terkunci (server menolak `409 Conflict`). Jika pengajuan terakhir berstatus `REJECTED`, banner merah menampilkan catatan penolakan beserta tombol **`Gunakan Draf Sebelumnya & Sesuaikan`**. Jika sudah melewati batas jendela koreksi, sistem menolak (`422`).
   5. **Uji Blokir Akses Halaman Review Koreksi bagi Staf Biasa (`403`):**
      - **Aksi:** Masih menggunakan akun Aditya (`dev.frontend@dutamedia.com`), ketik alamat `/corrections/review` secara manual di browser.
      - ***Hasil yang Diharapkan:***
@@ -852,8 +855,8 @@ flowchart TD
      - ***Hasil yang Diharapkan:***
        - Saat menolak tanpa alasan: sistem menahan penolakan karena alasan penolakan wajib diisi.
        - Setelah koreksi pagi ditolak dan koreksi EOD disetujui: pada filter `Semua Status` di `/corrections/review`, kedua baris tampil berstatus **`REJECTED`** dan **`APPROVED`**.
-       - Di akun Aditya: panel kanan `/corrections/morning` menampilkan kartu berstatus **`REJECTED`** lengkap dengan penanda **`Komitmen #...`**, perubahan **Tingkat Risiko** / **Tautan Referensi** bila ikut diubah, serta kotak merah catatan penolakan lengkap dengan nama peninjau (`Catatan Peninjau (Arif Budiman): ...`), sedangkan panel kanan `/corrections/eod` menampilkan kartu berstatus **`APPROVED`** lengkap dengan catatan persetujuan Arif Budiman. Notifikasi di `/notifications` membawa tombol langsung **`Buka Koreksi Komitmen Pagi`** (`/corrections/morning`) dan **`Buka Koreksi Evaluasi Sore`** (`/corrections/eod`).
-       - Di layar HP `375px`: tab Pagi/Sore, pilihan klasifikasi, pilihan tingkat risiko, tombol aksi formulir, dan perbandingan riwayat tersusun vertikal 1 kolom tanpa melebihi lebar layar.
+       - Di akun Aditya: panel kanan `/corrections/morning` menampilkan kartu berstatus **`REJECTED`** lengkap dengan penanda **`Komitmen #...`**, perubahan **Tingkat Risiko** / **Tautan Referensi** bila ikut diubah, serta kotak merah catatan penolakan lengkap dengan nama peninjau (`Catatan Peninjau (Arif Budiman): ...`), sedangkan panel kanan `/corrections/eod` menampilkan kartu berstatus **`APPROVED`** lengkap dengan penanda **`Tugas #...`**, label hasil Bahasa Indonesia (`DONE (Tuntas)`, dll.), diff kelanjutan/keterangan, dan catatan persetujuan peninjau (`Catatan Peninjau (<Nama>): ...`). Notifikasi di `/notifications` membawa tombol langsung **`Buka Koreksi Komitmen Pagi`** (`/corrections/morning`) dan **`Buka Koreksi Evaluasi Sore`** (`/corrections/eod`).
+       - Di layar HP `375px`: pada kedua halaman koreksi, tab Pagi/Sore, pilihan klasifikasi, pilihan risiko/hasil capaian, tombol aksi formulir, dan perbandingan riwayat tersusun vertikal 1 kolom tanpa melebihi lebar layar.
 
 ---
 
@@ -862,7 +865,7 @@ flowchart TD
 | ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
 |---|---|---|---|---|---|---|---|---|
 | **K-12.1** | **Koreksi Komitmen Pagi** (`/corrections/morning`) · *(Acuan `16a-Morning-Correction-Request.html`)* | Belum ada laporan pagi hari ini (`No Baseline`), tab Pagi/Sore, form `MINOR` vs `MATERIAL` + penghitung min. 10 huruf & `Reset Isian`, tolak tanpa perubahan (`400`) & tolak ganda saat `PENDING` (`409` + banner tunggu), bantuan `Gunakan Draf Sebelumnya & Sesuaikan` pasca-`REJECTED`, riwayat lengkap (`Komitmen #`, risiko/tautan, nama peninjau, `HH:mm WIB`), & responsif HP `375px` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-13.1** | **Koreksi Evaluasi Sore** (`/corrections/eod`) · *(Acuan `16b-EOD-Correction-Request.html`)* | Belum ada laporan EOD, form `MINOR` vs `MATERIAL` koreksi hasil sore, jendela 24 jam, & tabel riwayat bawah halaman berformat `HH:mm WIB` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-13.1** | **Koreksi Evaluasi Sore** (`/corrections/eod`) · *(Acuan `16b-EOD-Correction-Request.html`)* | Guard `Belum Ada Evaluasi Sore Hari Ini` (`422` bila EOD belum disubmit), jam cut-off dinamis kebijakan, tab Pagi/Sore, label hasil seragam (`DONE (Tuntas)`/`IN_PROGRESS (Sebagian)`/`BLOCKED (Terhambat)`/`DROPPED (Dibatalkan)`), penghitung min. 10 huruf & `Reset Isian`, tolak tanpa perubahan/invalid (`400`) & tolak ganda saat `PENDING` (`409` + banner tunggu), bantuan `Gunakan Draf Sebelumnya & Sesuaikan`, riwayat lengkap (`Tugas #`, kelanjutan/keterangan, nama peninjau, `HH:mm WIB`), & responsif HP `375px` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-14.1** | **Review Koreksi** (`/corrections/review`) · *(Acuan `22-Correction-and-Leave-Review.html`)* | Kartu perbandingan nilai Sebelum vs Diajukan (*Diff*) + modal Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
