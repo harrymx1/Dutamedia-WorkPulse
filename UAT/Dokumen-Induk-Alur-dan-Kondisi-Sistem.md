@@ -1264,25 +1264,23 @@ flowchart TD
   1. `admin@dutamedia.com` (System Administrator — pembuat delegasi)
   2. `lead.creative@dutamedia.com` (Rian Kurniawan — `SUPERVISOR` Ops & Infra yang ditunjuk sebagai Reviewer Sementara menggantikan Head yang cuti)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
-  1. **Uji Validasi Tanggal Terbalik (`400`), Larangan Menunjuk `SYSTEM_ADMIN` (`422`), & Bentrok Tanggal (`409`):**
-     - **Aksi:** Masuk sebagai **`admin@dutamedia.com`** dan buka menu kiri **Reviewer Sementara** (`/admin/temporary-reviewers`).
-     - **Aksi (Uji Tanggal Terbalik):** Klik **Tambah Reviewer Sementara**, pilih Pejabat yang Digantikan: **Gunawan Setiawan** (`head.ops@dutamedia.com`), pilih Pengganti: **Rian Kurniawan** (`lead.creative@dutamedia.com`), isi *Tanggal Mulai*: besok dan *Tanggal Selesai*: hari ini (terbalik), lalu coba simpan.
+  1. **Uji Kartu Ringkasan, Pencarian/Filter, Tanggal Terbalik/Mundur (`400`), Larangan `SYSTEM_ADMIN`/`Intern`/Diri Sendiri (`400`), Alasan Minimal, & Bentrok Tanggal (`409`):**
+     - **Aksi:** Masuk sebagai **`admin@dutamedia.com`** dan buka menu kiri **Reviewer Sementara** (`/admin/temporary-reviewers`). Periksa 4 kartu ringkasan klik (`Aktif`, `Terjadwal`, `Segera Berakhir`, `Kedaluwarsa`) serta (bila data tersedia) bar pencarian, filter divisi/status, dan tombol **`Tampilkan Semua Delegasi`**.
+     - **Aksi (Uji Validasi Tanggal Terbalik / Mundur & Alasan Singkat):** Klik **`+ Delegasikan Reviewer Baru`**, pilih Pejabat yang Berhalangan: **Gunawan Setiawan** (`head.ops@dutamedia.com`), pastikan **Divisi Wewenang Peninjauan (Otomatis)** terisi `OperationsInfrastructure`, pilih Pengganti: **Rian Kurniawan** (`lead.creative@dutamedia.com`), isi alasan `< 10` karakter (misal `abc`) lalu coba simpan; kemudian isi alasan `>= 10` karakter tetapi masukkan tanggal masa lalu (`kemarin`) atau tanggal selesai mendahului tanggal mulai, lalu coba simpan.
      - ***Hasil yang Diharapkan:***
-       - Sistem menolak penyimpanan (`400`) karena tanggal selesai tidak boleh mendahului tanggal mulai.
-     - **Aksi (Uji Larangan Menunjuk `SYSTEM_ADMIN`):** Coba pilih akun **System Administrator** (`admin@dutamedia.com`) sebagai Reviewer Sementara.
-     - ***Hasil yang Diharapkan:***
-       - Sistem mengecualikan akun `SYSTEM_ADMIN` dari dropdown atau menolak dengan kode **`422`** karena Admin Sistem dilarang memegang wewenang operasional persetujuan bisnis (`DEC-015`).
-  2. **Terbitkan Delegasi Aktif Hari Ini untuk Rian Kurniawan:**
+       - Dropdown `#del-replaced` dan `#del-user` otomatis mengecualikan akun `SYSTEM_ADMIN` (`admin@dutamedia.com`) maupun `INTERN` (*Raka Pratama* / *Nisa Amelia*) serta mencegah memilih orang yang sama; permintaan backend ke jenis terlarang / diri sendiri juga ditolak **`400 VALIDATION_FAILED`**.
+       - Sistem menolak penyimpanan (`400 VALIDATION_FAILED` & validasi UI/input `:min` WIB) apabila alasan `< 10` karakter, tanggal mulai berada di masa lalu (*anti-backdating*), atau tanggal selesai mendahului tanggal mulai.
+  2. **Terbitkan Delegasi Aktif Hari Ini untuk Rian Kurniawan (`Persetujuan Cuti, Koreksi & Blocker`):**
      - **Aksi:** Isi formulir delegasi dengan data valid berikut:
-       - **Pejabat yang Digantikan (Principal):** `Gunawan Setiawan (Head of Ops & Infra)`
+       - **Pejabat yang Digantikan (Principal):** `Gunawan Setiawan (Head of Operations & Infrastructure)`
        - **Reviewer Sementara (Delegate):** `Rian Kurniawan (lead.creative@dutamedia.com)`
-       - **Ruang Lingkup Divisi:** `Ops & Infra`
-       - **Tanggal Mulai:** **Hari Ini**
-       - **Tanggal Selesai:** **3 Hari dari Sekarang**
-       - **Alasan Penunjukan:** `Menggantikan Head of Ops & Infra selama dinas luar kota dan audit pusat data.`
-     - **Aksi:** Klik **Simpan Delegasi**.
+       - **Divisi Wewenang (Otomatis):** `OperationsInfrastructure`
+       - **Tanggal Efektif Mulai:** **Hari Ini** (atau uji 1 hari penuh dengan Tanggal Kedaluwarsa sama)
+       - **Batas Tanggal Kedaluwarsa:** **3 Hari dari Sekarang**
+       - **Alasan Delegasi (`>= 10` karakter):** `Menggantikan Head of Ops & Infra selama dinas luar kota dan audit pusat data.`
+     - **Aksi:** Klik **`Terbitkan Delegasi`**.
      - ***Hasil yang Diharapkan:***
-       - Delegasi baru tampil di tabel `/admin/temporary-reviewers` dengan lencana status **`AKTIF (ACTIVE)`**.
+       - Tabel `/admin/temporary-reviewers` memuat hingga `limit=100` dan menampilkan delegasi baru dengan lencana **`Aktif`** (atau **`Terjadwal`** bila mulai besok / **`Kedaluwarsa`** bila lewat) + hitung mundur sisa hari (penanda **`Segera Berakhir`** bila `<= 7` hari), rentang 1 hari ringkas bila mulai=selesai, serta cakupan **`Persetujuan Cuti, Koreksi & Blocker`**.
      - **Aksi (Uji Bentrok Tanggal `409 Conflict`):** Coba buat satu lagi delegasi baru dengan pasangan pejabat dan pengganti yang sama pada rentang tanggal yang bersinggungan (Hari Ini s/d Besok).
      - ***Hasil yang Diharapkan:***
        - Sistem menolak dengan kode **`409 Conflict`** karena sudah ada delegasi aktif pada tanggal yang bersinggungan.
@@ -1293,7 +1291,7 @@ flowchart TD
        - Karena penanda `isTemporaryReviewer: true` aktif pada sesi Rian Kurniawan hari ini, ketiga menu pimpinan tersebut (**Persetujuan Cuti**, **Review Koreksi**, dan **Antrean Blocker**) **terbuka penuh tanpa blokir `403`** untuk mewakili divisi Ops & Infra!
   4. **Edit & Cabut Delegasi oleh Admin:**
      - **Aksi:** Keluar dari akun Rian Kurniawan, masuk kembali sebagai **`admin@dutamedia.com`**, dan buka `/admin/temporary-reviewers`.
-     - **Aksi:** Klik tombol **Ubah (Edit)** pada baris delegasi Rian Kurniawan untuk memperbarui catatan alasan, simpan, lalu klik tombol **Cabut / Nonaktifkan (Revoke)** bila masa tugas selesai lebih cepat.
+     - **Aksi:** Klik tombol **Ubah (Edit)** pada baris delegasi Rian Kurniawan untuk memperbarui catatan alasan (minimal `5` karakter) atau perpanjang tanggal, simpan, lalu klik tombol **Cabut / Nonaktifkan (Revoke)** (alasan minimal `5` karakter) bila masa tugas selesai lebih cepat.
      - ***Hasil yang Diharapkan:***
        - Perubahan tersimpan dengan rapi dan saat dicabut, status delegasi berubah menjadi nonaktif serta wewenang tambahan Rian otomatis berakhir.
 
@@ -1356,7 +1354,7 @@ flowchart TD
 | **K-25.1** | **Undangan Pengguna** (`/admin/invitations`) · *(Acuan `25-Admin-User-Invitation-Management.html`)* | Daftar undangan (`PENDING`, `ACCEPTED`, `EXPIRED`, `REVOKED`) + salin token 72 jam + Kirim Ulang + Cabut | `SYSTEM_ADMIN` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-26.1** | **Struktur Organisasi** (`/admin/organization`) · *(Acuan `15-Admin-Organizational-Mapping.html`)* | Tab 1 Atasan Langsung: muat penuh `limit=100` (>20 baris), label peran Bahasa Indonesia, subjudul bersih tanpa rute, pencarian/filter divisi/status + reset, tolak diri sendiri (`400`) & siklus melingkar (`422`), pengaman `Intern` wajib tanggal selesai + blokir `Intern` jadi atasan, modal scroll aman, & responsif HP `375px` | `SYSTEM_ADMIN` / `HRGA` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-26.2** | **Struktur Organisasi** (`/admin/organization`) | Tab 2 Kewenangan Proyek (*Project Lead* & *Project Sponsor*, bebas `Intern`): muat penuh `limit=100`, pencarian + cek aktif WIB, default tanggal efektif hari ini WIB, tolak `PM === Reviewer` di UI & server (`400 VALIDATION_FAILED`), serta modal konfirmasi in-app `Konfirmasi Tutup Wewenang Proyek` | `SYSTEM_ADMIN` / `HRGA` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-27.1** | **Reviewer Sementara** (`/admin/temporary-reviewers`) · *(Acuan `17-Admin-Temporary-Reviewer.html`)* | Form delegasi: tolak tanggal terbalik (`400`), tolak `SYSTEM_ADMIN` (`422`), blokir `Intern`, tolak bentrok (`409`) + Edit & Cabut + bukti login `Rian Kurniawan` | `SYSTEM_ADMIN` & `lead.creative@dutamedia.com` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-27.1** | **Reviewer Sementara** (`/admin/temporary-reviewers`) · *(Acuan `17-Admin-Temporary-Reviewer.html`)* | Muat penuh `limit=100`, 4 kartu ringkasan klik (`Aktif`/`Terjadwal`/`Segera Berakhir`/`Kedaluwarsa`), bar cari/filter divisi & status + reset, status WIB + hitung mundur & cakupan `Persetujuan Cuti, Koreksi & Blocker`, anti-backdating & tanggal terbalik (`400`), alasan min (`10` buat / `5` ubah/cabut), tolak `SYSTEM_ADMIN`/`Intern`/diri sendiri (`400`), tolak bentrok (`409`), modal scrollable, responsif HP `375px`, Edit & Cabut + bukti login `Rian Kurniawan` | `SYSTEM_ADMIN` & `lead.creative@dutamedia.com` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-28.1** | **Pengaturan Kebijakan** (`/admin/policies`) · *(Acuan `18-Policy-Settings.html`)* | Tab 1 Aturan: `[Aktif v1.1]` bebas `SLA` & kurung Inggris, 6 label modal Bahasa Indonesia, tolak tanpa ubah nilai (`400`), alasan `< 15` huruf, tanggal mundur (`422`), riwayat versi `HH:mm WIB` | `CEO_MANAGEMENT` (`direktur@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-28.2** | **Pengaturan Kebijakan** (`/admin/policies`) | Tab 2 Pemilik Kebijakan: pengaman pemilik terakhir (`422`), blokir `Intern`, konfirmasi cabut diri sendiri, & tampilan khusus Pemilik Non-Admin (`Dewi Lestari`) | `CEO_MANAGEMENT` & `hrga@dutamedia.com` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-29.1** | **Saluran Notifikasi** (`/admin/notifications`) · *(Acuan `19-Admin-Notification-Channel-Setup.html`)* | Kartu status 3 saluran (In-App, Email, Web Push) + tombol **Kirim Uji Coba Notifikasi** + tabel log pengiriman | `SYSTEM_ADMIN` / `CEO_MANAGEMENT` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
