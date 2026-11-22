@@ -16,6 +16,7 @@ import {
   Plus,
   CheckCircle2,
   AlertCircle,
+  Search,
   X,
   Layers,
 } from 'lucide-vue-next';
@@ -75,6 +76,99 @@ const isLoading = ref(false);
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
+// Search & Filters
+const orgSearchQuery = ref('');
+const orgFunctionFilter = ref('ALL');
+const orgStatusFilter = ref<'ALL' | 'ACTIVE' | 'HISTORY'>('ALL');
+const paSearchQuery = ref('');
+
+function isDateActiveWib(endDate: string | null | undefined): boolean {
+  if (!endDate) return true;
+  return endDate.slice(0, 10) >= getTodayIsoWib();
+}
+
+function formatRoleLabel(role: string): string {
+  switch (role) {
+    case 'EMPLOYEE':
+      return 'Karyawan';
+    case 'SUPERVISOR':
+      return 'Supervisor';
+    case 'HEAD':
+      return 'Kepala Divisi';
+    case 'PROJECT_MANAGER':
+      return 'Manajer Proyek';
+    case 'HRGA':
+      return 'HRGA';
+    case 'CEO_MANAGEMENT':
+      return 'Direktur / CEO';
+    case 'SYSTEM_ADMIN':
+      return 'Admin Sistem';
+    default:
+      return role;
+  }
+}
+
+const orgFunctionOptions = computed(() => {
+  const unique = new Set<string>();
+  for (const asg of orgAssignments.value) {
+    if (asg.function) unique.add(asg.function);
+  }
+  return Array.from(unique).sort((a, b) => a.localeCompare(b, 'id'));
+});
+
+const filteredOrgAssignments = computed(() => {
+  const q = orgSearchQuery.value.trim().toLowerCase();
+  return orgAssignments.value.filter((asg) => {
+    if (orgFunctionFilter.value !== 'ALL' && asg.function !== orgFunctionFilter.value) {
+      return false;
+    }
+    const active = isDateActiveWib(asg.endDate);
+    if (orgStatusFilter.value === 'ACTIVE' && !active) return false;
+    if (orgStatusFilter.value === 'HISTORY' && active) return false;
+    if (q) {
+      const name = (asg.user?.fullName || '').toLowerCase();
+      const email = (asg.user?.email || '').toLowerCase();
+      const title = (asg.jobTitle || '').toLowerCase();
+      const manager = (asg.directManager?.fullName || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !title.includes(q) && !manager.includes(q)) {
+        return false;
+      }
+    }
+    return true;
+  });
+});
+
+const hasOrgFilters = computed(
+  () =>
+    orgSearchQuery.value.trim().length > 0 ||
+    orgFunctionFilter.value !== 'ALL' ||
+    orgStatusFilter.value !== 'ALL',
+);
+
+function resetOrgFilters() {
+  orgSearchQuery.value = '';
+  orgFunctionFilter.value = 'ALL';
+  orgStatusFilter.value = 'ALL';
+}
+
+const filteredProjectAuthorities = computed(() => {
+  const q = paSearchQuery.value.trim().toLowerCase();
+  if (!q) return projectAuthorities.value;
+  return projectAuthorities.value.filter((pa) => {
+    const code = (pa.projectCode || '').toLowerCase();
+    const name = (pa.projectName || '').toLowerCase();
+    const pm = (pa.projectManager?.fullName || '').toLowerCase();
+    const rev = (pa.escalationReviewer?.fullName || '').toLowerCase();
+    const fn = (pa.involvedFunction || '').toLowerCase();
+    return code.includes(q) || name.includes(q) || pm.includes(q) || rev.includes(q) || fn.includes(q);
+  });
+});
+
+// Close Project Authority Confirmation Modal State
+const endPaTarget = ref<ProjectAuthorityRow | null>(null);
+const isEndingPa = ref(false);
+const endPaError = ref<string | null>(null);
+
 // Modal Org Assignment State
 const isOrgModalOpen = ref(false);
 const isOrgSubmitting = ref(false);
@@ -107,7 +201,7 @@ const paForm = ref({
   projectManagerId: '',
   escalationReviewerId: '',
   involvedFunction: 'Engineering',
-  effectiveDate: new Date().toISOString().split('T')[0],
+  effectiveDate: getTodayIsoWib(),
   assignmentReason: '',
 });
 
@@ -116,8 +210,8 @@ async function loadData() {
   errorMessage.value = null;
   try {
     const [orgRes, paRes, usersRes] = await Promise.all([
-      apiClient<{ data: OrgAssignmentRow[] }>('/v1/admin/organization/assignments'),
-      apiClient<{ data: ProjectAuthorityRow[] }>('/v1/admin/project-authorities'),
+      apiClient<{ data: OrgAssignmentRow[] }>('/v1/admin/organization/assignments?limit=100'),
+      apiClient<{ data: ProjectAuthorityRow[] }>('/v1/admin/project-authorities?limit=100'),
       apiClient<{ data: SimpleUser[] }>('/v1/admin/users?limit=100'),
     ]);
 
@@ -148,6 +242,7 @@ function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     if (isOrgModalOpen.value) isOrgModalOpen.value = false;
     if (isPaModalOpen.value) isPaModalOpen.value = false;
+    if (endPaTarget.value && !isEndingPa.value) endPaTarget.value = null;
   }
 }
 
@@ -230,6 +325,10 @@ async function handleCreatePa() {
     paModalError.value = 'Semua field wajib diisi.';
     return;
   }
+  if (paForm.value.projectManagerId === paForm.value.escalationReviewerId) {
+    paModalError.value = 'Project Manager dan Escalation Reviewer tidak boleh dijabat oleh orang yang sama.';
+    return;
+  }
 
   isPaSubmitting.value = true;
   try {
@@ -247,14 +346,30 @@ async function handleCreatePa() {
   }
 }
 
-async function handleEndPa(id: string) {
-  if (!confirm('Apakah Anda yakin ingin menutup kewenangan proyek ini pada hari ini?')) return;
+function openEndPaConfirm(pa: ProjectAuthorityRow) {
+  endPaError.value = null;
+  endPaTarget.value = pa;
+}
+
+function cancelEndPaConfirm() {
+  if (isEndingPa.value) return;
+  endPaError.value = null;
+  endPaTarget.value = null;
+}
+
+async function confirmEndPa() {
+  if (!endPaTarget.value) return;
+  isEndingPa.value = true;
+  endPaError.value = null;
   try {
-    await apiClient(`/v1/admin/project-authorities/${id}/end`, { method: 'PATCH' });
+    await apiClient(`/v1/admin/project-authorities/${endPaTarget.value.id}/end`, { method: 'PATCH' });
+    endPaTarget.value = null;
     showToast('Kewenangan proyek berhasil ditutup.');
     await loadData();
   } catch (err: any) {
-    showToast(err.message || 'Gagal menutup kewenangan proyek.', true);
+    endPaError.value = err.message || 'Gagal menutup kewenangan proyek.';
+  } finally {
+    isEndingPa.value = false;
   }
 }
 
@@ -286,9 +401,9 @@ function showToast(msg: string, isError = false) {
     <main class="content-container">
       <div class="page-header">
         <div>
-          <h2>Struktur Organisasi & Kewenangan Proyek</h2>
+          <h2>Struktur Organisasi &amp; Kewenangan Proyek</h2>
           <p class="subtitle">
-            Kelola hierarki pelaporan, penugasan divisi, dan pemetaan Project Authority (/admin/organization).
+            Kelola susunan atasan langsung, penugasan divisi, serta penunjukan pemimpin dan peninjau proyek perusahaan.
           </p>
         </div>
         <div class="header-actions">
@@ -323,6 +438,41 @@ function showToast(msg: string, isError = false) {
 
       <!-- Tab Content 1: Organizational Assignments -->
       <div v-if="currentTab === 'org'" class="table-card">
+        <div v-if="orgAssignments.length > 0" class="table-toolbar">
+          <div class="toolbar-search">
+            <Search :size="15" class="search-icon" />
+            <input
+              id="orgSearchInput"
+              v-model="orgSearchQuery"
+              type="search"
+              placeholder="Cari nama, email, jabatan, atau atasan..."
+              aria-label="Cari penugasan karyawan"
+            />
+          </div>
+          <div class="toolbar-selects">
+            <select
+              id="orgFunctionFilter"
+              v-model="orgFunctionFilter"
+              aria-label="Saring divisi"
+            >
+              <option value="ALL">Semua Divisi</option>
+              <option v-for="fn in orgFunctionOptions" :key="fn" :value="fn">{{ fn }}</option>
+            </select>
+            <select
+              id="orgStatusFilter"
+              v-model="orgStatusFilter"
+              aria-label="Saring status penugasan"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="ACTIVE">Aktif</option>
+              <option value="HISTORY">Riwayat</option>
+            </select>
+          </div>
+          <span class="toolbar-count">
+            {{ filteredOrgAssignments.length }} dari {{ orgAssignments.length }} data
+          </span>
+        </div>
+
         <div v-if="isLoading" class="state-container">
           <p>Memuat data penugasan organisasi...</p>
         </div>
@@ -331,63 +481,89 @@ function showToast(msg: string, isError = false) {
           <h3>Belum Ada Penugasan Aktif</h3>
           <p>Klik tombol "Atur Penugasan Baru" untuk memetakan karyawan ke struktur organisasi.</p>
         </div>
-        <table v-else class="data-table">
-          <thead>
-            <tr>
-              <th>KARYAWAN</th>
-              <th>JABATAN & PERAN</th>
-              <th>FUNGSI / DIVISI</th>
-              <th>ATASAN LANGSUNG</th>
-              <th>MASA BERLAKU</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="asg in orgAssignments" :key="asg.id">
-              <td>
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                  <strong class="user-name">{{ asg.user?.fullName || '-' }}</strong>
-                  <span v-if="isInternStatus(asg.employmentStatus)" class="badge-intern">Intern</span>
-                  <span v-else-if="asg.employmentStatus === 'CONTRACT'" class="badge-contract">Kontrak</span>
-                </div>
-                <span class="user-email-text mono-num">{{ asg.user?.email || '-' }}</span>
-              </td>
-              <td>
-                <span class="role-badge">{{ asg.role }}</span>
-                <span class="job-title-text">{{ asg.jobTitle }}</span>
-                <span style="display: block; font-size: 11px; color: var(--color-text-secondary);">
-                  {{ formatEmploymentStatusLabel(asg.employmentStatus) }}
-                </span>
-              </td>
-              <td>
-                <span class="func-pill">{{ asg.function }}</span>
-              </td>
-              <td>
-                <template v-if="asg.directManager">
-                  <span class="manager-name">{{ asg.directManager.fullName }}</span>
-                  <span class="manager-email mono-num">{{ asg.directManager.email }}</span>
-                </template>
-                <span v-else class="text-muted">(Pucuk Pimpinan / Tidak Ada)</span>
-              </td>
-              <td>
-                <span class="date-text mono-num wp-datetime">
-                  {{ formatDateWib(asg.effectiveDate) }}
-                  s/d
-                  {{ asg.endDate ? formatDateWib(asg.endDate) : 'Sekarang' }}
-                </span>
-              </td>
-              <td>
-                <span :class="['status-badge', !asg.endDate || new Date(asg.endDate) >= new Date() ? 'active' : 'inactive']">
-                  {{ !asg.endDate || new Date(asg.endDate) >= new Date() ? 'Aktif' : 'Riwayat' }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else-if="filteredOrgAssignments.length === 0" class="state-container empty">
+          <Layers :size="36" class="empty-icon" />
+          <h3>Tidak Ada Penugasan yang Cocok</h3>
+          <p>Ubah kata kunci pencarian atau saringan divisi dan status untuk melihat data lainnya.</p>
+          <button v-if="hasOrgFilters" type="button" class="btn btn-secondary btn-reset-filter" @click="resetOrgFilters">
+            Tampilkan Semua Penugasan
+          </button>
+        </div>
+        <div v-else class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>KARYAWAN</th>
+                <th>JABATAN &amp; PERAN</th>
+                <th>FUNGSI / DIVISI</th>
+                <th>ATASAN LANGSUNG</th>
+                <th>MASA BERLAKU</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="asg in filteredOrgAssignments" :key="asg.id">
+                <td>
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <strong class="user-name">{{ asg.user?.fullName || '-' }}</strong>
+                    <span v-if="isInternStatus(asg.employmentStatus)" class="badge-intern">Intern</span>
+                    <span v-else-if="asg.employmentStatus === 'CONTRACT'" class="badge-contract">Kontrak</span>
+                  </div>
+                  <span class="user-email-text mono-num">{{ asg.user?.email || '-' }}</span>
+                </td>
+                <td>
+                  <span class="role-badge">{{ formatRoleLabel(asg.role) }}</span>
+                  <span class="job-title-text">{{ asg.jobTitle }}</span>
+                  <span style="display: block; font-size: 11px; color: var(--color-text-secondary);">
+                    {{ formatEmploymentStatusLabel(asg.employmentStatus) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="func-pill">{{ asg.function }}</span>
+                </td>
+                <td>
+                  <template v-if="asg.directManager">
+                    <span class="manager-name">{{ asg.directManager.fullName }}</span>
+                    <span class="manager-email mono-num">{{ asg.directManager.email }}</span>
+                  </template>
+                  <span v-else class="text-muted">(Pucuk Pimpinan / Tidak Ada)</span>
+                </td>
+                <td>
+                  <span class="date-text mono-num wp-datetime">
+                    {{ formatDateWib(asg.effectiveDate) }}
+                    s/d
+                    {{ asg.endDate ? formatDateWib(asg.endDate) : 'Sekarang' }}
+                  </span>
+                </td>
+                <td>
+                  <span :class="['status-badge', isDateActiveWib(asg.endDate) ? 'active' : 'inactive']">
+                    {{ isDateActiveWib(asg.endDate) ? 'Aktif' : 'Riwayat' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Tab Content 2: Project Authority Mappings -->
       <div v-else class="table-card">
+        <div v-if="projectAuthorities.length > 0" class="table-toolbar">
+          <div class="toolbar-search">
+            <Search :size="15" class="search-icon" />
+            <input
+              id="paSearchInput"
+              v-model="paSearchQuery"
+              type="search"
+              placeholder="Cari kode, nama proyek, Project Manager, atau divisi..."
+              aria-label="Cari kewenangan proyek"
+            />
+          </div>
+          <span class="toolbar-count">
+            {{ filteredProjectAuthorities.length }} dari {{ projectAuthorities.length }} proyek
+          </span>
+        </div>
+
         <div v-if="isLoading" class="state-container">
           <p>Memuat kewenangan proyek...</p>
         </div>
@@ -396,54 +572,65 @@ function showToast(msg: string, isError = false) {
           <h3>Belum Ada Wewenang Proyek</h3>
           <p>Belum ada penunjukan Project Authority. Klik tombol untuk menambahkan proyek baru.</p>
         </div>
-        <table v-else class="data-table">
-          <thead>
-            <tr>
-              <th>KODE & NAMA PROYEK</th>
-              <th>PROJECT MANAGER</th>
-              <th>ESCALATION REVIEWER</th>
-              <th>FUNGSI TERLIBAT</th>
-              <th>MASA BERLAKU</th>
-              <th>AKSI</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="pa in projectAuthorities" :key="pa.id">
-              <td>
-                <strong class="project-code mono-num">{{ pa.projectCode }}</strong>
-                <span class="project-name-text">{{ pa.projectName }}</span>
-              </td>
-              <td>
-                <span class="pm-name">{{ pa.projectManager?.fullName || '-' }}</span>
-                <span class="pm-email mono-num">{{ pa.projectManager?.email || '-' }}</span>
-              </td>
-              <td>
-                <span class="reviewer-name">{{ pa.escalationReviewer?.fullName || '-' }}</span>
-                <span class="reviewer-email mono-num">{{ pa.escalationReviewer?.email || '-' }}</span>
-              </td>
-              <td>
-                <span class="func-pill">{{ pa.involvedFunction }}</span>
-              </td>
-              <td>
-                <span class="date-text mono-num wp-datetime">
-                  {{ formatDateWib(pa.effectiveDate) }}
-                  s/d
-                  {{ pa.endDate ? formatDateWib(pa.endDate) : 'Aktif' }}
-                </span>
-              </td>
-              <td>
-                <button
-                  v-if="!pa.endDate || new Date(pa.endDate) >= new Date()"
-                  class="btn-end-pa"
-                  @click="handleEndPa(pa.id)"
-                >
-                  Tutup Wewenang
-                </button>
-                <span v-else class="text-muted">Ditutup</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else-if="filteredProjectAuthorities.length === 0" class="state-container empty">
+          <FolderGit2 :size="36" class="empty-icon" />
+          <h3>Tidak Ada Proyek yang Cocok</h3>
+          <p>Ubah kata kunci pencarian untuk melihat daftar proyek lainnya.</p>
+          <button type="button" class="btn btn-secondary btn-reset-filter" @click="paSearchQuery = ''">
+            Tampilkan Semua Proyek
+          </button>
+        </div>
+        <div v-else class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>KODE &amp; NAMA PROYEK</th>
+                <th>PROJECT MANAGER</th>
+                <th>ESCALATION REVIEWER</th>
+                <th>FUNGSI TERLIBAT</th>
+                <th>MASA BERLAKU</th>
+                <th>AKSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="pa in filteredProjectAuthorities" :key="pa.id">
+                <td>
+                  <strong class="project-code mono-num">{{ pa.projectCode }}</strong>
+                  <span class="project-name-text">{{ pa.projectName }}</span>
+                </td>
+                <td>
+                  <span class="pm-name">{{ pa.projectManager?.fullName || '-' }}</span>
+                  <span class="pm-email mono-num">{{ pa.projectManager?.email || '-' }}</span>
+                </td>
+                <td>
+                  <span class="reviewer-name">{{ pa.escalationReviewer?.fullName || '-' }}</span>
+                  <span class="reviewer-email mono-num">{{ pa.escalationReviewer?.email || '-' }}</span>
+                </td>
+                <td>
+                  <span class="func-pill">{{ pa.involvedFunction }}</span>
+                </td>
+                <td>
+                  <span class="date-text mono-num wp-datetime">
+                    {{ formatDateWib(pa.effectiveDate) }}
+                    s/d
+                    {{ pa.endDate ? formatDateWib(pa.endDate) : 'Aktif' }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    v-if="isDateActiveWib(pa.endDate)"
+                    type="button"
+                    class="btn-end-pa"
+                    @click="openEndPaConfirm(pa)"
+                  >
+                    Tutup Wewenang
+                  </button>
+                  <span v-else class="text-muted">Ditutup</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
 
@@ -452,7 +639,7 @@ function showToast(msg: string, isError = false) {
       <div class="modal-box" role="dialog" aria-modal="true">
         <div class="modal-header">
           <h3>Atur Penugasan Organisasi Baru</h3>
-          <button class="close-btn" @click="isOrgModalOpen = false"><X :size="20" /></button>
+          <button type="button" class="close-btn" aria-label="Tutup" @click="isOrgModalOpen = false"><X :size="20" /></button>
         </div>
         <form @submit.prevent="handleCreateOrgAssignment">
           <div v-if="orgModalError" class="alert-banner error">
@@ -489,19 +676,19 @@ function showToast(msg: string, isError = false) {
               </select>
             </div>
             <div class="form-group">
-              <label for="asg-role">Peran Kanonikal</label>
+              <label for="asg-role">Peran Jabatan</label>
               <select
                 id="asg-role"
                 v-model="orgForm.role"
                 :disabled="orgForm.employmentStatus === 'INTERN'"
                 required
               >
-                <option value="EMPLOYEE">EMPLOYEE</option>
-                <option value="SUPERVISOR">SUPERVISOR</option>
-                <option value="HEAD">HEAD</option>
-                <option value="PROJECT_MANAGER">PROJECT_MANAGER</option>
+                <option value="EMPLOYEE">Karyawan</option>
+                <option value="SUPERVISOR">Supervisor</option>
+                <option value="HEAD">Kepala Divisi</option>
+                <option value="PROJECT_MANAGER">Manajer Proyek</option>
                 <option value="HRGA">HRGA</option>
-                <option value="CEO_MANAGEMENT">CEO_MANAGEMENT</option>
+                <option value="CEO_MANAGEMENT">Direktur / CEO</option>
               </select>
               <span v-if="orgForm.employmentStatus === 'INTERN'" class="field-hint">
                 Karyawan Intern otomatis menggunakan peran EMPLOYEE.
@@ -582,7 +769,7 @@ function showToast(msg: string, isError = false) {
       <div class="modal-box" role="dialog" aria-modal="true">
         <div class="modal-header">
           <h3>Tetapkan Kewenangan Proyek (Project Authority)</h3>
-          <button class="close-btn" @click="isPaModalOpen = false"><X :size="20" /></button>
+          <button type="button" class="close-btn" aria-label="Tutup" @click="isPaModalOpen = false"><X :size="20" /></button>
         </div>
         <form @submit.prevent="handleCreatePa">
           <div v-if="paModalError" class="alert-banner error">
@@ -653,6 +840,34 @@ function showToast(msg: string, isError = false) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+    <!-- Modal Konfirmasi Tutup Kewenangan Proyek -->
+    <div v-if="endPaTarget" class="modal-backdrop" @click.self="cancelEndPaConfirm">
+      <div class="modal-box modal-confirm-box" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h3>Konfirmasi Tutup Wewenang Proyek</h3>
+          <button type="button" class="close-btn" aria-label="Tutup" :disabled="isEndingPa" @click="cancelEndPaConfirm">
+            <X :size="20" />
+          </button>
+        </div>
+        <div v-if="endPaError" class="alert-banner error">
+          <AlertCircle :size="18" />
+          <span>{{ endPaError }}</span>
+        </div>
+        <p class="confirm-text">
+          Apakah Anda yakin ingin menutup kewenangan proyek
+          <strong>{{ endPaTarget.projectName }} ({{ endPaTarget.projectCode }})</strong>
+          mulai hari ini?
+        </p>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" :disabled="isEndingPa" @click="cancelEndPaConfirm">
+            Batal
+          </button>
+          <button type="button" class="btn btn-danger" :disabled="isEndingPa" @click="confirmEndPa">
+            {{ isEndingPa ? 'Menutup...' : 'Ya, Tutup Wewenang' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1051,5 +1266,170 @@ input, select, textarea {
   background: var(--color-status-red-bg);
   border: 1px solid var(--color-status-red-border);
   color: var(--color-status-red-fg);
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: #FAFCFB;
+  flex-wrap: wrap;
+}
+
+.toolbar-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.toolbar-search input[type="search"] {
+  padding-left: 32px;
+}
+
+.toolbar-selects {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toolbar-selects select {
+  width: auto;
+  min-width: 150px;
+}
+
+.toolbar-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-left: auto;
+}
+
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.btn-reset-filter {
+  margin-top: 12px;
+}
+
+.modal-confirm-box {
+  width: min(100%, 440px);
+}
+
+.confirm-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.btn-danger {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+.btn-danger:hover {
+  background: #B91C1C;
+}
+
+.btn-danger:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    margin: 16px auto;
+    padding: 0 12px 48px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tab-bar {
+    flex-wrap: wrap;
+  }
+
+  .tab-bar-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header h2 {
+    font-size: 19px;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .toolbar-search,
+  .toolbar-selects,
+  .toolbar-selects select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar-count {
+    margin-left: 0;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .modal-box {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 64px;
+  }
 }
 </style>

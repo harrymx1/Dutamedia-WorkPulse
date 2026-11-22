@@ -14,6 +14,14 @@ export class ProjectAuthorityService {
     dto: CreateProjectAuthorityDto,
     adminUserId: string,
   ) {
+    if (dto.projectManagerId === dto.escalationReviewerId) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Project Manager dan Escalation Reviewer tidak boleh dijabat oleh orang yang sama.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const [pm, reviewer] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: dto.projectManagerId } }),
       this.prisma.user.findUnique({ where: { id: dto.escalationReviewerId } }),
@@ -104,20 +112,26 @@ export class ProjectAuthorityService {
     const limit = Math.max(1, Math.min(100, Number(options.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const conditions: any[] = [];
     if (options.search) {
       const q = options.search.trim();
-      where.OR = [
-        { projectCode: { contains: q, mode: 'insensitive' } },
-        { projectName: { contains: q, mode: 'insensitive' } },
-      ];
+      conditions.push({
+        OR: [
+          { projectCode: { contains: q, mode: 'insensitive' } },
+          { projectName: { contains: q, mode: 'insensitive' } },
+        ],
+      });
     }
 
     if (options.activeOnly) {
       const today = toJakartaDateOnly();
-      where.effectiveDate = { lte: today };
-      where.OR = [{ endDate: null }, { endDate: { gte: today } }];
+      conditions.push({
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      });
     }
+
+    const where: any = conditions.length > 0 ? { AND: conditions } : {};
 
     const [totalRecords, data] = await Promise.all([
       this.prisma.projectAuthorityMapping.count({ where }),
