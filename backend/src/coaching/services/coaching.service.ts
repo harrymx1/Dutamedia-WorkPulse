@@ -7,6 +7,7 @@ import {
   CanonicalRole,
   NotificationChannel,
   NoteVisibility,
+  UserStatus,
 } from '@prisma/client';
 import { CreateManagerNoteDto } from '../dto/create-manager-note.dto';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
@@ -192,21 +193,11 @@ export class CoachingService {
   }
 
   /**
-   * Mengambil ringkasan pembinaan tim bagi atasan langsung / Head.
+   * Mengambil ringkasan pembinaan tim sesuai kewenangan peran (Admin/CEO/HRGA, Head Divisi, atau atasan berjenjang).
    */
   async getTeamOverview(managerUserId: string) {
-    // Ambil karyawan yang dibawahi oleh manager ini (termasuk Intern yang memiliki tanggal selesai aktif)
-    const today = toJakartaDateOnly();
-    const subordinates = await this.prisma.organizationalAssignment.findMany({
-      where: {
-        directManagerId: managerUserId,
-        effectiveDate: { lte: today },
-        OR: [{ endDate: null }, { endDate: { gte: today } }],
-      },
-      include: {
-        user: { select: { id: true, fullName: true, email: true, status: true } },
-      },
-    });
+    const today = toJakartaDateOnly(this.clockService.now());
+    const subordinates = await this.resolveManagedAssignments(managerUserId, today);
 
     const results = [];
     for (const sub of subordinates) {
@@ -237,6 +228,128 @@ export class CoachingService {
     }
 
     return results;
+  }
+
+  private async resolveManagedAssignments(managerUserId: string, today: Date) {
+    const activeWindow = {
+      effectiveDate: { lte: today },
+      OR: [{ endDate: null }, { endDate: { gte: today } }],
+    };
+
+    const actorAssignment = this.prisma.organizationalAssignment?.findFirst
+      ? await this.prisma.organizationalAssignment.findFirst({
+          where: { userId: managerUserId, ...activeWindow },
+          orderBy: { effectiveDate: 'desc' },
+        })
+      : null;
+
+    const actorRole = actorAssignment?.role;
+    const rawAssignments: any[] = [];
+
+    if (
+      actorRole === CanonicalRole.SYSTEM_ADMIN ||
+      actorRole === CanonicalRole.CEO_MANAGEMENT ||
+      actorRole === CanonicalRole.HRGA
+    ) {
+      const companyAssignments = await this.prisma.organizationalAssignment.findMany({
+        where: {
+          userId: { not: managerUserId },
+          ...activeWindow,
+          user: { status: UserStatus.ACTIVE },
+        },
+        include: {
+          user: { select: { id: true, fullName: true, email: true, status: true } },
+        },
+        orderBy: { effectiveDate: 'desc' },
+      });
+      rawAssignments.push(...companyAssignments);
+    } else if (actorRole === CanonicalRole.HEAD && actorAssignment?.function) {
+      const [divisionAssignments, hierarchyAssignments] = await Promise.all([
+        this.prisma.organizationalAssignment.findMany({
+          where: {
+            userId: { not: managerUserId },
+            function: actorAssignment.function,
+            ...activeWindow,
+            user: { status: UserStatus.ACTIVE },
+          },
+          include: {
+            user: { select: { id: true, fullName: true, email: true, status: true } },
+          },
+          orderBy: { effectiveDate: 'desc' },
+        }),
+        this.collectSubordinatesBFS(managerUserId, activeWindow),
+      ]);
+      rawAssignments.push(...divisionAssignments, ...hierarchyAssignments);
+    } else {
+      const hierarchyAssignments = await this.collectSubordinatesBFS(
+        managerUserId,
+        activeWindow,
+      );
+      rawAssignments.push(...hierarchyAssignments);
+    }
+
+    const deduped = new Map<string, any>();
+    for (const item of rawAssignments) {
+      if (!item?.userId || item.userId === managerUserId) continue;
+      if (item.user?.status && item.user.status !== UserStatus.ACTIVE) continue;
+
+      const existing = deduped.get(item.userId);
+      if (!existing) {
+        deduped.set(item.userId, item);
+        continue;
+      }
+
+      const itemDate = item.effectiveDate ? new Date(item.effectiveDate).getTime() : 0;
+      const existingDate = existing.effectiveDate ? new Date(existing.effectiveDate).getTime() : 0;
+      if (itemDate > existingDate) {
+        deduped.set(item.userId, item);
+      }
+    }
+
+    return Array.from(deduped.values()).sort((a, b) =>
+      (a.user?.fullName || '').localeCompare(b.user?.fullName || '', 'id'),
+    );
+  }
+
+  private async collectSubordinatesBFS(
+    managerUserId: string,
+    activeWindow: { effectiveDate: { lte: Date }; OR: Array<Record<string, unknown>> },
+  ) {
+    const collected: any[] = [];
+    const visited = new Set<string>([managerUserId]);
+    let frontier: string[] = [managerUserId];
+    let depth = 0;
+
+    while (frontier.length > 0 && depth < 15) {
+      const directManagerFilter =
+        depth === 0 && frontier.length === 1 ? frontier[0] : { in: frontier };
+
+      const rows = await this.prisma.organizationalAssignment.findMany({
+        where: {
+          directManagerId: directManagerFilter,
+          ...activeWindow,
+          user: { status: UserStatus.ACTIVE },
+        },
+        include: {
+          user: { select: { id: true, fullName: true, email: true, status: true } },
+        },
+        orderBy: { effectiveDate: 'desc' },
+      });
+
+      const nextFrontier: string[] = [];
+      for (const row of rows || []) {
+        collected.push(row);
+        if (row?.userId && !visited.has(row.userId)) {
+          visited.add(row.userId);
+          nextFrontier.push(row.userId);
+        }
+      }
+
+      frontier = nextFrontier;
+      depth++;
+    }
+
+    return collected;
   }
 }
 

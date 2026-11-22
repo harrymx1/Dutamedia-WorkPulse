@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CoachingService } from './coaching.service';
-import { ManagerNoteType, NoteVisibility } from '@prisma/client';
+import { CanonicalRole, ManagerNoteType, NoteVisibility, UserStatus } from '@prisma/client';
 import { AppException } from '../../common/exceptions/app.exception';
 
 describe('CoachingService (WP-EP07 / Manager Coaching & 1-on-1 Notes - Prototipe 10)', () => {
@@ -168,6 +168,148 @@ describe('CoachingService (WP-EP07 / Manager Coaching & 1-on-1 Notes - Prototipe
       expect(overview[0].user.fullName).toBe('Budi Dev');
       expect(overview[0].totalNotes).toBe(3);
       expect(overview[0].lastComplianceStage).toBe('STAGE_1_REMINDER');
+    });
+
+    it('returns all active company employees (excluding self and inactive) for HRGA/CEO/SYSTEM_ADMIN', async () => {
+      mockPrisma.organizationalAssignment.findFirst = vi.fn().mockResolvedValue({
+        userId: 'hrga-1',
+        role: CanonicalRole.HRGA,
+        function: 'HRGA',
+      });
+      mockPrisma.organizationalAssignment.findMany.mockResolvedValue([
+        {
+          userId: 'emp-1',
+          jobTitle: 'Backend Engineer',
+          function: 'ENGINEERING',
+          effectiveDate: new Date('2026-01-01'),
+          user: { id: 'emp-1', fullName: 'Andi Saputra', email: 'andi@dutamedia.com', status: UserStatus.ACTIVE },
+        },
+        {
+          userId: 'emp-inactive',
+          jobTitle: 'Ex Staff',
+          function: 'DELIVERY',
+          effectiveDate: new Date('2026-01-01'),
+          user: { id: 'emp-inactive', fullName: 'Non Aktif', email: 'ex@dutamedia.com', status: UserStatus.INACTIVE },
+        },
+        {
+          userId: 'hrga-1',
+          jobTitle: 'HRGA Lead',
+          function: 'HRGA',
+          effectiveDate: new Date('2026-01-01'),
+          user: { id: 'hrga-1', fullName: 'Dina HRGA', email: 'hrga@dutamedia.com', status: UserStatus.ACTIVE },
+        },
+      ]);
+      mockPrisma.managerNote.findMany.mockResolvedValue([]);
+      mockPrisma.complianceEvent.findMany.mockResolvedValue([]);
+      mockPrisma.managerNote.count.mockResolvedValue(0);
+
+      const overview = await service.getTeamOverview('hrga-1');
+
+      expect(overview).toHaveLength(1);
+      expect(overview[0].user.id).toBe('emp-1');
+      expect(mockPrisma.organizationalAssignment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: { not: 'hrga-1' },
+            user: { status: UserStatus.ACTIVE },
+          }),
+        }),
+      );
+    });
+
+    it('returns active division members (including indirect reports) for HEAD and excludes other divisions', async () => {
+      mockPrisma.organizationalAssignment.findFirst = vi.fn().mockResolvedValue({
+        userId: 'head-eng',
+        role: CanonicalRole.HEAD,
+        function: 'ENGINEERING',
+      });
+      mockPrisma.organizationalAssignment.findMany
+        .mockResolvedValueOnce([
+          {
+            userId: 'lead-1',
+            jobTitle: 'Technical Lead',
+            function: 'ENGINEERING',
+            effectiveDate: new Date('2026-01-01'),
+            user: { id: 'lead-1', fullName: 'Rina Lead', email: 'rina@dutamedia.com', status: UserStatus.ACTIVE },
+          },
+          {
+            userId: 'dev-1',
+            jobTitle: 'Frontend Developer',
+            function: 'ENGINEERING',
+            effectiveDate: new Date('2026-01-01'),
+            user: { id: 'dev-1', fullName: 'Budi Dev', email: 'budi@dutamedia.com', status: UserStatus.ACTIVE },
+          },
+        ])
+        .mockResolvedValueOnce([
+          {
+            userId: 'lead-1',
+            jobTitle: 'Technical Lead',
+            function: 'ENGINEERING',
+            effectiveDate: new Date('2026-01-01'),
+            user: { id: 'lead-1', fullName: 'Rina Lead', email: 'rina@dutamedia.com', status: UserStatus.ACTIVE },
+          },
+        ])
+        .mockResolvedValue([]);
+      mockPrisma.managerNote.findMany.mockResolvedValue([]);
+      mockPrisma.complianceEvent.findMany.mockResolvedValue([]);
+      mockPrisma.managerNote.count.mockResolvedValue(0);
+
+      const overview = await service.getTeamOverview('head-eng');
+
+      expect(overview).toHaveLength(2);
+      expect(overview.map((item) => item.user.id)).toEqual(['dev-1', 'lead-1']);
+      expect(mockPrisma.organizationalAssignment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: { not: 'head-eng' },
+            function: 'ENGINEERING',
+            user: { status: UserStatus.ACTIVE },
+          }),
+        }),
+      );
+    });
+
+    it('collects multi-level active subordinates for direct supervisor via BFS', async () => {
+      mockPrisma.organizationalAssignment.findFirst = vi.fn().mockResolvedValue({
+        userId: 'mgr-1',
+        role: CanonicalRole.SUPERVISOR,
+        function: 'ENGINEERING',
+      });
+      mockPrisma.organizationalAssignment.findMany
+        .mockResolvedValueOnce([
+          {
+            userId: 'lead-1',
+            jobTitle: 'Team Lead',
+            function: 'ENGINEERING',
+            effectiveDate: new Date('2026-01-01'),
+            user: { id: 'lead-1', fullName: 'Citra Lead', email: 'citra@dutamedia.com', status: UserStatus.ACTIVE },
+          },
+        ])
+        .mockResolvedValueOnce([
+          {
+            userId: 'staff-1',
+            jobTitle: 'QA Engineer',
+            function: 'ENGINEERING',
+            effectiveDate: new Date('2026-01-01'),
+            user: { id: 'staff-1', fullName: 'Adi QA', email: 'adi@dutamedia.com', status: UserStatus.ACTIVE },
+          },
+          {
+            userId: 'staff-off',
+            jobTitle: 'Former QA',
+            function: 'ENGINEERING',
+            effectiveDate: new Date('2026-01-01'),
+            user: { id: 'staff-off', fullName: 'Zaki Lama', email: 'zaki@dutamedia.com', status: UserStatus.INACTIVE },
+          },
+        ])
+        .mockResolvedValue([]);
+      mockPrisma.managerNote.findMany.mockResolvedValue([]);
+      mockPrisma.complianceEvent.findMany.mockResolvedValue([]);
+      mockPrisma.managerNote.count.mockResolvedValue(0);
+
+      const overview = await service.getTeamOverview('mgr-1');
+
+      expect(overview).toHaveLength(2);
+      expect(overview.map((item) => item.user.fullName)).toEqual(['Adi QA', 'Citra Lead']);
     });
   });
 });

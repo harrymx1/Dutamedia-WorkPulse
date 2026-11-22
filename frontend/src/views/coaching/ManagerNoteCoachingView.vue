@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { formatDateWib } from '../../utils/dateTime';
+import { getUserInitials } from '../../utils/initials';
 import {
   CheckCircle2,
   AlertCircle,
@@ -48,6 +49,7 @@ const formSubjectId = ref<string>('');
 const formNoteType = ref<'COACHING' | 'RECOGNITION' | 'CORRECTIVE'>('COACHING');
 const formVisibility = ref<'CONFIDENTIAL_MANAGER_ONLY' | 'SHARED_WITH_EMPLOYEE'>('SHARED_WITH_EMPLOYEE');
 const formContent = ref('');
+const pendingTemplateType = ref<'coaching' | 'recognition' | 'corrective' | null>(null);
 
 // Toast
 const toastMessage = ref<string | null>(null);
@@ -109,7 +111,14 @@ async function handleFilterChange() {
   }
 }
 
-function applyTemplate(templateType: 'coaching' | 'recognition' | 'corrective') {
+async function handleFormSubjectChange() {
+  if (formSubjectId.value && formSubjectId.value !== selectedSubjectId.value) {
+    selectedSubjectId.value = formSubjectId.value;
+    await loadNotesForSubject(selectedSubjectId.value);
+  }
+}
+
+function applyTemplateNow(templateType: 'coaching' | 'recognition' | 'corrective') {
   if (templateType === 'coaching') {
     formNoteType.value = 'COACHING';
     formContent.value =
@@ -133,8 +142,29 @@ function applyTemplate(templateType: 'coaching' | 'recognition' | 'corrective') 
   }
 }
 
+function applyTemplate(templateType: 'coaching' | 'recognition' | 'corrective') {
+  if (formContent.value.trim().length > 0) {
+    pendingTemplateType.value = templateType;
+    return;
+  }
+  pendingTemplateType.value = null;
+  applyTemplateNow(templateType);
+}
+
+function confirmReplaceTemplate() {
+  if (pendingTemplateType.value) {
+    applyTemplateNow(pendingTemplateType.value);
+    pendingTemplateType.value = null;
+  }
+}
+
+function cancelReplaceTemplate() {
+  pendingTemplateType.value = null;
+}
+
 async function submitNote() {
   errorMessage.value = null;
+  pendingTemplateType.value = null;
 
   if (!formSubjectId.value) {
     showToast('Pilih karyawan subjek pembinaan.', true);
@@ -243,7 +273,7 @@ onMounted(() => {
         >
           <div class="member-top">
             <div class="member-avatar">
-              {{ member.user.fullName.substring(0, 2).toUpperCase() }}
+              {{ getUserInitials(member.user.fullName, member.user.email) }}
             </div>
             <div>
               <div class="member-name">{{ member.user.fullName }}</div>
@@ -282,7 +312,7 @@ onMounted(() => {
             <!-- Pilihan Subjek Karyawan -->
             <div class="form-group">
               <label for="subjectSelect">Karyawan yang Dituju <span class="req">*</span></label>
-              <select id="subjectSelect" v-model="formSubjectId" required>
+              <select id="subjectSelect" v-model="formSubjectId" required @change="handleFormSubjectChange">
                 <option value="" disabled>-- Pilih Anggota Tim --</option>
                 <option v-for="m in teamOverview" :key="m.user.id" :value="m.user.id">
                   {{ m.user.fullName }} ({{ m.jobTitle || m.function }})
@@ -325,7 +355,7 @@ onMounted(() => {
                   <div class="vis-icon"><Eye :size="18" /></div>
                   <div>
                     <strong>Dibagikan ke Karyawan</strong>
-                    <small>Karyawan dapat membaca catatan ini di laman profil &amp; menerima notifikasi aplikasi.</small>
+                    <small>Karyawan menerima notifikasi dan dapat membaca isi catatan ini di halaman Notifikasi.</small>
                   </div>
                 </label>
 
@@ -346,6 +376,20 @@ onMounted(() => {
               <button type="button" class="btn-template" @click="applyTemplate('coaching')">Bimbingan 1-on-1</button>
               <button type="button" class="btn-template" @click="applyTemplate('recognition')">Apresiasi Kinerja</button>
               <button type="button" class="btn-template" @click="applyTemplate('corrective')">Tindakan Korektif</button>
+            </div>
+
+            <div v-if="pendingTemplateType" class="template-confirm-box" role="alertdialog">
+              <p class="template-confirm-text">
+                Isi catatan saat ini akan diganti dengan teks contoh. Lanjutkan?
+              </p>
+              <div class="template-confirm-actions">
+                <button type="button" class="btn-confirm-replace" @click="confirmReplaceTemplate">
+                  Ya, Ganti Isi
+                </button>
+                <button type="button" class="btn-confirm-cancel" @click="cancelReplaceTemplate">
+                  Batal
+                </button>
+              </div>
             </div>
 
             <!-- Isi Catatan -->
@@ -901,12 +945,114 @@ textarea:focus {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.template-confirm-box {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.template-confirm-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400E;
+  margin: 0 0 8px;
+}
+
+.template-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-confirm-replace {
+  background: #00674D;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-confirm-cancel {
+  background: #fff;
+  color: #0E211B;
+  border: 1px solid #DCE7E2;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .toast-popup.success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 .toast-popup.error { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
 
 @media (max-width: 900px) {
   .coaching-split {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 12px 64px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .team-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .filter-subject,
+  .filter-subject select {
+    width: 100%;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  .type-selector-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .type-option {
+    justify-content: flex-start;
+    padding: 10px 12px;
+  }
+
+  .note-head {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .note-type-cluster {
+    flex-wrap: wrap;
+  }
+
+  .feed-body {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 64px;
   }
 }
 </style>

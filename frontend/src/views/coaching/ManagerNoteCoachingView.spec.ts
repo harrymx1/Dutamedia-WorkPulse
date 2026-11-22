@@ -169,4 +169,132 @@ describe('ManagerNoteCoachingView.vue (WP-EP07 / Prototipe 10 - Catatan Evaluasi
     expect(val).not.toContain('SLA');
     expect(val).not.toContain('production');
   });
+
+  it('uses getUserInitials for avatar and directs employees to Notifikasi page', async () => {
+    const wrapper = mount(ManagerNoteCoachingView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.find('.member-avatar').text()).toBe('BS');
+    expect(wrapper.text()).toContain('Karyawan menerima notifikasi dan dapat membaca isi catatan ini di halaman Notifikasi.');
+    expect(wrapper.text()).not.toContain('laman profil');
+  });
+
+  it('asks confirmation before overwriting existing note content with a quick template', async () => {
+    const wrapper = mount(ManagerNoteCoachingView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    const textarea = wrapper.find('textarea');
+    await textarea.setValue('Catatan custom atasan yang sedang diketik');
+
+    const coachingBtn = wrapper.findAll('.btn-template').find((b) => b.text().includes('Bimbingan 1-on-1'));
+    await coachingBtn!.trigger('click');
+
+    // Confirmation shown and existing custom note preserved
+    expect(wrapper.find('.template-confirm-box').exists()).toBe(true);
+    expect(textarea.element.value).toBe('Catatan custom atasan yang sedang diketik');
+
+    // Cancel keeps custom note
+    await wrapper.find('.btn-confirm-cancel').trigger('click');
+    expect(wrapper.find('.template-confirm-box').exists()).toBe(false);
+    expect(textarea.element.value).toBe('Catatan custom atasan yang sedang diketik');
+
+    // Trigger again and confirm replacement
+    await coachingBtn!.trigger('click');
+    await wrapper.find('.btn-confirm-replace').trigger('click');
+    expect(wrapper.find('.template-confirm-box').exists()).toBe(false);
+    expect(textarea.element.value).toContain('[Fokus Pengembangan]');
+  });
+
+  it('syncs right-hand history panel when form subject selection changes', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/coaching/team')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                user: { id: 'usr-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+                jobTitle: 'Frontend Engineer',
+                function: 'ENGINEERING',
+                totalNotes: 1,
+                lastNote: null,
+                lastComplianceStage: 'CLEAN',
+              },
+              {
+                user: { id: 'usr-2', fullName: 'Siti Rahma', email: 'siti@dutamedia.com' },
+                jobTitle: 'Backend Developer',
+                function: 'ENGINEERING',
+                totalNotes: 2,
+                lastNote: null,
+                lastComplianceStage: 'CLEAN',
+              },
+            ],
+          }),
+        });
+      }
+      if (url.includes('/coaching/users/usr-2')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'note-2',
+                noteType: 'RECOGNITION',
+                visibility: 'SHARED_WITH_EMPLOYEE',
+                content: 'Riwayat catatan khusus Siti Rahma',
+                createdAt: '2026-10-28T10:00:00.000Z',
+                authorUser: { id: 'mgr-1', fullName: 'Rina Lead', email: 'rina@dutamedia.com' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'note-1',
+              noteType: 'COACHING',
+              visibility: 'SHARED_WITH_EMPLOYEE',
+              content: 'Riwayat catatan Budi Staf',
+              createdAt: '2026-10-28T10:00:00.000Z',
+              authorUser: { id: 'mgr-1', fullName: 'Rina Lead', email: 'rina@dutamedia.com' },
+            },
+          ],
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(ManagerNoteCoachingView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+    expect(wrapper.text()).toContain('Riwayat catatan Budi Staf');
+
+    const subjectSelect = wrapper.find('#subjectSelect');
+    await subjectSelect.setValue('usr-2');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/coaching/users/usr-2'),
+      expect.anything(),
+    );
+    expect((wrapper.find('.filter-subject select').element as HTMLSelectElement).value).toBe('usr-2');
+    expect(wrapper.text()).toContain('Riwayat catatan khusus Siti Rahma');
+  });
 });
