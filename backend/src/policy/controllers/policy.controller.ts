@@ -27,18 +27,27 @@ export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Get()
-  async getAllActivePolicies(@Query('date') date?: string) {
+  async getAllActivePolicies(
+    @Req() req: any,
+    @Query('date') date?: string,
+  ) {
+    await this.policyService.assertCanViewPolicies(req.user);
     const targetDate = date ? new Date(date) : undefined;
     return this.policyService.getAllActivePolicies(targetDate);
   }
 
   @Get('audit')
-  async getAuditTrail(@Query('category') category?: PolicyCategory) {
+  async getAuditTrail(
+    @Req() req: any,
+    @Query('category') category?: PolicyCategory,
+  ) {
+    await this.policyService.assertCanViewPolicies(req.user);
     return this.policyService.getAuditTrail(category);
   }
 
   @Get('owners')
-  async getPolicyOwners() {
+  async getPolicyOwners(@Req() req: any) {
+    await this.policyService.assertCanViewPolicies(req.user);
     return this.policyService.getPolicyOwners();
   }
 

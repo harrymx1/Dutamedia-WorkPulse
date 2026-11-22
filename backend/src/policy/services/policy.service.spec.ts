@@ -90,6 +90,22 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       expect(result.isIllustrative).toBe(false);
       expect(result.configurationValues.morningLockCutoff).toBe('09:45');
     });
+
+    it('uses ClockService WIB date string when no targetDate is passed (avoids UTC early-morning drift)', async () => {
+      mockClock.todayString.mockReturnValue('2026-11-23');
+      mockPrisma.policy.findFirst.mockResolvedValue(null);
+
+      await service.getActivePolicy(PolicyCategory.CHECKIN_TIMING);
+
+      expect(mockClock.todayString).toHaveBeenCalledWith('Asia/Jakarta');
+      expect(mockPrisma.policy.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            effectiveDate: { lte: new Date('2026-11-23') },
+          }),
+        }),
+      );
+    });
   });
 
   describe('createPolicyVersion (DEC-008 Anti-Backdating)', () => {
@@ -589,6 +605,161 @@ describe('PolicyService (WP-EP04-TK001..TK005)', () => {
       const admRevokeNotif = revokeNotifs.find((n: any) => n.recipientUserId === 'usr-adm');
       expect(dharmaRevokeNotif.message).toContain('Wewenang Anda sebagai Pemilik Kebijakan untuk kategori berikut telah dicabut');
       expect(admRevokeNotif.message).toContain('Personil yang Dicabut: Dharma Putra (Backend Developer)');
+    });
+  });
+
+  describe('Audit #18 Hardening — Parameter Validation, Reminder Notification, Audit Filter & Read Guard', () => {
+    it('rejects inverted CHECKIN_TIMING cutoffs, invalid BLOCKER_SLA hours, and locking GREEN option with 400 VALIDATION_FAILED', async () => {
+      await expect(
+        service.createPolicyVersion('usr-1', {
+          category: PolicyCategory.CHECKIN_TIMING,
+          configurationValues: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '08:45',
+            eodOnTimeCutoff: '17:00',
+            eodLockCutoff: '21:00',
+          },
+          effectiveDate: '2026-10-28',
+          changeJustification: 'Uji batas kunci pagi mendahului batas tepat waktu',
+        }),
+      ).rejects.toMatchObject({ status: 400, code: ErrorCode.VALIDATION_FAILED });
+
+      await expect(
+        service.createPolicyVersion('usr-1', {
+          category: PolicyCategory.BLOCKER_SLA,
+          configurationValues: {
+            level1Hours: 8,
+            level2Hours: 4,
+            autoEscalateAfterHours: 4,
+          },
+          effectiveDate: '2026-10-28',
+          changeJustification: 'Uji jenjang lanjutan lebih cepat daripada jenjang pertama',
+        }),
+      ).rejects.toMatchObject({ status: 400, code: ErrorCode.VALIDATION_FAILED });
+
+      await expect(
+        service.createPolicyVersion('usr-1', {
+          category: PolicyCategory.COMPLIANCE_THRESHOLD,
+          configurationValues: {
+            carryOverAmberDays: 3,
+            allowGreenWithCarryOver: false,
+          },
+          effectiveDate: '2026-10-28',
+          changeJustification: 'Uji coba larangan penguncian pilihan status hijau',
+        }),
+      ).rejects.toMatchObject({ status: 400, code: ErrorCode.VALIDATION_FAILED });
+
+      await expect(
+        service.createPolicyVersion('usr-1', {
+          category: PolicyCategory.CORRECTION_WINDOW,
+          configurationValues: { maxCorrectionDays: 0 },
+          effectiveDate: '2026-10-28',
+          changeJustification: 'Uji nilai jendela koreksi nol hari kerja',
+        }),
+      ).rejects.toMatchObject({ status: 400, code: ErrorCode.VALIDATION_FAILED });
+
+      await expect(
+        service.createPolicyVersion('usr-1', {
+          category: PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD,
+          configurationValues: {
+            morningReminderMinutesBefore: 45,
+            eodReminderMinutesBefore: 60,
+            slaWarningPercent: 120,
+          },
+          effectiveDate: '2026-10-28',
+          changeJustification: 'Uji persentase peringatan kendala di atas 99 persen',
+        }),
+      ).rejects.toMatchObject({ status: 400, code: ErrorCode.VALIDATION_FAILED });
+    });
+
+    it('sends complete notification diff for NOTIFICATION_REMINDER_THRESHOLD without technical SLA text', async () => {
+      mockPrisma.policy.findFirst.mockResolvedValue({
+        id: 'old-notif-1',
+        category: PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD,
+        configurationValues: {
+          morningReminderMinutesBefore: 60,
+          eodReminderMinutesBefore: 60,
+          slaWarningPercent: 75,
+        },
+        isIllustrative: false,
+        effectiveDate: new Date('2026-10-01'),
+        endDate: null,
+      });
+
+      const dto = {
+        category: PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD,
+        configurationValues: {
+          morningReminderMinutesBefore: 45,
+          eodReminderMinutesBefore: 30,
+          slaWarningPercent: 80,
+        },
+        effectiveDate: '2026-10-28',
+        changeJustification: 'Penyesuaian jadwal pengingat pagi, sore, dan peringatan kendala',
+      };
+
+      mockPrisma.policy.create.mockResolvedValue({
+        id: 'new-notif-2',
+        ...dto,
+        effectiveDate: new Date('2026-10-28'),
+        createdBy: { id: 'usr-1', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+      });
+
+      await service.createPolicyVersion('usr-1', dto);
+
+      const notif = mockPrisma.notification.createMany.mock.calls[0][0].data[0];
+      expect(notif.message).toContain('Pengingat Komitmen Pagi: 60 → 45 menit sebelum batas tepat waktu');
+      expect(notif.message).toContain('Pengingat Evaluasi Sore (EOD): 60 → 30 menit sebelum batas tepat waktu');
+      expect(notif.message).toContain('Ambang Peringatan Batas Waktu Kendala: 75 → 80 %');
+      expect(notif.message).not.toContain('SLA');
+    });
+
+    it('filters getAuditTrail by requested category when category query is provided', async () => {
+      mockPrisma.auditLog.findMany.mockResolvedValue([
+        {
+          id: 'log-1',
+          timestamp: new Date('2026-10-28T02:00:00Z'),
+          actor: { id: 'u1', fullName: 'Hendra', email: 'dir@dm.com' },
+          actionCode: 'POLICY_VERSION_CREATED',
+          valueBefore: {},
+          valueAfter: {
+            category: PolicyCategory.CHECKIN_TIMING,
+            configurationValues: { morningLockCutoff: '09:45' },
+            changeJustification: 'Ubah jam pagi',
+          },
+        },
+        {
+          id: 'log-2',
+          timestamp: new Date('2026-10-28T01:00:00Z'),
+          actor: { id: 'u2', fullName: 'Dewi', email: 'hrga@dm.com' },
+          actionCode: 'POLICY_OWNER_ASSIGNED',
+          valueBefore: null,
+          valueAfter: {
+            category: PolicyCategory.CORRECTION_WINDOW,
+            userId: 'u2',
+            userName: 'Dewi Lestari',
+          },
+        },
+      ]);
+
+      const filtered = await service.getAuditTrail(PolicyCategory.CHECKIN_TIMING);
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].id).toBe('log-1');
+    });
+
+    it('restricts view access via assertCanViewPolicies to CEO_MANAGEMENT, SYSTEM_ADMIN, or active policy owners', async () => {
+      await expect(
+        service.assertCanViewPolicies({ id: 'usr-dir', role: 'CEO_MANAGEMENT' }),
+      ).resolves.toBeUndefined();
+
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValueOnce({ id: 'poa-owner' });
+      await expect(
+        service.assertCanViewPolicies({ id: 'usr-owner', role: 'HRGA' }),
+      ).resolves.toBeUndefined();
+
+      mockPrisma.policyOwnerAssignment.findFirst.mockResolvedValueOnce(null);
+      await expect(
+        service.assertCanViewPolicies({ id: 'usr-emp', role: 'EMPLOYEE' }),
+      ).rejects.toMatchObject({ status: 403, code: ErrorCode.AUTH_FORBIDDEN_ROLE });
     });
   });
 });

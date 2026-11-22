@@ -20,6 +20,8 @@ import {
   UserCheck,
   Trash2,
   Pencil,
+  Bell,
+  Search,
 } from 'lucide-vue-next';
 
 interface PolicyItem {
@@ -88,11 +90,16 @@ const isModalOpen = ref(false);
 const modalSubmitting = ref(false);
 const modalError = ref<string | null>(null);
 
+// Audit trail search & filter state
+const auditSearchQuery = ref('');
+const auditCategoryFilter = ref('');
+
 // Policy owner modal state
 const isOwnerModalOpen = ref(false);
 const ownerModalSubmitting = ref(false);
 const ownerModalError = ref<string | null>(null);
 const editingOwnerId = ref<string | null>(null);
+const editingOwnerOriginalEffectiveDate = ref<string | null>(null);
 
 const ownerForm = ref({
   policyCategory: 'CHECKIN_TIMING',
@@ -104,12 +111,12 @@ const policyCategoryOptions = [
   {
     value: 'CHECKIN_TIMING',
     label: 'Jam Kerja & Waktu Komitmen',
-    description: 'Jadwal morning check-in, batas on-time 09:00 WIB, dan penguncian formulir cut-off 09:30 WIB.',
+    description: 'Jadwal morning check-in, batas tepat waktu pagi/sore, serta penguncian formulir otomatis.',
   },
   {
     value: 'BLOCKER_SLA',
     label: 'Target Waktu Respon & Penanganan Kendala',
-    description: 'Target respon jenjang pertama, batas penanganan eskalasi, dan rute eskalasi kritis pimpinan.',
+    description: 'Target respon jenjang pertama, batas penanganan lanjutan, dan waktu naik ke atasan berikutnya.',
   },
   {
     value: 'COMPLIANCE_THRESHOLD',
@@ -119,12 +126,12 @@ const policyCategoryOptions = [
   {
     value: 'CORRECTION_WINDOW',
     label: 'Jendela Waktu Koreksi Mandiri',
-    description: 'Batas waktu pengajuan sanggahan/koreksi komitmen pagi (24 jam) dan evaluasi sore EOD (48 jam).',
+    description: 'Batas hari kerja pengajuan koreksi komitmen pagi dan evaluasi sore setelah melewati jam kunci.',
   },
   {
     value: 'NOTIFICATION_REMINDER_THRESHOLD',
     label: 'Ambang Batas Pengingat & Notifikasi',
-    description: 'Jadwal pengingat otomatis 60 menit sebelum batas waktu komitmen pagi dan evaluasi sore.',
+    description: 'Jadwal pengingat otomatis sebelum batas tepat waktu pagi & sore serta ambang peringatan kendala.',
   },
 ];
 
@@ -168,8 +175,8 @@ async function loadData() {
   loading.value = true;
   try {
     const res = await apiClient<{ policies: PolicyItem[]; owners: PolicyOwner[]; availableUsers?: SimpleUser[] }>('/policies');
-    policies.value = res.data.policies || [];
-    policyOwners.value = res.data.owners || [];
+    policies.value = Array.isArray(res.data?.policies) ? res.data.policies : [];
+    policyOwners.value = Array.isArray(res.data?.owners) ? res.data.owners : [];
     if (Array.isArray(res.data.availableUsers) && res.data.availableUsers.length > 0) {
       availableUsers.value = res.data.availableUsers.filter(
         (u) => !isInternStatus(u.employmentStatus),
@@ -177,7 +184,7 @@ async function loadData() {
     }
 
     const auditRes = await apiClient<AuditLogItem[]>('/policies/audit');
-    auditLogs.value = auditRes.data || [];
+    auditLogs.value = Array.isArray(auditRes.data) ? auditRes.data : [];
 
     if (availableUsers.value.length === 0) {
       try {
@@ -270,6 +277,7 @@ function getUserSubtext(userId?: string): string {
 function openOwnerModal(category?: string) {
   ownerModalError.value = null;
   editingOwnerId.value = null;
+  editingOwnerOriginalEffectiveDate.value = null;
   const initialCategory = category || 'CHECKIN_TIMING';
   
   // Pilih default user yang belum aktif ditugaskan pada kategori ini
@@ -288,6 +296,7 @@ function openEditOwnerModal(owner: PolicyOwner) {
   ownerModalError.value = null;
   editingOwnerId.value = owner.id;
   const effStr = owner.effectiveDate ? String(owner.effectiveDate).split('T')[0] : todayStr.value;
+  editingOwnerOriginalEffectiveDate.value = effStr;
   ownerForm.value = {
     policyCategory: owner.policyCategory,
     userId: owner.user?.id || '',
@@ -299,8 +308,20 @@ function openEditOwnerModal(owner: PolicyOwner) {
 function closeOwnerModal() {
   isOwnerModalOpen.value = false;
   editingOwnerId.value = null;
+  editingOwnerOriginalEffectiveDate.value = null;
   ownerModalError.value = null;
 }
+
+const ownerEffectiveMinDate = computed(() => {
+  if (
+    editingOwnerId.value &&
+    editingOwnerOriginalEffectiveDate.value &&
+    editingOwnerOriginalEffectiveDate.value < todayStr.value
+  ) {
+    return editingOwnerOriginalEffectiveDate.value;
+  }
+  return todayStr.value;
+});
 
 async function submitOwnerAssignment() {
   if (!ownerForm.value.userId) {
@@ -309,6 +330,17 @@ async function submitOwnerAssignment() {
   }
   if (!ownerForm.value.effectiveDate) {
     ownerModalError.value = 'Silakan tentukan tanggal berlaku efektif.';
+    return;
+  }
+
+  const keepingOriginalPastDate = Boolean(
+    editingOwnerId.value &&
+      editingOwnerOriginalEffectiveDate.value &&
+      ownerForm.value.effectiveDate === editingOwnerOriginalEffectiveDate.value,
+  );
+  if (!keepingOriginalPastDate && ownerForm.value.effectiveDate < todayStr.value) {
+    ownerModalError.value =
+      'Tanggal mulai berlaku penugasan tidak boleh di masa lampau (harus hari ini atau masa depan).';
     return;
   }
 
@@ -481,17 +513,46 @@ async function submitNewVersion() {
     return;
   }
 
+  if (formEndDate.value && formEndDate.value < formEffectiveDate.value) {
+    modalError.value = 'Tanggal berakhir kebijakan tidak boleh mendahului tanggal mulai berlaku.';
+    return;
+  }
+
   if (!canEditCategory(formCategory.value)) {
     modalError.value = `Akses Ditolak: Anda tidak terdaftar sebagai Pemilik Kebijakan aktif untuk kategori "${getCategoryLabel(formCategory.value)}". Wewenang penerbitan versi baru hanya dimiliki oleh personil yang tercatat pada tabel Penugasan Pemilik Kebijakan.`;
     return;
   }
 
-  modalSubmitting.value = true;
-  modalError.value = null;
+  const checkIntRange = (val: unknown, min: number, max: number, label: string): string | null => {
+    const n = Number(val);
+    if (!Number.isInteger(n) || n < min || n > max) {
+      return `${label} harus berupa bilangan bulat antara ${min} hingga ${max}.`;
+    }
+    return null;
+  };
 
   let configurationValues: Record<string, any> = {};
 
   if (formCategory.value === 'CHECKIN_TIMING') {
+    if (!formMorningOntime.value || !formMorningCutoff.value || !formEodOntime.value || !formEodCutoff.value) {
+      modalError.value = 'Semua kolom jam batas pagi dan sore wajib diisi.';
+      return;
+    }
+    if (formMorningCutoff.value <= formMorningOntime.value) {
+      modalError.value =
+        'Batas Kunci Pengisian Pagi (Cut-Off) harus lebih lambat daripada Batas Tepat Waktu Pagi.';
+      return;
+    }
+    if (formEodOntime.value <= formMorningCutoff.value) {
+      modalError.value =
+        'Batas Tepat Waktu Sore (EOD) harus lebih lambat daripada Batas Kunci Pengisian Pagi.';
+      return;
+    }
+    if (formEodCutoff.value <= formEodOntime.value) {
+      modalError.value =
+        'Batas Kunci Pengisian Sore (Cut-Off) harus lebih lambat daripada Batas Tepat Waktu Sore (EOD).';
+      return;
+    }
     configurationValues = {
       morningOnTimeCutoff: formMorningOntime.value,
       morningLockCutoff: formMorningCutoff.value,
@@ -500,6 +561,19 @@ async function submitNewVersion() {
       timezone: 'Asia/Jakarta',
     };
   } else if (formCategory.value === 'BLOCKER_SLA') {
+    const errL1 = checkIntRange(formSlaL1Hours.value, 1, 24, 'Batas Respon Jenjang Pertama');
+    const errL2 = checkIntRange(formSlaL2Hours.value, 1, 48, 'Batas Penanganan Jenjang Lanjutan');
+    const errAuto = checkIntRange(formAutoEscalateHours.value, 1, 24, 'Batas Waktu Naik ke Atasan Berikutnya');
+    const rangeErr = errL1 || errL2 || errAuto;
+    if (rangeErr) {
+      modalError.value = rangeErr;
+      return;
+    }
+    if (Number(formSlaL2Hours.value) < Number(formSlaL1Hours.value)) {
+      modalError.value =
+        'Batas Penanganan Jenjang Lanjutan tidak boleh lebih pendek daripada Batas Respon Jenjang Pertama.';
+      return;
+    }
     configurationValues = {
       level1Hours: Number(formSlaL1Hours.value),
       level2Hours: Number(formSlaL2Hours.value),
@@ -509,27 +583,48 @@ async function submitNewVersion() {
       countWeekends: false,
     };
   } else if (formCategory.value === 'COMPLIANCE_THRESHOLD') {
+    const errDays = checkIntRange(formCarryOverAmberDays.value, 1, 10, 'Ambang Saran Amber Carry-Over');
+    if (errDays) {
+      modalError.value = errDays;
+      return;
+    }
     configurationValues = {
       carryOverAmberDays: Number(formCarryOverAmberDays.value),
-      allowGreenWithCarryOver: formAllowGreenWithCarryOver.value,
+      allowGreenWithCarryOver: true,
       maxConsecutiveNoSubmissions: 2,
       minCommitmentsPerDay: 0,
       maxCommitmentsPerDay: 3,
       zeroCommitmentRequiresReason: true,
     };
   } else if (formCategory.value === 'CORRECTION_WINDOW') {
+    const errCorr = checkIntRange(formMaxCorrectionDays.value, 1, 30, 'Batas Jendela Pengajuan Koreksi');
+    if (errCorr) {
+      modalError.value = errCorr;
+      return;
+    }
     configurationValues = {
       maxCorrectionDays: Number(formMaxCorrectionDays.value),
       requireDirectManagerApproval: true,
       requireHrgaApproval: true,
     };
   } else {
+    const errMorn = checkIntRange(formMorningReminderMinutes.value, 5, 180, 'Pengingat Pagi');
+    const errEod = checkIntRange(formEodReminderMinutes.value, 5, 180, 'Pengingat Sore EOD');
+    const errWarn = checkIntRange(formSlaWarningPercent.value, 10, 99, 'Ambang Peringatan Batas Waktu Kendala');
+    const remErr = errMorn || errEod || errWarn;
+    if (remErr) {
+      modalError.value = remErr;
+      return;
+    }
     configurationValues = {
       morningReminderMinutesBefore: Number(formMorningReminderMinutes.value),
       eodReminderMinutesBefore: Number(formEodReminderMinutes.value),
       slaWarningPercent: Number(formSlaWarningPercent.value),
     };
   }
+
+  modalSubmitting.value = true;
+  modalError.value = null;
 
   const activePol = policyMap.value[formCategory.value];
   if (activePol && !activePol.isIllustrative && activePol.configurationValues) {
@@ -686,38 +781,123 @@ function formatAuditChanges(log: AuditLogItem): string {
   }
 
   if (log.category === 'CORRECTION_WINDOW') {
-    return `Maks Koreksi: ${after.maxCorrectionDays ?? 7} Hari`;
+    const afterDays = after.maxCorrectionDays ?? 7;
+    if (before?.maxCorrectionDays !== undefined && before.maxCorrectionDays !== afterDays) {
+      return `Batas Koreksi: ${before.maxCorrectionDays} → ${afterDays} Hari Kerja`;
+    }
+    return `Batas Koreksi: ${afterDays} Hari Kerja`;
+  }
+
+  if (log.category === 'NOTIFICATION_REMINDER_THRESHOLD') {
+    const parts: string[] = [];
+    if (after.morningReminderMinutesBefore !== undefined) {
+      if (
+        before?.morningReminderMinutesBefore !== undefined &&
+        before.morningReminderMinutesBefore !== after.morningReminderMinutesBefore
+      ) {
+        parts.push(
+          `Pengingat Pagi: ${before.morningReminderMinutesBefore} → ${after.morningReminderMinutesBefore} menit`,
+        );
+      } else {
+        parts.push(`Pengingat Pagi: ${after.morningReminderMinutesBefore} menit`);
+      }
+    }
+    if (after.eodReminderMinutesBefore !== undefined) {
+      if (
+        before?.eodReminderMinutesBefore !== undefined &&
+        before.eodReminderMinutesBefore !== after.eodReminderMinutesBefore
+      ) {
+        parts.push(
+          `Pengingat Sore: ${before.eodReminderMinutesBefore} → ${after.eodReminderMinutesBefore} menit`,
+        );
+      } else {
+        parts.push(`Pengingat Sore: ${after.eodReminderMinutesBefore} menit`);
+      }
+    }
+    if (after.slaWarningPercent !== undefined) {
+      if (
+        before?.slaWarningPercent !== undefined &&
+        before.slaWarningPercent !== after.slaWarningPercent
+      ) {
+        parts.push(
+          `Peringatan Batas Kendala: ${before.slaWarningPercent}% → ${after.slaWarningPercent}%`,
+        );
+      } else {
+        parts.push(`Peringatan Batas Kendala: ${after.slaWarningPercent}%`);
+      }
+    }
+    return parts.join(' · ') || 'Pengaturan Pengingat & Notifikasi Diperbarui';
   }
 
   return 'Versi Kebijakan Diterapkan';
 }
 
+const filteredAuditLogs = computed(() => {
+  const list = Array.isArray(auditLogs.value) ? auditLogs.value : [];
+  const q = auditSearchQuery.value.trim().toLowerCase();
+  return list.filter((log) => {
+    if (auditCategoryFilter.value && log.category !== auditCategoryFilter.value) {
+      return false;
+    }
+    if (!q) return true;
+    const haystack = [
+      formatCategoryLabel(log.category),
+      log.actor?.fullName || '',
+      log.actor?.email || '',
+      log.changeJustification || '',
+      formatAuditChanges(log),
+    ]
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+});
+
+const hasActiveAuditFilters = computed(
+  () => auditSearchQuery.value.trim().length > 0 || auditCategoryFilter.value !== '',
+);
+
+function resetAuditFilters() {
+  auditSearchQuery.value = '';
+  auditCategoryFilter.value = '';
+}
+
 function exportAuditCSV() {
-  if (auditLogs.value.length === 0) {
+  const sourceLogs = filteredAuditLogs.value;
+  if (sourceLogs.length === 0) {
     showToast('Tidak ada jejak audit untuk diunduh.', true);
     return;
   }
 
-  const headers = ['ID', 'Waktu', 'Pengubah', 'Email', 'Kategori', 'Tanggal Efektif', 'Alasan Perubahan', 'Perubahan Parameter'];
-  const rows = auditLogs.value.map((log) => [
-    log.id,
-    `"${formatTimestampDisplay(log.timestamp)}"`,
-    log.actor?.fullName || 'System',
-    log.actor?.email || '-',
-    formatCategoryLabel(log.category),
-    formatDateDisplay(log.effectiveDate),
-    `"${(log.changeJustification || '').replace(/"/g, '""')}"`,
-    `"${formatAuditChanges(log).replace(/"/g, '""')}"`,
-  ]);
+  const escapeCsv = (val: unknown) =>
+    `"${String(val ?? '').replace(/"/g, '""')}"`;
 
-  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-  const encodedUri = encodeURI(csvContent);
+  const headers = ['ID', 'Waktu', 'Pengubah', 'Email', 'Kategori', 'Tanggal Efektif', 'Alasan Perubahan', 'Perubahan Parameter'];
+  const rows = sourceLogs.map((log) =>
+    [
+      log.id,
+      formatTimestampDisplay(log.timestamp),
+      log.actor?.fullName || 'System',
+      log.actor?.email || '-',
+      formatCategoryLabel(log.category),
+      formatDateDisplay(log.effectiveDate),
+      log.changeJustification || '',
+      formatAuditChanges(log),
+    ]
+      .map(escapeCsv)
+      .join(','),
+  );
+
+  const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
+  link.setAttribute('href', objectUrl);
   link.setAttribute('download', `workpulse-policy-audit-${todayStr.value}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(objectUrl);
 }
 
 function showToast(msg: string, isError = false) {
@@ -866,7 +1046,7 @@ onUnmounted(() => {
                 <span class="param-value">{{ policyMap.CHECKIN_TIMING?.configurationValues?.morningOnTimeCutoff || '09:00' }}</span>
                 <span class="param-unit">WIB</span>
               </div>
-              <div class="param-desc">Batas waktu pengiriman Morning Commitment agar berstatus On-Time. Pengingat otomatis dikirim 60 menit sebelumnya.</div>
+              <div class="param-desc">Batas waktu pengiriman Morning Commitment agar berstatus On-Time. Pengingat otomatis dikirim {{ policyMap.NOTIFICATION_REMINDER_THRESHOLD?.configurationValues?.morningReminderMinutesBefore ?? 60 }} menit sebelumnya.</div>
               <div class="param-status-rule">
                 <span class="badge badge-ontime">On-Time</span>
                 <span class="status-note">Pengiriman sebelum jam deadline dihitung tepat waktu</span>
@@ -1023,13 +1203,13 @@ onUnmounted(() => {
             <div class="param-item">
               <div class="param-item-header">
                 <span class="param-title">Ambang Peringatan Saran AMBER</span>
-                <span class="badge badge-warning">Hari ke-3+</span>
+                <span class="badge badge-warning">Hari ke-{{ policyMap.COMPLIANCE_THRESHOLD?.configurationValues?.carryOverAmberDays ?? 3 }}+</span>
               </div>
               <div class="param-value-box">
                 <span class="param-value">{{ policyMap.COMPLIANCE_THRESHOLD?.configurationValues?.carryOverAmberDays || 3 }}</span>
                 <span class="param-unit">Hari Berturut-turut</span>
               </div>
-              <div class="param-desc">Tugas yang mengalami <code>Continue</code> sebanyak 3 hari berturut-turut memicu status saran minimal AMBER dari sistem.</div>
+              <div class="param-desc">Tugas yang mengalami <code>Continue</code> sebanyak {{ policyMap.COMPLIANCE_THRESHOLD?.configurationValues?.carryOverAmberDays ?? 3 }} hari berturut-turut memicu status saran minimal AMBER dari sistem.</div>
             </div>
 
             <div class="param-item">
@@ -1131,7 +1311,83 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <!-- 6. Penugasan Pemilik Kebijakan (Policy Owners) -->
+      <!-- SECTION 6: Jendela Pengajuan Koreksi & Pengingat Otomatis -->
+      <section class="policy-section" id="secCorrectionAndReminder">
+        <div class="policy-head">
+          <div class="policy-head-info">
+            <h2>
+              <Bell :size="18" />
+              <span>6. Jendela Pengajuan Koreksi &amp; Ambang Pengingat Otomatis</span>
+            </h2>
+            <p>Pengaturan batas hari kerja pengajuan koreksi komitmen/evaluasi serta jadwal pengingat otomatis sebelum tenggat.</p>
+          </div>
+          <div class="head-badges">
+            <span
+              v-if="policyMap.CORRECTION_WINDOW?.isIllustrative || policyMap.NOTIFICATION_REMINDER_THRESHOLD?.isIllustrative"
+              class="badge badge-illustrative"
+            >
+              Nilai Awal
+            </span>
+            <span class="badge badge-active">Sedang Berlaku</span>
+          </div>
+        </div>
+        <div class="policy-body">
+          <div class="params-grid">
+            <div class="param-item">
+              <div class="param-item-header">
+                <span class="param-title">Batas Jendela Pengajuan Koreksi</span>
+                <span class="badge badge-info">Koreksi Mandiri</span>
+              </div>
+              <div class="param-value-box">
+                <span class="param-value">{{ policyMap.CORRECTION_WINDOW?.configurationValues?.maxCorrectionDays ?? 7 }}</span>
+                <span class="param-unit">Hari Kerja</span>
+              </div>
+              <div class="param-desc">Batas maksimal pengajuan koreksi komitmen pagi maupun evaluasi sore sejak tanggal kerja terkait setelah formulir terkunci.</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-item-header">
+                <span class="param-title">Pengingat Komitmen Pagi</span>
+                <span class="badge badge-ontime">Otomatis Pagi</span>
+              </div>
+              <div class="param-value-box">
+                <span class="param-value">{{ policyMap.NOTIFICATION_REMINDER_THRESHOLD?.configurationValues?.morningReminderMinutesBefore ?? 60 }}</span>
+                <span class="param-unit">Menit Sebelum Batas</span>
+              </div>
+              <div class="param-desc">Jeda waktu pengiriman pengingat otomatis sebelum jam batas tepat waktu komitmen pagi tiba.</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-item-header">
+                <span class="param-title">Pengingat Evaluasi Sore (EOD)</span>
+                <span class="badge badge-ontime">Otomatis Sore</span>
+              </div>
+              <div class="param-value-box">
+                <span class="param-value">{{ policyMap.NOTIFICATION_REMINDER_THRESHOLD?.configurationValues?.eodReminderMinutesBefore ?? 60 }}</span>
+                <span class="param-unit">Menit Sebelum Batas</span>
+              </div>
+              <div class="param-desc">Jeda waktu pengiriman pengingat otomatis sebelum jam batas tepat waktu evaluasi sore tiba.</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-item-header">
+                <span class="param-title">Ambang Peringatan Batas Waktu Kendala</span>
+                <span class="badge badge-warning">Peringatan Dini</span>
+              </div>
+              <div class="param-value-box">
+                <span class="param-value">{{ policyMap.NOTIFICATION_REMINDER_THRESHOLD?.configurationValues?.slaWarningPercent ?? 75 }}</span>
+                <span class="param-unit">% dari Target Waktu</span>
+              </div>
+              <div class="param-desc">Persentase waktu terpakai sebelum sistem mengirimkan pengingat dini kepada penanggung jawab kendala.</div>
+            </div>
+          </div>
+          <div class="policy-guidance">
+            <strong>Keterbukaan Parameter:</strong> Seluruh nilai pada seksi ini dapat diperbarui langsung melalui tombol <strong>+ Buat Versi Kebijakan Baru</strong> oleh pejabat berwenang pada kategori terkait.
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Penugasan Pemilik Kebijakan (Policy Owners) -->
       <section class="policy-section policy-owners-section" aria-label="Penugasan Pemilik Kebijakan (Policy Owners)">
         <div class="policy-head">
           <div class="policy-head-info">
@@ -1263,6 +1519,34 @@ onUnmounted(() => {
           </button>
         </div>
 
+        <div class="audit-toolbar">
+          <div class="audit-toolbar-search">
+            <Search :size="15" class="search-icon" />
+            <input
+              id="auditSearchInput"
+              v-model="auditSearchQuery"
+              type="text"
+              class="toolbar-input"
+              placeholder="Cari pengubah, alasan, atau parameter perubahan..."
+              aria-label="Cari catatan jejak audit"
+            />
+          </div>
+          <select
+            id="auditCategoryFilter"
+            v-model="auditCategoryFilter"
+            class="toolbar-select"
+            aria-label="Saring berdasarkan kategori kebijakan"
+          >
+            <option value="">Semua Kategori Kebijakan</option>
+            <option v-for="cat in policyCategoryOptions" :key="cat.value" :value="cat.value">
+              {{ cat.label }}
+            </option>
+          </select>
+          <span class="audit-toolbar-count">
+            Menampilkan {{ filteredAuditLogs.length }} dari {{ auditLogs.length }} catatan
+          </span>
+        </div>
+
         <div class="table-card">
           <table class="data-table">
             <thead>
@@ -1281,7 +1565,22 @@ onUnmounted(() => {
                   Belum ada jejak audit perubahan kebijakan yang tercatat.
                 </td>
               </tr>
-              <tr v-for="log in auditLogs" :key="log.id">
+              <tr v-else-if="filteredAuditLogs.length === 0">
+                <td colspan="6" class="text-center empty-cell">
+                  <div class="empty-filter-box">
+                    <span>Tidak ada catatan jejak audit yang cocok dengan kata kunci atau kategori yang dipilih.</span>
+                    <button
+                      v-if="hasActiveAuditFilters"
+                      type="button"
+                      class="btn btn-secondary btn-sm btn-reset-audit-filter"
+                      @click="resetAuditFilters"
+                    >
+                      Tampilkan Semua Catatan
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-for="log in filteredAuditLogs" :key="log.id">
                 <td class="mono-text wp-datetime">{{ formatTimestampDisplay(log.timestamp) }}</td>
                 <td>
                   <span class="badge badge-info">{{ formatCategoryLabel(log.category) }}</span>
@@ -1329,7 +1628,7 @@ onUnmounted(() => {
           <span>{{ modalError }}</span>
         </div>
 
-        <form @submit.prevent="submitNewVersion" class="modal-form">
+        <form @submit.prevent="submitNewVersion" class="modal-form" novalidate>
           <div class="form-group">
             <label for="select-cat">Kategori Kebijakan *</label>
             <select id="select-cat" v-model="formCategory" @change="syncFormWithActivePolicy" class="input-control" required>
@@ -1460,12 +1759,28 @@ onUnmounted(() => {
               minlength="15"
               required
             ></textarea>
-            <span class="field-help">Minimal 15 karakter untuk kebutuhan jejak audit ISO/HRGA.</span>
+            <div class="reason-meta-row">
+              <span class="field-help">Minimal 15 karakter untuk kebutuhan jejak audit kepatuhan.</span>
+              <span
+                class="char-counter"
+                :class="{ valid: formJustification.trim().length >= 15 }"
+              >
+                {{
+                  formJustification.trim().length >= 15
+                    ? `Alasan memenuhi syarat (${formJustification.trim().length} karakter)`
+                    : `${formJustification.trim().length} / 15 karakter minimum`
+                }}
+              </span>
+            </div>
           </div>
 
           <div class="modal-actions">
             <button class="btn btn-secondary" type="button" @click="closeModal">Batal</button>
-            <button class="btn btn-primary" type="submit" :disabled="modalSubmitting">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              :disabled="modalSubmitting || !canEditCategory(formCategory)"
+            >
               <span>{{ modalSubmitting ? 'Menyimpan...' : 'Simpan & Terapkan Versi Baru' }}</span>
             </button>
           </div>
@@ -1504,7 +1819,7 @@ onUnmounted(() => {
           <span>{{ ownerModalError }}</span>
         </div>
 
-        <form @submit.prevent="submitOwnerAssignment" class="modal-form">
+        <form @submit.prevent="submitOwnerAssignment" class="modal-form" novalidate>
           <div class="form-group">
             <label for="owner-cat">Kategori Kebijakan *</label>
             <select id="owner-cat" v-model="ownerForm.policyCategory" class="input-control" required>
@@ -1537,7 +1852,7 @@ onUnmounted(() => {
               v-model="ownerForm.effectiveDate"
               type="date"
               class="input-control"
-              :min="todayStr"
+              :min="ownerEffectiveMinDate"
               required
             />
             <small class="helper-text">
@@ -2277,8 +2592,96 @@ h1 {
 }
 
 .form-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.reason-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.char-counter {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-status-amber-fg, #b45309);
+}
+
+.char-counter.valid {
+  color: var(--color-status-green-fg, #166534);
+}
+
+.audit-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.audit-toolbar-search {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.toolbar-input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: #fff;
+  color: var(--color-text-primary);
+}
+
+.toolbar-input:focus,
+.toolbar-select:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px var(--color-brand-tint);
+}
+
+.toolbar-select {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: #fff;
+  color: var(--color-text-primary);
+  max-width: 100%;
+}
+
+.audit-toolbar-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-left: auto;
+}
+
+.empty-cell {
+  padding: 28px 16px !important;
+  color: var(--color-text-secondary);
+}
+
+.empty-filter-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .modal-actions {
@@ -2489,6 +2892,8 @@ h1 {
   padding: 18px 24px 22px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-lead-text {
@@ -2600,5 +3005,134 @@ h1 {
 .warning-icon {
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .content-container {
+    padding: 18px 14px 48px;
+    gap: 20px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .policy-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .policy-head-actions {
+    width: 100%;
+  }
+
+  .policy-head-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .policy-body {
+    padding: 16px;
+  }
+
+  .params-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-section {
+    padding: 16px;
+  }
+
+  .audit-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .audit-head .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .audit-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .audit-toolbar-search {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar-select {
+    width: 100%;
+  }
+
+  .audit-toolbar-count {
+    margin-left: 0;
+  }
+
+  .table-card {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .owner-chip-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .owner-chip-action {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 6px;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-form,
+  .modal-body-content {
+    padding: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

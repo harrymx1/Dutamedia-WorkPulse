@@ -423,5 +423,314 @@ describe('PolicySettingsView.vue (WP-EP04-TK006 / Prototipe 18)', () => {
     await checkbox.setValue(true);
     expect(confirmBtn.disabled).toBe(false);
   });
+
+  it('renders Section 6 with dynamic correction window & reminder values, plus Section 1 & Section 3 dynamic descriptions without SLA text', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/policies/audit')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: [],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            policies: [
+              {
+                id: 'pol-comp',
+                category: 'COMPLIANCE_THRESHOLD',
+                configurationValues: { carryOverAmberDays: 4, allowGreenWithCarryOver: true },
+                isIllustrative: false,
+                isFallback: false,
+                effectiveDate: '2026-10-01',
+                endDate: null,
+                createdBy: { id: 'u1', fullName: 'Direktur', email: 'dir@test.com' },
+                createdAt: '2026-10-01',
+              },
+              {
+                id: 'pol-corr',
+                category: 'CORRECTION_WINDOW',
+                configurationValues: { maxCorrectionDays: 10 },
+                isIllustrative: false,
+                isFallback: false,
+                effectiveDate: '2026-10-01',
+                endDate: null,
+                createdBy: { id: 'u1', fullName: 'Direktur', email: 'dir@test.com' },
+                createdAt: '2026-10-01',
+              },
+              {
+                id: 'pol-notif',
+                category: 'NOTIFICATION_REMINDER_THRESHOLD',
+                configurationValues: {
+                  morningReminderMinutesBefore: 45,
+                  eodReminderMinutesBefore: 30,
+                  slaWarningPercent: 80,
+                },
+                isIllustrative: false,
+                isFallback: false,
+                effectiveDate: '2026-10-01',
+                endDate: null,
+                createdBy: { id: 'u1', fullName: 'Direktur', email: 'dir@test.com' },
+                createdAt: '2026-10-01',
+              },
+            ],
+            owners: [],
+          },
+        }),
+      });
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('6. Jendela Pengajuan Koreksi & Ambang Pengingat Otomatis');
+    expect(wrapper.text()).toContain('Batas Jendela Pengajuan Koreksi');
+    expect(wrapper.text()).toContain('Pengingat Komitmen Pagi');
+    expect(wrapper.text()).toContain('Pengingat Evaluasi Sore (EOD)');
+    expect(wrapper.text()).toContain('Ambang Peringatan Batas Waktu Kendala');
+    expect(wrapper.text()).toContain('45 menit sebelumnya');
+    expect(wrapper.text()).toContain('Hari ke-4+');
+    expect(wrapper.text()).toContain('sebanyak 4 hari berturut-turut');
+    expect(wrapper.text()).toContain('10');
+    expect(wrapper.text()).toContain('80');
+    expect(wrapper.text()).not.toContain('SLA');
+  });
+
+  it('formats before/after audit diffs for CORRECTION_WINDOW & NOTIFICATION_REMINDER_THRESHOLD and supports audit search/filter reset', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/policies/audit')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'aud-corr',
+                timestamp: '2026-10-28T03:00:00.000Z',
+                actor: { fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com' },
+                actionCode: 'POLICY_VERSION_CREATED',
+                category: 'CORRECTION_WINDOW',
+                effectiveDate: '2026-10-29',
+                changeJustification: 'Perpanjang batas koreksi akhir bulan',
+                valueBefore: { maxCorrectionDays: 7 },
+                valueAfter: { maxCorrectionDays: 10 },
+              },
+              {
+                id: 'aud-notif',
+                timestamp: '2026-10-28T02:00:00.000Z',
+                actor: { fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+                actionCode: 'POLICY_VERSION_CREATED',
+                category: 'NOTIFICATION_REMINDER_THRESHOLD',
+                effectiveDate: '2026-10-29',
+                changeJustification: 'Majukan pengingat pagi dan batas kendala',
+                valueBefore: {
+                  morningReminderMinutesBefore: 60,
+                  eodReminderMinutesBefore: 60,
+                  slaWarningPercent: 75,
+                },
+                valueAfter: {
+                  morningReminderMinutesBefore: 45,
+                  eodReminderMinutesBefore: 30,
+                  slaWarningPercent: 80,
+                },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: { policies: [], owners: [] },
+        }),
+      });
+    }));
+
+    const wrapper = mount(PolicySettingsView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Batas Koreksi: 7 → 10 Hari Kerja');
+    expect(wrapper.text()).toContain('Pengingat Pagi: 60 → 45 menit');
+    expect(wrapper.text()).toContain('Pengingat Sore: 60 → 30 menit');
+    expect(wrapper.text()).toContain('Peringatan Batas Kendala: 75% → 80%');
+    expect(wrapper.text()).toContain('Menampilkan 2 dari 2 catatan');
+    expect(wrapper.text()).not.toContain('SLA');
+
+    await wrapper.find('#auditCategoryFilter').setValue('CORRECTION_WINDOW');
+    expect(wrapper.text()).toContain('Menampilkan 1 dari 2 catatan');
+    expect(wrapper.text()).toContain('Perpanjang batas koreksi akhir bulan');
+    expect(wrapper.text()).not.toContain('Majukan pengingat pagi dan batas kendala');
+
+    await wrapper.find('#auditSearchInput').setValue('tidak-ditemukan-xyz');
+    expect(wrapper.text()).toContain('Tidak ada catatan jejak audit yang cocok');
+    await wrapper.find('.btn-reset-audit-filter').trigger('click');
+    expect(wrapper.text()).toContain('Menampilkan 2 dari 2 catatan');
+  });
+
+  it('shows live reason char counter, disables submit on locked category, and validates cutoff chronology & endDate in modal', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u-hrga',
+      email: 'hrga@dutamedia.com',
+      fullName: 'Dewi Lestari',
+      role: 'HRGA',
+      status: 'ACTIVE',
+    };
+
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/policies/audit')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: [] }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            policies: [],
+            owners: [
+              {
+                id: 'poa-hrga',
+                policyCategory: 'CHECKIN_TIMING',
+                effectiveDate: '2026-10-01',
+                user: { id: 'u-hrga', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+              },
+            ],
+          },
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(PolicySettingsView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const openBtn = wrapper.findAll('button').find((b) => b.text().includes('Buat Versi Kebijakan Baru'));
+    await openBtn?.trigger('click');
+
+    // Counter starts at 0 / 15
+    expect(wrapper.find('.char-counter').text()).toContain('0 / 15 karakter minimum');
+
+    const submitBtn = wrapper.find('.modal-form button[type="submit"]').element as HTMLButtonElement;
+    expect(submitBtn.disabled).toBe(false);
+
+    // Locked category disables submit
+    await wrapper.find('#select-cat').setValue('BLOCKER_SLA');
+    expect(submitBtn.disabled).toBe(true);
+
+    // Switch back to owned CHECKIN_TIMING and test endDate < effectiveDate & inverted cutoffs
+    await wrapper.find('#select-cat').setValue('CHECKIN_TIMING');
+    expect(submitBtn.disabled).toBe(false);
+
+    await wrapper.find('#input-reason').setValue('Penyesuaian batas waktu operasional pagi untuk uji validasi');
+    expect(wrapper.find('.char-counter').text()).toContain('Alasan memenuhi syarat');
+
+    await wrapper.find('#input-end-date').setValue('2026-01-01');
+    await wrapper.find('.modal-form').trigger('submit');
+    expect(wrapper.find('.modal-error-alert').text()).toContain(
+      'Tanggal berakhir kebijakan tidak boleh mendahului tanggal mulai berlaku',
+    );
+
+    await wrapper.find('#input-end-date').setValue('');
+    await wrapper.find('#input-morning-ontime').setValue('09:30');
+    await wrapper.find('#input-morning-cutoff').setValue('09:00');
+    await wrapper.find('.modal-form').trigger('submit');
+    expect(wrapper.find('.modal-error-alert').text()).toContain(
+      'Batas Kunci Pengisian Pagi (Cut-Off) harus lebih lambat daripada Batas Tepat Waktu Pagi',
+    );
+  });
+
+  it('allows editing an existing Policy Owner while preserving an earlier effectiveDate, and rejects changing to a different past date', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'u-dir',
+      email: 'direktur@dutamedia.com',
+      fullName: 'Hendra Wijaya',
+      role: 'CEO_MANAGEMENT',
+      status: 'ACTIVE',
+    };
+
+    const fetchMock = vi.fn().mockImplementation((url: string, opts?: any) => {
+      if (opts?.method === 'PUT') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: { id: 'poa-old' } }),
+        });
+      }
+      if (String(url).includes('/policies/audit')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: [] }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            policies: [],
+            owners: [
+              {
+                id: 'poa-old',
+                policyCategory: 'CHECKIN_TIMING',
+                effectiveDate: '2026-10-01',
+                user: { id: 'u1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+              },
+            ],
+            availableUsers: [
+              { id: 'u1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com', role: 'HRGA' },
+              { id: 'u2', fullName: 'Hendra Wijaya', email: 'direktur@dutamedia.com', role: 'CEO_MANAGEMENT' },
+            ],
+          },
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(PolicySettingsView, {
+      global: { plugins: [router] },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    await wrapper.find('.btn-edit-owner').trigger('click');
+    const effInput = wrapper.find('#owner-effective');
+    expect((effInput.element as HTMLInputElement).value).toBe('2026-10-01');
+    expect(effInput.attributes('min')).toBe('2026-10-01');
+
+    // Change user while preserving original past effectiveDate -> allowed!
+    await wrapper.find('#owner-user').setValue('u2');
+    await wrapper.find('.modal-form').trigger('submit');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/policies/owners/poa-old'),
+      expect.objectContaining({ method: 'PUT' }),
+    );
+
+    // Re-open edit and change to a DIFFERENT past date -> blocked client-side!
+    await wrapper.find('.btn-edit-owner').trigger('click');
+    await wrapper.find('#owner-effective').setValue('2026-09-15');
+    await wrapper.find('.modal-form').trigger('submit');
+    expect(wrapper.find('.modal-error-alert').text()).toContain(
+      'Tanggal mulai berlaku penugasan tidak boleh di masa lampau',
+    );
+  });
 });
 

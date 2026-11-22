@@ -24,13 +24,247 @@ export class PolicyService {
   ) {}
 
   /**
-   * Mengambil satu kebijakan aktif untuk kategori dan tanggal tertentu (default: hari ini).
+   * Memformat tanggal ke YYYY-MM-DD sesuai zona waktu Asia/Jakarta (WIB).
+   */
+  private formatDateYmdWib(date?: Date): string {
+    if (!date && typeof this.clockService.todayString === 'function') {
+      return this.clockService.todayString('Asia/Jakarta');
+    }
+    const d = date || this.clockService.now();
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+  }
+
+  /**
+   * Memastikan pemanggil berhak melihat konfigurasi kebijakan, pemilik kebijakan, dan jejak audit:
+   * Direktur (CEO_MANAGEMENT), System Admin, atau Pemilik Kebijakan aktif pada kategori mana pun.
+   */
+  async assertCanViewPolicies(user?: { id?: string; role?: string }): Promise<void> {
+    if (!user?.id) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_ROLE,
+        message: 'Akses ditolak. Silakan masuk terlebih dahulu.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (
+      user.role === CanonicalRole.SYSTEM_ADMIN ||
+      user.role === CanonicalRole.CEO_MANAGEMENT
+    ) {
+      return;
+    }
+
+    const todayStr = this.formatDateYmdWib();
+    const today = new Date(todayStr);
+    await ensurePolicyOwnersBaselineSynced(this.prisma, today);
+
+    const activeOwner = await this.prisma.policyOwnerAssignment.findFirst({
+      where: {
+        userId: user.id,
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      },
+      select: { id: true },
+    });
+
+    if (!activeOwner) {
+      throw new AppException({
+        code: ErrorCode.AUTH_FORBIDDEN_ROLE,
+        message:
+          'Akses ditolak. Halaman Pengaturan Kebijakan hanya dapat diakses oleh Direktur, Admin Sistem, atau Pemilik Kebijakan aktif.',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+    }
+  }
+
+  /**
+   * Memvalidasi parameter angka, urutan jam, serta proteksi hak pilih GREEN per kategori kebijakan.
+   */
+  private validateConfigurationValues(
+    category: PolicyCategory,
+    cfg: Record<string, any>,
+  ): void {
+    const assertIntInRange = (
+      value: any,
+      min: number,
+      max: number,
+      label: string,
+    ): number => {
+      const num = Number(value);
+      if (!Number.isInteger(num) || num < min || num > max) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: `${label} harus berupa bilangan bulat antara ${min} hingga ${max}.`,
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return num;
+    };
+
+    if (category === PolicyCategory.CHECKIN_TIMING) {
+      const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+      const timeFields: Array<[string, string]> = [
+        ['morningOnTimeCutoff', 'Batas Tepat Waktu Pagi'],
+        ['morningLockCutoff', 'Batas Kunci Pengisian Pagi (Cut-Off)'],
+        ['eodOnTimeCutoff', 'Batas Tepat Waktu Sore (EOD)'],
+        ['eodLockCutoff', 'Batas Kunci Pengisian Sore (Cut-Off)'],
+      ];
+
+      for (const [key, label] of timeFields) {
+        if (cfg[key] !== undefined && cfg[key] !== null) {
+          if (typeof cfg[key] !== 'string' || !hhmmRegex.test(cfg[key])) {
+            throw new AppException({
+              code: ErrorCode.VALIDATION_FAILED,
+              message: `${label} harus berformat jam HH:mm yang valid.`,
+              statusCode: HttpStatus.BAD_REQUEST,
+            });
+          }
+        }
+      }
+
+      if (
+        cfg.morningOnTimeCutoff &&
+        cfg.morningLockCutoff &&
+        cfg.morningLockCutoff <= cfg.morningOnTimeCutoff
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Batas Kunci Pengisian Pagi (Cut-Off) harus lebih lambat daripada Batas Tepat Waktu Pagi.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      if (
+        cfg.morningLockCutoff &&
+        cfg.eodOnTimeCutoff &&
+        cfg.eodOnTimeCutoff <= cfg.morningLockCutoff
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Batas Tepat Waktu Sore (EOD) harus lebih lambat daripada Batas Kunci Pengisian Pagi.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      if (
+        cfg.eodOnTimeCutoff &&
+        cfg.eodLockCutoff &&
+        cfg.eodLockCutoff <= cfg.eodOnTimeCutoff
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Batas Kunci Pengisian Sore (Cut-Off) harus lebih lambat daripada Batas Tepat Waktu Sore (EOD).',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return;
+    }
+
+    if (category === PolicyCategory.BLOCKER_SLA) {
+      let l1: number | undefined;
+      let l2: number | undefined;
+      if (cfg.level1Hours !== undefined) {
+        l1 = assertIntInRange(cfg.level1Hours, 1, 24, 'Batas Respon Jenjang Pertama');
+      }
+      if (cfg.level2Hours !== undefined) {
+        l2 = assertIntInRange(cfg.level2Hours, 1, 48, 'Batas Penanganan Jenjang Lanjutan');
+      }
+      if (cfg.autoEscalateAfterHours !== undefined) {
+        assertIntInRange(
+          cfg.autoEscalateAfterHours,
+          1,
+          24,
+          'Batas Waktu Naik ke Atasan Berikutnya',
+        );
+      }
+      if (l1 !== undefined && l2 !== undefined && l2 < l1) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Batas Penanganan Jenjang Lanjutan tidak boleh lebih pendek daripada Batas Respon Jenjang Pertama.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return;
+    }
+
+    if (category === PolicyCategory.COMPLIANCE_THRESHOLD) {
+      if (cfg.carryOverAmberDays !== undefined) {
+        assertIntInRange(
+          cfg.carryOverAmberDays,
+          1,
+          10,
+          'Ambang Saran Amber Carry-Over',
+        );
+      }
+      if (cfg.allowGreenWithCarryOver === false) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Hak memilih status GREEN tidak boleh dikunci melalui pengaturan kebijakan.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      if (cfg.allowGreenWithCarryOver === undefined) {
+        cfg.allowGreenWithCarryOver = true;
+      }
+      return;
+    }
+
+    if (category === PolicyCategory.CORRECTION_WINDOW) {
+      if (cfg.maxCorrectionDays !== undefined) {
+        assertIntInRange(
+          cfg.maxCorrectionDays,
+          1,
+          30,
+          'Batas Jendela Pengajuan Koreksi',
+        );
+      }
+      return;
+    }
+
+    if (category === PolicyCategory.NOTIFICATION_REMINDER_THRESHOLD) {
+      if (cfg.morningReminderMinutesBefore !== undefined) {
+        assertIntInRange(
+          cfg.morningReminderMinutesBefore,
+          5,
+          180,
+          'Pengingat Pagi',
+        );
+      }
+      if (cfg.eodReminderMinutesBefore !== undefined) {
+        assertIntInRange(
+          cfg.eodReminderMinutesBefore,
+          5,
+          180,
+          'Pengingat Sore EOD',
+        );
+      }
+      if (cfg.slaWarningPercent !== undefined) {
+        assertIntInRange(
+          cfg.slaWarningPercent,
+          10,
+          99,
+          'Ambang Peringatan Batas Waktu Kendala',
+        );
+      }
+    }
+  }
+
+  /**
+   * Mengambil satu kebijakan aktif untuk kategori dan tanggal tertentu (default: hari ini WIB).
    * Bila belum ada kebijakan di DB, mengembalikan nilai fallback kanonikal (DEC-011).
    */
   async getActivePolicy(category: PolicyCategory, targetDate?: Date) {
-    const evalDate = targetDate || this.clockService.now();
-    // Format YYYY-MM-DD
-    const dateStr = evalDate.toISOString().split('T')[0];
+    const dateStr = this.formatDateYmdWib(targetDate);
 
     const policy = await this.prisma.policy.findFirst({
       where: {
@@ -196,6 +430,11 @@ export class PolicyService {
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
+
+    this.validateConfigurationValues(
+      dto.category,
+      (dto.configurationValues || {}) as Record<string, any>,
+    );
 
     // Penegakan BR-15 & FR-34: Sinkronisasi Wewenang Pemilik Kebijakan (Authorized Policy Owner)
     // Hanya pengguna yang terdaftar aktif pada tabel Penugasan Pemilik Kebijakan untuk kategori ini yang berwenang menerbitkan versi baru.
@@ -414,6 +653,7 @@ export class PolicyService {
     const { category, before, after, effectiveDate, isEffectiveToday, changeJustification, issuerName } = params;
 
     const effDateLabel = effectiveDate.toLocaleDateString('id-ID', {
+      timeZone: 'Asia/Jakarta',
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -565,18 +805,43 @@ export class PolicyService {
       };
     }
 
+    const morningReminder = after.morningReminderMinutesBefore ?? 60;
+    const eodReminder = after.eodReminderMinutesBefore ?? 60;
+    const blockerWarnPct = after.slaWarningPercent ?? 75;
+
     const intro = isEffectiveToday
       ? `Mulai hari ini (${effDateLabel}, berlaku mulai sekarang), pengaturan pengingat otomatis sistem telah diperbarui.`
       : `Mulai ${effDateLabel}, pengaturan pengingat otomatis sistem akan disesuaikan.`;
+
+    const paramLines = buildChangedLines([
+      {
+        label: 'Pengingat Komitmen Pagi',
+        oldVal: before.morningReminderMinutesBefore,
+        newVal: morningReminder,
+        unit: 'menit sebelum batas tepat waktu',
+      },
+      {
+        label: 'Pengingat Evaluasi Sore (EOD)',
+        oldVal: before.eodReminderMinutesBefore,
+        newVal: eodReminder,
+        unit: 'menit sebelum batas tepat waktu',
+      },
+      {
+        label: 'Ambang Peringatan Batas Waktu Kendala',
+        oldVal: before.slaWarningPercent,
+        newVal: blockerWarnPct,
+        unit: '%',
+      },
+    ]);
 
     return {
       title: 'Perubahan Kebijakan Pengingat Otomatis',
       message: [
         intro,
-        'Kategori Kebijakan: Ambang Notifikasi & Pengingat',
+        'Kategori Kebijakan: Ambang Batas Pengingat & Notifikasi',
         `Mulai Berlaku: ${effectiveDisplay}`,
-        `Waktu Pengingat: ${after.morningReminderMinutesBefore ?? 60} menit sebelum batas waktu`,
-        `Artinya bagi Anda: Sistem akan mengirimkan pengingat sebelum batas waktu pengisian komitmen harian berakhir.`,
+        ...paramLines,
+        `Artinya bagi Anda: Pengingat komitmen pagi dikirim ${morningReminder} menit sebelum batas tepat waktu, pengingat evaluasi sore dikirim ${eodReminder} menit sebelum batas tepat waktu, dan peringatan batas waktu kendala muncul pada ${blockerWarnPct}% durasi target.`,
         `Alasan Perubahan: "${changeJustification}"`,
         `Diubah Oleh: ${issuerName}`,
       ].join('\n'),
@@ -1162,6 +1427,7 @@ export class PolicyService {
         : categoryLabel;
 
       const effDateLabel = params.effectiveDate.toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Jakarta',
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -1402,10 +1668,10 @@ export class PolicyService {
         },
       },
       orderBy: { timestamp: 'desc' },
-      take: 100,
+      take: category ? 200 : 100,
     });
 
-    return logs.map((log) => {
+    const mapped = logs.map((log) => {
       const valAfter = log.valueAfter as any;
       const valBefore = log.valueBefore as any;
       return {
@@ -1428,6 +1694,12 @@ export class PolicyService {
         valueAfter: valAfter?.configurationValues || valAfter,
       };
     });
+
+    if (category) {
+      return mapped.filter((item) => item.category === category).slice(0, 100);
+    }
+
+    return mapped;
   }
 
   /**
