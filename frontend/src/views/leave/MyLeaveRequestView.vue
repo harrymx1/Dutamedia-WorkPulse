@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Info,
   Tag,
+  X,
 } from 'lucide-vue-next';
 
 interface LeaveRequestItem {
@@ -86,13 +87,14 @@ const reason = ref('');
 const formError = ref('');
 
 // Filter & Search
-const activeFilter = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
+const activeFilter = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'>('ALL');
 const searchQuery = ref('');
 
-// Toasts
+// Toasts & Cancel confirmation modal
 const toastMessage = ref('');
 const errorMessage = ref('');
 const cancellingId = ref<string | null>(null);
+const cancelTarget = ref<LeaveRequestItem | null>(null);
 
 function showToast(msg: string, isError = false) {
   if (isError) {
@@ -123,10 +125,24 @@ async function loadLeaveRequests() {
       leaveType.value = 'PERMIT';
     }
   } catch (err: any) {
-    showToast(err.message || 'Gagal memuat riwayat pengajuan cuti.', true);
+    showToast(err.message || 'Gagal memuat riwayat pengajuan.', true);
   } finally {
     loading.value = false;
   }
+}
+
+function formatRequestCode(req: LeaveRequestItem): string {
+  const parsed = req.startDate ? new Date(req.startDate) : null;
+  const datePart =
+    parsed && !Number.isNaN(parsed.getTime())
+      ? `${parsed.getUTCFullYear()}${String(parsed.getUTCMonth() + 1).padStart(2, '0')}${String(parsed.getUTCDate()).padStart(2, '0')}`
+      : 'REQ';
+  const shortId =
+    (req.id || '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 4)
+      .toUpperCase() || '0000';
+  return `LVR-${datePart}-${shortId}`;
 }
 
 const filteredRequests = computed(() => {
@@ -135,11 +151,23 @@ const filteredRequests = computed(() => {
       return false;
     }
     if (searchQuery.value.trim()) {
-      const q = searchQuery.value.toLowerCase();
+      const q = searchQuery.value.trim().toLowerCase();
       const matchReason = req.reason?.toLowerCase().includes(q);
       const matchId = req.id.toLowerCase().includes(q);
+      const matchCode = formatRequestCode(req).toLowerCase().includes(q);
+      const matchType = formatLeaveType(req.leaveType).toLowerCase().includes(q);
+      const matchReviewer = req.reviewedBy?.fullName?.toLowerCase().includes(q);
+      const matchRange = formatDateRange(req.startDate, req.endDate).toLowerCase().includes(q);
       const matchDate = req.startDate.includes(q) || req.endDate.includes(q);
-      return matchReason || matchId || matchDate;
+      return (
+        matchReason ||
+        matchId ||
+        matchCode ||
+        matchType ||
+        matchReviewer ||
+        matchRange ||
+        matchDate
+      );
     }
     return true;
   });
@@ -186,8 +214,31 @@ function calculateDuration(start: string, end: string): number {
     }
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
-  return Math.max(1, count);
+  return count;
 }
+
+const isValidDateOrder = computed(() => {
+  if (!startDate.value || !endDate.value) return false;
+  return new Date(endDate.value) >= new Date(startDate.value);
+});
+
+const requestedWorkingDays = computed(() => {
+  if (!isValidDateOrder.value) return 0;
+  return calculateDuration(startDate.value, endDate.value);
+});
+
+const isWeekendOnlySelection = computed(() => {
+  return isValidDateOrder.value && requestedWorkingDays.value === 0;
+});
+
+const exceedsAnnualQuota = computed(() => {
+  if (isInternAccount.value) return false;
+  if (leaveType.value !== 'ANNUAL') return false;
+  if (!leaveQuota.value?.hasAnnualQuota) return false;
+  return requestedWorkingDays.value > leaveQuota.value.remainingDays;
+});
+
+const reasonTrimmedLength = computed(() => reason.value.trim().length);
 
 async function handleSubmit() {
   formError.value = '';
@@ -201,6 +252,11 @@ async function handleSubmit() {
   }
   if (new Date(endDate.value) < new Date(startDate.value)) {
     formError.value = 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.';
+    return;
+  }
+  if (calculateDuration(startDate.value, endDate.value) === 0) {
+    formError.value =
+      'Rentang tanggal yang dipilih hanya mencakup akhir pekan (0 hari kerja). Pilih minimal 1 hari kerja (Senin–Jumat).';
     return;
   }
   if (reason.value.trim().length < 5) {
@@ -227,7 +283,11 @@ async function handleSubmit() {
     reason.value = '';
     await loadLeaveRequests();
   } catch (err: any) {
-    formError.value = err.message || 'Gagal mengajukan permohonan cuti.';
+    formError.value =
+      err.message ||
+      (isInternAccount.value
+        ? 'Gagal mengajukan permohonan izin / sakit.'
+        : 'Gagal mengajukan permohonan cuti.');
     showToast(formError.value, true);
   } finally {
     submitting.value = false;
@@ -242,19 +302,43 @@ function handleReset() {
   formError.value = '';
 }
 
-async function handleCancel(id: string) {
-  if (!confirm('Apakah Anda yakin ingin membatalkan permohonan cuti ini?')) {
-    return;
-  }
-  cancellingId.value = id;
+function resetHistoryFilters() {
+  activeFilter.value = 'ALL';
+  searchQuery.value = '';
+}
+
+function openCancelModal(req: LeaveRequestItem) {
+  cancelTarget.value = req;
+}
+
+function closeCancelModal() {
+  if (cancellingId.value) return;
+  cancelTarget.value = null;
+}
+
+async function confirmCancel() {
+  const target = cancelTarget.value;
+  if (!target) return;
+  cancellingId.value = target.id;
   try {
-    await apiClient(`/leave/${id}/cancel`, {
+    await apiClient(`/leave/${target.id}/cancel`, {
       method: 'POST',
     });
-    showToast('Permohonan cuti berhasil dibatalkan.');
+    cancelTarget.value = null;
+    showToast(
+      isInternAccount.value
+        ? 'Permohonan izin / sakit berhasil dibatalkan.'
+        : 'Permohonan cuti berhasil dibatalkan.',
+    );
     await loadLeaveRequests();
   } catch (err: any) {
-    showToast(err.message || 'Gagal membatalkan permohonan cuti.', true);
+    showToast(
+      err.message ||
+        (isInternAccount.value
+          ? 'Gagal membatalkan permohonan izin / sakit.'
+          : 'Gagal membatalkan permohonan cuti.'),
+      true,
+    );
   } finally {
     cancellingId.value = null;
   }
@@ -272,7 +356,7 @@ onMounted(() => {
 <template>
   <div class="leave-layout">
     <!-- Topbar -->
-    <TopBar breadcrumb="Workspace / Cuti Saya" />
+    <TopBar :breadcrumb="isInternAccount ? 'Workspace / Izin & Sakit Saya' : 'Workspace / Cuti Saya'" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">
@@ -288,9 +372,13 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <span class="eyebrow">Manajemen Kehadiran &amp; Ketidakhadiran Sah</span>
-          <h1>Pengajuan &amp; Riwayat Cuti</h1>
+          <h1>{{ isInternAccount ? 'Pengajuan & Riwayat Izin / Sakit' : 'Pengajuan & Riwayat Cuti' }}</h1>
           <p class="subtitle">
-            Ajukan permohonan cuti dan pantau status persetujuan serta penyesuaian kehadiran harian Anda di satu tempat.
+            {{
+              isInternAccount
+                ? 'Ajukan permohonan izin atau sakit dan pantau status persetujuan serta penyesuaian kehadiran harian Anda di satu tempat.'
+                : 'Ajukan permohonan cuti dan pantau status persetujuan serta penyesuaian kehadiran harian Anda di satu tempat.'
+            }}
           </p>
         </div>
         <span class="pill neutral"><span class="dot-sm"></span>Pengajuan Milik Saya</span>
@@ -380,11 +468,24 @@ onMounted(() => {
                     v-model="endDate"
                     type="date"
                     class="input"
+                    :min="startDate || undefined"
                     required
                   />
                 </div>
-                <div v-if="startDate && endDate" class="duration-hint">
-                  {{ isInternAccount ? 'Durasi izin:' : 'Durasi cuti:' }} <strong>{{ calculateDuration(startDate, endDate) }} hari kerja</strong>
+                <div
+                  v-if="isValidDateOrder"
+                  class="duration-hint"
+                  :class="{ 'is-warning': isWeekendOnlySelection }"
+                >
+                  <template v-if="isWeekendOnlySelection">
+                    <strong>0 hari kerja</strong> (akhir pekan Sabtu/Minggu sudah hari libur). Pilih minimal 1 hari kerja Senin–Jumat.
+                  </template>
+                  <template v-else>
+                    {{ isInternAccount ? 'Durasi izin:' : 'Durasi cuti:' }} <strong>{{ requestedWorkingDays }} hari kerja</strong>
+                  </template>
+                </div>
+                <div v-if="exceedsAnnualQuota" class="duration-quota-warn" data-testid="quota-exceeded-hint">
+                  Melebihi sisa jatah Cuti Tahunan Anda ({{ leaveQuota?.remainingDays }} hari kerja tersisa).
                 </div>
               </div>
 
@@ -399,14 +500,20 @@ onMounted(() => {
                   required
                   :placeholder="isInternAccount ? 'Tuliskan alasan pengajuan izin/sakit secara singkat dan jelas (minimal 5 karakter).' : 'Tuliskan alasan pengajuan cuti secara singkat dan jelas (minimal 5 karakter).'"
                 ></textarea>
+                <div class="field-meta-row" data-testid="reason-char-counter">
+                  <span :class="{ 'counter-valid': reasonTrimmedLength >= 5 }">
+                    {{ reasonTrimmedLength }} / 5 karakter minimum
+                  </span>
+                  <span>{{ reason.length }} / 1.000</span>
+                </div>
               </div>
 
-              <!-- Note Info Blue: Penyesuaian Cuti Pasca-Cut-Off -->
+              <!-- Note Info Blue: Penyesuaian Pasca-Batas Waktu Pagi -->
               <div class="info-note">
                 <Info :size="18" class="info-icon" />
                 <div>
-                  <strong>Ketentuan Pengajuan Cuti:</strong> Tanggal yang masih berstatus
-                  <strong>Menunggu Review</strong> belum membebaskan kewajiban check-in harian hingga disetujui oleh atasan. Apabila cuti darurat/mendadak baru disetujui setelah batas waktu pagi (09:30 WIB), status belum mengisi komitmen pada hari tersebut otomatis <strong>diputihkan menjadi Cuti Disetujui</strong> (bebas dari catatan ketidakpatuhan).
+                  <strong>{{ isInternAccount ? 'Ketentuan Pengajuan Izin / Sakit:' : 'Ketentuan Pengajuan Cuti:' }}</strong> Tanggal yang masih berstatus
+                  <strong>Menunggu Review</strong> belum membebaskan kewajiban check-in harian hingga disetujui oleh atasan. Apabila {{ isInternAccount ? 'izin atau sakit mendadak' : 'cuti darurat/mendadak' }} baru disetujui setelah batas waktu laporan pagi yang berlaku, status belum mengisi komitmen pada hari tersebut otomatis <strong>diputihkan menjadi {{ isInternAccount ? 'Izin Disetujui' : 'Cuti Disetujui' }}</strong> (bebas dari catatan ketidakpatuhan).
                 </div>
               </div>
 
@@ -432,9 +539,13 @@ onMounted(() => {
         <section class="panel" aria-labelledby="history-title">
           <div class="panel-head">
             <div>
-              <h2 id="history-title">Riwayat Permohonan Cuti</h2>
+              <h2 id="history-title">{{ isInternAccount ? 'Riwayat Permohonan Izin / Sakit' : 'Riwayat Permohonan Cuti' }}</h2>
               <p class="panel-subtitle">
-                Pantau status persetujuan dan jejak penyesuaian kehadiran untuk setiap cuti yang Anda ajukan.
+                {{
+                  isInternAccount
+                    ? 'Pantau status persetujuan dan jejak penyesuaian kehadiran untuk setiap izin atau sakit yang Anda ajukan.'
+                    : 'Pantau status persetujuan dan jejak penyesuaian kehadiran untuk setiap cuti yang Anda ajukan.'
+                }}
               </p>
             </div>
             <span class="pill neutral">{{ filteredRequests.length }} permohonan</span>
@@ -447,8 +558,8 @@ onMounted(() => {
                 v-model="searchQuery"
                 type="search"
                 class="search-input"
-                placeholder="Cari alasan, ID tiket, atau tanggal..."
-                aria-label="Cari alasan atau tanggal"
+                placeholder="Cari alasan, jenis, peninjau, atau tanggal..."
+                aria-label="Cari alasan, jenis, peninjau, atau tanggal"
               />
             </div>
 
@@ -457,6 +568,7 @@ onMounted(() => {
                 type="button"
                 class="filter-btn"
                 :class="{ active: activeFilter === 'ALL' }"
+                :aria-pressed="activeFilter === 'ALL'"
                 @click="activeFilter = 'ALL'"
               >
                 Semua
@@ -465,6 +577,7 @@ onMounted(() => {
                 type="button"
                 class="filter-btn"
                 :class="{ active: activeFilter === 'PENDING' }"
+                :aria-pressed="activeFilter === 'PENDING'"
                 @click="activeFilter = 'PENDING'"
               >
                 Menunggu
@@ -473,6 +586,7 @@ onMounted(() => {
                 type="button"
                 class="filter-btn"
                 :class="{ active: activeFilter === 'APPROVED' }"
+                :aria-pressed="activeFilter === 'APPROVED'"
                 @click="activeFilter = 'APPROVED'"
               >
                 Disetujui
@@ -481,28 +595,51 @@ onMounted(() => {
                 type="button"
                 class="filter-btn"
                 :class="{ active: activeFilter === 'REJECTED' }"
+                :aria-pressed="activeFilter === 'REJECTED'"
                 @click="activeFilter = 'REJECTED'"
               >
                 Ditolak
+              </button>
+              <button
+                type="button"
+                class="filter-btn"
+                :class="{ active: activeFilter === 'CANCELLED' }"
+                :aria-pressed="activeFilter === 'CANCELLED'"
+                @click="activeFilter = 'CANCELLED'"
+              >
+                Dibatalkan
               </button>
             </div>
           </div>
 
           <div v-if="loading" class="empty-state">
             <Clock :size="24" class="spin" />
-            <p>Memuat riwayat permohonan cuti...</p>
+            <p>{{ isInternAccount ? 'Memuat riwayat permohonan izin / sakit...' : 'Memuat riwayat permohonan cuti...' }}</p>
+          </div>
+
+          <div v-else-if="leaveRequests.length === 0" class="empty-state">
+            <Calendar :size="32" />
+            <p>{{ isInternAccount ? 'Belum ada riwayat permohonan izin atau sakit.' : 'Belum ada riwayat permohonan cuti.' }}</p>
           </div>
 
           <div v-else-if="filteredRequests.length === 0" class="empty-state">
-            <Calendar :size="32" />
-            <p>Belum ada riwayat permohonan cuti.</p>
+            <Search :size="28" />
+            <p>Tidak ada permohonan yang cocok dengan pencarian atau filter status.</p>
+            <button
+              type="button"
+              class="btn-reset-filters"
+              data-testid="reset-filters-btn"
+              @click="resetHistoryFilters"
+            >
+              Tampilkan Semua
+            </button>
           </div>
 
           <div v-else class="table-wrap">
             <table class="leave-table">
               <thead>
                 <tr>
-                  <th scope="col" class="col-date">Tanggal Cuti</th>
+                  <th scope="col" class="col-date">{{ isInternAccount ? 'Tanggal Izin / Sakit' : 'Tanggal Cuti' }}</th>
                   <th scope="col" class="col-reason">Alasan &amp; Jejak Pengajuan</th>
                   <th scope="col" class="col-status">Status Persetujuan</th>
                   <th scope="col" class="col-action">Aksi</th>
@@ -518,10 +655,10 @@ onMounted(() => {
                   <td>
                     <div class="reason-text">{{ formatReason(req.reason) }}</div>
                     <div class="request-id">
-                      #{{ req.id }} · Diajukan <span class="wp-datetime">{{ formatDateWib(req.createdAt) }}</span>
+                      #{{ formatRequestCode(req) }} · Diajukan <span class="wp-datetime">{{ formatDateWib(req.createdAt) }}</span>
                     </div>
                     <div v-if="req.reconciled || req.reconciliationNote" class="reconcile-note">
-                      <strong>Pemutihan Kehadiran Otomatis:</strong> {{ req.reconciliationNote || 'Catatan belum check-in pagi otomatis diputihkan menjadi Cuti Disetujui.' }}
+                      <strong>Pemutihan Kehadiran Otomatis:</strong> {{ req.reconciliationNote || (isInternAccount ? 'Catatan belum check-in pagi otomatis diputihkan menjadi Izin Disetujui.' : 'Catatan belum check-in pagi otomatis diputihkan menjadi Cuti Disetujui.') }}
                     </div>
                     <div v-if="req.reviewNote || req.reviewNotes" class="review-note" :class="{ rejected: req.status === 'REJECTED' }">
                       <span class="review-note-label">Catatan Reviewer{{ req.reviewedBy?.fullName ? ` (${req.reviewedBy.fullName})` : '' }}:</span>
@@ -536,7 +673,7 @@ onMounted(() => {
                       <span v-else-if="req.status === 'CANCELLED'" class="pill neutral">Dibatalkan</span>
                       <span v-else class="pill neutral">{{ req.status }}</span>
 
-                      <span v-if="req.reconciled" class="pill neutral">Cuti Disetujui (Bebas Check-In)</span>
+                      <span v-if="req.reconciled" class="pill neutral">{{ isInternAccount ? 'Izin Disetujui (Bebas Check-In)' : 'Cuti Disetujui (Bebas Check-In)' }}</span>
                     </div>
                     <span v-if="req.status === 'PENDING'" class="status-sub">
                       Menunggu keputusan atasan
@@ -557,7 +694,7 @@ onMounted(() => {
                       type="button"
                       class="btn-cancel"
                       :disabled="cancellingId === req.id"
-                      @click="handleCancel(req.id)"
+                      @click="openCancelModal(req)"
                     >
                       {{ cancellingId === req.id ? 'Membatalkan...' : 'Batalkan' }}
                     </button>
@@ -570,6 +707,79 @@ onMounted(() => {
         </section>
       </div>
     </main>
+
+    <!-- In-app Cancel Confirmation Modal -->
+    <div
+      v-if="cancelTarget"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cancel-modal-title"
+      data-testid="cancel-confirm-modal"
+      @click.self="closeCancelModal"
+    >
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="cancel-modal-title">
+            {{ isInternAccount ? 'Batalkan Permohonan Izin / Sakit?' : 'Batalkan Permohonan Cuti?' }}
+          </h3>
+          <button
+            type="button"
+            class="modal-close"
+            aria-label="Tutup jendela konfirmasi"
+            :disabled="Boolean(cancellingId)"
+            @click="closeCancelModal"
+          >
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-lead">
+            {{
+              isInternAccount
+                ? 'Apakah Anda yakin ingin membatalkan pengajuan izin atau sakit berikut? Pengajuan yang dibatalkan tidak akan diproses oleh atasan.'
+                : 'Apakah Anda yakin ingin membatalkan pengajuan cuti berikut? Pengajuan yang dibatalkan tidak akan diproses dan sisa jatah cuti akan tetap utuh.'
+            }}
+          </p>
+          <div class="modal-summary">
+            <div class="modal-summary-row">
+              <span>Jenis</span>
+              <strong>{{ formatLeaveType(cancelTarget.leaveType) }}</strong>
+            </div>
+            <div class="modal-summary-row">
+              <span>Tanggal</span>
+              <strong>
+                {{ formatDateRange(cancelTarget.startDate, cancelTarget.endDate) }}
+                ({{ calculateDuration(cancelTarget.startDate, cancelTarget.endDate) }} hari kerja)
+              </strong>
+            </div>
+            <div class="modal-summary-row">
+              <span>Alasan</span>
+              <strong>{{ formatReason(cancelTarget.reason) }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            :disabled="Boolean(cancellingId)"
+            @click="closeCancelModal"
+          >
+            Kembali
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            data-testid="confirm-cancel-btn"
+            :disabled="Boolean(cancellingId)"
+            @click="confirmCancel"
+          >
+            {{ cancellingId ? 'Membatalkan...' : 'Ya, Batalkan Permohonan' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -631,54 +841,16 @@ onMounted(() => {
   margin: 0;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 24px;
-  background: #FFFFFF;
-  border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
-}
-
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--color-brand-primary, #00674D);
-  color: #FFFFFF;
-  font-weight: 800;
-  display: grid;
-  place-items: center;
-}
-
-.brand-title {
-  font-weight: 800;
-  font-size: 16px;
-}
-
-.breadcrumb {
-  font-size: 13.5px;
-  color: var(--color-text-secondary, #5C6E68);
-  margin-left: 8px;
-}
-
-.btn-topbar {
+.badge-intern {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--color-border-strong, #A9C7BC);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-primary, #0E211B);
-  text-decoration: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #EDE9FE;
+  color: #5B21B6;
+  border: 1px solid #C4B5FD;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .main-content {
@@ -734,6 +906,7 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 12px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel-head {
@@ -741,6 +914,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
 }
 
@@ -774,12 +948,6 @@ h1 {
   color: #DC2626;
 }
 
-.opt-label {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--color-text-secondary, #5C6E68);
-}
-
 .input-wrap {
   position: relative;
   display: flex;
@@ -804,7 +972,41 @@ h1 {
 .duration-hint {
   font-size: 12px;
   color: var(--color-brand-primary, #00674D);
-  margin-top: 4px;
+  margin-top: 6px;
+}
+
+.duration-hint.is-warning {
+  color: #B45309;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.duration-quota-warn {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #B45309;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.field-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--color-text-secondary, #5C6E68);
+}
+
+.field-meta-row .counter-valid {
+  color: var(--color-brand-primary, #00674D);
+  font-weight: 600;
 }
 
 .select-input {
@@ -1199,6 +1401,202 @@ h1 {
   display: inline-block;
   color: var(--color-text-secondary, #94A3B8);
   font-size: 14px;
+}
+
+.btn-reset-filters {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-strong, #A9C7BC);
+  background: #FFFFFF;
+  color: var(--color-brand-primary, #00674D);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-reset-filters:hover {
+  background: #EFF5F2;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 33, 27, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1200;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 460px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-subtle, #DCE7E2);
+  box-shadow: 0 20px 44px rgba(14, 33, 27, 0.18);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0E211B);
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #5C6E68);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover:not(:disabled) {
+  background: #F1F5F9;
+  color: var(--color-text-primary, #0E211B);
+}
+
+.modal-body {
+  padding: 18px 20px;
+}
+
+.modal-lead {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #5C6E68);
+}
+
+.modal-summary {
+  background: #F8FAF9;
+  border: 1px solid var(--color-border-subtle, #DCE7E2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.modal-summary-row span {
+  color: var(--color-text-secondary, #5C6E68);
+  flex-shrink: 0;
+}
+
+.modal-summary-row strong {
+  color: var(--color-text-primary, #0E211B);
+  text-align: right;
+  word-break: break-word;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  background: #F8FAF9;
+  border-top: 1px solid var(--color-border-subtle, #DCE7E2);
+}
+
+.btn-danger {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #B91C1C;
+}
+
+.btn-danger:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 14px 36px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  .list-tools {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-wrap {
+    min-width: 0;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .filter-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .form-actions,
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .btn,
+  .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-popup {
+    left: 14px;
+    right: 14px;
+    top: 14px;
+  }
+
+  .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @keyframes spin {

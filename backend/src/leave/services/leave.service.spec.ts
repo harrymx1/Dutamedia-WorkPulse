@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LeaveService } from './leave.service';
-import { LeaveStatus } from '@prisma/client';
+import { LeaveController, SELF_LEAVE_OPERATIONAL_ROLES } from '../controllers/leave.controller';
+import { ROLES_KEY } from '../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { CanonicalRole, LeaveStatus } from '@prisma/client';
 import { AppException } from '../../common/exceptions/app.exception';
 
 describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', () => {
@@ -157,6 +160,59 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
           reason: 'Cuti tambahan melebihi kuota',
         }),
       ).rejects.toThrowError(/melebihi batas jatah Cuti Tahunan 12 hari kerja/);
+    });
+
+    it('rejects weekend-only date ranges (0 working days) with 400 VALIDATION_FAILED', async () => {
+      await expect(
+        service.createLeaveRequest('usr-perm', {
+          startDate: '2026-11-28', // Sabtu
+          endDate: '2026-11-29', // Minggu
+          leaveType: 'ANNUAL',
+          reason: 'Pengajuan akhir pekan yang tidak perlu cuti',
+        }),
+      ).rejects.toThrowError(/0 hari kerja/);
+    });
+
+    it('sends Indonesian leave type labels and single-date format to manager and temporary reviewer', async () => {
+      mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
+      mockPrisma.leaveRequest.findMany.mockResolvedValue([]);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'PERMANENT',
+        directManagerId: 'mgr-1',
+        function: 'ENGINEERING',
+        role: CanonicalRole.EMPLOYEE,
+      });
+      mockPrisma.temporaryReviewerAssignment = {
+        findMany: vi.fn().mockResolvedValue([{ delegateUserId: 'del-1' }]),
+      };
+      mockPrisma.leaveRequest.create.mockResolvedValue({
+        id: 'lv-permit-single',
+        userId: 'usr-1',
+        leaveType: 'PERMIT',
+        status: LeaveStatus.PENDING,
+        user: { id: 'usr-1', fullName: 'Aditya Nugroho' },
+      });
+
+      await service.createLeaveRequest('usr-1', {
+        startDate: '2026-10-29',
+        endDate: '2026-10-29',
+        leaveType: 'PERMIT',
+        reason: 'Mengurus dokumen kependudukan pagi hari',
+      });
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(2);
+      const mgrCall = mockPrisma.notification.create.mock.calls[0][0].data;
+      const delCall = mockPrisma.notification.create.mock.calls[1][0].data;
+
+      expect(mgrCall.title).toBe('Pengajuan Izin Karyawan Baru');
+      expect(mgrCall.message).toContain('mengajukan izin');
+      expect(mgrCall.message).not.toContain('PERMIT');
+      expect(mgrCall.message).not.toContain('s/d');
+      expect(mgrCall.message).toContain('1 hari kerja');
+
+      expect(delCall.title).toBe('Pengajuan Izin Karyawan Baru (Delegasi Reviewer)');
+      expect(delCall.message).toContain('mengajukan izin');
+      expect(delCall.message).not.toContain('PERMIT');
     });
   });
 
@@ -336,6 +392,28 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
       await expect(
         service.cancelLeaveRequest('usr-1', 'lv-1'),
       ).rejects.toThrowError(AppException);
+    });
+  });
+
+  describe('LeaveController RBAC guards (Page 20 self-service endpoints)', () => {
+    it('restricts self-service leave endpoints to operational roles and excludes SYSTEM_ADMIN', () => {
+      expect(SELF_LEAVE_OPERATIONAL_ROLES).not.toContain(CanonicalRole.SYSTEM_ADMIN);
+      expect(SELF_LEAVE_OPERATIONAL_ROLES).toContain(CanonicalRole.EMPLOYEE);
+
+      const endpoints: Array<keyof LeaveController> = [
+        'createLeaveRequest',
+        'getMyLeaveRequests',
+        'getMyLeaveQuota',
+        'cancelLeaveRequest',
+      ];
+
+      for (const method of endpoints) {
+        const handler = LeaveController.prototype[method];
+        const roles = Reflect.getMetadata(ROLES_KEY, handler) as CanonicalRole[];
+        const guards = Reflect.getMetadata('__guards__', handler) as unknown[];
+        expect(guards).toContain(RolesGuard);
+        expect(roles).toEqual(SELF_LEAVE_OPERATIONAL_ROLES);
+      }
     });
   });
 });

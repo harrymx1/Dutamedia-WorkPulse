@@ -14,6 +14,42 @@ import {
 
 export const ANNUAL_LEAVE_QUOTA_DAYS = 12;
 
+const LEAVE_TYPE_LABELS: Record<string, string> = {
+  ANNUAL: 'Cuti Tahunan',
+  SICK: 'Sakit',
+  PERMIT: 'Izin',
+  SPECIAL_LEAVE: 'Cuti Khusus',
+  MATERNITY: 'Cuti Melahirkan',
+  UNPAID: 'Cuti di Luar Tanggungan',
+};
+
+function getLeaveTypeLabel(leaveType?: string | null): string {
+  if (!leaveType) return 'Cuti Tahunan';
+  return LEAVE_TYPE_LABELS[leaveType] || leaveType;
+}
+
+const ID_DATE_FORMATTER_UTC = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+function formatLeavePeriodId(start: Date, end: Date): string {
+  const s = new Date(
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()),
+  );
+  const e = new Date(
+    Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()),
+  );
+  const startText = ID_DATE_FORMATTER_UTC.format(s);
+  if (s.getTime() === e.getTime()) {
+    return startText;
+  }
+  const endText = ID_DATE_FORMATTER_UTC.format(e);
+  return `${startText} s/d ${endText}`;
+}
+
 function countWorkingDaysInclusive(start: Date, end: Date): number {
   const s = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
   const e = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()));
@@ -27,7 +63,7 @@ function countWorkingDaysInclusive(start: Date, end: Date): number {
     }
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
-  return Math.max(1, count);
+  return count;
 }
 
 @Injectable()
@@ -49,6 +85,16 @@ export class LeaveService {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
         message: 'Tanggal selesai cuti tidak boleh lebih awal dari tanggal mulai.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const requestedWorkingDays = countWorkingDaysInclusive(start, end);
+    if (requestedWorkingDays === 0) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Rentang tanggal yang dipilih hanya mencakup hari libur akhir pekan (Sabtu/Minggu) dengan 0 hari kerja. Pilih minimal 1 hari kerja (Senin–Jumat).',
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
@@ -118,12 +164,11 @@ export class LeaveService {
           acc + countWorkingDaysInclusive(new Date(item.startDate), new Date(item.endDate)),
         0,
       );
-      const requestedDays = countWorkingDaysInclusive(start, end);
-      if (usedOrPendingDays + requestedDays > ANNUAL_LEAVE_QUOTA_DAYS) {
+      if (usedOrPendingDays + requestedWorkingDays > ANNUAL_LEAVE_QUOTA_DAYS) {
         const remaining = Math.max(0, ANNUAL_LEAVE_QUOTA_DAYS - usedOrPendingDays);
         throw new AppException({
           code: ErrorCode.VALIDATION_FAILED,
-          message: `Pengajuan melebihi batas jatah Cuti Tahunan ${ANNUAL_LEAVE_QUOTA_DAYS} hari kerja per tahun (terpakai/menunggu: ${usedOrPendingDays} hari, sisa: ${remaining} hari, diajukan: ${requestedDays} hari).`,
+          message: `Pengajuan melebihi batas jatah Cuti Tahunan ${ANNUAL_LEAVE_QUOTA_DAYS} hari kerja per tahun (terpakai/menunggu: ${usedOrPendingDays} hari, sisa: ${remaining} hari, diajukan: ${requestedWorkingDays} hari).`,
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         });
       }
@@ -154,9 +199,17 @@ export class LeaveService {
         orderBy: { effectiveDate: 'desc' },
       });
 
-      const isPermit = normalizedLeaveType === 'PERMIT';
-      const notifTitle = isPermit ? 'Pengajuan Izin Karyawan Baru' : 'Pengajuan Cuti Karyawan Baru';
-      const notifActionPhrase = isPermit ? 'mengajukan izin' : `mengajukan cuti ${normalizedLeaveType}`;
+      const leaveLabel = getLeaveTypeLabel(normalizedLeaveType);
+      const periodText = formatLeavePeriodId(start, end);
+      const isPermitOrSick =
+        normalizedLeaveType === 'PERMIT' || normalizedLeaveType === 'SICK';
+      const notifTitle = isPermitOrSick
+        ? `Pengajuan ${leaveLabel} Karyawan Baru`
+        : 'Pengajuan Cuti Karyawan Baru';
+      const notifActionPhrase = isPermitOrSick
+        ? `mengajukan ${leaveLabel.toLowerCase()}`
+        : `mengajukan ${leaveLabel}`;
+      const notifMessage = `${leave.user.fullName} ${notifActionPhrase} (${periodText}, ${requestedWorkingDays} hari kerja).`;
 
       if (assignment?.directManagerId) {
         await tx.notification.create({
@@ -165,7 +218,7 @@ export class LeaveService {
             triggerType: 'LEAVE_REQUESTED',
             channel: NotificationChannel.IN_APP_CENTER,
             title: notifTitle,
-            message: `${leave.user.fullName} ${notifActionPhrase} (${dto.startDate} s/d ${dto.endDate}).`,
+            message: notifMessage,
             actionUrl: '/leave/queue',
             relatedEntityType: 'leave_requests',
             relatedEntityId: leave.id,
@@ -200,8 +253,8 @@ export class LeaveService {
                 recipientUserId: del.delegateUserId,
                 triggerType: 'LEAVE_REQUESTED',
                 channel: NotificationChannel.IN_APP_CENTER,
-                title: 'Pengajuan Cuti Karyawan Baru (Delegasi Reviewer)',
-                message: `${leave.user.fullName} mengajukan cuti ${dto.leaveType} (${dto.startDate} s/d ${dto.endDate}).`,
+                title: `${notifTitle} (Delegasi Reviewer)`,
+                message: notifMessage,
                 actionUrl: '/leave/queue',
                 relatedEntityType: 'leave_requests',
                 relatedEntityId: leave.id,
@@ -442,6 +495,9 @@ export class LeaveService {
 
       // DEC-007 Retroactive Reconciliation:
       // Jika disetujui dan mencakup masa lalu / hari ini, hapus event kepatuhan yang mungkin tercatat
+      const leaveLabel = getLeaveTypeLabel(leave.leaveType);
+      const periodText = formatLeavePeriodId(leave.startDate, leave.endDate);
+
       if (dto.decision === 'APPROVE') {
         await tx.complianceEvent.deleteMany({
           where: {
@@ -459,8 +515,8 @@ export class LeaveService {
             recipientUserId: leave.userId,
             triggerType: 'LEAVE_APPROVED',
             channel: NotificationChannel.IN_APP_CENTER,
-            title: 'Permohonan Cuti Disetujui',
-            message: `Permohonan cuti Anda untuk periode ${leave.startDate.toISOString().slice(0, 10)} s/d ${leave.endDate.toISOString().slice(0, 10)} telah disetujui.`,
+            title: `Permohonan ${leaveLabel} Disetujui`,
+            message: `Permohonan ${leaveLabel} Anda untuk periode ${periodText} telah disetujui.`,
             actionUrl: '/leave/my',
             relatedEntityType: 'leave_requests',
             relatedEntityId: leave.id,
@@ -473,8 +529,8 @@ export class LeaveService {
             recipientUserId: leave.userId,
             triggerType: 'LEAVE_REJECTED',
             channel: NotificationChannel.IN_APP_CENTER,
-            title: 'Permohonan Cuti Ditolak',
-            message: `Permohonan cuti Anda ditolak oleh atasan: "${dto.reviewNote || 'Tidak ada alasan khusus'}".`,
+            title: `Permohonan ${leaveLabel} Ditolak`,
+            message: `Permohonan ${leaveLabel} Anda (${periodText}) ditolak oleh peninjau: "${dto.reviewNote || 'Tidak ada alasan khusus'}".`,
             actionUrl: '/leave/my',
             relatedEntityType: 'leave_requests',
             relatedEntityId: leave.id,
@@ -513,7 +569,7 @@ export class LeaveService {
     if (leave.status !== LeaveStatus.PENDING) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
-        message: 'Hanya permohonan cuti berstatus PENDING yang dapat dibatalkan.',
+        message: 'Hanya permohonan berstatus Menunggu Review yang dapat dibatalkan.',
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
