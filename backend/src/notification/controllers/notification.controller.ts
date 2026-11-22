@@ -11,7 +11,9 @@ import {
 import { NotificationService } from '../services/notification.service';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
-import { NotificationChannel } from '@prisma/client';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { CanonicalRole } from '@prisma/client';
 
 @Controller(['notifications', 'api/notifications', 'api/v1/notifications'])
 @UseGuards(AuthGuard, CsrfGuard)
@@ -46,19 +48,31 @@ export class NotificationController {
   }
 
   @Get('channels')
+  @UseGuards(RolesGuard)
+  @Roles(
+    CanonicalRole.SYSTEM_ADMIN,
+    CanonicalRole.HRGA,
+    CanonicalRole.CEO_MANAGEMENT,
+  )
   async getChannelConfigurations() {
     return this.notificationService.getChannelConfigurations();
   }
 
   @Post(['channels/test', 'test-delivery'])
+  @UseGuards(RolesGuard)
+  @Roles(
+    CanonicalRole.SYSTEM_ADMIN,
+    CanonicalRole.HRGA,
+    CanonicalRole.CEO_MANAGEMENT,
+  )
   async testChannelDelivery(
-    @Body('channel') channel: NotificationChannel,
+    @Body('channel') channel: string,
     @Body('recipient') recipient: string,
     @Body('eventType') eventType?: string,
   ) {
     return this.notificationService.testChannelDelivery(
       channel,
-      recipient || 'test@dutamedia.com',
+      recipient,
       eventType,
     );
   }

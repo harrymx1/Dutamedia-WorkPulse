@@ -65,6 +65,86 @@ describe('NotificationService (WP-EP11 / Notification Center & Multi-Channel Del
     expect(testRes.latencyMs).toBeDefined();
   });
 
+  it('reports honest simulation readiness when Brevo/VAPID env vars are unset and returns all 9 canonical triggers', async () => {
+    const prevBrevo = process.env.BREVO_API_KEY;
+    const prevPub = process.env.VAPID_PUBLIC_KEY;
+    const prevPriv = process.env.VAPID_PRIVATE_KEY;
+    delete process.env.BREVO_API_KEY;
+    delete process.env.VAPID_PUBLIC_KEY;
+    delete process.env.VAPID_PRIVATE_KEY;
+
+    try {
+      const config = await service.getChannelConfigurations();
+      expect(config.channels).toHaveLength(3);
+
+      const inApp = config.channels.find((c) => c.id === 'IN_APP_CENTER');
+      const email = config.channels.find((c) => c.id === 'EMAIL_BREVO');
+      const push = config.channels.find((c) => c.id === 'BROWSER_PUSH');
+
+      expect(inApp?.mode).toBe('LIVE');
+      expect(email?.mode).toBe('SIMULATION');
+      expect(email?.statusLabel).toBe('Mode Simulasi Aktif');
+      expect(push?.mode).toBe('SIMULATION');
+      expect(push?.statusLabel).toBe('Mode Simulasi Aktif');
+
+      expect(config.triggerMatrix).toHaveLength(9);
+      const morning = config.triggerMatrix.find((t) => t.trigger === 'MORNING_REMINDER');
+      const correctionMat = config.triggerMatrix.find(
+        (t) => t.trigger === 'CORRECTION_MATERIAL_SUBMITTED',
+      );
+      expect(morning).toMatchObject({ inApp: true, browserPush: true, email: true });
+      expect(correctionMat).toMatchObject({ inApp: true, browserPush: false, email: true });
+      expect(JSON.stringify(config)).not.toContain('SLA');
+    } finally {
+      if (prevBrevo !== undefined) process.env.BREVO_API_KEY = prevBrevo;
+      if (prevPub !== undefined) process.env.VAPID_PUBLIC_KEY = prevPub;
+      if (prevPriv !== undefined) process.env.VAPID_PRIVATE_KEY = prevPriv;
+    }
+  });
+
+  it('normalizes test channel aliases, marks unconfigured Email/Push as SIMULATION, and rejects invalid inputs with 400', async () => {
+    const prevBrevo = process.env.BREVO_API_KEY;
+    const prevPub = process.env.VAPID_PUBLIC_KEY;
+    const prevPriv = process.env.VAPID_PRIVATE_KEY;
+    delete process.env.BREVO_API_KEY;
+    delete process.env.VAPID_PUBLIC_KEY;
+    delete process.env.VAPID_PRIVATE_KEY;
+
+    try {
+      const pushRes = await service.testChannelDelivery(
+        'PUSH',
+        'admin@dutamedia.com',
+        'MORNING_REMINDER',
+      );
+      expect(pushRes.channel).toBe(NotificationChannel.BROWSER_PUSH);
+      expect(pushRes.deliveryMode).toBe('SIMULATION');
+      expect(pushRes.statusLabel).toBe('Mode Simulasi Aktif');
+
+      const inAppRes = await service.testChannelDelivery(
+        'IN_APP',
+        'admin@dutamedia.com',
+      );
+      expect(inAppRes.channel).toBe(NotificationChannel.IN_APP_CENTER);
+      expect(inAppRes.deliveryMode).toBe('LIVE');
+
+      await expect(
+        service.testChannelDelivery('SMS' as any, 'admin@dutamedia.com'),
+      ).rejects.toMatchObject({ status: 400 });
+
+      await expect(
+        service.testChannelDelivery('EMAIL', '   '),
+      ).rejects.toMatchObject({ status: 400 });
+
+      await expect(
+        service.testChannelDelivery('EMAIL', 'bukan-email-valid'),
+      ).rejects.toMatchObject({ status: 400 });
+    } finally {
+      if (prevBrevo !== undefined) process.env.BREVO_API_KEY = prevBrevo;
+      if (prevPub !== undefined) process.env.VAPID_PUBLIC_KEY = prevPub;
+      if (prevPriv !== undefined) process.env.VAPID_PRIVATE_KEY = prevPriv;
+    }
+  });
+
   it('enriches and persists legacy truncated BLOCKER_RAISED notification from linked BlockerTicket', async () => {
     const fullBody =
       'Integrasi halaman komitmen pagi di frontend gagal menyimpan data karena endpoint POST /daily/commitments merespons HTTP 500 akibat deadlock query transaksi database.';

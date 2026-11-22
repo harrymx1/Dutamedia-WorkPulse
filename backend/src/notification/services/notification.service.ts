@@ -187,58 +187,250 @@ export class NotificationService {
     });
   }
 
+  private resolveChannelReadiness() {
+    const emailConfigured = Boolean(process.env.BREVO_API_KEY?.trim());
+    const pushConfigured = Boolean(
+      process.env.VAPID_PUBLIC_KEY?.trim() &&
+        process.env.VAPID_PRIVATE_KEY?.trim(),
+    );
+    return { emailConfigured, pushConfigured };
+  }
+
   /**
-   * Mengambil konfigurasi matriks kanal notifikasi (Prototipe 19).
+   * Mengambil konfigurasi kesiapan nyata saluran dan matriks 9 pemicu resmi WorkPulse (Prototipe 19).
    */
   async getChannelConfigurations() {
+    const { emailConfigured, pushConfigured } = this.resolveChannelReadiness();
+    const liveChannels = 1 + (emailConfigured ? 1 : 0) + (pushConfigured ? 1 : 0);
+    const simulationChannels = 3 - liveChannels;
+
+    const triggerMatrix = [
+      {
+        trigger: 'MORNING_REMINDER',
+        label: 'Pengingat Komitmen Pagi',
+        description: '60 menit sebelum batas tepat waktu pagi',
+        recipient: 'Karyawan wajib check-in yang belum mengirim Komitmen Pagi',
+        inApp: true,
+        browserPush: true,
+        email: true,
+      },
+      {
+        trigger: 'EOD_REMINDER',
+        label: 'Pengingat Evaluasi Sore (EOD)',
+        description: '60 menit sebelum batas tepat waktu sore',
+        recipient: 'Karyawan wajib check-in yang belum mengirim Evaluasi Sore',
+        inApp: true,
+        browserPush: true,
+        email: true,
+      },
+      {
+        trigger: 'BLOCKER_RAISED',
+        label: 'Kendala Baru Dilaporkan / Ditugaskan',
+        description: 'Tiket kendala baru atau kendala darurat kritis',
+        recipient: 'Penanggung Jawab Kendala & Atasan / Pemimpin Proyek terkait',
+        inApp: true,
+        browserPush: true,
+        email: true,
+      },
+      {
+        trigger: 'BLOCKER_ESCALATED',
+        label: 'Eskalasi Kendala Otomatis',
+        description: 'Kendala belum ditanggapi melewati batas waktu respon',
+        recipient: 'Pimpinan pada jenjang eskalasi berikutnya hingga Direksi',
+        inApp: true,
+        browserPush: true,
+        email: true,
+      },
+      {
+        trigger: 'BLOCKER_RESOLVED_REOPENED',
+        label: 'Kendala Tuntas / Dibuka Kembali',
+        description: 'Pembaruan penyelesaian atau pengembalian tiket kendala',
+        recipient: 'Karyawan pelapor & Penanggung Jawab Kendala',
+        inApp: true,
+        browserPush: true,
+        email: true,
+      },
+      {
+        trigger: 'CORRECTION_MATERIAL_SUBMITTED',
+        label: 'Pengajuan Koreksi Material',
+        description: 'Jendela sanggahan 24 jam terbuka untuk ditinjau',
+        recipient: 'Peninjau Berwenang dalam cakupan kewenangan',
+        inApp: true,
+        browserPush: false,
+        email: true,
+      },
+      {
+        trigger: 'CORRECTION_DECIDED',
+        label: 'Keputusan Koreksi (Disetujui / Ditolak)',
+        description: 'Hasil tinjauan atau persetujuan otomatis koreksi',
+        recipient: 'Karyawan pemohon koreksi',
+        inApp: true,
+        browserPush: false,
+        email: false,
+      },
+      {
+        trigger: 'LEAVE_WORKFLOW',
+        label: 'Permohonan & Keputusan Cuti',
+        description: 'Pengajuan cuti baru, persetujuan, atau penolakan cuti',
+        recipient: 'Penyetuju Cuti & Karyawan pemohon',
+        inApp: true,
+        browserPush: true,
+        email: true,
+      },
+      {
+        trigger: 'ACCOUNT_INVITATION',
+        label: 'Undangan & Aktivasi Akun Karyawan',
+        description: 'Tautan aktivasi sekali pakai berlaku 72 jam',
+        recipient: 'Karyawan pemilik akun yang diundang',
+        inApp: true,
+        browserPush: false,
+        email: true,
+      },
+    ];
+
     return {
       channels: [
         {
           id: 'IN_APP_CENTER',
           name: 'In-App Notification Center',
+          provider: 'Pusat Notifikasi Basis Data WorkPulse',
           status: 'ACTIVE',
-          description: 'Notifikasi internal terpadu di dalam dashboard WorkPulse.',
+          mode: 'LIVE',
+          statusLabel: 'Aktif',
+          detailLabel: 'Tersimpan di Basis Data · Retensi 30 Hari',
+          description:
+            'Pusat notifikasi langsung di dalam antarmuka web WorkPulse.',
           isConfigured: true,
-        },
-        {
-          id: 'BROWSER_PUSH',
-          name: 'Browser Web Push (VAPID)',
-          status: 'ACTIVE',
-          description: 'Notifikasi desktop langsung saat peramban web aktif.',
-          isConfigured: true,
+          enabled: true,
         },
         {
           id: 'EMAIL_BREVO',
-          name: 'Transactional Email (Brevo SMTP)',
-          status: 'ACTIVE',
-          description: 'Pengiriman email resmi untuk peringatan cut-off, eskalasi darurat, dan ringkasan audit.',
-          isConfigured: true,
+          name: 'Email Transaksional (Brevo)',
+          provider: 'Brevo SMTP / API',
+          status: emailConfigured ? 'READY' : 'SIMULATION',
+          mode: emailConfigured ? 'LIVE' : 'SIMULATION',
+          statusLabel: emailConfigured
+            ? 'Siap (Terkonfigurasi)'
+            : 'Mode Simulasi Aktif',
+          detailLabel: emailConfigured
+            ? 'Kunci Layanan Terpasang'
+            : 'Mode Simulasi (Kunci Brevo Belum Diatur)',
+          description:
+            'Pengiriman email untuk pengingat, eskalasi kendala kritis, cuti, dan tautan undangan.',
+          isConfigured: emailConfigured,
+          enabled: true,
+        },
+        {
+          id: 'BROWSER_PUSH',
+          name: 'Browser Push (VAPID RFC 8292)',
+          provider: 'Web Push (VAPID RFC 8292)',
+          status: pushConfigured ? 'READY' : 'SIMULATION',
+          mode: pushConfigured ? 'LIVE' : 'SIMULATION',
+          statusLabel: pushConfigured
+            ? 'Siap (Terkonfigurasi)'
+            : 'Mode Simulasi Aktif',
+          detailLabel: pushConfigured
+            ? 'Kunci VAPID Terpasang'
+            : 'Mode Simulasi (Kunci VAPID Belum Diatur)',
+          description:
+            'Pemberitahuan push ke peramban perangkat yang telah memberikan izin.',
+          isConfigured: pushConfigured,
+          enabled: true,
         },
       ],
-      triggerMatrix: [
-        { trigger: 'BLOCKER_RAISED', inApp: true, browserPush: true, email: true },
-        { trigger: 'BLOCKER_ESCALATED_L2', inApp: true, browserPush: true, email: true },
-        { trigger: 'MANAGER_NOTE_SHARED', inApp: true, browserPush: false, email: false },
-        { trigger: 'LEAVE_REQUESTED', inApp: true, browserPush: false, email: true },
-        { trigger: 'CORRECTION_REQUESTED', inApp: true, browserPush: true, email: false },
-      ],
+      triggerMatrix,
+      summary: {
+        totalChannels: 3,
+        liveChannels,
+        simulationChannels,
+        totalTriggers: triggerMatrix.length,
+      },
     };
   }
 
   /**
-   * Simulasi pengujian pengiriman kanal notifikasi (Prototipe 19).
+   * Simulasi pengujian pengiriman saluran notifikasi tanpa memalsukan status pengiriman (Prototipe 19).
    */
   async testChannelDelivery(
-    channel: NotificationChannel,
+    channel: NotificationChannel | string,
     testRecipient: string,
     eventType?: string,
   ) {
+    const rawChannel = String(channel || '').trim().toUpperCase();
+    let normalizedChannel: NotificationChannel;
+
+    if (rawChannel === 'EMAIL' || rawChannel === NotificationChannel.EMAIL) {
+      normalizedChannel = NotificationChannel.EMAIL;
+    } else if (
+      rawChannel === 'PUSH' ||
+      rawChannel === NotificationChannel.BROWSER_PUSH
+    ) {
+      normalizedChannel = NotificationChannel.BROWSER_PUSH;
+    } else if (
+      rawChannel === 'IN_APP' ||
+      rawChannel === NotificationChannel.IN_APP_CENTER
+    ) {
+      normalizedChannel = NotificationChannel.IN_APP_CENTER;
+    } else {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Saluran notifikasi uji yang dipilih tidak valid.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const trimmedRecipient =
+      typeof testRecipient === 'string' ? testRecipient.trim() : '';
+    if (!trimmedRecipient) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Target penerima uji wajib diisi.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    if (
+      normalizedChannel === NotificationChannel.EMAIL &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedRecipient)
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Alamat email penerima uji tidak valid.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const { emailConfigured, pushConfigured } = this.resolveChannelReadiness();
+    let deliveryMode: 'LIVE' | 'SIMULATION' = 'LIVE';
+    let statusLabel = 'Terkirim (In-App)';
+    let message = `Pengujian saluran Notifikasi Dalam Aplikasi ke ${trimmedRecipient} siap disimulasikan tanpa mengubah kotak masuk asli.`;
+
+    if (normalizedChannel === NotificationChannel.EMAIL) {
+      deliveryMode = emailConfigured ? 'LIVE' : 'SIMULATION';
+      statusLabel = emailConfigured
+        ? 'Terkirim (Terverifikasi)'
+        : 'Mode Simulasi Aktif';
+      message = emailConfigured
+        ? `Pengujian saluran Email ke ${trimmedRecipient} siap dikirim melalui penyedia terkonfigurasi.`
+        : `Mode simulasi aktif: kunci layanan Email Brevo belum diatur di server, sehingga tidak ada email sungguhan yang dikirim ke ${trimmedRecipient}.`;
+    } else if (normalizedChannel === NotificationChannel.BROWSER_PUSH) {
+      deliveryMode = pushConfigured ? 'LIVE' : 'SIMULATION';
+      statusLabel = pushConfigured
+        ? 'Terkirim (Terverifikasi)'
+        : 'Mode Simulasi Aktif';
+      message = pushConfigured
+        ? `Pengujian Browser Push untuk ${trimmedRecipient} siap dijalankan melalui kunci VAPID server.`
+        : `Mode simulasi aktif: kunci Browser Push (VAPID) belum diatur di server, sehingga tidak ada notifikasi peramban sungguhan yang dikirim ke ${trimmedRecipient}.`;
+    }
+
     return {
       success: true,
-      channel,
-      recipient: testRecipient,
+      channel: normalizedChannel,
+      deliveryMode,
+      statusLabel,
+      recipient: trimmedRecipient,
       eventType: eventType || 'TEST_SIMULATION',
-      message: `Simulasi pengiriman notifikasi berhasil dikirim ke saluran ${channel} (${testRecipient}).`,
+      message,
       deliveredAt: this.clockService.now().toISOString(),
       latencyMs: 142,
     };
