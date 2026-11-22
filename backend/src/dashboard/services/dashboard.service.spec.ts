@@ -481,4 +481,57 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
       }),
     ).rejects.toThrow(/tidak memiliki akses/);
   });
+
+  it('uses WIB workDate, includes active projects with future endDate, formats topBlockerTitle severity in Indonesian, and enforces 403 for non-lead employee', async () => {
+    // 2026-11-21T18:00:00.000Z === 2026-11-22 01:00 WIB (calendar date 2026-11-22)
+    mockClock.now.mockReturnValue(new Date('2026-11-21T18:00:00.000Z'));
+    mockPrisma.projectAuthorityMapping.findMany.mockResolvedValue([
+      {
+        id: 'prj-future',
+        projectCode: 'PRJ-Q4',
+        projectName: 'Proyek Akhir Tahun',
+        projectManagerId: 'emp-lead-1',
+        involvedFunction: 'Delivery',
+        projectManager: { fullName: 'Dimas Prakoso' },
+      },
+    ]);
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
+    mockPrisma.blockerTicket.findMany.mockResolvedValue([
+      {
+        projectCodeReference: 'PRJ-Q4',
+        severity: BlockerSeverity.CRITICAL,
+        status: BlockerStatus.OPEN,
+        description: 'Database staging gagal terhubung',
+      },
+    ]);
+
+    // Non-lead EMPLOYEE must receive 403 AUTH_FORBIDDEN_SCOPE
+    await expect(
+      service.getProjectRiskOverview({ userId: 'emp-regular', userRole: 'EMPLOYEE' }),
+    ).rejects.toThrow(/tidak memiliki kewenangan/);
+
+    // Active projectManagerId (even if role is EMPLOYEE) succeeds
+    const result = await service.getProjectRiskOverview({
+      userId: 'emp-lead-1',
+      userRole: 'EMPLOYEE',
+    });
+
+    const expectedWibToday = new Date('2026-11-22T00:00:00.000Z');
+    expect(mockPrisma.projectAuthorityMapping.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          effectiveDate: { lte: expectedWibToday },
+          OR: [{ endDate: null }, { endDate: { gte: expectedWibToday } }],
+        },
+      }),
+    );
+    expect(mockPrisma.dailyAccountabilityRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { workDate: expectedWibToday },
+      }),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].topBlockerTitle).toContain('[Kritis]');
+    expect(result[0].topBlockerTitle).not.toContain('[CRITICAL]');
+  });
 });

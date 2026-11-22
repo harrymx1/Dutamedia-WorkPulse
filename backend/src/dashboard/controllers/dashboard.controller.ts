@@ -72,8 +72,11 @@ export class DashboardController {
   }
 
   @Get(['projects/risk', 'api/projects/risk', 'dashboard/projects', 'api/dashboard/projects'])
-  async getProjectRiskOverview() {
-    return this.dashboardService.getProjectRiskOverview();
+  async getProjectRiskOverview(@Req() req: any) {
+    return this.dashboardService.getProjectRiskOverview({
+      userId: req.user?.id,
+      userRole: req.user?.role,
+    });
   }
 
   @Get(['dashboard/feed', 'api/dashboard/feed', 'api/v1/dashboard/feed'])

@@ -84,11 +84,32 @@ const filteredProjects = computed(() => {
       const matchName = p.name.toLowerCase().includes(q);
       const matchCode = p.code.toLowerCase().includes(q);
       const matchLead = p.leadName.toLowerCase().includes(q);
-      return matchName || matchCode || matchLead;
+      const matchDivision = (p.clientName || '').toLowerCase().includes(q);
+      return matchName || matchCode || matchLead || matchDivision;
     }
     return true;
   });
 });
+
+function formatRiskLevel(level: string): string {
+  switch (level) {
+    case 'LOW':
+      return 'Rendah';
+    case 'MEDIUM':
+      return 'Waspada';
+    case 'HIGH':
+      return 'Tinggi';
+    case 'CRITICAL':
+      return 'Kritis';
+    default:
+      return level;
+  }
+}
+
+function resetFilters() {
+  activeFilter.value = 'ALL';
+  searchQuery.value = '';
+}
 
 function openDetail(p: ProjectRiskItem) {
   selectedProject.value = p;
@@ -123,7 +144,7 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <span class="eyebrow">Pemantauan Risiko Portofolio &amp; Kesehatan Inisiatif</span>
-          <h1>Project Risk Radar</h1>
+          <h1>Radar Risiko Proyek</h1>
           <p class="subtitle">
             Visualisasi status kesehatan komitmen harian dan eskalasi blocker di setiap inisiatif proyek untuk mengantisipasi hambatan rilis secara dini.
           </p>
@@ -220,7 +241,7 @@ onMounted(() => {
               v-model="searchQuery"
               type="search"
               class="search-input"
-              placeholder="Cari kode proyek, nama, atau Lead..."
+              placeholder="Cari kode, nama proyek, divisi, atau Lead..."
             />
           </div>
         </div>
@@ -233,6 +254,14 @@ onMounted(() => {
         <div v-else-if="filteredProjects.length === 0" class="empty-state">
           <FolderGit2 :size="32" />
           <p>Tidak ada proyek yang sesuai filter risiko ini.</p>
+          <button
+            v-if="activeFilter !== 'ALL' || searchQuery.trim()"
+            type="button"
+            class="btn btn-secondary btn-sm btn-reset-filter"
+            @click="resetFilters"
+          >
+            Tampilkan Semua Proyek
+          </button>
         </div>
 
         <div v-else class="table-wrap">
@@ -243,7 +272,7 @@ onMounted(() => {
                 <th scope="col">Project Lead</th>
                 <th scope="col">Komitmen Aktif</th>
                 <th scope="col">Blocker Terbuka</th>
-                <th scope="col">Health Score &amp; Risiko</th>
+                <th scope="col">Skor Kesehatan &amp; Risiko</th>
                 <th scope="col">Aksi</th>
               </tr>
             </thead>
@@ -272,7 +301,7 @@ onMounted(() => {
                         red: p.riskLevel === 'HIGH' || p.riskLevel === 'CRITICAL',
                       }"
                     >
-                      {{ p.riskLevel }} ({{ p.healthScore }}%)
+                      {{ formatRiskLevel(p.riskLevel) }} ({{ p.healthScore }}%)
                     </span>
                   </div>
                 </td>
@@ -289,11 +318,11 @@ onMounted(() => {
       </section>
 
       <!-- Project Detail Modal -->
-      <div v-if="selectedProject" class="modal-backdrop">
+      <div v-if="selectedProject" class="modal-backdrop" @click.self="closeDetail">
         <div class="modal-card">
           <div class="modal-header">
             <h3>Rincian Risiko Proyek</h3>
-            <button type="button" class="close-btn" @click="closeDetail">
+            <button type="button" class="close-btn" aria-label="Tutup" @click="closeDetail">
               <X :size="18" />
             </button>
           </div>
@@ -314,11 +343,11 @@ onMounted(() => {
                     red: selectedProject.riskLevel === 'HIGH' || selectedProject.riskLevel === 'CRITICAL',
                   }"
                 >
-                  {{ selectedProject.riskLevel }}
+                  {{ formatRiskLevel(selectedProject.riskLevel) }}
                 </span>
               </div>
               <div class="detail-row">
-                <span>Skor Kesehatan (Health Score):</span>
+                <span>Skor Kesehatan:</span>
                 <strong>{{ selectedProject.healthScore }} / 100</strong>
               </div>
               <div class="detail-row">
@@ -798,5 +827,63 @@ h1 {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 12px 48px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .list-tools {
+    padding: 12px 16px;
+  }
+
+  .search-wrap {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-header,
+  .modal-body {
+    padding: 14px 16px;
+  }
+
+  .detail-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 64px;
+  }
 }
 </style>

@@ -73,14 +73,15 @@ describe('ProjectRiskView.vue (Prototipe 13 / EP12 - Project Risk Radar)', () =>
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(wrapper.find('h1').text()).toBe('Project Risk Radar');
+    expect(wrapper.find('h1').text()).toBe('Radar Risiko Proyek');
     expect(wrapper.text()).toContain('Core Payment Engine');
     expect(wrapper.text()).toContain('Merchant Portal Web');
-    expect(wrapper.text()).toContain('HIGH (68%)');
-    expect(wrapper.text()).toContain('LOW (95%)');
+    expect(wrapper.text()).toContain('Tinggi (68%)');
+    expect(wrapper.text()).toContain('Rendah (95%)');
+    expect(wrapper.text()).not.toContain('HIGH (68%)');
   });
 
-  it('opens project detail modal when Rincian button is clicked', async () => {
+  it('opens project detail modal when Rincian button is clicked and closes on backdrop click', async () => {
     const wrapper = mount(ProjectRiskView, {
       global: {
         plugins: [router],
@@ -102,6 +103,37 @@ describe('ProjectRiskView.vue (Prototipe 13 / EP12 - Project Risk Radar)', () =>
     expect(wrapper.find('.modal-card').exists()).toBe(true);
     expect(wrapper.text()).toContain('Rincian Risiko Proyek');
     expect(wrapper.text()).toContain('Timeout koneksi Redis staging');
+    expect(wrapper.find('.modal-detail-box').text()).toContain('Tinggi');
+
+    await wrapper.find('.modal-backdrop').trigger('click');
+    expect(wrapper.find('.modal-card').exists()).toBe(false);
+  });
+
+  it('searches by division/client name and resets empty filter via Tampilkan Semua Proyek button', async () => {
+    const wrapper = mount(ProjectRiskView, {
+      global: {
+        plugins: [router],
+        stubs: {
+          RouterLink: true,
+        },
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const searchInput = wrapper.find('.search-input');
+    await searchInput.setValue('Bank ABC');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Core Payment Engine');
+
+    await searchInput.setValue('Proyek Tidak Ada');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(0);
+    const resetBtn = wrapper.find('.btn-reset-filter');
+    expect(resetBtn.exists()).toBe(true);
+    expect(resetBtn.text()).toBe('Tampilkan Semua Proyek');
+
+    await resetBtn.trigger('click');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(2);
   });
 });
 

@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import {
   BlockerSeverity,
   BlockerStatus,
@@ -635,16 +636,46 @@ export class DashboardService {
   /**
    * Mengambil pemantauan risiko portofolio proyek (Prototipe 13).
    */
-  async getProjectRiskOverview() {
-    // 1. Ambil seluruh project authority mappings aktif dari DB
+  async getProjectRiskOverview(actor?: { userId?: string; userRole?: string }) {
+    const nowDate = this.clockService?.now
+      ? this.clockService.now()
+      : this.clockService?.currentDate
+        ? this.clockService.currentDate()
+        : new Date();
+    const today = toJakartaDateOnly(nowDate);
+
+    // 1. Ambil seluruh project authority mappings aktif pada tanggal WIB hari ini
     const mappings = await this.prisma.projectAuthorityMapping.findMany({
-      where: { endDate: null },
+      where: {
+        effectiveDate: { lte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      },
       include: {
         projectManager: { select: { id: true, fullName: true, email: true } },
         escalationReviewer: { select: { id: true, fullName: true, email: true } },
       },
       orderBy: { projectCode: 'asc' },
     });
+
+    const managerialRoles = new Set<string>([
+      CanonicalRole.SUPERVISOR,
+      CanonicalRole.HEAD,
+      CanonicalRole.HRGA,
+      CanonicalRole.CEO_MANAGEMENT,
+      CanonicalRole.SYSTEM_ADMIN,
+    ]);
+    if (actor?.userRole && !managerialRoles.has(actor.userRole)) {
+      const isActiveLead = mappings.some(
+        (m) => Boolean(actor.userId) && m.projectManagerId === actor.userId,
+      );
+      if (!isActiveLead) {
+        throw new AppException({
+          statusCode: HttpStatus.FORBIDDEN,
+          code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+          message: 'Anda tidak memiliki kewenangan untuk mengakses Radar Risiko Proyek.',
+        });
+      }
+    }
 
     // 2. Ambil seluruh open blockers
     const allOpenBlockers = await this.prisma.blockerTicket.findMany({
@@ -656,13 +687,18 @@ export class DashboardService {
       },
     });
 
-    // 3. Ambil komitmen aktif hari ini
-    const today = this.clockService?.now ? this.clockService.now() : (this.clockService?.currentDate ? this.clockService.currentDate() : new Date());
-    today.setHours(0, 0, 0, 0);
+    // 3. Ambil komitmen aktif hari ini (tanggal kalender WIB)
     const todayRecords = await this.prisma.dailyAccountabilityRecord.findMany({
       where: { workDate: today },
       include: { commitments: true },
     });
+
+    const severityLabels: Record<string, string> = {
+      CRITICAL: 'Kritis',
+      HIGH: 'Tinggi',
+      MEDIUM: 'Sedang',
+      LOW: 'Rendah',
+    };
 
     return mappings.map((prj) => {
       // Hitung komitmen aktif pada proyek ini
@@ -721,7 +757,7 @@ export class DashboardService {
         riskLevel,
         healthScore,
         topBlockerTitle: topBlocker
-          ? `[${topBlocker.severity}] ${this.formatBlockerSummaryText(topBlocker.description).slice(0, 80)}`
+          ? `[${severityLabels[topBlocker.severity] || topBlocker.severity}] ${this.formatBlockerSummaryText(topBlocker.description).slice(0, 80)}`
           : undefined,
       };
     });
