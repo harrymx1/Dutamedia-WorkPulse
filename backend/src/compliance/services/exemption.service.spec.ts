@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExemptionService } from './exemption.service';
+import { NotificationChannel } from '@prisma/client';
 import { AppException } from '../../common/exceptions/app.exception';
 
 describe('ExemptionService (WP-EP08 / Exemption Management - Prototipe 12)', () => {
@@ -59,6 +60,80 @@ describe('ExemptionService (WP-EP08 / Exemption Management - Prototipe 12)', () 
 
     expect(res.id).toBe('ex-1');
     expect(mockPrisma.boundedExemption.create).toHaveBeenCalled();
+  });
+
+  it('rejects exemption reason shorter than 5 characters with VALIDATION_FAILED', async () => {
+    await expect(
+      service.createBoundedExemption('hrga-1', {
+        userId: 'usr-1',
+        startDate: '2026-10-29',
+        endDate: '2026-10-30',
+        exemptionCategory: 'Dinas Luar',
+        reason: 'ok',
+      }),
+    ).rejects.toThrowError(AppException);
+    expect(mockPrisma.boundedExemption.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects overlapping bounded exemption for the same employee with RESOURCE_CONFLICT', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'usr-1', fullName: 'Budi Staf' });
+    mockPrisma.boundedExemption.findFirst = vi.fn().mockResolvedValue({
+      id: 'ex-existing',
+      userId: 'usr-1',
+      startDate: new Date('2026-10-28'),
+      endDate: new Date('2026-10-30'),
+    });
+
+    await expect(
+      service.createBoundedExemption('hrga-1', {
+        userId: 'usr-1',
+        startDate: '2026-10-29',
+        endDate: '2026-10-31',
+        exemptionCategory: 'Dinas Luar',
+        reason: 'Pendampingan klien luar kota',
+      }),
+    ).rejects.toThrowError(AppException);
+    expect(mockPrisma.boundedExemption.create).not.toHaveBeenCalled();
+  });
+
+  it('sends EXEMPTION_GRANTED notification to target employee upon creation', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'usr-1', fullName: 'Budi Staf' });
+    mockPrisma.boundedExemption.findFirst = vi.fn().mockResolvedValue(null);
+    mockPrisma.boundedExemption.create.mockResolvedValue({
+      id: 'ex-2',
+      userId: 'usr-1',
+      startDate: new Date('2026-11-22'),
+      endDate: new Date('2026-11-22'),
+      exemptionCategory: 'Dinas Luar',
+      reason: 'Kunjungan instalasi server klien',
+      createdByUser: { id: 'hrga-1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+    });
+    mockPrisma.notification = {
+      create: vi.fn().mockResolvedValue({ id: 'notif-ex-1' }),
+    };
+
+    const res = await service.createBoundedExemption('hrga-1', {
+      userId: 'usr-1',
+      startDate: '2026-11-22',
+      endDate: '2026-11-22',
+      exemptionCategory: 'Dinas Luar',
+      reason: 'Kunjungan instalasi server klien',
+    });
+
+    expect(res.id).toBe('ex-2');
+    expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          recipientUserId: 'usr-1',
+          triggerType: 'EXEMPTION_GRANTED',
+          channel: NotificationChannel.IN_APP_CENTER,
+          title: 'Dispensasi Resmi Didaftarkan (Dinas Luar)',
+          actionUrl: '/notifications',
+          relatedEntityType: 'bounded_exemptions',
+          relatedEntityId: 'ex-2',
+        }),
+      }),
+    );
   });
 });
 

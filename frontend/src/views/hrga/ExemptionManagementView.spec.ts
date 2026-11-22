@@ -62,12 +62,83 @@ describe('ExemptionManagementView.vue (WP-EP08 / Prototipe 12 - Kelola Pengecual
 
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Kelola Hari Libur & Pengecualian');
+    expect(wrapper.text()).toContain('Manajemen Dispensasi & Pengecualian Akuntabilitas');
     expect(wrapper.text()).toContain('Daftarkan Dispensasi Baru');
     expect(wrapper.text()).toContain('Daftar Pengecualian Resmi Aktif');
     expect(wrapper.text()).toContain('Budi Staf');
     expect(wrapper.text()).toContain('Dinas Luar');
     expect(wrapper.text()).toContain('ST-042');
+  });
+
+  it('formats 1-day period as single date, supports search/category filter, and binds endDate min attribute', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/compliance/exemptions')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'ex-1',
+                userId: 'u-1',
+                startDate: '2026-10-29',
+                endDate: '2026-10-29',
+                exemptionCategory: 'Dinas Luar',
+                officialReferenceNumber: 'ST-001',
+                reason: 'Instalasi server klien Bandung',
+                user: { id: 'u-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+                createdByUser: { id: 'hrga-1', fullName: 'Dewi Lestari' },
+              },
+              {
+                id: 'ex-2',
+                userId: 'u-2',
+                startDate: '2026-11-01',
+                endDate: '2026-11-03',
+                exemptionCategory: 'Pelatihan Sertifikasi',
+                officialReferenceNumber: 'ST-002',
+                reason: 'Pelatihan cloud architecture',
+                user: { id: 'u-2', fullName: 'Siti Rahma', email: 'siti@dutamedia.com' },
+                createdByUser: { id: 'hrga-1', fullName: 'Dewi Lestari' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            { id: 'u-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+            { id: 'u-2', fullName: 'Siti Rahma', email: 'siti@dutamedia.com' },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(ExemptionManagementView, {
+      global: { plugins: [router] },
+    });
+
+    await flushPromises();
+
+    const periodCells = wrapper.findAll('.period-text');
+    expect(periodCells).toHaveLength(2);
+    expect(periodCells[0].text()).not.toContain('s/d');
+    expect(periodCells[1].text()).toContain('s/d');
+
+    await wrapper.find('#startDateInput').setValue('2026-11-25');
+    expect(wrapper.find('#endDateInput').attributes('min')).toBe('2026-11-25');
+
+    await wrapper.find('#exemptionCategoryFilter').setValue('Pelatihan Sertifikasi');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Siti Rahma');
+
+    await wrapper.find('#exemptionSearchInput').setValue('bandung');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(0);
+    expect(wrapper.text()).toContain('Tidak Ada Dispensasi yang Cocok');
   });
 });
 

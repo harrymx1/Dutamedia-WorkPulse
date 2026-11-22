@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatDateWib } from '../../utils/dateTime';
 import {
@@ -40,6 +40,35 @@ const formReason = ref('');
 // Toast
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
+
+// Search & Filter
+const searchQuery = ref('');
+const categoryFilter = ref('ALL');
+
+const filteredExemptions = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  return exemptions.value.filter((item) => {
+    if (categoryFilter.value !== 'ALL' && item.exemptionCategory !== categoryFilter.value) {
+      return false;
+    }
+    if (!q) return true;
+    return (
+      item.user.fullName.toLowerCase().includes(q) ||
+      (item.user.email || '').toLowerCase().includes(q) ||
+      (item.officialReferenceNumber || '').toLowerCase().includes(q) ||
+      item.reason.toLowerCase().includes(q)
+    );
+  });
+});
+
+function formatPeriodLabel(startDate: string, endDate: string): string {
+  const startLabel = formatDateWib(startDate);
+  const endLabel = formatDateWib(endDate);
+  if (startLabel === endLabel) {
+    return startLabel;
+  }
+  return `${startLabel} s/d ${endLabel}`;
+}
 
 function showToast(msg: string, isError = false) {
   if (isError) {
@@ -108,6 +137,8 @@ async function submitExemption() {
     });
 
     showToast('Dispensasi akuntabilitas berhasil didaftarkan.');
+    formStartDate.value = '';
+    formEndDate.value = '';
     formReason.value = '';
     formRefNo.value = '';
     await loadData();
@@ -143,7 +174,7 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <span class="eyebrow">Tata Kelola Dispensasi &amp; Pengecualian</span>
-          <h1>Kelola Hari Libur &amp; Pengecualian</h1>
+          <h1>Manajemen Dispensasi &amp; Pengecualian Akuntabilitas</h1>
           <p class="subtitle">
             Daftarkan dispensasi akuntabilitas individual (Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus). Hari dispensasi otomatis dikecualikan dari pemantauan pola keterlambatan.
           </p>
@@ -179,7 +210,13 @@ onMounted(() => {
               </div>
               <div class="form-group">
                 <label for="endDateInput">Tanggal Selesai <span class="req">*</span></label>
-                <input id="endDateInput" v-model="formEndDate" type="date" required />
+                <input
+                  id="endDateInput"
+                  v-model="formEndDate"
+                  type="date"
+                  :min="formStartDate || undefined"
+                  required
+                />
               </div>
             </div>
 
@@ -231,9 +268,33 @@ onMounted(() => {
 
         <!-- Panel Tabel Riwayat Dispensasi -->
         <section class="panel table-panel">
-          <div class="panel-head">
-            <h2>Daftar Pengecualian Resmi Aktif</h2>
-            <p class="panel-desc">Total {{ exemptions.length }} rekaman dispensasi terdaftar.</p>
+          <div class="panel-head table-panel-head">
+            <div>
+              <h2>Daftar Pengecualian Resmi Aktif</h2>
+              <p class="panel-desc">
+                Menampilkan {{ filteredExemptions.length }} dari {{ exemptions.length }} rekaman dispensasi terdaftar.
+              </p>
+            </div>
+            <div class="table-filters">
+              <input
+                id="exemptionSearchInput"
+                v-model="searchQuery"
+                type="search"
+                placeholder="Cari karyawan, no. surat, alasan..."
+                aria-label="Cari dispensasi"
+              />
+              <select
+                id="exemptionCategoryFilter"
+                v-model="categoryFilter"
+                aria-label="Saring kategori dispensasi"
+              >
+                <option value="ALL">Semua Kategori</option>
+                <option value="Dinas Luar">Dinas Luar</option>
+                <option value="Pelatihan Sertifikasi">Pelatihan Sertifikasi</option>
+                <option value="Cuti Khusus">Cuti Khusus</option>
+                <option value="Tugas Khusus">Tugas Khusus</option>
+              </select>
+            </div>
           </div>
 
           <div class="table-container">
@@ -247,6 +308,12 @@ onMounted(() => {
               <p>Seluruh karyawan berada dalam jadwal kerja akuntabilitas harian normal.</p>
             </div>
 
+            <div v-else-if="filteredExemptions.length === 0" class="empty-state">
+              <Calendar :size="36" class="empty-icon" />
+              <h3>Tidak Ada Dispensasi yang Cocok</h3>
+              <p>Ubah kata kunci pencarian atau pilihan kategori untuk melihat daftar dispensasi lainnya.</p>
+            </div>
+
             <table v-else class="exemption-table">
               <thead>
                 <tr>
@@ -258,7 +325,7 @@ onMounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in exemptions" :key="item.id">
+                <tr v-for="item in filteredExemptions" :key="item.id">
                   <td class="col-user">
                     <div class="user-inline">
                       <User :size="14" />
@@ -267,9 +334,7 @@ onMounted(() => {
                   </td>
                   <td class="col-period">
                     <span class="period-text wp-datetime">
-                      {{ formatDateWib(item.startDate) }}
-                      s/d
-                      {{ formatDateWib(item.endDate) }}
+                      {{ formatPeriodLabel(item.startDate, item.endDate) }}
                     </span>
                   </td>
                   <td class="col-cat">
@@ -447,6 +512,7 @@ label {
 .opt { font-size: 11px; color: #66736E; font-weight: normal; }
 
 input[type="text"],
+input[type="search"],
 input[type="date"],
 select,
 textarea {
@@ -458,6 +524,28 @@ textarea {
   background: #fff;
   color: #0E211B;
   box-sizing: border-box;
+}
+
+.table-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.table-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.table-filters input[type="search"] {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.table-filters select {
+  flex: 0 0 180px;
+  width: 180px;
 }
 
 .btn-submit {
@@ -582,5 +670,54 @@ textarea {
 
 @media (max-width: 900px) {
   .split-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 12px 64px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .panel-head {
+    padding: 14px 16px;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  .table-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .table-filters input[type="search"],
+  .table-filters select {
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+  }
+
+  .table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 64px;
+  }
 }
 </style>

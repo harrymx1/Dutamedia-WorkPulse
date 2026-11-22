@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { NotificationChannel } from '@prisma/client';
 import { CreateBoundedExemptionDto } from '../dto/create-exemption.dto';
 
 @Injectable()
@@ -30,6 +31,15 @@ export class ExemptionService {
       });
     }
 
+    const trimmedReason = (dto.reason || '').trim();
+    if (trimmedReason.length < 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Alasan resmi dispensasi minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const targetUser = await this.prisma.user.findUnique({
       where: { id: dto.userId },
     });
@@ -42,14 +52,34 @@ export class ExemptionService {
       });
     }
 
-    return this.prisma.boundedExemption.create({
+    if (this.prisma.boundedExemption.findFirst) {
+      const overlapping = await this.prisma.boundedExemption.findFirst({
+        where: {
+          userId: dto.userId,
+          startDate: { lte: end },
+          endDate: { gte: start },
+        },
+      });
+      if (overlapping) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message:
+            'Karyawan tersebut sudah memiliki dispensasi pada rentang tanggal yang bertumpuk.',
+          statusCode: HttpStatus.CONFLICT,
+        });
+      }
+    }
+
+    const trimmedCategory = dto.exemptionCategory.trim();
+
+    const created = await this.prisma.boundedExemption.create({
       data: {
         userId: dto.userId,
         startDate: start,
         endDate: end,
-        exemptionCategory: dto.exemptionCategory.trim(),
+        exemptionCategory: trimmedCategory,
         officialReferenceNumber: dto.officialReferenceNumber?.trim() || null,
-        reason: dto.reason.trim(),
+        reason: trimmedReason,
         createdByUserId,
       },
       include: {
@@ -57,6 +87,35 @@ export class ExemptionService {
         createdByUser: { select: { id: true, fullName: true, email: true } },
       },
     });
+
+    if (this.prisma.notification?.create) {
+      const fmt = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+      const startLabel = fmt.format(start);
+      const endLabel = fmt.format(end);
+      const periodLabel =
+        startLabel === endLabel ? startLabel : `${startLabel} s/d ${endLabel}`;
+      const creatorName = created.createdByUser?.fullName || 'Tim HRGA / Pimpinan';
+
+      await this.prisma.notification.create({
+        data: {
+          recipientUserId: dto.userId,
+          triggerType: 'EXEMPTION_GRANTED',
+          channel: NotificationChannel.IN_APP_CENTER,
+          title: `Dispensasi Resmi Didaftarkan (${trimmedCategory})`,
+          message: `${creatorName} mendaftarkan dispensasi ${trimmedCategory} untuk Anda pada periode ${periodLabel}. Alasan: ${trimmedReason}`,
+          actionUrl: '/notifications',
+          relatedEntityType: 'bounded_exemptions',
+          relatedEntityId: created.id,
+        },
+      });
+    }
+
+    return created;
   }
 
   /**

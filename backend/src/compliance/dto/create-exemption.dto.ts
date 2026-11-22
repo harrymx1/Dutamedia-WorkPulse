@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MinLength,
 } from 'class-validator';
 
 export class CreateBoundedExemptionDto {
@@ -26,6 +27,7 @@ export class CreateBoundedExemptionDto {
 
   @IsString({ message: 'Alasan resmi dispensasi wajib diisi' })
   @IsNotEmpty({ message: 'Alasan dispensasi tidak boleh kosong' })
+  @MinLength(5, { message: 'Alasan resmi dispensasi minimal 5 karakter' })
   reason!: string;
 }
 
