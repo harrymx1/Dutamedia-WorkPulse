@@ -91,6 +91,7 @@ function formatReason(reason: string): string {
     NEWLY_ASSIGNED: 'Penugasan Baru Atasan',
     OPERATIONAL_INCIDENT: 'Perbaikan Error / Bug Kritis',
     MISSED_IN_PLANNING: 'Terlewat Catat Pagi',
+    MORNING_CUTOFF_MISSED: 'Komitmen Pagi Terlewat',
     PRIORITY_CHANGE: 'Pengalihan Prioritas',
     OTHER: 'Lainnya',
   };

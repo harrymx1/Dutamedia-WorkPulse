@@ -426,4 +426,226 @@ describe('AdditionalWorkView.vue (WP-EP05-TK007 / Prototipe 03 & IMP-016 Verific
     expect(banner.text()).toContain('Batas Waktu EOD (21:00 WIB) Telah Berakhir');
     expect(wrapper.find('[data-testid="btn-add-additional-work"]').attributes('disabled')).toBeDefined();
   });
+
+  it('membuka formulir dengan opsi default "Komitmen Pagi Terlewat" saat jam pagi sudah terkunci dan belum ada record (Temuan 2 - Opsi A)', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string, opts?: any) => {
+      if (String(url).includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: {
+              workDate: '2026-11-22',
+              cutoffTimings: {
+                morningLockCutoff: '09:30',
+                isMorningLocked: true,
+                eodLockCutoff: '21:00',
+                isEodLocked: false,
+              },
+              record: null,
+            },
+          }),
+        });
+      }
+      if (String(url).includes('/daily/additional-work') && opts?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: { id: 'aw-missed-1' },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.find('[data-testid="morning-missed-info-banner"]').exists()).toBe(true);
+    expect(wrapper.text()).not.toContain('Belum Mengisi Morning Commitment:');
+
+    const reasonSelect = wrapper.find('[data-testid="select-reason"]');
+    expect(reasonSelect.exists()).toBe(true);
+    expect((reasonSelect.element as HTMLSelectElement).value).toBe('MORNING_CUTOFF_MISSED');
+    expect(reasonSelect.text()).toContain('Komitmen Pagi Terlewat');
+
+    await wrapper.find('#input-task-text').setValue('Menyelesaikan laporan keuangan yang belum sempat dicatat pagi');
+    await wrapper.find('form').trigger('submit.prevent');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/daily/additional-work'),
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"reason":"MORNING_CUTOFF_MISSED"'),
+      }),
+    );
+  });
+
+  it('menyembunyikan opsi "Komitmen Pagi Terlewat" jika Komitmen Pagi hari ini sudah diisi', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: {
+              workDate: '2026-11-22',
+              cutoffTimings: { morningLockCutoff: '09:30', isMorningLocked: true, isEodLocked: false },
+              record: {
+                id: 'rec-morning-ok',
+                morningSubmittedAt: '2026-11-22T01:30:00.000Z',
+                additionalWorks: [],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const reasonSelect = wrapper.find('[data-testid="select-reason"]');
+    expect(reasonSelect.exists()).toBe(true);
+    expect(reasonSelect.text()).not.toContain('Komitmen Pagi Terlewat');
+  });
+
+  it('mendukung Edit dan Hapus terkontrol (alasan wajib) sebelum EOD ditutup dan menyembunyikan kedua tombol saat EOD terkunci (Temuan 3)', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: {
+              workDate: '2026-11-22',
+              cutoffTimings: { morningLockCutoff: '09:30', isMorningLocked: true, isEodLocked: false },
+              record: {
+                id: 'rec-open-eod',
+                morningSubmittedAt: '2026-11-22T01:30:00.000Z',
+                eodSubmittedAt: null,
+                additionalWorks: [
+                  {
+                    id: 'aw-10',
+                    taskText: 'Perbaikan bug sesi login',
+                    reason: 'NEWLY_ASSIGNED',
+                    projectCode: 'WP-CORE',
+                    assignedByUser: { id: 'mgr-1', fullName: 'Bambang Pratama' },
+                    createdAt: '2026-11-22T04:00:00.000Z',
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      if (String(url).includes('/v1/organization/users')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: [
+              { id: 'mgr-1', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com', employmentStatus: 'PERMANENT' },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true, data: {} }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Tombol Edit & Hapus tampil sebelum EOD terkunci
+    const editBtn = wrapper.find('[data-testid="btn-edit-aw"]');
+    const deleteBtn = wrapper.find('[data-testid="btn-delete-aw"]');
+    expect(editBtn.exists()).toBe(true);
+    expect(deleteBtn.exists()).toBe(true);
+
+    // Uji Edit -> PATCH /daily/additional-work/aw-10
+    await editBtn.trigger('click');
+    expect(wrapper.find('[data-testid="btn-cancel-edit-aw"]').exists()).toBe(true);
+    await wrapper.find('#input-task-text').setValue('Perbaikan bug sesi login + OTP');
+    await wrapper.find('form').trigger('submit.prevent');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/daily/additional-work/aw-10'),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('Perbaikan bug sesi login + OTP'),
+      }),
+    );
+
+    // Uji Hapus Terkontrol -> buka panel konfirmasi, info notifikasi atasan penugas tampil, DELETE dengan alasan wajib
+    await wrapper.find('[data-testid="btn-delete-aw"]').trigger('click');
+    const delBox = wrapper.find('[data-testid="delete-confirm-box"]');
+    expect(delBox.exists()).toBe(true);
+    expect(delBox.text()).toContain('Bambang Pratama');
+
+    await wrapper.find('[data-testid="input-delete-aw-reason"]').setValue('Tugas dibatalkan oleh atasan');
+    await wrapper.find('[data-testid="btn-confirm-delete-aw"]').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/daily/additional-work/aw-10'),
+      expect.objectContaining({
+        method: 'DELETE',
+        body: JSON.stringify({ reason: 'Tugas dibatalkan oleh atasan' }),
+      }),
+    );
+  });
+
+  it('menyembunyikan tombol Edit dan Hapus ketika Evaluasi Sore (EOD) sudah dikirim', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (String(url).includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: {
+              workDate: '2026-11-22',
+              cutoffTimings: { eodLockCutoff: '21:00', isEodLocked: false },
+              record: {
+                id: 'rec-closed',
+                eodSubmittedAt: '2026-11-22T10:15:00.000Z',
+                additionalWorks: [
+                  { id: 'aw-locked-1', taskText: 'Tugas selesai sebelum EOD', reason: 'OPERATIONAL_INCIDENT', createdAt: '2026-11-22T06:00:00Z' },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ success: true, data: [] }) });
+    }));
+
+    const wrapper = mount(AdditionalWorkView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(wrapper.find('[data-testid="btn-edit-aw"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="btn-delete-aw"]').exists()).toBe(false);
+  });
 });

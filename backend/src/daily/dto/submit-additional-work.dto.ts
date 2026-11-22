@@ -26,3 +26,9 @@ export class SubmitAdditionalWorkDto {
   linkedBlockerId?: string;
 }
 
+export class DeleteAdditionalWorkDto {
+  @IsString({ message: 'Alasan penghapusan pekerjaan tambahan wajib diisi' })
+  @MinLength(5, { message: 'Alasan penghapusan pekerjaan tambahan minimal 5 karakter' })
+  reason!: string;
+}
+

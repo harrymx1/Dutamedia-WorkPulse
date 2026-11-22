@@ -8,6 +8,10 @@ import { formatDateSpanWib } from '../../utils/dateTime';
 import { isInternStatus } from '../../utils/employmentStatus';
 import {
   Plus,
+  Pencil,
+  Trash2,
+  X,
+  Info,
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
@@ -60,9 +64,13 @@ interface ActiveBlockerOption {
 // State
 const loading = ref(false);
 const submitting = ref(false);
+const deleting = ref(false);
 const recordId = ref<string | null>(null);
 const workDate = ref('');
 const activeLeave = ref<ActiveLeave | null>(null);
+const morningSubmittedAt = ref<string | null>(null);
+const isMorningLocked = ref(false);
+const morningLockCutoff = ref('09:30');
 const eodSubmittedAt = ref<string | null>(null);
 const isEodLocked = ref(false);
 const eodLockCutoff = ref('21:00');
@@ -75,10 +83,23 @@ const availableProjects = ref<ProjectOption[]>([
 ]);
 const activeBlockers = ref<ActiveBlockerOption[]>([]);
 const isBlockerPickerOpen = ref(false);
+const editingWorkId = ref<string | null>(null);
+const deletingWorkId = ref<string | null>(null);
+const deleteReason = ref('');
+const formSectionRef = ref<HTMLElement | null>(null);
+
 const isMaxReached = computed(() => additionalWorks.value.length >= 5);
 const hasSubmittedEod = computed(() => eodSubmittedAt.value !== null && eodSubmittedAt.value !== '');
 const isEodClosedOrLocked = computed(() => hasSubmittedEod.value || isEodLocked.value);
-const isFormDisabled = computed(() => isMaxReached.value || isEodClosedOrLocked.value);
+const isMorningMissedPostCutoff = computed(
+  () => !activeLeave.value && isMorningLocked.value && !morningSubmittedAt.value,
+);
+const canShowForm = computed(
+  () => !activeLeave.value && (Boolean(recordId.value) || isMorningMissedPostCutoff.value),
+);
+const isFormDisabled = computed(
+  () => (!editingWorkId.value && isMaxReached.value) || isEodClosedOrLocked.value,
+);
 
 const formTaskText = ref('');
 const formReason = ref('NEWLY_ASSIGNED');
@@ -93,6 +114,7 @@ function formatReason(reason: string): string {
     NEWLY_ASSIGNED: 'Penugasan Baru Atasan',
     OPERATIONAL_INCIDENT: 'Perbaikan Error / Bug Kritis',
     MISSED_IN_PLANNING: 'Terlewat Catat Pagi',
+    MORNING_CUTOFF_MISSED: 'Komitmen Pagi Terlewat',
     PRIORITY_CHANGE: 'Pengalihan Prioritas',
     OTHER: 'Lainnya',
   };
@@ -131,6 +153,8 @@ async function loadTodayState() {
     const res = await apiClient<{
       workDate: string;
       cutoffTimings?: {
+        morningLockCutoff?: string;
+        isMorningLocked?: boolean;
         eodLockCutoff?: string;
         isEodLocked?: boolean;
       };
@@ -142,6 +166,8 @@ async function loadTodayState() {
 
     workDate.value = res.data.workDate;
     activeLeave.value = (res.data as any).activeLeave || null;
+    isMorningLocked.value = Boolean(res.data.cutoffTimings?.isMorningLocked);
+    morningLockCutoff.value = res.data.cutoffTimings?.morningLockCutoff || '09:30';
     isEodLocked.value = Boolean(res.data.cutoffTimings?.isEodLocked);
     eodLockCutoff.value = res.data.cutoffTimings?.eodLockCutoff || '21:00';
     if (Array.isArray(res.data.availableProjects) && res.data.availableProjects.length > 0) {
@@ -153,6 +179,9 @@ async function loadTodayState() {
     if (res.data.record) {
       recordId.value = res.data.record.id;
       additionalWorks.value = res.data.record.additionalWorks || [];
+      morningSubmittedAt.value = res.data.record.morningSubmittedAt
+        ? new Date(res.data.record.morningSubmittedAt).toISOString()
+        : null;
       eodSubmittedAt.value = res.data.record.eodSubmittedAt
         ? new Date(res.data.record.eodSubmittedAt).toISOString()
         : null;
@@ -160,7 +189,16 @@ async function loadTodayState() {
         isEodLocked.value = true;
       }
     } else {
+      recordId.value = null;
+      additionalWorks.value = [];
+      morningSubmittedAt.value = null;
       eodSubmittedAt.value = null;
+    }
+
+    if (!editingWorkId.value) {
+      formReason.value = isMorningMissedPostCutoff.value
+        ? 'MORNING_CUTOFF_MISSED'
+        : 'NEWLY_ASSIGNED';
     }
 
     // Load available managers for NEWLY_ASSIGNED (kecualikan karyawan Intern)
@@ -187,8 +225,96 @@ function selectBlockerItem(blocker: ActiveBlockerOption) {
   isBlockerPickerOpen.value = false;
 }
 
+function resetForm() {
+  editingWorkId.value = null;
+  formTaskText.value = '';
+  formReason.value = isMorningMissedPostCutoff.value
+    ? 'MORNING_CUTOFF_MISSED'
+    : 'NEWLY_ASSIGNED';
+  formAssignedBy.value = '';
+  formOtherReason.value = '';
+  formProjectCode.value = '';
+  formReferenceLink.value = '';
+  formLinkedBlockerId.value = '';
+  isBlockerPickerOpen.value = false;
+}
+
+function startEdit(item: AdditionalWorkItem) {
+  if (isEodClosedOrLocked.value) return;
+  deletingWorkId.value = null;
+  deleteReason.value = '';
+  editingWorkId.value = item.id;
+
+  if (item.reason === 'OTHER') {
+    const match = item.taskText.match(/^(.*?)\s*\(Alasan:\s*(.+)\)$/);
+    if (match) {
+      formTaskText.value = match[1].trim();
+      formOtherReason.value = match[2].trim();
+    } else {
+      formTaskText.value = item.taskText;
+      formOtherReason.value = '';
+    }
+  } else {
+    formTaskText.value = item.taskText;
+    formOtherReason.value = '';
+  }
+
+  formReason.value = item.reason;
+  formAssignedBy.value = item.assignedByUser?.id || '';
+  formProjectCode.value = item.projectCode || '';
+  formReferenceLink.value = item.referenceLink || '';
+  formLinkedBlockerId.value = item.linkedBlockerId || '';
+  isBlockerPickerOpen.value = false;
+
+  if (formSectionRef.value && typeof formSectionRef.value.scrollIntoView === 'function') {
+    formSectionRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function cancelEdit() {
+  resetForm();
+}
+
+function openDeleteConfirm(workId: string) {
+  if (isEodClosedOrLocked.value) return;
+  deletingWorkId.value = workId;
+  deleteReason.value = '';
+}
+
+function cancelDeleteConfirm() {
+  deletingWorkId.value = null;
+  deleteReason.value = '';
+}
+
+async function confirmDeleteWork(item: AdditionalWorkItem) {
+  if (isEodClosedOrLocked.value) return;
+  const cleanReason = deleteReason.value.trim();
+  if (cleanReason.length < 5) {
+    showToast('Alasan penghapusan pekerjaan tambahan minimal 5 karakter.', true);
+    return;
+  }
+
+  deleting.value = true;
+  try {
+    await apiClient(`/daily/additional-work/${item.id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason: cleanReason }),
+    });
+    if (editingWorkId.value === item.id) {
+      resetForm();
+    }
+    cancelDeleteConfirm();
+    showToast('Pekerjaan tambahan berhasil dihapus dan dicatat ke riwayat audit.');
+    await loadTodayState();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal menghapus pekerjaan tambahan.', true);
+  } finally {
+    deleting.value = false;
+  }
+}
+
 async function addAdditionalWork() {
-  if (!recordId.value) {
+  if (!recordId.value && !isMorningMissedPostCutoff.value) {
     showToast('Silakan isi Morning Commitment hari ini terlebih dahulu sebelum mencatat pekerjaan tambahan.', true);
     return;
   }
@@ -203,7 +329,7 @@ async function addAdditionalWork() {
     return;
   }
 
-  if (isMaxReached.value) {
+  if (!editingWorkId.value && isMaxReached.value) {
     showToast('Maksimum 5 tugas tambahan per hari kerja telah terpenuhi.', true);
     return;
   }
@@ -227,31 +353,41 @@ async function addAdditionalWork() {
     ? `${formTaskText.value.trim()} (Alasan: ${formOtherReason.value.trim()})`
     : formTaskText.value.trim();
 
+  const payload = {
+    taskText: finalTaskText,
+    reason: formReason.value,
+    assignedByUserId: formReason.value === 'NEWLY_ASSIGNED' ? formAssignedBy.value : undefined,
+    projectCode: formProjectCode.value.trim() ? formProjectCode.value.trim() : undefined,
+    referenceLink: formReferenceLink.value.trim() ? formReferenceLink.value.trim() : undefined,
+    linkedBlockerId: formLinkedBlockerId.value.trim() ? formLinkedBlockerId.value.trim() : undefined,
+  };
+
   submitting.value = true;
   try {
-    await apiClient(`/daily/records/${recordId.value}/additional-work`, {
-      method: 'POST',
-      body: JSON.stringify({
-        taskText: finalTaskText,
-        reason: formReason.value,
-        assignedByUserId: formReason.value === 'NEWLY_ASSIGNED' ? formAssignedBy.value : undefined,
-        projectCode: formProjectCode.value.trim() ? formProjectCode.value.trim() : undefined,
-        referenceLink: formReferenceLink.value.trim() ? formReferenceLink.value.trim() : undefined,
-        linkedBlockerId: formLinkedBlockerId.value.trim() ? formLinkedBlockerId.value.trim() : undefined,
-      }),
-    });
+    if (editingWorkId.value) {
+      await apiClient(`/daily/additional-work/${editingWorkId.value}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      showToast('Pekerjaan tambahan berhasil diperbarui.');
+    } else if (recordId.value) {
+      await apiClient(`/daily/records/${recordId.value}/additional-work`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      showToast('Pekerjaan tambahan berhasil dicatat.');
+    } else {
+      await apiClient('/daily/additional-work', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      showToast('Pekerjaan tambahan berhasil dicatat.');
+    }
 
-    showToast('Pekerjaan tambahan berhasil dicatat.');
-    formTaskText.value = '';
-    formReason.value = 'NEWLY_ASSIGNED';
-    formAssignedBy.value = '';
-    formOtherReason.value = '';
-    formProjectCode.value = '';
-    formReferenceLink.value = '';
-    formLinkedBlockerId.value = '';
+    resetForm();
     await loadTodayState();
   } catch (err: any) {
-    showToast(err.message || 'Gagal menambahkan pekerjaan tambahan.', true);
+    showToast(err.message || 'Gagal menyimpan pekerjaan tambahan.', true);
   } finally {
     submitting.value = false;
   }
@@ -373,8 +509,8 @@ onMounted(() => {
         </div>
       </template>
 
-      <!-- Warning jika belum Morning Check-in -->
-      <div v-else-if="!recordId && !loading" class="alert-box" role="alert">
+      <!-- Warning jika belum Morning Check-in sebelum batas pagi -->
+      <div v-else-if="!recordId && !isMorningLocked && !loading" class="alert-box" role="alert">
         <AlertCircle :size="20" />
         <div>
           <strong>Belum Mengisi Morning Commitment:</strong>
@@ -383,12 +519,12 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Form Tambah Additional Work -->
-      <section v-if="!activeLeave && recordId" class="panel">
+      <!-- Form Tambah / Edit Additional Work -->
+      <section v-if="canShowForm" ref="formSectionRef" class="panel">
         <div class="panel-head">
           <div>
-            <div class="kicker">Input Pekerjaan Tambahan</div>
-            <h2>Formulir Pencatatan Pekerjaan Tambahan</h2>
+            <div class="kicker">{{ editingWorkId ? 'Edit Pekerjaan Tambahan' : 'Input Pekerjaan Tambahan' }}</div>
+            <h2>{{ editingWorkId ? 'Ubah Rincian Pekerjaan Tambahan' : 'Formulir Pencatatan Pekerjaan Tambahan' }}</h2>
           </div>
         </div>
         <div class="panel-body">
@@ -410,9 +546,19 @@ onMounted(() => {
             </div>
           </div>
 
-          <div v-else-if="isMaxReached" class="alert-banner warning" data-testid="max-limit-banner">
+          <div v-else-if="!editingWorkId && isMaxReached" class="alert-banner warning" data-testid="max-limit-banner">
             <AlertTriangle :size="18" class="alert-icon" />
             <span>Batas maksimum 5 tugas tambahan per hari telah tercapai. Anda tidak dapat menambahkan tugas baru lagi hari ini.</span>
+          </div>
+
+          <div v-if="!isEodClosedOrLocked && isMorningMissedPostCutoff" class="alert-banner info" role="status" data-testid="morning-missed-info-banner">
+            <Info :size="18" class="alert-icon info" />
+            <div class="locked-banner-content">
+              <strong>Pengisian Komitmen Pagi Melewati Batas Waktu ({{ morningLockCutoff }} WIB)</strong>
+              <p class="locked-banner-desc">
+                Status pengisian pagi hari ini tetap tercatat jujur sebagai <strong>Tidak Mengisi Pagi (No Submission)</strong>, namun Anda tetap dapat mencatat pekerjaan yang dikerjakan hari ini dan mengisi <em>Evaluasi Sore (EOD Outcome)</em> sebelum batas malam ditutup.
+              </p>
+            </div>
           </div>
 
           <form @submit.prevent="addAdditionalWork" class="form-container">
@@ -433,6 +579,12 @@ onMounted(() => {
               <div class="form-group">
                 <label for="select-reason" class="form-label">Alasan Pekerjaan Tambahan *</label>
                 <select id="select-reason" v-model="formReason" class="input-control" :disabled="isFormDisabled" required data-testid="select-reason">
+                  <option
+                    v-if="isMorningMissedPostCutoff || formReason === 'MORNING_CUTOFF_MISSED'"
+                    value="MORNING_CUTOFF_MISSED"
+                  >
+                    Komitmen Pagi Terlewat
+                  </option>
                   <option value="NEWLY_ASSIGNED">Penugasan Baru dari Atasan</option>
                   <option value="OPERATIONAL_INCIDENT">Perbaikan Error / Bug Kritis</option>
                   <option value="MISSED_IN_PLANNING">Tugas Terlewat Dicatat Pagi</option>
@@ -546,9 +698,31 @@ onMounted(() => {
             </div>
 
             <div class="form-actions">
+              <button
+                v-if="editingWorkId"
+                type="button"
+                class="btn btn-secondary"
+                :disabled="submitting"
+                data-testid="btn-cancel-edit-aw"
+                @click="cancelEdit"
+              >
+                <X :size="15" />
+                <span>Batal Edit</span>
+              </button>
               <button type="submit" class="btn btn-primary" :disabled="submitting || isFormDisabled" data-testid="btn-add-additional-work">
-                <Plus :size="16" />
-                <span>{{ submitting ? 'Menambahkan...' : (isEodClosedOrLocked ? 'Terkunci Pasca-EOD' : (isMaxReached ? 'Batas 5 Tugas Tercapai' : 'Tambahkan Pekerjaan')) }}</span>
+                <Pencil v-if="editingWorkId" :size="15" />
+                <Plus v-else :size="16" />
+                <span>{{
+                  submitting
+                    ? 'Menyimpan...'
+                    : editingWorkId
+                      ? 'Simpan Perubahan'
+                      : isEodClosedOrLocked
+                        ? 'Terkunci Pasca-EOD'
+                        : isMaxReached
+                          ? 'Batas 5 Tugas Tercapai'
+                          : 'Tambahkan Pekerjaan'
+                }}</span>
               </button>
             </div>
           </form>
@@ -571,19 +745,89 @@ onMounted(() => {
           <div v-else class="works-list">
             <div v-for="(item, idx) in additionalWorks" :key="item.id" class="work-card">
               <div class="work-main">
-                <div class="work-header">
-                  <span class="work-idx">#{{ idx + 1 }}</span>
-                  <span class="badge badge-info">{{ formatReason(item.reason) }}</span>
-                  <span v-if="item.projectCode" class="badge badge-info" style="background: #E6F4EE; color: #00674D;">
-                    Proyek: {{ item.projectCode }}
-                  </span>
-                  <span v-if="item.assignedByUser" class="assigned-by">
-                    Ditugaskan oleh: <strong>{{ item.assignedByUser.fullName }}</strong>
-                  </span>
+                <div class="work-header-row">
+                  <div class="work-header">
+                    <span class="work-idx">#{{ idx + 1 }}</span>
+                    <span class="badge badge-info">{{ formatReason(item.reason) }}</span>
+                    <span v-if="item.projectCode" class="badge badge-info" style="background: #E6F4EE; color: #00674D;">
+                      Proyek: {{ item.projectCode }}
+                    </span>
+                    <span v-if="item.assignedByUser" class="assigned-by">
+                      Ditugaskan oleh: <strong>{{ item.assignedByUser.fullName }}</strong>
+                    </span>
+                  </div>
+                  <div v-if="!isEodClosedOrLocked" class="work-actions">
+                    <button
+                      type="button"
+                      class="btn-work-action"
+                      data-testid="btn-edit-aw"
+                      title="Ubah rincian pekerjaan tambahan ini"
+                      @click="startEdit(item)"
+                    >
+                      <Pencil :size="13" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-work-action danger"
+                      data-testid="btn-delete-aw"
+                      title="Hapus pekerjaan tambahan ini (wajib menyertakan alasan)"
+                      @click="openDeleteConfirm(item.id)"
+                    >
+                      <Trash2 :size="13" />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="work-title">{{ item.taskText }}</div>
-                <div v-if="item.referenceLink" style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">
+                <div v-if="item.referenceLink" class="work-ref-line">
                   Referensi: {{ item.referenceLink }}
+                </div>
+
+                <!-- Panel Konfirmasi Hapus Terkontrol (Wajib Alasan + Audit Log) -->
+                <div
+                  v-if="deletingWorkId === item.id && !isEodClosedOrLocked"
+                  class="delete-confirm-box"
+                  data-testid="delete-confirm-box"
+                >
+                  <div class="delete-confirm-title">
+                    Hapus Pekerjaan Tambahan #{{ idx + 1 }}?
+                  </div>
+                  <p class="delete-confirm-desc">
+                    Tindakan penghapusan ini dicatat permanen ke riwayat audit sistem.
+                    <span v-if="item.reason === 'NEWLY_ASSIGNED' && item.assignedByUser">
+                      Notifikasi penghapusan beserta alasan akan otomatis dikirim kepada
+                      <strong>{{ item.assignedByUser.fullName }}</strong>.
+                    </span>
+                  </p>
+                  <div class="delete-confirm-row">
+                    <input
+                      v-model="deleteReason"
+                      type="text"
+                      class="input-control delete-reason-input"
+                      placeholder="Tuliskan alasan penghapusan (min. 5 karakter)..."
+                      data-testid="input-delete-aw-reason"
+                    />
+                    <div class="delete-confirm-btns">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        :disabled="deleting"
+                        @click="cancelDeleteConfirm"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        :disabled="deleting"
+                        data-testid="btn-confirm-delete-aw"
+                        @click="confirmDeleteWork(item)"
+                      >
+                        {{ deleting ? 'Menghapus...' : 'Konfirmasi Hapus' }}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -790,12 +1034,22 @@ onMounted(() => {
   color: var(--color-status-amber-fg, #92400e);
 }
 
+.alert-banner.info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
 .alert-banner .alert-icon {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--color-status-amber-fg, #b45309);
+}
+
+.alert-banner .alert-icon.info {
+  color: #1d4ed8;
 }
 
 .alert-link {
@@ -917,6 +1171,8 @@ select.input-control {
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -938,6 +1194,30 @@ select.input-control {
 
 .btn-primary:hover {
   background: var(--color-brand-hover);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-surface-subtle);
+}
+
+.btn-danger {
+  background: var(--color-status-red-fg, #b91c1c);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 12px;
 }
 
 .empty-state {
@@ -968,11 +1248,58 @@ select.input-control {
   border-radius: var(--radius-sm);
 }
 
+.work-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
 .work-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+}
+
+.work-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-work-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-work-action:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+}
+
+.btn-work-action.danger {
+  color: var(--color-status-red-fg, #b91c1c);
+  border-color: var(--color-status-red-border, #fecaca);
+}
+
+.btn-work-action.danger:hover {
+  background: var(--color-status-red-bg, #fef2f2);
+  border-color: var(--color-status-red-fg, #b91c1c);
 }
 
 .work-idx {
@@ -990,6 +1317,54 @@ select.input-control {
   font-size: 14px;
   color: var(--color-text-primary);
   font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.work-ref-line {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.delete-confirm-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--color-status-red-bg, #fef2f2);
+  border: 1px solid var(--color-status-red-border, #fecaca);
+  border-radius: var(--radius-sm);
+}
+
+.delete-confirm-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-status-red-fg, #991b1b);
+  margin-bottom: 4px;
+}
+
+.delete-confirm-desc {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.delete-confirm-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.delete-reason-input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.delete-confirm-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .badge {

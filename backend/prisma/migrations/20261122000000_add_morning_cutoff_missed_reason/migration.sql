@@ -1,0 +1,1 @@
+ALTER TYPE "additional_work_reason_enum" ADD VALUE IF NOT EXISTS 'MORNING_CUTOFF_MISSED';

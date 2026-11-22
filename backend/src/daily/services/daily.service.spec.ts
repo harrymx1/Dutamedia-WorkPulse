@@ -523,4 +523,282 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
       expect(result.availableCarryOvers).toEqual([]);
     });
   });
+
+  describe('Temuan 2 & 3 — Additional Work Pasca Cut-Off Pagi (Opsi A), Edit & Hapus Terkontrol', () => {
+    beforeEach(() => {
+      mockPrisma.leaveRequest = { findFirst: vi.fn().mockResolvedValue(null) };
+      mockPrisma.auditLog = { create: vi.fn().mockResolvedValue({ id: 'aud-1' }) };
+      mockPrisma.notification = { create: vi.fn().mockResolvedValue({ id: 'notif-1' }) };
+      mockPrisma.additionalWork.findUnique = vi.fn();
+      mockPrisma.additionalWork.delete = vi.fn();
+    });
+
+    it('menolak submitTodayAdditionalWork sebelum batas Cut-Off pagi (<= 09:30 WIB) bila Morning Commitment belum diisi', async () => {
+      // 01:45 UTC = 08:45 WIB (sebelum 09:30 WIB)
+      mockClock.now.mockReturnValue(new Date('2026-10-28T01:45:00.000Z'));
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.submitTodayAdditionalWork('usr-1', {
+          taskText: 'Mengerjakan tugas tambahan sebelum cutoff pagi',
+          reason: 'OPERATIONAL_INCIDENT' as any,
+        }),
+      ).rejects.toMatchObject({
+        code: ErrorCode.VALIDATION_FAILED,
+      });
+    });
+
+    it('mengizinkan submitTodayAdditionalWork pasca Cut-Off pagi (> 09:30 WIB) dengan status pagi jujur NO_SUBMISSION dan alasan MORNING_CUTOFF_MISSED', async () => {
+      // 03:30 UTC = 10:30 WIB (melewati 09:30 WIB, sebelum 21:00 WIB)
+      mockClock.now.mockReturnValue(new Date('2026-10-28T03:30:00.000Z'));
+      mockPrisma.dailyAccountabilityRecord.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: 'rec-auto-nosub',
+          userId: 'usr-1',
+          workDate: new Date('2026-10-28'),
+          morningSubmittedAt: null,
+          eodSubmittedAt: null,
+          eodCutoffLockedAt: null,
+          orgContextSnapshot: {},
+        });
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-auto-nosub',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        morningSubmittedAt: null,
+        morningTiming: 'NO_SUBMISSION',
+        initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
+        orgContextSnapshot: {},
+      });
+      mockPrisma.additionalWork.create.mockResolvedValue({
+        id: 'aw-late-1',
+        dailyRecordId: 'rec-auto-nosub',
+        taskText: 'Menangani revisi laporan karena pagi rapat mendadak',
+        reason: 'MORNING_CUTOFF_MISSED',
+        assignedByUserId: null,
+        assignedByUser: null,
+      });
+
+      const res = await service.submitTodayAdditionalWork('usr-1', {
+        taskText: 'Menangani revisi laporan karena pagi rapat mendadak',
+        reason: 'MORNING_CUTOFF_MISSED' as any,
+      });
+
+      expect(res?.id).toBe('aw-late-1');
+      expect(mockPrisma.dailyAccountabilityRecord.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            morningSubmittedAt: null,
+            morningTiming: 'NO_SUBMISSION',
+            initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
+          }),
+        }),
+      );
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'ADDITIONAL_WORK_CREATED',
+            relatedEntityId: 'aw-late-1',
+          }),
+        }),
+      );
+    });
+
+    it('menolak alasan MORNING_CUTOFF_MISSED bila Morning Commitment hari ini sudah diisi', async () => {
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue({
+        id: 'rec-has-morning',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        morningSubmittedAt: new Date('2026-10-28T01:20:00.000Z'),
+        eodSubmittedAt: null,
+        eodCutoffLockedAt: null,
+        orgContextSnapshot: {},
+      });
+
+      await expect(
+        service.submitAdditionalWork('usr-1', 'rec-has-morning', {
+          taskText: 'Tugas yang salah pilih alasan pagi terlewat',
+          reason: 'MORNING_CUTOFF_MISSED' as any,
+        }),
+      ).rejects.toMatchObject({
+        code: ErrorCode.VALIDATION_FAILED,
+      });
+    });
+
+    it('mengizinkan submitEodOutcome pasca Cut-Off pagi (> 09:30 WIB) saat record harian belum dibuat agar konsisten dengan Opsi A', async () => {
+      mockClock.now.mockReturnValue(new Date('2026-10-28T09:30:00.000Z')); // 16:30 WIB
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue(null);
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-eod-nosub',
+        userId: 'usr-1',
+        workDate: new Date('2026-10-28'),
+        morningSubmittedAt: null,
+        eodSubmittedAt: null,
+        orgContextSnapshot: {},
+        commitments: [],
+        additionalWorks: [],
+      });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-eod-nosub',
+        morningTiming: 'NO_SUBMISSION',
+        finalDailyStatus: DailyRiskStatus.GREEN,
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      const res = await service.submitEodOutcome('usr-1', {
+        workDate: '2026-10-28',
+        commitmentOutcomes: [],
+        finalDailyStatus: DailyRiskStatus.GREEN,
+      });
+
+      expect(res.finalDailyStatus).toBe(DailyRiskStatus.GREEN);
+      expect(mockPrisma.dailyAccountabilityRecord.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            morningTiming: 'NO_SUBMISSION',
+          }),
+        }),
+      );
+    });
+
+    it('memperbarui pekerjaan tambahan sebelum EOD ditutup, mencatat audit before/after, dan mengirim notifikasi ke atasan penugas (NEWLY_ASSIGNED)', async () => {
+      mockClock.now.mockReturnValue(new Date('2026-10-28T06:00:00.000Z')); // 13:00 WIB
+      mockPrisma.user = {
+        findUnique: vi.fn().mockResolvedValue({ id: 'mgr-1', status: 'ACTIVE' }),
+      };
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        employmentStatus: 'PERMANENT',
+        endDate: null,
+      });
+      mockPrisma.additionalWork.findUnique.mockResolvedValue({
+        id: 'aw-1',
+        dailyRecordId: 'rec-today',
+        taskText: 'Tugas awal dari atasan',
+        reason: 'NEWLY_ASSIGNED',
+        assignedByUserId: 'mgr-1',
+        dailyRecord: {
+          id: 'rec-today',
+          userId: 'usr-1',
+          workDate: new Date('2026-10-28'),
+          morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+          eodSubmittedAt: null,
+          eodCutoffLockedAt: null,
+          orgContextSnapshot: { additionalWorkMeta: { 'aw-1': { projectCode: 'WP-CORE' } } },
+          user: { id: 'usr-1', fullName: 'Aditya Nugroho' },
+        },
+        assignedByUser: { id: 'mgr-1', fullName: 'Bambang Pratama' },
+      });
+      mockPrisma.additionalWork.update.mockResolvedValue({
+        id: 'aw-1',
+        dailyRecordId: 'rec-today',
+        taskText: 'Tugas diperbarui dari atasan (modul login)',
+        reason: 'NEWLY_ASSIGNED',
+        assignedByUserId: 'mgr-1',
+        assignedByUser: { id: 'mgr-1', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+      });
+
+      const updated = await service.updateAdditionalWork('usr-1', 'aw-1', {
+        taskText: 'Tugas diperbarui dari atasan (modul login)',
+        reason: 'NEWLY_ASSIGNED' as any,
+        assignedByUserId: 'mgr-1',
+        projectCode: 'PRJ-CORE',
+      });
+
+      expect(updated.taskText).toBe('Tugas diperbarui dari atasan (modul login)');
+      expect(updated.projectCode).toBe('PRJ-CORE');
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'ADDITIONAL_WORK_UPDATED',
+            relatedEntityId: 'aw-1',
+            valueBefore: expect.objectContaining({ taskText: 'Tugas awal dari atasan', projectCode: 'WP-CORE' }),
+            valueAfter: expect.objectContaining({ taskText: 'Tugas diperbarui dari atasan (modul login)', projectCode: 'PRJ-CORE' }),
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'mgr-1',
+            triggerType: 'ADDITIONAL_WORK_UPDATED',
+          }),
+        }),
+      );
+    });
+
+    it('menolak penghapusan jika alasan < 5 karakter dan menolak update/hapus setelah EOD dikirim', async () => {
+      await expect(service.deleteAdditionalWork('usr-1', 'aw-1', 'ok')).rejects.toMatchObject({
+        code: ErrorCode.VALIDATION_FAILED,
+      });
+
+      mockPrisma.additionalWork.findUnique.mockResolvedValue({
+        id: 'aw-1',
+        dailyRecordId: 'rec-today',
+        taskText: 'Tugas terkunci',
+        reason: 'OPERATIONAL_INCIDENT',
+        assignedByUserId: null,
+        dailyRecord: {
+          id: 'rec-today',
+          userId: 'usr-1',
+          workDate: new Date('2026-10-28'),
+          eodSubmittedAt: new Date('2026-10-28T10:15:00.000Z'),
+        },
+      });
+
+      await expect(
+        service.deleteAdditionalWork('usr-1', 'aw-1', 'Salah ketik ganda'),
+      ).rejects.toMatchObject({
+        code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+      });
+    });
+
+    it('menghapus pekerjaan tambahan sebelum EOD dengan alasan wajib, mencatat audit, dan mengirim notifikasi ke atasan penugas', async () => {
+      mockClock.now.mockReturnValue(new Date('2026-10-28T06:00:00.000Z')); // 13:00 WIB
+      mockPrisma.additionalWork.findUnique.mockResolvedValue({
+        id: 'aw-del-1',
+        dailyRecordId: 'rec-today',
+        taskText: 'Penugasan rapat mendadak klien X',
+        reason: 'NEWLY_ASSIGNED',
+        assignedByUserId: 'mgr-1',
+        dailyRecord: {
+          id: 'rec-today',
+          userId: 'usr-1',
+          workDate: new Date('2026-10-28'),
+          eodSubmittedAt: null,
+          eodCutoffLockedAt: null,
+          orgContextSnapshot: { additionalWorkMeta: { 'aw-del-1': { projectCode: 'PRJ-PORTAL' } } },
+          user: { id: 'usr-1', fullName: 'Aditya Nugroho' },
+        },
+        assignedByUser: { id: 'mgr-1', fullName: 'Bambang Pratama' },
+      });
+      mockPrisma.additionalWork.delete.mockResolvedValue({ id: 'aw-del-1' });
+
+      const res = await service.deleteAdditionalWork('usr-1', 'aw-del-1', 'Jadwal rapat ditunda atasan ke pekan depan');
+
+      expect(res).toEqual({ deleted: true, id: 'aw-del-1' });
+      expect(mockPrisma.additionalWork.delete).toHaveBeenCalledWith({ where: { id: 'aw-del-1' } });
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actionCode: 'ADDITIONAL_WORK_DELETED',
+            relatedEntityId: 'aw-del-1',
+            valueAfter: expect.objectContaining({
+              deleted: true,
+              deleteReason: 'Jadwal rapat ditunda atasan ke pekan depan',
+            }),
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'mgr-1',
+            triggerType: 'ADDITIONAL_WORK_DELETED',
+          }),
+        }),
+      );
+    });
+  });
 });

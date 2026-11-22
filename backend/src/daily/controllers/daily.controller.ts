@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -10,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { DailyService } from '../services/daily.service';
 import { SubmitMorningCheckinDto } from '../dto/submit-morning-checkin.dto';
-import { SubmitAdditionalWorkDto } from '../dto/submit-additional-work.dto';
+import {
+  DeleteAdditionalWorkDto,
+  SubmitAdditionalWorkDto,
+} from '../dto/submit-additional-work.dto';
 import { SubmitEodOutcomeDto } from '../dto/submit-eod-outcome.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
@@ -42,6 +47,29 @@ export class DailyController {
     @Body() dto: SubmitAdditionalWorkDto,
   ) {
     return this.dailyService.submitAdditionalWork(req.user.id, recordId, dto);
+  }
+
+  @Post('additional-work')
+  async submitTodayAdditionalWork(@Req() req: any, @Body() dto: SubmitAdditionalWorkDto) {
+    return this.dailyService.submitTodayAdditionalWork(req.user.id, dto);
+  }
+
+  @Patch('additional-work/:workId')
+  async updateAdditionalWork(
+    @Req() req: any,
+    @Param('workId') workId: string,
+    @Body() dto: SubmitAdditionalWorkDto,
+  ) {
+    return this.dailyService.updateAdditionalWork(req.user.id, workId, dto);
+  }
+
+  @Delete('additional-work/:workId')
+  async deleteAdditionalWork(
+    @Req() req: any,
+    @Param('workId') workId: string,
+    @Body() dto: DeleteAdditionalWorkDto,
+  ) {
+    return this.dailyService.deleteAdditionalWork(req.user.id, workId, dto.reason);
   }
 
   @Post('eod')

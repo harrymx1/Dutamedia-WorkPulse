@@ -34,15 +34,55 @@ export const CANONICAL_PROMPT_HINTS: Record<string, string> = {
 export const DEFAULT_FALLBACK_PROMPT =
   'Tuliskan rencana pekerjaan yang ingin Anda selesaikan hari ini';
 
-export function getPromptHintForFunction(func: string | undefined | null): string {
-  if (!func) return DEFAULT_FALLBACK_PROMPT;
-  return CANONICAL_PROMPT_HINTS[func] || DEFAULT_FALLBACK_PROMPT;
+const FUNCTION_ALIAS_MAP: Record<string, string> = {
+  engineering: 'Engineering',
+  quality: 'Quality',
+  qa: 'Quality',
+  'qa/qc': 'Quality',
+  operationsinfrastructure: 'Operations & Infrastructure',
+  'operations&infrastructure': 'Operations & Infrastructure',
+  operations_infrastructure: 'Operations & Infrastructure',
+  ops: 'Operations & Infrastructure',
+  rnd: 'R&D',
+  'r&d': 'R&D',
+  delivery: 'Delivery',
+  businessdevelopment: 'Business Development',
+  business_development: 'Business Development',
+  salesenablementpresales: 'Sales Enablement & Presales',
+  'salesenablement&presales': 'Sales Enablement & Presales',
+  sales_enablement_presales: 'Sales Enablement & Presales',
+  commercial: 'Sales Enablement & Presales',
+  finance: 'Finance',
+  hrga: 'HRGA',
+  management: 'Management',
+  ceo: 'Management',
+};
+
+export function normalizeCanonicalFunction(func: string | undefined | null): string | null {
+  if (!func) return null;
+  const trimmed = func.trim();
+  if (!trimmed) return null;
+  if (CANONICAL_PROMPT_HINTS[trimmed]) return trimmed;
+  const compactKey = trimmed.toLowerCase().replace(/\s+/g, '');
+  if (FUNCTION_ALIAS_MAP[compactKey]) return FUNCTION_ALIAS_MAP[compactKey];
+  const lowerKey = trimmed.toLowerCase();
+  return FUNCTION_ALIAS_MAP[lowerKey] || null;
 }
 
-export function resolveUserFunction(user: { role?: string; email?: string } | null | undefined): string {
+export function getPromptHintForFunction(func: string | undefined | null): string {
+  const normalized = normalizeCanonicalFunction(func);
+  if (!normalized) return DEFAULT_FALLBACK_PROMPT;
+  return CANONICAL_PROMPT_HINTS[normalized] || DEFAULT_FALLBACK_PROMPT;
+}
+
+export function resolveUserFunction(
+  user: { function?: string | null; role?: string; email?: string } | null | undefined,
+): string {
   if (!user) return 'Engineering';
-  const role = user.role;
-  switch (role) {
+  const normalizedFn = normalizeCanonicalFunction(user.function);
+  if (normalizedFn) return normalizedFn;
+
+  switch (user.role) {
     case 'HRGA':
       return 'HRGA';
     case 'CEO_MANAGEMENT':

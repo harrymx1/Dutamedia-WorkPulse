@@ -541,6 +541,53 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(textarea.attributes('placeholder')).toContain('Menyelesaikan implementasi fitur dan memastikan perubahan siap diuji');
   });
 
+  it('menampilkan placeholder komitmen pagi sesuai divisi asli akun (Delivery & Finance, Temuan 1)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-22',
+          currentTime: '08:30',
+          cutoffTimings: { morningOnTimeCutoff: '09:00', morningLockCutoff: '09:30', isMorningLocked: false },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-del',
+      fullName: 'Dio Bayu Bagaskara',
+      email: 'product@dutamedia.com',
+      role: 'PROJECT_MANAGER',
+      function: 'Delivery',
+      status: 'ACTIVE',
+    };
+
+    const wrapperDelivery = mount(MorningCommitmentView, { global: { plugins: [router] } });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(wrapperDelivery.find('.slots-body textarea.input-control').attributes('placeholder')).toContain(
+      'Menyelesaikan koordinasi atau pekerjaan yang mendukung delivery proyek hari ini',
+    );
+
+    authStore.user = {
+      id: 'usr-fin',
+      fullName: 'Oivi Deasepta',
+      email: 'staff.finance@dutamedia.com',
+      role: 'EMPLOYEE',
+      function: 'Finance',
+      status: 'ACTIVE',
+    };
+
+    const wrapperFinance = mount(MorningCommitmentView, { global: { plugins: [router] } });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(wrapperFinance.find('.slots-body textarea.input-control').attributes('placeholder')).toContain(
+      'Menyelesaikan rekonsiliasi atau proses administrasi keuangan yang menjadi prioritas hari ini',
+    );
+  });
+
   it('handles Copy-Forward UX: clean titles, non-destructive slot placement, single-click disable, and reset on delete', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
