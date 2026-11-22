@@ -1017,11 +1017,11 @@ flowchart TD
   2. **Tindak Lanjuti Pola Pelanggaran 3x Berturut-turut di `/compliance` (HRGA):**
      - **Aksi:** Keluar dari akun staf, lalu masuk sebagai **`hrga@dutamedia.com`** (Dewi Lestari — HRGA) dan buka menu kiri **Antrean Kepatuhan** (`/compliance`).
      - ***Hasil yang Diharapkan:***
-       - Tampil kartu ringkasan kepatuhan, filter status/divisi, dan tabel daftar ketidakpatuhan harian.
-       - Terlihat data contoh **Siti Rahma** (`dev.backend@dutamedia.com`) dengan penanda peringatan merah **Pola Pelanggaran Berulang (`3x`)** berstatus **`OPEN`**.
-     - **Aksi:** Klik tombol **Tindak Lanjuti** pada baris pelanggaran Siti Rahma, isi catatan tindak lanjut: `Sudah dilakukan panggilan pengingat disiplin pelaporan harian bersama Head of Engineering`, lalu klik simpan.
+       - Tampil kartu ringkasan kepatuhan, filter **Semua Jenjang** (`Pola Terlambat 3x`, `Peringatan Tertulis`, `Eskalasi Direksi`, `Tidak Check-in`) dan **Semua Status** (`Belum Ditangani`, `Sudah Ditangani`), serta tabel daftar ketidakpatuhan harian dalam Bahasa Indonesia penuh.
+       - Terlihat data contoh **Siti Rahma** (`dev.backend@dutamedia.com`) dengan penanda **`Pola Terlambat 3x`** dan **Nadia Kusuma** (`qa@dutamedia.com`) dengan penanda **`Tidak Check-in`** berstatus **`Belum Ditangani`** (tombol **`Tindak Lanjut`**) atau **`Sudah Ditangani`** (tombol **`Ubah Catatan`**).
+     - **Aksi:** Klik tombol **Tindak Lanjut** pada baris berstatus `Belum Ditangani`, coba ketik `"ok"` lalu hapus dan isi catatan tindak lanjut min. 5 karakter: `Sudah dilakukan panggilan pengingat disiplin pelaporan harian bersama Head of Engineering`, lalu klik **`Simpan Tindak Lanjut`**.
      - ***Hasil yang Diharapkan:***
-       - Status baris kepatuhan tersebut berubah dari `OPEN` menjadi **`ADDRESSED`** lengkap dengan nama penindak lanjut (Dewi Lestari) dan jam tindakan (`HH:mm WIB`).
+       - Tombol **`Simpan Tindak Lanjut`** tetap nonaktif saat catatan kurang dari 5 karakter (dan server juga menolak `400` jika kurang dari 5 karakter). Setelah catatan valid disimpan, status baris kepatuhan berubah dari `Belum Ditangani` menjadi **`Sudah Ditangani`** lengkap dengan nama penindak lanjut sesuai akun yang masuk (Dewi Lestari, Direktur, atau Admin Sistem) dan karyawan menerima pemberitahuan di halaman `/notifications`.
   3. **Daftarkan Dispensasi Resmi Terikat Tanggal di `/exemptions` (`DEC-013`):**
      - **Aksi:** Masih sebagai Dewi Lestari (`hrga@dutamedia.com`), klik menu kiri **Manajemen Dispensasi** (`/exemptions`).
      - **Aksi (Uji Validasi Tanggal Terbalik pada Panel Kiri `Daftarkan Dispensasi Baru`):**
@@ -1066,7 +1066,7 @@ flowchart TD
 
 | ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
 |---|---|---|---|---|---|---|---|---|
-| **K-17.1** | **Pengawasan Kepatuhan** (`/compliance`) · *(Acuan `11-Compliance-Queue-HRGA.html`)* | Kartu ringkasan + filter + lencana merah pola 3x (`Repeat Offender`) + modal Tindak Lanjuti (`OPEN` → `ADDRESSED`) + format `HH:mm WIB` | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-17.1** | **Pengawasan Kepatuhan** (`/compliance`) · *(Acuan `11-Compliance-Queue-HRGA.html`)* | Kartu ringkasan + filter & tabel Bahasa Indonesia penuh (`Pola Terlambat 3x` / `Tidak Check-in`, `Belum Ditangani` → `Sudah Ditangani`, tombol `Tindak Lanjut` / `Ubah Catatan`) + modal textarea 4 baris min. 5 karakter (`Simpan Tindak Lanjut`, atribusi nama pencatat sesuai akun masuk + kirim notifikasi ke karyawan) & responsif HP `375px` (`scrollWidth = 375`) | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-18.1** | **Dispensasi Kepatuhan** (`/exemptions`) · *(Acuan `12-Exemption-Management.html`)* | Form buat dispensasi terikat tanggal (`DEC-013`) + tabel riwayat jejak audit dispensasi berformat tanggal WIB | `HRGA` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-19.1** | **Catatan Coaching** (`/coaching`) · *(Acuan `10-Manager-Note-Coaching-Record.html`)* | Cakupan daftar karyawan aktif sesuai peran (`HRGA`/`CEO`/`Admin`/`HEAD`/atasan berjenjang), sinkronisasi pilihan formulir ke panel riwayat + inisial avatar standar, chip template cepat bebas `SLA` dengan konfirmasi sebelum timpa ketikan, panduan visibilitas ke `/notifications`, lencana `Dibagikan` vs `Rahasia Manajemen`, & responsif HP `375px` (`scrollWidth = 375`) | `HEAD` / `SUPERVISOR` / `HRGA` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
