@@ -1101,22 +1101,24 @@ flowchart TD
 
 ### 7.B. Lapisan 2 — Panduan Skenario Prosedural Langkah demi Langkah (`Journey 7`)
 
-#### Skenario Prosedural `SP-07.1`: Uji Lengkap Pusat Notifikasi (`/notifications`), 4 Tab Kategori & Pencarian, serta Pengaman Tombol Tujuan (`canUserAccess`)
-- **Akun Uji:** `dev.frontend@dutamedia.com` (Aditya Nugroho — Staf yang sudah menerima berbagai notifikasi dari Journey 2–6)
+#### Skenario Prosedural `SP-07.1`: Uji Lengkap Pusat Notifikasi (`/notifications`), 4 Tab Kategori & Pencarian, Pengaman Tombol Tujuan (`canUserAccess`), Navigasi Kartu Ringkasan, Status Browser Push Bahasa Indonesia, & Layar HP `375px`
+- **Akun Uji:** `dev.frontend@dutamedia.com` (Aditya Nugroho) atau `lead.tech@dutamedia.com` (Bambang Pratama)
 - **Langkah Pelaksanaan & Hasil yang Diharapkan:**
   1. **Uji 4 Tab Filter Kategori, Pencarian, Klik 1 Notifikasi, & Pengurangan Angka Lencana Lonceng:**
-     - **Aksi:** Masuk (*Login*) sebagai **`dev.frontend@dutamedia.com`** (Aditya Nugroho). Perhatikan angka pada lencana lonceng di baris atas (*TopBar*) dan di menu kiri **Notifikasi**, lalu klik menu **Notifikasi** (`/notifications`).
-     - **Aksi:** Klik secara berurutan 4 tombol tab filter kategori (**`Semua`**, **`Belum Dibaca`**, **`Blocker & Eskalasi`**, **`Komitmen & Pengingat`**), ketik kata kunci di kotak **`Cari notifikasi...`**, lalu pada tab **Belum Dibaca** klik salah satu kartu notifikasi yang masih memiliki titik hijau/biru (belum dibaca).
+     - **Aksi:** Masuk (*Login*) sebagai **`lead.tech@dutamedia.com`** atau **`dev.frontend@dutamedia.com`**. Perhatikan angka pada lencana lonceng di baris atas (*TopBar*) dan di menu kiri **Notifikasi**, lalu buka `/notifications`.
+     - **Aksi:** Klik secara berurutan 4 tombol tab filter kategori (**`Semua`**, **`Belum Dibaca`**, **`Blocker & Eskalasi`**, **`Komitmen & Pengingat`**), ketik kata kunci di kotak **`Cari notifikasi...`**, lalu klik salah satu kartu notifikasi yang masih memiliki titik hijau (belum dibaca).
      - ***Hasil yang Diharapkan:***
-       - Daftar notifikasi tersaring sesuai tab dan kata kunci pencarian; seluruh cap waktu tampil dalam format `HH:mm WIB` tanpa detik dan bebas kata `SLA`.
-       - Saat satu notifikasi belum dibaca diklik: status kartu berubah menjadi sudah dibaca dan angka pada lonceng berkurang **1** secara langsung tanpa perlu memuat ulang halaman.
-       - Jika notifikasi adalah *Catatan Coaching*, *Blocker*, atau *Perubahan Kebijakan*, muncul jendela pop-up berisi rincian pesannya.
-       - *Pengaman Akses Tujuan (`canUserAccess`):* Pada notifikasi yang asalnya dari halaman khusus Admin/Pimpinan (misal perubahan kebijakan `/admin/policies`), sistem **menyembunyikan tombol "Buka Halaman Terkait"** bagi akun staf Aditya agar staf tidak diarahkan ke halaman yang diblokir `403`.
-  2. **Uji Tombol `Tandai semua dibaca` & Tab `Pengaturan Kanal & Perangkat`:**
-     - **Aksi:** Klik tombol **`Tandai semua dibaca`** di bagian atas daftar notifikasi, lalu klik tab **`Pengaturan Kanal & Perangkat`**.
+       - Daftar notifikasi tersaring sesuai tab dan kata kunci pencarian; tab **`Komitmen & Pengingat`** ikut menampilkan notifikasi **Pekerjaan Tambahan**, **Koreksi Komitmen**, **Pengajuan Cuti**, **Catatan Pembinaan**, **Pembaruan Kebijakan**, dan **Pengingat Harian**. Item perubahan/penghapusan Pekerjaan Tambahan memakai lencana chip **`Pekerjaan Tambahan`**, dan seluruh cap waktu tampil dalam format `HH:mm WIB` tanpa detik serta bebas kata `SLA`.
+       - Saat satu notifikasi belum dibaca diklik: status kartu berubah menjadi sudah dibaca dan angka belum dibaca berkurang **1** secara langsung tanpa memuat ulang halaman.
+       - Jika notifikasi adalah *Catatan Coaching*, *Blocker*, *Delegasi Reviewer*, atau *Perubahan Kebijakan*, muncul jendela pop-up berisi rincian pesannya. Tombol menuju halaman asal menampilkan label spesifik (misal **`Buka Pekerjaan Tambahan`**, **`Buka Antrean Eskalasi Blocker`**, **`Buka Cuti Saya`**, **`Buka Koreksi Komitmen Pagi`**), kecuali jika asal halamannya dibatasi untuk peran pengguna.
+       - *Pengaman Akses Tujuan (`canUserAccess`):* Pada notifikasi yang asalnya dari halaman khusus Admin/Pimpinan (misal `/admin/policies` bagi staf atau `/coaching` bagi non-atasan), sistem **menyembunyikan tombol menuju halaman terkait** agar staf tidak diarahkan ke halaman yang diblokir `403`.
+  2. **Uji Tombol `Tandai semua dibaca`, Kartu Ringkasan Tab-Switch, Tab `Pengaturan Kanal & Perangkat`, & Layar HP `375px`:**
+     - **Aksi:** Klik kartu ke-3 (**`Browser Push Perangkat`**) untuk berpindah ke tab **`Pengaturan Kanal & Perangkat`**, lalu klik kartu ke-1 (**`Total Notifikasi`**) atau kartu ke-2 (**`Belum Dibaca`**). Jika ingin menguji penguncian saat `0` belum dibaca, perhatikan status tombol **`Tandai semua dibaca`** saat angka belum dibaca bernilai `0`. Uji juga halaman pada lebar layar HP `375px`.
      - ***Hasil yang Diharapkan:***
-       - Seluruh notifikasi berubah menjadi sudah dibaca dan lencana angka merah pada lonceng menjadi **0 / hilang**.
-       - Pada tab `Pengaturan Kanal & Perangkat`: tampil kartu status langganan notifikasi browser (*Web Push*) lengkap dengan tombol aktifkan/uji/cabut notifikasi perangkat.
+       - Status izin peramban di kartu ke-3 maupun di tab **`Pengaturan Kanal & Perangkat`** tampil dalam Bahasa Indonesia (**`Belum Diatur`**, **`Aktif`**, **`Ditolak Peramban`**, atau **`Tidak Didukung`**), tombol dinonaktifkan apabila izin sudah aktif / ditolak / tidak didukung, dan catatan informasi menyebut menu **`Saluran Notifikasi (khusus Admin / Pimpinan)`**.
+       - Mengklik kartu **`Total Notifikasi`** atau **`Belum Dibaca`** dari tab pengaturan langsung mengembalikan tampilan ke tab **`Daftar Notifikasi`** dengan penyaring yang sesuai.
+       - Saat jumlah belum dibaca bernilai `0`, tombol **`Tandai semua dibaca`** nonaktif dan tidak dapat ditekan; saat `> 0` lalu diklik, seluruh notifikasi berubah menjadi sudah dibaca.
+       - Pada layar HP `375px`, 3 kartu ringkasan menumpuk 1 kolom, 2 tab utama bertumpuk lebar penuh, tombol filter & kotak pencarian tertata rapi tanpa meluap ke samping (`scrollWidth = 375`).
 
 ---
 
@@ -1163,8 +1165,8 @@ flowchart TD
 
 | ID Kondisi | Halaman & Rute | Kondisi / State yang Diuji | Peran Uji | HP (375) | Tablet (768/1024) | Desktop (1440) | Lebar (1920) | Cek Prototype & Baseline |
 |---|---|---|---|---|---|---|---|---|
-| **K-20.1** | **Pusat Notifikasi** (`/notifications`) · *(Acuan `07-Notification-Center-Browser-Push.html`)* | Daftar notifikasi + filter Belum Dibaca + klik item kurangi counter + modal detail coaching/kebijakan (`0` kata `SLA` & waktu `HH:mm WIB`) | Semua Peran (`dev.frontend@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-20.2** | **Pusat Notifikasi** (`/notifications`) | Pengaman `canUserAccess` (sembunyikan tombol halaman Admin bagi staf) + tab **Pengaturan Push Perangkat** | `EMPLOYEE` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-20.1** | **Pusat Notifikasi** (`/notifications`) · *(Acuan `07-Notification-Center-Browser-Push.html`)* | 4 filter termasuk `Komitmen & Pengingat` (mencakup `Pekerjaan Tambahan`, Koreksi, Cuti, Coaching), klik item kurangi counter, tombol tujuan spesifik + kunci `Tandai semua dibaca` saat `0` belum dibaca, & responsif HP `375px` (`scrollWidth = 375`) | Semua Peran (`dev.frontend` / `lead.tech`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-20.2** | **Pusat Notifikasi** (`/notifications`) | Pengaman `canUserAccess` (sembunyikan tombol halaman terlarang bagi staf), navigasi balik dari Tab 2 lewat klik kartu atas, & status izin peramban Bahasa Indonesia (`Belum Diatur`/`Aktif`/`Ditolak Peramban`/`Tidak Didukung`) + wording `Saluran Notifikasi` | `EMPLOYEE` / `SUPERVISOR` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-21.1** | **Pulse Dashboard** (`/dashboard`) · *(Acuan `08-Pulse-Dashboard.html`)* | `Scope: PROJECT` (`SUPERVISOR` & `PROJECT_MANAGER`) vs `Scope: DIVISION` (`HEAD`) vs `Scope: COMPANY` (`CEO`/`HRGA`/`ADMIN`) | `lead.tech`, `pm`, `head.eng`, `direktur` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-21.2** | **Pulse Dashboard** (`/dashboard`) | Filter silang Divisi × Proyek + `[Aktif v1.1 — Paket #1]` Filter Status Karyawan (`Tetap/Kontrak/Intern`, total `23 + 0 + 2 = 25`, pil ungu `Intern`) | `CEO_MANAGEMENT` (`direktur@dutamedia.com`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-22.1** | **Radar Risiko Proyek** (`/projects/risk`) · *(Acuan `13-Project-Risk-View.html`)* | Grid kartu kesehatan proyek + lencana risiko + **Modal Rincian Proyek** saat kartu diklik | `PROJECT_MANAGER` / `HEAD` / `CEO` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
