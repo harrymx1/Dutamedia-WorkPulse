@@ -20,6 +20,7 @@ interface CommitmentRecord {
   isCarryOver: boolean;
   carryOverDaysCount: number;
   outcome?: string;
+  outcomeReason?: string;
   continuation?: string;
   continuationReason?: string;
 }
@@ -29,6 +30,15 @@ interface AdditionalWorkRecord {
   taskText: string;
   reason: string;
   outcome?: string;
+  outcomeReason?: string;
+  continuation?: string;
+  continuationReason?: string;
+}
+
+interface OrgContextSnapshot {
+  dailyRiskExplanation?: string;
+  tomorrowPriority?: string;
+  [key: string]: unknown;
 }
 
 interface DailyRecordRow {
@@ -39,6 +49,7 @@ interface DailyRecordRow {
   initialDailyStatus: string;
   finalDailyStatus?: string;
   zeroCommitmentReason?: string;
+  orgContextSnapshot?: OrgContextSnapshot | null;
   commitments: CommitmentRecord[];
   additionalWorks: AdditionalWorkRecord[];
 }
@@ -67,11 +78,157 @@ const kpi = ref<HistoryKpi>({
 const startDate = ref('');
 const endDate = ref('');
 const expandedRows = ref<Record<string, boolean>>({});
+const dateRangeError = ref<string | null>(null);
 
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
+function formatTimingLabel(timing: string, kind: 'morning' | 'eod'): string {
+  switch (timing) {
+    case 'ON_TIME':
+      return 'Tepat Waktu';
+    case 'LATE':
+      return kind === 'eod' ? 'Di Luar Jam Normal' : 'Terlambat';
+    case 'NO_SUBMISSION':
+      return 'Belum Mengisi';
+    case 'APPROVED_LEAVE':
+      return 'Cuti Resmi';
+    case 'EXEMPTED':
+      return 'Dikecualikan';
+    default:
+      return timing || '-';
+  }
+}
+
+function getTimingBadgeClass(timing: string): string {
+  if (timing === 'ON_TIME') return 'badge-ontime';
+  if (timing === 'LATE') return 'badge-late';
+  return 'badge-neutral';
+}
+
+function formatDailyStatusLabel(status?: string): string {
+  switch (status) {
+    case 'GREEN':
+      return 'Hijau (Terkendali)';
+    case 'AMBER':
+      return 'Kuning (Waspada)';
+    case 'RED':
+      return 'Merah (Kritis)';
+    case 'NOT_APPLICABLE_NO_COMMITMENT':
+      return 'Tidak Ada Komitmen';
+    default:
+      return status || '-';
+  }
+}
+
+function getDailyStatusBadgeClass(status?: string): string {
+  switch (status) {
+    case 'GREEN':
+      return 'badge-active';
+    case 'AMBER':
+      return 'badge-warning';
+    case 'RED':
+      return 'badge-danger';
+    default:
+      return 'badge-neutral';
+  }
+}
+
+function formatRiskLabel(risk?: string): string {
+  switch (risk) {
+    case 'GREEN':
+      return 'Risiko Rendah';
+    case 'AMBER':
+      return 'Risiko Sedang';
+    case 'RED':
+      return 'Risiko Tinggi';
+    default:
+      return risk || '-';
+  }
+}
+
+function getRiskBadgeClass(risk?: string): string {
+  switch (risk) {
+    case 'GREEN':
+      return 'badge-active';
+    case 'AMBER':
+      return 'badge-warning';
+    case 'RED':
+      return 'badge-danger';
+    default:
+      return 'badge-neutral';
+  }
+}
+
+function formatOutcomeLabel(outcome?: string): string {
+  switch (outcome) {
+    case 'COMPLETED':
+      return 'Selesai';
+    case 'PARTIALLY_COMPLETED':
+      return 'Selesai Sebagian';
+    case 'NOT_COMPLETED':
+      return 'Belum Selesai';
+    case 'CANCELLED':
+      return 'Dibatalkan';
+    default:
+      return outcome || '-';
+  }
+}
+
+function getOutcomeBadgeClass(outcome?: string): string {
+  switch (outcome) {
+    case 'COMPLETED':
+      return 'badge-active';
+    case 'PARTIALLY_COMPLETED':
+      return 'badge-warning';
+    case 'NOT_COMPLETED':
+      return 'badge-danger';
+    case 'CANCELLED':
+    default:
+      return 'badge-neutral';
+  }
+}
+
+function formatAdditionalReasonLabel(reason?: string): string {
+  switch (reason) {
+    case 'NEWLY_ASSIGNED':
+      return 'Penugasan Baru Atasan';
+    case 'OPERATIONAL_INCIDENT':
+      return 'Perbaikan Error / Bug Kritis';
+    case 'MISSED_IN_PLANNING':
+      return 'Terlewat Catat Pagi';
+    case 'MORNING_CUTOFF_MISSED':
+      return 'Komitmen Pagi Terlewat';
+    case 'PRIORITY_CHANGE':
+      return 'Pengalihan Prioritas';
+    case 'OTHER':
+      return 'Lainnya';
+    default:
+      return reason || '-';
+  }
+}
+
+function getSnapshotText(record: DailyRecordRow, key: 'dailyRiskExplanation' | 'tomorrowPriority'): string {
+  const val = record.orgContextSnapshot?.[key];
+  return typeof val === 'string' ? val.trim() : '';
+}
+
+function escapeCsvCell(value: string | number): string {
+  const str = String(value);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
 async function loadHistory() {
+  if (startDate.value && endDate.value && startDate.value > endDate.value) {
+    dateRangeError.value = 'Dari Tanggal tidak boleh lebih akhir daripada Sampai Tanggal.';
+    showToast(dateRangeError.value, true);
+    return;
+  }
+  dateRangeError.value = null;
+
   loading.value = true;
   try {
     const query = new URLSearchParams();
@@ -105,18 +262,19 @@ function exportCsv() {
     return;
   }
 
-  const headers = ['Tanggal', 'Morning Timing', 'EOD Timing', 'Status Pagi', 'Status Akhir (Refleksi)', 'Jml Komitmen', 'Jml Pekerjaan Tambahan'];
+  const headers = ['Tanggal', 'Waktu Pagi', 'Waktu EOD', 'Status Pagi', 'Status Akhir (Refleksi)', 'Jml Komitmen', 'Jml Pekerjaan Tambahan'];
   const rows = records.value.map((r) => [
     r.workDate.split('T')[0],
-    r.morningTiming,
-    r.eodTiming,
-    r.initialDailyStatus,
-    r.finalDailyStatus || '-',
+    formatTimingLabel(r.morningTiming, 'morning'),
+    formatTimingLabel(r.eodTiming, 'eod'),
+    formatDailyStatusLabel(r.initialDailyStatus),
+    r.finalDailyStatus ? formatDailyStatusLabel(r.finalDailyStatus) : '-',
     r.commitments.length,
     r.additionalWorks.length,
   ]);
 
-  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+  const csvLines = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(','));
+  const csvContent = 'data:text/csv;charset=utf-8,' + csvLines.join('\n');
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
@@ -161,7 +319,7 @@ onMounted(() => {
         <div>
           <h1>Riwayat Akuntabilitas & Weekly Summary</h1>
           <p class="subtitle">
-            Pantau kepatuhan ketepatan waktu check-in, tren risiko harian, dan evaluasi hasil komitmen Anda dari waktu ke waktu (Prototipe 06).
+            Pantau kepatuhan ketepatan waktu check-in, tren risiko harian, dan evaluasi hasil komitmen Anda dari waktu ke waktu.
           </p>
         </div>
         <button type="button" class="btn btn-secondary" @click="exportCsv">
@@ -185,6 +343,9 @@ onMounted(() => {
             <span>Terapkan Rentang</span>
           </button>
         </div>
+        <p v-if="dateRangeError" class="filter-error" role="alert" data-testid="date-range-error">
+          {{ dateRangeError }}
+        </p>
       </section>
 
       <!-- 4 Summary KPI Cards -->
@@ -246,29 +407,29 @@ onMounted(() => {
                 <tr class="main-row" @click="toggleExpand(r.id)">
                   <td class="mono font-bold">{{ r.workDate.split('T')[0] }}</td>
                   <td>
-                    <span class="badge" :class="r.morningTiming === 'ON_TIME' ? 'badge-ontime' : r.morningTiming === 'LATE' ? 'badge-late' : 'badge-neutral'">
-                      {{ r.morningTiming }}
+                    <span class="badge" :class="getTimingBadgeClass(r.morningTiming)">
+                      {{ formatTimingLabel(r.morningTiming, 'morning') }}
                     </span>
                   </td>
                   <td>
-                    <span class="badge" :class="r.eodTiming === 'ON_TIME' ? 'badge-ontime' : r.eodTiming === 'LATE' ? 'badge-late' : 'badge-neutral'">
-                      {{ r.eodTiming }}
+                    <span class="badge" :class="getTimingBadgeClass(r.eodTiming)">
+                      {{ formatTimingLabel(r.eodTiming, 'eod') }}
                     </span>
                   </td>
                   <td>
-                    <span class="badge" :class="r.initialDailyStatus === 'GREEN' ? 'badge-active' : r.initialDailyStatus === 'AMBER' ? 'badge-warning' : r.initialDailyStatus === 'RED' ? 'badge-danger' : 'badge-neutral'">
-                      {{ r.initialDailyStatus }}
+                    <span class="badge" :class="getDailyStatusBadgeClass(r.initialDailyStatus)">
+                      {{ formatDailyStatusLabel(r.initialDailyStatus) }}
                     </span>
                   </td>
                   <td>
-                    <span v-if="r.finalDailyStatus" class="badge" :class="r.finalDailyStatus === 'GREEN' ? 'badge-active' : r.finalDailyStatus === 'AMBER' ? 'badge-warning' : 'badge-danger'">
-                      {{ r.finalDailyStatus }}
+                    <span v-if="r.finalDailyStatus" class="badge" :class="getDailyStatusBadgeClass(r.finalDailyStatus)">
+                      {{ formatDailyStatusLabel(r.finalDailyStatus) }}
                     </span>
                     <span v-else class="text-muted">-</span>
                   </td>
                   <td class="mono">{{ r.commitments.length + r.additionalWorks.length }} Item</td>
                   <td>
-                    <button type="button" class="expand-btn">
+                    <button type="button" class="expand-btn" :aria-expanded="!!expandedRows[r.id]">
                       <span>{{ expandedRows[r.id] ? 'Tutup' : 'Detail' }}</span>
                       <ChevronUp v-if="expandedRows[r.id]" :size="14" />
                       <ChevronDown v-else :size="14" />
@@ -284,6 +445,24 @@ onMounted(() => {
                         <strong>Alasan 0 Komitmen:</strong> {{ r.zeroCommitmentReason }}
                       </div>
 
+                      <div
+                        v-if="getSnapshotText(r, 'dailyRiskExplanation')"
+                        class="detail-note detail-note-risk"
+                        data-testid="detail-risk-explanation"
+                      >
+                        <strong>Penjelasan Risiko Hari Ini:</strong>
+                        <span>{{ getSnapshotText(r, 'dailyRiskExplanation') }}</span>
+                      </div>
+
+                      <div
+                        v-if="getSnapshotText(r, 'tomorrowPriority')"
+                        class="detail-note detail-note-priority"
+                        data-testid="detail-tomorrow-priority"
+                      >
+                        <strong>Prioritas Esok Hari:</strong>
+                        <span>{{ getSnapshotText(r, 'tomorrowPriority') }}</span>
+                      </div>
+
                       <div v-if="r.commitments.length > 0" class="sub-section">
                         <h4>Komitmen Pagi ({{ r.commitments.length }}):</h4>
                         <div class="items-list">
@@ -291,11 +470,22 @@ onMounted(() => {
                             <div class="sub-item-header">
                               <span class="item-num">#{{ c.sequenceNo }}</span>
                               <span class="item-text">{{ c.taskText }}</span>
-                              <span class="badge badge-info">{{ c.initialRisk }}</span>
-                              <span v-if="c.outcome" class="badge badge-active">{{ c.outcome }}</span>
+                              <span class="badge" :class="getRiskBadgeClass(c.initialRisk)">
+                                {{ formatRiskLabel(c.initialRisk) }}
+                              </span>
+                              <span v-if="c.outcome" class="badge" :class="getOutcomeBadgeClass(c.outcome)">
+                                {{ formatOutcomeLabel(c.outcome) }}
+                              </span>
                             </div>
                             <div v-if="c.continuation === 'CONTINUE'" class="sub-item-meta">
-                              <strong>Kelanjutan Besok:</strong> {{ c.continuationReason || (c as any).outcomeReason || 'Dilanjutkan ke hari kerja berikutnya' }}
+                              <strong>Kelanjutan Besok:</strong> {{ c.continuationReason || c.outcomeReason || 'Dilanjutkan ke hari kerja berikutnya' }}
+                            </div>
+                            <div
+                              v-if="c.outcome === 'CANCELLED' && c.outcomeReason"
+                              class="sub-item-meta"
+                              data-testid="detail-cancel-reason"
+                            >
+                              <strong>Alasan Pembatalan:</strong> {{ c.outcomeReason }}
                             </div>
                           </div>
                         </div>
@@ -307,8 +497,20 @@ onMounted(() => {
                           <div v-for="w in r.additionalWorks" :key="w.id" class="sub-item">
                             <div class="sub-item-header">
                               <span class="item-text">{{ w.taskText }}</span>
-                              <span class="badge badge-neutral">{{ w.reason }}</span>
-                              <span v-if="w.outcome" class="badge badge-active">{{ w.outcome }}</span>
+                              <span class="badge badge-neutral">{{ formatAdditionalReasonLabel(w.reason) }}</span>
+                              <span v-if="w.outcome" class="badge" :class="getOutcomeBadgeClass(w.outcome)">
+                                {{ formatOutcomeLabel(w.outcome) }}
+                              </span>
+                            </div>
+                            <div v-if="w.continuation === 'CONTINUE'" class="sub-item-meta">
+                              <strong>Kelanjutan Besok:</strong> {{ w.continuationReason || w.outcomeReason || 'Dilanjutkan ke hari kerja berikutnya' }}
+                            </div>
+                            <div
+                              v-if="w.outcome === 'CANCELLED' && w.outcomeReason"
+                              class="sub-item-meta"
+                              data-testid="detail-cancel-reason"
+                            >
+                              <strong>Alasan Pembatalan:</strong> {{ w.outcomeReason }}
                             </div>
                           </div>
                         </div>
@@ -328,6 +530,8 @@ onMounted(() => {
 <style scoped>
 .daily-layout {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
   background-color: var(--color-canvas);
   display: flex;
   flex-direction: column;
@@ -395,6 +599,7 @@ onMounted(() => {
 .main-content {
   max-width: 1080px;
   width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 28px 24px 64px;
   display: flex;
@@ -427,10 +632,13 @@ onMounted(() => {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   padding: 16px 20px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .filter-inputs {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: flex-end;
 }
@@ -451,9 +659,16 @@ onMounted(() => {
   height: 38px;
 }
 
+.filter-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-status-red-fg);
+}
+
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -462,6 +677,8 @@ onMounted(() => {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   padding: 18px 20px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .kpi-label {
@@ -489,6 +706,9 @@ onMounted(() => {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-head {
@@ -573,6 +793,25 @@ onMounted(() => {
   color: var(--color-text-secondary);
 }
 
+.detail-note {
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--color-border-subtle);
+  border-left: 3px solid var(--color-brand-primary);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.45;
+}
+
+.detail-note-risk {
+  border-left-color: #d97706;
+  background: #fffbeb;
+}
+
 .sub-section h4 {
   font-size: 13px;
   font-weight: 700;
@@ -599,6 +838,7 @@ onMounted(() => {
 .sub-item-header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -716,5 +956,85 @@ onMounted(() => {
   background: var(--color-status-red-bg);
   color: var(--color-status-red-fg);
   border: 1px solid var(--color-status-red-border);
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 20px 16px 48px;
+    gap: 16px;
+  }
+
+  .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-heading .btn {
+    align-self: flex-start;
+  }
+
+  .filter-card {
+    padding: 14px 16px;
+  }
+
+  .filter-inputs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .input-control,
+  .filter-btn {
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .kpi-card {
+    padding: 14px;
+  }
+
+  .kpi-value {
+    font-size: 22px;
+  }
+
+  .toast-popup {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-heading h1 {
+    font-size: 20px;
+  }
+
+  .kpi-card {
+    padding: 12px;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 10px 12px;
+  }
+
+  .detail-row td {
+    padding: 12px;
+  }
 }
 </style>

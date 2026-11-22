@@ -1497,7 +1497,7 @@ export class DailyService {
   }
 
   /**
-   * Mengambil riwayat log mingguan karyawan (Prototipe 06).
+   * Mengambil riwayat log mingguan karyawan.
    */
   async getWeeklyHistory(userId: string, startDate?: string, endDate?: string) {
     let start: Date;
@@ -1507,10 +1507,11 @@ export class DailyService {
       start = new Date(startDate);
       end = new Date(endDate);
     } else {
-      // Default: 7 hari terakhir
-      end = this.clockService.now();
+      // Default: 7 hari terakhir berdasarkan tanggal hari ini di Asia/Jakarta (WIB)
+      const todayStr = this.clockService.todayString('Asia/Jakarta');
+      end = new Date(`${todayStr}T00:00:00.000Z`);
       start = new Date(end);
-      start.setDate(start.getDate() - 6);
+      start.setUTCDate(start.getUTCDate() - 6);
     }
 
     const records = await this.prisma.dailyAccountabilityRecord.findMany({

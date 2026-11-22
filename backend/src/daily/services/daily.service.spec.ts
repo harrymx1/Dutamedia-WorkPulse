@@ -980,4 +980,74 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
       });
     });
   });
+
+  describe('getWeeklyHistory', () => {
+    it('uses Asia/Jakarta todayString for default 7-day range during early-morning WIB (00:00-06:59 WIB)', async () => {
+      // 18:30 UTC on 2026-11-21 equals 01:30 WIB on 2026-11-22
+      mockClock.now.mockReturnValue(new Date('2026-11-21T18:30:00.000Z'));
+      mockClock.todayString.mockReturnValue('2026-11-22');
+
+      mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([
+        {
+          id: 'rec-wib-1',
+          workDate: new Date('2026-11-22T00:00:00.000Z'),
+          morningTiming: 'ON_TIME',
+          eodTiming: 'ON_TIME',
+          initialDailyStatus: 'GREEN',
+          finalDailyStatus: 'AMBER',
+          commitments: [],
+          additionalWorks: [],
+        },
+      ]);
+
+      const res = await service.getWeeklyHistory('usr-1');
+
+      expect(mockClock.todayString).toHaveBeenCalledWith('Asia/Jakarta');
+      expect(mockPrisma.dailyAccountabilityRecord.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId: 'usr-1',
+            workDate: {
+              gte: new Date('2026-11-16T00:00:00.000Z'),
+              lte: new Date('2026-11-22T00:00:00.000Z'),
+            },
+          },
+        }),
+      );
+      expect(res.dateRange).toEqual({
+        startDate: '2026-11-16',
+        endDate: '2026-11-22',
+      });
+      expect(res.kpi).toEqual({
+        totalDays: 1,
+        onTimeSubmissions: 1,
+        onTimeRate: 100,
+        greenDays: 0,
+        amberDays: 1,
+        redDays: 0,
+      });
+    });
+
+    it('uses explicit startDate and endDate when provided', async () => {
+      mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
+
+      const res = await service.getWeeklyHistory('usr-1', '2026-11-01', '2026-11-10');
+
+      expect(mockPrisma.dailyAccountabilityRecord.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId: 'usr-1',
+            workDate: {
+              gte: new Date('2026-11-01'),
+              lte: new Date('2026-11-10'),
+            },
+          },
+        }),
+      );
+      expect(res.dateRange).toEqual({
+        startDate: '2026-11-01',
+        endDate: '2026-11-10',
+      });
+    });
+  });
 });
