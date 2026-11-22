@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
-import { ComplianceEventStage } from '@prisma/client';
+import { ComplianceEventStage, NotificationChannel } from '@prisma/client';
 
 @Injectable()
 export class ComplianceService {
@@ -94,12 +94,26 @@ export class ComplianceService {
   }
 
   /**
-   * Menindaklanjuti peristiwa kepatuhan dengan menautkan catatan pembinaan manajerial.
+   * Menindaklanjuti peristiwa kepatuhan dengan menautkan atau membuat catatan pembinaan manajerial.
    */
   async addressComplianceEvent(
     eventId: string,
     followUpManagerNoteId: string,
+    actorUserId?: string,
   ) {
+    const cleanInput = followUpManagerNoteId?.trim() || '';
+    const isUuid =
+      !!cleanInput &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanInput);
+
+    if (!cleanInput || (!isUuid && cleanInput.length < 5)) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Catatan tindak lanjut minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const event = await this.prisma.complianceEvent.findUnique({
       where: { id: eventId },
     });
@@ -112,8 +126,6 @@ export class ComplianceService {
       });
     }
 
-    const cleanInput = followUpManagerNoteId?.trim();
-    const isUuid = !!cleanInput && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanInput);
     let noteId: string | null = null;
 
     if (!this.prisma.managerNote) {
@@ -135,21 +147,47 @@ export class ComplianceService {
       // Jika input adalah teks bebas (bukan UUID) atau ID tidak ditemukan di DB, buatkan rekaman ManagerNote baru
       if (!noteId && this.prisma.managerNote.create) {
         try {
-          const adminOrHr = this.prisma.user?.findFirst
-            ? await this.prisma.user.findFirst({ where: { email: 'hrga@dutamedia.com' } })
-            : null;
+          let resolvedAuthorId = actorUserId;
+          if (!resolvedAuthorId) {
+            const adminOrHr = this.prisma.user?.findFirst
+              ? await this.prisma.user.findFirst({ where: { email: 'hrga@dutamedia.com' } })
+              : null;
+            resolvedAuthorId = adminOrHr?.id || event.userId;
+          }
+
           const createdNote = await this.prisma.managerNote.create({
             data: {
               subjectUserId: event.userId,
-              authorUserId: adminOrHr?.id || event.userId,
+              authorUserId: resolvedAuthorId,
               noteType: 'COACHING',
               visibility: 'SHARED_WITH_EMPLOYEE',
-              content: cleanInput.length >= 5 ? cleanInput : 'Tindak lanjut pembinaan kepatuhan oleh HRGA',
+              content: cleanInput,
+            },
+            include: {
+              authorUser: { select: { id: true, fullName: true } },
             },
           });
           noteId = createdNote.id;
+
+          if (this.prisma.notification?.create && event.userId) {
+            const authorName = createdNote.authorUser?.fullName || 'Tim HRGA / Pimpinan';
+            await this.prisma.notification.create({
+              data: {
+                recipientUserId: event.userId,
+                triggerType: 'MANAGER_NOTE_SHARED',
+                channel: NotificationChannel.IN_APP_CENTER,
+                title: 'Tindak Lanjut Kepatuhan & Pembinaan',
+                message: `${authorName} mencatat tindak lanjut kepatuhan: "${cleanInput}"`,
+                actionUrl: '/notifications',
+                relatedEntityType: 'manager_notes',
+                relatedEntityId: createdNote.id,
+              },
+            });
+          }
         } catch {
-          noteId = cleanInput;
+          if (!noteId) {
+            noteId = cleanInput;
+          }
         }
       }
     }

@@ -98,14 +98,43 @@ const filteredEvents = computed(() => {
 
 function openAddressModal(event: ComplianceEventItem) {
   selectedEvent.value = event;
-  managerNoteIdInput.value = event.followUpManagerNoteId || '';
+  managerNoteIdInput.value = event.followUpManagerNote?.content || '';
   isAddressModalOpen.value = true;
+}
+
+function formatStageLabel(stage: string): string {
+  switch (stage) {
+    case 'PATTERN_FLAG_3X':
+      return 'Pola Terlambat 3x';
+    case 'RECORDED_WARNING':
+      return 'Peringatan Tertulis';
+    case 'FORMAL_HR_ESCALATION':
+      return 'Eskalasi Direksi';
+    case 'NO_SUBMISSION':
+      return 'Tidak Check-in';
+    case 'COACHING_LOGGED':
+      return 'Sudah Dibina';
+    default:
+      return stage;
+  }
+}
+
+function formatStatusLabel(status: string): string {
+  switch (status) {
+    case 'OPEN':
+      return 'Belum Ditangani';
+    case 'ADDRESSED':
+      return 'Sudah Ditangani';
+    default:
+      return status;
+  }
 }
 
 async function submitAddressCompliance() {
   if (!selectedEvent.value) return;
-  if (!managerNoteIdInput.value.trim()) {
-    showToast('Masukkan ID atau catatan pembinaan manajerial terkait.', true);
+  const trimmedNote = managerNoteIdInput.value.trim();
+  if (trimmedNote.length < 5) {
+    showToast('Catatan tindak lanjut minimal 5 karakter.', true);
     return;
   }
 
@@ -114,12 +143,12 @@ async function submitAddressCompliance() {
     await apiClient(`/compliance/events/${selectedEvent.value.id}/address`, {
       method: 'POST',
       body: JSON.stringify({
-        managerNoteId: managerNoteIdInput.value.trim(),
+        managerNoteId: trimmedNote,
       }),
     });
 
     isAddressModalOpen.value = false;
-    showToast('Tindak lanjut peristiwa kepatuhan berhasil dicatat (ADDRESSED).');
+    showToast('Tindak lanjut peristiwa kepatuhan berhasil disimpan.');
     await loadData();
   } catch (err: any) {
     showToast(err.message || 'Gagal menyimpan tindak lanjut.', true);
@@ -206,17 +235,17 @@ onMounted(() => {
             <h2>Daftar Peristiwa Kepatuhan Aktif</h2>
             <div class="filters">
               <select v-model="stageFilter" class="filter-select">
-                <option value="ALL">Semua Jenjang (Stage)</option>
-                <option value="PATTERN_FLAG_3X">Pola 3x (Stage 1)</option>
-                <option value="RECORDED_WARNING">Surat Peringatan (Stage 2)</option>
-                <option value="FORMAL_HR_ESCALATION">Eskalasi Direksi (Stage 3)</option>
+                <option value="ALL">Semua Jenjang</option>
+                <option value="PATTERN_FLAG_3X">Pola Terlambat 3x</option>
+                <option value="RECORDED_WARNING">Peringatan Tertulis</option>
+                <option value="FORMAL_HR_ESCALATION">Eskalasi Direksi</option>
                 <option value="NO_SUBMISSION">Tidak Check-in</option>
               </select>
 
               <select v-model="statusFilter" class="filter-select">
                 <option value="ALL">Semua Status</option>
-                <option value="OPEN">Belum Ditindaklanjuti (OPEN)</option>
-                <option value="ADDRESSED">Selesai (ADDRESSED)</option>
+                <option value="OPEN">Belum Ditangani</option>
+                <option value="ADDRESSED">Sudah Ditangani</option>
               </select>
             </div>
           </div>
@@ -238,7 +267,7 @@ onMounted(() => {
               <tr>
                 <th>Karyawan</th>
                 <th>Tanggal Kejadian</th>
-                <th>Jenjang Kepatuhan (Stage)</th>
+                <th>Jenjang Kepatuhan</th>
                 <th>Status Tindak Lanjut</th>
                 <th>Catatan Pembinaan / Solusi</th>
                 <th>Aksi</th>
@@ -260,7 +289,7 @@ onMounted(() => {
                 </td>
                 <td class="col-stage">
                   <span class="stage-badge" :class="item.stage.toLowerCase()">
-                    {{ item.stage }}
+                    {{ formatStageLabel(item.stage) }}
                   </span>
                 </td>
                 <td class="col-status">
@@ -268,7 +297,7 @@ onMounted(() => {
                     class="status-pill"
                     :class="item.followUpStatus === 'OPEN' ? 'status-open' : 'status-addressed'"
                   >
-                    {{ item.followUpStatus }}
+                    {{ formatStatusLabel(item.followUpStatus) }}
                   </span>
                 </td>
                 <td class="col-note">
@@ -285,7 +314,7 @@ onMounted(() => {
                     @click="openAddressModal(item)"
                   >
                     <Link2 :size="14" />
-                    <span>Tindak Lanjut</span>
+                    <span>{{ item.followUpStatus === 'ADDRESSED' ? 'Ubah Catatan' : 'Tindak Lanjut' }}</span>
                   </button>
                 </td>
               </tr>
@@ -306,15 +335,17 @@ onMounted(() => {
         </div>
         <div class="modal-body">
           <p class="modal-hint">
-            Kaitkan catatan pembinaan / evaluasi manajerial yang telah dilakukan bersama atasan langsung karyawan (<strong>{{ selectedEvent?.user.fullName }}</strong>).
+            Tuliskan ringkasan pembinaan atau langkah tindak lanjut bersama atasan langsung karyawan (<strong>{{ selectedEvent?.user.fullName }}</strong>). Karyawan terkait juga akan menerima pemberitahuan di halaman Notifikasi.
           </p>
           <div class="form-group">
-            <label>ID atau Catatan Pembinaan Manajerial <span class="req">*</span></label>
-            <input
+            <label for="followUpNoteInput">Catatan Tindak Lanjut / Pembinaan <span class="req">*</span></label>
+            <textarea
+              id="followUpNoteInput"
               v-model="managerNoteIdInput"
-              type="text"
-              placeholder="Masukkan UUID catatan pembinaan atau ketikkan ringkasan solusi..."
-            />
+              rows="4"
+              minlength="5"
+              placeholder="Tuliskan ringkasan pembinaan atau langkah tindak lanjut bersama atasan (minimal 5 karakter)..."
+            ></textarea>
           </div>
         </div>
         <div class="modal-foot">
@@ -322,10 +353,10 @@ onMounted(() => {
           <button
             type="button"
             class="btn-primary"
-            :disabled="submittingAddress || !managerNoteIdInput.trim()"
+            :disabled="submittingAddress || managerNoteIdInput.trim().length < 5"
             @click="submitAddressCompliance"
           >
-            {{ submittingAddress ? 'Menyimpan...' : 'Tandai ADDRESSED' }}
+            {{ submittingAddress ? 'Menyimpan...' : 'Simpan Tindak Lanjut' }}
           </button>
         </div>
       </div>
@@ -571,6 +602,7 @@ h1 {
 .stage-badge.recorded_warning { background: #FEE2E2; color: #991B1B; }
 .stage-badge.formal_hr_escalation { background: #7F1D1D; color: #fff; }
 .stage-badge.no_submission { background: #EFF5F2; color: #5C6E68; }
+.stage-badge.coaching_logged { background: #E0F2FE; color: #075985; }
 
 .status-pill {
   font-size: 11px;
@@ -692,13 +724,23 @@ label {
 
 .req { color: #991B1B; }
 
-input[type="text"] {
+input[type="text"],
+textarea {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #DCE7E2;
   border-radius: 6px;
   font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
   box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: #00674D;
+  box-shadow: 0 0 0 2px rgba(0, 103, 77, 0.15);
 }
 
 .modal-foot {
@@ -731,6 +773,11 @@ input[type="text"] {
   cursor: pointer;
 }
 
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .toast-popup {
   position: fixed;
   top: 70px;
@@ -751,5 +798,77 @@ input[type="text"] {
 
 @media (max-width: 900px) {
   .metrics-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 12px 64px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .panel-head {
+    padding: 14px 16px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-head,
+  .modal-body,
+  .modal-foot {
+    padding: 14px 16px;
+  }
+
+  .modal-foot {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-foot .btn-primary,
+  .modal-foot .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 64px;
+  }
 }
 </style>

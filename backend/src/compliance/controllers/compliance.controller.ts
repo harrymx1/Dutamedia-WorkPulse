@@ -41,10 +41,15 @@ export class ComplianceController {
 
   @Post('events/:id/address')
   async addressComplianceEvent(
+    @Req() req: any,
     @Param('id') id: string,
     @Body('managerNoteId') managerNoteId: string,
   ) {
-    return this.complianceService.addressComplianceEvent(id, managerNoteId);
+    return this.complianceService.addressComplianceEvent(
+      id,
+      managerNoteId,
+      req.user?.id,
+    );
   }
 
   @Get('exemptions')
