@@ -26,7 +26,7 @@ Dokumen ini mencatat seluruh hasil audit tersebut dengan jujur:
 |---|---|---|---|---|
 | 1 | **`01-Login-Activation.html`** | **Login (`/login`) & Aktivasi (`/activate`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada `7f20e60`, `3904826`, `7a373e2`, & `389a47f` (`01-B1` s/d `01-B5`: logo mobile, ingat email, 3 syarat sandi + huruf & angka, pratinjau akun undangan Desktop & HP `375px` tanpa meluap, banner lockout & pasca-aktivasi). Lihat **Audit #2** di bawah. |
 | 2 | **`02-Morning-Commitment.html`** | **Komitmen Pagi (`/daily/morning`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada `dabb266`, `69bb068`, & Audit #3 (`1a`, `1b`, `1c`, footer 1 baris, data `H-1`/`H-2`, plus **contoh kalimat divisi asli `CR-008` untuk 10 divisi**). Lihat **Audit #1** & **Audit #3**. |
-| 3 | **`03-Additional-Work.html`** | **Tugas Tambahan (`/daily/additional-work`)** | **`Selesai Diaudit & Disesuaikan (Menunggu Verifikasi Live pasca Deploy Render)`** | Diperbaiki pada **Audit #3**: **Opsi A + alasan `Komitmen Pagi Terlewat`** saat jam pagi lewat Cut-Off, serta tombol **`Edit` & `Hapus` terkontrol** (wajib alasan, catat audit, & notifikasi atasan penugas) sebelum EOD ditutup. |
+| 3 | **`03-Additional-Work.html`** | **Tugas Tambahan (`/daily/additional-work`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada **Audit #3**: **Opsi A + alasan `Komitmen Pagi Terlewat`** saat jam pagi lewat Cut-Off, serta tombol **`Edit` & `Hapus` terkontrol** (wajib alasan, catat audit, & notifikasi atasan penugas) sebelum EOD ditutup. |
 | 4 | `04-EOD-Outcome.html` | Evaluasi Sore EOD (`/daily/eod`) | `Menunggu Audit Detail` | — |
 | 5 | `05-Blocker-Resolution-Queue.html` | Antrean Blocker (`/blockers`) | `Menunggu Audit Detail` | — |
 | 6 | `06-My-History-Weekly-Summary.html` | Riwayat Saya (`/daily/history`) | `Menunggu Audit Detail` | — |
@@ -87,7 +87,14 @@ Dokumen ini mencatat seluruh hasil audit tersebut dengan jujur:
 
 ### Audit #3: Lanjutan `02-Morning-Commitment.html` (`/daily/morning`) & `03-Additional-Work.html` (`/daily/additional-work`) — 3 Temuan Krusial Disetujui Harry
 
-- **Tanggal Penerapan Kode & Uji Unit:** 22 November 2026 *(Lulus 100% BE 32 file / 208 test + FE 35 file / 199 test; menunggu Manual Deploy Render untuk verifikasi live Chrome)*
+- **Tanggal Penerapan Kode & Uji Unit:** 22 November 2026 *(Commit `4ff8d88` — Lulus 100% BE 32 file / 208 test + FE 35 file / 199 test)*
+- **Tanggal Verifikasi Live Chrome:** 22 November 2026 (`08:09–08:12 WIB`, pasca deploy Render & Vercel — **Lulus 100%** pada uji Chrome live desktop `1280x850` tanpa galat API aksi)
+- **Bukti Screenshot Verifikasi Live (`screenshots/verifikasi-audit3/`):**
+  - `K1-morning-prompt-finance.png`: Placeholder contoh kalimat spesifik divisi Finance pada akun Oivi Deasepta (`staff.finance@dutamedia.com`, tidak disubmit).
+  - `K2-morning-prompt-delivery.png`: Placeholder contoh kalimat spesifik divisi Delivery pada akun Dio Bayu Bagaskara (`product@dutamedia.com`, tidak disubmit; tab `Additional Work` menampilkan blokir aman pra-Cut-Off).
+  - `K3-additional-work-edit-delete-buttons.png`: Kartu Pekerjaan Tambahan pada akun Aditya Nugroho (`dev.frontend@dutamedia.com`) dengan tombol `Edit` dan `Hapus` sejajar rapi sebelum EOD terkunci.
+  - `K4-additional-work-delete-confirm-box.png`: Pembaruan teks `(revisi)` berhasil, dan kotak konfirmasi hapus inline (`Hapus`) meminta alasan wajib min. 5 karakter serta memperingatkan pengiriman notifikasi ke `Bambang Pratama`.
+  - `K5-manager-notifications-aw-audit.png`: Akun atasan penugas `Bambang Pratama` (`lead.tech@dutamedia.com`) menerima notifikasi otomatis **Pekerjaan Tambahan dari Anda Diubah** dan **Pekerjaan Tambahan dari Anda Dihapus** lengkap dengan alasan penghapusan.
 
 | Kode Temuan | Bagian yang Diaudit | Kondisi Sebelumnya di Sistem Live | Akar Penyebab | Penyesuaian yang Diterapkan | Alasan / Keputusan |
 |---|---|---|---|---|---|
