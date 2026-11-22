@@ -416,5 +416,104 @@ describe('LeaveService (WP-EP10 / Leave Management & DEC-007 Reconciliation)', (
       }
     });
   });
+
+  describe('Page 21 Approval Queue guards, division exposure, and mandatory rejection reason', () => {
+    it('denies getApprovalQueue for ordinary EMPLOYEE without active temporary reviewer delegation (403)', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: CanonicalRole.EMPLOYEE,
+      });
+      mockPrisma.temporaryReviewerAssignment = {
+        findFirst: vi.fn().mockResolvedValue(null),
+      };
+
+      await expect(service.getApprovalQueue('usr-emp')).rejects.toThrowError(
+        /Akses ditolak/,
+      );
+    });
+
+    it('allows getApprovalQueue for EMPLOYEE with active temporary reviewer delegation and exposes user.function', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: CanonicalRole.EMPLOYEE,
+      });
+      mockPrisma.temporaryReviewerAssignment = {
+        findFirst: vi.fn().mockResolvedValue({ id: 'del-1' }),
+      };
+      mockPrisma.leaveRequest.findMany.mockResolvedValue([
+        {
+          id: 'lv-sub',
+          userId: 'usr-sub',
+          user: {
+            id: 'usr-sub',
+            fullName: 'Raka Pratama',
+            email: 'intern@dutamedia.com',
+            orgAssignments: [
+              {
+                role: CanonicalRole.EMPLOYEE,
+                jobTitle: 'Frontend Intern',
+                function: 'Engineering',
+                employmentStatus: 'INTERN',
+              },
+            ],
+          },
+        },
+      ]);
+      mockScopeResolver.canAccessUser.mockResolvedValue(true);
+
+      const queue = await service.getApprovalQueue('usr-delegate');
+      expect(queue).toHaveLength(1);
+      expect(queue[0].user.function).toBe('Engineering');
+    });
+
+    it('rejects REJECT decision with empty or short (< 5 chars) reviewNote (400 VALIDATION_FAILED)', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-pend-1',
+        userId: 'usr-1',
+        leaveType: 'ANNUAL',
+        startDate: new Date('2026-12-01'),
+        endDate: new Date('2026-12-01'),
+        status: LeaveStatus.PENDING,
+        user: { id: 'usr-1', fullName: 'Budi' },
+      });
+
+      await expect(
+        service.reviewLeaveRequest('mgr-1', 'lv-pend-1', {
+          decision: 'REJECT',
+          reviewNote: 'No',
+        }),
+      ).rejects.toThrowError(/minimal 5 karakter/);
+    });
+
+    it('accepts REJECT decision with valid >= 5 char reviewNote and sends Indonesian LEAVE_REJECTED notification', async () => {
+      mockPrisma.leaveRequest.findUnique.mockResolvedValue({
+        id: 'lv-pend-2',
+        userId: 'usr-1',
+        leaveType: 'PERMIT',
+        startDate: new Date('2026-12-01'),
+        endDate: new Date('2026-12-01'),
+        status: LeaveStatus.PENDING,
+        user: { id: 'usr-1', fullName: 'Raka' },
+      });
+      mockPrisma.leaveRequest.update.mockResolvedValue({
+        id: 'lv-pend-2',
+        status: LeaveStatus.REJECTED,
+      });
+
+      const res = await service.reviewLeaveRequest('mgr-1', 'lv-pend-2', {
+        decision: 'REJECT',
+        reviewNote: 'Jadwal demo klien wajib hadir',
+      });
+
+      expect(res.status).toBe(LeaveStatus.REJECTED);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            triggerType: 'LEAVE_REJECTED',
+            title: 'Permohonan Izin Ditolak',
+            message: expect.stringContaining('Jadwal demo klien wajib hadir'),
+          }),
+        }),
+      );
+    });
+  });
 });
 

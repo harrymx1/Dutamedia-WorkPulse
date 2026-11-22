@@ -369,6 +369,49 @@ export class LeaveService {
    */
   async getApprovalQueue(reviewerUserId?: string, status?: LeaveStatus) {
     const todayDateOnly = toJakartaDateOnly(this.clockService.now());
+
+    if (reviewerUserId && this.prisma.organizationalAssignment?.findFirst) {
+      const callerOrg = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId: reviewerUserId,
+          effectiveDate: { lte: todayDateOnly },
+          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
+        select: { role: true },
+      });
+
+      const QUEUE_AUTHORIZED_ROLES: CanonicalRole[] = [
+        CanonicalRole.HEAD,
+        CanonicalRole.CEO_MANAGEMENT,
+        CanonicalRole.HRGA,
+        CanonicalRole.SYSTEM_ADMIN,
+        CanonicalRole.SUPERVISOR,
+      ];
+
+      if (callerOrg && !QUEUE_AUTHORIZED_ROLES.includes(callerOrg.role)) {
+        const activeDelegation = this.prisma.temporaryReviewerAssignment?.findFirst
+          ? await this.prisma.temporaryReviewerAssignment.findFirst({
+              where: {
+                delegateUserId: reviewerUserId,
+                effectiveDate: { lte: todayDateOnly },
+                expiryDate: { gte: todayDateOnly },
+              },
+              select: { id: true },
+            })
+          : null;
+
+        if (!activeDelegation) {
+          throw new AppException({
+            code: ErrorCode.AUTH_FORBIDDEN_ROLE,
+            message:
+              'Akses ditolak. Halaman Persetujuan Cuti hanya dapat diakses oleh pejabat berwenang atau Reviewer Sementara aktif.',
+            statusCode: HttpStatus.FORBIDDEN,
+          });
+        }
+      }
+    }
+
     const rawList = await this.prisma.leaveRequest.findMany({
       where: {
         ...(status ? { status } : { status: { not: LeaveStatus.CANCELLED } }),
@@ -386,7 +429,12 @@ export class LeaveService {
               },
               orderBy: { effectiveDate: 'desc' },
               take: 1,
-              select: { role: true, jobTitle: true, employmentStatus: true },
+              select: {
+                role: true,
+                jobTitle: true,
+                function: true,
+                employmentStatus: true,
+              },
             },
           },
         },
@@ -406,6 +454,7 @@ export class LeaveService {
           email: item.user.email,
           role: activeOrg?.role || item.user.role,
           jobTitle: activeOrg?.jobTitle || null,
+          function: activeOrg?.function || null,
           employmentStatus: activeOrg?.employmentStatus || EmploymentStatus.PERMANENT,
         },
       };
@@ -475,6 +524,15 @@ export class LeaveService {
       });
     }
 
+    const trimmedNote = dto.reviewNote?.trim() || '';
+    if (dto.decision === 'REJECT' && trimmedNote.length < 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Catatan alasan penolakan wajib diisi minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const now = this.clockService.now();
     const newStatus = dto.decision === 'APPROVE' ? LeaveStatus.APPROVED : LeaveStatus.REJECTED;
 
@@ -484,7 +542,7 @@ export class LeaveService {
         data: {
           status: newStatus,
           reviewedByUserId: reviewerUserId,
-          reviewNote: dto.reviewNote?.trim() || null,
+          reviewNote: trimmedNote || null,
           reviewedAt: now,
         },
         include: {
@@ -530,7 +588,7 @@ export class LeaveService {
             triggerType: 'LEAVE_REJECTED',
             channel: NotificationChannel.IN_APP_CENTER,
             title: `Permohonan ${leaveLabel} Ditolak`,
-            message: `Permohonan ${leaveLabel} Anda (${periodText}) ditolak oleh peninjau: "${dto.reviewNote || 'Tidak ada alasan khusus'}".`,
+            message: `Permohonan ${leaveLabel} Anda (${periodText}) ditolak oleh peninjau: "${trimmedNote || 'Tidak ada alasan khusus'}".`,
             actionUrl: '/leave/my',
             relatedEntityType: 'leave_requests',
             relatedEntityId: leave.id,
