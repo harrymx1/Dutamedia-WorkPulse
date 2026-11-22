@@ -9,7 +9,9 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle2,
+  AlertCircle,
   RefreshCw,
+  Search,
   User,
   ArrowUpRight,
 } from 'lucide-vue-next';
@@ -49,19 +51,25 @@ const loading = ref(false);
 const data = ref<AgingMetricsResponse | null>(null);
 const severityFilter = ref<string>('ALL');
 const breachOnlyFilter = ref<boolean>(false);
+const searchQuery = ref('');
 const toastMessage = ref<string | null>(null);
+const errorMessage = ref<string | null>(null);
 
-async function loadAgingMetrics() {
+async function loadAgingMetrics(showRefreshToast = false) {
   loading.value = true;
+  errorMessage.value = null;
   try {
     const res = await apiClient<AgingMetricsResponse>('/blockers/aging');
     if (res.data) {
       data.value = res.data;
-      toastMessage.value = 'Metrik aging eskalasi berhasil diperbarui.';
-      setTimeout(() => { toastMessage.value = null; }, 2500);
+      if (showRefreshToast) {
+        toastMessage.value = 'Data penuaan kendala berhasil diperbarui.';
+        setTimeout(() => { toastMessage.value = null; }, 2500);
+      }
     }
   } catch (err: any) {
-    console.error('Failed to load aging metrics:', err);
+    errorMessage.value = err?.message || 'Gagal memuat data penuaan kendala.';
+    setTimeout(() => { errorMessage.value = null; }, 4000);
   } finally {
     loading.value = false;
   }
@@ -69,12 +77,57 @@ async function loadAgingMetrics() {
 
 const filteredBlockers = computed(() => {
   if (!data.value) return [];
+  const q = searchQuery.value.trim().toLowerCase();
   return data.value.blockers.filter((b) => {
     if (severityFilter.value !== 'ALL' && b.severity !== severityFilter.value) return false;
     if (breachOnlyFilter.value && !b.isBreached) return false;
+    if (q) {
+      const summary = formatCleanBlockerSummary(b.description).toLowerCase();
+      const projectCode = (b.projectCodeReference || '').toLowerCase();
+      const reporter = (b.raisedBy?.fullName || '').toLowerCase();
+      const owner = (b.assignedOwner?.fullName || '').toLowerCase();
+      const typeName = getBlockerTypeInfo(b.type).name.toLowerCase();
+      if (
+        !summary.includes(q) &&
+        !projectCode.includes(q) &&
+        !reporter.includes(q) &&
+        !owner.includes(q) &&
+        !typeName.includes(q)
+      ) {
+        return false;
+      }
+    }
     return true;
   });
 });
+
+const hasActiveFilters = computed(
+  () =>
+    severityFilter.value !== 'ALL' ||
+    breachOnlyFilter.value ||
+    searchQuery.value.trim().length > 0,
+);
+
+function resetFilters() {
+  severityFilter.value = 'ALL';
+  breachOnlyFilter.value = false;
+  searchQuery.value = '';
+}
+
+function formatSeverityLabel(severity: string): string {
+  switch (severity) {
+    case 'CRITICAL':
+      return 'Kritis';
+    case 'HIGH':
+      return 'Tinggi';
+    case 'MEDIUM':
+      return 'Sedang';
+    case 'LOW':
+      return 'Rendah';
+    default:
+      return severity;
+  }
+}
 
 function formatCleanBlockerSummary(rawDescription?: string): string {
   const raw = (rawDescription || '').trim();
@@ -90,7 +143,7 @@ function formatCleanBlockerSummary(rawDescription?: string): string {
 }
 
 onMounted(() => {
-  loadAgingMetrics();
+  loadAgingMetrics(false);
 });
 </script>
 
@@ -99,17 +152,21 @@ onMounted(() => {
     <!-- Topbar Navigation -->
     <TopBar breadcrumb="Management / Penuaan & Eskalasi">
       <template #actions>
-        <button type="button" class="btn-topbar" :disabled="loading" @click="loadAgingMetrics">
+        <button type="button" class="btn-topbar" :disabled="loading" @click="loadAgingMetrics(true)">
           <RefreshCw :size="15" :class="{ spinning: loading }" />
           <span>Segarkan Data</span>
         </button>
       </template>
     </TopBar>
 
-    <!-- Toast -->
+    <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">
       <CheckCircle2 :size="18" />
       <span>{{ toastMessage }}</span>
+    </div>
+    <div v-if="errorMessage" class="toast-popup error" role="alert">
+      <AlertCircle :size="18" />
+      <span>{{ errorMessage }}</span>
     </div>
 
     <main class="main-content">
@@ -144,7 +201,7 @@ onMounted(() => {
         </div>
 
         <div class="metric-card alert-critical">
-          <div class="metric-label">Prioritas Kritis (Critical)</div>
+          <div class="metric-label">Prioritas Kritis</div>
           <div class="metric-value">{{ data?.summary.criticalCount ?? 0 }}</div>
           <div class="metric-sub">Kendala dengan dampak terhenti total</div>
         </div>
@@ -162,12 +219,24 @@ onMounted(() => {
           <div class="filter-row">
             <h2>Daftar Kendala Tertahan</h2>
             <div class="filters">
-              <select v-model="severityFilter" class="filter-select">
+              <div class="search-wrap">
+                <Search :size="15" class="search-icon" />
+                <input
+                  id="agingSearchInput"
+                  v-model="searchQuery"
+                  type="search"
+                  class="search-input"
+                  placeholder="Cari kendala, proyek, pelapor, atau PIC..."
+                  aria-label="Cari kendala tertahan"
+                />
+              </div>
+
+              <select id="agingSeverityFilter" v-model="severityFilter" class="filter-select" aria-label="Saring tingkat keparahan">
                 <option value="ALL">Semua Tingkat Keparahan</option>
-                <option value="CRITICAL">Critical</option>
-                <option value="HIGH">High</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="LOW">Low</option>
+                <option value="CRITICAL">Kritis</option>
+                <option value="HIGH">Tinggi</option>
+                <option value="MEDIUM">Sedang</option>
+                <option value="LOW">Rendah</option>
               </select>
 
               <label class="toggle-label">
@@ -183,10 +252,24 @@ onMounted(() => {
             <span>Menghitung radar eskalasi kendala...</span>
           </div>
 
-          <div v-else-if="filteredBlockers.length === 0" class="empty-state">
+          <div v-else-if="(data?.blockers.length ?? 0) === 0" class="empty-state">
             <CheckCircle2 :size="36" class="empty-icon" />
             <h3>Tidak Ada Kendala Tertahan</h3>
             <p>Seluruh kendala aktif tertangani dalam batas waktu penanganan kebijakan.</p>
+          </div>
+
+          <div v-else-if="filteredBlockers.length === 0" class="empty-state">
+            <CheckCircle2 :size="36" class="empty-icon" />
+            <h3>Tidak Ada Kendala yang Cocok</h3>
+            <p>Ubah pilihan tingkat keparahan atau kata kunci pencarian untuk melihat kendala lainnya.</p>
+            <button
+              v-if="hasActiveFilters"
+              type="button"
+              class="btn-reset-filter"
+              @click="resetFilters"
+            >
+              Tampilkan Semua Kendala
+            </button>
           </div>
 
           <table v-else class="aging-table">
@@ -232,12 +315,12 @@ onMounted(() => {
                 <!-- Kolom 3: PIC -->
                 <td class="col-owner">
                   <span v-if="item.assignedOwner">{{ item.assignedOwner.fullName }}</span>
-                  <span v-else class="unassigned-text">Belum Di-assign</span>
+                  <span v-else class="unassigned-text">Belum Ditugaskan</span>
                 </td>
 
                 <!-- Kolom 4: Severity -->
                 <td class="col-sev">
-                  <span class="sev-badge" :class="item.severity.toLowerCase()">{{ item.severity }}</span>
+                  <span class="sev-badge" :class="item.severity.toLowerCase()">{{ formatSeverityLabel(item.severity) }}</span>
                 </td>
 
                 <!-- Kolom 5: Elapsed Hours -->
@@ -256,13 +339,13 @@ onMounted(() => {
                     <span>Sisa {{ item.hoursRemaining }}j</span>
                   </div>
                   <div v-else class="sla-pill neutral">
-                    <span>N/A</span>
+                    <span>Tanpa Batas Waktu</span>
                   </div>
                 </td>
 
                 <!-- Kolom 7: Action -->
                 <td class="col-action">
-                  <AccessLink to="/blockers" class="btn-inspect" title="Buka Tiket di Antrean">
+                  <AccessLink :to="`/blockers?ticketId=${item.id}`" class="btn-inspect" title="Buka Tiket di Antrean">
                     <span>Buka</span>
                     <ArrowUpRight :size="14" />
                   </AccessLink>
@@ -465,7 +548,33 @@ h1 {
 .filters {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 240px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: #5C6E68;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 10px 6px 30px;
+  border: 1px solid #DCE7E2;
+  border-radius: 6px;
+  font-size: 12.5px;
+  background: #fff;
+  color: #0E211B;
+  box-sizing: border-box;
 }
 
 .filter-select {
@@ -638,6 +747,22 @@ h1 {
   margin-bottom: 8px;
 }
 
+.btn-reset-filter {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #A9C7BC;
+  background: #fff;
+  color: #00674D;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-reset-filter:hover {
+  background: #E6F4EE;
+}
+
 .toast-popup {
   position: fixed;
   top: 70px;
@@ -651,14 +776,81 @@ h1 {
   gap: 10px;
   z-index: 100;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.toast-popup.success {
   background: #DCFCE7;
   color: #166534;
   border: 1px solid #86EFAC;
 }
 
+.toast-popup.error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
 @media (max-width: 900px) {
   .metrics-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 16px 12px 64px;
+  }
+
+  .page-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .panel-head {
+    padding: 14px 16px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .search-wrap,
+  .filter-select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 64px;
   }
 }
 </style>

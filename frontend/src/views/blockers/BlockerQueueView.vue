@@ -2,6 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { formatTimeWib, formatDateTimeWib } from '../../utils/dateTime';
@@ -79,6 +80,14 @@ interface BlockerTicketItem {
 }
 
 const authStore = useAuthStore();
+const route = (() => {
+  try {
+    return useRoute();
+  } catch {
+    return null;
+  }
+})();
+const hasAppliedRouteTicket = ref(false);
 
 // State
 const loading = ref(false);
@@ -202,7 +211,14 @@ async function loadBlockers() {
       if (visible.length === 0) {
         selectedTicket.value = null;
       } else if (!selectedTicket.value) {
-        selectedTicket.value = visible[0];
+        const queryTicketId =
+          typeof route?.query?.ticketId === 'string' ? route.query.ticketId : '';
+        if (queryTicketId && !hasAppliedRouteTicket.value) {
+          hasAppliedRouteTicket.value = true;
+          selectedTicket.value = visible.find((b) => b.id === queryTicketId) || visible[0];
+        } else {
+          selectedTicket.value = visible[0];
+        }
       } else {
         // Refresh selected ticket in place atau sinkronkan ke tiket pertama jika tiket terpilih kena filter
         const updated = visible.find((b) => b.id === selectedTicket.value?.id);

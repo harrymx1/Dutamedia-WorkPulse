@@ -901,4 +901,62 @@ describe('BlockerQueueView.vue (WP-EP06 / Prototipe 09 - Antrean Eskalasi Blocke
 
     vi.unstubAllGlobals();
   });
+
+  it('pre-selects the ticket matching route query ticketId when opened from Aging Radar', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'blk-newest',
+              description: '[Bug API] Error terbaru',
+              type: 'TECHNICAL',
+              severity: 'HIGH',
+              impact: 'TASK',
+              impacts: ['TASK'],
+              status: 'OPEN',
+              raisedAt: '2026-11-22T02:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u1', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
+              assignedOwner: { id: 'u-lead', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+              supportContributions: [],
+            },
+            {
+              id: 'blk-target',
+              description: '[WiFi Lantai 2] Target tiket dari Aging Radar',
+              type: 'NETWORK',
+              severity: 'CRITICAL',
+              impact: 'COMPANY_OPS',
+              impacts: ['COMPANY_OPS'],
+              status: 'OPEN',
+              raisedAt: '2026-11-22T01:00:00.000Z',
+              ownerNeededType: 'ORGANIZATIONAL_AUTHORITY',
+              raisedBy: { id: 'u2', fullName: 'Siti Rahma', email: 'qa@dutamedia.com' },
+              assignedOwner: { id: 'u-net', fullName: 'Raka Ops', email: 'network.infra@dutamedia.com' },
+              supportContributions: [],
+            },
+          ],
+        }),
+      }),
+    );
+
+    await router.push('/blockers?ticketId=blk-target');
+    const wrapper = mount(BlockerQueueView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="ticket-detail-panel"]').text()).toContain(
+      'Target tiket dari Aging Radar',
+    );
+    expect(wrapper.find('[data-testid="ticket-detail-panel"]').text()).not.toContain(
+      'Error terbaru',
+    );
+
+    vi.unstubAllGlobals();
+  });
 });
