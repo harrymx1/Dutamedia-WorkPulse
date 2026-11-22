@@ -399,32 +399,39 @@ flowchart TD
 
 ---
 
-#### Skenario Prosedural `SP-02.3` — Menyisir Halaman Evaluasi Sore (`/daily/eod`) & Riwayat Saya (`/daily/history`): Wajib Alasan Batal/Lanjut, Hak Pilih Hijau (`DEC-003`), Kunci Atomik (`DEF-002`), Kunci Additional Work Pasca-EOD (`[Aktif v1.1 — Paket #2]`), & Buka Rincian Riwayat
-- **Acuan Prototype & Baseline:** `UI-UX-Design/04-EOD-Outcome.html` · `06-My-History-Weekly-Summary.html` · `DEC-003` · `TC-DLYE-001..005`
+#### Skenario Prosedural `SP-02.3` — Menyisir Halaman Evaluasi Sore (`/daily/eod`) & Riwayat Saya (`/daily/history`): Penahanan Pra-Cut-Off Pagi (`Opsi A`), Wajib Alasan Batal/Lanjut & Risiko `AMBER`/`RED` (`FR-10`), Saran Status & Hak Pilih Hijau (`FR-13`/`FR-14`/`DEC-003`), Kunci Atomik (`DEF-002`), Kunci Additional Work Pasca-EOD (`[Aktif v1.1 — Paket #2]`), & Buka Rincian Riwayat
+- **Acuan Prototype & Baseline:** `UI-UX-Design/04-EOD-Outcome.html` · `06-My-History-Weekly-Summary.html` · `FR-08..14` · `DEC-003` · `TC-DLYE-001..005`
 
-1. **Langkah 2.3.1 — Uji Validasi Wajib Alasan pada Status `Dibatalkan` & `Lanjutkan Besok` (`ST-DLYE-01..03`):**
-   - **Aksi:** Masih login sebagai **Aditya Nugroho**, buka `/daily/eod`:
+1. **Langkah 2.3.0 — Uji Kondisi Belum Mengisi Komitmen Pagi Sebelum Batas Pagi (`Opsi A` Pra-Cut-Off):**
+   - **Aksi:** Login sebagai **Dio Bayu Bagaskara** (`product@dutamedia.com` / `Password123!`, yang belum mengisi komitmen pagi hari ini) sebelum batas pagi lewat, lalu buka `/daily/eod` (**jangan submit komitmen pagi di akun Dio**).
+   - **Hasil yang Diharapkan:** Layar menampilkan kotak kuning **`Belum Mengisi Morning Commitment`** lengkap dengan tautan **`Buka Morning Commitment →`**, sedangkan formulir evaluasi dan tombol **`Kirim Evaluasi EOD`** disembunyikan agar tidak terjadi error pengisian. *(Bila jam sudah melewati batas pagi, layar otomatis membuka formulir EOD dengan kotak info **`Komitmen Pagi Hari Ini Terlewat`**).*
+
+2. **Langkah 2.3.1 — Uji Validasi Wajib Alasan `Dibatalkan`, `Lanjutkan Besok`, Perubahan Status Kembali ke `Selesai`, & Wajib Penjelasan Risiko `AMBER`/`RED` (`ST-DLYE-01..03`):**
+   - **Aksi:** Login sebagai **Aditya Nugroho** (`dev.frontend@dutamedia.com`), buka `/daily/eod`:
      1. Pastikan seluruh Komitmen Pagi **dan** seluruh Tugas Tambahan yang baru dicatat di `SP-02.2` muncul di daftar evaluasi.
      2. Pada Komitmen #1, pilih **`Dibatalkan`** (`CANCELLED`), kosongkan kotak alasan pembatalan, lalu klik **`Kirim Evaluasi EOD`**.
      3. Ubah Komitmen #1 menjadi **`Selesai Sebagian`** (`PARTIALLY_COMPLETED`), pilih kelanjutan **`Lanjutkan Besok (Carry-Over)`** (`CONTINUE`), kosongkan kotak alasan kelanjutan, lalu klik **`Kirim Evaluasi EOD`**.
+     4. Setelah melihat penolakan error kelanjutan, ubah kembali Komitmen #1 menjadi **`Selesai`** (`COMPLETED`) lalu kembali ke **`Selesai Sebagian`** (`Lanjutkan Besok`). Pastikan mengganti ke **`Selesai`** tidak memicu error catatan kelanjutan usang.
+     5. Pada bagian **Status Akhir Hari (`Final Daily Status`)**, klik kartu **`AMBER`** atau **`RED`** dan amati munculnya kolom **`Penjelasan Risiko / Kendala Hari Ini *`**. Coba ketik kurang dari 10 huruf (misal `"Pendek"`) dan klik **`Kirim Evaluasi EOD`**.
    - **Hasil yang Diharapkan:**
      1. Saat `Dibatalkan` tanpa alasan: ditolak dengan pesan merah persis: **`"Komitmen #1: Alasan pembatalan wajib diisi bila status Dibatalkan."`**
      2. Saat `Lanjutkan Besok` tanpa alasan: ditolak dengan pesan merah persis: **`"Komitmen #1: Alasan kelanjutan (Continuation) wajib diisi bila tugas dilanjutkan."`**
+     3. Saat memilih **`AMBER`** / **`RED`** dengan penjelasan risiko < 10 huruf: ditolak dengan pesan **`"Penjelasan risiko atau kendala hari ini wajib diisi minimal 10 karakter ketika status akhir hari AMBER atau RED."`**
 
-2. **Langkah 2.3.2 — Uji Hak Pilih Status Hijau (`DEC-003`), Penguncian Permanen Pasca-Kirim (`DEF-002`), & Penguncian `Additional Work` Pasca-EOD (`[Aktif v1.1 — Paket #2]` — `ST-DLYE-02`, `ST-DLYE-04`, `ST-DLYA-06`):**
+3. **Langkah 2.3.2 — Uji Saran Status Sistem (`FR-13`/`FR-14`), Hak Pilih Status Hijau (`DEC-003`), Penguncian Permanen Pasca-Kirim (`DEF-002`), & Penguncian `Additional Work` Pasca-EOD (`[Aktif v1.1 — Paket #2]` — `ST-DLYE-02`, `ST-DLYE-04`, `ST-DLYA-06`):**
    - **Aksi:**
-     1. Isi alasan kelanjutan pada Komitmen #1 (`CONTINUE`): `Menunggu penggabungan cabang kode utama besok pagi`, dan pilih **`Selesai Penuh`** (`COMPLETED`) untuk tugas lainnya.
-     2. Pada bagian **Status Akhir Hari (`Final Daily Status`)**, klik pilihan **`GREEN` (Hijau — Terkendali)**.
+     1. Isi alasan kelanjutan pada Komitmen #1 (`CONTINUE`): `Menunggu penggabungan cabang kode utama besok pagi`, dan pilih **`Selesai Penuh`** (`COMPLETED`) untuk tugas lainnya (amati panel **`Saran Status Sistem`** tampil menyesuaikan kondisi tugas/blocker aktif tanpa mengunci pilihan radio).
+     2. Pada bagian **Status Akhir Hari (`Final Daily Status`)**, klik pilihan **`GREEN` (Hijau — Terkendali)** dan klik **`Kirim Evaluasi EOD`**: jika kotak **`Konfirmasi Pilihan Status Akhir Hari`** muncul karena pilihan lebih ringan dari saran, klik **`Tetap Kirim sebagai GREEN`** (atau pilih **`AMBER`** dengan mengisi kolom wajib **`Penjelasan Risiko / Kendala Hari Ini *`** >= 10 huruf bila menguji penyimpanan catatan risiko).
      3. Isi kolom opsional **Prioritas Utama Besok (`Tomorrow Priority`)**: `Menjalankan verifikasi integrasi tabel waktu WIB pada pukul 09:00 WIB`.
-     4. Klik **`Kirim Evaluasi EOD`**, lalu tekan `F5` (Refresh).
+     4. Klik **`Kirim Evaluasi EOD`**, lalu tekan `F5` (Refresh) dan uji juga pada lebar layar HP `375px`.
      5. **`[Aktif v1.1 — Paket #2]`:** Buka kembali halaman `/daily/additional-work` setelah EOD terkunci, dan periksa juga lencana status waktu di `/daily/eod` jika mengirim antara pukul `17:01–21:00 WIB`.
    - **Hasil yang Diharapkan:**
-     - Pilihan **`GREEN` tetap aktif dan dapat dikirim** meskipun Komitmen #1 belum selesai penuh (`DEC-003`).
-     - Setelah dikirim: muncul pesan hijau **`"Evaluasi EOD Outcome berhasil dikirim dan dicatat."`**, lencana atas menjadi **`SUBMITTED (Terkunci)`**, muncul banner hijau waktu kirim (`HH:mm WIB` tanpa detik) + tombol **`Ajukan Koreksi EOD`**, dan seluruh item berubah menjadi **Kartu Ringkasan Evaluasi** yang tetap terkunci setelah `F5`.
+     - Pilihan **`GREEN` tetap aktif dan dapat dikirim** meskipun Komitmen #1 belum selesai penuh atau ada blocker aktif (`DEC-003`).
+     - Setelah dikirim: muncul pesan hijau **`"Evaluasi EOD Outcome berhasil dikirim dan dicatat."`**, lencana atas menjadi **`SUBMITTED (Terkunci)`**, muncul banner hijau waktu kirim (`HH:mm WIB` tanpa detik) + tombol **`Ajukan Koreksi EOD`**, seluruh item berubah menjadi **Kartu Ringkasan Evaluasi** (termasuk kartu **`Penjelasan Risiko / Kendala Hari Ini`** bila mengirim `AMBER`/`RED`) yang tetap terkunci setelah `F5`, dan tampil rapi tanpa terpotong ke samping pada layar HP `375px`.
      - Jika mengisi EOD pada jam `17:01–21:00 WIB`, lencana waktu bertuliskan **`Di Luar Jam Normal (Lembur Fleksibel)`** (bukan `LATE`).
      - **`[Aktif v1.1 — Paket #2]`:** Saat membuka `/daily/additional-work` setelah EOD terkunci, seluruh kotak input tidak aktif (`disabled`), tombol berubah menjadi **`Terkunci Pasca-EOD`**, dan tampil banner **`"Evaluasi Sore (EOD) Hari Ini Telah Ditutup — Formulir Terkunci"`** dengan panduan mencatat lembur mendadak di hari kerja berikutnya serta tautan **`Lapor Blocker`** yang tetap bisa diklik 24 jam.
 
-3. **Langkah 2.3.3 — Menyisir Halaman Riwayat Saya (`/daily/history` — `ST-HIST-01..03`):**
+4. **Langkah 2.3.3 — Menyisir Halaman Riwayat Saya (`/daily/history` — `ST-HIST-01..03`):**
    - **Aksi:**
      1. Buka menu **Riwayat Saya (`/daily/history`)**.
      2. Klik baris catatan hari ini pada tabel untuk membuka rinciannya (`Tutup ^`), lalu klik sekali lagi untuk menutupnya.
@@ -447,7 +454,7 @@ flowchart TD
 | `ST-ERR-01..02` | **4. Error 403 & 404** (`/forbidden`, `/*`) | Standar Design System | Layar `403 — Akses Dibatasi` (menampilkan nama peran & alamat yang diblokir + tombol kembali ke beranda peran `IMP-023`) & layar `404 — Halaman Tidak Ditemukan`. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-DLYM-01..11` | **5. Komitmen Pagi** (`/daily/morning`) | `02-Morning-Commitment.html` | `ON-TIME` vs `Terlambat (LATE)` vs `LOCKED` (>09:30) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, format `HH:mm WIB`, panel **`Draf Tugas Berlanjut dari Kemarin`** (`Carry-Over #2+ Disarankan AMBER`, centang multi-item `Gunakan Item Terpilih ke Slot Hari Ini`, `Salin ke Slot`, auto-isi kendala dari `Catatan EOD Kemarin`), banner **`Prioritas Kemarin Sore`** (tampil baik saat terbuka maupun sesudah terkunci), fitur **`Simpan Draf` lokal tahan `F5` + `Reset Draf`**, tata letak footer **1 baris** (`Pastikan seluruh komitmen...` sejajar `Simpan Draf` & `Kirim`), risiko `AMBER/RED`, `Pilih Blocker Aktif`, opsi `0 Komitmen` (`DEC-004`), batas 3 slot, & pengaman 2 tab (`DEF-001`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-DLYA-01..06` | **6. Tugas Tambahan** (`/daily/additional-work`) | `03-Additional-Work.html` | Peringatan belum isi pagi, tampilan daftar kosong, 5 alasan kondisional (pilih atasan bebas `Intern` pada `Penugasan Baru` & teks wajib pada `Lainnya`), pemilih proyek & blocker, kunci batas maksimum 5 tugas, & `[Aktif v1.1 — Paket #2]` kunci pasca-EOD (`Terkunci Pasca-EOD` + tautan `Lapor Blocker`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| `ST-DLYE-01..06` | **7. Evaluasi Sore EOD** (`/daily/eod`) | `04-EOD-Outcome.html` | `ON-TIME` vs **`Di Luar Jam Normal (Lembur Fleksibel)`** (`17:01–21:00 WIB`) vs `LOCKED` (>21:00 WIB) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, alasan wajib `Dibatalkan` & `Lanjutkan Besok`, hak pilih `GREEN` (`DEC-003`), & pengaman anti-dobel (`DEF-002`). | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ST-DLYE-01..09` | **7. Evaluasi Sore EOD** (`/daily/eod`) | `04-EOD-Outcome.html` | Penahanan pra-Cut-Off pagi (`Belum Mengisi Morning Commitment`) vs info pasca-Cut-Off (`Komitmen Pagi Hari Ini Terlewat` — `Opsi A`), `ON-TIME` vs **`Di Luar Jam Normal (Lembur Fleksibel)`** (`17:01–21:00 WIB`) vs `LOCKED` (>21:00 WIB) vs `SUBMITTED (Kartu Ringkasan)` vs `CUTI RESMI`, alasan wajib `Dibatalkan` & `Lanjutkan Besok` (termasuk saat ubah balik ke `Selesai`), kolom wajib **`Penjelasan Risiko / Kendala Hari Ini *`** (`AMBER`/`RED`), panel **`Saran Status Sistem`** + konfirmasi ketidaksesuaian inline + hak pilih bebas `GREEN` (`DEC-003`), pengaman anti-dobel (`DEF-002`), & responsif HP `375px` tanpa terpotong. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | `ST-HIST-01..03` | **8. Riwayat Saya** (`/daily/history`) | `06-My-History-Weekly-Summary.html` | Filter tanggal, 4 kartu KPI mingguan, buka/tutup rincian baris (komitmen + tugas tambahan + 0 komitmen), baris kosong, & pesan merah tolak unduh saat kosong. | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
 ---
