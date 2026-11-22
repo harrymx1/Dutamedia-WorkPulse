@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash2,
   AlertTriangle,
+  Search,
 } from 'lucide-vue-next';
 
 interface TemporaryReviewerRow {
@@ -55,10 +56,99 @@ const isLoading = ref(false);
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
+// Filters
+const searchQuery = ref('');
+const statusFilter = ref<'ALL' | 'ACTIVE' | 'EXPIRING' | 'UPCOMING' | 'EXPIRED'>('ALL');
+const divisionFilter = ref('ALL');
+
 // Modal state
 const isModalOpen = ref(false);
 const isSubmitting = ref(false);
 const modalError = ref<string | null>(null);
+
+function getTodayDateString(): string {
+  return getTodayIsoWib();
+}
+
+function addDaysIso(baseIso: string, days: number): string {
+  const [y, m, d] = baseIso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return dt.toISOString().slice(0, 10);
+}
+
+function diffCalendarDays(targetIso: string, baseIso: string): number {
+  const [ty, tm, td] = targetIso.split('-').map(Number);
+  const [by, bm, bd] = baseIso.split('-').map(Number);
+  const tUtc = Date.UTC(ty, tm - 1, td);
+  const bUtc = Date.UTC(by, bm - 1, bd);
+  return Math.round((tUtc - bUtc) / 86400000);
+}
+
+function toDateOnlyString(val: string | Date): string {
+  if (!val) return '';
+  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}/.test(val.trim())) {
+    return val.trim().slice(0, 10);
+  }
+  const d = typeof val === 'string' ? new Date(val) : val;
+  return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+}
+
+type DelegationLifecycleStatus = 'ACTIVE' | 'UPCOMING' | 'EXPIRED';
+
+function getDelegationStatus(d: TemporaryReviewerRow): DelegationLifecycleStatus {
+  const today = getTodayDateString();
+  const eff = toDateOnlyString(d.effectiveDate);
+  const exp = toDateOnlyString(d.expiryDate);
+  if (eff > today) return 'UPCOMING';
+  if (exp < today) return 'EXPIRED';
+  return 'ACTIVE';
+}
+
+function isExpiringSoon(d: TemporaryReviewerRow): boolean {
+  if (getDelegationStatus(d) !== 'ACTIVE') return false;
+  const remaining = diffCalendarDays(toDateOnlyString(d.expiryDate), getTodayDateString());
+  return remaining >= 0 && remaining <= 7;
+}
+
+function getStatusLabel(d: TemporaryReviewerRow): string {
+  const st = getDelegationStatus(d);
+  if (st === 'UPCOMING') return 'Terjadwal';
+  if (st === 'EXPIRED') return 'Kedaluwarsa';
+  return 'Aktif';
+}
+
+function getStatusClass(d: TemporaryReviewerRow): string {
+  const st = getDelegationStatus(d);
+  if (st === 'UPCOMING') return 'upcoming';
+  if (st === 'EXPIRED') return 'expired';
+  return 'active';
+}
+
+function getCountdownText(d: TemporaryReviewerRow): string {
+  const today = getTodayDateString();
+  const eff = toDateOnlyString(d.effectiveDate);
+  const exp = toDateOnlyString(d.expiryDate);
+  const st = getDelegationStatus(d);
+  if (st === 'UPCOMING') {
+    const startIn = diffCalendarDays(eff, today);
+    return startIn === 1 ? 'Mulai besok' : `Mulai dalam ${startIn} hari`;
+  }
+  if (st === 'EXPIRED') {
+    const endedAgo = diffCalendarDays(today, exp);
+    return endedAgo === 1 ? 'Berakhir kemarin' : `Berakhir ${endedAgo} hari lalu`;
+  }
+  const remaining = diffCalendarDays(exp, today);
+  return remaining === 0 ? 'Berakhir hari ini' : `${remaining} hari tersisa`;
+}
+
+function formatPeriodRange(effectiveDate: string | Date, expiryDate: string | Date): string {
+  const effIso = toDateOnlyString(effectiveDate);
+  const expIso = toDateOnlyString(expiryDate);
+  if (effIso && expIso && effIso === expIso) {
+    return formatDateWib(effectiveDate);
+  }
+  return `${formatDateWib(effectiveDate)} s/d ${formatDateWib(expiryDate)}`;
+}
 
 const form = ref({
   replacedUserId: '',
@@ -66,24 +156,62 @@ const form = ref({
   targetFunction: 'Engineering',
   delegationReason: '',
   effectiveDate: getTodayDateString(),
-  expiryDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+  expiryDate: addDaysIso(getTodayDateString(), 14),
 });
 
-function getTodayDateString(): string {
-  return getTodayIsoWib();
+const activeCount = computed(
+  () => delegations.value.filter((d) => getDelegationStatus(d) === 'ACTIVE').length,
+);
+const upcomingCount = computed(
+  () => delegations.value.filter((d) => getDelegationStatus(d) === 'UPCOMING').length,
+);
+const expiringCount = computed(
+  () => delegations.value.filter((d) => isExpiringSoon(d)).length,
+);
+const expiredCount = computed(
+  () => delegations.value.filter((d) => getDelegationStatus(d) === 'EXPIRED').length,
+);
+
+const availableDivisions = computed(() => {
+  const set = new Set<string>();
+  for (const d of delegations.value) {
+    if (d.targetFunction) set.add(d.targetFunction);
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+});
+
+const filteredDelegations = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  return delegations.value.filter((d) => {
+    const st = getDelegationStatus(d);
+    if (statusFilter.value === 'ACTIVE' && st !== 'ACTIVE') return false;
+    if (statusFilter.value === 'UPCOMING' && st !== 'UPCOMING') return false;
+    if (statusFilter.value === 'EXPIRED' && st !== 'EXPIRED') return false;
+    if (statusFilter.value === 'EXPIRING' && !isExpiringSoon(d)) return false;
+    if (divisionFilter.value !== 'ALL' && d.targetFunction !== divisionFilter.value) return false;
+
+    if (!q) return true;
+    const hay = [
+      d.delegateUser?.fullName || '',
+      d.delegateUser?.email || '',
+      parseReplacedOfficial(d.delegationReason, d.targetFunction),
+      d.targetFunction || '',
+      cleanReason(d.delegationReason),
+    ]
+      .join(' ')
+      .toLowerCase();
+    return hay.includes(q);
+  });
+});
+
+function toggleStatusCard(target: 'ACTIVE' | 'UPCOMING' | 'EXPIRING' | 'EXPIRED') {
+  statusFilter.value = statusFilter.value === target ? 'ALL' : target;
 }
 
-function toDateOnlyString(val: string | Date): string {
-  if (!val) return '';
-  const d = typeof val === 'string' ? new Date(val) : val;
-  return d.toISOString().slice(0, 10);
-}
-
-function isDelegationActive(d: TemporaryReviewerRow): boolean {
-  const today = getTodayDateString();
-  const eff = toDateOnlyString(d.effectiveDate);
-  const exp = toDateOnlyString(d.expiryDate);
-  return eff <= today && exp >= today;
+function resetFilters() {
+  searchQuery.value = '';
+  statusFilter.value = 'ALL';
+  divisionFilter.value = 'ALL';
 }
 
 // Karyawan lini operasional yang berhak didelegasikan atau digantikan (mengecualikan SYSTEM_ADMIN dan karyawan Intern)
@@ -202,7 +330,7 @@ function onReplacedUserChange() {
 
 function onEffectiveDateChange() {
   // Jika tanggal kedaluwarsa mendahului tanggal efektif, sinkronkan otomatis
-  if (new Date(form.value.expiryDate) < new Date(form.value.effectiveDate)) {
+  if (form.value.expiryDate < form.value.effectiveDate) {
     form.value.expiryDate = form.value.effectiveDate;
   }
 }
@@ -212,7 +340,7 @@ async function loadData() {
   errorMessage.value = null;
   try {
     const [delRes, usersRes] = await Promise.all([
-      apiClient<{ data: TemporaryReviewerRow[] }>('/v1/admin/temporary-reviewers'),
+      apiClient<{ data: TemporaryReviewerRow[] }>('/v1/admin/temporary-reviewers?limit=100'),
       apiClient<{ data: SimpleUser[] }>('/v1/admin/users?limit=500'),
     ]);
     delegations.value = delRes.data.data || (delRes.data as any) || [];
@@ -257,7 +385,7 @@ function openModal() {
     targetFunction: targetFunc,
     delegationReason: 'Cuti tahunan dan pelimpahan wewenang peninjauan sementara',
     effectiveDate: getTodayDateString(),
-    expiryDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+    expiryDate: addDaysIso(getTodayDateString(), 14),
   };
 
   const defaultDelegate =
@@ -281,7 +409,25 @@ async function handleCreateDelegation() {
     return;
   }
 
-  if (new Date(form.value.expiryDate) < new Date(form.value.effectiveDate)) {
+  if (form.value.replacedUserId && form.value.replacedUserId === form.value.delegateUserId) {
+    modalError.value =
+      'Pejabat yang berhalangan tidak dapat mendelegasikan wewenang peninjauan kepada dirinya sendiri.';
+    return;
+  }
+
+  const strippedReason = cleanReason(form.value.delegationReason);
+  if (strippedReason === '-' || strippedReason.length < 10) {
+    modalError.value = 'Alasan delegasi peninjau sementara minimal 10 karakter.';
+    return;
+  }
+
+  if (form.value.effectiveDate < getTodayDateString()) {
+    modalError.value =
+      'Tanggal mulai efektif delegasi tidak boleh di masa lalu (Dilarang Backdating). Wajib hari ini atau tanggal masa depan.';
+    return;
+  }
+
+  if (form.value.expiryDate < form.value.effectiveDate) {
     modalError.value = 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif mulai.';
     return;
   }
@@ -339,26 +485,26 @@ function openEditModal(d: TemporaryReviewerRow) {
     replacedOfficial: parseReplacedOfficial(d.delegationReason, d.targetFunction),
     delegateName: d.delegateUser?.fullName || 'Pejabat Pengganti',
     targetFunction: d.targetFunction,
-    effectiveDate: new Date(d.effectiveDate).toISOString().split('T')[0],
-    expiryDate: new Date(d.expiryDate).toISOString().split('T')[0],
+    effectiveDate: toDateOnlyString(d.effectiveDate),
+    expiryDate: toDateOnlyString(d.expiryDate),
     updateReason: '',
   };
   isEditModalOpen.value = true;
 }
 
 function onEditEffectiveDateChange() {
-  if (new Date(editForm.value.expiryDate) < new Date(editForm.value.effectiveDate)) {
+  if (editForm.value.expiryDate < editForm.value.effectiveDate) {
     editForm.value.expiryDate = editForm.value.effectiveDate;
   }
 }
 
 async function handleUpdateDelegation() {
   editModalError.value = null;
-  if (!editForm.value.updateReason.trim()) {
-    editModalError.value = 'Alasan perubahan delegasi wajib diisi untuk kebutuhan jejak audit.';
+  if (editForm.value.updateReason.trim().length < 5) {
+    editModalError.value = 'Alasan perubahan delegasi minimal 5 karakter untuk kebutuhan jejak audit.';
     return;
   }
-  if (new Date(editForm.value.expiryDate) < new Date(editForm.value.effectiveDate)) {
+  if (editForm.value.expiryDate < editForm.value.effectiveDate) {
     editModalError.value = 'Batas tanggal kedaluwarsa delegasi tidak boleh mendahului tanggal efektif mulai.';
     return;
   }
@@ -409,8 +555,8 @@ function openRevokeModal(d: TemporaryReviewerRow) {
 
 async function handleRevokeDelegation() {
   revokeModalError.value = null;
-  if (!revokeForm.value.revokeReason.trim()) {
-    revokeModalError.value = 'Alasan pencabutan wewenang wajib diisi untuk kebutuhan jejak audit kepatuhan.';
+  if (revokeForm.value.revokeReason.trim().length < 5) {
+    revokeModalError.value = 'Alasan pencabutan wewenang minimal 5 karakter untuk kebutuhan jejak audit kepatuhan.';
     return;
   }
 
@@ -494,6 +640,50 @@ function showToast(msg: string) {
         </button>
       </div>
 
+      <!-- 4 Kartu Ringkasan Status -->
+      <section class="metrics-grid" aria-label="Ringkasan Status Delegasi Reviewer Sementara">
+        <button
+          type="button"
+          class="metric-card"
+          :class="{ active: statusFilter === 'ACTIVE' }"
+          @click="toggleStatusCard('ACTIVE')"
+        >
+          <span class="metric-label">Aktif</span>
+          <strong class="metric-value">{{ activeCount }}</strong>
+          <span class="metric-sub">Sedang berlaku hari ini</span>
+        </button>
+        <button
+          type="button"
+          class="metric-card accent-blue"
+          :class="{ active: statusFilter === 'UPCOMING' }"
+          @click="toggleStatusCard('UPCOMING')"
+        >
+          <span class="metric-label">Terjadwal</span>
+          <strong class="metric-value">{{ upcomingCount }}</strong>
+          <span class="metric-sub">Tanggal mulai di masa depan</span>
+        </button>
+        <button
+          type="button"
+          class="metric-card accent-amber"
+          :class="{ active: statusFilter === 'EXPIRING' }"
+          @click="toggleStatusCard('EXPIRING')"
+        >
+          <span class="metric-label">Segera Berakhir</span>
+          <strong class="metric-value">{{ expiringCount }}</strong>
+          <span class="metric-sub">Berakhir dalam 7 hari ke depan</span>
+        </button>
+        <button
+          type="button"
+          class="metric-card accent-slate"
+          :class="{ active: statusFilter === 'EXPIRED' }"
+          @click="toggleStatusCard('EXPIRED')"
+        >
+          <span class="metric-label">Kedaluwarsa</span>
+          <strong class="metric-value">{{ expiredCount }}</strong>
+          <span class="metric-sub">Sudah melewati tanggal berakhir</span>
+        </button>
+      </section>
+
       <div class="table-card">
         <div v-if="isLoading" class="state-container">
           <p>Memuat daftar reviewer sementara...</p>
@@ -503,78 +693,122 @@ function showToast(msg: string) {
           <h3>Tidak Ada Delegasi Aktif</h3>
           <p>Saat ini tidak ada pendelegasian wewenang reviewer sementara yang sedang berlaku.</p>
         </div>
-        <table v-else class="data-table">
-          <thead>
-            <tr>
-              <th>PEJABAT PENGGANTI</th>
-              <th>MENGGANTIKAN SIAPA</th>
-              <th>DIVISI / WEWENANG</th>
-              <th>PERIODE DELEGASI</th>
-              <th>STATUS</th>
-              <th>DITERBITKAN OLEH</th>
-              <th>ALASAN DELEGASI</th>
-              <th>AKSI</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in delegations" :key="d.id">
-              <td>
-                <strong class="user-name">{{ d.delegateUser?.fullName || '-' }}</strong>
-                <span class="user-subtext">{{ getDelegateSubtext(d.delegateUser) }}</span>
-              </td>
-              <td>
-                <strong class="replaced-name">{{ parseReplacedOfficial(d.delegationReason, d.targetFunction) }}</strong>
-              </td>
-              <td>
-                <span class="func-pill">{{ d.targetFunction }}</span>
-                <span class="auth-scope-text">Persetujuan Cuti &amp; Koreksi</span>
-              </td>
-              <td>
-                <span class="date-text mono-num wp-datetime">
-                  {{ formatDateWib(d.effectiveDate) }}
-                  s/d
-                  {{ formatDateWib(d.expiryDate) }}
-                </span>
-              </td>
-              <td>
-                <span
-                  :class="[
-                    'status-badge',
-                    isDelegationActive(d) ? 'active' : 'expired',
-                  ]"
-                >
-                  {{ isDelegationActive(d) ? 'Aktif' : 'Kedaluwarsa' }}
-                </span>
-              </td>
-              <td>
-                <span class="creator-name">{{ d.createdBy?.fullName || 'System Admin' }}</span>
-              </td>
-              <td>
-                <span class="reason-text">{{ cleanReason(d.delegationReason) }}</span>
-              </td>
-              <td class="actions-cell">
-                <button
-                  type="button"
-                  class="btn-icon btn-edit"
-                  title="Edit Periode & Alasan Delegasi"
-                  @click="openEditModal(d)"
-                >
-                  <Pencil :size="13" />
-                  <span>Edit</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn-icon btn-revoke"
-                  title="Cabut Wewenang Delegasi Lebih Awal"
-                  @click="openRevokeModal(d)"
-                >
-                  <Trash2 :size="13" />
-                  <span>Cabut</span>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <template v-else>
+          <div class="table-toolbar">
+            <div class="toolbar-search">
+              <Search :size="15" class="search-icon" />
+              <input
+                id="trSearchInput"
+                v-model="searchQuery"
+                type="search"
+                placeholder="Cari pejabat pengganti, yang digantikan, divisi, atau alasan..."
+              />
+            </div>
+            <div class="toolbar-selects">
+              <select id="trDivisionFilter" v-model="divisionFilter" aria-label="Saring menurut divisi">
+                <option value="ALL">Semua Divisi</option>
+                <option v-for="div in availableDivisions" :key="div" :value="div">
+                  {{ div }}
+                </option>
+              </select>
+              <select id="trStatusFilter" v-model="statusFilter" aria-label="Saring menurut status">
+                <option value="ALL">Semua Status</option>
+                <option value="ACTIVE">Aktif</option>
+                <option value="EXPIRING">Segera Berakhir (&lt;= 7 Hari)</option>
+                <option value="UPCOMING">Terjadwal</option>
+                <option value="EXPIRED">Kedaluwarsa</option>
+              </select>
+            </div>
+            <span class="toolbar-count">
+              {{ filteredDelegations.length }} dari {{ delegations.length }} delegasi
+            </span>
+          </div>
+
+          <div v-if="filteredDelegations.length === 0" class="state-container empty">
+            <Clock :size="32" class="empty-icon" />
+            <h3>Tidak Ada Delegasi yang Cocok</h3>
+            <p>Coba ubah kata kunci pencarian atau pilih status dan divisi lain.</p>
+            <button type="button" class="btn btn-reset-filter" @click="resetFilters">
+              Tampilkan Semua Delegasi
+            </button>
+          </div>
+
+          <div v-else class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>PEJABAT PENGGANTI</th>
+                  <th>MENGGANTIKAN SIAPA</th>
+                  <th>DIVISI / WEWENANG</th>
+                  <th>PERIODE DELEGASI</th>
+                  <th>STATUS</th>
+                  <th>DITERBITKAN OLEH</th>
+                  <th>ALASAN DELEGASI</th>
+                  <th>AKSI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in filteredDelegations" :key="d.id">
+                  <td>
+                    <strong class="user-name">{{ d.delegateUser?.fullName || '-' }}</strong>
+                    <span class="user-subtext">{{ getDelegateSubtext(d.delegateUser) }}</span>
+                  </td>
+                  <td>
+                    <strong class="replaced-name">{{ parseReplacedOfficial(d.delegationReason, d.targetFunction) }}</strong>
+                  </td>
+                  <td>
+                    <span class="func-pill">{{ d.targetFunction }}</span>
+                    <span class="auth-scope-text">Persetujuan Cuti, Koreksi &amp; Blocker</span>
+                  </td>
+                  <td>
+                    <span class="date-text mono-num wp-datetime">
+                      {{ formatPeriodRange(d.effectiveDate, d.expiryDate) }}
+                    </span>
+                    <span class="countdown-text" :class="{ warning: isExpiringSoon(d) }">
+                      {{ getCountdownText(d) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      :class="[
+                        'status-badge',
+                        getStatusClass(d),
+                      ]"
+                    >
+                      {{ getStatusLabel(d) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="creator-name">{{ d.createdBy?.fullName || 'System Admin' }}</span>
+                  </td>
+                  <td>
+                    <span class="reason-text">{{ cleanReason(d.delegationReason) }}</span>
+                  </td>
+                  <td class="actions-cell">
+                    <button
+                      type="button"
+                      class="btn-icon btn-edit"
+                      title="Edit Periode & Alasan Delegasi"
+                      @click="openEditModal(d)"
+                    >
+                      <Pencil :size="13" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-icon btn-revoke"
+                      title="Cabut Wewenang Delegasi Lebih Awal"
+                      @click="openRevokeModal(d)"
+                    >
+                      <Trash2 :size="13" />
+                      <span>Cabut</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
       </div>
     </main>
 
@@ -647,6 +881,7 @@ function showToast(msg: string) {
                 id="del-eff"
                 v-model="form.effectiveDate"
                 type="date"
+                :min="getTodayDateString()"
                 required
                 @change="onEffectiveDateChange"
               />
@@ -865,8 +1100,132 @@ function showToast(msg: string) {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.metric-card {
+  text-align: left;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-subtle, #DCE7E2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.metric-card:hover {
+  border-color: var(--color-brand-primary, #00674D);
+}
+
+.metric-card.active {
+  border-color: var(--color-brand-primary, #00674D);
+  background: #F4FBF7;
+}
+
+.metric-card.accent-blue.active {
+  border-color: #0284C7;
+  background: #F0F9FF;
+}
+
+.metric-card.accent-amber.active {
+  border-color: #D97706;
+  background: #FFFBEB;
+}
+
+.metric-card.accent-slate.active {
+  border-color: #64748B;
+  background: #F8FAFC;
+}
+
+.metric-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary, #5C6E68);
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0E211B);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-sub {
+  font-size: 11.5px;
+  color: var(--color-text-secondary, #5C6E68);
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border-subtle, #DCE7E2);
+  background: #FAFCFB;
+  flex-wrap: wrap;
+}
+
+.toolbar-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-secondary, #5C6E68);
+  pointer-events: none;
+}
+
+.toolbar-search input[type="search"] {
+  padding-left: 32px;
+}
+
+.toolbar-selects {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toolbar-selects select {
+  width: auto;
+  min-width: 155px;
+}
+
+.toolbar-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary, #5C6E68);
+  margin-left: auto;
+}
+
+.btn-reset-filter {
+  margin-top: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-strong, #A9C7BC);
+  color: var(--color-brand-primary, #00674D);
+  padding: 8px 14px;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .data-table {
   width: 100%;
+  min-width: 980px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -942,6 +1301,20 @@ function showToast(msg: string) {
 
 .date-text {
   font-size: 12px;
+  display: block;
+}
+
+.countdown-text {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #5C6E68);
+  margin-top: 3px;
+}
+
+.countdown-text.warning {
+  color: #B45309;
+  font-weight: 700;
 }
 
 .status-badge {
@@ -955,6 +1328,11 @@ function showToast(msg: string) {
 .status-badge.active {
   background: #D1FAE5;
   color: #065F46;
+}
+
+.status-badge.upcoming {
+  background: #E0F2FE;
+  color: #075985;
 }
 
 .status-badge.expired {
@@ -1039,6 +1417,7 @@ function showToast(msg: string) {
 .modal-backdrop {
   position: fixed;
   inset: 0;
+  padding: 16px;
   background: rgba(14, 33, 27, 0.45);
   display: flex;
   align-items: center;
@@ -1048,6 +1427,8 @@ function showToast(msg: string) {
 
 .modal-box {
   width: min(100%, 540px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: #FFFFFF;
   border-radius: var(--radius-lg, 12px);
   padding: 24px 28px;
@@ -1257,5 +1638,88 @@ input:focus, select:focus, textarea:focus {
 
 .btn-danger:hover:not(:disabled) {
   background: #B91C1C;
+}
+
+@media (max-width: 900px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .content-container {
+    margin: 18px auto;
+    padding: 0 12px 48px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-header h2 {
+    font-size: 19px;
+  }
+
+  .page-header .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .toolbar-search,
+  .toolbar-selects,
+  .toolbar-selects select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar-search {
+    flex: none;
+  }
+
+  .toolbar-selects {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-count {
+    margin-left: 0;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-box {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-popup {
+    left: 12px;
+    right: 12px;
+    top: 14px;
+  }
 }
 </style>

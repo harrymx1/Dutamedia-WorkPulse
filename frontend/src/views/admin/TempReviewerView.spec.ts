@@ -178,4 +178,137 @@ describe('TempReviewerView.vue (WP-EP03-TK007 / Prototipe 17 & IMP-058)', () => 
     expect(replacedHtml).toContain('usr-arif');
     expect(delegateHtml).toContain('usr-bambang');
   });
+
+  it('distinguishes Aktif, Terjadwal, Kedaluwarsa statuses, supports card/search filters, and formats 1-day period cleanly', async () => {
+    const todayWib = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+    const addDays = (days: number) => {
+      const [y, m, d] = todayWib.split('-').map(Number);
+      return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+    };
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/admin/temporary-reviewers')) {
+        expect(url).toContain('limit=100');
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'del-active',
+                delegateUserId: 'usr-bambang',
+                targetFunction: 'Engineering',
+                delegationReason: '[Menggantikan Arif Budiman (Head)] Delegasi aktif',
+                effectiveDate: addDays(-1),
+                expiryDate: addDays(3),
+                createdAt: '2026-11-20T00:00:00Z',
+                delegateUser: {
+                  id: 'usr-bambang',
+                  fullName: 'Bambang Pratama',
+                  email: 'lead.tech@dutamedia.com',
+                },
+                createdBy: { id: 'admin-1', fullName: 'Admin', email: 'admin@dutamedia.com' },
+              },
+              {
+                id: 'del-upcoming',
+                delegateUserId: 'usr-rian',
+                targetFunction: 'OperationsInfrastructure',
+                delegationReason: '[Menggantikan Gunawan Setiawan (Head)] Delegasi jadwal 1 hari',
+                effectiveDate: addDays(2),
+                expiryDate: addDays(2),
+                createdAt: '2026-11-20T00:00:00Z',
+                delegateUser: {
+                  id: 'usr-rian',
+                  fullName: 'Rian Kurniawan',
+                  email: 'lead.creative@dutamedia.com',
+                },
+                createdBy: { id: 'admin-1', fullName: 'Admin', email: 'admin@dutamedia.com' },
+              },
+              {
+                id: 'del-expired',
+                delegateUserId: 'usr-dio',
+                targetFunction: 'Delivery',
+                delegationReason: '[Menggantikan Dharma Putra (Head)] Delegasi lama berakhir',
+                effectiveDate: addDays(-10),
+                expiryDate: addDays(-3),
+                createdAt: '2026-11-10T00:00:00Z',
+                delegateUser: {
+                  id: 'usr-dio',
+                  fullName: 'Dio Bayu',
+                  email: 'product@dutamedia.com',
+                },
+                createdBy: { id: 'admin-1', fullName: 'Admin', email: 'admin@dutamedia.com' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const wrapper = mount(TempReviewerView, {
+      global: { plugins: [router, pinia] },
+    });
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(wrapper.text()).toContain('Persetujuan Cuti, Koreksi & Blocker');
+    expect(wrapper.text()).toContain('Terjadwal');
+    expect(wrapper.text()).toContain('Kedaluwarsa');
+    expect(wrapper.text()).toContain('3 hari tersisa');
+    expect(wrapper.text()).toContain('Mulai dalam 2 hari');
+    expect(wrapper.text()).toContain('Berakhir 3 hari lalu');
+    expect(wrapper.text()).toContain('3 dari 3 delegasi');
+
+    // Metric card filter: Terjadwal
+    await wrapper.find('.metrics-grid .metric-card.accent-blue').trigger('click');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Rian Kurniawan');
+
+    // Empty search + reset
+    await wrapper.find('#trSearchInput').setValue('tidak-ada-nama');
+    expect(wrapper.text()).toContain('Tidak Ada Delegasi yang Cocok');
+    await wrapper.find('.btn-reset-filter').trigger('click');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(3);
+  });
+
+  it('rejects backdated effectiveDate and short reasons in create, edit, and revoke forms', async () => {
+    const todayWib = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+    const [y, m, d] = todayWib.split('-').map(Number);
+    const yesterday = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+
+    const wrapper = mount(TempReviewerView, {
+      global: { plugins: [router, pinia] },
+    });
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Create modal: short reason & backdating
+    await wrapper.find('.page-header .btn-primary').trigger('click');
+    await wrapper.find('#del-reason').setValue('pendek');
+    await wrapper.find('.modal-box form').trigger('submit.prevent');
+    expect(wrapper.find('.alert-banner.error').text()).toContain('minimal 10 karakter');
+
+    await wrapper.find('#del-reason').setValue('Cuti tahunan dan pelimpahan tugas');
+    await wrapper.find('#del-eff').setValue(yesterday);
+    await wrapper.find('.modal-box form').trigger('submit.prevent');
+    expect(wrapper.find('.alert-banner.error').text()).toContain('tidak boleh di masa lalu');
+    await wrapper.find('.modal-box .close-btn').trigger('click');
+
+    // Edit modal: short reason
+    await wrapper.find('.btn-edit').trigger('click');
+    await wrapper.find('#edit-reason').setValue('abc');
+    await wrapper.find('.modal-box form').trigger('submit.prevent');
+    expect(wrapper.find('.alert-banner.error').text()).toContain('minimal 5 karakter');
+    await wrapper.find('.modal-box .close-btn').trigger('click');
+
+    // Revoke modal: short reason
+    await wrapper.find('.btn-revoke').trigger('click');
+    await wrapper.find('#revoke-reason').setValue('abc');
+    await wrapper.find('.modal-box form').trigger('submit.prevent');
+    expect(wrapper.find('.alert-banner.error').text()).toContain('minimal 5 karakter');
+  });
 });

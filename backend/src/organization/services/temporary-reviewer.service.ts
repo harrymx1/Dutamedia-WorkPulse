@@ -149,6 +149,26 @@ export class TemporaryReviewerService {
       });
     }
 
+    if (effectiveDate < today) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Tanggal mulai efektif delegasi tidak boleh di masa lalu (Dilarang Backdating). Wajib hari ini atau tanggal masa depan.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const cleanedInputReason = dto.delegationReason
+      .replace(/\[Menggantikan\s+[^\]]+\]\s*/i, '')
+      .trim();
+    if (cleanedInputReason.length < 10) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Alasan delegasi peninjau sementara minimal 10 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     if (this.prisma.temporaryReviewerAssignment?.findFirst) {
       const overlapping = await this.prisma.temporaryReviewerAssignment.findFirst({
         where: {
@@ -184,7 +204,12 @@ export class TemporaryReviewerService {
 
     try {
       // Format tanggal Indonesia untuk notifikasi
-      const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      };
       const effStr = effectiveDate.toLocaleDateString('id-ID', dateOptions);
       const expStr = expiryDate.toLocaleDateString('id-ID', dateOptions);
 
@@ -315,6 +340,14 @@ export class TemporaryReviewerService {
       });
     }
 
+    if ((dto.updateReason || '').trim().length < 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Alasan perubahan delegasi minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const adminUser = await this.prisma.user.findUnique({
       where: { id: adminUserId },
       select: { id: true, fullName: true, email: true },
@@ -368,7 +401,12 @@ export class TemporaryReviewerService {
     });
 
     try {
-      const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      };
       const effStr = effectiveDate.toLocaleDateString('id-ID', dateOptions);
       const expStr = expiryDate.toLocaleDateString('id-ID', dateOptions);
 
@@ -476,6 +514,14 @@ export class TemporaryReviewerService {
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'Pendelegasian reviewer sementara tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    if ((dto.revokeReason || '').trim().length < 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Alasan pencabutan delegasi minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
       });
     }
 
