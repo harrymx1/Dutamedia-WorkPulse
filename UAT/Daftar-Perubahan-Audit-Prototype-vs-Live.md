@@ -28,7 +28,7 @@ Dokumen ini mencatat seluruh hasil audit tersebut dengan jujur:
 | 2 | **`02-Morning-Commitment.html`** | **Komitmen Pagi (`/daily/morning`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada `dabb266`, `69bb068`, & Audit #3 (`1a`, `1b`, `1c`, footer 1 baris, data `H-1`/`H-2`, plus **contoh kalimat divisi asli `CR-008` untuk 10 divisi**). Lihat **Audit #1** & **Audit #3**. |
 | 3 | **`03-Additional-Work.html`** | **Tugas Tambahan (`/daily/additional-work`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada **Audit #3**: **Opsi A + alasan `Komitmen Pagi Terlewat`** saat jam pagi lewat Cut-Off, serta tombol **`Edit` & `Hapus` terkontrol** (wajib alasan, catat audit, & notifikasi atasan penugas) sebelum EOD ditutup. |
 | 4 | **`04-EOD-Outcome.html`** | **Evaluasi Sore EOD (`/daily/eod`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada **Audit #4** (`312e7e5` & `e536969`): kolom wajib penjelasan risiko `AMBER`/`RED`, penahanan sebelum batas pagi vs mode pagi terlewat pasca batas pagi, perbaikan validasi `Lanjutkan Besok` usang + validasi Pekerjaan Tambahan, saran status + konfirmasi ketidaksesuaian tanpa mengunci `GREEN`, serta perbaikan tata letak HP `375px`. |
-| 5 | **`05-Raise-Instant-Blocker.html`** | **Lapor Blocker & Blocker Saya (`/raise-blockers`)** | **`Selesai Diaudit & Disesuaikan (Menunggu Verifikasi Live pasca Deploy Render)`** | Diperbaiki pada **Audit #5**: tampilkan nomor urut komitmen (`#1`, `#2`, `#3`) dari `sequenceNo` pada formulir & kartu, konfirmasi sebelum menimpa ketikan pada tombol `+ Gunakan Format Terstruktur`, serta pembersihan kode internal dari pesan error server. |
+| 5 | **`05-Raise-Instant-Blocker.html`** | **Lapor Blocker & Blocker Saya (`/raise-blockers`)** | **`Selesai Diaudit & Disesuaikan`** | Diperbaiki pada **Audit #5** (`f24c9b9`): tampilkan nomor urut komitmen (`#1`, `#2`, `#3`) dari `sequenceNo` pada formulir & kartu, konfirmasi sebelum menimpa ketikan pada tombol `+ Gunakan Format Terstruktur`, serta pembersihan kode internal dari pesan error server. |
 | 6 | `06-My-History-Weekly-Summary.html` | Riwayat Saya (`/daily/history`) | `Menunggu Audit Detail` | — |
 | 7 | `07-Notifications-Inbox.html` | Notifikasi (`/notifications`) | `Menunggu Audit Detail` | — |
 | 8 | `08-Manager-Pulse-Dashboard.html` | Pulse Dashboard (`/dashboard`) | `Menunggu Audit Detail` | — |
@@ -129,7 +129,12 @@ Dokumen ini mencatat seluruh hasil audit tersebut dengan jujur:
 
 ### Audit #5: `05-Raise-Instant-Blocker.html` → Halaman Lapor Blocker & Blocker Saya (`/raise-blockers`) — 3 Temuan Nyata Disetujui Harry
 
-- **Tanggal Penerapan Kode & Uji Unit:** 22 November 2026 *(Lulus 100% BE + FE; menunggu Manual Deploy Render untuk verifikasi live Chrome)*
+- **Tanggal Penerapan Kode & Uji Unit:** 22 November 2026 *(Commit `f24c9b9` — Lulus 100% BE 32 file / 212 test + FE 35 file / 206 test)*
+- **Tanggal Verifikasi Live Chrome:** 22 November 2026 (`09:50–09:53 WIB`, pasca deploy Render & Vercel — **Lulus 100%** pada Desktop `1280x850` & HP `375x812` dengan `scrollWidth = 375 === clientWidth`, tanpa error API/konsol)
+- **Bukti Screenshot Verifikasi Live (`screenshots/verifikasi-audit5/`):**
+  - `R1-raise-blocker-commitment-seqno.png`: Dropdown **Tautkan ke Komitmen / Tugas Hari Ini (opsional)** menampilkan `[Komitmen #1]` lengkap dengan nomor urutnya (tab `Blocker Saya` juga menampilkan `Terkait: Komitmen #2` dengan lengkap).
+  - `R2-raise-blocker-template-confirm.png`: Saat kolom deskripsi sudah berisi teks ketikan dan `+ Gunakan Format Terstruktur` ditekan, kotak konfirmasi kuning tampil tanpa menghapus teks; `Batal` menjaga ketikan tetap utuh dan `Ganti dengan Format Terstruktur` menggantinya ke kerangka 4 poin.
+  - `R3-raise-blocker-mobile-375px.png`: Tampilan layar HP `375x812` tersusun rapi dengan seluruh tombol, tab, formulir, dan footer berada di dalam lebar layar tanpa geser ke samping (`scrollWidth = 375`).
 
 | Kode Temuan | Bagian yang Diaudit | Kondisi Sebelumnya di Sistem Live | Akar Penyebab | Penyesuaian yang Diterapkan | Alasan / Keputusan |
 |---|---|---|---|---|---|
