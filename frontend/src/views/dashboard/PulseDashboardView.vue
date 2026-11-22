@@ -40,6 +40,7 @@ interface ProjectOption {
 
 interface DashboardMetrics {
   totalEmployees: number;
+  exemptedOrLeaveCount?: number;
   submittedCount: number;
   noSubmissionCount: number;
   amberCommitmentsCount: number;
@@ -211,11 +212,18 @@ function showToast(msg: string, isError = false) {
   }
 }
 
+const periodLabel = computed(() => {
+  if (selectedPeriod.value === 'yesterday') return 'Kemarin';
+  if (selectedPeriod.value === 'week') return 'Pekan Ini';
+  return 'Hari Ini';
+});
+
 async function loadDashboardData() {
   loading.value = true;
   try {
     const query = new URLSearchParams({
       scope: activeScope.value,
+      period: selectedPeriod.value,
     });
     if (activeScope.value === 'management' && selectedDivision.value !== 'ALL') {
       query.set('function', selectedDivision.value);
@@ -445,7 +453,13 @@ onMounted(() => {
             </option>
           </select>
 
-          <select v-model="selectedPeriod" class="filter-select">
+          <select
+            v-model="selectedPeriod"
+            class="filter-select"
+            data-testid="filter-period-select"
+            aria-label="Filter Periode Waktu"
+            @change="loadDashboardData"
+          >
             <option value="today">Hari Ini</option>
             <option value="yesterday">Kemarin</option>
             <option value="week">Pekan Ini</option>
@@ -466,7 +480,9 @@ onMounted(() => {
             <span class="metric-unit">Orang</span>
           </div>
           <div class="metric-footer">
-            <span>Partisipasi: {{ metrics.submittedCount }}/{{ metrics.totalEmployees }} ({{ metrics.completionRatePercent }}%)</span>
+            <span data-testid="participation-summary">
+              Partisipasi: {{ metrics.submittedCount }}/{{ metrics.totalEmployees }} ({{ metrics.completionRatePercent }}%)<template v-if="(metrics.exemptedOrLeaveCount ?? 0) > 0"> · {{ metrics.exemptedOrLeaveCount }} Cuti/Dispensasi</template>
+            </span>
           </div>
         </div>
 
@@ -525,7 +541,7 @@ onMounted(() => {
         <section class="panel">
           <div class="panel-head">
             <div>
-              <h2>Personil Butuh Bantuan Hari Ini</h2>
+              <h2>Personil Butuh Bantuan {{ periodLabel }}</h2>
               <p class="panel-subtitle">Daftar anggota yang mengalami kendala teknis atau komitmen yang memerlukan eskalasi.</p>
             </div>
           </div>
@@ -536,7 +552,7 @@ onMounted(() => {
               data-testid="empty-attention-items"
             >
               <CheckCircle2 :size="32" class="empty-icon" />
-              <p>Seluruh personel dalam lingkup ini berjalan terkendali hari ini (Tidak ada kendala aktif atau komitmen Amber/Merah).</p>
+              <p>Seluruh personel dalam lingkup ini berjalan terkendali pada periode {{ periodLabel.toLowerCase() }} (Tidak ada kendala aktif atau komitmen Amber/Merah).</p>
             </div>
             <div v-else class="action-items-list">
               <div
@@ -584,7 +600,7 @@ onMounted(() => {
           <div class="panel-body">
             <div v-if="feedItems.length === 0" class="empty-feed">
               <HeartHandshake :size="32" class="empty-icon" />
-              <p>Belum ada kontribusi bantuan yang dicatat hari ini.</p>
+              <p>Belum ada kontribusi bantuan yang dicatat pada periode {{ periodLabel.toLowerCase() }}.</p>
             </div>
 
             <div v-else class="feed-list">
@@ -613,6 +629,9 @@ onMounted(() => {
 <style scoped>
 .dashboard-layout {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
   background: var(--color-canvas, #F7FAF9);
   color: var(--color-text-primary, #0E211B);
 }
@@ -670,6 +689,8 @@ onMounted(() => {
 
 .main-content {
   max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
@@ -711,6 +732,8 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 8px;
   padding: 8px 14px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .scope-icon-wrap {
@@ -721,6 +744,7 @@ h1 {
   color: #00674D;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
 }
 
 .scope-label {
@@ -745,6 +769,8 @@ h1 {
   margin-bottom: 22px;
   flex-wrap: wrap;
   gap: 12px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .scope-tabs {
@@ -789,6 +815,8 @@ h1 {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .filter-select {
@@ -799,6 +827,10 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 6px;
   font-size: 12.5px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
   background-color: #FFFFFF;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C6E68' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -808,14 +840,14 @@ h1 {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
 @media (max-width: 900px) {
   .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -828,6 +860,8 @@ h1 {
   flex-direction: column;
   justify-content: space-between;
   min-height: 120px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .metric-card.caution {
@@ -907,6 +941,9 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 12px;
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-head {
@@ -967,6 +1004,8 @@ h1 {
 
 .item-info {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .item-title {
@@ -1020,6 +1059,8 @@ h1 {
 
 .feed-content {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 12.5px;
 }
 
@@ -1127,5 +1168,62 @@ h1 {
   background: #FEE2E2;
   border: 1px solid #FCA5A5;
   color: #991B1B;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 18px 14px 48px;
+  }
+
+  .scope-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-tools {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .action-item {
+    flex-wrap: wrap;
+  }
+
+  .action-item .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast-popup {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .metric-card {
+    min-height: 0;
+    padding: 14px 16px;
+  }
+
+  .panel-head,
+  .panel-body {
+    padding: 14px;
+  }
 }
 </style>

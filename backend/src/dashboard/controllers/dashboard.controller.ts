@@ -11,22 +11,7 @@ import { CanonicalRole } from '@prisma/client';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get([
-    'dashboard/pulse',
-    'api/dashboard/pulse',
-    'api/v1/dashboard/pulse',
-    'dashboard/metrics',
-    'api/dashboard/metrics',
-    'api/v1/dashboard/metrics',
-  ])
-  async getPulseMetrics(
-    @Req() req: any,
-    @Query('scope') scope?: string,
-    @Query('function') filterFunction?: string,
-    @Query('projectCode') projectCode?: string,
-    @Query('employmentStatus') employmentStatus?: string,
-  ) {
-    const userRole = req.user?.role;
+  private assertScopeAccess(userRole: string | undefined, scope?: string) {
     if (scope === 'management') {
       if (
         userRole &&
@@ -55,6 +40,25 @@ export class DashboardController {
         });
       }
     }
+  }
+
+  @Get([
+    'dashboard/pulse',
+    'api/dashboard/pulse',
+    'api/v1/dashboard/pulse',
+    'dashboard/metrics',
+    'api/dashboard/metrics',
+    'api/v1/dashboard/metrics',
+  ])
+  async getPulseMetrics(
+    @Req() req: any,
+    @Query('scope') scope?: string,
+    @Query('function') filterFunction?: string,
+    @Query('projectCode') projectCode?: string,
+    @Query('employmentStatus') employmentStatus?: string,
+    @Query('period') period?: string,
+  ) {
+    this.assertScopeAccess(req.user?.role, scope);
     return this.dashboardService.getPulseMetrics({
       userId: req.user?.id,
       userRole: req.user?.role,
@@ -63,6 +67,7 @@ export class DashboardController {
       filterFunction,
       projectCode,
       employmentStatus,
+      period,
     });
   }
 
@@ -78,7 +83,9 @@ export class DashboardController {
     @Query('function') filterFunction?: string,
     @Query('projectCode') projectCode?: string,
     @Query('employmentStatus') employmentStatus?: string,
+    @Query('period') period?: string,
   ) {
+    this.assertScopeAccess(req.user?.role, scope);
     return this.dashboardService.getSupportFeed({
       userId: req.user?.id,
       userRole: req.user?.role,
@@ -87,6 +94,7 @@ export class DashboardController {
       filterFunction,
       projectCode,
       employmentStatus,
+      period,
     });
   }
 }

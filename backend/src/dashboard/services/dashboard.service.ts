@@ -9,8 +9,12 @@ import {
   CanonicalRole,
   CommitmentOutcome,
   CommitmentRisk,
+  LeaveStatus,
+  TimingStatus,
   UserStatus,
 } from '@prisma/client';
+
+export type DashboardPeriod = 'today' | 'yesterday' | 'week';
 
 export interface PulseQueryOptions {
   userId?: string;
@@ -20,6 +24,7 @@ export interface PulseQueryOptions {
   filterFunction?: string;
   projectCode?: string;
   employmentStatus?: string;
+  period?: string;
 }
 
 @Injectable()
@@ -29,6 +34,68 @@ export class DashboardService {
     private readonly clockService: ClockService,
   ) {}
 
+  private resolvePeriodRange(period?: string): {
+    period: DashboardPeriod;
+    startDate: Date;
+    endDate: Date;
+    startStr: string;
+    endStr: string;
+    startTimestamp: Date;
+    endTimestamp: Date;
+  } {
+    const todayStr = this.clockService?.todayString
+      ? this.clockService.todayString('Asia/Jakarta')
+      : this.clockService.currentDate().toISOString().slice(0, 10);
+
+    const normalizedPeriod: DashboardPeriod =
+      period === 'yesterday' || period === 'week' ? period : 'today';
+
+    const endDate = new Date(`${todayStr}T00:00:00.000Z`);
+    let startDate = new Date(endDate);
+
+    if (normalizedPeriod === 'yesterday') {
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
+      endDate.setUTCDate(endDate.getUTCDate() - 1);
+    } else if (normalizedPeriod === 'week') {
+      startDate.setUTCDate(startDate.getUTCDate() - 6);
+    }
+
+    const startStr = startDate.toISOString().slice(0, 10);
+    const endStr = endDate.toISOString().slice(0, 10);
+
+    return {
+      period: normalizedPeriod,
+      startDate,
+      endDate,
+      startStr,
+      endStr,
+      startTimestamp: new Date(`${startStr}T00:00:00+07:00`),
+      endTimestamp: new Date(`${endStr}T23:59:59.999+07:00`),
+    };
+  }
+
+  private assertHeadDivisionScope(
+    scope: string | undefined,
+    callerRole: string | null | undefined,
+    callerFunction: string | null | undefined,
+    filterFunction?: string,
+  ) {
+    if (
+      scope === 'function' &&
+      callerRole === CanonicalRole.HEAD &&
+      filterFunction &&
+      filterFunction !== 'ALL' &&
+      callerFunction &&
+      filterFunction !== callerFunction
+    ) {
+      throw new AppException({
+        statusCode: HttpStatus.FORBIDDEN,
+        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
+        message: `Sebagai Head Divisi ${callerFunction}, Anda tidak memiliki akses ke data Divisi ${filterFunction}.`,
+      });
+    }
+  }
+
   /**
    * Mengambil metrik harian Pulse Dashboard (Prototipe 08) dengan penyaringan Scope:
    * - management (Seluruh Perusahaan): Khusus CEO_MANAGEMENT / SYSTEM_ADMIN / HRGA, dapat difilter per Divisi & Proyek
@@ -37,6 +104,7 @@ export class DashboardService {
    */
   async getPulseMetrics(options?: PulseQueryOptions) {
     const today = this.clockService.currentDate();
+    const range = this.resolvePeriodRange(options?.period);
 
     // Default projects fallback
     const defaultProjects = [
@@ -101,34 +169,59 @@ export class DashboardService {
     const callerRole = callerAssignment?.role || options?.userRole || null;
 
     // Penegakan otorisasi lintas divisi untuk HEAD pada scope=function
-    if (
-      options?.scope === 'function' &&
-      callerRole === CanonicalRole.HEAD &&
-      options?.filterFunction &&
-      options.filterFunction !== 'ALL' &&
-      callerFunction &&
-      options.filterFunction !== callerFunction
-    ) {
-      throw new AppException({
-        statusCode: HttpStatus.FORBIDDEN,
-        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
-        message: `Sebagai Head Divisi ${callerFunction}, Anda tidak memiliki akses ke data Divisi ${options.filterFunction}.`,
-      });
-    }
+    this.assertHeadDivisionScope(
+      options?.scope,
+      callerRole,
+      callerFunction,
+      options?.filterFunction,
+    );
 
     // Total karyawan aktif (baseline)
     let totalEmployees = await this.prisma.user.count({
       where: { status: UserStatus.ACTIVE },
     });
 
-    // Record akuntabilitas hari ini
+    // Record akuntabilitas sesuai periode yang dipilih
+    const workDateFilter =
+      range.startStr === range.endStr
+        ? range.startDate
+        : { gte: range.startDate, lte: range.endDate };
+
     let todayRecords = await this.prisma.dailyAccountabilityRecord.findMany({
-      where: { workDate: today },
+      where: { workDate: workDateFilter },
       include: {
         commitments: true,
         user: { select: { id: true, fullName: true } },
       },
     });
+
+    // Data cuti disetujui & dispensasi aktif pada periode terpilih (FR-27)
+    let approvedLeaves: Array<{ userId: string }> = [];
+    if ((this.prisma as any).leaveRequest?.findMany) {
+      approvedLeaves =
+        (await (this.prisma as any).leaveRequest.findMany({
+          where: {
+            status: LeaveStatus.APPROVED,
+            startDate: { lte: range.startDate },
+            endDate: { gte: range.endDate },
+            user: { status: UserStatus.ACTIVE },
+          },
+          select: { userId: true },
+        })) || [];
+    }
+
+    let activeExemptions: Array<{ userId: string }> = [];
+    if ((this.prisma as any).boundedExemption?.findMany) {
+      activeExemptions =
+        (await (this.prisma as any).boundedExemption.findMany({
+          where: {
+            startDate: { lte: range.startDate },
+            endDate: { gte: range.endDate },
+            user: { status: UserStatus.ACTIVE },
+          },
+          select: { userId: true },
+        })) || [];
+    }
 
     // Blocker Aktif
     let openBlockers = await this.prisma.blockerTicket.findMany({
@@ -320,17 +413,46 @@ export class DashboardService {
       );
     }
 
-    const checkedInCount = todayRecords.filter((r: any) => {
+    const submittedRecords = todayRecords.filter((r: any) => {
       const isSubmitted = r.isMorningSubmitted || Boolean(r.morningSubmittedAt);
       if (!isSubmitted) return false;
       if (targetProject) {
         return (r.commitments || []).length > 0;
       }
       return true;
-    }).length;
+    });
+    const submittedUserKeys = new Set(
+      submittedRecords.map((r: any, idx: number) => String(r.userId || r.id || `sub-${idx}`)),
+    );
+    const checkedInCount = submittedUserKeys.size;
     const eodSubmittedCount = todayRecords.filter(
       (r: any) => r.isEodSubmitted || Boolean(r.eodSubmittedAt),
     ).length;
+
+    // Pengecualian FR-27: karyawan dengan Cuti Disetujui atau Dispensasi aktif pada periode ini tidak dihitung "Belum Mengisi"
+    const excusedUserIds = new Set<string>();
+    for (const lr of approvedLeaves) {
+      if (lr?.userId) excusedUserIds.add(lr.userId);
+    }
+    for (const ex of activeExemptions) {
+      if (ex?.userId) excusedUserIds.add(ex.userId);
+    }
+    for (const r of todayRecords as any[]) {
+      if (
+        r?.userId &&
+        (r.morningTiming === TimingStatus.APPROVED_LEAVE ||
+          r.morningTiming === TimingStatus.EXEMPTED)
+      ) {
+        excusedUserIds.add(r.userId);
+      }
+    }
+    const relevantExcusedIds = [...excusedUserIds].filter(
+      (id) =>
+        (effectiveUserIds === null || effectiveUserIds.has(id)) &&
+        !submittedUserKeys.has(id),
+    );
+    const exemptedOrLeaveCount = relevantExcusedIds.length;
+    const eligibleEmployees = Math.max(0, totalEmployees - exemptedOrLeaveCount);
 
     // Breakdown Komitmen
     const allCommitments = todayRecords.flatMap((r: any) => r.commitments || []);
@@ -360,8 +482,10 @@ export class DashboardService {
     ).length;
 
     const participationRate =
-      totalEmployees > 0 ? Math.round((checkedInCount / totalEmployees) * 100) : 0;
-    const noSubmissionCount = Math.max(0, totalEmployees - checkedInCount);
+      eligibleEmployees > 0
+        ? Math.min(100, Math.round((checkedInCount / eligibleEmployees) * 100))
+        : 0;
+    const noSubmissionCount = Math.max(0, eligibleEmployees - checkedInCount);
 
     // Susun daftar personil butuh perhatian secara dinamis dari record & blocker nyata
     const userJobMap = new Map<
@@ -466,8 +590,11 @@ export class DashboardService {
     }
 
     return {
-      date: today.toISOString().slice(0, 10),
-      totalEmployees,
+      date: range.endStr,
+      period: range.period,
+      dateRange: { startDate: range.startStr, endDate: range.endStr },
+      totalEmployees: eligibleEmployees,
+      exemptedOrLeaveCount,
       checkedInCount,
       eodSubmittedCount,
       participationRate,
@@ -611,21 +738,43 @@ export class DashboardService {
       return [];
     }
 
-    const todayStr = this.clockService?.todayString
-      ? this.clockService.todayString('Asia/Jakarta')
-      : new Date().toISOString().slice(0, 10);
-    const startOfToday = new Date(`${todayStr}T00:00:00+07:00`);
-    const endOfToday = new Date(`${todayStr}T23:59:59.999+07:00`);
+    const range = this.resolvePeriodRange(options?.period);
     const today = this.clockService?.currentDate
       ? this.clockService.currentDate()
-      : new Date(todayStr);
+      : new Date(range.endStr);
+
+    let activeAssignments: any[] = [];
+    if ((this.prisma as any).organizationalAssignment?.findMany) {
+      activeAssignments =
+        (await (this.prisma as any).organizationalAssignment.findMany({
+          where: {
+            effectiveDate: { lte: today },
+            OR: [{ endDate: null }, { endDate: { gte: today } }],
+            user: { status: UserStatus.ACTIVE },
+          },
+          select: { userId: true, function: true, role: true, employmentStatus: true },
+        })) || [];
+    }
+
+    const callerAssignment = options?.userId
+      ? activeAssignments.find((a) => a.userId === options.userId)
+      : null;
+    const callerFunction = callerAssignment?.function || options?.userFunction || null;
+    const callerRole = callerAssignment?.role || options?.userRole || null;
+
+    this.assertHeadDivisionScope(
+      options?.scope,
+      callerRole,
+      callerFunction,
+      options?.filterFunction,
+    );
 
     const rows =
       (await this.prisma.supportContribution.findMany({
         where: {
           createdAt: {
-            gte: startOfToday,
-            lte: endOfToday,
+            gte: range.startTimestamp,
+            lte: range.endTimestamp,
           },
         },
         include: {
@@ -662,19 +811,6 @@ export class DashboardService {
       return [];
     }
 
-    let activeAssignments: any[] = [];
-    if ((this.prisma as any).organizationalAssignment?.findMany) {
-      activeAssignments =
-        (await (this.prisma as any).organizationalAssignment.findMany({
-          where: {
-            effectiveDate: { lte: today },
-            OR: [{ endDate: null }, { endDate: { gte: today } }],
-            user: { status: UserStatus.ACTIVE },
-          },
-          select: { userId: true, function: true, role: true, employmentStatus: true },
-        })) || [];
-    }
-
     let projectMappings: any[] = [];
     if ((this.prisma as any).projectAuthorityMapping?.findMany) {
       projectMappings =
@@ -686,12 +822,6 @@ export class DashboardService {
           select: { projectCode: true, projectManagerId: true, involvedFunction: true },
         })) || [];
     }
-
-    const callerAssignment = options?.userId
-      ? activeAssignments.find((a) => a.userId === options.userId)
-      : null;
-    const callerFunction = callerAssignment?.function || options?.userFunction || null;
-    const callerRole = callerAssignment?.role || options?.userRole || null;
     const effectiveScope =
       options?.scope ||
       (callerRole === CanonicalRole.HEAD

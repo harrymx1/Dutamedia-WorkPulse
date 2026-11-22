@@ -355,4 +355,130 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
     });
     expect(bdFeed).toHaveLength(0);
   });
+
+  it('applies yesterday and week period filters to metrics and support feed and deduplicates multi-day submissions', async () => {
+    mockClock.todayString = vi.fn(() => '2026-11-22');
+    mockClock.currentDate.mockReturnValue(new Date('2026-11-22T00:00:00.000Z'));
+
+    mockPrisma.user.count.mockResolvedValue(4);
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([
+      {
+        id: 'rec-u1-day1',
+        userId: 'u1',
+        isMorningSubmitted: true,
+        commitments: [{ initialRisk: CommitmentRisk.GREEN }],
+      },
+      {
+        id: 'rec-u1-day2',
+        userId: 'u1',
+        isMorningSubmitted: true,
+        commitments: [{ initialRisk: CommitmentRisk.AMBER }],
+      },
+    ]);
+    mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+    mockPrisma.supportContribution = {
+      findMany: vi.fn().mockResolvedValue([]),
+    };
+
+    const yestMetrics = await service.getPulseMetrics({ period: 'yesterday' });
+    expect(mockPrisma.dailyAccountabilityRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { workDate: new Date('2026-11-21T00:00:00.000Z') },
+      }),
+    );
+    expect(yestMetrics.period).toBe('yesterday');
+    expect(yestMetrics.dateRange).toEqual({ startDate: '2026-11-21', endDate: '2026-11-21' });
+
+    const weekMetrics = await service.getPulseMetrics({ period: 'week' });
+    expect(mockPrisma.dailyAccountabilityRecord.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: {
+          workDate: {
+            gte: new Date('2026-11-16T00:00:00.000Z'),
+            lte: new Date('2026-11-22T00:00:00.000Z'),
+          },
+        },
+      }),
+    );
+    expect(weekMetrics.period).toBe('week');
+    expect(weekMetrics.dateRange).toEqual({ startDate: '2026-11-16', endDate: '2026-11-22' });
+    // u1 submitted twice in the week -> counted once in submittedCount
+    expect(weekMetrics.submittedCount).toBe(1);
+    expect(weekMetrics.totalEmployees).toBe(4);
+    expect(weekMetrics.noSubmissionCount).toBe(3);
+
+    await service.getSupportFeed({ period: 'yesterday' });
+    expect(mockPrisma.supportContribution.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          createdAt: {
+            gte: new Date('2026-11-21T00:00:00+07:00'),
+            lte: new Date('2026-11-21T23:59:59.999+07:00'),
+          },
+        },
+      }),
+    );
+  });
+
+  it('excludes users with approved leave or active bounded exemption from noSubmissionCount and participation denominator (FR-27)', async () => {
+    mockClock.todayString = vi.fn(() => '2026-11-22');
+    mockClock.currentDate.mockReturnValue(new Date('2026-11-22T00:00:00.000Z'));
+
+    mockPrisma.user.count.mockResolvedValue(5);
+    mockPrisma.organizationalAssignment = {
+      findMany: vi.fn().mockResolvedValue([
+        { userId: 'u1', function: 'Engineering', role: 'EMPLOYEE', user: { fullName: 'U1' } },
+        { userId: 'u2', function: 'Engineering', role: 'EMPLOYEE', user: { fullName: 'U2' } },
+        { userId: 'u3', function: 'Engineering', role: 'EMPLOYEE', user: { fullName: 'U3' } },
+        { userId: 'u4', function: 'Engineering', role: 'EMPLOYEE', user: { fullName: 'U4' } },
+        { userId: 'u5', function: 'Engineering', role: 'EMPLOYEE', user: { fullName: 'U5' } },
+      ]),
+    };
+    mockPrisma.leaveRequest = {
+      findMany: vi.fn().mockResolvedValue([{ userId: 'u4' }]),
+    };
+    mockPrisma.boundedExemption = {
+      findMany: vi.fn().mockResolvedValue([{ userId: 'u5' }]),
+    };
+    mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([
+      { id: 'r1', userId: 'u1', isMorningSubmitted: true, commitments: [] },
+      { id: 'r2', userId: 'u2', isMorningSubmitted: true, commitments: [] },
+      { id: 'r3', userId: 'u3', isMorningSubmitted: true, commitments: [] },
+    ]);
+    mockPrisma.blockerTicket.findMany.mockResolvedValue([]);
+
+    const metrics = await service.getPulseMetrics({
+      userId: 'head-eng',
+      userRole: 'HEAD',
+      userFunction: 'Engineering',
+      scope: 'function',
+    });
+
+    expect(metrics.exemptedOrLeaveCount).toBe(2);
+    expect(metrics.totalEmployees).toBe(3);
+    expect(metrics.submittedCount).toBe(3);
+    expect(metrics.noSubmissionCount).toBe(0);
+    expect(metrics.completionRatePercent).toBe(100);
+  });
+
+  it('rejects cross-division getSupportFeed request from HEAD with 403 AUTH_FORBIDDEN_SCOPE', async () => {
+    mockPrisma.organizationalAssignment = {
+      findMany: vi.fn().mockResolvedValue([
+        { userId: 'user-arif', function: 'Engineering', role: 'HEAD' },
+      ]),
+    };
+    mockPrisma.supportContribution = {
+      findMany: vi.fn().mockResolvedValue([]),
+    };
+
+    await expect(
+      service.getSupportFeed({
+        userId: 'user-arif',
+        userRole: 'HEAD',
+        userFunction: 'Engineering',
+        scope: 'function',
+        filterFunction: 'Finance',
+      }),
+    ).rejects.toThrow(/tidak memiliki akses/);
+  });
 });

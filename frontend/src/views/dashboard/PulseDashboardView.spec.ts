@@ -221,4 +221,69 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     expect(tabs[0].text()).toContain('Tim (Proyek)');
     expect(wrapper.find('[data-testid="filter-project-select"]').exists()).toBe(true);
   });
+
+  it('reloads metrics and feed with period parameter when period selector changes and updates panel label', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/dashboard/metrics')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              totalEmployees: 10,
+              exemptedOrLeaveCount: 2,
+              submittedCount: 8,
+              noSubmissionCount: 2,
+              amberCommitmentsCount: 1,
+              redCommitmentsCount: 0,
+              unacknowledgedBlockersCount: 0,
+              completionRatePercent: 80,
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(PulseDashboardView, {
+      global: { plugins: [router], stubs: { RouterLink: true } },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Personil Butuh Bantuan Hari Ini');
+    expect(wrapper.find('[data-testid="participation-summary"]').text()).toContain('2 Cuti/Dispensasi');
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('period=today'))).toBe(true);
+
+    const periodSelect = wrapper.find('[data-testid="filter-period-select"]');
+    await periodSelect.setValue('yesterday');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Personil Butuh Bantuan Kemarin');
+    expect(
+      fetchMock.mock.calls.some(
+        ([u]) => String(u).includes('/dashboard/metrics') && String(u).includes('period=yesterday'),
+      ),
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(
+        ([u]) => String(u).includes('/dashboard/feed') && String(u).includes('period=yesterday'),
+      ),
+    ).toBe(true);
+
+    await periodSelect.setValue('week');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.text()).toContain('Personil Butuh Bantuan Pekan Ini');
+    expect(
+      fetchMock.mock.calls.some(
+        ([u]) => String(u).includes('/dashboard/metrics') && String(u).includes('period=week'),
+      ),
+    ).toBe(true);
+  });
 });
