@@ -839,24 +839,25 @@ flowchart TD
   5. **Uji Blokir Akses Halaman Review Koreksi bagi Staf Biasa (`403`):**
      - **Aksi:** Masih menggunakan akun Aditya (`dev.frontend@dutamedia.com`), ketik alamat `/corrections/review` secara manual di browser.
      - ***Hasil yang Diharapkan:***
-       - Sistem memblokir akses dan mengalihkan Aditya ke layar **`403 — Akses Dibatasi`** karena staf biasa tidak berwenang menyetujui koreksi.
-  6. **Review di `/corrections/review`: Uji Tolak Tanpa Alasan, Tolak Resmi (`REJECTED`), Setujui Resmi (`APPROVED`), & Filter Riwayat:**
+       - Server menolak permintaan `GET /api/correction-requests?mode=review` dengan **HTTP `403 AUTH_FORBIDDEN_ROLE`** dan sistem mengalihkan Aditya ke layar **`403 — Akses Dibatasi`** karena staf biasa tanpa delegasi Reviewer Sementara aktif tidak berwenang meninjau koreksi.
+  6. **Review di `/corrections/review`: Uji Tolak/Setujui Catatan Wajib Min. 5 Karakter, Tolak Resmi (`REJECTED`), Setujui Resmi (`APPROVED`), Diff Terstruktur, & Filter Riwayat:**
      - **Aksi:** Keluar dari akun Aditya, lalu masuk sebagai **`head.eng@dutamedia.com`** (Arif Budiman — Head of Engineering) dan buka menu kiri **Review Koreksi & Cuti** (`/corrections/review`).
      - ***Hasil yang Diharapkan:***
-       - Tabel **Permohonan Koreksi Material** menampilkan pengajuan `MATERIAL` milik Aditya lengkap dengan kotak **PERBANDINGAN NILAI (DIFF)** (`Sebelum:` vs `Diajukan:`), alasan permohonan, dan sisa waktu jendela sanggahan.
+       - Header menampilkan judul Bahasa Indonesia **`Review Koreksi & Cuti`** bebas kode internal `SAD 2.4` serta tombol pintas **`Buka Persetujuan Cuti`** ke `/leave/queue`.
+       - Tabel **Permohonan Koreksi Material** menampilkan pemohon berinisial 2 huruf lengkap dengan **Peran · Divisi** (mis. `Karyawan · Engineering`), pil lingkup (**`Koreksi Komitmen Pagi`** / **`Koreksi Evaluasi Sore`**), kotak **PERBANDINGAN NILAI** terstruktur per field (`Deskripsi Tugas`, `Tingkat Risiko`, `Tautan Referensi`, `Hasil Capaian`, `Status Kelanjutan`, `Alasan / Keterangan` dengan label Bahasa Indonesia `Sebelum:` vs `Diajukan:` tanpa JSON mentah), alasan permohonan, sisa waktu jendela sanggahan, serta kolom paling kanan **`AKSI`** utuh tanpa terpotong di layar Desktop `1440px` maupun responsif tanpa overflow di layar HP `375px`.
      - **Aksi (Cabang 1 — Uji Validasi Penolakan & Tolak Resmi `REJECTED` pada Koreksi Pagi):**
        1. Pada baris koreksi pagi (`MORNING_COMMITMENT`) milik Aditya, klik tombol **`Tolak`**.
-       2. Kosongkan kolom catatan penolakan, lalu coba klik konfirmasi tolak.
-       3. Isi catatan penolakan: `Target komitmen pagi yang sudah dikunci tidak boleh diganti ke topik lain; silakan catat sebagai Pekerjaan Tambahan.` lalu klik konfirmasi tolak.
-     - **Aksi (Cabang 2 — Setujui Resmi `APPROVED` pada Koreksi EOD & Cek Filter Status):**
-       1. Pada baris koreksi sore (`EOD_OUTCOME`) milik Aditya, klik tombol **`Setujui`**, isi catatan: `Disetujui sesuai bukti penggabungan kode sebelum pukul 17:30 WIB`, lalu konfirmasi setuju.
-       2. Ubah dropdown filter di kanan atas tabel dari `Menunggu Review (PENDING)` menjadi **`Semua Status`**.
+       2. Kosongkan atau isi catatan kurang dari 5 karakter (penghitung menampilkan `X / 5 karakter minimum`), lalu coba klik konfirmasi tolak.
+       3. Isi catatan penolakan minimal 5 karakter: `Target komitmen pagi yang sudah dikunci tidak boleh diganti ke topik lain; silakan catat sebagai Pekerjaan Tambahan.` lalu klik konfirmasi tolak.
+     - **Aksi (Cabang 2 — Setujui Resmi `APPROVED` pada Koreksi EOD & Cek Filter Lingkup/Status/Reset):**
+       1. Pada baris koreksi sore (`EOD_OUTCOME`) milik Aditya, klik tombol **`Setujui`**, isi catatan minimal 5 karakter: `Disetujui sesuai bukti penggabungan kode sebelum pukul 17:30 WIB`, lalu konfirmasi setuju.
+       2. Uji dropdown filter lingkup (**`Semua Lingkup`** / `Koreksi Komitmen Pagi` / `Koreksi Evaluasi Sore`), divisi (bila ada >= 2 divisi), klik kartu metrik, serta ubah dropdown filter status di kanan atas tabel dari **`Menunggu Review`** menjadi **`Semua Status`** (serta tombol **`Tampilkan Semua`** saat pencarian 0 hasil).
      - **Aksi (Verifikasi Catatan Penolakan & Persetujuan di Akun Aditya):** Keluar dari Arif, masuk kembali sebagai **Aditya Nugroho** (`dev.frontend@dutamedia.com`), lalu buka `/corrections/morning` dan `/corrections/eod`.
      - ***Hasil yang Diharapkan:***
-       - Saat menolak tanpa alasan: sistem menahan penolakan karena alasan penolakan wajib diisi.
-       - Setelah koreksi pagi ditolak dan koreksi EOD disetujui: pada filter `Semua Status` di `/corrections/review`, kedua baris tampil berstatus **`REJECTED`** dan **`APPROVED`**.
+       - Saat menyetujui/menolak dengan catatan kosong atau `< 5` karakter: modal menahan pengiriman lewat pesan kesalahan inline merah di dalam modal, dan server menolak **HTTP `400 VALIDATION_FAILED`** bila dikirim langsung.
+       - Setelah koreksi pagi ditolak dan koreksi EOD disetujui: pada filter `Semua Status` di `/corrections/review`, kedua baris tampil berstatus **`Ditolak`** dan **`Disetujui`** lengkap dengan nama peninjau + waktu keputusan WIB + kotak **`Catatan Peninjau`**, serta kolom aksi menampilkan **`Selesai`**.
        - Di akun Aditya: panel kanan `/corrections/morning` menampilkan kartu berstatus **`REJECTED`** lengkap dengan penanda **`Komitmen #...`**, perubahan **Tingkat Risiko** / **Tautan Referensi** bila ikut diubah, serta kotak merah catatan penolakan lengkap dengan nama peninjau (`Catatan Peninjau (Arif Budiman): ...`), sedangkan panel kanan `/corrections/eod` menampilkan kartu berstatus **`APPROVED`** lengkap dengan penanda **`Tugas #...`**, label hasil Bahasa Indonesia (`DONE (Tuntas)`, dll.), diff kelanjutan/keterangan, dan catatan persetujuan peninjau (`Catatan Peninjau (<Nama>): ...`). Notifikasi di `/notifications` membawa tombol langsung **`Buka Koreksi Komitmen Pagi`** (`/corrections/morning`) dan **`Buka Koreksi Evaluasi Sore`** (`/corrections/eod`).
-       - Di layar HP `375px`: pada kedua halaman koreksi, tab Pagi/Sore, pilihan klasifikasi, pilihan risiko/hasil capaian, tombol aksi formulir, dan perbandingan riwayat tersusun vertikal 1 kolom tanpa melebihi lebar layar.
+       - Di layar HP `375px`: pada kedua halaman koreksi maupun `/corrections/review`, tab/filter, pilihan klasifikasi, pilihan risiko/hasil capaian, tombol aksi formulir, kartu metrik, modal, dan perbandingan riwayat tersusun rapi tanpa melebihi lebar layar (`scrollWidth === 375`).
 
 ---
 
@@ -866,7 +867,7 @@ flowchart TD
 |---|---|---|---|---|---|---|---|---|
 | **K-12.1** | **Koreksi Komitmen Pagi** (`/corrections/morning`) · *(Acuan `16a-Morning-Correction-Request.html`)* | Belum ada laporan pagi hari ini (`No Baseline`), tab Pagi/Sore, form `MINOR` vs `MATERIAL` + penghitung min. 10 huruf & `Reset Isian`, tolak tanpa perubahan (`400`) & tolak ganda saat `PENDING` (`409` + banner tunggu), bantuan `Gunakan Draf Sebelumnya & Sesuaikan` pasca-`REJECTED`, riwayat lengkap (`Komitmen #`, risiko/tautan, nama peninjau, `HH:mm WIB`), & responsif HP `375px` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 | **K-13.1** | **Koreksi Evaluasi Sore** (`/corrections/eod`) · *(Acuan `16b-EOD-Correction-Request.html`)* | Guard `Belum Ada Evaluasi Sore Hari Ini` (`422` bila EOD belum disubmit), jam cut-off dinamis kebijakan, tab Pagi/Sore, label hasil seragam (`DONE (Tuntas)`/`IN_PROGRESS (Sebagian)`/`BLOCKED (Terhambat)`/`DROPPED (Dibatalkan)`), penghitung min. 10 huruf & `Reset Isian`, tolak tanpa perubahan/invalid (`400`) & tolak ganda saat `PENDING` (`409` + banner tunggu), bantuan `Gunakan Draf Sebelumnya & Sesuaikan`, riwayat lengkap (`Tugas #`, kelanjutan/keterangan, nama peninjau, `HH:mm WIB`), & responsif HP `375px` | `EMPLOYEE` (`product` & `dev.frontend`) | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
-| **K-14.1** | **Review Koreksi** (`/corrections/review`) · *(Acuan `22-Correction-and-Leave-Review.html`)* | Kartu perbandingan nilai Sebelum vs Diajukan (*Diff*) + modal Setujui / Tolak wajib alasan | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| **K-14.1** | **Review Koreksi & Cuti** (`/corrections/review`) · *(Acuan `22-Correction-and-Leave-Review.html`)* | Guard `403` staf biasa, header **`Review Koreksi & Cuti`** bebas `SAD 2.4` + pintasan `/leave/queue`, diff terstruktur per field (`Sebelum:` vs `Diajukan:`) tanpa JSON mentah, peran/divisi & **`Catatan Peninjau`**, filter lingkup/divisi/status + reset, modal Setujui/Tolak wajib alasan min. 5 karakter, Desktop `1440px` tanpa potong kolom `AKSI` & HP `375px` | `HEAD` / `HRGA` / `CEO` / `Reviewer Sementara` | `[x]` | `[ ]` | `[x]` | `[ ]` | `[x]` |
 
 ---
 
