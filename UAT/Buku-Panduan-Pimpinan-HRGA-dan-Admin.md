@@ -125,13 +125,13 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 ### 2.3 Membaca Laporan Eksekutif & Mengunduh CSV / Cetak PDF (`/reports`)
 
 > **[Gambar `WP-SS-28` — Laporan Eksekutif & Ekspor CSV (`/reports`)]**  
-> *Tampilkan pilihan periode (`Hari Ini`, `Pekan Ini`, `Bulan Ini`, `Kuartal Ini`), filter `Status Karyawan`, 4 kartu KPI, tabel performa antar-divisi, dan tombol `Export Data (CSV)`.*
+> *Tampilkan pilihan periode (`Hari Ini`, `Pekan Ini`, `Bulan Ini`, `Kuartal Ini`), filter `Status Karyawan`, 4 kartu KPI, tabel performa antar-divisi, dan tombol `Unduh Laporan (CSV)`.*
 
 1. Buka menu **`Laporan Eksekutif`** (`/reports`).
 2. Pilih rentang waktu: **`Hari Ini`**, **`Pekan Ini`**, **`Bulan Ini`**, atau **`Kuartal Ini`**.
 3. Gunakan filter **`Status Karyawan`** untuk memisahkan kepatuhan Karyawan Tetap, Kontrak, atau Intern *(jika memilih status yang belum memiliki anggota, tampil pesan informatif `"Belum ada data karyawan untuk status karyawan yang dipilih."`)*.
 4. Laporan menyajikan ringkasan per divisi tanpa pemeringkatan individu (*non-punitive*).
-5. Klik **`Export Data (CSV)`** untuk mengunduh berkas spreadsheet (kolom `Status Karyawan` ikut tersimpan di CSV), atau gunakan tombol **`Cetak / PDF`** untuk presentasi rapat.
+5. Klik **`Unduh Laporan (CSV)`** untuk mengunduh berkas spreadsheet (kolom `Status Karyawan` ikut tersimpan di CSV), atau gunakan tombol **`Cetak / PDF`** untuk presentasi rapat.
 
 ---
 
@@ -159,10 +159,10 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 > **[Gambar `WP-SS-23` — Radar Penuaan & Eskalasi (`/blockers/aging`)]**  
 > *Tampilkan 4 kartu metrik batas waktu, filter keparahan & kotak centang `Hanya Lewat Batas Waktu`, serta tabel radar penuaan dengan lencana merah `Lewat Batas Waktu`.*
 
-1. Buka menu **`Penuaan & Eskalasi`** (`/blockers/aging`).
+1. Buka menu **`Penuaan & Eskalasi`** (`/blockers/aging`, judul layar: **`Keterlambatan Penanganan Blocker`**).
 2. Periksa **4 kartu ringkasan**: Total Tiket Aktif, Melewati Batas Waktu (*Breached*), Persentase Kepatuhan Batas Waktu, dan Tiket Kritis Aktif.
 3. Centang **`Hanya Tampilkan Tiket Melewati Batas Waktu`** untuk langsung memfokuskan intervensi pada tiket yang melewati target (`Critical` 1 jam, `High` 4 jam, `Medium` 8 jam, `Low` 24 jam).
-4. Klik **`Buka di Antrean`** di kanan baris tiket untuk langsung melompat ke halaman `/blockers` dan menyalurkan bantuan.
+4. Klik tombol **`Buka`** di kanan baris tiket untuk langsung melompat ke halaman `/blockers` dan menyalurkan bantuan.
 
 ---
 
@@ -198,7 +198,7 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 
 1. Buka menu **`Review Koreksi & Cuti`** (`/corrections/review`).
 2. Periksa kotak perbandingan visual **Sebelum** vs **Diajukan**, alasan dari karyawan, dan sisa waktu jendela tinjauan 24 jam.
-3. Klik **`Setujui`** (isi catatan peninjau min. 5 karakter) untuk langsung memperbarui data laporan harian karyawan secara resmi, atau klik **`Tolak`** (wajib isi alasan penolakan min. 5 karakter) agar karyawan dapat memperbaikinya lewat tombol `Gunakan Draf Sebelumnya & Sesuaikan`.
+3. Klik **`Setujui`** (isi catatan peninjau min. 5 karakter, lalu klik **`Konfirmasi Setujui`**) untuk langsung memperbarui data laporan harian karyawan secara resmi, atau klik **`Tolak`** (jendela **`Sampaikan Keberatan / Tolak Koreksi`**, wajib isi alasan penolakan min. 5 karakter, lalu klik **`Konfirmasi Tolak`**) agar karyawan dapat memperbaikinya lewat tombol `Gunakan Draf Sebelumnya & Sesuaikan`.
 
 ---
 
@@ -244,7 +244,7 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 3. Pilih **Tingkat Kerahasiaan**:
    - **`Dibagikan ke Karyawan`:** Isi catatan langsung masuk ke Pusat Notifikasi karyawan tersebut sebagai kesepakatan bersama.
    - **`Rahasia Manajemen`:** Hanya bisa dilihat oleh atasan pembuat, HRGA, dan Direktur — **tidak pernah muncul** di akun karyawan.
-4. Ketik isi catatan (min. 10 karakter) atau gunakan tombol **template cepat** (*Bimbingan 1-on-1* / *Apresiasi*), lalu klik **`Simpan Catatan`**.
+4. Ketik isi catatan (min. 10 karakter) atau gunakan tombol **template cepat** (*Bimbingan 1-on-1* / *Apresiasi Kinerja* / *Tindakan Korektif*), lalu klik **`Simpan Catatan Pembinaan`**.
 
 ---
 
@@ -322,7 +322,7 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 
 1. **5 Kategori Kebijakan Resmi:** (1) Batas Waktu Komitmen Pagi, (2) Target Waktu Respon & Penanganan Kendala, (3) Batas Waktu Evaluasi Sore, (4) Batas Waktu Pengajuan Koreksi, dan (5) Kalender Kerja & Hari Libur.
 2. **Aturan Pengubahan Parameter:**
-   - Klik **`Ubah Parameter`** pada kategori yang Anda miliki.
+   - Klik tombol **`+ Buat Versi Kebijakan Baru`** di kanan atas untuk menerbitkan pembaruan parameter pada kategori yang Anda miliki.
    - **Larangan Tanggal Mundur:** Tanggal mulai berlaku wajib hari ini atau masa depan.
    - **Wajib Ada Perubahan & Alasan:** Tidak boleh menyimpan tanpa mengubah angka, dan wajib mengisi **Alasan Perubahan minimal 15 karakter**.
 3. **Mengelola Daftar Pemilik Kebijakan (Khusus Direktur & Admin):**

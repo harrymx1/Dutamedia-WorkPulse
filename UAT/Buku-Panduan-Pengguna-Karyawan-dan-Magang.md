@@ -95,7 +95,7 @@ Saat pertama kali bergabung, Admin atau Tim HRGA akan mendaftarkan email kantor 
    - Memadukan **huruf dan angka** (misalnya: `Dutamedia2026!`).
    - Pastikan meteran kekuatan sandi menyala hijau dan seluruh tanda centang syarat sudah berwarna hijau.
 4. Ketik ulang kata sandi yang sama persis pada kolom **`Konfirmasi Kata Sandi`**.
-5. Klik tombol hijau **`Aktifkan Akun Saya`**.
+5. Klik tombol hijau **`Aktivasi Akun`**.
 6. Jika berhasil, muncul kartu **Aktivasi Berhasil!** — klik tombol **`Lanjut ke Halaman Masuk`** untuk mulai login.
 
 > [!WARNING]
@@ -116,7 +116,7 @@ Saat pertama kali bergabung, Admin atau Tim HRGA akan mendaftarkan email kantor 
 2. Isi **`Email Perusahaan`** (contoh: `dev.frontend@dutamedia.com`).
 3. Isi **`Kata Sandi`**. Klik **ikon mata** di ujung kanan kolom jika ingin melihat huruf yang Anda ketik.
 4. *(Opsional)* Centang **`Ingat email di perangkat ini`** agar saat Anda keluar nanti, alamat email sudah otomatis terisi di perangkat pribadi Anda.
-5. Klik tombol hijau **`Masuk ke Sistem`**.
+5. Klik tombol hijau **`Masuk Sistem`**.
 6. Karyawan operasional dan anak magang akan langsung diarahkan ke halaman utama **`My Today` (`/daily/morning`)**.
 
 #### Pesan Peringatan yang Mungkin Muncul Saat Masuk:
@@ -316,7 +316,7 @@ Di bagian atas formulir, perhatikan dua alat bantu praktis:
 5. Klik tombol hijau **`Kirim Evaluasi EOD`**.
 
 > **[Gambar `WP-SS-09` — Kartu Ringkasan Evaluasi Sore Terkirim (`/daily/eod`)]**  
-> *Tampilkan kartu ringkasan EOD terkunci beserta rekap status tiap tugas dan tombol `Ajukan Koreksi Evaluasi Sore`.*
+> *Tampilkan kartu ringkasan EOD terkunci beserta rekap status tiap tugas dan tombol `Ajukan Koreksi EOD`.*
 
 ---
 

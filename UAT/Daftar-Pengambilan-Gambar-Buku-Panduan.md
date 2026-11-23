@@ -45,15 +45,15 @@ flowchart TD
 
 ---
 
-### SESI 1A — KARYAWAN FORM TERBUKA (*Nadia Kusuma — `qa@dutamedia.com` / `Password123!`*)
-*(Dipakai karena formulir Komitmen Pagi akun ini belum dikirim sehingga masih terbuka untuk difoto).*
+### SESI 1A — FORM KOMITMEN PAGI TERBUKA (*Dio Bayu Bagaskara — `product@dutamedia.com` atau Nadia Kusuma — `qa@dutamedia.com` / `Password123!`*)
+*(Direkomendasikan memakai `product@dutamedia.com` untuk `WP-SS-04` karena sudah punya data `H-2 → H-1` yang langsung memunculkan kotak `Prioritas Kemarin Sore` dan panel `Draf Tugas Berlanjut dari Kemarin (2 Tersedia)`).*
 
 | Kode | Nama Berkas (`.png`) | Alamat Halaman | Buku Panduan | Petunjuk Pengambilan Gambar | Aturan Tombol | Selesai |
 |---|---|---|---|---|---|:---:|
-| **`WP-SS-04`** | `WP-SS-04-morning-form.png` | `/daily/morning` | Versi 1 (Bab 2.2) | Isi 2–3 slot komitmen dengan contoh nyata, pilih proyek & warna risiko (Hijau & Amber), pastikan tombol `Simpan Draf` & `Kirim Morning Commitment` terlihat. *(Opsional: boleh juga pakai akun `product@dutamedia.com` jika ingin sekaligus memperlihatkan panel `Draf Tugas Berlanjut dari Kemarin`)*. | **`[JANGAN KLIK KIRIM]`** | [ ] |
+| **`WP-SS-04`** | `WP-SS-04-morning-form.png` | `/daily/morning` | Versi 1 (Bab 2.2) | Login `product@dutamedia.com`: tampilkan kotak `Prioritas Kemarin Sore` + panel `Draf Tugas Berlanjut dari Kemarin`, isi 2–3 slot komitmen dengan proyek & warna risiko (Hijau & Amber), pastikan tombol `Simpan Draf` & `Kirim Morning Commitment` terlihat. | **`[JANGAN KLIK KIRIM]`** | [ ] |
 | **`WP-SS-05`** | `WP-SS-05-morning-zero-commitment.png` | `/daily/morning` | Versi 1 (Bab 2.2) | Centang kotak **`0 Komitmen Hari Ini`**, lalu isi kolom alasan minimal 10 karakter (mis. *Mengikuti pelatihan keamanan informasi seharian penuh bersama tim HRGA*). | **`[JANGAN KLIK KIRIM]`** | [ ] |
 
-*(Keluar / Logout dari akun Nadia Kusuma).*
+*(Keluar / Logout dari akun Sesi 1A).*
 
 ---
 
@@ -65,7 +65,7 @@ flowchart TD
 | **`WP-SS-06`** | `WP-SS-06-morning-locked.png` | `/daily/morning` | Versi 1 (Bab 2.2) | Fokus pada Kartu Ringkasan Komitmen Pagi yang sudah terkunci (`ON-TIME`/`LATE`), kotak `Prioritas Kemarin Sore`, dan tombol `Ajukan Koreksi Komitmen Pagi`. | Hanya Tampil | [ ] |
 | **`WP-SS-07`** | `WP-SS-07-additional-work.png` | `/daily/additional-work` | Versi 1 (Bab 2.3) | Isi contoh deskripsi tugas tambahan & pilih alasan `Penugasan Baru dari Atasan` + nama atasan (terlihat daftar tugas tambahan berjalan). | **`[JANGAN KLIK TAMBAH]`** | [ ] |
 | **`WP-SS-08`** | `WP-SS-08-eod-form.png` | `/daily/eod` | Versi 1 (Bab 2.4) | Pilih status capaian pada daftar tugas (`Selesai Penuh` / `Selesai Sebagian`), isi catatan progres, pilih `Status Akhir Hari`, dan isi `Prioritas Utama Besok`. | **`[JANGAN KLIK KIRIM DULU]`** | [ ] |
-| **`WP-SS-09`** | `WP-SS-09-eod-submitted.png` | `/daily/eod` | Versi 1 (Bab 2.4) | Lanjutan dari `WP-SS-08`: klik **`Kirim Evaluasi EOD`**, lalu foto Kartu Ringkasan Evaluasi Sore yang sudah terkunci. | **`[KLIK KIRIM]`** | [ ] |
+| **`WP-SS-09`** | `WP-SS-09-eod-submitted.png` | `/daily/eod` | Versi 1 (Bab 2.4) | Lanjutan dari `WP-SS-08`: klik **`Kirim Evaluasi EOD`**, lalu foto Kartu Ringkasan Evaluasi Sore yang sudah terkunci (terlihat tombol `Ajukan Koreksi EOD`). | **`[KLIK KIRIM]`** | [ ] |
 | **`WP-SS-10`** | `WP-SS-10-daily-history.png` | `/daily/history` | Versi 1 (Bab 2.5) | Tampilkan 4 kartu ringkasan atas, tombol `Unduh CSV`, dan klik 1 baris tanggal pada tabel agar rinciannya terbuka (*expanded*). | Hanya Tampil | [ ] |
 | **`WP-SS-11`** | `WP-SS-11-raise-blocker-form.png` | `/raise-blockers` | Versi 1 (Bab 3.2) | Isi Judul, pilih Kategori `Server & Rilis Sistem (INFRA)`, centang 2 dari 9 Dampak, pilih `High`, isi deskripsi, dan pastikan Panel **Jalur Penanganan Otomatis** (menunjuk *Fakhrizal Asshiddiq*) terlihat. | **`[JANGAN KLIK KIRIM DULU]`** | [ ] |
 | **`WP-SS-12`** | `WP-SS-12-raise-blocker-success.png` | `/raise-blockers` | Versi 1 (Bab 3.2) | Lanjutan dari `WP-SS-11`: klik **`Kirim Laporan Blocker`**, lalu foto Kartu Konfirmasi Tiket Terbit lengkap dengan ID Tiket & tombol `Lihat di Blocker Saya`. | **`[KLIK KIRIM]`** | [ ] |
@@ -102,7 +102,7 @@ flowchart TD
 | **`WP-SS-25`** | `WP-SS-25-leave-queue-modal.png` | `/leave/queue` | Versi 2 (Bab 4.1) | Klik tombol **`Setujui`** pada salah satu permohonan `Menunggu Review`, isi contoh catatan persetujuan di modal. | **`[JANGAN KLIK KONFIRMASI]`** | [ ] |
 | **`WP-SS-26`** | `WP-SS-26-corrections-review-diff.png` | `/corrections/review` | Versi 2 (Bab 4.2) | Tampilkan kartu permohonan koreksi dengan kotak perbandingan visual `Sebelum` vs `Diajukan` serta tombol `Setujui` & `Tolak`. | Hanya Tampil | [ ] |
 | **`WP-SS-27`** | `WP-SS-27-coaching-notes.png` | `/coaching` | Versi 2 (Bab 5.3) | Pilih anggota tim (`Aditya Nugroho`), pilih jenis `Bimbingan` & `Dibagikan ke Karyawan`, klik template cepat `Bimbingan 1-on-1`, berdampingan dengan riwayat di kanan. | **`[JANGAN KLIK SIMPAN]`** | [ ] |
-| **`WP-SS-28`** | `WP-SS-28-executive-reports.png` | `/reports` | Versi 2 (Bab 2.3) | Pilih periode `Bulan Ini`, tampilkan 4 kartu KPI, tabel performa divisi, filter `Status Karyawan`, dan tombol `Export Data (CSV)`. | Hanya Tampil | [ ] |
+| **`WP-SS-28`** | `WP-SS-28-executive-reports.png` | `/reports` | Versi 2 (Bab 2.3) | Pilih periode `Bulan Ini`, tampilkan 4 kartu KPI, tabel performa divisi, filter `Status Karyawan`, dan tombol `Unduh Laporan (CSV)`. | Hanya Tampil | [ ] |
 
 *(Keluar / Logout dari akun Arif Budiman).*
 
