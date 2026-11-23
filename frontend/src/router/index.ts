@@ -243,8 +243,11 @@ export const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
-  // Pulihkan sesi (cookie) sekali bila belum diketahui, untuk rute akar & guest-only
-  if (!authStore.isAuthenticated && (to.path === '/' || to.meta.guestOnly)) {
+  // Pulihkan sesi (cookie) sekali bila belum diketahui, untuk rute akar, guest-only, & halaman 404
+  if (
+    !authStore.isAuthenticated &&
+    (to.path === '/' || to.meta.guestOnly || to.meta.errorKind === 'not-found')
+  ) {
     await authStore.fetchMe();
   }
 

@@ -140,5 +140,28 @@ describe('ErrorPageView.vue (IMP-023 / TC-AUTH-005 - Role-Based Error Recovery R
     const btn = wrapper.find('[data-testid="error-home-btn"]');
     expect(btn.attributes('href')).toBe('/admin/organization');
   });
+
+  it('renders "Kembali ke Beranda" on 404 page when user is authenticated', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      id: 'usr-intern',
+      fullName: 'Raka Pratama',
+      email: 'intern.frontend@dutamedia.com',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    };
+
+    router.push('/not-found');
+    await router.isReady();
+
+    const wrapper = mount(ErrorPageView, {
+      global: { plugins: [router, pinia] },
+    });
+
+    expect(wrapper.text()).toContain('404 — Halaman Tidak Ditemukan');
+    const btn = wrapper.find('[data-testid="error-home-btn"]');
+    expect(btn.text()).toBe('Kembali ke Beranda');
+    expect(btn.attributes('href')).toBe('/daily/morning');
+  });
 });
 

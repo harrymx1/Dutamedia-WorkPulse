@@ -236,20 +236,15 @@ function isItemActive(to: string): boolean {
   padding: 20px 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   width: 232px;
-  overflow-y: auto;
+  overflow: hidden;
   box-sizing: border-box;
   z-index: 50;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.sidebar::-webkit-scrollbar {
-  display: none;
 }
 
 /* Brand Header */
@@ -311,6 +306,29 @@ function isItemActive(to: string): boolean {
   flex-direction: column;
   gap: 18px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+
+.nav-tree::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nav-tree::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-tree::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+}
+
+.nav-tree::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.32);
 }
 
 .nav-group {
@@ -485,6 +503,8 @@ function isItemActive(to: string): boolean {
     bottom: 0;
     width: 260px;
     height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
     z-index: 1000;

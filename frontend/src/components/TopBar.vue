@@ -200,6 +200,12 @@ const breadcrumbSegments = computed<string[]>(() => {
   box-shadow: 0 2px 6px rgba(0, 103, 77, 0.2);
 }
 
+@media (max-width: 992px) {
+  .topbar {
+    position: static;
+  }
+}
+
 @media (max-width: 640px) {
   .topbar {
     padding: 0 16px;

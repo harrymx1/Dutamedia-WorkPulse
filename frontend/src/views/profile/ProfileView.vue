@@ -970,6 +970,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
   padding: 12px 14px;
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 8px;
@@ -1288,6 +1289,14 @@ input:focus {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+}
+
+.device-channel-card .pill {
+  white-space: normal;
+  text-align: left;
+  max-width: 100%;
+  line-height: 1.3;
 }
 
 .device-channel-card-top {
@@ -1311,7 +1320,7 @@ input:focus {
 }
 
 /* Responsive Breakpoints */
-@media (max-width: 960px) {
+@media (max-width: 1180px) {
   .info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -142,5 +142,37 @@ describe('EnterpriseSidebar.vue (IMP-020, IMP-021)', () => {
     expect(groupTitles).not.toContain('Management');
     expect(wrapper.find('[data-testid="nav-group-management"]').exists()).toBe(false);
   });
+
+  it('keeps brand header above scrollable nav-tree and profile/logout card pinned at bottom even on longest CEO/HRGA menu', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      id: 'usr-ceo',
+      email: 'direktur@dutamedia.com',
+      fullName: 'Hendra Wijaya',
+      role: 'CEO_MANAGEMENT',
+      status: 'ACTIVE',
+      hasSubordinates: true,
+    };
+
+    const wrapper = mount(EnterpriseSidebar, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    const aside = wrapper.find('[data-testid="enterprise-sidebar"]');
+    const brand = aside.find('.brand');
+    const navTree = aside.find('.nav-tree');
+    const sideBottom = aside.find('.side-bottom');
+
+    expect(brand.exists()).toBe(true);
+    expect(navTree.exists()).toBe(true);
+    expect(sideBottom.exists()).toBe(true);
+    expect(navTree.find('.side-bottom').exists()).toBe(false);
+    expect(sideBottom.find('[data-testid="nav-logout"]').exists()).toBe(true);
+    expect(aside.findAll('.nav-link').length).toBeGreaterThanOrEqual(20);
+  });
 });
 

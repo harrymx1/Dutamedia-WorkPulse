@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { useAuthStore } from '../stores/auth';
 import {
   navForRole,
   navGroups,
@@ -232,5 +234,22 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     expect(links).not.toContain('/dashboard');
     expect(links).not.toContain('/leave/queue');
     expect(canAccessRoute('/dashboard', categoryOwnerCtx)).toBe(false);
+  });
+
+  it('memulihkan sesi auth saat mengakses rute 404 agar pengguna yang sudah masuk melihat tombol Kembali ke Beranda', async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const authStore = useAuthStore(pinia);
+    const fetchMeSpy = vi.spyOn(authStore, 'fetchMe').mockResolvedValue({
+      id: 'usr-1',
+      email: 'dev.frontend@dutamedia.com',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    } as any);
+
+    await router.push('/halaman-tidak-ditemukan-uji-404');
+    expect(fetchMeSpy).toHaveBeenCalledTimes(1);
+    fetchMeSpy.mockRestore();
   });
 });
