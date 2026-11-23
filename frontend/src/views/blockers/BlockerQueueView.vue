@@ -2852,6 +2852,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .form-group label {
@@ -2869,6 +2871,8 @@ h1 {
   font-size: 11.5px;
   font-weight: 600;
   color: #94A3B8;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .char-count.ok {
@@ -3167,6 +3171,16 @@ h1 {
   .detail-actions .btn-action {
     flex: 1 1 auto;
     justify-content: center;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-head,
+  .modal-body,
+  .modal-foot {
+    padding: 14px 16px;
   }
 }
 </style>

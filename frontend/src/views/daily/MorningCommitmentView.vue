@@ -2722,6 +2722,9 @@ select.input-control {
   top: calc(100% + 6px);
   width: 340px;
   max-width: 90vw;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--color-surface, #ffffff);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);

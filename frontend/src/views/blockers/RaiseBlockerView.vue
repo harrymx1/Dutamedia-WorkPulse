@@ -2464,6 +2464,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   background: #FAFCFB;
 }
 
@@ -2492,6 +2494,8 @@ h1 {
 .pill-brand {
   background: #E6F4EE;
   color: #00674D;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pill-sla {
@@ -2562,6 +2566,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 6px;
 }
 
@@ -2584,6 +2590,8 @@ label {
 .char-counter {
   font-size: 11.5px;
   color: #66736E;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .char-valid {
@@ -3940,12 +3948,98 @@ textarea:focus {
   cursor: pointer;
 }
 
+.char-count {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.footer-actions {
+  flex-shrink: 0;
+}
+
+.btn-secondary,
+.btn-primary {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .severity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .main-content {
+    padding: 18px 16px 120px;
+  }
+
   .form-grid-2,
-  .severity-grid,
   .authority-grid,
   .impact-checkbox-grid {
     grid-template-columns: 1fr;
+  }
+
+  .severity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .sticky-footer {
+    left: 0;
+    padding: 8px 14px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .footer-content {
+    gap: 6px;
+  }
+
+  .footer-hint {
+    font-size: 11.5px;
+    line-height: 1.3;
+  }
+
+  .footer-actions {
+    grid-template-columns: 1fr 1.15fr;
+    gap: 8px;
+  }
+
+  .footer-actions .btn-secondary,
+  .footer-actions .btn-primary {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .severity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-tabs {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .view-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-head,
+  .modal-body,
+  .modal-foot {
+    padding: 14px 16px;
   }
 }
 </style>

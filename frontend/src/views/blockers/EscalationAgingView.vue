@@ -447,7 +447,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 16px;
   margin-bottom: 24px;
+}
+
+.heading-side {
+  flex-shrink: 0;
 }
 
 .eyebrow {
@@ -471,6 +476,8 @@ h1 {
 }
 
 .eval-pill {
+  display: inline-block;
+  white-space: nowrap;
   font-size: 11.5px;
   font-weight: 700;
   color: #00674D;
@@ -691,6 +698,19 @@ h1 {
 .sev-badge.medium { background: #FEF3C7; color: #92400E; }
 .sev-badge.low { background: #EFF5F2; color: #5C6E68; }
 
+.col-desc {
+  min-width: 260px;
+}
+
+.col-reporter,
+.col-owner {
+  min-width: 130px;
+}
+
+.col-elapsed {
+  white-space: nowrap;
+}
+
 .sla-pill {
   display: inline-flex;
   align-items: center;
@@ -699,6 +719,7 @@ h1 {
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .sla-pill.breached {
@@ -729,6 +750,7 @@ h1 {
   font-weight: 700;
   font-size: 12px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .btn-inspect:hover {
@@ -790,7 +812,7 @@ h1 {
   border: 1px solid #FCA5A5;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .metrics-grid {
     grid-template-columns: 1fr 1fr;
   }
