@@ -536,5 +536,118 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
         }),
       ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
     });
+
+    it('uses Indonesian scope labels in material correction notifications (not raw MORNING_COMMITMENT/EOD_OUTCOME)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-mat-id',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 2,
+        taskText: 'Refactor layanan laporan',
+        outcome: CommitmentOutcome.PARTIALLY_COMPLETED,
+        dailyRecord: { userId: 'usr-1', eodSubmittedAt: new Date('2026-11-22T10:00:00.000Z') },
+      });
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        directManagerId: 'mgr-1',
+        function: 'Engineering',
+        role: 'EMPLOYEE',
+      });
+      mockPrisma.temporaryReviewerAssignment = {
+        findMany: vi.fn().mockResolvedValue([{ delegateUserId: 'del-1' }]),
+      };
+      mockPrisma.correctionRequest.create.mockResolvedValue({
+        id: 'cr-mat-1',
+        status: CorrectionStatus.PENDING,
+      });
+
+      await service.createCorrectionRequest('usr-1', {
+        targetCommitmentId: 'com-mat-id',
+        scopeType: CorrectionScopeType.EOD_OUTCOME,
+        classification: CorrectionClassification.MATERIAL,
+        reason: 'Perubahan status hasil capaian sore berdasarkan bukti PR.',
+        requestedChange: { outcome: 'DONE' },
+      });
+
+      expect(mockPrisma.notification.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            title: 'Permohonan Koreksi Evaluasi Sore Material',
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            title: 'Permohonan Koreksi Evaluasi Sore Material — Delegasi Reviewer',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('Page 22 Review Queue guards & trimmed reviewNote validation', () => {
+    it('denies getCorrectionRequests(mode=review) for ordinary EMPLOYEE without temporary reviewer delegation (403)', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+      });
+      mockPrisma.temporaryReviewerAssignment = {
+        findFirst: vi.fn().mockResolvedValue(null),
+      };
+
+      await expect(
+        service.getCorrectionRequests({ mode: 'review' }, 'usr-emp'),
+      ).rejects.toMatchObject({ status: 403, code: 'AUTH_FORBIDDEN_ROLE' });
+    });
+
+    it('allows getCorrectionRequests(mode=review) for EMPLOYEE with active temporary reviewer delegation and exposes role/function', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+      });
+      mockPrisma.temporaryReviewerAssignment = {
+        findFirst: vi.fn().mockResolvedValue({ id: 'del-active-1' }),
+      };
+      mockPrisma.correctionRequest.findMany.mockResolvedValue([
+        {
+          id: 'cr-sub-1',
+          requestedByUserId: 'usr-sub-1',
+          requestedByUser: {
+            id: 'usr-sub-1',
+            fullName: 'Aditya Nugroho',
+            email: 'dev.frontend@dutamedia.com',
+            orgAssignments: [
+              {
+                role: 'EMPLOYEE',
+                jobTitle: 'Frontend Developer',
+                function: 'Engineering',
+                employmentStatus: 'PERMANENT',
+              },
+            ],
+          },
+        },
+      ]);
+      mockScopeResolver.canAccessUser.mockResolvedValue(true);
+
+      const list = await service.getCorrectionRequests({ mode: 'review' }, 'usr-delegate');
+      expect(list).toHaveLength(1);
+      expect(list[0].requestedByUser.function).toBe('Engineering');
+      expect(list[0].requestedByUser.role).toBe('EMPLOYEE');
+    });
+
+    it('rejects whitespace-only reviewNote in reviewCorrectionRequest (400 VALIDATION_FAILED)', async () => {
+      mockPrisma.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-ws-1',
+        requestedByUserId: 'usr-1',
+        status: CorrectionStatus.PENDING,
+        targetCommitment: { sequenceNo: 1 },
+      });
+
+      await expect(
+        service.reviewCorrectionRequest('mgr-1', 'cr-ws-1', {
+          decision: 'REJECT',
+          reviewNote: '     ',
+        }),
+      ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
+    });
   });
 });

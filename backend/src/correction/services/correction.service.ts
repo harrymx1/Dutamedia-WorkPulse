@@ -38,6 +38,13 @@ function mapRequestedContinuation(rawContinuation?: string): ContinuationStatus 
   return undefined;
 }
 
+function getCorrectionScopeLabel(scopeType?: CorrectionScopeType | string): string {
+  if (scopeType === CorrectionScopeType.EOD_OUTCOME || scopeType === 'EOD_OUTCOME') {
+    return 'Koreksi Evaluasi Sore';
+  }
+  return 'Koreksi Komitmen Pagi';
+}
+
 @Injectable()
 export class CorrectionService {
   constructor(
@@ -362,13 +369,15 @@ export class CorrectionService {
         orderBy: { effectiveDate: 'desc' },
       });
 
+      const scopeLabel = getCorrectionScopeLabel(dto.scopeType);
+
       if (assignment?.directManagerId) {
         await tx.notification.create({
           data: {
             recipientUserId: assignment.directManagerId,
             triggerType: 'CORRECTION_REQUESTED',
             channel: NotificationChannel.IN_APP_CENTER,
-            title: `Permohonan Koreksi Material (${dto.scopeType})`,
+            title: `Permohonan ${scopeLabel} Material`,
             message: `Karyawan mengajukan koreksi material pada komitmen #${commitment.sequenceNo}. Jendela keberatan aktif 24 jam.`,
             actionUrl: '/corrections/review',
             relatedEntityType: 'correction_requests',
@@ -405,7 +414,7 @@ export class CorrectionService {
                 recipientUserId: del.delegateUserId,
                 triggerType: 'CORRECTION_REQUESTED',
                 channel: NotificationChannel.IN_APP_CENTER,
-                title: `Permohonan Koreksi Material (${dto.scopeType}) — Delegasi Reviewer`,
+                title: `Permohonan ${scopeLabel} Material — Delegasi Reviewer`,
                 message: `Karyawan mengajukan koreksi material pada komitmen #${commitment.sequenceNo}. Jendela keberatan aktif 24 jam.`,
                 actionUrl: '/corrections/review',
                 relatedEntityType: 'correction_requests',
@@ -431,12 +440,60 @@ export class CorrectionService {
     },
     reviewerUserId?: string,
   ) {
+    const todayDateOnly = toJakartaDateOnly(this.clockService.now());
+
+    if (
+      filters?.mode === 'review' &&
+      reviewerUserId &&
+      this.prisma.organizationalAssignment?.findFirst
+    ) {
+      const callerOrg = await this.prisma.organizationalAssignment.findFirst({
+        where: {
+          userId: reviewerUserId,
+          effectiveDate: { lte: todayDateOnly },
+          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+        },
+        orderBy: { effectiveDate: 'desc' },
+        select: { role: true },
+      });
+
+      const CORRECTION_REVIEW_ROLES: CanonicalRole[] = [
+        CanonicalRole.HEAD,
+        CanonicalRole.CEO_MANAGEMENT,
+        CanonicalRole.HRGA,
+        CanonicalRole.SYSTEM_ADMIN,
+        CanonicalRole.SUPERVISOR,
+      ];
+
+      if (callerOrg && !CORRECTION_REVIEW_ROLES.includes(callerOrg.role)) {
+        const activeDelegation = this.prisma.temporaryReviewerAssignment?.findFirst
+          ? await this.prisma.temporaryReviewerAssignment.findFirst({
+              where: {
+                delegateUserId: reviewerUserId,
+                effectiveDate: { lte: todayDateOnly },
+                expiryDate: { gte: todayDateOnly },
+              },
+              select: { id: true },
+            })
+          : null;
+
+        if (!activeDelegation) {
+          throw new AppException({
+            code: ErrorCode.AUTH_FORBIDDEN_ROLE,
+            message:
+              'Akses ditolak. Halaman Review Koreksi hanya dapat diakses oleh pejabat berwenang atau Reviewer Sementara aktif.',
+            statusCode: HttpStatus.FORBIDDEN,
+          });
+        }
+      }
+    }
+
     const effectiveRequesterId =
       filters?.mode === 'mine' && reviewerUserId
         ? reviewerUserId
         : filters?.requesterId;
 
-    const list = await this.prisma.correctionRequest.findMany({
+    const rawList = await this.prisma.correctionRequest.findMany({
       where: {
         ...(filters?.status && { status: filters.status }),
         ...(effectiveRequesterId && { requestedByUserId: effectiveRequesterId }),
@@ -445,10 +502,47 @@ export class CorrectionService {
         targetCommitment: {
           include: { dailyRecord: true },
         },
-        requestedByUser: { select: { id: true, fullName: true, email: true } },
+        requestedByUser: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            orgAssignments: {
+              where: {
+                effectiveDate: { lte: todayDateOnly },
+                OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+              },
+              orderBy: { effectiveDate: 'desc' },
+              take: 1,
+              select: {
+                role: true,
+                jobTitle: true,
+                function: true,
+                employmentStatus: true,
+              },
+            },
+          },
+        },
         reviewedByUser: { select: { id: true, fullName: true, email: true } },
       },
       orderBy: [{ createdAt: 'desc' }],
+    });
+
+    const list = (rawList || []).map((item: any) => {
+      const activeOrg = item.requestedByUser?.orgAssignments?.[0];
+      if (!item.requestedByUser) return item;
+      return {
+        ...item,
+        requestedByUser: {
+          id: item.requestedByUser.id,
+          fullName: item.requestedByUser.fullName,
+          email: item.requestedByUser.email,
+          role: activeOrg?.role || null,
+          jobTitle: activeOrg?.jobTitle || null,
+          function: activeOrg?.function || null,
+          employmentStatus: activeOrg?.employmentStatus || null,
+        },
+      };
     });
 
     if (!reviewerUserId) {
@@ -531,6 +625,15 @@ export class CorrectionService {
       });
     }
 
+    const trimmedNote = dto.reviewNote?.trim() || '';
+    if (trimmedNote.length < 5) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Catatan review peninjau wajib diisi minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const now = this.clockService.now();
     const targetActionUrl =
       req.scopeType === CorrectionScopeType.EOD_OUTCOME
@@ -555,7 +658,7 @@ export class CorrectionService {
           data: {
             status: CorrectionStatus.APPROVED,
             reviewedByUserId: reviewerUserId,
-            reviewNote: dto.reviewNote.trim(),
+            reviewNote: trimmedNote,
             reviewedAt: now,
             appliedAt: now,
           },
@@ -595,7 +698,7 @@ export class CorrectionService {
           data: {
             status: CorrectionStatus.REJECTED,
             reviewedByUserId: reviewerUserId,
-            reviewNote: dto.reviewNote.trim(),
+            reviewNote: trimmedNote,
             reviewedAt: now,
           },
         });
@@ -607,7 +710,7 @@ export class CorrectionService {
             triggerType: 'CORRECTION_REJECTED',
             channel: NotificationChannel.IN_APP_CENTER,
             title: 'Permohonan Koreksi Ditolak',
-            message: `Permohonan koreksi komitmen #${req.targetCommitment.sequenceNo} ditolak: "${dto.reviewNote.trim()}".`,
+            message: `Permohonan koreksi komitmen #${req.targetCommitment.sequenceNo} ditolak: "${trimmedNote}".`,
             actionUrl: targetActionUrl,
             relatedEntityType: 'correction_requests',
             relatedEntityId: req.id,
