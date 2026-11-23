@@ -308,6 +308,7 @@ function isItemActive(to: string): boolean {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   padding-right: 2px;
   scrollbar-width: thin;
@@ -334,6 +335,7 @@ function isItemActive(to: string): boolean {
 .nav-group {
   display: grid;
   gap: 3px;
+  min-width: 0;
 }
 
 .nav-label {
@@ -350,6 +352,7 @@ function isItemActive(to: string): boolean {
   display: flex;
   gap: 10px;
   align-items: center;
+  min-width: 0;
   padding: 8px 10px;
   border-radius: 8px;
   color: var(--color-text-secondary, #5C6E68);

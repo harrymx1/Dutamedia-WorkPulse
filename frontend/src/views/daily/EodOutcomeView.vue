@@ -1873,6 +1873,12 @@ textarea.input-control {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+}
+
+.post-submit-panel .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .post-submit-header {
@@ -2317,6 +2323,12 @@ textarea.input-control {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+  }
+
+  .post-submit-panel .btn {
+    white-space: normal;
+    justify-content: center;
+    text-align: center;
   }
 
   .mismatch-actions {

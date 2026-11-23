@@ -1617,6 +1617,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .context-label {
@@ -2288,9 +2290,8 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.35;
 }
 
 .input-control {
@@ -2822,5 +2823,107 @@ select.input-control {
 .badge-mini.in-prog {
   background: var(--color-status-green-bg);
   color: var(--color-status-green-fg);
+}
+
+.risk-card {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .workflow-bar {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .step-items {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+
+  .step-item {
+    font-size: 12px;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .workflow-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .main-content {
+    padding: 20px 16px 48px;
+    gap: 16px;
+  }
+
+  .panel {
+    min-width: 0;
+  }
+
+  .panel-head {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  .context-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .next-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toast-popup {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .slot-card {
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .risk-options {
+    grid-template-columns: 1fr;
+  }
+
+  .input-picker-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-picker-group input,
+  .input-picker-group .input-control {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .btn-picker-trigger {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .picker-dropdown-menu {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 </style>

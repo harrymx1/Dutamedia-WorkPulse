@@ -958,6 +958,24 @@ onMounted(() => {
   border: 1px solid var(--color-status-red-border);
 }
 
+.page-heading .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.history-table td.mono,
+.expand-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1120px) {
+  .history-table th,
+  .history-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 768px) {
   .main-content {
     padding: 20px 16px 48px;
@@ -1015,6 +1033,21 @@ onMounted(() => {
   }
 }
 
+@media (max-width: 640px) {
+  .history-table .detail-row td {
+    padding: 12px 0;
+  }
+
+  .detail-content {
+    position: sticky;
+    left: 12px;
+    width: calc(100vw - 58px);
+    max-width: calc(100vw - 58px);
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+}
+
 @media (max-width: 480px) {
   .page-heading h1 {
     font-size: 20px;
@@ -1031,10 +1064,6 @@ onMounted(() => {
   .history-table th,
   .history-table td {
     padding: 10px 12px;
-  }
-
-  .detail-row td {
-    padding: 12px;
   }
 }
 </style>
