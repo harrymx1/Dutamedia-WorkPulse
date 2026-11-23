@@ -478,7 +478,7 @@ async function handleLogout() {
             <span>{{ errorMessage }}</span>
           </div>
 
-          <form style="max-width: 560px;" novalidate @submit.prevent="handleChangePassword">
+          <form style="max-width: 560px; position: relative;" novalidate @submit.prevent="handleChangePassword">
             <input
               type="text"
               name="username"
@@ -728,12 +728,16 @@ async function handleLogout() {
 
 .sr-only {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 1px;
   height: 1px;
+  max-width: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -1024,7 +1028,7 @@ h1 {
   position: relative;
 }
 
-input[type="text"],
+input[type="text"]:not(.sr-only),
 input[type="password"] {
   width: 100%;
   border: 1px solid var(--color-border-strong, #A9C7BC);
