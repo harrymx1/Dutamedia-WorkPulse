@@ -796,7 +796,32 @@ textarea:focus {
 .toast-popup.success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 .toast-popup.error { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
 
-@media (max-width: 900px) {
+.col-user {
+  min-width: 190px;
+}
+
+.col-date,
+.col-stage,
+.col-status,
+.col-action {
+  white-space: nowrap;
+}
+
+.col-note {
+  min-width: 260px;
+}
+
+.stage-badge,
+.status-pill {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.btn-action {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
   .metrics-grid { grid-template-columns: 1fr 1fr; }
 }
 

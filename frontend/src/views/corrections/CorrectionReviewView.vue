@@ -1459,7 +1459,32 @@ textarea {
 .toast-popup.success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 .toast-popup.error { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
 
-@media (max-width: 900px) {
+.col-user {
+  min-width: 200px;
+}
+
+.col-scope {
+  min-width: 210px;
+}
+
+.col-diff {
+  min-width: 270px;
+}
+
+.diff-list {
+  min-width: 245px;
+  max-width: 300px;
+}
+
+.col-reason {
+  min-width: 175px;
+}
+
+.scope-pill {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
   .metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

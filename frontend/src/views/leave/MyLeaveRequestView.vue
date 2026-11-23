@@ -1536,6 +1536,22 @@ h1 {
   cursor: not-allowed;
 }
 
+.filters {
+  flex-wrap: wrap;
+}
+
+.filter-btn,
+.pill {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1180px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .main-content {
     padding: 16px 14px 36px;
