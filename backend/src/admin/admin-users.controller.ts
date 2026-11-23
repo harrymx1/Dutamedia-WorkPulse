@@ -12,13 +12,13 @@ import {
 } from '@nestjs/common';
 import { AdminUsersService } from './admin-users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserStatusDto } from './dto/user-status.dto';
+import { InvitationActionDto, UpdateUserStatusDto } from './dto/user-status.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CsrfGuard } from '../auth/guards/csrf.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { CanonicalRole, EmploymentStatus, UserStatus } from '@prisma/client';
+import { CanonicalFunction, CanonicalRole, EmploymentStatus } from '@prisma/client';
 
 @Controller('api/v1/admin/users')
 @UseGuards(AuthGuard, CsrfGuard, RolesGuard)
@@ -31,7 +31,9 @@ export class AdminUsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
-    @Query('status') status?: UserStatus,
+    @Query('status') status?: string,
+    @Query('role') role?: CanonicalRole,
+    @Query('function') fn?: CanonicalFunction,
     @Query('employmentStatus') employmentStatus?: EmploymentStatus,
   ) {
     return await this.adminUsersService.listUsers({
@@ -39,6 +41,8 @@ export class AdminUsersController {
       limit: limit ? Number(limit) : undefined,
       search,
       status,
+      role,
+      function: fn,
       employmentStatus,
     });
   }
@@ -56,18 +60,20 @@ export class AdminUsersController {
   @HttpCode(HttpStatus.OK)
   async resendInvitation(
     @Param('userId') userId: string,
+    @Body() dto: InvitationActionDto | undefined,
     @CurrentUser('id') adminUserId: string,
   ) {
-    return await this.adminUsersService.resendInvitation(userId, adminUserId);
+    return await this.adminUsersService.resendInvitation(userId, adminUserId, dto?.reason);
   }
 
   @Post(':userId/revoke-invitation')
   @HttpCode(HttpStatus.OK)
   async revokeInvitation(
     @Param('userId') userId: string,
+    @Body() dto: InvitationActionDto | undefined,
     @CurrentUser('id') adminUserId: string,
   ) {
-    return await this.adminUsersService.revokeInvitation(userId, adminUserId);
+    return await this.adminUsersService.revokeInvitation(userId, adminUserId, dto?.reason);
   }
 
   @Patch(':userId/status')

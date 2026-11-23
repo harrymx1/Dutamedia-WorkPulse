@@ -3,6 +3,6 @@ import AdminUsersView from './AdminUsersView.vue';
 </script>
 
 <template>
-  <AdminUsersView />
+  <AdminUsersView mode="invitations" />
 </template>
 
