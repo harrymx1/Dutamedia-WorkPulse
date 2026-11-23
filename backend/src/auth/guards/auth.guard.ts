@@ -13,6 +13,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import { ensurePolicyOwnersBaselineSynced } from '../../policy/policy-owner-sync.util';
 import { resolveOwnedBlockerCategories } from '../utils/category-owner.util';
+import { resolveUserProfileExtras } from '../utils/profile-context.util';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -145,6 +146,13 @@ export class AuthGuard implements CanActivate {
     );
 
     const ownedBlockerCategories = await resolveOwnedBlockerCategories(this.prisma, session.user.id, today);
+    const resolvedRole = activeOrg?.role || payload.role || 'EMPLOYEE';
+    const { activeExemption, reminderSchedule } = await resolveUserProfileExtras(
+      this.prisma,
+      session.user.id,
+      resolvedRole,
+      today,
+    );
 
     request.user = {
       ...payload,
@@ -152,10 +160,13 @@ export class AuthGuard implements CanActivate {
       email: session.user.email,
       fullName: session.user.fullName,
       status: session.user.status,
-      role: activeOrg?.role || payload.role || 'EMPLOYEE',
+      role: resolvedRole,
       jobTitle: activeOrg?.jobTitle || null,
       function: activeOrg?.function || null,
       employmentStatus: activeOrg?.employmentStatus || 'PERMANENT',
+      assignmentEffectiveDate: activeOrg?.effectiveDate
+        ? new Date(activeOrg.effectiveDate).toISOString().split('T')[0]
+        : null,
       assignmentEndDate: activeOrg?.endDate
         ? new Date(activeOrg.endDate).toISOString().split('T')[0]
         : null,
@@ -167,6 +178,8 @@ export class AuthGuard implements CanActivate {
       ownedPolicyCategories,
       isCategoryOwner: ownedBlockerCategories.length > 0,
       ownedBlockerCategories,
+      activeExemption,
+      reminderSchedule,
     };
     request.sessionId = session.id;
 

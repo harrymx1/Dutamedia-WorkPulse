@@ -1,4 +1,4 @@
-import { IsNotEmpty, MinLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, MinLength } from 'class-validator';
 
 export class ChangePasswordDto {
   @IsNotEmpty({ message: 'Kata sandi saat ini wajib diisi' })
@@ -7,5 +7,9 @@ export class ChangePasswordDto {
   @IsNotEmpty({ message: 'Kata sandi baru wajib diisi' })
   @MinLength(8, { message: 'Kata sandi baru minimal terdiri dari 8 karakter' })
   newPassword!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  revokeOtherSessions?: boolean;
 }
 

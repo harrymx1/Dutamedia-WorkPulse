@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
 import ProfileView from './ProfileView.vue';
 import { useAuthStore } from '../../stores/auth';
 
-describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 & IMP-018, IMP-019, IMP-020)', () => {
+describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO + Audit #24)', () => {
   let router: any;
   let pinia: any;
 
@@ -14,11 +14,24 @@ describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 &
     setActivePinia(pinia);
     const authStore = useAuthStore(pinia);
     authStore.user = {
-      id: 'usr-dev-1',
+      id: '299830d6-3d3a-4c10-b1e4-ff7d89d13ad4',
       fullName: 'Aditya Nugroho',
       email: 'dev.frontend@dutamedia.com',
       role: 'EMPLOYEE',
       status: 'ACTIVE',
+      jobTitle: 'Frontend Engineer',
+      function: 'Engineering',
+      employmentStatus: 'PERMANENT',
+      assignmentEffectiveDate: '2026-02-10',
+      managerName: 'Arif Budiman',
+      activeExemption: null,
+      reminderSchedule: {
+        leadMinutes: 60,
+        morningReminderTime: '08:00',
+        eodReminderTime: '16:00',
+        morningOnTimeCutoff: '09:00',
+        eodOnTimeCutoff: '17:00',
+      },
     };
 
     router = createRouter({
@@ -39,36 +52,46 @@ describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 &
       },
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await flushPromises();
 
-    // Breadcrumb: Profil Akun
     const topbar = wrapper.find('[data-testid="global-topbar"]');
     expect(topbar.exists()).toBe(true);
     expect(topbar.text()).toContain('Profil Akun');
 
-    // Negative assertions: NO WP badge, NO WorkPulse text on topbar
     expect(topbar.find('.brand-badge').exists()).toBe(false);
     expect(topbar.find('.brand-name').exists()).toBe(false);
 
-    // Right items: notifications bell & avatar
     expect(topbar.find('[data-testid="topbar-notifications"]').exists()).toBe(true);
     expect(topbar.find('[data-testid="topbar-profile-avatar"]').exists()).toBe(true);
     expect(topbar.find('[data-testid="topbar-profile-avatar"]').text()).toBe('AN');
   });
 
-  it('renders large avatar with 2-char initials consistent with sidebar (IMP-020)', async () => {
+  it('formats UUID into readable compact #USR code and displays real effective date and active exemption', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      ...authStore.user!,
+      activeExemption: {
+        type: 'BOUNDED',
+        category: 'Dinas Luar Kota',
+        startDate: '2026-11-20',
+        endDate: '2026-11-24',
+      },
+    };
+
     const wrapper = mount(ProfileView, {
       global: {
         plugins: [router, pinia],
       },
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await flushPromises();
 
-    const largeAvatar = wrapper.find('[data-testid="profile-hero-avatar"]');
-    expect(largeAvatar.exists()).toBe(true);
-    // Aditya Nugroho -> AN
-    expect(largeAvatar.text()).toBe('AN');
+    expect(wrapper.find('[data-testid="profile-hero-avatar"]').text()).toBe('AN');
+    expect(wrapper.find('[data-testid="profile-hero-id"]').text()).toBe('#USR-299830D6');
+    expect(wrapper.find('[data-testid="info-nik"]').text()).toBe('#USR-299830D6');
+    expect(wrapper.find('[data-testid="info-effdate"]').text()).toBe('10 Feb 2026');
+    expect(wrapper.find('[data-testid="info-role"]').text()).toBe('Karyawan');
+    expect(wrapper.find('[data-testid="info-exemption"]').text()).toContain('Dispensasi Aktif: Dinas Luar Kota');
   });
 
   it('separates full name and job title/role without parentheses in user profile view (IMP-021)', async () => {
@@ -78,33 +101,22 @@ describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 &
       },
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await flushPromises();
 
-    // Full name in Hero card is its own element
     const heroName = wrapper.find('[data-testid="profile-hero-name"]');
-    expect(heroName.exists()).toBe(true);
     expect(heroName.text()).toBe('Aditya Nugroho');
 
-    // Job title and function in meta strip are separate elements
     const heroMeta = wrapper.find('[data-testid="profile-hero-meta"]');
-    expect(heroMeta.exists()).toBe(true);
     expect(heroMeta.find('.hero-job-title').text()).toBe('Frontend Engineer');
     expect(heroMeta.find('.hero-department').text()).toBe('Engineering');
 
-    // Negative assertion: NO parentheses concatenation like "Aditya Nugroho (Frontend Engineer)" or "Aditya Nugroho (EMPLOYEE)"
     const heroCardText = wrapper.find('[data-testid="profile-hero-card"]').text();
     expect(heroCardText).not.toContain('Aditya Nugroho (Frontend Engineer)');
     expect(heroCardText).not.toContain('Aditya Nugroho (EMPLOYEE)');
 
-    // In Section 1, Nama Lengkap and Jabatan Fungsional are distinct grid items
-    const infoName = wrapper.find('[data-testid="info-fullname"]');
-    const infoJob = wrapper.find('[data-testid="info-jobtitle"]');
-    const infoManager = wrapper.find('[data-testid="info-manager"]');
-    expect(infoName.text()).toBe('Aditya Nugroho');
-    expect(infoJob.text()).toBe('Frontend Engineer');
-    expect(infoManager.text()).toBe('Bambang Pratama');
-    expect(infoName.text()).not.toContain('(');
-    expect(infoManager.text()).not.toContain('(');
+    expect(wrapper.find('[data-testid="info-fullname"]').text()).toBe('Aditya Nugroho');
+    expect(wrapper.find('[data-testid="info-jobtitle"]').text()).toBe('Frontend Engineer');
+    expect(wrapper.find('[data-testid="info-manager"]').text()).toBe('Arif Budiman');
   });
 
   it('sanitizes legacy parenthesized role strings from backend fullName (IMP-021)', async () => {
@@ -123,69 +135,104 @@ describe('ProfileView.vue (Cycle 2 Group 3: SOL-PROF-LAYO — IMP-021, IMP-022 &
       },
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await flushPromises();
 
-    // Sanitized full name: "Aditya Nugroho"
     expect(wrapper.find('[data-testid="profile-hero-name"]').text()).toBe('Aditya Nugroho');
     expect(wrapper.find('[data-testid="info-fullname"]').text()).toBe('Aditya Nugroho');
-
-    // Avatar initials: "AN" (not "AE")
     expect(wrapper.find('[data-testid="profile-hero-avatar"]').text()).toBe('AN');
   });
 
-  it('renders the 3 canonical sections of Prototype 24 and eliminates prototype simulation bar (IMP-022)', async () => {
+  it('renders the 3 Indonesian sections without prompt-hint box, technical cookie jargon, or prototype sim bar', async () => {
+    const authStore = useAuthStore(pinia);
+    authStore.user = {
+      ...authStore.user!,
+      reminderSchedule: {
+        leadMinutes: 60,
+        morningReminderTime: '22:58',
+        eodReminderTime: '16:30',
+        morningOnTimeCutoff: '23:58',
+        eodOnTimeCutoff: '17:30',
+      },
+    };
+
     const wrapper = mount(ProfileView, {
       global: {
         plugins: [router, pinia],
       },
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await flushPromises();
 
-    // Page Heading & Eyebrow
     expect(wrapper.find('.eyebrow').text()).toBe('Identitas & Konteks Akun');
     expect(wrapper.find('[data-testid="profile-page-title"]').text()).toBe(
       'Profil Pengguna & Keamanan Akun',
     );
+    expect(wrapper.text()).not.toContain('pratinjau panduan komitmen');
+    expect(wrapper.text()).not.toContain('HttpOnly; Secure; SameSite=Strict');
+    expect(wrapper.text()).toContain('Sesi masuk Anda terlindungi secara otomatis pada peramban ini.');
 
-    // Section 1: Kartu Identitas & Penugasan Efektif (Read-Only)
     const panel1 = wrapper.find('[data-testid="panel-identity"]');
-    expect(panel1.exists()).toBe(true);
-    expect(panel1.text()).toContain('1. Kartu Identitas & Penugasan Efektif (Read-Only)');
-    expect(panel1.text()).toContain('Master Data Organisasi (Read-Only)');
-    expect(panel1.find('[data-testid="info-fullname"]').text()).toBe('Aditya Nugroho');
-    expect(panel1.find('[data-testid="info-email"]').text()).toBe('dev.frontend@dutamedia.com');
-    // Negative assertion: Prompt hint preview box is eliminated from profile view (Clean UX)
+    expect(panel1.text()).toContain('1. Kartu Identitas & Penugasan Aktif');
     expect(panel1.find('[data-testid="prompt-hint-box"]').exists()).toBe(false);
-    expect(panel1.find('[data-testid="profile-governance-note"]').exists()).toBe(true);
-    expect(panel1.find('[data-testid="profile-governance-note"]').text()).toContain('Seluruh data identitas');
 
-    // Section 2: Keamanan & Pembaruan Kata Sandi Mandiri
     const panel2 = wrapper.find('[data-testid="panel-security"]');
-    expect(panel2.exists()).toBe(true);
-    expect(panel2.text()).toContain('Keamanan & Kata Sandi');
-    expect(panel2.text()).toContain('Pembaruan Mandiri');
-    expect(panel2.find('#curr-pwd').exists()).toBe(true);
-    expect(panel2.find('#new-pwd').exists()).toBe(true);
-    expect(panel2.find('#confirm-pwd').exists()).toBe(true);
-    expect(panel2.find('.pwd-meter-bars').exists()).toBe(true);
-    expect(panel2.find('[data-testid="pwd-strength-label"]').exists()).toBe(true);
-    expect(panel2.find('[data-testid="crit-length"]').exists()).toBe(true);
-    expect(panel2.find('[data-testid="crit-alnum"]').exists()).toBe(true);
-    expect(panel2.find('[data-testid="crit-diff"]').exists()).toBe(true);
-    expect(panel2.find('[data-testid="btn-save-pwd"]').exists()).toBe(true);
+    expect(panel2.find('input[name="username"]').exists()).toBe(true);
+    expect(panel2.find('#new-pwd').attributes('placeholder')).toBe('Min. 8 karakter (huruf & angka)');
 
-    // Section 3: Ringkasan Kanal Notifikasi Perangkat Ini
     const panel3 = wrapper.find('[data-testid="panel-notifications"]');
-    expect(panel3.exists()).toBe(true);
-    expect(panel3.text()).toContain('3. Ringkasan Kanal Notifikasi Perangkat Ini');
-    expect(panel3.find('[data-testid="card-push-pill"]').exists()).toBe(true);
-    expect(panel3.text()).toContain('60 Menit Sebelum Deadline');
-    expect(panel3.text()).toContain('Web Center & Email Resmi');
-    expect(panel3.find('[data-testid="btn-goto-notifications"]').exists()).toBe(true);
+    expect(panel3.find('[data-testid="card-reminder-desc"]').text()).toContain('22:58 WIB');
+    expect(panel3.find('[data-testid="card-reminder-desc"]').text()).toContain('16:30 WIB');
+    expect(panel3.text()).not.toContain('Unregister');
+    expect(panel3.text()).not.toContain('[Mode Simulasi Prototipe]');
+  });
 
-    // Negative Assertion: Prototype dummy simulation bar MUST be excluded (IMP-022)
-    expect(wrapper.find('.sim-bar').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain('[Mode Simulasi Prototipe]');
+  it('blocks identical new password client-side, clears error on input, and passes revokeOtherSessions checkbox on submit', async () => {
+    const authStore = useAuthStore(pinia);
+    const changeSpy = vi
+      .spyOn(authStore, 'changePassword')
+      .mockResolvedValue('Kata sandi berhasil diperbarui dan seluruh sesi aktif di perangkat/peramban lain telah diakhiri.');
+
+    const wrapper = mount(ProfileView, {
+      global: {
+        plugins: [router, pinia],
+      },
+    });
+
+    await flushPromises();
+
+    // Same password -> blocked client-side without calling API
+    await wrapper.find('#curr-pwd').setValue('Sama1234!');
+    await wrapper.find('#new-pwd').setValue('Sama1234!');
+    await wrapper.find('#confirm-pwd').setValue('Sama1234!');
+    await wrapper.find('form').trigger('submit.prevent');
+
+    expect(changeSpy).not.toHaveBeenCalled();
+    expect(wrapper.find('[data-testid="pwd-error-banner"]').text()).toBe(
+      'Kata sandi baru harus berbeda dari kata sandi saat ini.',
+    );
+
+    // Typing clears error immediately
+    await wrapper.find('#new-pwd').setValue('Baru1234!');
+    expect(wrapper.find('[data-testid="pwd-error-banner"]').exists()).toBe(false);
+
+    // Confirm and submit with default checked revokeOtherSessions=true
+    await wrapper.find('#confirm-pwd').setValue('Baru1234!');
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(changeSpy).toHaveBeenCalledWith('Sama1234!', 'Baru1234!', true);
+    expect(wrapper.find('[data-testid="pwd-success-banner"]').text()).toContain(
+      'perangkat/peramban lain telah diakhiri',
+    );
+
+    // Submit again with unchecked revokeOtherSessions=false
+    await wrapper.find('#curr-pwd').setValue('Baru1234!');
+    await wrapper.find('#new-pwd').setValue('LebihBaru99!');
+    await wrapper.find('#confirm-pwd').setValue('LebihBaru99!');
+    await wrapper.find('[data-testid="chk-revoke-other-sessions"]').setValue(false);
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(changeSpy).toHaveBeenLastCalledWith('Baru1234!', 'LebihBaru99!', false);
   });
 });

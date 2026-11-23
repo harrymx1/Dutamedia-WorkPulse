@@ -152,6 +152,62 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
       expect(result.user.isCategoryOwner).toBe(true);
       expect(result.user.ownedBlockerCategories).toEqual(['INFRA', 'NETWORK']);
     });
+
+    it('returns assignmentEffectiveDate, activeExemption from boundedExemption, and reminderSchedule from active policy', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'usr-exempt',
+        email: 'exempt@dutamedia.com',
+        fullName: 'Dewi Lestari',
+        status: 'ACTIVE',
+        passwordHash: '$argon2id$valid',
+      });
+      mockPasswordHasher.verify.mockResolvedValue(true);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+        jobTitle: 'QA Engineer',
+        function: 'Quality',
+        effectiveDate: new Date('2026-03-10T00:00:00.000Z'),
+      });
+      mockPrisma.boundedExemption = {
+        findFirst: vi.fn().mockResolvedValue({
+          exemptionCategory: 'Dinas Luar Kota',
+          startDate: new Date('2026-11-20T00:00:00.000Z'),
+          endDate: new Date('2026-11-25T00:00:00.000Z'),
+        }),
+      };
+      mockPrisma.policy = {
+        findFirst: vi.fn().mockResolvedValue({
+          configurationValues: {
+            morningOnTimeCutoff: '08:30',
+            eodOnTimeCutoff: '17:30',
+          },
+        }),
+      };
+      mockPrisma.session.create.mockResolvedValue({
+        id: 'sess-exempt',
+        expiresAt: new Date(Date.now() + 86400000),
+      });
+
+      const result = await authService.login({
+        email: 'exempt@dutamedia.com',
+        password: 'Password123!',
+      });
+
+      expect(result.user.assignmentEffectiveDate).toBe('2026-03-10');
+      expect(result.user.activeExemption).toEqual({
+        type: 'BOUNDED',
+        category: 'Dinas Luar Kota',
+        startDate: '2026-11-20',
+        endDate: '2026-11-25',
+      });
+      expect(result.user.reminderSchedule).toEqual({
+        leadMinutes: 60,
+        morningReminderTime: '07:30',
+        eodReminderTime: '16:30',
+        morningOnTimeCutoff: '08:30',
+        eodOnTimeCutoff: '17:30',
+      });
+    });
   });
 
   describe('activate (WP-EP02-TK003: Token 72 Jam & Sekali Pakai)', () => {
@@ -275,6 +331,89 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
       const missingResult = await authService.getInvitationPreview('unknown_tok');
       expect(missingResult.valid).toBe(false);
       expect(missingResult.status).toBe('NOT_FOUND');
+    });
+  });
+
+  describe('changePassword (Audit #24 - Validasi Sandi & Cabut Sesi Perangkat Lain)', () => {
+    it('rejects short password, missing letters/digits, identical new password, and wrong current password', async () => {
+      await expect(
+        authService.changePassword('usr-1', {
+          currentPassword: 'Password123!',
+          newPassword: 'abc12',
+        }),
+      ).rejects.toMatchObject({ code: ErrorCode.VALIDATION_FAILED });
+
+      await expect(
+        authService.changePassword('usr-1', {
+          currentPassword: 'Password123!',
+          newPassword: 'semuahurufsaja',
+        }),
+      ).rejects.toMatchObject({ code: ErrorCode.VALIDATION_FAILED });
+
+      await expect(
+        authService.changePassword('usr-1', {
+          currentPassword: 'Password123!',
+          newPassword: 'Password123!',
+        }),
+      ).rejects.toMatchObject({ code: ErrorCode.VALIDATION_FAILED });
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'usr-1',
+        passwordHash: '$argon2id$valid',
+      });
+      mockPasswordHasher.verify.mockResolvedValue(false);
+
+      await expect(
+        authService.changePassword('usr-1', {
+          currentPassword: 'WrongPassword1!',
+          newPassword: 'NewPassword99!',
+        }),
+      ).rejects.toMatchObject({ code: ErrorCode.VALIDATION_FAILED });
+    });
+
+    it('revokes all other active sessions when revokeOtherSessions is true and keeps them when false', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'usr-1',
+        passwordHash: '$argon2id$valid',
+      });
+      mockPasswordHasher.verify.mockResolvedValue(true);
+      mockPrisma.session.updateMany.mockResolvedValue({ count: 2 });
+
+      const revokedRes = await authService.changePassword(
+        'usr-1',
+        {
+          currentPassword: 'Password123!',
+          newPassword: 'PasswordBaru123!',
+          revokeOtherSessions: true,
+        },
+        'sess-current',
+      );
+
+      expect(mockPrisma.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          userId: 'usr-1',
+          revokedAt: null,
+          id: { not: 'sess-current' },
+        },
+        data: { revokedAt: expect.any(Date) },
+      });
+      expect(revokedRes.revokedOtherSessionsCount).toBe(2);
+      expect(revokedRes.message).toContain('perangkat/peramban lain');
+
+      mockPrisma.session.updateMany.mockClear();
+
+      const keptRes = await authService.changePassword(
+        'usr-1',
+        {
+          currentPassword: 'Password123!',
+          newPassword: 'PasswordBaru456!',
+          revokeOtherSessions: false,
+        },
+        'sess-current',
+      );
+
+      expect(mockPrisma.session.updateMany).not.toHaveBeenCalled();
+      expect(keptRes.revokedOtherSessionsCount).toBe(0);
     });
   });
 });

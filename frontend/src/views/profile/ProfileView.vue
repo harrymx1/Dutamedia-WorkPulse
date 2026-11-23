@@ -4,7 +4,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { getUserInitials } from '../../utils/initials';
-import { formatDateWib } from '../../utils/dateTime';
+import { formatDateRangeWib, formatDateWib } from '../../utils/dateTime';
 import { formatEmploymentStatusLabel, isInternStatus } from '../../utils/employmentStatus';
 import {
   KeyRound,
@@ -21,10 +21,12 @@ import {
 const router = useRouter();
 const authStore = useAuthStore();
 
+const isLoggingOut = ref(false);
+
 // Pemisahan Nama Lengkap dan Jabatan (IMP-021): Bersihkan string tanda kurung peran/posisi bila ada
 const sanitizedFullName = computed(() => {
   const raw = authStore.user?.fullName;
-  if (!raw) return 'Pengguna';
+  if (!raw) return '-';
   return raw.replace(/\s*\([^)]*\)/g, '').trim() || raw;
 });
 
@@ -46,26 +48,33 @@ const successMessage = ref<string | null>(null);
 const isLoading = ref(false);
 
 // Notification Permission State
-const pushPermission = ref<string>('default');
+const pushPermission = ref<'granted' | 'denied' | 'default' | 'unsupported'>('default');
 
 onMounted(async () => {
   if (!authStore.user) {
     const u = await authStore.fetchMe();
     if (!u) {
-      router.push('/login');
+      router.replace('/login');
+      return;
     }
   }
 
-  if (typeof window !== 'undefined' && 'Notification' in window) {
-    pushPermission.value = Notification.permission;
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    pushPermission.value = 'unsupported';
+  } else {
+    pushPermission.value = Notification.permission as 'granted' | 'denied' | 'default';
   }
 });
 
-// Formatters for Read-Only Identity Card (IMP-021 & IMP-022)
+// Kode ringkas ramah-baca tanpa UUID panjang
 const formattedNik = computed(() => {
   const id = authStore.user?.id;
-  if (!id) return 'EMP-2024-0118';
-  return id.startsWith('usr-') ? id.toUpperCase() : id;
+  if (!id) return '-';
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (isUuid) {
+    return `#USR-${id.slice(0, 8).toUpperCase()}`;
+  }
+  return id.toUpperCase();
 });
 
 const statusLabel = computed(() => {
@@ -78,23 +87,23 @@ const formattedRole = computed(() => {
   const r = authStore.user?.role;
   switch (r) {
     case 'EMPLOYEE':
-      return 'Employee';
+      return 'Karyawan';
     case 'SUPERVISOR':
       return 'Supervisor';
     case 'HEAD':
     case 'HEAD_OF_DEPARTMENT':
-      return 'Head of Department';
+      return 'Kepala Divisi';
     case 'PROJECT_MANAGER':
-      return 'Project Manager';
+      return 'Manajer Proyek';
     case 'HRGA':
       return 'HRGA';
     case 'CEO_MANAGEMENT':
     case 'CEO':
-      return 'CEO / Management';
+      return 'Direktur / Manajemen';
     case 'SYSTEM_ADMIN':
-      return 'System Administrator';
+      return 'Admin Sistem';
     default:
-      return r || 'Employee';
+      return r || 'Karyawan';
   }
 });
 
@@ -108,24 +117,22 @@ const formattedJobTitle = computed(() => {
 
   const r = authStore.user?.role;
   switch (r) {
-    case 'EMPLOYEE':
-      return 'Frontend Engineer';
     case 'SUPERVISOR':
-      return 'Tech Lead / Supervisor';
+      return 'Supervisor';
     case 'HEAD':
     case 'HEAD_OF_DEPARTMENT':
-      return 'Head of Engineering';
+      return 'Kepala Divisi';
     case 'PROJECT_MANAGER':
-      return 'Technical Project Manager';
+      return 'Manajer Proyek';
     case 'HRGA':
-      return 'HRGA Officer';
+      return 'Petugas HRGA';
     case 'CEO_MANAGEMENT':
     case 'CEO':
-      return 'Chief Executive Officer';
+      return 'Direktur';
     case 'SYSTEM_ADMIN':
-      return 'System Administrator';
+      return 'Admin Sistem';
     default:
-      return 'Frontend Engineer';
+      return '-';
   }
 });
 
@@ -149,7 +156,7 @@ const formattedFunction = computed(() => {
     case 'SYSTEM_ADMIN':
       return 'Operations & Infrastructure';
     default:
-      return 'Engineering';
+      return '-';
   }
 });
 
@@ -159,14 +166,13 @@ const formattedManager = computed(() => {
   }
   const r = authStore.user?.role;
   if (r === 'CEO_MANAGEMENT' || r === 'CEO') return 'Dewan Komisaris';
-  if (r === 'HEAD' || r === 'HEAD_OF_DEPARTMENT') return 'Hendra Wijaya';
-  if (r === 'SUPERVISOR') return 'Hendra Wijaya';
-  if (r === 'SYSTEM_ADMIN') return 'Hendra Wijaya';
-  return 'Bambang Pratama';
+  return '-';
 });
 
 const formattedEffectiveDate = computed(() => {
-  return '05 Januari 2026';
+  const raw = authStore.user?.assignmentEffectiveDate;
+  if (!raw) return '-';
+  return formatDateWib(raw);
 });
 
 const isInternUser = computed(() => isInternStatus(authStore.user?.employmentStatus));
@@ -182,13 +188,25 @@ const formattedInternEndDate = computed(() => {
 });
 
 const formattedExemption = computed(() => {
-  const r = authStore.user?.role;
-  if (r === 'CEO_MANAGEMENT' || r === 'CEO') {
-    return 'Pengecualian Permanen (Role-Based Exemption)';
+  const ex = authStore.user?.activeExemption;
+  if (ex?.type === 'BOUNDED') {
+    const rangeText =
+      ex.startDate && ex.endDate ? ` (${formatDateRangeWib(ex.startDate, ex.endDate)})` : '';
+    return `Dispensasi Aktif: ${ex.category}${rangeText}`;
   }
-  return 'Tidak Ada Pengecualian Aktif';
+  const r = authStore.user?.role;
+  if (ex?.type === 'ROLE_INDEFINITE' || r === 'CEO_MANAGEMENT' || r === 'CEO') {
+    return 'Pengecualian Peran Eksekutif (Pengisian Opsional)';
+  }
+  return 'Tidak Ada Dispensasi Aktif';
 });
 
+const morningReminderDisplay = computed(
+  () => authStore.user?.reminderSchedule?.morningReminderTime || '08:00',
+);
+const eodReminderDisplay = computed(
+  () => authStore.user?.reminderSchedule?.eodReminderTime || '16:00',
+);
 
 // Real-Time Password Validation Criteria
 const isMinLengthMet = computed(() => newPassword.value.length >= 8);
@@ -229,33 +247,39 @@ const strengthLabel = computed(() => {
   }
 });
 
-// Notification Push Card Computeds
+// Notification Push Card Computeds (Bahasa Indonesia Penuh)
 const pushPillClass = computed(() => {
   if (pushPermission.value === 'granted') return 'green';
   if (pushPermission.value === 'denied') return 'red';
+  if (pushPermission.value === 'unsupported') return 'neutral';
   return 'amber';
 });
 
 const pushStatusHeaderLabel = computed(() => {
-  if (pushPermission.value === 'granted') return 'Aktif & Terdaftar (Granted)';
-  if (pushPermission.value === 'denied') return 'Ditolak / Diblokir (Denied)';
-  return 'Menunggu Izin (Default)';
+  if (pushPermission.value === 'granted') return 'Aktif di Perangkat Ini';
+  if (pushPermission.value === 'denied') return 'Diblokir Peramban';
+  if (pushPermission.value === 'unsupported') return 'Tidak Didukung Peramban';
+  return 'Belum Diatur';
 });
 
 const pushStatusShortLabel = computed(() => {
-  if (pushPermission.value === 'granted') return 'Granted';
-  if (pushPermission.value === 'denied') return 'Denied';
-  return 'Default';
+  if (pushPermission.value === 'granted') return 'Aktif';
+  if (pushPermission.value === 'denied') return 'Diblokir';
+  if (pushPermission.value === 'unsupported') return 'Tidak Didukung';
+  return 'Belum Diatur';
 });
 
 const pushStatusDesc = computed(() => {
   if (pushPermission.value === 'granted') {
-    return 'Status izin dan langganan aktif spesifik pada browser/perangkat yang sedang Anda gunakan saat ini.';
+    return 'Status izin dan langganan aktif khusus pada peramban atau perangkat yang sedang Anda gunakan saat ini.';
   }
   if (pushPermission.value === 'denied') {
-    return 'Izin pengiriman push diblokir oleh peramban ini. Anda dapat mengaktifkannya kembali di setelan perizinan browser.';
+    return 'Izin notifikasi ditolak pada peramban ini. Anda dapat mengaktifkannya kembali lewat pengaturan izin situs di peramban.';
   }
-  return 'Status izin dan langganan bersifat spesifik pada browser/perangkat yang sedang Anda gunakan saat ini.';
+  if (pushPermission.value === 'unsupported') {
+    return 'Peramban pada perangkat ini tidak mendukung notifikasi langsung. Pemberitahuan tetap tersedia melalui email dan Pusat Notifikasi.';
+  }
+  return 'Status izin dan langganan berlaku khusus pada peramban atau perangkat yang sedang Anda gunakan saat ini.';
 });
 
 async function handleChangePassword() {
@@ -274,6 +298,10 @@ async function handleChangePassword() {
     errorMessage.value = 'Kata sandi baru harus kombinasi huruf dan angka.';
     return;
   }
+  if (newPassword.value === currentPassword.value) {
+    errorMessage.value = 'Kata sandi baru harus berbeda dari kata sandi saat ini.';
+    return;
+  }
   if (newPassword.value !== confirmPassword.value) {
     errorMessage.value = 'Konfirmasi kata sandi baru tidak cocok dengan kata sandi baru.';
     return;
@@ -284,6 +312,7 @@ async function handleChangePassword() {
     const msg = await authStore.changePassword(
       currentPassword.value,
       newPassword.value,
+      revokeOtherSessions.value,
     );
     successMessage.value = msg || 'Kata sandi berhasil diperbarui.';
     currentPassword.value = '';
@@ -297,8 +326,9 @@ async function handleChangePassword() {
 }
 
 async function handleLogout() {
+  isLoggingOut.value = true;
   await authStore.logout();
-  router.push('/login');
+  router.replace('/login');
 }
 </script>
 
@@ -307,13 +337,19 @@ async function handleLogout() {
     <!-- Global TopBar (IMP-018, IMP-019) -->
     <TopBar breadcrumb="Profil Akun" />
 
-    <main id="main-content" class="content">
-      <!-- Page Heading (Prototipe 24) -->
+    <main v-if="isLoggingOut || !authStore.user" id="main-content" class="content">
+      <div class="profile-loading-state" data-testid="profile-loading-state">
+        <p>{{ isLoggingOut ? 'Mengakhiri sesi masuk...' : 'Memuat data profil akun...' }}</p>
+      </div>
+    </main>
+
+    <main v-else id="main-content" class="content">
+      <!-- Page Heading -->
       <div class="page-heading">
         <div class="eyebrow">Identitas &amp; Konteks Akun</div>
         <h1 data-testid="profile-page-title">Profil Pengguna &amp; Keamanan Akun</h1>
         <p class="subtitle">
-          Informasi identitas resmi, penugasan organisasi efektif (<em>read-only</em>), pratinjau panduan komitmen sesuai fungsi kanonikal, pembaruan kata sandi mandiri, serta ringkasan kanal notifikasi perangkat ini.
+          Informasi identitas resmi, penugasan organisasi aktif, pembaruan kata sandi mandiri, serta ringkasan kanal notifikasi pada perangkat ini.
         </p>
       </div>
 
@@ -332,7 +368,6 @@ async function handleLogout() {
               <span>{{ statusLabel }}</span>
             </span>
           </div>
-          <!-- Pemisahan Nama Lengkap dan Jabatan pada Tampilan User (IMP-021) -->
           <div class="hero-meta" data-testid="profile-hero-meta">
             <span class="hero-email">{{ authStore.user?.email || '-' }}</span>
             <span class="meta-dot">·</span>
@@ -343,14 +378,14 @@ async function handleLogout() {
         </div>
       </div>
 
-      <!-- PANEL 1: Kartu Identitas & Penugasan Efektif (Read-Only) -->
+      <!-- PANEL 1: Kartu Identitas & Penugasan Aktif -->
       <section class="panel" aria-labelledby="panel1-title" data-testid="panel-identity">
         <div class="panel-head">
           <div>
-            <h2 id="panel1-title">1. Kartu Identitas &amp; Penugasan Efektif (Read-Only)</h2>
-            <p>Atribut identitas resmi dan pemetaan organisasi yang berlaku saat ini pada setiap komitmen harian Anda.</p>
+            <h2 id="panel1-title">1. Kartu Identitas &amp; Penugasan Aktif</h2>
+            <p>Data identitas resmi dan pemetaan organisasi yang berlaku saat ini pada setiap laporan harian Anda.</p>
           </div>
-          <span class="pill neutral">Master Data Organisasi (Read-Only)</span>
+          <span class="pill neutral">Data Organisasi Terpusat</span>
         </div>
         <div class="panel-body">
           <div class="info-grid">
@@ -359,7 +394,7 @@ async function handleLogout() {
               <span class="info-value" data-testid="info-fullname">{{ sanitizedFullName }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">ID / NIK Karyawan</span>
+              <span class="info-label">Kode Akun / ID</span>
               <span class="info-value mono-id" data-testid="info-nik">{{ formattedNik }}</span>
             </div>
             <div class="info-item">
@@ -367,7 +402,7 @@ async function handleLogout() {
               <span class="info-value mono-id" data-testid="info-email">{{ authStore.user?.email || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Jabatan Fungsional (Job Title)</span>
+              <span class="info-label">Jabatan</span>
               <span class="info-value" data-testid="info-jobtitle">{{ formattedJobTitle }}</span>
             </div>
             <div class="info-item">
@@ -385,15 +420,15 @@ async function handleLogout() {
               <span class="info-value wp-datetime" data-testid="info-intern-enddate">{{ formattedInternEndDate }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Peran Otorisasi Sistem (System RBAC Role)</span>
+              <span class="info-label">Peran Akses Sistem</span>
               <span class="info-value" data-testid="info-role">{{ formattedRole }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Fungsi Organisasi Kanonikal (Canonical Function)</span>
+              <span class="info-label">Divisi / Fungsi</span>
               <span class="info-value" data-testid="info-function">{{ formattedFunction }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Atasan Langsung Efektif (Direct Manager)</span>
+              <span class="info-label">Atasan Langsung</span>
               <span class="info-value" data-testid="info-manager">{{ formattedManager }}</span>
             </div>
             <div class="info-item">
@@ -401,7 +436,7 @@ async function handleLogout() {
               <span class="info-value tabular-nums" data-testid="info-effdate">{{ formattedEffectiveDate }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Status Pengecualian (Exemption)</span>
+              <span class="info-label">Status Dispensasi Kerja</span>
               <span class="info-value" data-testid="info-exemption">{{ formattedExemption }}</span>
             </div>
           </div>
@@ -409,7 +444,7 @@ async function handleLogout() {
           <div class="info-note-box" data-testid="profile-governance-note">
             <Info :size="18" class="note-icon" />
             <div>
-              Seluruh data identitas, fungsi organisasi, atasan langsung, dan status dispensasi kerja dikelola secara terpusat oleh tim HRGA &amp; Admin Sistem melalui menu Struktur Organisasi. Jika terdapat pembaruan jabatan atau mutasi unit kerja, silakan hubungi HRGA.
+              Seluruh data identitas, divisi kerja, atasan langsung, dan status dispensasi kerja dikelola secara terpusat oleh tim HRGA &amp; Admin Sistem melalui menu Struktur Organisasi. Jika terdapat pembaruan jabatan atau mutasi unit kerja, silakan hubungi HRGA.
             </div>
           </div>
         </div>
@@ -420,7 +455,7 @@ async function handleLogout() {
         <div class="panel-head">
           <div>
             <h2 id="panel2-title">2. Keamanan &amp; Kata Sandi — Pembaruan Mandiri</h2>
-            <p>Kelola keamanan &amp; kata sandi akun Anda secara mandiri dengan validasi kekuatan kata sandi <em>real-time</em>.</p>
+            <p>Kelola keamanan kata sandi akun Anda secara mandiri dengan pemeriksaan syarat kata sandi secara langsung.</p>
           </div>
         </div>
         <div class="panel-body">
@@ -444,6 +479,16 @@ async function handleLogout() {
           </div>
 
           <form style="max-width: 560px;" novalidate @submit.prevent="handleChangePassword">
+            <input
+              type="text"
+              name="username"
+              :value="authStore.user?.email || ''"
+              autocomplete="username"
+              class="sr-only"
+              tabindex="-1"
+              aria-hidden="true"
+            />
+
             <!-- Kata Sandi Saat Ini -->
             <div class="form-group">
               <label class="form-label" for="curr-pwd">Kata Sandi Saat Ini</label>
@@ -455,6 +500,7 @@ async function handleLogout() {
                   placeholder="Masukkan kata sandi saat ini"
                   required
                   autocomplete="current-password"
+                  @input="errorMessage = null"
                 />
                 <button
                   type="button"
@@ -476,9 +522,10 @@ async function handleLogout() {
                   id="new-pwd"
                   v-model="newPassword"
                   :type="showNewPwd ? 'text' : 'password'"
-                  placeholder="Minimal 8 karakter kombinasi huruf &amp; angka"
+                  placeholder="Min. 8 karakter (huruf &amp; angka)"
                   required
                   autocomplete="new-password"
+                  @input="errorMessage = null"
                 />
                 <button
                   type="button"
@@ -491,7 +538,7 @@ async function handleLogout() {
                 </button>
               </div>
 
-              <!-- 4-Segment Password Strength Meter (Prototipe 24) -->
+              <!-- 4-Segment Password Strength Meter -->
               <div class="pwd-meter-wrap" aria-live="polite">
                 <div
                   class="pwd-meter-bars"
@@ -512,7 +559,7 @@ async function handleLogout() {
                 </div>
               </div>
 
-              <!-- Real-time Security Criteria Checklist -->
+              <!-- Checklist Syarat Kata Sandi -->
               <ul class="pwd-criteria-list" aria-label="Kriteria keamanan kata sandi">
                 <li class="pwd-criteria-item" :class="{ met: isMinLengthMet }" data-testid="crit-length">
                   <CheckCircle2 v-if="isMinLengthMet" :size="15" class="crit-icon met" />
@@ -543,6 +590,7 @@ async function handleLogout() {
                   placeholder="Ketik ulang kata sandi baru"
                   required
                   autocomplete="new-password"
+                  @input="errorMessage = null"
                 />
                 <button
                   type="button"
@@ -562,6 +610,7 @@ async function handleLogout() {
                 id="revoke-other-sessions"
                 v-model="revokeOtherSessions"
                 type="checkbox"
+                data-testid="chk-revoke-other-sessions"
               />
               <span><strong>Akhiri seluruh sesi aktif di perangkat/peramban lain setelah kata sandi diperbarui</strong> (direkomendasikan untuk menjaga keamanan akses akun Anda).</span>
             </label>
@@ -585,7 +634,7 @@ async function handleLogout() {
               <Laptop :size="20" class="session-icon" />
               <div>
                 <strong>Sesi Peramban Ini</strong>
-                <p>Dilindungi dengan cookie HttpOnly; Secure; SameSite=Strict</p>
+                <p>Sesi masuk Anda terlindungi secara otomatis pada peramban ini.</p>
               </div>
             </div>
             <button
@@ -605,18 +654,18 @@ async function handleLogout() {
         <div class="panel-head">
           <div>
             <h2 id="panel3-title">3. Ringkasan Kanal Notifikasi Perangkat Ini</h2>
-            <p>Status izin pengiriman Browser Push pada perangkat/peramban saat ini beserta aturan tetap pengingat produk.</p>
+            <p>Status izin notifikasi langsung pada peramban saat ini beserta aturan tetap pengingat harian.</p>
           </div>
           <span class="pill" :class="pushPillClass" data-testid="push-header-pill">
-            Browser Push: {{ pushStatusHeaderLabel }}
+            Notifikasi Peramban: {{ pushStatusHeaderLabel }}
           </span>
         </div>
         <div class="panel-body">
           <div class="device-channel-summary">
-            <!-- Card 1: Browser Push -->
+            <!-- Card 1: Notifikasi Peramban -->
             <div class="device-channel-card">
               <div class="device-channel-card-top">
-                <span class="device-channel-name">Browser Push Perangkat Ini</span>
+                <span class="device-channel-name">Notifikasi Peramban Ini</span>
                 <span class="pill" :class="pushPillClass" data-testid="card-push-pill">{{ pushStatusShortLabel }}</span>
               </div>
               <div class="device-channel-desc" data-testid="card-push-desc">
@@ -628,21 +677,21 @@ async function handleLogout() {
             <div class="device-channel-card">
               <div class="device-channel-card-top">
                 <span class="device-channel-name">Aturan Tetap Pengingat</span>
-                <span class="pill blue tabular-nums">60 Menit Sebelum Deadline</span>
+                <span class="pill blue tabular-nums">60 Menit Sebelum Batas Waktu</span>
               </div>
-              <div class="device-channel-desc tabular-nums">
-                Pengingat Morning Commitment (<span class="mono-id">08:00 WIB</span>) dan EOD Update (<span class="mono-id">16:00 WIB</span>) dikirim tepat <strong>60 menit sebelum batas waktu tepat waktu</strong> dan berhenti tepat saat batas waktu tiba.
+              <div class="device-channel-desc tabular-nums" data-testid="card-reminder-desc">
+                Pengingat Komitmen Pagi (<span class="mono-id">{{ morningReminderDisplay }} WIB</span>) dan Evaluasi Sore (<span class="mono-id">{{ eodReminderDisplay }} WIB</span>) dikirim tepat <strong>60 menit sebelum batas waktu tepat waktu</strong> dan berhenti saat batas waktu tiba.
               </div>
             </div>
 
-            <!-- Card 3: Web Center & Email Resmi -->
+            <!-- Card 3: Pusat Notifikasi & Email Resmi -->
             <div class="device-channel-card">
               <div class="device-channel-card-top">
-                <span class="device-channel-name">Web Center &amp; Email Resmi</span>
-                <span class="pill neutral">Kanal Sistem Tetap</span>
+                <span class="device-channel-name">Pusat Notifikasi &amp; Email Resmi</span>
+                <span class="pill neutral">Saluran Sistem Tetap</span>
               </div>
               <div class="device-channel-desc">
-                Pencatatan di Web Notification Center dan pengiriman Email resmi dikelola secara terpusat berdasarkan matriks trigger produk.
+                Pencatatan di Pusat Notifikasi web dan pengiriman email resmi dikelola terpusat mengikuti aturan peristiwa pemberitahuan perusahaan.
               </div>
             </div>
           </div>
@@ -650,13 +699,13 @@ async function handleLogout() {
           <div class="info-note-box" style="margin-top:0;margin-bottom:18px">
             <Bell :size="18" class="note-icon" />
             <div class="tabular-nums">
-              Untuk menguji pengiriman push lokal, mendaftarkan ulang langganan perangkat, atau mencabut langganan perangkat ini (<em>Unregister</em>), silakan buka pengaturan perangkat di halaman Pusat Notifikasi.
+              Untuk menguji pengiriman notifikasi di perangkat ini, mendaftarkan ulang langganan perangkat, atau berhenti berlangganan pada perangkat ini, silakan buka pengaturan perangkat di halaman Pusat Notifikasi.
             </div>
           </div>
 
           <div style="display:flex;justify-content:flex-start">
             <router-link to="/notifications" class="btn btn-secondary" data-testid="btn-goto-notifications">
-              <span>Kelola Kanal &amp; Uji Perangkat di Pusat Notifikasi →</span>
+              <span>Kelola Saluran &amp; Uji Perangkat di Pusat Notifikasi →</span>
             </router-link>
           </div>
         </div>
@@ -671,9 +720,33 @@ async function handleLogout() {
    ============================================================== */
 .profile-layout {
   min-height: 100vh;
+  min-width: 0;
   background: var(--color-canvas, #F7FAF9);
   color: var(--color-text-primary, #0E211B);
   font-family: var(--font-sans, "Plus Jakarta Sans", system-ui, sans-serif);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.profile-loading-state {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-subtle, #DCE7E2);
+  border-radius: 12px;
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--color-text-secondary, #5C6E68);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .content {
@@ -853,6 +926,7 @@ h1 {
   box-shadow: none;
   margin-bottom: 24px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel-head {
@@ -1248,6 +1322,23 @@ input:focus {
   }
   .info-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .meta-dot {
+    display: none;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

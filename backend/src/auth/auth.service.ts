@@ -11,6 +11,11 @@ import { CanonicalRole } from '@prisma/client';
 import { toJakartaDateOnly } from '../common/time/date-only.util';
 import { ensurePolicyOwnersBaselineSynced } from '../policy/policy-owner-sync.util';
 import { resolveOwnedBlockerCategories } from './utils/category-owner.util';
+import {
+  ActiveExemptionInfo,
+  ReminderScheduleInfo,
+  resolveUserProfileExtras,
+} from './utils/profile-context.util';
 
 export interface InvitationPreviewResult {
   valid: boolean;
@@ -52,6 +57,7 @@ export interface LoginResult {
     jobTitle?: string | null;
     function?: string | null;
     employmentStatus?: string | null;
+    assignmentEffectiveDate?: string | null;
     assignmentEndDate?: string | null;
     managerName?: string | null;
     hasSubordinates?: boolean;
@@ -61,6 +67,8 @@ export interface LoginResult {
     ownedPolicyCategories?: string[];
     isCategoryOwner?: boolean;
     ownedBlockerCategories?: string[];
+    activeExemption?: ActiveExemptionInfo | null;
+    reminderSchedule?: ReminderScheduleInfo | null;
   };
   session: {
     id: string;
@@ -149,6 +157,9 @@ export class AuthService {
     const jobTitle: string | null = (activeOrg as any)?.jobTitle || null;
     const orgFunction: string | null = (activeOrg as any)?.function || null;
     const employmentStatus: string = (activeOrg as any)?.employmentStatus || 'PERMANENT';
+    const assignmentEffectiveDate: string | null = (activeOrg as any)?.effectiveDate
+      ? new Date((activeOrg as any).effectiveDate).toISOString().split('T')[0]
+      : null;
     const assignmentEndDate: string | null = (activeOrg as any)?.endDate
       ? new Date((activeOrg as any).endDate).toISOString().split('T')[0]
       : null;
@@ -202,6 +213,12 @@ export class AuthService {
     );
 
     const ownedBlockerCategories = await resolveOwnedBlockerCategories(this.prisma, user.id, today);
+    const { activeExemption, reminderSchedule } = await resolveUserProfileExtras(
+      this.prisma,
+      user.id,
+      role,
+      today,
+    );
 
     // Penerbitan Sesi Baru (24 Jam)
     const sessionTokenRaw = this.tokenService.generateRandomToken(32);
@@ -242,6 +259,7 @@ export class AuthService {
         jobTitle,
         function: orgFunction,
         employmentStatus,
+        assignmentEffectiveDate,
         assignmentEndDate,
         managerName,
         hasSubordinates: subordinateCount > 0,
@@ -251,6 +269,8 @@ export class AuthService {
         ownedPolicyCategories,
         isCategoryOwner: ownedBlockerCategories.length > 0,
         ownedBlockerCategories,
+        activeExemption,
+        reminderSchedule,
       },
       session: {
         id: session.id,
@@ -432,7 +452,34 @@ export class AuthService {
   async changePassword(
     userId: string,
     changePasswordDto: ChangePasswordDto,
-  ): Promise<{ message: string }> {
+    currentSessionId?: string,
+  ): Promise<{ message: string; revokedOtherSessionsCount: number }> {
+    const { currentPassword, newPassword, revokeOtherSessions } = changePasswordDto;
+
+    if (!newPassword || newPassword.length < 8) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Kata sandi baru minimal 8 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Kata sandi baru harus kombinasi huruf dan angka.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    if (newPassword === currentPassword) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Kata sandi baru harus berbeda dari kata sandi saat ini.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -446,7 +493,7 @@ export class AuthService {
     }
 
     const isCurrentValid = await this.passwordHasher.verify(
-      changePasswordDto.currentPassword,
+      currentPassword,
       user.passwordHash,
     );
 
@@ -458,9 +505,7 @@ export class AuthService {
       });
     }
 
-    const newPasswordHash = await this.passwordHasher.hash(
-      changePasswordDto.newPassword,
-    );
+    const newPasswordHash = await this.passwordHasher.hash(newPassword);
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -471,8 +516,24 @@ export class AuthService {
       },
     });
 
+    let revokedOtherSessionsCount = 0;
+    if (revokeOtherSessions && this.prisma.session?.updateMany) {
+      const revokeRes = await this.prisma.session.updateMany({
+        where: {
+          userId,
+          revokedAt: null,
+          ...(currentSessionId ? { id: { not: currentSessionId } } : {}),
+        },
+        data: { revokedAt: new Date() },
+      });
+      revokedOtherSessionsCount = revokeRes?.count ?? 0;
+    }
+
     return {
-      message: 'Kata sandi berhasil diperbarui dengan aman.',
+      message: revokeOtherSessions
+        ? 'Kata sandi berhasil diperbarui dan seluruh sesi aktif di perangkat/peramban lain telah diakhiri.'
+        : 'Kata sandi berhasil diperbarui dengan aman.',
+      revokedOtherSessionsCount,
     };
   }
 }

@@ -11,6 +11,7 @@ export interface UserProfile {
   jobTitle?: string | null;
   function?: string | null;
   employmentStatus?: 'PERMANENT' | 'CONTRACT' | 'INTERN' | null;
+  assignmentEffectiveDate?: string | null;
   assignmentEndDate?: string | null;
   managerName?: string | null;
   hasSubordinates?: boolean;
@@ -20,6 +21,19 @@ export interface UserProfile {
   ownedPolicyCategories?: string[];
   isCategoryOwner?: boolean;
   ownedBlockerCategories?: string[];
+  activeExemption?: {
+    type: 'BOUNDED' | 'ROLE_INDEFINITE';
+    category: string;
+    startDate: string | null;
+    endDate: string | null;
+  } | null;
+  reminderSchedule?: {
+    leadMinutes: number;
+    morningReminderTime: string;
+    eodReminderTime: string;
+    morningOnTimeCutoff: string;
+    eodOnTimeCutoff: string;
+  } | null;
 }
 
 export interface InvitationPreviewResult {
@@ -119,13 +133,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function changePassword(currentPassword: string, newPassword: string): Promise<string> {
+  async function changePassword(
+    currentPassword: string,
+    newPassword: string,
+    revokeOtherSessions = true,
+  ): Promise<string> {
     isLoading.value = true;
     error.value = null;
     try {
       const res = await apiClient<{ message: string }>('/v1/auth/change-password', {
         method: 'POST',
-        body: JSON.stringify({ currentPassword, newPassword }),
+        body: JSON.stringify({ currentPassword, newPassword, revokeOtherSessions }),
       });
       return res.data.message;
     } catch (err: any) {

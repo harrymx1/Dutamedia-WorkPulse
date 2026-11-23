@@ -126,8 +126,13 @@ export class AuthController {
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req: Request,
   ) {
-    return await this.authService.changePassword(userId, changePasswordDto);
+    return await this.authService.changePassword(
+      userId,
+      changePasswordDto,
+      (req as any).sessionId,
+    );
   }
 }
 
