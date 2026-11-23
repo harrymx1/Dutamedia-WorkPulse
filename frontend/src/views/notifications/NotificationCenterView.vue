@@ -1161,12 +1161,12 @@ h1 {
 
 .summary-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .summary-strip {
     grid-template-columns: 1fr;
   }

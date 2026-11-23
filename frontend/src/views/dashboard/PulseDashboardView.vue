@@ -845,9 +845,14 @@ h1 {
   margin-bottom: 24px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1180px) {
   .metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-header .pill {
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 }
 
@@ -930,7 +935,7 @@ h1 {
   gap: 20px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1180px) {
   .content-grid {
     grid-template-columns: 1fr;
   }

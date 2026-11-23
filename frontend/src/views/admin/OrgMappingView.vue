@@ -581,10 +581,10 @@ function showToast(msg: string, isError = false) {
           </button>
         </div>
         <div v-else class="table-scroll">
-          <table class="data-table">
+          <table class="data-table project-authority-table">
             <thead>
               <tr>
-                <th>KODE &amp; NAMA PROYEK</th>
+                <th class="col-project">KODE &amp; NAMA PROYEK</th>
                 <th>PROJECT MANAGER</th>
                 <th>ESCALATION REVIEWER</th>
                 <th>FUNGSI TERLIBAT</th>
@@ -594,7 +594,7 @@ function showToast(msg: string, isError = false) {
             </thead>
             <tbody>
               <tr v-for="pa in filteredProjectAuthorities" :key="pa.id">
-                <td>
+                <td class="col-project">
                   <strong class="project-code mono-num">{{ pa.projectCode }}</strong>
                   <span class="project-name-text">{{ pa.projectName }}</span>
                 </td>
@@ -943,7 +943,17 @@ function showToast(msg: string, isError = false) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 20px;
+}
+
+.header-actions {
+  flex-shrink: 0;
+}
+
+.header-actions .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .page-header h2 {
@@ -1035,6 +1045,7 @@ function showToast(msg: string, isError = false) {
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border-strong);
   color: var(--color-brand-primary);
+  white-space: nowrap;
 }
 
 .job-title-text {
@@ -1051,6 +1062,7 @@ function showToast(msg: string, isError = false) {
   background: var(--color-surface-subtle);
   padding: 3px 8px;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .manager-name, .pm-name, .reviewer-name {
@@ -1062,6 +1074,7 @@ function showToast(msg: string, isError = false) {
   display: block;
   font-weight: 800;
   color: var(--color-brand-primary);
+  white-space: nowrap;
 }
 
 .project-name-text {
@@ -1080,6 +1093,7 @@ function showToast(msg: string, isError = false) {
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .status-badge.active {
@@ -1100,6 +1114,7 @@ function showToast(msg: string, isError = false) {
   border: 1px solid var(--color-border-strong);
   background: var(--color-surface);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn-end-pa:hover {
@@ -1321,6 +1336,14 @@ input, select, textarea {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.project-authority-table {
+  min-width: 980px;
+}
+
+.col-project {
+  min-width: 220px;
 }
 
 .btn-reset-filter {

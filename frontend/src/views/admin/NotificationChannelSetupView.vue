@@ -920,7 +920,9 @@ onMounted(() => {
             <tbody>
               <tr v-if="deliveryLogs.length === 0">
                 <td colspan="6" class="empty-log-cell">
-                  Belum ada catatan pengujian pengiriman pada sesi ini. Jalankan uji coba di atas untuk mencatat hasilnya.
+                  <span class="empty-log-text">
+                    Belum ada catatan pengujian pengiriman pada sesi ini. Jalankan uji coba di atas untuk mencatat hasilnya.
+                  </span>
                 </td>
               </tr>
               <tr v-for="item in deliveryLogs" :key="item.id">
@@ -1441,20 +1443,18 @@ h1 {
   color: #991B1B;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1180px) {
   .channel-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .metrics-grid,
   .test-form .form-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 640px) {
   .main-content {
     padding: 16px 14px 48px;
   }
@@ -1476,6 +1476,14 @@ h1 {
 
   .channel-head {
     flex-wrap: wrap;
+  }
+
+  .channel-head .channel-title-wrap {
+    flex: 1 1 calc(100% - 54px);
+  }
+
+  .channel-head > .pill {
+    margin-left: 50px;
   }
 
   .detail-row {
@@ -1509,7 +1517,24 @@ h1 {
   }
 
   .matrix-tabs {
-    padding: 0 14px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding: 6px 14px;
+    gap: 4px 12px;
+  }
+
+  .matrix-tab {
+    padding: 8px 4px;
+  }
+
+  .empty-log-cell {
+    text-align: left;
+  }
+
+  .empty-log-text {
+    display: block;
+    max-width: calc(100vw - 68px);
+    white-space: normal;
   }
 
   .form-actions .btn {

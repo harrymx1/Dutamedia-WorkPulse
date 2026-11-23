@@ -379,6 +379,9 @@ onMounted(() => {
 <style scoped>
 .risk-layout {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
   background: var(--color-canvas, #F7FAF9);
   color: var(--color-text-primary, #0E211B);
 }
@@ -436,6 +439,8 @@ onMounted(() => {
 
 .main-content {
   max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
@@ -466,14 +471,14 @@ h1 {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 24px;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1180px) {
   .metrics-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -488,6 +493,8 @@ h1 {
   border: 1px solid var(--color-border-subtle, #DCE7E2);
   border-radius: 12px;
   padding: 16px 18px;
+  min-width: 0;
+  box-sizing: border-box;
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -505,6 +512,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
 }
 
 .metric-title {
@@ -583,11 +591,13 @@ h1 {
 }
 
 .table-wrap {
+  max-width: 100%;
   overflow-x: auto;
 }
 
 .project-table {
   width: 100%;
+  min-width: 780px;
   border-collapse: collapse;
 }
 
@@ -728,6 +738,8 @@ h1 {
   font-size: 11.5px;
   font-weight: 700;
   border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pill.green {
@@ -765,6 +777,8 @@ h1 {
   cursor: pointer;
   border: 1px solid transparent;
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-secondary {

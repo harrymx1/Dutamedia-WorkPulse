@@ -1077,7 +1077,13 @@ function showToast(msg: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 24px;
+}
+
+.page-header .btn-primary {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .page-header h2 {

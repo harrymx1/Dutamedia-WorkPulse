@@ -1417,7 +1417,7 @@ onUnmounted(() => {
         </div>
 
         <div class="table-card">
-          <table class="data-table">
+          <table class="data-table policy-owners-table">
             <thead>
               <tr>
                 <th style="width: 28%;">Kategori Kebijakan</th>
@@ -1548,7 +1548,7 @@ onUnmounted(() => {
         </div>
 
         <div class="table-card">
-          <table class="data-table">
+          <table class="data-table audit-trail-table">
             <thead>
               <tr>
                 <th>Waktu</th>
@@ -2080,6 +2080,12 @@ h1 {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.header-actions .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -2133,6 +2139,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 10px;
 }
 
@@ -2199,6 +2207,23 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+}
+
+.policy-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.policy-head-actions {
+  flex-shrink: 0;
+}
+
+.policy-head-actions .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .policy-head-info h2 {
@@ -2244,6 +2269,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 10px;
 }
 
@@ -2318,7 +2345,13 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 18px;
+}
+
+.audit-head .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .audit-head h2 {
@@ -2388,6 +2421,22 @@ h1 {
   max-width: 340px;
 }
 
+.audit-trail-table {
+  min-width: 960px;
+}
+
+.audit-trail-table td.mono-text {
+  white-space: nowrap;
+}
+
+.audit-trail-table .rationale-cell {
+  min-width: 190px;
+}
+
+.audit-trail-table .changes-cell {
+  min-width: 240px;
+}
+
 .change-detail-text {
   font-size: 12px;
   font-weight: 600;
@@ -2408,6 +2457,8 @@ h1 {
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-info {
@@ -3099,6 +3150,45 @@ h1 {
   .table-card {
     overflow-x: auto;
     max-width: 100%;
+  }
+
+  .policy-owners-table {
+    display: block;
+    width: 100%;
+  }
+
+  .policy-owners-table thead {
+    display: none;
+  }
+
+  .policy-owners-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .policy-owners-table tr {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--color-canvas);
+  }
+
+  .policy-owners-table td {
+    display: block;
+    width: 100% !important;
+    padding: 0;
+    border-bottom: none;
+    text-align: left !important;
+  }
+
+  .policy-owners-table td:last-child .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .owner-chip-card {
