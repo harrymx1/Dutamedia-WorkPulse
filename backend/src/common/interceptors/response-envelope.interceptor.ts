@@ -23,6 +23,7 @@ export interface StandardSuccessResponse<T> {
       totalRecords: number;
       totalPages: number;
     };
+    summary?: Record<string, any>;
   };
 }
 
@@ -60,6 +61,7 @@ export class ResponseEnvelopeInterceptor<T>
       map((result) => {
         let data = result;
         let pagination: any = undefined;
+        let summary: any = undefined;
 
         // Mendeteksi payload paginasi terstruktur { data: [...], pagination: {...} }
         if (
@@ -70,6 +72,9 @@ export class ResponseEnvelopeInterceptor<T>
         ) {
           data = result.data;
           pagination = result.pagination;
+          if ('summary' in result && (result as any).summary) {
+            summary = (result as any).summary;
+          }
         }
 
         const envelope: StandardSuccessResponse<T> = {
@@ -81,6 +86,7 @@ export class ResponseEnvelopeInterceptor<T>
             timestamp: new Date().toISOString(),
             requestId: String(requestId),
             ...(pagination ? { pagination } : {}),
+            ...(summary ? { summary } : {}),
           },
         };
 

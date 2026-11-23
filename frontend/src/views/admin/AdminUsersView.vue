@@ -386,7 +386,7 @@ async function loadUsers() {
         ? payload.data
         : [];
     users.value = rows;
-    summary.value = payload?.summary || computeFallbackSummary(rows);
+    summary.value = res.meta?.summary || payload?.summary || computeFallbackSummary(rows);
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal memuat daftar pengguna.';
   } finally {
@@ -1442,6 +1442,8 @@ async function copyToClipboard(text: string) {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
+  row-gap: 4px;
 }
 
 .metric-label {
@@ -1603,6 +1605,10 @@ async function copyToClipboard(text: string) {
   white-space: nowrap;
 }
 
+.data-table th:first-child {
+  min-width: 280px;
+}
+
 .data-table td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--color-border-subtle);
@@ -1658,7 +1664,8 @@ async function copyToClipboard(text: string) {
   font-size: 12px;
   color: var(--color-text-secondary);
   margin-top: 1px;
-  word-break: break-word;
+  white-space: nowrap;
+  word-break: normal;
 }
 
 .intern-end-hint {
@@ -2188,6 +2195,19 @@ async function copyToClipboard(text: string) {
   .metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+
+  .metric-card {
+    padding: 12px;
+  }
+
+  .metric-label {
+    font-size: 11.5px;
+  }
+
+  .user-email-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .filter-grid {

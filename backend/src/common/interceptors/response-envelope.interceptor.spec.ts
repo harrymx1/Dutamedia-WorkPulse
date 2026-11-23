@@ -69,5 +69,40 @@ describe('ResponseEnvelopeInterceptor (EP01-TK006 / SAD IV.2.1)', () => {
       totalPages: 1,
     });
   });
+
+  it('should preserve summary inside meta when controller returns paginated payload with summary', async () => {
+    const paginatedWithSummary = {
+      data: [{ id: '1' }],
+      pagination: {
+        page: 1,
+        limit: 200,
+        totalRecords: 1,
+        totalPages: 1,
+      },
+      summary: {
+        total: 26,
+        active: 24,
+        invitedPending: 1,
+        needsAttention: 1,
+      },
+    };
+
+    const handler: CallHandler = {
+      handle: () => of(paginatedWithSummary),
+    };
+
+    const ctx = mockContext({ 'x-request-id': 'req_summary_01' }, 200);
+    const result$ = interceptor.intercept(ctx, handler);
+    const result = (await lastValueFrom(result$)) as any;
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual([{ id: '1' }]);
+    expect(result.meta.summary).toEqual({
+      total: 26,
+      active: 24,
+      invitedPending: 1,
+      needsAttention: 1,
+    });
+  });
 });
 

@@ -266,4 +266,43 @@ describe('AdminUsersView & AdminUserInvitationView (Audit #25 - Kelola Pengguna 
       reason: 'Habis masa kontrak',
     });
   });
+
+  it('preserves full directory summary counts from meta.summary when view is filtered', async () => {
+    fetchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [sampleUsers[1]],
+          meta: {
+            pagination: { page: 1, limit: 200, totalRecords: 1, totalPages: 1 },
+            summary: {
+              total: 26,
+              active: 24,
+              invited: 2,
+              invitedPending: 1,
+              invitedExpired: 1,
+              invitedRevoked: 0,
+              inactive: 0,
+              needsAttention: 1,
+            },
+          },
+        }),
+      }),
+    );
+
+    const wrapper = mount(AdminUsersView, {
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true },
+      },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Menampilkan 1 dari 26 akun');
+    expect(wrapper.text()).toContain('26');
+    expect(wrapper.text()).toContain('24');
+  });
 });
