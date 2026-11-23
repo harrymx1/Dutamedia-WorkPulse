@@ -1024,17 +1024,18 @@ h1 {
 
 .review-table th {
   background: #EFF5F2;
-  padding: 12px 16px;
+  padding: 11px 12px;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11.5px;
+  line-height: 1.3;
   color: #5C6E68;
   border-bottom: 1px solid #DCE7E2;
   text-transform: uppercase;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .review-table td {
-  padding: 14px 16px;
+  padding: 12px 12px;
   border-bottom: 1px solid #DCE7E2;
   vertical-align: top;
 }
@@ -1059,7 +1060,13 @@ h1 {
 }
 
 .user-inline strong { display: block; font-size: 13px; }
-.user-inline small { display: block; color: #5C6E68; font-size: 11.5px; }
+.user-inline small {
+  display: block;
+  color: #5C6E68;
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+  max-width: 165px;
+}
 .user-meta-role { color: #00674D !important; font-weight: 600; margin-top: 1px; }
 
 .scope-pill {
@@ -1077,7 +1084,7 @@ h1 {
   font-size: 12.5px;
   color: #0E211B;
   font-weight: 600;
-  max-width: 210px;
+  max-width: 170px;
   line-height: 1.4;
 }
 
@@ -1091,8 +1098,8 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 240px;
-  max-width: 340px;
+  min-width: 180px;
+  max-width: 250px;
 }
 
 .diff-box {
@@ -1126,9 +1133,10 @@ h1 {
 .reason-text {
   font-size: 12.5px;
   color: #0E211B;
-  max-width: 230px;
+  max-width: 180px;
   margin: 0;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .reviewer-note-chip {
@@ -1139,13 +1147,19 @@ h1 {
   border-left: 3px solid #16A34A;
   color: #166534;
   font-size: 11.5px;
-  max-width: 230px;
+  max-width: 180px;
+  overflow-wrap: anywhere;
 }
 
 .reviewer-note-chip.rejected {
   background: #FEF2F2;
   border-left-color: #DC2626;
   color: #991B1B;
+}
+
+.col-status {
+  min-width: 135px;
+  max-width: 165px;
 }
 
 .status-badge {
@@ -1169,7 +1183,6 @@ h1 {
   font-size: 11px;
   color: #B45309;
   margin-top: 5px;
-  white-space: nowrap;
 }
 
 .decision-meta-line {
@@ -1179,9 +1192,16 @@ h1 {
   line-height: 1.4;
 }
 
+.col-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
 .action-buttons {
   display: flex;
   gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .btn-decision {
