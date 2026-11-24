@@ -121,7 +121,16 @@ Siapkan 6 jendela browser (pakai profil Chrome berbeda / Edge / Firefox / Incogn
      * **Keparahan:** **`High (Target 4 jam)`**.
      * **Deskripsi:** `Sejak pukul 13:00 WIB aplikasi staging tidak dapat terhubung ke database PostgreSQL. Restart layanan lokal sudah dicoba namun koneksi pool tetap penuh.`
    - Klik **`Kirim Laporan Blocker`** → muncul Kartu Konfirmasi Tiket Terbit!
-2. **3B — Siklus Penuh Lintas Jendela (Terima → Beri Bantuan → Membantu Sebagian → Selesaikan → Kembalikan → Tutup) (Jendela 3 `Fakhrizal` ↔ Jendela 2 `Aditya`):**
+2. **3A-2 — Lapor Blocker Dulu Sebelum Komitmen Pagi → Tautkan ke `Tiket Blocker Penyebab` (`intern.frontend@dutamedia.com` — Raka Pratama di Jendela 6):**
+   - **Kalimat ke Atasan:** *"Bagaimana jika karyawan datang pagi-pagi langsung ketemu kendala sebelum sempat mengisi Komitmen Pagi? Di WorkPulse, Lapor Blocker bisa dibuat lebih dulu, lalu saat mengisi Komitmen Pagi tiket tersebut langsung bisa dikaitkan sebagai penyebab risiko."*
+   - Di Jendela 6, masuk sebagai **`intern.frontend@dutamedia.com`** *(Komitmen Pagi hari ini belum dikirim)* → buka **`/raise-blockers`** → buat tiket cepat (siap salin):
+     * **Judul:** `Monitor eksternal di meja kerja kedip-kedip dan kabel HDMI longgar`
+     * **Kategori:** **`2. Kantor & Perangkat` → `Perangkat Kerja` (`WORK_DEVICE`)** *(otomatis mengarah ke **`Rahian M. Suari` — IT Support**)*
+     * **Dampak:** Centang **`Tugas Pribadi`** | **Keparahan:** **`Medium (Target 8 jam)`**
+     * **Deskripsi:** `Layar monitor kedua di meja kerja sering padam mendadak sejak pagi sehingga menyulitkan pemeriksaan tampilan responsif.`
+     * Klik **`Kirim Laporan Blocker`**.
+   - Langsung klik menu **`My Today`** (`/daily/morning`) pada akun Raka → klik **`Lihat Draf`** pada `Draf Tugas Berlanjut dari Kemarin (1 Tersedia)` → salin ke Slot #1 → ubah tingkat risiko menjadi **`AMBER`** (atau **`RED`**) → isi potensi kendala singkat → buka dropdown **`Tiket Blocker Penyebab`** → **pilih tiket `Monitor eksternal...` yang baru saja dibuat 1 menit lalu!** → klik **`Kirim Morning Commitment`**. *(Membuktikan 3 hal sekaligus: Blocker boleh dibuat sebelum Komitmen Pagi, penautan `Tiket Blocker Penyebab` langsung tersambung otomatis, dan Anak Magang ikut melapor harian).*
+3. **3B — Siklus Penuh Lintas Jendela (Terima → Beri Bantuan → Membantu Sebagian → Selesaikan → Kembalikan → Tutup) (Jendela 3 `Fakhrizal` ↔ Jendela 2 `Aditya`):**
    - **Jendela 3 (`network.infra@dutamedia.com` di `/blockers`):** Tunjukkan bahwa `Fakhrizal` adalah staf biasa (`EMPLOYEE`), namun karena berstatus **`Penanggung Jawab Kategori`**, menu `/blockers` & `/blockers/aging` otomatis terbuka! *(Tunjukkan juga bila Fakhrizal membuka `/raise-blockers` dan memilih `INFRA` sendiri → **Anti-Self-Routing** otomatis menaikkannya ke `Gunawan Setiawan`!).*
    - Pilih tiket barusan (`Tugas Anda`) → klik **`Terima & Tangani`** (`Sedang Ditangani`).
    - Klik **`Beri Bantuan`** *(Ambil **`WP-SS-22`**)* → tindakan: `Menambah kapasitas koneksi pool database staging dan restart worker`, hasil: `Silakan dicoba ulang akses endpoint pembayaran` → simpan.
