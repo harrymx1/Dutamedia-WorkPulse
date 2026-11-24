@@ -79,18 +79,19 @@ Siapkan 6 jendela browser (pakai profil Chrome berbeda / Edge / Firefox / Incogn
        ```
      * Klik simpan → tunjukkan perubahan langsung tercatat di **`Jejak Audit Perubahan Kebijakan`**.
    - **Refresh Jendela 2 (`product@dutamedia.com`):** Formulir Komitmen Pagi **seketika terbuka (`ON-TIME`)**!
-2. **2B — Komitmen Pagi Lengkap dengan `Carry-Over`, `Simpan Draf`, Validasi, & Picker Blocker (`product@dutamedia.com` di `/daily/morning`)** *(Ambil **`WP-SS-03`** & **`WP-SS-04`**)*:
-   - Tunjukkan kotak **`Prioritas Kemarin Sore`** & contoh kalimat panduan otomatis khusus divisi Delivery.
-   - Klik **`Lihat Draf`** pada **`Draf Tugas Berlanjut dari Kemarin (2 Tersedia)`** → tunjukkan **`Carry-Over #2`** yang otomatis disarankan **`AMBER`** + terisi catatan potensi kendala dari kemarin! Centang keduanya → klik **`Gunakan Item Terpilih ke Slot Hari Ini`**.
-   - Tambah **Slot #3** (tunjukkan batas maks. 3 slot): tulis `Review usulan desain fitur ekspor laporan`, pilih **`RED`** → tunjukkan wajib isi **`Potensi Kendala / Hambatan`** & beda tombol **`Pilih Blocker Aktif`** (tugas untuk membereskan tiket) vs **`Tiket Blocker Penyebab`** (tugas terhambat tiket). Kosongkan lagi Slot #3 atau isi lengkap.
-   - Klik **`Simpan Draf`** → muat ulang (`F5`) untuk membuktikan ketikan aman tersimpan di browser!
-   - Klik **`Kirim Morning Commitment`** → layar terkunci rapi (**`ON-TIME`**) + tombol **`Ajukan Koreksi Komitmen Pagi`** *(Ambil **`WP-SS-06`**)*.
-3. **2C — Kirim `0 Komitmen Hari Ini` Sampai Tuntas (`qa@dutamedia.com` di Jendela 6 → `/daily/morning`)** *(Ambil **`WP-SS-05`**)*:
+2. **2B — Kirim `0 Komitmen Hari Ini` Sampai Tuntas (`qa@dutamedia.com` di Jendela 6 → `/daily/morning`)** *(Ambil **`WP-SS-05`**)*:
+   - *(Sesuai urutan tampilan layar dari atas ke bawah: jelaskan bagian paling atas kotak centang **`0 Komitmen`** terlebih dahulu — untuk hari pelatihan internal, rapat seharian, onboarding, atau audit agar karyawan tidak mengarang tugas palsu, sejalan dengan PRD asli atasan "maksimum 3 item" & `DEC-004`).*
    - Centang **`Hari ini tidak ada komitmen harian khusus (0 Komitmen)`** → isi alasan resmi (siap salin):
      ```text
      Mengikuti pelatihan sertifikasi pengujian otomatis dan audit mutu internal seharian penuh bersama tim HRGA
      ```
    - Klik **`Kirim Morning Commitment`** → tampil kartu hijau **`Status 0 Komitmen (Bebas Komitmen Kerja Hari Ini)`**! Keluar dari `qa`.
+3. **2C — Komitmen Pagi Lengkap dengan `Prioritas Kemarin Sore`, `Carry-Over`, `Simpan Draf`, Validasi, & Picker Blocker (`product@dutamedia.com` di Jendela 2 → `/daily/morning`)** *(Ambil **`WP-SS-03`** & **`WP-SS-04`**)*:
+   - Tunjukkan kotak **`Prioritas Kemarin Sore`** & contoh kalimat panduan otomatis khusus divisi Delivery.
+   - Klik **`Lihat Draf`** pada **`Draf Tugas Berlanjut dari Kemarin (2 Tersedia)`** → tunjukkan **`Carry-Over #2`** yang otomatis disarankan **`AMBER`** + terisi catatan potensi kendala dari kemarin! Centang keduanya → klik **`Gunakan Item Terpilih ke Slot Hari Ini`**.
+   - Tambah **Slot #3** (tunjukkan batas maks. 3 slot): tulis `Review usulan desain fitur ekspor laporan`, pilih **`RED`** → tunjukkan wajib isi **`Potensi Kendala / Hambatan`** & beda tombol **`Pilih Blocker Aktif`** (tugas untuk membereskan tiket) vs **`Tiket Blocker Penyebab`** (tugas terhambat tiket). Kosongkan lagi Slot #3 atau isi lengkap.
+   - Klik **`Simpan Draf`** → muat ulang (`F5`) untuk membuktikan ketikan aman tersimpan di browser!
+   - Klik **`Kirim Morning Commitment`** → layar terkunci rapi (**`ON-TIME`**) + tombol **`Ajukan Koreksi Komitmen Pagi`** *(Ambil **`WP-SS-06`**)*.
 4. **2D — Pembuktian Karyawan Sedang Cuti Resmi Disetujui (`specialist.it@dutamedia.com` — Achmad Noer di Jendela 6):**
    - Masuk sebagai `specialist.it@dutamedia.com` → langsung tampil **Spanduk Hijau `Masa Cuti Resmi Disetujui`** di `/daily/morning` (bebas Komitmen Pagi, Tugas Tambahan, & EOD!). Keluar.
 5. **2E — Pekerjaan Tambahan Siang Hari: Tambah, `Edit`, & `Hapus` (`product@dutamedia.com` di Jendela 2 → `/daily/additional-work`)** *(Ambil **`WP-SS-07`**)*:
