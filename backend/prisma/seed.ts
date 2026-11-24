@@ -1208,8 +1208,13 @@ async function main() {
   const h1Morning = new Date(prevWorkdayDate.getTime() + 1.5 * 3600 * 1000); // 08:30 WIB
   const h1Eod = new Date(prevWorkdayDate.getTime() + 10 * 3600 * 1000); // 17:00 WIB
 
-  // Pastikan formulir Hari H terbuka siap diisi untuk Dio Bayu Bagaskara & Raka Pratama
-  for (const openFormUserId of [productManagerUser.id, internFrontendUser.id]) {
+  // Pastikan formulir Hari H terbuka siap diisi untuk Dio Bayu, Raka Pratama, Nadia Kusuma, & Oivi Deasepta
+  for (const openFormUserId of [
+    productManagerUser.id,
+    internFrontendUser.id,
+    qaUser.id,
+    staffFinanceUser.id,
+  ]) {
     const todayRec = await prisma.dailyAccountabilityRecord.findUnique({
       where: { userId_workDate: { userId: openFormUserId, workDate } },
       include: { commitments: { select: { id: true } } },
@@ -1224,6 +1229,22 @@ async function main() {
       await prisma.dailyAccountabilityRecord.delete({ where: { id: todayRec.id } });
     }
   }
+
+  // Pastikan Oivi Deasepta (akun cabang demo cuti/dispensasi Hari H) selalu mulai dalam kondisi kerja normal
+  await prisma.leaveRequest.deleteMany({
+    where: {
+      userId: staffFinanceUser.id,
+      startDate: { lte: workDate },
+      endDate: { gte: workDate },
+    },
+  });
+  await prisma.boundedExemption.deleteMany({
+    where: {
+      userId: staffFinanceUser.id,
+      startDate: { lte: workDate },
+      endDate: { gte: workDate },
+    },
+  });
 
   // 1) Dio Bayu Bagaskara (product@dutamedia.com): H-2 -> H-1 (memicu Carry-Over #2 AMBER & Carry-Over #1 + Tomorrow Priority)
   const dioH2Record = await upsertPastDailyRecordBypassTrigger({
@@ -1327,7 +1348,7 @@ async function main() {
     commitments: [
       {
         sequenceNo: 1,
-        taskText: 'Implementasi tata letak kartu responsif pada modul pengajuan izin',
+        taskText: 'Implementasi tata letak kartu responsif pada halaman riwayat cuti dan dispensasi',
         referenceLink: 'https://github.com/dutamedia/workpulse/pull/225',
         initialRisk: CommitmentRisk.GREEN,
         isCarryOver: false,
@@ -1697,11 +1718,16 @@ async function main() {
         userId: salesBdUser.id,
         startDate: exStart,
         endDate: exEnd,
-        exemptionCategory: 'DINAS_LUAR',
+        exemptionCategory: 'Dinas Luar',
         officialReferenceNumber: 'ST/HRGA/2026/XI/104',
         reason: 'Kunjungan presentasi proposal solusi teknologi ke klien korporasi di Surabaya',
         createdByUserId: hrgaUser.id,
       },
+    });
+  } else if (existingExemptionHari.exemptionCategory !== 'Dinas Luar') {
+    await prisma.boundedExemption.update({
+      where: { id: existingExemptionHari.id },
+      data: { exemptionCategory: 'Dinas Luar' },
     });
   }
 
