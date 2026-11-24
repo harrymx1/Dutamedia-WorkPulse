@@ -203,8 +203,25 @@ async function scrollLeftCardIntoView(ticketId?: string) {
   const cardEl = document.querySelector(
     `[data-testid="ticket-card-${ticketId}"]`,
   ) as HTMLElement | null;
-  if (cardEl && typeof cardEl.scrollIntoView === 'function') {
-    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  if (!cardEl) return;
+
+  // 1. Gulir KHUSUS wadah daftar panel kiri agar kartu terpilih muncul tanpa menarik seluruh halaman melewati header panel kanan
+  const listEl = listSectionRef.value;
+  if (listEl && typeof listEl.scrollTo === 'function') {
+    const cardRect = cardEl.getBoundingClientRect();
+    const listRect = listEl.getBoundingClientRect();
+    const targetTop =
+      listEl.scrollTop +
+      (cardRect.top - listRect.top) -
+      Math.max(0, (listEl.clientHeight - cardEl.clientHeight) / 2);
+    listEl.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+  }
+
+  // 2. Posisikan halaman luar tepat pada filter bar di atas 2-panel agar header panel kanan (Tiket #... & tombol aksi) selalu utuh terlihat
+  const toolbarEl = document.querySelector('.filter-toolbar') as HTMLElement | null;
+  if (toolbarEl && typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+    const topPos = toolbarEl.getBoundingClientRect().top + window.scrollY - 68;
+    window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
   }
 }
 
