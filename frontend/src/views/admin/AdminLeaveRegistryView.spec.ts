@@ -47,7 +47,7 @@ describe('AdminLeaveRegistryView.vue (DEC-018 Pencatatan Cuti Resmi Ter-ACC)', (
                 leaveType: 'ANNUAL',
                 reason: 'Cuti tahunan keperluan keluarga',
                 status: 'APPROVED',
-                user: { id: 'u-1', fullName: 'Achmad Noer', email: 'specialist.it@dutamedia.com' },
+                user: { id: 'u-1', fullName: 'Gilang Ramadhan', email: 'specialist.it@dutamedia.com' },
                 reviewedBy: { id: 'hr-1', fullName: 'Dewi HRGA' },
               },
             ],
@@ -60,7 +60,7 @@ describe('AdminLeaveRegistryView.vue (DEC-018 Pencatatan Cuti Resmi Ter-ACC)', (
         json: async () => ({
           success: true,
           data: [
-            { id: 'u-1', fullName: 'Achmad Noer', email: 'specialist.it@dutamedia.com' },
+            { id: 'u-1', fullName: 'Gilang Ramadhan', email: 'specialist.it@dutamedia.com' },
           ],
         }),
       });
@@ -83,7 +83,7 @@ describe('AdminLeaveRegistryView.vue (DEC-018 Pencatatan Cuti Resmi Ter-ACC)', (
     await flushPromises();
 
     expect(wrapper.find('h1').text()).toBe('Pencatatan Cuti Resmi');
-    expect(wrapper.text()).toContain('Achmad Noer');
+    expect(wrapper.text()).toContain('Gilang Ramadhan');
     expect(wrapper.text()).toContain('Cuti Tahunan');
     expect(wrapper.text()).toContain('Dewi HRGA');
 

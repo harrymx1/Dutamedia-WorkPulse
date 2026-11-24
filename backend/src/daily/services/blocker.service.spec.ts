@@ -1807,23 +1807,23 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
     it('routes 16 blocker categories accurately using BlockerCategoryOwner, project authority, CROSS_TEAM, and fallback rules (DEC-017)', async () => {
       const categoryOwnersByType: Record<string, string> = {
         TECHNICAL: 'lead-bambang',
-        INFRA: 'staff-fakhrizal',
-        HOSTING_DOMAIN: 'staff-achmad',
-        ACCESS_SECURITY: 'staff-rahian',
-        NETWORK: 'staff-fakhrizal',
-        WORK_DEVICE: 'staff-rahian',
-        OFFICE_FACILITY: 'staff-sugito',
-        FINANCE: 'staff-oivi',
-        CLIENT: 'staff-hari',
+        INFRA: 'staff-reza',
+        HOSTING_DOMAIN: 'staff-gilang',
+        ACCESS_SECURITY: 'staff-taufik',
+        NETWORK: 'staff-reza',
+        WORK_DEVICE: 'staff-taufik',
+        OFFICE_FACILITY: 'staff-eko',
+        FINANCE: 'staff-intan',
+        CLIENT: 'staff-bayu',
       };
       const usersDirectory: Record<string, { fullName: string; jobTitle: string }> = {
         'lead-bambang': { fullName: 'Bambang Pratama', jobTitle: 'Technical Lead 1' },
-        'staff-fakhrizal': { fullName: 'Fakhrizal Asshiddiq', jobTitle: 'Network & Infrastructure Engineer' },
-        'staff-achmad': { fullName: 'Achmad Noer Wahid', jobTitle: 'IT Systems & Cloud Specialist' },
-        'staff-rahian': { fullName: 'Rahian M. Suari', jobTitle: 'IT Technical Support' },
-        'staff-sugito': { fullName: 'Sugito Erik Fajar', jobTitle: 'General Affairs (GA) Officer' },
-        'staff-oivi': { fullName: 'Oivi Deasepta', jobTitle: 'Finance & Invoicing Staff' },
-        'staff-hari': { fullName: 'Hari Wibowo', jobTitle: 'Business Development Executive' },
+        'staff-reza': { fullName: 'Reza Mahendra', jobTitle: 'Network & Infrastructure Engineer' },
+        'staff-gilang': { fullName: 'Gilang Ramadhan', jobTitle: 'IT Systems & Cloud Specialist' },
+        'staff-taufik': { fullName: 'Taufik Hidayat', jobTitle: 'IT Technical Support' },
+        'staff-eko': { fullName: 'Eko Prasetyo', jobTitle: 'General Affairs (GA) Officer' },
+        'staff-intan': { fullName: 'Intan Permata', jobTitle: 'Finance & Invoicing Staff' },
+        'staff-bayu': { fullName: 'Bayu Santoso', jobTitle: 'Business Development Executive' },
         'head-arif': { fullName: 'Arif Budiman', jobTitle: 'Head of Engineering' },
         'head-dewi': { fullName: 'Dewi Lestari', jobTitle: 'HRGA & Corporate Legal Administration' },
         'head-dharma': { fullName: 'Dharma Putra', jobTitle: 'Head of Delivery' },
@@ -1878,19 +1878,19 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         expectedOwnerId: string;
       }> = [
         { type: BlockerType.TECHNICAL, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'lead-bambang' },
-        { type: BlockerType.INFRA, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-fakhrizal' },
-        { type: BlockerType.HOSTING_DOMAIN, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-achmad' },
-        { type: BlockerType.ACCESS_SECURITY, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-rahian' },
-        { type: BlockerType.NETWORK, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-fakhrizal' },
-        { type: BlockerType.WORK_DEVICE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-rahian' },
-        { type: BlockerType.OFFICE_FACILITY, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-sugito' },
+        { type: BlockerType.INFRA, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-reza' },
+        { type: BlockerType.HOSTING_DOMAIN, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-gilang' },
+        { type: BlockerType.ACCESS_SECURITY, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-taufik' },
+        { type: BlockerType.NETWORK, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-reza' },
+        { type: BlockerType.WORK_DEVICE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-taufik' },
+        { type: BlockerType.OFFICE_FACILITY, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-eko' },
         { type: BlockerType.REQUIREMENT, ownerNeededType: AuthorityContext.PROJECT_AUTHORITY, projectCode: 'PRJ-PORTAL', expectedOwnerId: 'pm-dimas' },
         { type: BlockerType.APPROVAL, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
         { type: BlockerType.CROSS_TEAM, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, waitingForFunction: CanonicalFunction.Delivery, expectedOwnerId: 'head-dharma' },
         { type: BlockerType.RESOURCE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
-        { type: BlockerType.CLIENT, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-hari' },
+        { type: BlockerType.CLIENT, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-bayu' },
         { type: BlockerType.VENDOR, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
-        { type: BlockerType.FINANCE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-oivi' },
+        { type: BlockerType.FINANCE, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'staff-intan' },
         { type: BlockerType.LEGAL, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-dewi' },
         { type: BlockerType.OTHER, ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY, expectedOwnerId: 'head-arif' },
       ];
@@ -1911,15 +1911,15 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       mockPrisma.blockerCategoryOwner = {
         findFirst: vi.fn().mockResolvedValue({
           blockerType: BlockerType.NETWORK,
-          ownerUserId: 'staff-fakhrizal',
+          ownerUserId: 'staff-reza',
         }),
       };
       mockPrisma.temporaryReviewerAssignment = { findMany: vi.fn().mockResolvedValue([]) };
       mockPrisma.organizationalAssignment = {
         findFirst: vi.fn().mockImplementation(async ({ where }: any) => {
-          if (where?.userId === 'staff-fakhrizal') {
+          if (where?.userId === 'staff-reza') {
             return {
-              userId: 'staff-fakhrizal',
+              userId: 'staff-reza',
               role: 'EMPLOYEE',
               function: CanonicalFunction.OperationsInfrastructure,
               directManagerId: 'head-gunawan',
@@ -1947,10 +1947,10 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         return null;
       });
 
-      // Kasus 1: Fakhrizal sedang cuti resmi -> naik ke Pak Gunawan (bukan ke rekan Operations)
+      // Kasus 1: Reza sedang cuti resmi -> naik ke Pak Gunawan (bukan ke rekan Operations)
       mockPrisma.leaveRequest = {
         findFirst: vi.fn().mockImplementation(async ({ where }: any) => {
-          if (where?.userId === 'staff-fakhrizal') {
+          if (where?.userId === 'staff-reza') {
             return { id: 'lv-fk', status: 'APPROVED' };
           }
           return null;
@@ -1964,9 +1964,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       expect(resOnLeave.reason).toBe('CATEGORY_OWNER');
       expect(resOnLeave.routingNote).toContain('atasan langsung');
 
-      // Kasus 2: Pelapor adalah Fakhrizal sendiri -> langsung naik ke atasannya (Pak Gunawan), tidak ke dirinya sendiri
+      // Kasus 2: Pelapor adalah Reza sendiri -> langsung naik ke atasannya (Pak Gunawan), tidak ke dirinya sendiri
       mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
-      const resSelf = await service.resolveSuggestedOwner('staff-fakhrizal', {
+      const resSelf = await service.resolveSuggestedOwner('staff-reza', {
         type: BlockerType.NETWORK,
         ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
       });
@@ -1975,10 +1975,10 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
     });
 
     it('includes full category label and all impacts in BLOCKER_RAISED, BLOCKER_CRITICAL_ESCALATION, UPDATE, and DELETE notifications', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' });
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'staff-reza', fullName: 'Reza Mahendra' });
       mockPrisma.organizationalAssignment = {
         findFirst: vi.fn().mockResolvedValue({
-          userId: 'staff-fakhrizal',
+          userId: 'staff-reza',
           role: 'EMPLOYEE',
           function: CanonicalFunction.OperationsInfrastructure,
           directManagerId: 'head-gunawan',
@@ -1995,7 +1995,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         status: BlockerStatus.OPEN,
         description: '[Internet Mati Total] Seluruh jaringan lantai 2 terputus',
         raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho', email: 'dev.frontend@dutamedia.com' },
-        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq', email: 'network.infra@dutamedia.com' },
+        assignedOwner: { id: 'staff-reza', fullName: 'Reza Mahendra', email: 'network.infra@dutamedia.com' },
       });
 
       await service.raiseBlocker('emp-adit', {
@@ -2004,7 +2004,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         impacts: [BlockerImpact.COMPANY_OPS, BlockerImpact.TEAM],
         description: '[Internet Mati Total] Seluruh jaringan lantai 2 terputus',
         ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
-        assignedOwnerId: 'staff-fakhrizal',
+        assignedOwnerId: 'staff-reza',
       } as any);
 
       expect(mockPrisma.notification.create).toHaveBeenCalledTimes(2);
@@ -2031,10 +2031,10 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         status: BlockerStatus.OPEN,
         description: '[Internet Lambat] Koneksi tidak stabil',
         raisedByUserId: 'emp-adit',
-        assignedOwnerId: 'staff-fakhrizal',
+        assignedOwnerId: 'staff-reza',
         raisedAt: new Date('2026-11-18T01:00:00.000Z'),
         raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
-        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' },
+        assignedOwner: { id: 'staff-reza', fullName: 'Reza Mahendra' },
         supportContributions: [],
       });
       mockPrisma.blockerTicket.update.mockResolvedValue({
@@ -2046,7 +2046,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         status: BlockerStatus.OPEN,
         description: '[Listrik Lantai 2 Padam] Panel listrik ruang kerja turun',
         raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
-        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' },
+        assignedOwner: { id: 'staff-reza', fullName: 'Reza Mahendra' },
       });
 
       await service.updateBlocker('emp-adit', 'blk-notif-full', {
@@ -2079,7 +2079,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       mockPrisma.blockerCategoryOwner = {
         findFirst: vi.fn().mockResolvedValue({
           blockerType: BlockerType.NETWORK,
-          ownerUserId: 'staff-fakhrizal',
+          ownerUserId: 'staff-reza',
         }),
       };
       mockPrisma.temporaryReviewerAssignment = { findMany: vi.fn().mockResolvedValue([]) };
@@ -2089,12 +2089,12 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         findMany: vi.fn().mockResolvedValue([]),
       };
       mockPrisma.user.findFirst = vi.fn().mockResolvedValue({
-        id: 'staff-fakhrizal',
-        fullName: 'Fakhrizal Asshiddiq',
+        id: 'staff-reza',
+        fullName: 'Reza Mahendra',
         orgAssignments: [{ jobTitle: 'Network & Infrastructure Engineer' }],
       });
 
-      // Kasus 1: Status masih OPEN dan kategori diubah dari TECHNICAL -> NETWORK => pindah ke staff-fakhrizal
+      // Kasus 1: Status masih OPEN dan kategori diubah dari TECHNICAL -> NETWORK => pindah ke staff-reza
       mockPrisma.blockerTicket.findUnique.mockResolvedValue({
         id: 'blk-reroute-open',
         type: BlockerType.TECHNICAL,
@@ -2114,9 +2114,9 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       mockPrisma.blockerTicket.update.mockResolvedValue({
         id: 'blk-reroute-open',
         type: BlockerType.NETWORK,
-        assignedOwnerId: 'staff-fakhrizal',
+        assignedOwnerId: 'staff-reza',
         raisedBy: { id: 'emp-adit', fullName: 'Aditya Nugroho' },
-        assignedOwner: { id: 'staff-fakhrizal', fullName: 'Fakhrizal Asshiddiq' },
+        assignedOwner: { id: 'staff-reza', fullName: 'Reza Mahendra' },
       });
 
       await service.updateBlocker('emp-adit', 'blk-reroute-open', {
@@ -2130,7 +2130,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         expect.objectContaining({
           data: expect.objectContaining({
             type: BlockerType.NETWORK,
-            assignedOwnerId: 'staff-fakhrizal',
+            assignedOwnerId: 'staff-reza',
           }),
         }),
       );
@@ -2138,7 +2138,7 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         (c: any) => c[0].data.recipientUserId,
       );
       expect(recipientsOpen).toEqual(
-        expect.arrayContaining(['staff-fakhrizal', 'lead-bambang']),
+        expect.arrayContaining(['staff-reza', 'lead-bambang']),
       );
 
       // Kasus 2: Status sudah ACKNOWLEDGED => PIC tidak berpindah meski kategori diedit

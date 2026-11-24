@@ -768,7 +768,7 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
                 description: '[WiFi Lantai 2 Mati] Koneksi kantor terputus sejak pagi',
                 status: 'OPEN',
                 raisedAt: '2026-11-18T08:00:00Z',
-                assignedOwner: { id: 'usr-fk', fullName: 'Fakhrizal Asshiddiq', email: 'network.infra@dutamedia.com' },
+                assignedOwner: { id: 'usr-fk', fullName: 'Reza Mahendra', email: 'network.infra@dutamedia.com' },
               },
             ],
           }),

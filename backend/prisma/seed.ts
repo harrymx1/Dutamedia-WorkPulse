@@ -163,7 +163,7 @@ async function main() {
     },
     {
       email: 'product@dutamedia.com',
-      fullName: 'Dio Bayu Bagaskara',
+      fullName: 'Bagas Saputra',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -185,21 +185,21 @@ async function main() {
     },
     {
       email: 'network.infra@dutamedia.com',
-      fullName: 'Fakhrizal Asshiddiq',
+      fullName: 'Reza Mahendra',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
     },
     {
       email: 'specialist.it@dutamedia.com',
-      fullName: 'Achmad Noer Wahid',
+      fullName: 'Gilang Ramadhan',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
     },
     {
       email: 'it.support@dutamedia.com',
-      fullName: 'Rahian M. Suari',
+      fullName: 'Taufik Hidayat',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -222,7 +222,7 @@ async function main() {
     },
     {
       email: 'sales.bd@dutamedia.com',
-      fullName: 'Hari Wibowo',
+      fullName: 'Bayu Santoso',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -237,7 +237,7 @@ async function main() {
     },
     {
       email: 'staff.finance@dutamedia.com',
-      fullName: 'Oivi Deasepta',
+      fullName: 'Intan Permata',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -252,7 +252,7 @@ async function main() {
     },
     {
       email: 'ga@dutamedia.com',
-      fullName: 'Sugito Erik Fajar',
+      fullName: 'Eko Prasetyo',
       status: UserStatus.ACTIVE,
       passwordHash: defaultPasswordHash,
       preserveStatusOnUpdate: false,
@@ -1208,7 +1208,7 @@ async function main() {
   const h1Morning = new Date(prevWorkdayDate.getTime() + 1.5 * 3600 * 1000); // 08:30 WIB
   const h1Eod = new Date(prevWorkdayDate.getTime() + 10 * 3600 * 1000); // 17:00 WIB
 
-  // Pastikan formulir Hari H terbuka siap diisi untuk Dio Bayu, Raka Pratama, Nadia Kusuma, & Oivi Deasepta
+  // Pastikan formulir Hari H terbuka siap diisi untuk Bagas Saputra, Raka Pratama, Nadia Kusuma, & Intan Permata
   for (const openFormUserId of [
     productManagerUser.id,
     internFrontendUser.id,
@@ -1230,7 +1230,7 @@ async function main() {
     }
   }
 
-  // Pastikan Oivi Deasepta (akun cabang demo cuti/dispensasi Hari H) selalu mulai dalam kondisi kerja normal
+  // Pastikan Intan Permata (akun cabang demo cuti/dispensasi Hari H) selalu mulai dalam kondisi kerja normal
   await prisma.leaveRequest.deleteMany({
     where: {
       userId: staffFinanceUser.id,
@@ -1246,8 +1246,8 @@ async function main() {
     },
   });
 
-  // 1) Dio Bayu Bagaskara (product@dutamedia.com): H-2 -> H-1 (memicu Carry-Over #2 AMBER & Carry-Over #1 + Tomorrow Priority)
-  const dioH2Record = await upsertPastDailyRecordBypassTrigger({
+  // 1) Bagas Saputra (product@dutamedia.com): H-2 -> H-1 (memicu Carry-Over #2 AMBER & Carry-Over #1 + Tomorrow Priority)
+  const bagasH2Record = await upsertPastDailyRecordBypassTrigger({
     userId: productManagerUser.id,
     workDate: prev2WorkdayDate,
     orgContextSnapshot: {
@@ -1279,7 +1279,7 @@ async function main() {
     ],
   });
 
-  const dioH2Commitment1 = dioH2Record.commitments.find((c) => c.sequenceNo === 1);
+  const bagasH2Commitment1 = bagasH2Record.commitments.find((c) => c.sequenceNo === 1);
   await upsertPastDailyRecordBypassTrigger({
     userId: productManagerUser.id,
     workDate: prevWorkdayDate,
@@ -1307,7 +1307,7 @@ async function main() {
         knownBlockerNote: 'Menunggu konfirmasi skema diskon bertingkat dari tim Finance',
         isCarryOver: true,
         carryOverDaysCount: 1,
-        originCommitmentId: dioH2Commitment1?.id ?? null,
+        originCommitmentId: bagasH2Commitment1?.id ?? null,
         outcome: CommitmentOutcome.PARTIALLY_COMPLETED,
         continuation: ContinuationStatus.CONTINUE,
         continuationReason: 'Masih menunggu tabel tarif pajak final dari Finance, dilanjutkan pagi ini',
@@ -1599,20 +1599,20 @@ async function main() {
     });
   }
 
-  // 6c-3. Cuti Resmi APPROVED Hari Ini untuk Specialist IT (Achmad Noer Wahid — Penanggung Jawab Kategori HOSTING_DOMAIN)
+  // 6c-3. Cuti Resmi APPROVED Hari Ini untuk Specialist IT (Gilang Ramadhan — Penanggung Jawab Kategori HOSTING_DOMAIN)
   // Membuktikan langsung 2 fitur sekaligus: (1) Spanduk Hijau Bebas Check-In & (2) Aturan Cuti Vertikal Blocker (naik ke Gunawan Setiawan)
-  const existingApprovedLeaveAchmad = await prisma.leaveRequest.findFirst({
+  const existingApprovedLeaveGilang = await prisma.leaveRequest.findFirst({
     where: { userId: specialistItUser.id, status: 'APPROVED', startDate: workDate },
   });
-  if (!existingApprovedLeaveAchmad) {
-    const tomorrowAchmad = new Date(workDate);
-    tomorrowAchmad.setDate(tomorrowAchmad.getDate() + 1);
+  if (!existingApprovedLeaveGilang) {
+    const tomorrowGilang = new Date(workDate);
+    tomorrowGilang.setDate(tomorrowGilang.getDate() + 1);
 
     await prisma.leaveRequest.create({
       data: {
         userId: specialistItUser.id,
         startDate: workDate,
-        endDate: tomorrowAchmad,
+        endDate: tomorrowGilang,
         leaveType: 'ANNUAL',
         reason: 'Cuti tahunan keperluan keluarga (disetujui resmi Head Ops & Infra)',
         status: 'APPROVED',
@@ -1704,11 +1704,11 @@ async function main() {
     });
   }
 
-  // 6f. Dispensasi Kepatuhan Aktif (BoundedExemption) — Dinas Luar Sales/BD (Hari Wibowo) pada H+2 s/d H+3
-  const existingExemptionHari = await prisma.boundedExemption.findFirst({
+  // 6f. Dispensasi Kepatuhan Aktif (BoundedExemption) — Dinas Luar Sales/BD (Bayu Santoso) pada H+2 s/d H+3
+  const existingExemptionBayu = await prisma.boundedExemption.findFirst({
     where: { userId: salesBdUser.id, officialReferenceNumber: 'ST/HRGA/2026/XI/104' },
   });
-  if (!existingExemptionHari) {
+  if (!existingExemptionBayu) {
     const exStart = new Date(workDate);
     exStart.setDate(exStart.getDate() + 2);
     const exEnd = new Date(workDate);
@@ -1724,9 +1724,9 @@ async function main() {
         createdByUserId: hrgaUser.id,
       },
     });
-  } else if (existingExemptionHari.exemptionCategory !== 'Dinas Luar') {
+  } else if (existingExemptionBayu.exemptionCategory !== 'Dinas Luar') {
     await prisma.boundedExemption.update({
-      where: { id: existingExemptionHari.id },
+      where: { id: existingExemptionBayu.id },
       data: { exemptionCategory: 'Dinas Luar' },
     });
   }
@@ -1779,20 +1779,20 @@ async function main() {
   • Backend Developer (Eng)  : dev.backend@dutamedia.com    (Siti Rahma)       [EMPLOYEE]
   • Head of Delivery         : head.delivery@dutamedia.com  (Dharma Putra)        [HEAD]
   • Project Manager 1 (Del)  : pm@dutamedia.com             (Dimas Prakoso)       [PROJECT_MANAGER / Project Lead PRJ-PORTAL & PRJ-MOBILE]
-  • Product Manager (Del)    : product@dutamedia.com        (Dio Bayu Bagaskara)  [PROJECT_MANAGER]
+  • Product Manager (Del)    : product@dutamedia.com        (Bagas Saputra)  [PROJECT_MANAGER]
   • Software QA (Del)        : qa@dutamedia.com             (Nadia Kusuma)        [EMPLOYEE]
   • Head of Ops & Infra      : head.ops@dutamedia.com       (Gunawan Setiawan)    [HEAD]
   • Operations Supervisor    : lead.creative@dutamedia.com  (Rian Kurniawan)      [SUPERVISOR]
-  • Network & Infra (Ops)    : network.infra@dutamedia.com  (Fakhrizal Asshiddiq) [EMPLOYEE]
-  • Specialist IT (Ops)      : specialist.it@dutamedia.com  (Achmad Noer Wahid)   [EMPLOYEE]
-  • IT Support (Ops)         : it.support@dutamedia.com     (Rahian M. Suari)     [EMPLOYEE]
+  • Network & Infra (Ops)    : network.infra@dutamedia.com  (Reza Mahendra) [EMPLOYEE]
+  • Specialist IT (Ops)      : specialist.it@dutamedia.com  (Gilang Ramadhan)   [EMPLOYEE]
+  • IT Support (Ops)         : it.support@dutamedia.com     (Taufik Hidayat)     [EMPLOYEE]
   • Principal Engineer (R&D) : designer@dutamedia.com       (Maya Putri)          [EMPLOYEE]
   • Head of Sales & Presales : head.sales@dutamedia.com     (Lukman Hakim)        [HEAD]
-  • Sales / BD Executive     : sales.bd@dutamedia.com       (Hari Wibowo)         [EMPLOYEE]
+  • Sales / BD Executive     : sales.bd@dutamedia.com       (Bayu Santoso)         [EMPLOYEE]
   • Senior Finance Staff     : finance@dutamedia.com        (Ratna Sari)          [EMPLOYEE]
-  • Finance Staff            : staff.finance@dutamedia.com  (Oivi Deasepta)       [EMPLOYEE]
+  • Finance Staff            : staff.finance@dutamedia.com  (Intan Permata)       [EMPLOYEE]
   • HRGA & Legal Admin       : hrga@dutamedia.com           (Dewi Lestari)        [HRGA]
-  • General Affairs (GA)     : ga@dutamedia.com             (Sugito Erik Fajar)   [EMPLOYEE]
+  • General Affairs (GA)     : ga@dutamedia.com             (Eko Prasetyo)   [EMPLOYEE]
   ════════════════════════════════════════════════════════════════════════════
   `);
 }

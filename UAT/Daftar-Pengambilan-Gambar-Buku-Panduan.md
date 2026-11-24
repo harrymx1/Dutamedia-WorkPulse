@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-### SESI 1A — FORM KOMITMEN PAGI TERBUKA (*Dio Bayu Bagaskara — `product@dutamedia.com` atau Nadia Kusuma — `qa@dutamedia.com` / `Password123!`*)
+### SESI 1A — FORM KOMITMEN PAGI TERBUKA (*Bagas Saputra — `product@dutamedia.com` atau Nadia Kusuma — `qa@dutamedia.com` / `Password123!`*)
 *(Direkomendasikan memakai `product@dutamedia.com` untuk `WP-SS-04` karena sudah punya data `H-2 → H-1` yang langsung memunculkan kotak `Prioritas Kemarin Sore` dan panel `Draf Tugas Berlanjut dari Kemarin (2 Tersedia)`).*
 
 | Kode | Nama Berkas (`.png`) | Alamat Halaman | Buku Panduan | Petunjuk Pengambilan Gambar | Aturan Tombol | Selesai |
@@ -67,7 +67,7 @@ flowchart TD
 | **`WP-SS-08`** | `WP-SS-08-eod-form.png` | `/daily/eod` | Versi 1 (Bab 2.4) | Pilih status capaian pada daftar tugas (`Selesai Penuh` / `Selesai Sebagian`), isi catatan progres, pilih `Status Akhir Hari`, dan isi `Prioritas Utama Besok`. | **`[JANGAN KLIK KIRIM DULU]`** | [ ] |
 | **`WP-SS-09`** | `WP-SS-09-eod-submitted.png` | `/daily/eod` | Versi 1 (Bab 2.4) | Lanjutan dari `WP-SS-08`: klik **`Kirim Evaluasi EOD`**, lalu foto Kartu Ringkasan Evaluasi Sore yang sudah terkunci (terlihat tombol `Ajukan Koreksi EOD`). | **`[KLIK KIRIM]`** | [ ] |
 | **`WP-SS-10`** | `WP-SS-10-daily-history.png` | `/daily/history` | Versi 1 (Bab 2.5) | Tampilkan 4 kartu ringkasan atas, tombol `Unduh CSV`, dan klik 1 baris tanggal pada tabel agar rinciannya terbuka (*expanded*). | Hanya Tampil | [ ] |
-| **`WP-SS-11`** | `WP-SS-11-raise-blocker-form.png` | `/raise-blockers` | Versi 1 (Bab 3.2) | Isi Judul, pilih Kategori `Server & Rilis Sistem (INFRA)`, centang 2 dari 9 Dampak, pilih `High`, isi deskripsi, dan pastikan Panel **Jalur Penanganan Otomatis** (menunjuk *Fakhrizal Asshiddiq*) terlihat. | **`[JANGAN KLIK KIRIM DULU]`** | [ ] |
+| **`WP-SS-11`** | `WP-SS-11-raise-blocker-form.png` | `/raise-blockers` | Versi 1 (Bab 3.2) | Isi Judul, pilih Kategori `Server & Rilis Sistem (INFRA)`, centang 2 dari 9 Dampak, pilih `High`, isi deskripsi, dan pastikan Panel **Jalur Penanganan Otomatis** (menunjuk *Reza Mahendra*) terlihat. | **`[JANGAN KLIK KIRIM DULU]`** | [ ] |
 | **`WP-SS-12`** | `WP-SS-12-raise-blocker-success.png` | `/raise-blockers` | Versi 1 (Bab 3.2) | Lanjutan dari `WP-SS-11`: klik **`Kirim Laporan Blocker`**, lalu foto Kartu Konfirmasi Tiket Terbit lengkap dengan ID Tiket & tombol `Lihat di Blocker Saya`. | **`[KLIK KIRIM]`** | [ ] |
 | **`WP-SS-13`** | `WP-SS-13-leave-my-permanent.png` | `/leave/my` | Versi 1 (Bab 5.2) | Tampilkan kotak hijau `Jatah Cuti Tahunan`, isi formulir cuti (jangan kirim), dan tampilkan tabel riwayat pengajuan di sebelah kanan. | **`[JANGAN KLIK AJUKAN]`** | [ ] |
 | **`WP-SS-14`** | `WP-SS-14-correction-morning.png` | `/corrections/morning` | Versi 1 (Bab 4.2) | Pilih 1 komitmen sasaran, pilih `Koreksi Material`, isi teks usulan & alasan (min. 10 huruf) agar panel perbandingan terlihat. | **`[JANGAN KLIK KIRIM]`** | [ ] |

@@ -71,7 +71,7 @@
 Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 penugasan aktif berikut:
 1. **Punya Bawahan Langsung Aktif:** Membuka menu **`Catatan Coaching` (`/coaching`)** — berlaku bahkan bagi staf senior berstatus `EMPLOYEE` yang membawahi staf lain (contoh: *Ratna Sari* di Divisi Finance).
 2. **Pimpinan Proyek Aktif (`Project Lead`):** Siapa pun yang tercatat memimpin proyek di `/admin/organization` Tab 2 otomatis mendapat akses **`Pulse Dashboard`**, **`Radar Risiko Proyek`**, **`Antrean Blocker`**, dan **`Penuaan & Eskalasi`**. Begitu proyek ditutup lewat **`Tutup Wewenang`**, akses proyek otomatis berakhir.
-3. **Penanggung Jawab Kategori Kendala Resmi:** Staf spesialis (contoh: *Fakhrizal*, *Achmad Noer*, *Rahian*, *Sugito*, *Oivi*, *Hari Wibowo*) otomatis mendapat akses **`Antrean Blocker` (`/blockers`)** dan **`Penuaan & Eskalasi` (`/blockers/aging`)** meski peran dasarnya `EMPLOYEE`.
+3. **Penanggung Jawab Kategori Kendala Resmi:** Staf spesialis (contoh: *Reza*, *Gilang Ramadhan*, *Taufik*, *Eko*, *Intan*, *Bayu Santoso*) otomatis mendapat akses **`Antrean Blocker` (`/blockers`)** dan **`Penuaan & Eskalasi` (`/blockers/aging`)** meski peran dasarnya `EMPLOYEE`.
 4. **Reviewer Sementara Aktif:** Selama tanggal delegasi di `/admin/temporary-reviewers` sedang berlaku, penerima delegasi otomatis mendapat akses **`Review Koreksi` (`/corrections/review`)**, **`Antrean Blocker`**, dan **`Penuaan & Eskalasi`** untuk divisi pejabat yang digantikan.
 5. **Pemilik Kebijakan Resmi (`Policy Owner`):** Pejabat yang ditunjuk di Seksi 7 `/admin/policies` berhak mengubah parameter hanya pada kategori kebijakan yang menjadi wewenangnya (kategori lain bertanda `[Terkunci: Bukan Pemilik]`).
 

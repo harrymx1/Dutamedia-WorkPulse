@@ -121,9 +121,9 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
 
     it('sets isCategoryOwner=true and ownedBlockerCategories when user holds BlockerCategoryOwner mandates (DEC-017)', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
-        id: 'staff-fakhrizal',
+        id: 'staff-reza',
         email: 'network.infra@dutamedia.com',
-        fullName: 'Fakhrizal Asshiddiq',
+        fullName: 'Reza Mahendra',
         status: 'ACTIVE',
         passwordHash: '$argon2id$valid',
       });

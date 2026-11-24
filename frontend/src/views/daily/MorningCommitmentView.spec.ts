@@ -559,7 +559,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     const authStore = useAuthStore();
     authStore.user = {
       id: 'usr-del',
-      fullName: 'Dio Bayu Bagaskara',
+      fullName: 'Bagas Saputra',
       email: 'product@dutamedia.com',
       role: 'PROJECT_MANAGER',
       function: 'Delivery',
@@ -574,7 +574,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
 
     authStore.user = {
       id: 'usr-fin',
-      fullName: 'Oivi Deasepta',
+      fullName: 'Intan Permata',
       email: 'staff.finance@dutamedia.com',
       role: 'EMPLOYEE',
       function: 'Finance',
@@ -891,7 +891,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     const authStore = useAuthStore();
     authStore.user = {
       id: 'usr-dio-1',
-      fullName: 'Dio Bayu Bagaskara',
+      fullName: 'Bagas Saputra',
       email: 'product@dutamedia.com',
       role: 'PROJECT_MANAGER',
       status: 'ACTIVE',

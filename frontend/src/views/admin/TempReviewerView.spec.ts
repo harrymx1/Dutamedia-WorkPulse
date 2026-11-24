@@ -235,7 +235,7 @@ describe('TempReviewerView.vue (WP-EP03-TK007 / Prototipe 17 & IMP-058)', () => 
                 createdAt: '2026-11-10T00:00:00Z',
                 delegateUser: {
                   id: 'usr-dio',
-                  fullName: 'Dio Bayu',
+                  fullName: 'Bagas Saputra',
                   email: 'product@dutamedia.com',
                 },
                 createdBy: { id: 'admin-1', fullName: 'Admin', email: 'admin@dutamedia.com' },
