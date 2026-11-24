@@ -24,6 +24,9 @@ import {
   UserStatus,
   NotificationChannel,
   NotificationStatus,
+  ManagerNoteType,
+  NoteVisibility,
+  ComplianceEventStage,
 } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -1464,6 +1467,21 @@ async function main() {
       status: 'OPEN' as const,
       targetResolutionAt: new Date(Date.now() + 8 * 3600 * 1000),
     },
+    {
+      raisedByUserId: backendUser.id,
+      type: BlockerType.INFRA,
+      severity: BlockerSeverity.CRITICAL,
+      impact: BlockerImpact.PRODUCTION,
+      impacts: [BlockerImpact.PRODUCTION, BlockerImpact.MILESTONE, BlockerImpact.CLIENT],
+      description:
+        '[Server API Produksi WP-CORE Mengalami Lonjakan Timeout Database] Layanan sinkronisasi utama melebihi batas waktu respon sehingga menghambat jadwal rilis klien hari ini.',
+      ownerNeededType: AuthorityContext.PROJECT_AUTHORITY,
+      assignedOwnerId: networkInfraUser.id,
+      projectCodeReference: 'WP-CORE',
+      status: 'OPEN' as const,
+      // Sengaja diset 2 jam yang lalu agar Radar Penuaan (/blockers/aging) & Risiko Proyek langsung menampilkan status Lewat Batas Waktu
+      targetResolutionAt: new Date(Date.now() - 2 * 3600 * 1000),
+    },
   ];
 
   for (const sampleTicket of crossCategorySampleBlockers) {
@@ -1531,7 +1549,154 @@ async function main() {
     });
   }
 
-  // 6d. Notifikasi In-App untuk Technical Lead 1 & Head of Engineering
+  // 6c-2. Pengajuan Izin (PERMIT) PENDING untuk Anak Magang (Raka Pratama - Divisi Engineering) pada H+5
+  const existingLeaveRaka = await prisma.leaveRequest.findFirst({
+    where: { userId: internFrontendUser.id, status: 'PENDING' },
+  });
+  if (!existingLeaveRaka) {
+    const internPermitDate = new Date(workDate);
+    internPermitDate.setDate(internPermitDate.getDate() + 5);
+
+    await prisma.leaveRequest.create({
+      data: {
+        userId: internFrontendUser.id,
+        startDate: internPermitDate,
+        endDate: internPermitDate,
+        leaveType: 'PERMIT',
+        reason: 'Menghadiri seminar tugas akhir wajib di kampus (surat keterangan terlampir)',
+        status: 'PENDING',
+      },
+    });
+  }
+
+  // 6c-3. Cuti Resmi APPROVED Hari Ini untuk Specialist IT (Achmad Noer Wahid — Penanggung Jawab Kategori HOSTING_DOMAIN)
+  // Membuktikan langsung 2 fitur sekaligus: (1) Spanduk Hijau Bebas Check-In & (2) Aturan Cuti Vertikal Blocker (naik ke Gunawan Setiawan)
+  const existingApprovedLeaveAchmad = await prisma.leaveRequest.findFirst({
+    where: { userId: specialistItUser.id, status: 'APPROVED', startDate: workDate },
+  });
+  if (!existingApprovedLeaveAchmad) {
+    const tomorrowAchmad = new Date(workDate);
+    tomorrowAchmad.setDate(tomorrowAchmad.getDate() + 1);
+
+    await prisma.leaveRequest.create({
+      data: {
+        userId: specialistItUser.id,
+        startDate: workDate,
+        endDate: tomorrowAchmad,
+        leaveType: 'ANNUAL',
+        reason: 'Cuti tahunan keperluan keluarga (disetujui resmi Head Ops & Infra)',
+        status: 'APPROVED',
+        reviewedByUserId: headOpsUser.id,
+        reviewedAt: new Date(),
+        reviewNote: 'Disetujui. Seluruh kendala Hosting & Domain sementara dialihkan otomatis ke Head Ops & Infra.',
+      },
+    });
+  }
+
+  // 6d. Catatan Pembinaan Awal (ManagerNote) — 2 Mode Kerahasiaan (Dibagikan ke Karyawan vs Rahasia Manajemen)
+  const existingSharedNote = await prisma.managerNote.findFirst({
+    where: {
+      subjectUserId: frontendUser.id,
+      visibility: NoteVisibility.SHARED_WITH_EMPLOYEE,
+    },
+  });
+  if (!existingSharedNote) {
+    await prisma.managerNote.create({
+      data: {
+        subjectUserId: frontendUser.id,
+        authorUserId: headEngUser.id,
+        noteType: ManagerNoteType.RECOGNITION,
+        visibility: NoteVisibility.SHARED_WITH_EMPLOYEE,
+        content:
+          'Apresiasi atas inisiatif cepat menyelesaikan kerangka navigasi responsif lintas 5 ukuran layar sebelum tenggat UAT.',
+      },
+    });
+  }
+
+  const existingConfidentialNote = await prisma.managerNote.findFirst({
+    where: {
+      subjectUserId: frontendUser.id,
+      visibility: NoteVisibility.CONFIDENTIAL_MANAGER_ONLY,
+    },
+  });
+  if (!existingConfidentialNote) {
+    await prisma.managerNote.create({
+      data: {
+        subjectUserId: frontendUser.id,
+        authorUserId: headEngUser.id,
+        noteType: ManagerNoteType.COACHING,
+        visibility: NoteVisibility.CONFIDENTIAL_MANAGER_ONLY,
+        content:
+          '[Rahasia Manajemen] Perlu pendampingan tambahan estimasi beban kerja ketika mengerjakan 2 modul paralel agar risiko AMBER bisa ditekan.',
+      },
+    });
+  }
+
+  // 6e. Antrean Kepatuhan HRGA (ComplianceEvent) — 1 OPEN (Tindak Lanjut) & 1 ADDRESSED (Ubah Catatan)
+  const existingComplianceOpen = await prisma.complianceEvent.findFirst({
+    where: { userId: backendUser.id, stage: ComplianceEventStage.PATTERN_FLAG_3X },
+  });
+  if (!existingComplianceOpen) {
+    await prisma.complianceEvent.create({
+      data: {
+        userId: backendUser.id,
+        eventDate: prevWorkdayDate,
+        stage: ComplianceEventStage.PATTERN_FLAG_3X,
+        policySnapshot: { morningCutoff: '09:30', patternThreshold: 3 },
+        followUpStatus: 'OPEN',
+      },
+    });
+  }
+
+  const existingComplianceAddressed = await prisma.complianceEvent.findFirst({
+    where: { userId: qaUser.id, followUpStatus: 'ADDRESSED' },
+  });
+  if (!existingComplianceAddressed) {
+    const hrgaFollowUpNote = await prisma.managerNote.create({
+      data: {
+        subjectUserId: qaUser.id,
+        authorUserId: hrgaUser.id,
+        noteType: ManagerNoteType.COACHING,
+        visibility: NoteVisibility.SHARED_WITH_EMPLOYEE,
+        content:
+          'Sudah dikonfirmasi bersama Head of Delivery: keterlambatan disebabkan kendala listrik pagi hari di lokasi kerja.',
+      },
+    });
+    await prisma.complianceEvent.create({
+      data: {
+        userId: qaUser.id,
+        eventDate: prev2WorkdayDate,
+        stage: ComplianceEventStage.NO_SUBMISSION,
+        policySnapshot: { morningCutoff: '09:30' },
+        followUpStatus: 'ADDRESSED',
+        followUpManagerNoteId: hrgaFollowUpNote.id,
+      },
+    });
+  }
+
+  // 6f. Dispensasi Kepatuhan Aktif (BoundedExemption) — Dinas Luar Sales/BD (Hari Wibowo) pada H+2 s/d H+3
+  const existingExemptionHari = await prisma.boundedExemption.findFirst({
+    where: { userId: salesBdUser.id, officialReferenceNumber: 'ST/HRGA/2026/XI/104' },
+  });
+  if (!existingExemptionHari) {
+    const exStart = new Date(workDate);
+    exStart.setDate(exStart.getDate() + 2);
+    const exEnd = new Date(workDate);
+    exEnd.setDate(exEnd.getDate() + 3);
+    await prisma.boundedExemption.create({
+      data: {
+        userId: salesBdUser.id,
+        startDate: exStart,
+        endDate: exEnd,
+        exemptionCategory: 'DINAS_LUAR',
+        officialReferenceNumber: 'ST/HRGA/2026/XI/104',
+        reason: 'Kunjungan presentasi proposal solusi teknologi ke klien korporasi di Surabaya',
+        createdByUserId: hrgaUser.id,
+      },
+    });
+  }
+
+  // 6g. Notifikasi In-App untuk Technical Lead 1 & Aditya Nugroho
   const existingNotif = await prisma.notification.findFirst({
     where: { recipientUserId: techLeadUser.id, triggerType: 'BLOCKER_RAISED' },
   });
@@ -1544,6 +1709,23 @@ async function main() {
         title: 'Kendala Proyek [WP-CORE] Dilaporkan',
         message: 'Aditya Nugroho melaporkan kendala teknis pada proyek WP-CORE: CI runner mengalami Out Of Memory.',
         actionUrl: '/blockers',
+        status: NotificationStatus.SENT,
+      },
+    });
+  }
+
+  const existingNotifAditya = await prisma.notification.findFirst({
+    where: { recipientUserId: frontendUser.id, triggerType: 'COACHING_NOTE_SHARED' },
+  });
+  if (!existingNotifAditya) {
+    await prisma.notification.create({
+      data: {
+        recipientUserId: frontendUser.id,
+        triggerType: 'COACHING_NOTE_SHARED',
+        channel: NotificationChannel.IN_APP_CENTER,
+        title: 'Catatan Apresiasi Baru dari Head of Engineering',
+        message: 'Arif Budiman membagikan catatan apresiasi terkait penyelesaian kerangka navigasi responsif.',
+        actionUrl: '/profile',
         status: NotificationStatus.SENT,
       },
     });
