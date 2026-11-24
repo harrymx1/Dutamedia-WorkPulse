@@ -29,6 +29,15 @@ interface ActiveLeave {
   reason: string;
 }
 
+interface ActiveExemption {
+  id: string;
+  exemptionCategory: string;
+  officialReferenceNumber?: string | null;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
+
 interface AdditionalWorkItem {
   id: string;
   taskText: string;
@@ -68,6 +77,7 @@ const deleting = ref(false);
 const recordId = ref<string | null>(null);
 const workDate = ref('');
 const activeLeave = ref<ActiveLeave | null>(null);
+const activeExemption = ref<ActiveExemption | null>(null);
 const morningSubmittedAt = ref<string | null>(null);
 const isMorningLocked = ref(false);
 const morningLockCutoff = ref('09:30');
@@ -91,11 +101,12 @@ const formSectionRef = ref<HTMLElement | null>(null);
 const isMaxReached = computed(() => additionalWorks.value.length >= 5);
 const hasSubmittedEod = computed(() => eodSubmittedAt.value !== null && eodSubmittedAt.value !== '');
 const isEodClosedOrLocked = computed(() => hasSubmittedEod.value || isEodLocked.value);
+const isAutoExempted = computed(() => Boolean(activeLeave.value || activeExemption.value));
 const isMorningMissedPostCutoff = computed(
-  () => !activeLeave.value && isMorningLocked.value && !morningSubmittedAt.value,
+  () => !isAutoExempted.value && isMorningLocked.value && !morningSubmittedAt.value,
 );
 const canShowForm = computed(
-  () => !activeLeave.value && (Boolean(recordId.value) || isMorningMissedPostCutoff.value),
+  () => !isAutoExempted.value && (Boolean(recordId.value) || isMorningMissedPostCutoff.value),
 );
 const isFormDisabled = computed(
   () => (!editingWorkId.value && isMaxReached.value) || isEodClosedOrLocked.value,
@@ -162,10 +173,12 @@ async function loadTodayState() {
       availableProjects?: ProjectOption[];
       activeBlockers?: ActiveBlockerOption[];
       activeLeave?: ActiveLeave | null;
+      activeExemption?: ActiveExemption | null;
     }>('/daily/today');
 
     workDate.value = res.data.workDate;
     activeLeave.value = (res.data as any).activeLeave || null;
+    activeExemption.value = (res.data as any).activeExemption || null;
     isMorningLocked.value = Boolean(res.data.cutoffTimings?.isMorningLocked);
     morningLockCutoff.value = res.data.cutoffTimings?.morningLockCutoff || '09:30';
     isEodLocked.value = Boolean(res.data.cutoffTimings?.isEodLocked);
@@ -479,7 +492,7 @@ onMounted(() => {
               Keterangan: {{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}
             </div>
             <div class="submitted-banner-actions">
-              <AccessLink to="/leave/my" class="btn btn-secondary btn-sm">
+              <AccessLink to="/daily/history" class="btn btn-secondary btn-sm">
                 Lihat Riwayat Cuti Saya
               </AccessLink>
             </div>
@@ -490,9 +503,9 @@ onMounted(() => {
           <div class="leave-notice-content">
             <CalendarCheck :size="32" class="text-green" />
             <div class="leave-notice-text">
-              <h3>Hari Bebas Pekerjaan Tambahan (Cuti Disetujui)</h3>
+              <h3>Hari Bebas Pekerjaan Tambahan (Cuti Resmi Tercatat)</h3>
               <p>
-                Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Disetujui (Bebas Kewajiban Check-In)</strong>. Anda tidak perlu mencatat pekerjaan tambahan hari ini.
+                Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Tercatat (Bebas Kewajiban Otomatis)</strong>. Anda tidak perlu mencatat pekerjaan tambahan hari ini.
               </p>
               <div class="leave-notice-meta">
                 <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
@@ -502,9 +515,34 @@ onMounted(() => {
             </div>
           </div>
           <div class="leave-notice-actions">
-            <AccessLink to="/leave/my" class="btn btn-secondary">
-              Lihat Permohonan Cuti Saya
+            <AccessLink to="/daily/history" class="btn btn-secondary">
+              Lihat Riwayat Cuti Saya
             </AccessLink>
+          </div>
+        </div>
+      </template>
+
+      <!-- Alert Banner & Notice Box jika sedang dalam masa dispensasi resmi (DEC-018) -->
+      <template v-else-if="activeExemption">
+        <div class="alert-banner leave" role="status" data-testid="exemption-active-banner">
+          <CalendarCheck :size="20" class="text-green" />
+          <div class="submitted-banner-content">
+            <div class="submitted-banner-title">
+              <strong>Masa Dispensasi Resmi ({{ activeExemption.exemptionCategory }}):</strong>
+              <span class="wp-datetime"> {{ formatLeaveDateRange(activeExemption.startDate, activeExemption.endDate) }}</span>
+            </div>
+            <p class="submitted-banner-desc">
+              Anda sedang dalam masa dispensasi resmi ({{ activeExemption.exemptionCategory }}). Anda dibebaskan otomatis dari kewajiban pengisian pekerjaan tambahan hari ini.
+            </p>
+            <div v-if="activeExemption.reason" class="leave-banner-reason">
+              <span v-if="activeExemption.officialReferenceNumber">No. Surat: <strong>{{ activeExemption.officialReferenceNumber }}</strong> · </span>
+              Keterangan: {{ activeExemption.reason }}
+            </div>
+            <div class="submitted-banner-actions">
+              <AccessLink to="/daily/history" class="btn btn-secondary btn-sm">
+                Lihat Riwayat Dispensasi Saya
+              </AccessLink>
+            </div>
           </div>
         </div>
       </template>

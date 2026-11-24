@@ -75,7 +75,7 @@ export const ADMIN_LEVEL: RoleName[] = [
 ];
 
 /**
- * Aturan Poin 2: Menu kepegawaian di grup Management (Persetujuan Cuti & Review Koreksi)
+ * Aturan Poin 2: Menu review koreksi di grup Management
  * hanya untuk Kepala Divisi (HEAD) dan CEO/Direktur (untuk bagian tanpa HEAD),
  * serta siapapun yang sedang ditunjuk aktif sebagai Reviewer Sementara.
  */
@@ -84,14 +84,13 @@ export const HR_APPROVAL_ROLES: RoleName[] = [
   'CEO_MANAGEMENT',
 ];
 
-/** Peran staf operasional yang memiliki kewajiban komitmen harian (IMP-026). */
+/** Peran staf operasional yang memiliki kewajiban komitmen harian (IMP-026 & DEC-019). */
 export const OPERATIONAL_ROLES: RoleName[] = [
   'EMPLOYEE',
   'SUPERVISOR',
   'HEAD',
   'PROJECT_MANAGER',
   'HRGA',
-  'CEO_MANAGEMENT',
 ];
 
 export const navGroups: NavGroup[] = [
@@ -101,7 +100,6 @@ export const navGroups: NavGroup[] = [
       { label: 'My Today', to: '/daily/morning', roles: OPERATIONAL_ROLES, iconName: 'Clock' },
       { label: 'Lapor Blocker', to: '/raise-blockers', roles: OPERATIONAL_ROLES, iconName: 'AlertTriangle' },
       { label: 'Riwayat Saya', to: '/daily/history', roles: OPERATIONAL_ROLES, iconName: 'CalendarDays' },
-      { label: 'Cuti Saya', to: '/leave/my', roles: OPERATIONAL_ROLES, iconName: 'Plane' },
       { label: 'Koreksi Komitmen Pagi', to: '/corrections/morning', roles: OPERATIONAL_ROLES, iconName: 'FileEdit' },
       { label: 'Koreksi Evaluasi Sore', to: '/corrections/eod', roles: OPERATIONAL_ROLES, iconName: 'FilePenLine' },
       { label: 'Notifikasi', to: '/notifications', iconName: 'Bell' },
@@ -115,8 +113,7 @@ export const navGroups: NavGroup[] = [
       { label: 'Catatan Coaching', to: '/coaching', requiresSubordinates: true, iconName: 'MessagesSquare' },
       { label: 'Radar Risiko Proyek', to: '/projects/risk', roles: ALL_MANAGERIAL, allowProjectLead: true, iconName: 'FolderGit2' },
       { label: 'Penuaan & Eskalasi', to: '/blockers/aging', roles: ALL_MANAGERIAL, allowProjectLead: true, allowTemporaryReviewer: true, allowCategoryOwner: true, iconName: 'Clock' },
-      { label: 'Persetujuan Cuti', to: '/leave/queue', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'CheckSquare' },
-      { label: 'Review Koreksi & Cuti', to: '/corrections/review', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'FileCheck' },
+      { label: 'Review Koreksi', to: '/corrections/review', roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true, iconName: 'FileCheck' },
       { label: 'Laporan Eksekutif', to: '/reports', roles: ['SYSTEM_ADMIN', 'CEO_MANAGEMENT', 'HEAD', 'HRGA'], iconName: 'BarChart3' },
     ],
   },
@@ -125,6 +122,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'Antrean Kepatuhan', to: '/compliance', roles: ADMIN_LEVEL, iconName: 'ClipboardCheck' },
       { label: 'Manajemen Dispensasi', to: '/exemptions', roles: ADMIN_LEVEL, iconName: 'CalendarRange' },
+      { label: 'Pencatatan Cuti Resmi', to: '/admin/leaves', roles: ADMIN_LEVEL, iconName: 'Plane' },
       { label: 'Kelola Pengguna', to: '/admin/users', roles: ADMIN_LEVEL, iconName: 'Users' },
       { label: 'Undangan Karyawan', to: '/admin/invitations', roles: ADMIN_LEVEL, iconName: 'UserPlus' },
       { label: 'Struktur Organisasi', to: '/admin/organization', roles: ADMIN_LEVEL, iconName: 'Network' },
@@ -250,7 +248,7 @@ export function canAccessRoute(
       ? '/daily/morning'
       : path;
 
-  if (ctx.role === 'SYSTEM_ADMIN') {
+  if (ctx.role === 'SYSTEM_ADMIN' || ctx.role === 'CEO_MANAGEMENT') {
     const workspacePaths =
       navGroups.find((g) => g.title === 'Workspace')?.items.map((i) => i.to) || [];
     if (workspacePaths.includes(normalizedPath) && normalizedPath !== '/notifications') {
@@ -277,9 +275,9 @@ export function navForRole(
   if (!ctx.role) return [];
   return navGroups
     .filter((g) => {
-      // IMP-026: Persona SYSTEM_ADMIN murni untuk konfigurasi sistem & pengawasan manajerial,
-      // grup 'Workspace' dinonaktifkan sepenuhnya guna menegakkan Separation of Duties.
-      if (ctx.role === 'SYSTEM_ADMIN' && g.title === 'Workspace') {
+      // IMP-026 & DEC-019: SYSTEM_ADMIN dan CEO_MANAGEMENT tidak mengisi komitmen harian operasional,
+      // grup 'Workspace' disembunyikan (notifikasi tetap diakses lewat lonceng + badge merah di TopBar kanan atas).
+      if ((ctx.role === 'SYSTEM_ADMIN' || ctx.role === 'CEO_MANAGEMENT') && g.title === 'Workspace') {
         return false;
       }
       return true;

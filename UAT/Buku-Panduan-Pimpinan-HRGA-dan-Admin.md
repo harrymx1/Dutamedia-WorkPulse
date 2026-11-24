@@ -8,7 +8,7 @@
 > [!NOTE]
 > **Untuk Siapa Buku Panduan Ini?**  
 > Buku ini khusus disusun untuk **Supervisor / Technical Lead**, **Project Manager**, **Kepala Divisi (`HEAD`)**, **Staf Spesialis Penanggung Jawab Kategori Kendala**, **Reviewer Sementara**, **Tim HRGA**, **Direktur / CEO**, dan **Administrator Sistem (`SYSTEM_ADMIN`)**.  
-> Untuk panduan kerja harian karyawan & anak magang (`My Today`, `Lapor Blocker`, `Cuti Saya`), silakan baca dokumen pendamping: **`Buku-Panduan-Pengguna-Karyawan-dan-Magang.md`**.
+> Untuk panduan kerja harian karyawan & anak magang (`My Today`, `Lapor Blocker`, `Riwayat Saya`), silakan baca dokumen pendamping: **`Buku-Panduan-Pengguna-Karyawan-dan-Magang.md`**.
 
 ---
 
@@ -26,14 +26,14 @@
    - 3.1 Mengelola Antrean Blocker 2 Panel (`/blockers`)
    - 3.2 Memantau Penuaan & Pelanggaran Batas Waktu (`/blockers/aging`)
    - 3.3 Aturan Cuti Vertikal & Pencegahan Pengarahan Diri Sendiri
-4. **BAB 4 — Tinjauan Persetujuan Tim (`Persetujuan Cuti` & `Review Koreksi`)**
-   - 4.1 Memutuskan Permohonan Cuti & Izin Magang (`/leave/queue`)
-   - 4.2 Meninjau Permohonan Koreksi Laporan dengan Perbandingan Visual (`/corrections/review`)
-5. **BAB 5 — Pengawasan Kepatuhan, Dispensasi, & Pembinaan (`HRGA` & `Atasan`)**
+4. **BAB 4 — Tinjauan Koreksi Laporan Tim (`Review Koreksi`)**
+   - 4.1 Meninjau Permohonan Koreksi Laporan dengan Perbandingan Visual (`/corrections/review`)
+5. **BAB 5 — Pengawasan Kepatuhan, Dispensasi, Pencatatan Cuti Resmi, & Pembinaan (`HRGA` & `Atasan`)**
    - 5.1 Menangani Antrean Kepatuhan Harian: `Tindak Lanjut` & `Ubah Catatan` (`/compliance`)
-   - 5.2 Menerbitkan & Mencabut Dispensasi Resmi (`/exemptions`)
-   - 5.3 Mencatat Sesi Pembinaan / Coaching: `Dibagikan ke Karyawan` vs `Rahasia Manajemen` (`/coaching`)
-   - 5.4 Kapan Menggunakan `Tindak Lanjut` di `/compliance` vs `Catat Pembinaan` di `/coaching`?
+   - 5.2 Mencatat, Mengedit, & Menghapus Dispensasi Resmi (`/exemptions`)
+   - 5.3 Mencatat, Mengedit, & Menghapus Cuti Resmi Ter-ACC (`/admin/leaves`)
+   - 5.4 Mencatat Sesi Pembinaan / Coaching: `Dibagikan ke Karyawan` vs `Rahasia Manajemen` (`/coaching`)
+   - 5.5 Kapan Menggunakan `Tindak Lanjut` di `/compliance` vs `Catat Pembinaan` di `/coaching`?
 6. **BAB 6 — Tata Kelola Administrasi Organisasi & Kebijakan (`Administration`)**
    - 6.1 Kelola Pengguna & Penonaktifan Akun (`/admin/users`)
    - 6.2 Mengundang Karyawan Baru — Token 72 Jam (`/admin/invitations`)
@@ -51,16 +51,15 @@
 
 | Menu Sidebar | Alamat Halaman | Supervisor / Lead | Project Manager | Head Divisi | HRGA | Direktur (CEO) | System Admin |
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Grup Workspace (`My Today`, `Lapor Blocker`, `Cuti Saya`, dll.)** | `/daily/*`, `/raise-blockers`, `/leave/my`, `/corrections/*` | Ya | Ya | Ya | Ya | Ya | **Diblokir (`403`)** |
+| **Grup Workspace (`My Today`, `Lapor Blocker`, `Riwayat Saya`, `Koreksi`, `Notifikasi` di sidebar)** | `/daily/*`, `/raise-blockers`, `/corrections/morning`, `/corrections/eod` | Ya | Ya | Ya | Ya | **Diblokir (`403`)** *(Notif via Lonceng TopBar)* | **Diblokir (`403`)** *(Notif via Lonceng TopBar)* |
 | **Pulse Dashboard** | `/dashboard` | Ya *(Proyek)* | Ya *(Proyek)* | Ya *(Divisi)* | Ya *(Semua)* | Ya *(Semua)* | Ya |
-| **Antrean Blocker** | `/blockers` | Ya | Ya | Ya | Ya | Ya | Ya |
+| **Antrean Blocker** | `/blockers` | Ya | Ya | Ya | Ya | Ya *(Tanpa tombol Lapor Baru)* | Ya *(Tanpa tombol Lapor Baru)* |
 | **Penuaan & Eskalasi** | `/blockers/aging` | Ya | Ya | Ya | Ya | Ya | Ya |
 | **Radar Risiko Proyek** | `/projects/risk` | Ya *(Lead)* | Ya *(Lead)* | Ya | Ya | Ya | Ya |
 | **Catatan Coaching** | `/coaching` | Jika Punya Bawahan | Jika Punya Bawahan | Ya | Ya | Ya | Jika Punya Bawahan |
-| **Persetujuan Cuti** | `/leave/queue` | Jika Delegasi | Jika Delegasi | Ya | Jika Delegasi | Ya | Tidak |
-| **Review Koreksi & Cuti** | `/corrections/review` | Jika Delegasi | Jika Delegasi | Ya | Jika Delegasi | Ya | Tidak |
+| **Review Koreksi** | `/corrections/review` | Jika Delegasi | Jika Delegasi | Ya | Jika Delegasi | Ya | Tidak |
 | **Laporan Eksekutif** | `/reports` | Tidak | Tidak | Ya *(Divisi)* | Ya *(Semua)* | Ya *(Semua)* | Ya *(Semua)* |
-| **Antrean Kepatuhan & Dispensasi** | `/compliance`, `/exemptions` | Tidak | Tidak | Tidak | Ya | Ya | Ya |
+| **Antrean Kepatuhan, Dispensasi, & Pencatatan Cuti Resmi** | `/compliance`, `/exemptions`, `/admin/leaves` | Tidak | Tidak | Tidak | Ya | Ya | Ya |
 | **Pengguna, Undangan, Organisasi, Reviewer Sementara** | `/admin/users`, `/admin/invitations`, `/admin/organization`, `/admin/temporary-reviewers` | Tidak | Tidak | Tidak | Ya | Ya | Ya |
 | **Kebijakan & Cut-off** | `/admin/policies` | Tidak | Tidak | Jika Pemilik Kebijakan | Jika Pemilik Kebijakan | **Penuh** | **Penuh** |
 | **Saluran Notifikasi** | `/admin/notifications` | Tidak | Tidak | Tidak | Ya | Ya | Ya |
@@ -73,14 +72,14 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 1. **Punya Bawahan Langsung Aktif:** Membuka menu **`Catatan Coaching` (`/coaching`)** — berlaku bahkan bagi staf senior berstatus `EMPLOYEE` yang membawahi staf lain (contoh: *Ratna Sari* di Divisi Finance).
 2. **Pimpinan Proyek Aktif (`Project Lead`):** Siapa pun yang tercatat memimpin proyek di `/admin/organization` Tab 2 otomatis mendapat akses **`Pulse Dashboard`**, **`Radar Risiko Proyek`**, **`Antrean Blocker`**, dan **`Penuaan & Eskalasi`**. Begitu proyek ditutup lewat **`Tutup Wewenang`**, akses proyek otomatis berakhir.
 3. **Penanggung Jawab Kategori Kendala Resmi:** Staf spesialis (contoh: *Fakhrizal*, *Achmad Noer*, *Rahian*, *Sugito*, *Oivi*, *Hari Wibowo*) otomatis mendapat akses **`Antrean Blocker` (`/blockers`)** dan **`Penuaan & Eskalasi` (`/blockers/aging`)** meski peran dasarnya `EMPLOYEE`.
-4. **Reviewer Sementara Aktif:** Selama tanggal delegasi di `/admin/temporary-reviewers` sedang berlaku, penerima delegasi otomatis mendapat akses **`Persetujuan Cuti` (`/leave/queue`)**, **`Review Koreksi & Cuti` (`/corrections/review`)**, **`Antrean Blocker`**, dan **`Penuaan & Eskalasi`** untuk divisi pejabat yang digantikan.
+4. **Reviewer Sementara Aktif:** Selama tanggal delegasi di `/admin/temporary-reviewers` sedang berlaku, penerima delegasi otomatis mendapat akses **`Review Koreksi` (`/corrections/review`)**, **`Antrean Blocker`**, dan **`Penuaan & Eskalasi`** untuk divisi pejabat yang digantikan.
 5. **Pemilik Kebijakan Resmi (`Policy Owner`):** Pejabat yang ditunjuk di Seksi 7 `/admin/policies` berhak mengubah parameter hanya pada kategori kebijakan yang menjadi wewenangnya (kategori lain bertanda `[Terkunci: Bukan Pemilik]`).
 
 ---
 
 ### 1.3 Prinsip Pemisahan Tugas Administrator & Pengecualian Anak Magang (`Intern`)
 
-- **Pemisahan Tugas Administrator (`SYSTEM_ADMIN`):** Akun `admin@dutamedia.com` dikhususkan untuk pengaturan teknis & tata kelola. Seluruh menu kerja harian `Workspace` disembunyikan dan diblokir (`403`), serta tidak boleh dipilih sebagai Reviewer Sementara agar statistik kinerja karyawan murni mencerminkan personel operasional.
+- **Pemisahan Tugas Administrator & Pimpinan Puncak (`SYSTEM_ADMIN` & `CEO_MANAGEMENT`):** Akun `admin@dutamedia.com` dan `direktur@dutamedia.com` dikhususkan untuk pengawasan manajerial dan tata kelola perusahaan. Seluruh menu kerja harian `Workspace` disembunyikan dan diblokir (`403`), sedangkan pemberitahuan tetap muncul secara *real-time* melalui **ikon lonceng + badge merah di bilah atas (`TopBar`)**. Selain itu, `SYSTEM_ADMIN` tidak boleh dipilih sebagai Reviewer Sementara.
 - **Pengecualian Anak Magang (`Intern`):** Akun berstatus `Intern` (seperti *Raka Pratama* dan *Nisa Amelia*) otomatis disaring keluar dan ditolak sistem dari **7 jabatan pengambil keputusan**: (1) Atasan Langsung, (2) Project Manager, (3) Escalation Reviewer Proyek, (4) Reviewer Sementara, (5) Pemilik Kebijakan, (6) Penanggung Jawab Khusus Blocker, dan (7) Pemberi Tugas Tambahan.
 
 ---
@@ -173,36 +172,22 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 
 ---
 
-# BAB 4: TINJAUAN PERSETUJUAN TIM (`PERSETUJUAN CUTI` & `REVIEW KOREKSI`)
+# BAB 4: TINJAUAN KOREKSI LAPORAN TIM (`REVIEW KOREKSI`)
 
-### 4.1 Memutuskan Permohonan Cuti & Izin Magang (`/leave/queue`)
-
-> **[Gambar `WP-SS-25` — Antrean Persetujuan Cuti & Modal Keputusan (`/leave/queue`)]**  
-> *Tampilkan 4 kartu status antrean, tabel permohonan tim (termasuk pil ungu `Intern` bila ada pemohon magang), dan modal konfirmasi Setujui/Tolak.*
-
-*Hak Akses:* Kepala Divisi (`HEAD`), Direktur (`CEO`), dan **Reviewer Sementara** yang sedang aktif. *(Catatan: Di sistem live saat ini berlaku persetujuan 1 tahap langsung; alur berjenjang 3 tahap dijadwalkan pada pengembangan berikutnya).*
-
-1. Buka menu **`Persetujuan Cuti`** (`/leave/queue`).
-2. Periksa detail pengajuan: nama pemohon (pil ungu **`Intern`** untuk anak magang), jenis cuti/izin, durasi **hari kerja Senin–Jumat**, dan alasannya.
-3. Klik **`Setujui`** (catatan opsional) atau **`Tolak`** (**wajib** mengisi alasan penolakan minimal **5 karakter**), lalu klik **`Konfirmasi Keputusan`**.
-4. **Dampak Otomatis Saat Disetujui:**
-   - Pemohon otomatis bebas dari kewajiban laporan harian pada tanggal tersebut.
-   - Jika disetujui siang/sore hari setelah cut-off pagi, catatan belum melapor hari itu **otomatis diputihkan** dari antrean kepatuhan HRGA.
-
----
-
-### 4.2 Meninjau Permohonan Koreksi Laporan dengan Perbandingan Visual (`/corrections/review`)
+### 4.1 Meninjau Permohonan Koreksi Laporan dengan Perbandingan Visual (`/corrections/review`)
 
 > **[Gambar `WP-SS-26` — Halaman Review Koreksi & Perbandingan Visual (`/corrections/review`)]**  
 > *Tampilkan daftar kartu permohonan koreksi `Menunggu Review`, kotak perbandingan visual `Sebelum` (merah) vs `Diajukan` (hijau), dan tombol `Setujui` / `Tolak`.*
 
-1. Buka menu **`Review Koreksi & Cuti`** (`/corrections/review`).
+*Hak Akses:* Kepala Divisi (`HEAD`), Direktur (`CEO`), dan **Reviewer Sementara** yang sedang aktif. *(Untuk pencatatan Cuti & Dispensasi resmi yang sudah disetujui di luar sistem, dikelola melalui menu `Administration` di Bab 5).*
+
+1. Buka menu **`Review Koreksi`** (`/corrections/review`).
 2. Periksa kotak perbandingan visual **Sebelum** vs **Diajukan**, alasan dari karyawan, dan sisa waktu jendela tinjauan 24 jam.
 3. Klik **`Setujui`** (isi catatan peninjau min. 5 karakter, lalu klik **`Konfirmasi Setujui`**) untuk langsung memperbarui data laporan harian karyawan secara resmi, atau klik **`Tolak`** (jendela **`Sampaikan Keberatan / Tolak Koreksi`**, wajib isi alasan penolakan min. 5 karakter, lalu klik **`Konfirmasi Tolak`**) agar karyawan dapat memperbaikinya lewat tombol `Gunakan Draf Sebelumnya & Sesuaikan`.
 
 ---
 
-# BAB 5: PENGAWASAN KEPATUHAN, DISPENSASI, & PEMBINAAN (`HRGA` & `ATASAN`)
+# BAB 5: PENGAWASAN KEPATUHAN, DISPENSASI, PENCATATAN CUTI RESMI, & PEMBINAAN (`HRGA` & `ATASAN`)
 
 ### 5.1 Menangani Antrean Kepatuhan Harian: `Tindak Lanjut` & `Ubah Catatan` (`/compliance`)
 
@@ -218,21 +203,35 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 
 ---
 
-### 5.2 Menerbitkan & Mencabut Dispensasi Resmi (`/exemptions`)
+### 5.2 Mencatat, Mengedit, & Menghapus Dispensasi Resmi (`/exemptions`)
 
 > **[Gambar `WP-SS-30` — Manajemen Dispensasi Resmi (`/exemptions`)]**  
-> *Tampilkan tata letak 2 kolom: formulir pendaftaran dispensasi di kiri dan tabel daftar dispensasi aktif di kanan.*
+> *Tampilkan tata letak 2 kolom: formulir pendaftaran/edit dispensasi di kiri dan tabel daftar dispensasi dengan tombol `Edit` dan `Hapus` di kanan.*
 
-*Hak Akses:* HRGA, Direktur, dan Admin Sistem.
+*Hak Akses:* HRGA, Direktur, dan Admin Sistem *(tanpa proses pengajuan di sistem — hanya mencatat dinas luar/pelatihan/tugas khusus yang sudah sah)*.
 
 1. Buka menu **`Manajemen Dispensasi`** (`/exemptions`).
-2. Pilih **Karyawan Penerima Dispensasi**, **Rentang Tanggal Mulai–Selesai**, **Kategori** (*Dinas Luar, Pelatihan Eksternal, Gangguan Teknis/ISP, Penugasan Khusus Direksi*), **Nomor Surat Tugas** *(opsional)*, dan **Alasan Resmi** (min. 5 karakter).
-3. Klik **`Daftarkan Dispensasi`**. Hari kerja pada rentang tersebut otomatis berstatus **`EXEMPT`** (tidak dianggap melanggar kepatuhan) dan karyawan menerima notifikasi.
-4. Jika tugas luar selesai lebih cepat, klik **`Cabut / Nonaktifkan`** pada tabel sebelah kanan.
+2. Pilih **Karyawan Penerima Dispensasi**, **Rentang Tanggal Mulai–Selesai**, **Kategori** (*Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus, Tugas Khusus*), **Nomor Surat Tugas** *(opsional)*, dan **Alasan Resmi** (min. 5 karakter).
+3. Klik **`Daftarkan Dispensasi`**. Karyawan pada rentang tersebut **otomatis dibebaskan penuh** dari kewajiban check-in pagi/tambahan/sore **tanpa perlu memilih `0 Komitmen`**, dikecualikan dari deteksi pelanggaran, dan menerima notifikasi.
+4. **Mengedit atau Menghapus:** Klik tombol **`Edit`** pada baris tabel untuk memperbarui tanggal/kategori/alasan (`Simpan Perubahan Dispensasi`), atau klik **`Hapus`** lalu konfirmasi di jendela modal apabila data perlu dihapus.
 
 ---
 
-### 5.3 Mencatat Sesi Pembinaan / Coaching: `Dibagikan ke Karyawan` vs `Rahasia Manajemen` (`/coaching`)
+### 5.3 Mencatat, Mengedit, & Menghapus Cuti Resmi Ter-ACC (`/admin/leaves`)
+
+> **[Gambar `WP-SS-25` — Halaman Pencatatan Cuti Resmi (`/admin/leaves`)]**  
+> *Tampilkan formulir Catat Cuti Resmi di kiri dan tabel daftar cuti resmi beserta tombol `Edit` dan `Hapus` di kanan.*
+
+*Hak Akses:* HRGA, Direktur, dan Admin Sistem. WorkPulse tidak menjalankan alur pengajuan/persetujuan cuti internal; hanya cuti, sakit, atau izin resmi yang sudah disetujui di luar sistem yang didaftarkan di sini.
+
+1. Buka menu **`Pencatatan Cuti Resmi`** (`/admin/leaves`).
+2. Pilih **Karyawan**, **Tanggal Mulai & Selesai** (minimal 1 hari kerja Senin–Jumat), **Jenis Cuti / Izin** *(khusus `Intern`, hanya `Izin Resmi` atau `Sakit`)*, dan **Keterangan Resmi / Dasar Persetujuan** (min. 5 karakter).
+3. Klik **`Daftarkan Cuti Resmi`**. Sistem otomatis membebaskan karyawan dari laporan harian, membersihkan catatan pelanggaran pada tanggal tersebut, mengalihkan tiket Blocker kategori ke atasan langsung selama cuti berlangsung, dan mengirim notifikasi ke karyawan (data juga tampil *read-only* di halaman `Riwayat Saya` karyawan).
+4. **Mengedit atau Menghapus:** Klik **`Edit`** untuk memperbarui periode/keterangan atau **`Hapus`** bila terdapat pembatalan/koreksi di luar sistem.
+
+---
+
+### 5.4 Mencatat Sesi Pembinaan / Coaching: `Dibagikan ke Karyawan` vs `Rahasia Manajemen` (`/coaching`)
 
 > **[Gambar `WP-SS-27` — Halaman Catatan Coaching Manajerial (`/coaching`)]**  
 > *Tampilkan kartu anggota tim di atas, formulir buat catatan di kiri (termasuk tombol template cepat & pilihan kerahasiaan), dan riwayat catatan di kanan.*
@@ -248,7 +247,7 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 
 ---
 
-### 5.4 Kapan Menggunakan `Tindak Lanjut` di `/compliance` vs `Catat Pembinaan` di `/coaching`?
+### 5.5 Kapan Menggunakan `Tindak Lanjut` di `/compliance` vs `Catat Pembinaan` di `/coaching`?
 
 | Aspek | `Tindak Lanjut` / `Ubah Catatan` di `/compliance` | `Catat Pembinaan` di `/coaching` |
 |---|---|---|
@@ -311,7 +310,7 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 1. Buka **`Reviewer Sementara`** (`/admin/temporary-reviewers`) dan klik **`Delegasikan Reviewer Baru`**.
 2. Pilih **Pejabat yang Berhalangan**, periksa **Divisi Wewenang** (terisi otomatis), pilih **Pejabat Pengganti Sementara** *(melarang `SYSTEM_ADMIN` dan `Intern`)*, tentukan **Tanggal Mulai–Selesai**, dan isi **Alasan Penunjukan Resmi**.
 3. Klik **`Terbitkan Delegasi`**. Sistem menolak jika ada delegasi lain yang tanggalnya bentrok di divisi yang sama.
-4. Selama periode aktif, pejabat pengganti otomatis mendapat akses `/leave/queue`, `/corrections/review`, dan `/blockers`, lalu otomatis dicabut kembali saat tanggal berakhir (atau bila diklik **`Cabut`** lebih awal).
+4. Selama periode aktif, pejabat pengganti otomatis mendapat akses `/corrections/review` dan `/blockers`, lalu otomatis dicabut kembali saat tanggal berakhir (atau bila diklik **`Cabut`** lebih awal).
 
 ---
 
@@ -347,11 +346,11 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 
 | Pertanyaan Operasional | Jawaban & Langkah Solusi |
 |---|---|
-| **1. Mengapa akun `SYSTEM_ADMIN` diblokir `403` saat membuka `My Today` (`/daily/morning`)?** | Sesuai prinsip Pemisahan Tugas, akun Administrator Sistem dikhususkan untuk pengaturan teknis agar statistik kepatuhan kerja murni berisi karyawan operasional. |
+| **1. Mengapa akun `SYSTEM_ADMIN` dan `CEO_MANAGEMENT` diblokir `403` saat membuka `My Today` (`/daily/morning`)?** | Sesuai prinsip Pemisahan Tugas (`DEC-019`), Administrator Sistem (`SYSTEM_ADMIN`) berfokus pada tata kelola teknis dan Direktur (`CEO_MANAGEMENT`) pada pengawasan strategis, sehingga statistik kepatuhan harian murni berisi personel operasional. Untuk notifikasi, keduanya mengakses via lonceng TopBar (`/notifications`). |
 | **2. Mengapa saya sebagai Kepala Divisi tidak bisa melihat data divisi lain di `/dashboard` dan `/reports`?** | Sistem menerapkan isolasi cakupan otomatis (`Divisi Saya`) agar tiap Kepala Divisi fokus pada timnya. Cakupan `Seluruh Perusahaan` khusus untuk Direktur, HRGA, dan Admin. |
 | **3. Mengapa nama anak magang (`Intern`) tidak muncul di pilihan Atasan, Project Manager, atau Reviewer Sementara?** | Sesuai aturan perusahaan, status `Intern` dikecualikan dari seluruh 7 jabatan pengambil keputusan sampai yang bersangkutan diangkat menjadi Karyawan Tetap/Kontrak di `/admin/organization`. |
-| **4. Bagaimana jika Kepala Divisi cuti 1 minggu — siapa yang menyetujui cuti dan koreksi timnya?** | HRGA/Admin/Direktur cukup menetapkan **Reviewer Sementara** di `/admin/temporary-reviewers` pada rentang tanggal cuti tersebut. |
+| **4. Bagaimana jika Kepala Divisi cuti 1 minggu — siapa yang meninjau koreksi timnya?** | HRGA/Admin/Direktur cukup menetapkan **Reviewer Sementara** di `/admin/temporary-reviewers` pada rentang tanggal cuti tersebut agar wewenang **`Review Koreksi`** & **`Antrean Blocker`** tetap berjalan. Untuk cuti itu sendiri tidak ada persetujuan di dalam aplikasi — HRGA/Admin/Direktur langsung mencatatnya di `/admin/leaves`. |
 | **5. Mengapa saya sebagai Pemilik Kebijakan tidak bisa mengubah semua 5 kategori di `/admin/policies`?** | Anda hanya dapat mengubah kategori yang secara resmi ditugaskan kepada Anda. Kategori lain bertanda `[Terkunci: Bukan Pemilik]`; hubungi Direktur/Admin bila perlu perluasan wewenang. |
 | **6. Mengapa sistem menolak saat saya mencoba mencabut Pemilik Kebijakan di `/admin/policies`?** | Setiap kategori kebijakan wajib memiliki minimal 1 pemilik aktif. Tetapkan dulu pemilik pengganti sebelum mencabut pemilik lama. |
-| **7. Bagaimana cara memutihkan catatan mangkir karyawan yang sedang dinas luar kota?** | Terbitkan **Dispensasi Resmi** di `/exemptions` lengkap dengan rentang tanggal dan nomor surat tugas (jangan menghapus data secara manual). |
+| **7. Bagaimana cara mencatatkan cuti resmi atau memutihkan catatan mangkir karyawan yang dinas luar kota?** | Untuk cuti/izin/sakit yang sudah disetujui di luar sistem, catat di **`Pencatatan Cuti Resmi`** (`/admin/leaves`). Untuk dinas luar kota/penugasan khusus, terbitkan **`Dispensasi Resmi`** di `/exemptions` lengkap dengan nomor surat tugas. Keduanya dapat diubah/dihapus kapan saja dan **otomatis membebaskan karyawan dari pengisian harian** serta memutihkan catatan pelanggaran di tanggal terkait. |
 | **8. Karyawan mengeluh lupa kata sandi dan sudah keluar dari semua perangkat. Apa tindakan Admin/HRGA?** | Bantu pemulihan akses akun secara resmi melalui prosedur internal Admin/HRGA, lalu arahkan karyawan segera mengganti kata sandi mandirinya di `/profile`. |

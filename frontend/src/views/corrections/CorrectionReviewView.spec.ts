@@ -37,27 +37,26 @@ describe('CorrectionReviewView.vue (WP-EP09 / Prototipe 22 - Review Koreksi & Je
       routes: [
         { path: '/', component: { template: '<div>Home</div>' } },
         { path: '/corrections/review', component: CorrectionReviewView },
-        { path: '/leave/queue', component: { template: '<div>Leave Queue</div>' } },
         { path: '/compliance', component: { template: '<div>Compliance</div>' } },
         { path: '/exemptions', component: { template: '<div>Exemptions</div>' } },
       ],
     });
   });
 
-  it('renders pending material correction requests with Indonesian labels, 2-letter initials, and leave link', async () => {
+  it('renders pending material correction requests with Indonesian labels and 2-letter initials without leave link', async () => {
     const wrapper = mount(CorrectionReviewView, {
       global: { plugins: [router] },
     });
 
     await flushPromises();
 
-    expect(wrapper.find('h1').text()).toBe('Review Koreksi & Cuti');
+    expect(wrapper.find('h1').text()).toBe('Review Koreksi');
     expect(wrapper.text()).not.toContain('SAD 2.4');
     expect(wrapper.text()).toContain('Permohonan Koreksi Material');
     expect(wrapper.find('.user-avatar').text()).toBe('AD');
     expect(wrapper.text()).toContain('Koreksi Komitmen Pagi');
     expect(wrapper.text()).not.toContain('MORNING_COMMITMENT');
-    expect(wrapper.find('[data-testid="link-leave-queue"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="link-leave-queue"]').exists()).toBe(false);
     expect(wrapper.text()).toContain('Alice Dev');
     expect(wrapper.text()).toContain('Tugas A');
     expect(wrapper.text()).toContain('Tugas A Patch Darurat');

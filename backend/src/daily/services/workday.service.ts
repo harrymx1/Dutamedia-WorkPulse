@@ -15,7 +15,8 @@ export class WorkdayService {
    * Melompati:
    * 1. Akhir pekan (Sabtu & Minggu)
    * 2. Hari libur nasional resmi (company_holidays)
-   * 3. Cuti yang disetujui (leave_requests berstatus APPROVED)
+   * 3. Cuti resmi tercatat (leave_requests berstatus APPROVED)
+   * 4. Dispensasi resmi tercatat (bounded_exemptions)
    */
   async getPreviousWorkday(userId: string, fromDate?: Date): Promise<string> {
     const curDate = fromDate ? new Date(fromDate) : this.clockService.now();
@@ -23,11 +24,11 @@ export class WorkdayService {
     // Mundur 1 hari dari target
     scan.setDate(scan.getDate() - 1);
 
-    // Ambil daftar libur perusahaan dalam 30 hari ke belakang
+    // Ambil daftar libur perusahaan, cuti resmi, & dispensasi dalam 30 hari ke belakang
     const minScanDate = new Date(curDate);
     minScanDate.setDate(minScanDate.getDate() - 30);
 
-    const [holidays, approvedLeaves] = await Promise.all([
+    const [holidays, approvedLeaves, boundedExemptions] = await Promise.all([
       this.prisma.companyHoliday.findMany({
         where: {
           holidayDate: { gte: minScanDate, lte: curDate },
@@ -41,6 +42,15 @@ export class WorkdayService {
           endDate: { gte: minScanDate },
         },
       }),
+      (this.prisma as any).boundedExemption?.findMany
+        ? (this.prisma as any).boundedExemption.findMany({
+            where: {
+              userId,
+              startDate: { lte: curDate },
+              endDate: { gte: minScanDate },
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
     const holidayDates = new Set(
@@ -54,13 +64,18 @@ export class WorkdayService {
 
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const isHoliday = holidayDates.has(dateStr);
-      const isApprovedLeave = approvedLeaves.some((l) => {
-        const start = l.startDate.toISOString().split('T')[0];
-        const end = l.endDate.toISOString().split('T')[0];
+      const isApprovedLeave = (approvedLeaves || []).some((l) => {
+        const start = new Date(l.startDate).toISOString().split('T')[0];
+        const end = new Date(l.endDate).toISOString().split('T')[0];
+        return dateStr >= start && dateStr <= end;
+      });
+      const isExempted = (boundedExemptions || []).some((ex: any) => {
+        const start = new Date(ex.startDate).toISOString().split('T')[0];
+        const end = new Date(ex.endDate).toISOString().split('T')[0];
         return dateStr >= start && dateStr <= end;
       });
 
-      if (!isWeekend && !isHoliday && !isApprovedLeave) {
+      if (!isWeekend && !isHoliday && !isApprovedLeave && !isExempted) {
         return dateStr;
       }
 
@@ -74,7 +89,7 @@ export class WorkdayService {
   }
 
   /**
-   * Memeriksa apakah suatu tanggal merupakan hari kerja resmi (bukan libur/weekend/cuti).
+   * Memeriksa apakah suatu tanggal merupakan hari kerja resmi (bukan libur/weekend/cuti/dispensasi).
    */
   async isWorkday(date: Date, userId?: string): Promise<boolean> {
     const dayOfWeek = date.getDay();
@@ -87,15 +102,27 @@ export class WorkdayService {
     if (holiday) return false;
 
     if (userId) {
+      const targetDate = new Date(dateStr);
       const leave = await this.prisma.leaveRequest.findFirst({
         where: {
           userId,
           status: LeaveStatus.APPROVED,
-          startDate: { lte: new Date(dateStr) },
-          endDate: { gte: new Date(dateStr) },
+          startDate: { lte: targetDate },
+          endDate: { gte: targetDate },
         },
       });
       if (leave) return false;
+
+      if ((this.prisma as any).boundedExemption?.findFirst) {
+        const exemption = await (this.prisma as any).boundedExemption.findFirst({
+          where: {
+            userId,
+            startDate: { lte: targetDate },
+            endDate: { gte: targetDate },
+          },
+        });
+        if (exemption) return false;
+      }
     }
 
     return true;

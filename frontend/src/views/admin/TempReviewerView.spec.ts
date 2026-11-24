@@ -256,7 +256,7 @@ describe('TempReviewerView.vue (WP-EP03-TK007 / Prototipe 17 & IMP-058)', () => 
     });
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(wrapper.text()).toContain('Persetujuan Cuti, Koreksi & Blocker');
+    expect(wrapper.text()).toContain('Review Koreksi & Eskalasi Blocker');
     expect(wrapper.text()).toContain('Terjadwal');
     expect(wrapper.text()).toContain('Kedaluwarsa');
     expect(wrapper.text()).toContain('3 hari tersisa');

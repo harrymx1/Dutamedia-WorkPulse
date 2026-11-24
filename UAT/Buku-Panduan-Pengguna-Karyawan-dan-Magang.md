@@ -39,10 +39,10 @@
    - 4.2 Mengajukan Koreksi Komitmen Pagi (`/corrections/morning`)
    - 4.3 Mengajukan Koreksi Evaluasi Sore (`/corrections/eod`)
    - 4.4 Cara Merevisi Permohonan Koreksi Jika Ditolak Atasan
-5. **BAB 5 — Mengajukan Cuti & Izin (`Cuti Saya`)**
-   - 5.1 Aturan Cuti Karyawan Tetap/Kontrak vs Aturan Izin Anak Magang (`Intern`)
-   - 5.2 Langkah Mengajukan Cuti / Izin & Cara Membatalkan Mandiri (`/leave/my`)
-   - 5.3 Apa yang Terjadi Otomatis Setelah Cuti / Izin Disetujui?
+5. **BAB 5 — Aturan Cuti, Sakit, Izin, & Dispensasi Resmi**
+   - 5.1 Cara Pencatatan Cuti & Dispensasi Resmi (Tanpa Pengajuan di Aplikasi)
+   - 5.2 Melihat Riwayat Cuti & Dispensasi Saya (`Hanya Baca` di `/daily/history`)
+   - 5.3 Apa yang Terjadi Otomatis Selama Masa Cuti / Dispensasi?
 6. **BAB 6 — Pusat Notifikasi (`/notifications`)**
 7. **BAB 7 — Tanya-Jawab & Solusi Masalah Sehari-hari (FAQ)**
 8. **LAMPIRAN**
@@ -142,8 +142,7 @@ Layar WorkPulse dibagi menjadi 3 bagian sederhana:
 2. **Bilah Menu Kiri (`Workspace`):**
    - **`My Today`** (`/daily/morning`) — Tempat mengisi Komitmen Pagi, Tugas Tambahan, dan Evaluasi Sore.
    - **`Lapor Blocker`** (`/raise-blockers`) — Tempat melaporkan kendala kerja dan memantau tiket kendala Anda.
-   - **`Riwayat Saya`** (`/daily/history`) — Tempat melihat riwayat kerja harian Anda dan mengunduh arsip CSV.
-   - **`Cuti Saya`** (`/leave/my`) — Tempat mengajukan cuti/izin (untuk anak magang: Izin & Sakit).
+   - **`Riwayat Saya`** (`/daily/history`) — Tempat melihat riwayat kerja harian, riwayat cuti/dispensasi tercatat *(hanya baca)*, dan mengunduh arsip CSV.
    - **`Koreksi Komitmen Pagi`** (`/corrections/morning`) — Tempat mengajukan perbaikan komitmen pagi yang sudah terkunci.
    - **`Koreksi Evaluasi Sore`** (`/corrections/eod`) — Tempat mengajukan perbaikan laporan sore yang sudah terkunci.
    - **`Notifikasi`** (`/notifications`) — Daftar seluruh pemberitahuan masuk.
@@ -172,7 +171,7 @@ Buka halaman **`/profile`** dengan mengeklik nama/avatar Anda di pojok kanan ata
 
 Di WorkPulse, dua orang yang sama-sama berstatus Karyawan (`EMPLOYEE`) bisa melihat tambahan menu di bilah kiri jika salah satunya mendapat penugasan resmi berikut:
 - **Ditunjuk sebagai Penanggung Jawab Kategori Kendala:** Otomatis terbuka menu **`Antrean Blocker` (`/blockers`)** dan **`Penuaan & Eskalasi` (`/blockers/aging`)** agar bisa menangani tiket sesuai bidang keahliannya (misalnya IT Support, GA, Network & Infra, Finance, atau Sales).
-- **Ditunjuk sebagai Reviewer Sementara:** Selama masa delegasi aktif (menggantikan atasan yang sedang cuti/dinas luar), otomatis terbuka menu **`Persetujuan Cuti`**, **`Review Koreksi & Cuti`**, dan **`Antrean Blocker`** untuk divisi terkait.
+- **Ditunjuk sebagai Reviewer Sementara:** Selama masa delegasi aktif (menggantikan atasan yang sedang cuti/dinas luar), otomatis terbuka menu **`Review Koreksi`** dan **`Antrean Blocker`** untuk divisi terkait.
 - **Memiliki Bawahan Langsung di Bagan Organisasi:** Otomatis terbuka menu **`Catatan Coaching` (`/coaching`)**.
 - **Khusus Anak Magang (`Intern`):** Sesuai aturan perusahaan, anak magang tidak dapat ditunjuk sebagai Atasan Langsung, Pimpinan Proyek, Penanggung Jawab Khusus Blocker, maupun Reviewer Sementara.
 
@@ -212,8 +211,8 @@ Seluruh jadwal di WorkPulse menggunakan **Waktu Indonesia Barat (WIB)**:
 | **Evaluasi Sore — Terkunci Malam** | Lewat `21:00` | **`Terkunci (LOCKED)`** | Formulir sore dan tugas tambahan terkunci untuk menjaga disiplin hari yang sama. |
 
 > [!TIP]
-> **Jika Anda Sedang Cuti atau Izin Resmi Disetujui (`APPROVED`):**  
-> Formulir Komitmen Pagi, Tugas Tambahan, dan Evaluasi Sore otomatis terkunci dan menampilkan **Spanduk Hijau Cuti Resmi**. Anda tidak perlu melapor apa pun dan bebas dari catatan alpa.
+> **Jika Anda Sedang Cuti Resmi atau Dispensasi Dinas Luar:**  
+> Formulir Komitmen Pagi, Tugas Tambahan, dan Evaluasi Sore otomatis terkunci dan menampilkan **Spanduk Hijau Bebas Komitmen**. Anda **tidak perlu membuka halaman ini** dan **tidak perlu memilih `0 Komitmen`** — seluruh hari cuti/dispensasi resmi otomatis membebaskan Anda dari kewajiban laporan harian.
 
 ---
 
@@ -248,8 +247,9 @@ Di bagian atas formulir, perhatikan dua alat bantu praktis:
 4. *(Opsional)* Jika target ini adalah **tugas untuk membereskan tiket kendala aktif**, klik tombol **`Pilih Blocker Aktif`** di sebelah kolom Tautan Referensi.
 5. Pilih **`Tingkat Risiko *`**:
    - **`GREEN (Terkendali)`:** Tugas bisa dikerjakan lancar tanpa hambatan berarti.
-   - **`AMBER (Berisiko)`:** Ada potensi kendala atau ketergantungan pada rekan lain. **Wajib** mengisi kolom **`Potensi Kendala / Hambatan *`** (dan opsional **`Bantuan yang Dibutuhkan`**).
-   - **`RED (Kritis)`:** Sangat berisiko gagal hari ini bila tidak segera dibantu. **Wajib** mengisi **`Potensi Kendala / Hambatan *`**, dan Anda bisa memilih **`Tiket Blocker Penyebab`** jika tiket kendalanya sudah dibuat.
+   - **`AMBER (Berisiko)`:** Ada potensi hambatan atau ketergantungan ringan, tetapi pekerjaan masih dapat berjalan. **Wajib** mengisi kolom **`Uraian Resiko atau Potensi Kendala *`**. Kaitan **`Tiket Blocker Penyebab`** bersifat **opsional** — Anda boleh memilih *Tidak Terkait Tiket Blocker Aktif* jika sekadar antisipasi atau tugas berlanjut (*carry-over*), atau menautkannya jika tiket kendalanya memang sudah dibuat.
+   - **`RED (Kritis)`:** Tugas kritis/macet dan membutuhkan intervensi nyata. **Wajib mengaitkan `Tiket Blocker Penyebab *`** yang masih aktif sebelum bisa dikirim.
+     * Jika tiket Blocker belum dibuat, klik tombol merah **`+ Buat Tiket Blocker Sekarang`** tepat di bawah pilihan tiket. Sistem **otomatis menyimpan draf Komitmen Pagi Anda**, mengantar Anda ke halaman `Lapor Blocker`, lalu **otomatis mengembalikan Anda** ke `Morning Commitment` dengan tiket baru langsung tertaut!
 6. Klik **`+ Tambah Slot Komitmen`** jika ingin menambah Slot #2 atau Slot #3 (maksimal 3 slot).
 7. *(Opsional)* Klik **`Simpan Draf`** jika Anda ingin menyimpan ketikan sementara di peramban sebelum dikirim (aman jika halaman di-refresh; tersedia tombol **`Reset Draf`** untuk menghapus draf sementara).
 8. Klik tombol hijau **`Kirim Morning Commitment`**.
@@ -332,23 +332,24 @@ Di bagian atas formulir, perhatikan dua alat bantu praktis:
 3. Perhatikan **4 Kartu Ringkasan** di bagian atas (Persentase Ketepatan Waktu, jumlah Hari Hijau, Hari Kuning/Amber, dan Hari Merah).
 4. **Klik baris tanggal mana pun** di tabel untuk membuka rincian lengkap komitmen pagi, tugas tambahan, dan hasil sore pada tanggal tersebut.
 5. Klik **`Unduh CSV`** di pojok kanan atas jika Anda ingin menyimpan salinan arsip pribadi ke komputer Anda.
+6. Gulir ke panel bawah **`Riwayat Cuti & Dispensasi Resmi Tercatat (Read-Only)`** untuk memeriksa daftar tanggal cuti resmi dan dinas luar/dispensasi yang sudah dicatat oleh HRGA/Pimpinan pada akun Anda.
 
 ---
 
 # BAB 3: MELAPORKAN & MEMANTAU KENDALA KERJA (`LAPOR BLOCKER`)
 
-### 3.1 Kapan Cukup Pilih `AMBER/RED` vs Kapan Wajib Buat Tiket Blocker? (7 Situasi Nyata)
+### 3.1 Kapan Cukup Pilih `AMBER` vs Kapan Wajib Buat Tiket Blocker (`RED`)? (7 Situasi Nyata)
 
 Tidak semua masalah harus dibuatkan tiket Blocker. Gunakan panduan 7 situasi sehari-hari ini:
 
-| No | Situasi Nyata di Kantor | Cukup di Komitmen Pagi (`AMBER`/`RED`)? | Wajib Buat Tiket Blocker (`/raise-blockers`)? |
+| No | Situasi Nyata di Kantor | Status di Komitmen Pagi | Wajib Buat Tiket Blocker (`/raise-blockers`)? |
 |---|---|---|---|
-| 1 | Tugas agak padat tapi masih bisa selesai sendiri jika fokus. | **Ya**, pilih `AMBER` dan tulis alasannya. | **Tidak perlu.** |
-| 2 | Baru menduga besok mungkin butuh review rekan, hari ini masih jalan lancar. | **Ya**, pilih `AMBER` sebagai tanda waspada. | **Belum perlu**, buat tiket baru jika benar-benar tertahan. |
-| 3 | Laptop rusak, internet mati, server staging error, atau akun kerja terkunci. | Bisa tandai `RED` jika menghambat target hari ini. | **YA, WAJIB** buat tiket Blocker agar tim IT/Infra segera menangani. |
-| 4 | Menunggu data/review dari divisi lain dan pekerjaan Anda berhenti total. | Tandai `AMBER`/`RED` pada komitmen terkait. | **YA, WAJIB** pilih kategori `Menunggu Tim / Rekan Lain` (`CROSS_TEAM`) dan pilih divisi yang ditunggu. |
+| 1 | Tugas agak padat atau *carry-over* hari ke-2 karena ruang lingkupnya besar, masih bisa dikerjakan. | Pilih **`AMBER`** dan tulis alasannya (`Tidak Terkait Tiket Blocker Aktif`). | **Tidak perlu.** |
+| 2 | Menunggu review rutin yang dijanjikan siang nanti, hari ini masih ada bagian lain yang berjalan lancar. | Pilih **`AMBER`** sebagai tanda waspada. | **Opsional** — buat tiket hanya jika nantinya benar-benar tertahan. |
+| 3 | Laptop rusak, internet mati, server staging error, atau akun kerja terkunci sehingga tugas berhenti. | Jika berdampak pada komitmen hari ini, pilih **`RED`** (atau `AMBER` bila ada *workaround*). | **YA, WAJIB** — untuk **`RED`**, sistem mewajibkan tiket Blocker aktif tertaut (bisa klik **`+ Buat Tiket Blocker Sekarang`** langsung dari form pagi). |
+| 4 | Menunggu data/review dari divisi lain dan pekerjaan Anda terhenti total. | Pilih **`RED`** pada komitmen terkait. | **YA, WAJIB** pilih kategori `Menunggu Tim / Rekan Lain` (`CROSS_TEAM`) dan pilih divisi yang ditunggu. |
 | 5 | AC mati, listrik padam, kendaraan operasional mogok, atau ATK habis. | Tidak perlu ubah risiko tugas jika tugas pribadi jalan. | **YA, WAJIB** pilih kategori `Fasilitas & Sarana Kantor` (`OFFICE_FACILITY`) agar Tim GA segera bertindak. |
-| 6 | Menunggu ACC/tanda tangan atasan atau pencairan dana vendor yang menghambat jadwal. | Tandai `AMBER`/`RED` pada target proyek. | **YA, WAJIB** pilih kategori `Persetujuan & Tanda Tangan` atau `Keuangan & Pembayaran`. |
+| 6 | Menunggu ACC/tanda tangan atasan atau pencairan dana vendor yang menghambat jadwal kritis. | Pilih **`RED`** pada target proyek terkait. | **YA, WAJIB** pilih kategori `Persetujuan & Tanda Tangan` atau `Keuangan & Pembayaran`. |
 | 7 | Kendala terjadi di malam hari setelah EOD ditutup (misalnya website klien tiba-tiba error). | Formulir harian sudah terkunci. | **YA, WAJIB** — halaman `/raise-blockers` aktif **24 jam penuh**. |
 
 #### Perbedaan 2 Tombol Penautan Blocker di Komitmen Pagi:
@@ -472,41 +473,30 @@ Jika permohonan koreksi *Material* Anda ditolak oleh atasan (`REJECTED`), Anda a
 
 ---
 
-# BAB 5: MENGAJUKAN CUTI & IZIN (`CUTI SAYA`)
+# BAB 5: ATURAN CUTI, SAKIT, IZIN, & DISPENSASI RESMI
 
-### 5.1 Aturan Cuti Karyawan Tetap/Kontrak vs Aturan Izin Anak Magang (`Intern`)
+### 5.1 Cara Pencatatan Cuti & Dispensasi Resmi (Tanpa Pengajuan di Aplikasi)
 
-| Aspek | Karyawan Tetap & Kontrak | Karyawan Magang (`Intern`) |
-|---|---|---|
-| **Jatah Cuti Tahunan** | **12 hari kerja/tahun** (ditampilkan di kotak hijau `Jatah Cuti Tahunan`). | **Tidak ada kuota Cuti Tahunan 12 hari** (ditampilkan kotak ungu `Aturan Izin Karyawan Magang`). |
-| **Pilihan Jenis Pengajuan** | 6 pilihan: *Cuti Tahunan, Cuti Sakit, Cuti Khusus, Cuti Melahirkan, Di Luar Tanggungan, Izin (Keperluan Mendesak / Alasan Logis)*. | 2 pilihan khusus: **`Izin (Keperluan Mendesak / Alasan Logis)`** dan **`Sakit`**. |
-| **Hitungan Hari Kerja** | Hanya menghitung **Senin–Jumat** (Sabtu & Minggu tidak memotong kuota). | Hanya menghitung **Senin–Jumat** (Sabtu & Minggu otomatis dilewati). |
+Untuk mencegah kerja ganda (*double entry*), pengajuan dan persetujuan cuti, sakit, izin resmi, maupun dinas luar tetap mengikuti prosedur perusahaan di luar aplikasi (atasan / HRGA / surat dokter). Setelah disetujui, **HRGA, Direktur, atau Admin Sistem** akan langsung mendaftarkan data cuti atau dispensasi Anda ke dalam WorkPulse.
 
 ---
 
-### 5.2 Langkah Mengajukan Cuti / Izin & Cara Membatalkan Mandiri (`/leave/my`)
+### 5.2 Melihat Riwayat Cuti & Dispensasi Saya (`Hanya Baca` di `/daily/history`)
 
-> **[Gambar `WP-SS-13` — Halaman Cuti Saya untuk Karyawan Tetap (`/leave/my`)]**  
-> *Tampilkan kotak hijau `Jatah Cuti Tahunan`, formulir pengajuan cuti terisi, dan tabel riwayat pengajuan.*
+> **[Gambar `WP-SS-13` — Panel Riwayat Cuti & Dispensasi Resmi Read-Only (`/daily/history`)]**  
+> *Tampilkan panel `Riwayat Cuti & Dispensasi Resmi Tercatat` berlabel `Read-Only` di halaman Riwayat Saya.*
 
-> **[Gambar `WP-SS-19` — Halaman Izin Saya Khusus Karyawan Magang (`/leave/my`)]**  
-> *Tampilkan kotak ungu `Aturan Izin Karyawan Magang` dengan 2 pilihan (`Izin` & `Sakit`) saat login sebagai akun Intern.*
-
-1. Buka menu **`Cuti Saya`** (`/leave/my`).
-2. Pilih **`Jenis Cuti / Izin *`**, **`Tanggal Mulai *`**, dan **`Tanggal Selesai *`** (jika hanya 1 hari, samakan kedua tanggalnya).
-3. Isi **`Alasan *`** (minimal **5 karakter**).
-4. Klik tombol hijau **`Ajukan Permohonan`**.
-5. **Membatalkan Sendiri:** Selama permohonan masih berstatus **`Menunggu Review` (`PENDING`)**, Anda dapat mengeklik tombol merah **`Batalkan`** pada baris riwayat Anda. Kuota tidak akan terpotong.
-
-*Catatan validasi:* Tanggal selesai tidak boleh lebih awal dari tanggal mulai, dan tidak boleh bentrok dengan pengajuan cuti lain yang masih aktif.
+1. Setiap kali HRGA/Pimpinan mencatat, mengubah, atau menghapus data cuti maupun dispensasi Anda, Anda otomatis menerima **pemberitahuan di Pusat Notifikasi (`/notifications`)**.
+2. Untuk memastikan tanggal cuti atau dinas luar Anda sudah tercatat benar, buka menu **`Riwayat Saya`** (`/daily/history`) lalu gulir ke bagian **`Riwayat Cuti & Dispensasi Resmi Tercatat`** (*hanya baca / read-only*).
+3. Jika ada tanggal yang belum tercatat atau perlu diubah, cukup hubungi **Tim HRGA (`hrga@dutamedia.com`)** atau atasan Anda agar langsung diperbarui di sistem.
 
 ---
 
-### 5.3 Apa yang Terjadi Otomatis Setelah Cuti / Izin Disetujui?
+### 5.3 Apa yang Terjadi Otomatis Selama Masa Cuti / Dispensasi?
 
-1. **Bebas Laporan Harian:** Selama tanggal cuti/izin tersebut, halaman Komitmen Pagi, Tugas Tambahan, dan Evaluasi Sore otomatis menampilkan **Spanduk Hijau Cuti Resmi**.
-2. **Pemutihan Kepatuhan Otomatis:** Jika Anda sakit mendadak di pagi hari dan izin sakit baru disetujui atasan pada siang/sore hari (setelah lewat `09:30 WIB`), catatan belum melapor hari itu otomatis diputihkan dari daftar kepatuhan HRGA.
-3. **Pengalihan Tiket Kendala:** Jika Anda adalah Penanggung Jawab Kategori Kendala, tiket baru selama Anda cuti otomatis naik ke atasan langsung Anda.
+1. **Otomatis Bebas Laporan Harian (Tanpa Pilih 0 Komitmen):** Selama rentang tanggal cuti atau dispensasi resmi, Anda **tidak perlu membuka WorkPulse** dan **tidak perlu memilih `0 Komitmen`**. Jika halaman `My Today` tetap dibuka, otomatis tampil **Spanduk Hijau Cuti Resmi / Dispensasi Resmi** dan formulir terkunci aman.
+2. **Bebas Catatan Mangkir (*No Submission*):** Hari kerja selama periode cuti atau dispensasi otomatis dikecualikan dari pantauan keterlambatan/ketidakpatuhan HRGA.
+3. **Pengalihan Tiket Kendala (*Cuti Resmi*):** Jika Anda adalah Penanggung Jawab Kategori Kendala dan sedang dalam masa Cuti Resmi, tiket baru otomatis naik ke atasan langsung Anda agar tim tidak menunggu.
 
 ---
 
@@ -533,8 +523,8 @@ Jika permohonan koreksi *Material* Anda ditolak oleh atasan (`REJECTED`), Anda a
 | **4. Bagaimana jika saya lupa kata sandi saat sedang keluar dari sistem?** | Hubungi **Admin Sistem (`admin@dutamedia.com`)** atau **Tim HRGA (`hrga@dutamedia.com`)**. Demi keamanan kantor, reset sandi tidak dibuka secara publik di halaman login. |
 | **5. Mengapa saya tidak bisa menghapus/menambah Tugas Tambahan di malam hari?** | Begitu Evaluasi Sore (EOD) dikirim atau jam melewati `21:00 WIB`, formulir Tugas Tambahan otomatis terkunci. Catat lembur malam di hari kerja berikutnya; bila ada kendala darurat, gunakan **`Lapor Blocker`** yang buka 24 jam. |
 | **6. Saya salah memilih kategori kendala sehingga tiket masuk ke orang yang salah. Apakah harus hapus dan buat ulang?** | Tidak perlu. Buka tab **`Blocker Saya`**, klik **`Edit`** pada tiket aktif tersebut, lalu ganti kategorinya. Sistem otomatis memindahkan tiket ke penanggung jawab yang benar. |
-| **7. Saya sakit mendadak pagi hari dan belum sempat isi Komitmen Pagi. Apakah saya dicatat alpa?** | Ajukan **Cuti Sakit** di **`Cuti Saya` (`/leave/my`)**. Begitu disetujui atasan (meskipun di siang/sore hari), catatan belum melapor hari itu otomatis diputihkan. |
-| **8. Saya anak magang (`Intern`), mengapa tidak ada kotak Jatah Cuti Tahunan 12 hari?** | Sesuai kebijakan perusahaan, anak magang menggunakan alur khusus **`Izin (Keperluan Mendesak / Alasan Logis)`** dan **`Sakit`** tanpa kuota cuti tahunan 12 hari. |
+| **7. Saya sakit mendadak atau mendapat tugas dinas luar. Apakah saya harus membuka web dan memilih `0 Komitmen`?** | **Tidak perlu.** Setelah izin sakit atau dinas luar Anda disetujui di luar sistem, cukup pastikan **HRGA / Pimpinan** mencatatnya ke menu Cuti Resmi atau Dispensasi. Hari tersebut otomatis membebaskan Anda dari kewajiban laporan harian tanpa memilih `0 Komitmen`, dan riwayatnya dapat dicek (*read-only*) di **`Riwayat Saya` (`/daily/history`)**. |
+| **8. Mengapa saat memilih risiko `RED` di Komitmen Pagi saya wajib memilih tiket Blocker, sedangkan `AMBER` tidak wajib?** | Agar status **`RED` (Kritis)** selalu terhubung dengan tiket bantuan nyata yang langsung masuk ke antrean PIC (bukan sekadar catatan kosong), sedangkan **`AMBER`** tetap fleksibel untuk peringatan dini (*early warning*) atau tugas berlanjut. Klik **`+ Buat Tiket Blocker Sekarang`** di form pagi jika tiketnya belum dibuat — draf Anda tersimpan otomatis! |
 | **9. Apakah saya bisa membaca Catatan Coaching yang dibuat atasan saya?** | Jika atasan memilih mode **`Dibagikan ke Karyawan`**, catatan akan langsung masuk ke Pusat Notifikasi Anda. Jika dipilih **`Rahasia Manajemen`**, catatan tersebut hanya untuk internal pimpinan dan HRGA. |
 | **10. Tampilan layar saya terasa aneh setelah ada pembaruan aplikasi.** | Tekan **`Ctrl + Shift + R`** (Windows) atau **`Cmd + Shift + R`** (Mac) untuk memuat ulang tampilan terbaru. |
 

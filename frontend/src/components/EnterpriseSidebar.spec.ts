@@ -143,7 +143,7 @@ describe('EnterpriseSidebar.vue (IMP-020, IMP-021)', () => {
     expect(wrapper.find('[data-testid="nav-group-management"]').exists()).toBe(false);
   });
 
-  it('keeps brand header above scrollable nav-tree and profile/logout card pinned at bottom even on longest CEO/HRGA menu', async () => {
+  it('hides Workspace group for CEO_MANAGEMENT and keeps brand header above scrollable nav-tree with logout pinned at bottom (DEC-019)', async () => {
     const authStore = useAuthStore(pinia);
     authStore.user = {
       id: 'usr-ceo',
@@ -172,7 +172,10 @@ describe('EnterpriseSidebar.vue (IMP-020, IMP-021)', () => {
     expect(sideBottom.exists()).toBe(true);
     expect(navTree.find('.side-bottom').exists()).toBe(false);
     expect(sideBottom.find('[data-testid="nav-logout"]').exists()).toBe(true);
-    expect(aside.findAll('.nav-link').length).toBeGreaterThanOrEqual(20);
+    expect(wrapper.find('[data-testid="nav-group-workspace"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="nav-group-management"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="nav-group-administration"]').exists()).toBe(true);
+    expect(aside.findAll('.nav-link').length).toBeGreaterThanOrEqual(15);
   });
 });
 

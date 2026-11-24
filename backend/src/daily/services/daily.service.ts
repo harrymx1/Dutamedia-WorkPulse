@@ -67,25 +67,11 @@ export class DailyService {
     const isMorningLocked = currentTimeStr > morningLockCutoff;
     const isEodLocked = currentTimeStr > eodLockCutoff;
 
-    // Ambil permohonan cuti aktif yang telah disetujui hari ini (DEC-007 & DEC-008)
-    let activeLeave: any = null;
-    if ((this.prisma as any).leaveRequest?.findFirst) {
-      activeLeave = await this.prisma.leaveRequest.findFirst({
-        where: {
-          userId,
-          status: LeaveStatus.APPROVED,
-          startDate: { lte: todayDate },
-          endDate: { gte: todayDate },
-        },
-        select: {
-          id: true,
-          leaveType: true,
-          startDate: true,
-          endDate: true,
-          reason: true,
-        },
-      });
-    }
+    // Ambil permohonan cuti resmi & dispensasi aktif hari ini (DEC-007, DEC-008, DEC-018)
+    const { activeLeave, activeExemption } = await this.getActiveLeaveAndExemption(
+      userId,
+      todayDate,
+    );
 
     // Ambil record hari ini jika sudah pernah dibuat
     const record = await this.prisma.dailyAccountabilityRecord.findUnique({
@@ -286,6 +272,16 @@ export class DailyService {
             reason: activeLeave.reason,
           }
         : null,
+      activeExemption: activeExemption
+        ? {
+            id: activeExemption.id,
+            exemptionCategory: activeExemption.exemptionCategory,
+            officialReferenceNumber: activeExemption.officialReferenceNumber || null,
+            startDate: activeExemption.startDate.toISOString().split('T')[0],
+            endDate: activeExemption.endDate.toISOString().split('T')[0],
+            reason: activeExemption.reason,
+          }
+        : null,
       record: enrichedRecord,
       availableCarryOvers,
       availableProjects,
@@ -313,25 +309,8 @@ export class DailyService {
 
     const workDate = new Date(inputWorkDate);
 
-    // Penegakan DEC-008: Pembebasan pengisian komitmen saat dalam masa cuti resmi disetujui
-    if ((this.prisma as any).leaveRequest?.findFirst) {
-      const activeLeave = await this.prisma.leaveRequest.findFirst({
-        where: {
-          userId,
-          status: LeaveStatus.APPROVED,
-          startDate: { lte: workDate },
-          endDate: { gte: workDate },
-        },
-      });
-      if (activeLeave) {
-        throw new AppException({
-          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message:
-            'Anda sedang dalam masa cuti resmi yang telah disetujui (Superseded by Approved Leave). Anda dibebaskan dari kewajiban komitmen harian.',
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        });
-      }
-    }
+    // Penegakan DEC-008 & DEC-018: Pembebasan otomatis pengisian komitmen saat cuti resmi atau dispensasi aktif
+    await this.assertNotOnLeaveOrExemption(userId, workDate, 'komitmen harian');
 
     // Ambil kebijakan waktu checkin
     const timingPolicy = await this.policyService.getActivePolicy(
@@ -423,11 +402,49 @@ export class DailyService {
 
     for (let i = 0; i < dto.commitments.length; i++) {
       const item = dto.commitments[i];
+      let resolvedKnownBlockerNote = item.knownBlockerNote
+        ? item.knownBlockerNote.trim()
+        : null;
+      const linkedBlockerId =
+        item.linkedBlockerId && item.linkedBlockerId.trim()
+          ? item.linkedBlockerId.trim()
+          : null;
 
-      // Validasi catatan kendala untuk AMBER / RED
+      // Penegakan DEC-020: Risiko RED wajib menautkan tiket Blocker aktif yang masih berjalan
+      if (item.initialRisk === CommitmentRisk.RED) {
+        if (!linkedBlockerId) {
+          throw new AppException({
+            code: ErrorCode.VALIDATION_FAILED,
+            message: `Komitmen #${i + 1} dengan tingkat risiko RED wajib mengaitkan tiket Blocker aktif. Buat tiket Blocker terlebih dahulu lalu kaitkan sebagai penyebab.`,
+            statusCode: HttpStatus.BAD_REQUEST,
+          });
+        }
+
+        if ((this.prisma as any).blockerTicket?.findUnique) {
+          const blocker = await (this.prisma as any).blockerTicket.findUnique({
+            where: { id: linkedBlockerId },
+            select: { id: true, description: true, status: true },
+          });
+          const activeStatuses = ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'];
+          if (!blocker || !activeStatuses.includes(String(blocker.status))) {
+            throw new AppException({
+              code: ErrorCode.VALIDATION_FAILED,
+              message: `Tiket Blocker yang dikaitkan pada Komitmen #${i + 1} tidak ditemukan atau sudah tidak aktif. Pilih tiket Blocker yang masih berjalan.`,
+              statusCode: HttpStatus.BAD_REQUEST,
+            });
+          }
+          if (!resolvedKnownBlockerNote) {
+            const blkCode = `#BLK-${String(blocker.id).slice(0, 6).toUpperCase()}`;
+            resolvedKnownBlockerNote = `Terkait kendala aktif ${blkCode}: ${blocker.description}`;
+          }
+        }
+      }
+
+      // Penegakan DEC-021: Risiko AMBER/RED wajib menyertakan uraian potensi kendala
       if (
-        (item.initialRisk === CommitmentRisk.AMBER || item.initialRisk === CommitmentRisk.RED) &&
-        (!item.knownBlockerNote || item.knownBlockerNote.trim().length === 0)
+        (item.initialRisk === CommitmentRisk.AMBER ||
+          item.initialRisk === CommitmentRisk.RED) &&
+        (!resolvedKnownBlockerNote || resolvedKnownBlockerNote.length === 0)
       ) {
         throw new AppException({
           code: ErrorCode.VALIDATION_FAILED,
@@ -465,7 +482,6 @@ export class DailyService {
 
       const seqNo = i + 1;
       const projectCode = item.projectCode && item.projectCode.trim() ? item.projectCode.trim() : null;
-      const linkedBlockerId = item.linkedBlockerId && item.linkedBlockerId.trim() ? item.linkedBlockerId.trim() : null;
       if (projectCode || linkedBlockerId) {
         commitmentMeta[String(seqNo)] = { projectCode, linkedBlockerId };
       }
@@ -475,7 +491,7 @@ export class DailyService {
         taskText: item.taskText.trim(),
         referenceLink: item.referenceLink ? item.referenceLink.trim() : null,
         initialRisk: item.initialRisk,
-        knownBlockerNote: item.knownBlockerNote ? item.knownBlockerNote.trim() : null,
+        knownBlockerNote: resolvedKnownBlockerNote,
         supportNeeded: item.supportNeeded ? item.supportNeeded.trim() : null,
         isCarryOver,
         carryOverDaysCount,
@@ -700,6 +716,73 @@ export class DailyService {
     };
   }
 
+  private async getActiveLeaveAndExemption(userId: string, targetDate: Date) {
+    let activeLeave: any = null;
+    if ((this.prisma as any).leaveRequest?.findFirst) {
+      activeLeave = await this.prisma.leaveRequest.findFirst({
+        where: {
+          userId,
+          status: LeaveStatus.APPROVED,
+          startDate: { lte: targetDate },
+          endDate: { gte: targetDate },
+        },
+        select: {
+          id: true,
+          leaveType: true,
+          startDate: true,
+          endDate: true,
+          reason: true,
+        },
+      });
+    }
+
+    let activeExemption: any = null;
+    if ((this.prisma as any).boundedExemption?.findFirst) {
+      activeExemption = await (this.prisma as any).boundedExemption.findFirst({
+        where: {
+          userId,
+          startDate: { lte: targetDate },
+          endDate: { gte: targetDate },
+        },
+        select: {
+          id: true,
+          exemptionCategory: true,
+          officialReferenceNumber: true,
+          startDate: true,
+          endDate: true,
+          reason: true,
+        },
+      });
+    }
+
+    return { activeLeave, activeExemption };
+  }
+
+  private async assertNotOnLeaveOrExemption(
+    userId: string,
+    targetDate: Date,
+    activityLabel: string,
+  ) {
+    const { activeLeave, activeExemption } = await this.getActiveLeaveAndExemption(
+      userId,
+      targetDate,
+    );
+    if (activeLeave) {
+      throw new AppException({
+        code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+        message: `Anda sedang dalam masa cuti resmi tercatat. Pengisian ${activityLabel} dinonaktifkan otomatis tanpa perlu memilih 0 komitmen.`,
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
+    }
+    if (activeExemption) {
+      throw new AppException({
+        code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+        message: `Anda sedang dalam masa dispensasi resmi (${activeExemption.exemptionCategory}). Pengisian ${activityLabel} dinonaktifkan otomatis tanpa perlu memilih 0 komitmen.`,
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
+    }
+  }
+
   private async buildActiveOrgSnapshot(userId: string, workDate: Date) {
     const activeOrg = this.prisma.organizationalAssignment?.findFirst
       ? await this.prisma.organizationalAssignment.findFirst({
@@ -858,24 +941,7 @@ export class DailyService {
     const todayStr = this.clockService.todayString('Asia/Jakarta');
     const workDate = new Date(todayStr);
 
-    if ((this.prisma as any).leaveRequest?.findFirst) {
-      const activeLeave = await this.prisma.leaveRequest.findFirst({
-        where: {
-          userId,
-          status: LeaveStatus.APPROVED,
-          startDate: { lte: workDate },
-          endDate: { gte: workDate },
-        },
-      });
-      if (activeLeave) {
-        throw new AppException({
-          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message:
-            'Anda sedang dalam masa cuti resmi yang telah disetujui. Pencatatan pekerjaan tambahan dinonaktifkan.',
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        });
-      }
-    }
+    await this.assertNotOnLeaveOrExemption(userId, workDate, 'pekerjaan tambahan');
 
     const timingPolicy = await this.policyService.getActivePolicy(
       PolicyCategory.CHECKIN_TIMING,
@@ -925,6 +991,14 @@ export class DailyService {
         message: 'Catatan akuntabilitas harian tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
       });
+    }
+
+    if (record.workDate) {
+      await this.assertNotOnLeaveOrExemption(
+        userId,
+        new Date(record.workDate),
+        'pekerjaan tambahan',
+      );
     }
 
     await this.assertAdditionalWorkWindowOpen(record);
@@ -1325,25 +1399,8 @@ export class DailyService {
 
     const workDate = new Date(inputWorkDate);
 
-    // Penegakan DEC-008: Pembebasan pelaporan EOD saat dalam masa cuti resmi disetujui
-    if ((this.prisma as any).leaveRequest?.findFirst) {
-      const activeLeave = await this.prisma.leaveRequest.findFirst({
-        where: {
-          userId,
-          status: LeaveStatus.APPROVED,
-          startDate: { lte: workDate },
-          endDate: { gte: workDate },
-        },
-      });
-      if (activeLeave) {
-        throw new AppException({
-          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message:
-            'Anda sedang dalam masa cuti resmi yang telah disetujui. Pelaporan evaluasi sore dinonaktifkan.',
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        });
-      }
-    }
+    // Penegakan DEC-008 & DEC-018: Pembebasan pelaporan EOD saat cuti resmi atau dispensasi aktif
+    await this.assertNotOnLeaveOrExemption(userId, workDate, 'evaluasi sore (EOD)');
 
     const existingRecord = await this.prisma.dailyAccountabilityRecord.findUnique({
       where: {
@@ -1545,6 +1602,32 @@ export class DailyService {
       (r) => r.finalDailyStatus === DailyRiskStatus.RED,
     ).length;
 
+    const [recordedLeaves, recordedExemptions] = await Promise.all([
+      (this.prisma as any).leaveRequest?.findMany
+        ? this.prisma.leaveRequest.findMany({
+            where: {
+              userId,
+              status: LeaveStatus.APPROVED,
+            },
+            include: {
+              reviewedBy: { select: { id: true, fullName: true } },
+            },
+            orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
+            take: 25,
+          })
+        : Promise.resolve([]),
+      (this.prisma as any).boundedExemption?.findMany
+        ? (this.prisma as any).boundedExemption.findMany({
+            where: { userId },
+            include: {
+              createdByUser: { select: { id: true, fullName: true } },
+            },
+            orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
+            take: 25,
+          })
+        : Promise.resolve([]),
+    ]);
+
     return {
       dateRange: {
         startDate: start.toISOString().split('T')[0],
@@ -1559,6 +1642,8 @@ export class DailyService {
         redDays,
       },
       records,
+      recordedLeaves: recordedLeaves || [],
+      recordedExemptions: recordedExemptions || [],
     };
   }
 }

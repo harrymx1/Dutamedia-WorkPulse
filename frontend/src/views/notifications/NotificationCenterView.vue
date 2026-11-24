@@ -276,7 +276,14 @@ function formatNotificationTypeLabel(type?: string): string {
     case 'LEAVE_APPROVED':
     case 'LEAVE_REJECTED':
     case 'LEAVE_RECONCILED':
-      return 'Pengajuan Cuti';
+    case 'LEAVE_RECORDED':
+    case 'LEAVE_UPDATED':
+    case 'LEAVE_DELETED':
+      return 'Catatan Cuti Resmi';
+    case 'EXEMPTION_GRANTED':
+    case 'EXEMPTION_UPDATED':
+    case 'EXEMPTION_DELETED':
+      return 'Dispensasi Resmi';
     case 'CORRECTION_REQUESTED':
     case 'CORRECTION_SUBMITTED':
     case 'CORRECTION_APPROVED':
@@ -300,7 +307,8 @@ function formatNotificationTypeLabel(type?: string): string {
       if (type.startsWith('POLICY_OWNER_')) return 'Tata Kelola Kebijakan';
       if (type.startsWith('POLICY_')) return 'Pembaruan Kebijakan';
       if (type.startsWith('TEMPORARY_REVIEWER_')) return 'Delegasi Wewenang';
-      if (type.startsWith('LEAVE_')) return 'Pengajuan Cuti';
+      if (type.startsWith('LEAVE_')) return 'Catatan Cuti Resmi';
+      if (type.startsWith('EXEMPTION_')) return 'Dispensasi Resmi';
       if (type.startsWith('CORRECTION_')) return 'Koreksi Komitmen';
       if (type.includes('COACHING') || type.includes('NOTE')) return 'Catatan Pembinaan';
       if (type.includes('REMINDER')) return 'Pengingat Harian';
@@ -480,16 +488,16 @@ function getNotificationPreview(message: string): string {
 }
 
 const ACTION_BUTTON_LABELS: Record<string, string> = {
-  '/leave/queue': 'Buka Antrean Persetujuan Cuti',
+  '/admin/leaves': 'Buka Pencatatan Cuti Resmi',
   '/blockers': 'Buka Antrean Eskalasi Blocker',
   '/daily/morning': 'Buka Morning Commitment',
   '/daily/additional-work': 'Buka Pekerjaan Tambahan',
   '/daily/eod': 'Buka Evaluasi Sore (EOD)',
+  '/daily/history': 'Lihat Riwayat Cuti & Dispensasi',
   '/admin/policies': 'Buka Pengaturan Kebijakan',
   '/corrections/review': 'Buka Review Koreksi',
   '/corrections/morning': 'Buka Koreksi Komitmen Pagi',
   '/corrections/eod': 'Buka Koreksi Evaluasi Sore',
-  '/leave/my': 'Buka Cuti Saya',
 };
 
 function getActionButtonLabel(actionUrl?: string): string {

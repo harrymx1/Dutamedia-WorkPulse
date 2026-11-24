@@ -233,4 +233,62 @@ describe('MyHistoryView.vue (Audit #6 Verification)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(wrapper.find('[data-testid="date-range-error"]').exists()).toBe(false);
   });
+
+  it('renders read-only recordedLeaves and recordedExemptions panel cleanly (DEC-018)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            dateRange: { startDate: '2026-11-18', endDate: '2026-11-24' },
+            kpi: {
+              totalDays: 0,
+              onTimeSubmissions: 0,
+              onTimeRate: 0,
+              greenDays: 0,
+              amberDays: 0,
+              redDays: 0,
+            },
+            records: [],
+            recordedLeaves: [
+              {
+                id: 'lv-ro-1',
+                leaveType: 'ANNUAL',
+                startDate: '2026-11-24',
+                endDate: '2026-11-25',
+                reason: 'Cuti tahunan resmi disetujui',
+                reviewedBy: { id: 'hr-1', fullName: 'Dewi HRGA' },
+              },
+            ],
+            recordedExemptions: [
+              {
+                id: 'ex-ro-1',
+                exemptionCategory: 'Dinas Luar',
+                officialReferenceNumber: 'ST/HRGA/104',
+                startDate: '2026-11-26',
+                endDate: '2026-11-26',
+                reason: 'Presentasi proyek ke klien Surabaya',
+                createdByUser: { id: 'hr-1', fullName: 'Dewi HRGA' },
+              },
+            ],
+          },
+        }),
+      }),
+    );
+
+    const wrapper = mount(MyHistoryView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    const panel = wrapper.find('[data-testid="readonly-leave-exemption-panel"]');
+    expect(panel.exists()).toBe(true);
+    expect(panel.text()).toContain('Read-Only');
+    expect(panel.text()).toContain('Cuti Tahunan');
+    expect(panel.text()).toContain('Dinas Luar');
+    expect(panel.text()).toContain('ST/HRGA/104');
+    expect(panel.text()).toContain('Dewi HRGA');
+  });
 });

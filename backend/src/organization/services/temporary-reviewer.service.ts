@@ -248,7 +248,7 @@ export class TemporaryReviewerService {
         replacedName
           ? `Anda telah resmi diberikan pelimpahan wewenang sebagai Reviewer Sementara untuk Divisi ${dto.targetFunction} menggantikan ${replacedName}.`
           : `Anda telah resmi diberikan pelimpahan wewenang sebagai Reviewer Sementara untuk Divisi ${dto.targetFunction}.`,
-        'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+        'Cakupan Wewenang: Review koreksi komitmen harian tim',
         `Divisi Wewenang: ${dto.targetFunction}`,
         replacedName ? `Menggantikan: ${replacedName}` : null,
         `Periode Berlaku: ${effStr} s/d ${expStr}`,
@@ -263,7 +263,7 @@ export class TemporaryReviewerService {
           channel: NotificationChannel.IN_APP_CENTER,
           title: 'Penugasan Reviewer Sementara Baru',
           message: delegateMessage,
-          actionUrl: '/leave/queue',
+          actionUrl: '/corrections/review',
           relatedEntityType: 'temporary_reviewer_assignments',
           relatedEntityId: assignment.id,
         },
@@ -273,7 +273,7 @@ export class TemporaryReviewerService {
       if (replacedUser && replacedUser.id !== dto.delegateUserId) {
         const replacedMessage = [
           `Wewenang peninjauan Anda untuk Divisi ${dto.targetFunction} telah resmi dialihkan sementara kepada ${delegateName} selama masa berhalangan hadir.`,
-          'Cakupan Wewenang: Persetujuan cuti dan review koreksi komitmen tim',
+          'Cakupan Wewenang: Review koreksi komitmen harian tim',
           `Divisi Wewenang: ${dto.targetFunction}`,
           `Pejabat Pengganti: ${delegateName}`,
           `Periode Pelimpahan: ${effStr} s/d ${expStr}`,

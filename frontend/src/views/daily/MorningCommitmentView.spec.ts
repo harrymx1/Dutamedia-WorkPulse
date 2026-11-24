@@ -979,4 +979,177 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
 
     expect(window.localStorage.getItem('wp_morning_draft_usr-dio-1_2026-11-20')).toBeNull();
   });
+
+  it('auto-locks Morning Commitment when activeExemption is active without requiring 0 commitments (DEC-018)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-24',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          activeLeave: null,
+          activeExemption: {
+            id: 'ex-today-1',
+            exemptionCategory: 'Dinas Luar',
+            officialReferenceNumber: 'ST/HRGA/2026/XI/104',
+            startDate: '2026-11-24',
+            endDate: '2026-11-25',
+            reason: 'Kunjungan implementasi ke kantor klien',
+          },
+          record: null,
+          availableCarryOvers: [],
+        },
+      }),
+    }));
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(wrapper.find('[data-testid="exemption-active-banner"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="exemption-notice-box"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Dinas Luar');
+    expect(wrapper.text()).toContain('ST/HRGA/2026/XI/104');
+    expect(wrapper.find('[data-testid="btn-submit-morning"]').exists()).toBe(false);
+  });
+
+  it('enforces RED requires active blocker ticket with Cara A shortcut and keeps AMBER optional (DEC-020 & DEC-021)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-red-1',
+      email: 'dev@dutamedia.com',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    } as any;
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-24',
+          currentTime: '08:30',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+          activeBlockers: [
+            {
+              id: 'blk-100',
+              code: '#BLK-100',
+              description: 'Database staging error',
+              severity: 'CRITICAL',
+              projectCodeReference: 'PRJ-CORE',
+              status: 'OPEN',
+            },
+          ],
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+
+    await wrapper.find('.slots-body textarea.input-control').setValue('Deploy integrasi pembayaran ke staging');
+
+    // 1. Pilih AMBER tanpa blocker -> harus bisa dikirim bila uraian risiko diisi
+    await wrapper.find('input[type="radio"][value="AMBER"]').setValue(true);
+    expect(wrapper.find('[data-testid="amber-blocker-hint-0"]').exists()).toBe(true);
+
+    // 2. Pilih RED tanpa blocker -> muncul CTA + Buat Tiket Blocker Sekarang dan submit ditolak sebelum API POST
+    await wrapper.find('input[type="radio"][value="RED"]').setValue(true);
+    expect(wrapper.find('[data-testid="red-blocker-cta-0"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="btn-create-blocker-for-slot-0"]').exists()).toBe(true);
+
+    await wrapper.find('[data-testid="btn-submit-morning"]').trigger('click');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(wrapper.text()).toContain('Komitmen berisiko RED wajib mengaitkan tiket Blocker aktif');
+    expect(fetchMock).toHaveBeenCalledTimes(1); // Hanya GET /daily/today, tidak mengirim POST
+  });
+
+  it('auto-links returned linkedBlockerId query param after Cara A redirect from RaiseBlockerView (DEC-020)', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-return-1',
+      email: 'dev@dutamedia.com',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    } as any;
+
+    window.localStorage.setItem(
+      'wp_morning_draft_usr-return-1_2026-11-24',
+      JSON.stringify({
+        isZeroCommitment: false,
+        zeroCommitmentReason: '',
+        commitmentSlots: [
+          {
+            taskText: 'Rilis API ke server staging hari ini',
+            referenceLink: '',
+            projectCode: 'PRJ-CORE',
+            linkedBlockerId: '',
+            initialRisk: 'RED',
+            knownBlockerNote: '',
+            supportNeeded: '',
+            carryOverDaysCount: 0,
+          },
+        ],
+        savedAt: '2026-11-24T01:30:00.000Z',
+      }),
+    );
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-24',
+          currentTime: '08:35',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+          activeBlockers: [
+            {
+              id: 'blk-new-77',
+              code: '#BLK-NEW77',
+              description: 'Server staging kehabisan disk space',
+              severity: 'CRITICAL',
+              projectCodeReference: 'PRJ-CORE',
+              status: 'OPEN',
+            },
+          ],
+        },
+      }),
+    }));
+
+    await router.push('/daily/morning?linkedBlockerId=blk-new-77&slot=0');
+    await router.isReady();
+
+    const wrapper = mount(MorningCommitmentView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((r) => setTimeout(r, 40));
+
+    const selectEl = wrapper.find('[data-testid="hindered-blocker-select-0"]').element as HTMLSelectElement;
+    expect(selectEl.value).toBe('blk-new-77');
+    expect(wrapper.text()).toContain('Tiket Blocker baru berhasil ditautkan ke Komitmen #1');
+  });
 });

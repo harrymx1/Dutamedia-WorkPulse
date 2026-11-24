@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -10,20 +12,17 @@ import {
 } from '@nestjs/common';
 import { LeaveService } from '../services/leave.service';
 import {
-  CreateLeaveRequestDto,
-  ReviewLeaveRequestDto,
+  RecordApprovedLeaveDto,
+  UpdateApprovedLeaveDto,
 } from '../dto/create-leave-request.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { CanonicalRole, LeaveStatus } from '@prisma/client';
+import { CanonicalRole } from '@prisma/client';
 
-export const SELF_LEAVE_OPERATIONAL_ROLES: CanonicalRole[] = [
-  CanonicalRole.EMPLOYEE,
-  CanonicalRole.SUPERVISOR,
-  CanonicalRole.HEAD,
-  CanonicalRole.PROJECT_MANAGER,
+export const LEAVE_REGISTRY_ADMIN_ROLES: CanonicalRole[] = [
+  CanonicalRole.SYSTEM_ADMIN,
   CanonicalRole.HRGA,
   CanonicalRole.CEO_MANAGEMENT,
 ];
@@ -33,46 +32,59 @@ export const SELF_LEAVE_OPERATIONAL_ROLES: CanonicalRole[] = [
 export class LeaveController {
   constructor(private readonly leaveService: LeaveService) {}
 
-  @Post(['', 'requests'])
-  @UseGuards(RolesGuard)
-  @Roles(...SELF_LEAVE_OPERATIONAL_ROLES)
-  async createLeaveRequest(@Req() req: any, @Body() dto: CreateLeaveRequestDto) {
-    return this.leaveService.createLeaveRequest(req.user.id, dto);
-  }
-
+  /**
+   * Riwayat cuti resmi tercatat (read-only) untuk karyawan sendiri.
+   */
   @Get('my')
-  @UseGuards(RolesGuard)
-  @Roles(...SELF_LEAVE_OPERATIONAL_ROLES)
   async getMyLeaveRequests(@Req() req: any) {
     return this.leaveService.getMyLeaveRequests(req.user.id);
   }
 
-  @Get('quota')
+  /**
+   * Daftar seluruh catatan cuti resmi (ter-ACC) — dikelola HRGA / Direktur / Admin.
+   */
+  @Get('registry')
   @UseGuards(RolesGuard)
-  @Roles(...SELF_LEAVE_OPERATIONAL_ROLES)
-  async getMyLeaveQuota(@Req() req: any) {
-    return this.leaveService.getMyLeaveQuota(req.user.id);
+  @Roles(...LEAVE_REGISTRY_ADMIN_ROLES)
+  async getAllApprovedLeaves(@Query('userId') userId?: string) {
+    return this.leaveService.getAllApprovedLeaves(userId);
   }
 
-  @Get('queue')
-  async getApprovalQueue(@Req() req: any, @Query('status') status?: LeaveStatus) {
-    return this.leaveService.getApprovalQueue(req.user?.id, status);
+  /**
+   * Mencatat data cuti resmi yang sudah disetujui di luar sistem (langsung APPROVED).
+   */
+  @Post('registry')
+  @UseGuards(RolesGuard)
+  @Roles(...LEAVE_REGISTRY_ADMIN_ROLES)
+  async recordApprovedLeave(
+    @Req() req: any,
+    @Body() dto: RecordApprovedLeaveDto,
+  ) {
+    return this.leaveService.recordApprovedLeave(req.user.id, dto);
   }
 
-  @Post([':id/review', 'requests/:id/review'])
-  async reviewLeaveRequest(
+  /**
+   * Mengubah catatan cuti resmi yang sudah terdaftar.
+   */
+  @Patch('registry/:id')
+  @UseGuards(RolesGuard)
+  @Roles(...LEAVE_REGISTRY_ADMIN_ROLES)
+  async updateApprovedLeave(
     @Req() req: any,
     @Param('id') id: string,
-    @Body() dto: ReviewLeaveRequestDto,
+    @Body() dto: UpdateApprovedLeaveDto,
   ) {
-    return this.leaveService.reviewLeaveRequest(req.user.id, id, dto);
+    return this.leaveService.updateApprovedLeave(req.user.id, id, dto);
   }
 
-  @Post([':id/cancel', 'requests/:id/cancel'])
+  /**
+   * Menghapus catatan cuti resmi dari sistem.
+   */
+  @Delete('registry/:id')
   @UseGuards(RolesGuard)
-  @Roles(...SELF_LEAVE_OPERATIONAL_ROLES)
-  async cancelLeaveRequest(@Req() req: any, @Param('id') id: string) {
-    return this.leaveService.cancelLeaveRequest(req.user.id, id);
+  @Roles(...LEAVE_REGISTRY_ADMIN_ROLES)
+  async deleteApprovedLeave(@Req() req: any, @Param('id') id: string) {
+    return this.leaveService.deleteApprovedLeave(req.user.id, id);
   }
 }
 

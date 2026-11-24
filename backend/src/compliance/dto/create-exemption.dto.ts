@@ -31,3 +31,31 @@ export class CreateBoundedExemptionDto {
   reason!: string;
 }
 
+export class UpdateBoundedExemptionDto {
+  @IsOptional()
+  @IsUUID('4', { message: 'ID karyawan subjek dispensasi tidak valid' })
+  userId?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Tanggal mulai harus berformat YYYY-MM-DD' })
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Tanggal selesai harus berformat YYYY-MM-DD' })
+  endDate?: string;
+
+  @IsOptional()
+  @IsString({ message: 'Kategori pengecualian wajib diisi' })
+  @IsNotEmpty({ message: 'Kategori pengecualian tidak boleh kosong' })
+  exemptionCategory?: string;
+
+  @IsOptional()
+  @IsString()
+  officialReferenceNumber?: string;
+
+  @IsOptional()
+  @IsString({ message: 'Alasan resmi dispensasi wajib diisi' })
+  @MinLength(5, { message: 'Alasan resmi dispensasi minimal 5 karakter' })
+  reason?: string;
+}
+

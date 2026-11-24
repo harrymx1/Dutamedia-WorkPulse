@@ -93,7 +93,7 @@
 | ID | Story |
 |---|---|
 | US-17 | Sebagai HRGA, saya ingin melihat flag repeated non-submission dan compliance event, agar saya bisa memproses sesuai kebijakan. |
-| US-18 | Sebagai HRGA, saya ingin mengelola exemption partisipasi (cuti, dinas, dll.), agar No Submission tidak salah ditandai pada hari yang valid. |
+| US-18 | Sebagai HRGA/Direktur/Admin, saya ingin mencatat, mengubah, dan menghapus data cuti resmi ter-ACC serta dispensasi kerja langsung tanpa alur persetujuan di sistem (`DEC-018`), agar karyawan otomatis bebas kewajiban komitmen dan No Submission tidak salah tercatat. |
 | US-19 | Sebagai HRGA, saya ingin akses terbatas ke coaching/warning record sesuai kewenangan saya, agar data sensitif tidak terekspos berlebihan. |
 
 ### CEO / Management
@@ -113,7 +113,7 @@
 | ID | Story |
 |---|---|
 | US-25 | Sebagai Employee, saya ingin mengajukan Correction Request untuk Morning Commitment yang sudah locked, agar saya bisa memperbaiki kesalahan tanpa mengubah baseline secara diam-diam. |
-| US-26 | Sebagai Employee, saya ingin mengajukan Leave Request, agar hari saya tidak salah ditandai No Submission setelah disetujui. |
+| US-26 | Sebagai Employee, saya ingin melihat riwayat cuti dan dispensasi resmi saya secara read-only pada Riwayat Saya dan otomatis dibebaskan dari check-in tanpa harus membuka form untuk memilih 0 komitmen (`DEC-018`). |
 | US-27 | Sebagai Authorized Reviewer (Supervisor/TL/Head sesuai policy), saya ingin melihat Correction Request material dalam objection window dan mengajukan objection bila perlu, agar baseline tetap terjaga tanpa saya harus meninjau setiap pengajuan secara aktif. |
 | US-28 | Sebagai Employee, saya ingin menyimpan catatan opsional Tomorrow Priority pada EOD dan melihatnya terpisah pada Morning berikutnya, agar konteks prioritas tetap terlihat tanpa menjadi Commitment otomatis. |
 | US-29 | Sebagai Employee, saya ingin mengajukan EOD Correction Request terpisah untuk data EOD yang telah terkunci, agar kesalahan dapat dikoreksi tanpa menulis ulang data secara diam-diam. |
@@ -136,7 +136,7 @@
 | ID | Requirement |
 |---|---|
 | FR-03 | Employee dapat menyerahkan Morning Check-in dengan 0–3 Morning Commitment sebelum Cut-Off. Setiap Commitment yang dibuat memiliki Initial Risk (GREEN/AMBER/RED). Jika tidak ada Commitment, alasan wajib diisi; kondisi ini tetap merupakan submission yang valid dan tunduk pada aturan waktu submission. |
-| FR-04 | Known Blocker dan Support Needed wajib diisi pada Commitment jika Initial Risk = AMBER/RED. |
+| FR-04 | Uraian risiko/potensi kendala wajib diisi pada Commitment jika Initial Risk = `AMBER`/`RED`. Untuk `RED`, pengguna **wajib mengaitkan tiket Blocker aktif** yang sedang berjalan (`DEC-020`); untuk `AMBER`, kaitan tiket Blocker bersifat opsional (`DEC-021`). |
 | FR-05 | Setelah Cut-Off, Morning Commitment terkunci sebagai baseline; perubahan apa pun wajib melalui Morning Correction Request (lihat Section 3.9) — tidak ada direct-edit terhadap baseline yang sudah locked. |
 | FR-06 | Employee dapat mencatat Additional Work kapan saja setelah Morning Check-in, terpisah dari Commitment 1–3, dengan Reason (Newly Assigned/Missed in Planning/Priority Change/Operational-Incident/Other); Assigned By wajib jika Reason = Newly Assigned. |
 | FR-07 | Additional Work tidak mengubah baseline Morning Commitment dan tidak dihitung sebagai commitment ke-4. |
@@ -231,12 +231,12 @@ Nilai default sistem yang telah dikunci oleh aturan tetap produk atau batas keam
 | FR-44 | Sistem mengklasifikasikan Morning Correction Request sebagai **Minor** (diterapkan langsung) atau **Material** (masuk Objection Window) berdasarkan policy yang berlaku. Pengajuan Material otomatis menjadi Applied jika tidak ada objection dari Authorized Reviewer dalam Objection Window; Reviewer dapat mengajukan objection secara eksplisit selama window berjalan, yang menghasilkan status Rejected dan baseline Morning asli tetap berlaku. |
 | FR-45 | Seluruh siklus Morning Correction Request—pengajuan, klasifikasi, penerapan, objection/rejection, serta aktor dan timestamp—wajib dapat ditelusuri melalui audit trail. Jika perubahan diterapkan, audit trail harus menyimpan nilai before/after dan referensi ke request terkait; jika ditolak, baseline Morning asli tetap berlaku dan alasan objection tercatat. EOD Correction Request mengikuti FR-53 dan FR-55 dengan record audit terpisah. |
 
-### 3.10 Leave & Exemption Management 
+### 3.10 Leave & Exemption Management (`DEC-018`)
 | ID | Requirement |
 |---|---|
-| FR-46 | HRGA/Admin dapat membuat, mengedit, dan menonaktifkan Holiday dan individual Exemption (single date/date range, effective period) tanpa memerlukan approval tambahan. |
-| FR-47 | Employee dapat mengajukan Leave Request; Leave hanya berlaku sebagai valid exception setelah disetujui oleh Authorized Approval sesuai policy. |
-| FR-48 | Leave/Holiday/Exemption yang berstatus valid mengecualikan tanggal terkait secara otomatis dari No Submission detection (FR-27), tanpa memerlukan aksi manual tambahan pada tanggal berjalan. Apabila suatu `Leave Request` baru disetujui (*Approved*) oleh Authorized Approver setelah jam Cut-Off pada tanggal terkait (ketika event `No Submission` terlanjur tercatat karena status permohonan masih `Pending`), sistem secara otomatis merekonsiliasi status tanggal tersebut menjadi `Approved Leave`, memberi penanda status `Superseded by Approved Leave` pada event `No Submission` sebelumnya beserta entri audit trail lengkap (tanpa menghapus rekaman historis secara fisik), serta mengeluarkan tanggal tersebut dari perhitungan ambang 3 kejadian pola ketidakpatuhan (FR-29). |
+| FR-46 | HRGA, Direktur (`CEO_MANAGEMENT`), dan System Admin dapat mencatat, mengedit, dan menghapus Holiday, individual Exemption (`/exemptions`), serta Catatan Cuti Resmi Ter-ACC (`/admin/leaves`) tanpa alur pengajuan/persetujuan di dalam sistem (`DEC-018`). Setiap penambahan, perubahan, maupun penghapusan mengirimkan notifikasi ke karyawan terkait. |
+| FR-47 | Karyawan dapat meninjau daftar cuti dan dispensasi resmi yang tercatat atas namanya secara **hanya baca (*read-only*)** pada halaman `Riwayat Saya` (`/daily/history`), serta tidak memiliki menu pengajuan cuti maupun antrean persetujuan cuti. |
+| FR-48 | Cuti resmi (`APPROVED`) dan Dispensasi resmi (`bounded_exemptions`) yang aktif pada suatu tanggal **otomatis membebaskan** karyawan dari kewajiban Morning Commitment, Additional Work, dan EOD Outcome tanpa perlu memilih `0 komitmen`, mengecualikan tanggal tersebut dari `No Submission` serta hitungan `previousWorkday`, dan otomatis membersihkan event ketidakpatuhan yang terlanjur tercatat pada rentang tanggal tersebut. |
 
 ### 3.11 EOD Correction Request (mekanisme terpisah)
 | ID | Requirement |
@@ -271,7 +271,7 @@ Nilai default sistem yang telah dikunci oleh aturan tetap produk atau batas keam
 |---|---|
 | BR-01 | Maksimal 3 Morning Commitment; Additional Work dicatat terpisah dan tidak dihitung sebagai commitment ke-4. |
 | BR-02 | Morning Commitment dapat diedit bebas sebelum Cut-Off; setelah Cut-Off, baseline terkunci dan perubahan apa pun wajib melalui Morning Correction Request (BR-16). |
-| BR-03 | Continuation = `Continue` wajib memiliki Continuation Reason. Initial Risk `AMBER`/`RED` wajib memiliki Known Blocker dan Support Needed pada konteks Commitment. Final Status `AMBER`/`RED` wajib memiliki penjelasan risiko/blocker tingkat-hari. Ketiga konteks ini terpisah. |
+| BR-03 | Continuation = `DO_NOT_CONTINUE` wajib memiliki alasan tidak dilanjutkan (`Continue` catatan opsional). Initial Risk `RED` wajib mengaitkan tiket Blocker aktif (`DEC-020`); Initial Risk `AMBER` mewajibkan uraian risiko/potensi kendala dengan kaitan tiket Blocker bersifat opsional (`DEC-021`). Final Status `AMBER`/`RED` wajib memiliki penjelasan risiko/blocker tingkat-hari. |
 | BR-04 | Status RED dan critical/instant blocker dapat dibuat kapan saja tanpa menunggu EOD. |
 | BR-05 | Sistem tidak pernah menerbitkan SP atau memotong insentif secara otomatis; hanya menghasilkan evidence/flag. |
 | BR-06 | Satu missed submission atau satu hari RED tidak otomatis menghasilkan konsekuensi disipliner. |
@@ -286,7 +286,7 @@ Nilai default sistem yang telah dikunci oleh aturan tetap produk atau batas keam
 | BR-15 | Kewenangan mengubah tiap jenis kebijakan dibatasi ke Authorized Policy Owner yang ditetapkan untuk jenis kebijakan tersebut. |
 | BR-16 | Morning Correction Request tidak boleh langsung mengubah baseline. Kategori Minor diterapkan langsung dengan audit trail; kategori Material melalui Objection Window dan default-approve (otomatis Applied) jika tidak ada objection eksplisit dari Authorized Reviewer dalam periode configurable. EOD Correction Request mengikuti prinsip tata kelola yang sama tetapi memiliki target dan record terpisah. |
 | BR-17 | Maksimum satu No Submission occurrence dihitung per applicable workday untuk pattern detection, meskipun Morning dan EOD sama-sama terlewat pada hari yang sama; sistem tetap menyimpan submission spesifik mana yang terlewat sebagai evidence. |
-| BR-18 | Leave wajib melalui Authorized Approval sebelum berlaku sebagai valid exception; persetujuan Leave pasca-Cut-Off merekonsiliasi tanggal tersebut menjadi Approved Leave dan menandai event No Submission sebelumnya sebagai `Superseded by Approved Leave` pada audit trail (tidak lagi dihitung dalam FR-29). Holiday dan individual Exemption dapat langsung di-set oleh Admin/HRGA berwenang tanpa approval tambahan. |
+| BR-18 | WorkPulse tidak mengelola pengajuan maupun persetujuan cuti/dispensasi (`DEC-018`). HRGA/Direktur/Admin mencatat, mengedit, dan menghapus data Cuti Resmi Ter-ACC (`/admin/leaves`) maupun Dispensasi (`/exemptions`) yang sudah sah di luar sistem; keduanya otomatis membebaskan karyawan dari kewajiban laporan harian tanpa perlu memilih `0 komitmen` dan membersihkan event ketidakpatuhan pada rentang tanggal terkait. |
 | BR-19 | Initial Daily Status diturunkan dari Initial Risk dengan prioritas RED > AMBER > GREEN. Jika tidak ada Commitment, Employee wajib memberi alasan dan status menjadi `NOT_APPLICABLE — NO_COMMITMENT`; status ini bukan GREEN dan bukan No Submission. |
 | BR-20 | `Tomorrow Priority` adalah catatan opsional EOD yang disimpan dan ditampilkan terpisah pada Morning berikutnya; bukan sumber, bukan pembentuk draft, dan tidak memengaruhi FR-11 atau Initial Daily Status. |
 | BR-21 | Morning Correction Request hanya mencakup Morning Commitment yang terkunci. EOD Correction Request adalah alur terpisah untuk EOD yang sudah disubmit dan terkunci; keduanya tidak boleh mengubah baseline atau compliance evidence secara diam-diam. |

@@ -67,7 +67,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
         { path: '/corrections/morning', component: { template: '<div>Morning Correction</div>' } },
         { path: '/corrections/eod', component: { template: '<div>EOD Correction</div>' } },
         { path: '/corrections/review', component: { template: '<div>Correction Review</div>' } },
-        { path: '/leave/my', component: { template: '<div>My Leave</div>' } },
+        { path: '/daily/history', component: { template: '<div>My History</div>' } },
         { path: '/blockers', component: { template: '<div>Blocker Queue</div>' } },
       ],
     });
@@ -649,12 +649,12 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
             },
             {
               id: 'n-leave',
-              title: 'Pengajuan Cuti Disetujui',
-              message: 'Pengajuan cuti tahunan Anda telah disetujui.',
-              type: 'LEAVE_APPROVED',
+              title: 'Catatan Cuti Tahunan Resmi Didaftarkan',
+              message: 'HRGA mencatat cuti tahunan Anda.',
+              type: 'LEAVE_RECORDED',
               channel: 'IN_APP',
               read: false,
-              actionUrl: '/leave/my',
+              actionUrl: '/daily/history',
               createdAt: '2026-11-22T01:20:00Z',
             },
             {
@@ -681,7 +681,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     const chips = wrapper.findAll('.context-chip').map((c) => c.text());
     expect(chips).toContain('Pekerjaan Tambahan');
     expect(chips).toContain('Koreksi Komitmen');
-    expect(chips).toContain('Pengajuan Cuti');
+    expect(chips).toContain('Catatan Cuti Resmi');
 
     // Click "Komitmen & Pengingat" filter pill -> keeps n-aw, n-corr, n-leave (3 items), excludes BLOCKER_RAISED
     const dailyPill = wrapper.findAll('.filter-pill').find((b) => b.text().includes('Komitmen & Pengingat'));
@@ -692,7 +692,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(visibleItems).toHaveLength(3);
     expect(wrapper.text()).toContain('Pekerjaan Tambahan dari Anda Diubah');
     expect(wrapper.text()).toContain('Permohonan Koreksi Disetujui');
-    expect(wrapper.text()).toContain('Pengajuan Cuti Disetujui');
+    expect(wrapper.text()).toContain('Catatan Cuti Tahunan Resmi Didaftarkan');
     expect(wrapper.text()).not.toContain('Kendala Baru');
 
     // Open modal on n-aw -> shows specific label "Buka Pekerjaan Tambahan"
@@ -705,9 +705,9 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.text()).toContain('Buka Koreksi Komitmen Pagi');
     await wrapper.find('.close-btn').trigger('click');
 
-    // Open modal on n-leave -> shows "Buka Cuti Saya"
+    // Open modal on n-leave -> shows "Lihat Riwayat Cuti & Dispensasi"
     await visibleItems[2].trigger('click');
-    expect(wrapper.text()).toContain('Buka Cuti Saya');
+    expect(wrapper.text()).toContain('Lihat Riwayat Cuti & Dispensasi');
   });
 
   it('disables Tandai semua dibaca when unreadCount is 0 and skips POST read-all', async () => {

@@ -4,12 +4,12 @@ import { ClockService } from '../../common/time/clock.service';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { ScopeResolverService } from '../../organization/services/scope-resolver.service';
-import { CanonicalRole, EmploymentStatus, LeaveStatus, NotificationChannel } from '@prisma/client';
+import { EmploymentStatus, LeaveStatus, NotificationChannel } from '@prisma/client';
 import { toJakartaDateOnly } from '../../common/time/date-only.util';
 import {
-  CreateLeaveRequestDto,
   INTERN_ALLOWED_LEAVE_TYPES,
-  ReviewLeaveRequestDto,
+  RecordApprovedLeaveDto,
+  UpdateApprovedLeaveDto,
 } from '../dto/create-leave-request.dto';
 
 export const ANNUAL_LEAVE_QUOTA_DAYS = 12;
@@ -71,15 +71,18 @@ export class LeaveService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clockService: ClockService,
-    private readonly scopeResolverService: ScopeResolverService,
+    private readonly _scopeResolverService?: ScopeResolverService,
   ) {}
 
-  /**
-   * Mengajukan permohonan cuti resmi mandiri (Prototipe 20).
-   */
-  async createLeaveRequest(userId: string, dto: CreateLeaveRequestDto) {
-    const start = new Date(dto.startDate);
-    const end = new Date(dto.endDate);
+  private async validateLeavePayload(params: {
+    userId: string;
+    start: Date;
+    end: Date;
+    leaveType: string;
+    reason: string;
+    excludeLeaveId?: string;
+  }) {
+    const { userId, start, end, leaveType, reason, excludeLeaveId } = params;
 
     if (end < start) {
       throw new AppException({
@@ -89,8 +92,8 @@ export class LeaveService {
       });
     }
 
-    const requestedWorkingDays = countWorkingDaysInclusive(start, end);
-    if (requestedWorkingDays === 0) {
+    const workingDays = countWorkingDaysInclusive(start, end);
+    if (workingDays === 0) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
         message:
@@ -99,29 +102,49 @@ export class LeaveService {
       });
     }
 
-    // Cek tumpang tindih permohonan cuti aktif
-    const overlapping = await this.prisma.leaveRequest.findFirst({
-      where: {
-        userId,
-        status: { in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
-        OR: [
-          { startDate: { lte: end }, endDate: { gte: start } },
-        ],
-      },
-    });
-
-    if (overlapping) {
+    if (reason.trim().length < 5) {
       throw new AppException({
-        code: ErrorCode.RESOURCE_CONFLICT,
-        message: 'Terdapat permohonan cuti aktif pada rentang tanggal yang dipilih.',
-        statusCode: HttpStatus.CONFLICT,
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Keterangan cuti wajib diisi minimal 5 karakter.',
+        statusCode: HttpStatus.BAD_REQUEST,
       });
     }
 
-    const now = this.clockService.now();
-    const todayDateOnly = toJakartaDateOnly(now);
+    if (this.prisma.user?.findUnique) {
+      const targetUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, fullName: true },
+      });
+      if (!targetUser) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_NOT_FOUND,
+          message: 'Karyawan tidak ditemukan.',
+          statusCode: HttpStatus.NOT_FOUND,
+        });
+      }
+    }
 
-    // Periksa status kepegawaian aktif pemohon (Aturan Paket #1: Intern hanya boleh Izin & Sakit, Non-Intern batas 12 hari/tahun)
+    if (this.prisma.leaveRequest?.findFirst) {
+      const overlapping = await this.prisma.leaveRequest.findFirst({
+        where: {
+          ...(excludeLeaveId ? { id: { not: excludeLeaveId } } : {}),
+          userId,
+          status: LeaveStatus.APPROVED,
+          startDate: { lte: end },
+          endDate: { gte: start },
+        },
+      });
+
+      if (overlapping) {
+        throw new AppException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message: 'Karyawan tersebut sudah memiliki catatan cuti resmi pada rentang tanggal yang bertumpuk.',
+          statusCode: HttpStatus.CONFLICT,
+        });
+      }
+    }
+
+    const todayDateOnly = toJakartaDateOnly(this.clockService.now());
     let activeEmploymentStatus: EmploymentStatus = EmploymentStatus.PERMANENT;
     if (this.prisma.organizationalAssignment?.findFirst) {
       const activeOrg = await this.prisma.organizationalAssignment.findFirst({
@@ -136,462 +159,194 @@ export class LeaveService {
         (activeOrg as any)?.employmentStatus || EmploymentStatus.PERMANENT;
     }
 
-    const normalizedLeaveType = dto.leaveType.trim();
-    if (activeEmploymentStatus === EmploymentStatus.INTERN) {
-      if (!(INTERN_ALLOWED_LEAVE_TYPES as readonly string[]).includes(normalizedLeaveType)) {
-        throw new AppException({
-          code: ErrorCode.VALIDATION_FAILED,
-          message:
-            'Karyawan berstatus Intern tidak memiliki hak cuti tahunan atau cuti khusus. Silakan pilih jenis pengajuan Izin (dengan alasan logis) atau Sakit.',
-          statusCode: HttpStatus.BAD_REQUEST,
-        });
-      }
-    } else if (normalizedLeaveType === 'ANNUAL' && this.prisma.leaveRequest?.findMany) {
-      const targetYear = start.getUTCFullYear();
-      const yearStart = new Date(Date.UTC(targetYear, 0, 1));
-      const yearEnd = new Date(Date.UTC(targetYear, 11, 31));
-      const existingAnnualLeaves = await this.prisma.leaveRequest.findMany({
-        where: {
-          userId,
-          leaveType: 'ANNUAL',
-          status: { in: [LeaveStatus.APPROVED, LeaveStatus.PENDING] },
-          startDate: { lte: yearEnd },
-          endDate: { gte: yearStart },
-        },
+    if (
+      activeEmploymentStatus === EmploymentStatus.INTERN &&
+      !(INTERN_ALLOWED_LEAVE_TYPES as readonly string[]).includes(leaveType)
+    ) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message:
+          'Karyawan berstatus Intern tidak memiliki hak cuti tahunan/khusus. Pilih jenis Izin (PERMIT) atau Sakit (SICK).',
+        statusCode: HttpStatus.BAD_REQUEST,
       });
-      const usedOrPendingDays = (existingAnnualLeaves || []).reduce(
-        (acc: number, item: any) =>
-          acc + countWorkingDaysInclusive(new Date(item.startDate), new Date(item.endDate)),
-        0,
-      );
-      if (usedOrPendingDays + requestedWorkingDays > ANNUAL_LEAVE_QUOTA_DAYS) {
-        const remaining = Math.max(0, ANNUAL_LEAVE_QUOTA_DAYS - usedOrPendingDays);
-        throw new AppException({
-          code: ErrorCode.VALIDATION_FAILED,
-          message: `Pengajuan melebihi batas jatah Cuti Tahunan ${ANNUAL_LEAVE_QUOTA_DAYS} hari kerja per tahun (terpakai/menunggu: ${usedOrPendingDays} hari, sisa: ${remaining} hari, diajukan: ${requestedWorkingDays} hari).`,
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        });
-      }
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const leave = await tx.leaveRequest.create({
-        data: {
-          userId,
-          startDate: start,
-          endDate: end,
-          leaveType: normalizedLeaveType,
-          reason: dto.reason.trim(),
-          status: LeaveStatus.PENDING,
-        },
-        include: {
-          user: { select: { id: true, fullName: true, email: true } },
-        },
-      });
-
-      // Cari atasan langsung untuk notifikasi approval (termasuk akun Intern yang memiliki endDate aktif)
-      const assignment = await tx.organizationalAssignment.findFirst({
-        where: {
-          userId,
-          effectiveDate: { lte: todayDateOnly },
-          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
-        },
-        orderBy: { effectiveDate: 'desc' },
-      });
-
-      const leaveLabel = getLeaveTypeLabel(normalizedLeaveType);
-      const periodText = formatLeavePeriodId(start, end);
-      const isPermitOrSick =
-        normalizedLeaveType === 'PERMIT' || normalizedLeaveType === 'SICK';
-      const notifTitle = isPermitOrSick
-        ? `Pengajuan ${leaveLabel} Karyawan Baru`
-        : 'Pengajuan Cuti Karyawan Baru';
-      const notifActionPhrase = isPermitOrSick
-        ? `mengajukan ${leaveLabel.toLowerCase()}`
-        : `mengajukan ${leaveLabel}`;
-      const notifMessage = `${leave.user.fullName} ${notifActionPhrase} (${periodText}, ${requestedWorkingDays} hari kerja).`;
-
-      if (assignment?.directManagerId) {
-        await tx.notification.create({
-          data: {
-            recipientUserId: assignment.directManagerId,
-            triggerType: 'LEAVE_REQUESTED',
-            channel: NotificationChannel.IN_APP_CENTER,
-            title: notifTitle,
-            message: notifMessage,
-            actionUrl: '/leave/queue',
-            relatedEntityType: 'leave_requests',
-            relatedEntityId: leave.id,
-          },
-        });
-      }
-
-      // Kirim notifikasi juga kepada Reviewer Sementara aktif untuk divisi pemohon (jika ada)
-      if (
-        assignment?.function &&
-        assignment.role !== CanonicalRole.HEAD &&
-        assignment.role !== CanonicalRole.CEO_MANAGEMENT &&
-        tx.temporaryReviewerAssignment?.findMany
-      ) {
-        const activeDelegations = await tx.temporaryReviewerAssignment.findMany({
-          where: {
-            targetFunction: assignment.function,
-            effectiveDate: { lte: todayDateOnly },
-            expiryDate: { gte: todayDateOnly },
-          },
-          select: { delegateUserId: true },
-          distinct: ['delegateUserId'],
-        });
-
-        for (const del of activeDelegations) {
-          if (
-            del.delegateUserId !== userId &&
-            del.delegateUserId !== assignment.directManagerId
-          ) {
-            await tx.notification.create({
-              data: {
-                recipientUserId: del.delegateUserId,
-                triggerType: 'LEAVE_REQUESTED',
-                channel: NotificationChannel.IN_APP_CENTER,
-                title: `${notifTitle} (Delegasi Reviewer)`,
-                message: notifMessage,
-                actionUrl: '/leave/queue',
-                relatedEntityType: 'leave_requests',
-                relatedEntityId: leave.id,
-              },
-            });
-          }
-        }
-      }
-
-      return leave;
-    });
+    return { workingDays };
   }
 
   /**
-   * Mengambil riwayat pengajuan cuti pribadi (Prototipe 20).
+   * Mengambil seluruh daftar catatan cuti resmi (ter-ACC) untuk HRGA / Direktur / Admin (DEC-018).
    */
-  async getMyLeaveRequests(userId: string) {
+  async getAllApprovedLeaves(userId?: string) {
     return this.prisma.leaveRequest.findMany({
-      where: { userId },
+      where: {
+        status: LeaveStatus.APPROVED,
+        ...(userId ? { userId } : {}),
+      },
       include: {
-        reviewedBy: { select: { id: true, fullName: true } },
+        user: { select: { id: true, fullName: true, email: true } },
+        reviewedBy: { select: { id: true, fullName: true, email: true } },
       },
       orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
   /**
-   * Mengambil informasi jatah cuti tahunan & hak pengajuan sesuai status kepegawaian (Paket #1).
-   * - Karyawan Tetap & Kontrak: jatah 12 hari kerja per tahun (Cuti Tahunan).
-   * - Karyawan Intern: tidak memiliki jatah cuti tahunan, hanya diperbolehkan Izin & Sakit.
+   * Mencatat data cuti resmi yang sudah disetujui di luar sistem (DEC-018).
+   * Otomatis berstatus APPROVED, menghapus event kepatuhan pada periode tersebut, dan memberi notifikasi karyawan.
    */
-  async getMyLeaveQuota(userId: string, year?: number) {
+  async recordApprovedLeave(actorUserId: string, dto: RecordApprovedLeaveDto) {
+    const start = new Date(dto.startDate);
+    const end = new Date(dto.endDate);
+    const normalizedLeaveType = dto.leaveType.trim();
+    const trimmedReason = (dto.reason || '').trim();
+
+    const { workingDays } = await this.validateLeavePayload({
+      userId: dto.userId,
+      start,
+      end,
+      leaveType: normalizedLeaveType,
+      reason: trimmedReason,
+    });
+
     const now = this.clockService.now();
-    const todayDateOnly = toJakartaDateOnly(now);
-    const targetYear = year || todayDateOnly.getUTCFullYear();
 
-    let employmentStatus: EmploymentStatus = EmploymentStatus.PERMANENT;
-    if (this.prisma.organizationalAssignment?.findFirst) {
-      const activeOrg = await this.prisma.organizationalAssignment.findFirst({
-        where: {
-          userId,
-          effectiveDate: { lte: todayDateOnly },
-          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.leaveRequest.create({
+        data: {
+          userId: dto.userId,
+          startDate: start,
+          endDate: end,
+          leaveType: normalizedLeaveType,
+          reason: trimmedReason,
+          status: LeaveStatus.APPROVED,
+          reviewedByUserId: actorUserId,
+          reviewedAt: now,
+          reviewNote: 'Dicatat resmi sebagai cuti ter-ACC (DEC-018)',
         },
-        orderBy: { effectiveDate: 'desc' },
+        include: {
+          user: { select: { id: true, fullName: true, email: true } },
+          reviewedBy: { select: { id: true, fullName: true, email: true } },
+        },
       });
-      employmentStatus =
-        (activeOrg as any)?.employmentStatus || EmploymentStatus.PERMANENT;
-    }
 
-    if (employmentStatus === EmploymentStatus.INTERN) {
-      return {
-        year: targetYear,
-        employmentStatus,
-        hasAnnualQuota: false,
-        annualQuotaDays: 0,
-        usedDays: 0,
-        pendingDays: 0,
-        remainingDays: 0,
-        allowedLeaveTypes: [...INTERN_ALLOWED_LEAVE_TYPES],
-      };
-    }
-
-    const yearStart = new Date(Date.UTC(targetYear, 0, 1));
-    const yearEnd = new Date(Date.UTC(targetYear, 11, 31));
-    const annualLeaves = this.prisma.leaveRequest?.findMany
-      ? await this.prisma.leaveRequest.findMany({
+      if (tx.complianceEvent?.deleteMany) {
+        await tx.complianceEvent.deleteMany({
           where: {
-            userId,
-            leaveType: 'ANNUAL',
-            status: { in: [LeaveStatus.APPROVED, LeaveStatus.PENDING] },
-            startDate: { lte: yearEnd },
-            endDate: { gte: yearStart },
+            userId: dto.userId,
+            eventDate: { gte: start, lte: end },
           },
-        })
-      : [];
+        });
+      }
 
-    let usedDays = 0;
-    let pendingDays = 0;
-    for (const item of annualLeaves || []) {
-      const days = countWorkingDaysInclusive(
-        new Date(item.startDate),
-        new Date(item.endDate),
-      );
-      if (item.status === LeaveStatus.APPROVED) usedDays += days;
-      else if (item.status === LeaveStatus.PENDING) pendingDays += days;
-    }
+      if (tx.notification?.create) {
+        const leaveLabel = getLeaveTypeLabel(normalizedLeaveType);
+        const periodText = formatLeavePeriodId(start, end);
+        const actorName = created.reviewedBy?.fullName || 'Tim HRGA / Pimpinan';
 
-    const remainingDays = Math.max(0, ANNUAL_LEAVE_QUOTA_DAYS - usedDays - pendingDays);
+        await tx.notification.create({
+          data: {
+            recipientUserId: dto.userId,
+            triggerType: 'LEAVE_RECORDED',
+            channel: NotificationChannel.IN_APP_CENTER,
+            title: `Catatan ${leaveLabel} Resmi Didaftarkan`,
+            message: `${actorName} mencatat ${leaveLabel} resmi untuk Anda pada periode ${periodText} (${workingDays} hari kerja). Anda dibebaskan otomatis dari pengisian komitmen harian pada periode tersebut.`,
+            actionUrl: '/daily/history',
+            relatedEntityType: 'leave_requests',
+            relatedEntityId: created.id,
+          },
+        });
+      }
 
-    return {
-      year: targetYear,
-      employmentStatus,
-      hasAnnualQuota: true,
-      annualQuotaDays: ANNUAL_LEAVE_QUOTA_DAYS,
-      usedDays,
-      pendingDays,
-      remainingDays,
-      allowedLeaveTypes: [
-        'ANNUAL',
-        'SICK',
-        'PERMIT',
-        'SPECIAL_LEAVE',
-        'MATERNITY',
-        'UNPAID',
-      ],
-    };
+      return created;
+    });
   }
 
   /**
-   * Mengambil antrean persetujuan cuti untuk Atasan / HRGA (Prototipe 21).
+   * Mengubah catatan cuti resmi yang sudah terdaftar (DEC-018).
    */
-  async getApprovalQueue(reviewerUserId?: string, status?: LeaveStatus) {
-    const todayDateOnly = toJakartaDateOnly(this.clockService.now());
-
-    if (reviewerUserId && this.prisma.organizationalAssignment?.findFirst) {
-      const callerOrg = await this.prisma.organizationalAssignment.findFirst({
-        where: {
-          userId: reviewerUserId,
-          effectiveDate: { lte: todayDateOnly },
-          OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
-        },
-        orderBy: { effectiveDate: 'desc' },
-        select: { role: true },
-      });
-
-      const QUEUE_AUTHORIZED_ROLES: CanonicalRole[] = [
-        CanonicalRole.HEAD,
-        CanonicalRole.CEO_MANAGEMENT,
-        CanonicalRole.HRGA,
-        CanonicalRole.SYSTEM_ADMIN,
-        CanonicalRole.SUPERVISOR,
-      ];
-
-      if (callerOrg && !QUEUE_AUTHORIZED_ROLES.includes(callerOrg.role)) {
-        const activeDelegation = this.prisma.temporaryReviewerAssignment?.findFirst
-          ? await this.prisma.temporaryReviewerAssignment.findFirst({
-              where: {
-                delegateUserId: reviewerUserId,
-                effectiveDate: { lte: todayDateOnly },
-                expiryDate: { gte: todayDateOnly },
-              },
-              select: { id: true },
-            })
-          : null;
-
-        if (!activeDelegation) {
-          throw new AppException({
-            code: ErrorCode.AUTH_FORBIDDEN_ROLE,
-            message:
-              'Akses ditolak. Halaman Persetujuan Cuti hanya dapat diakses oleh pejabat berwenang atau Reviewer Sementara aktif.',
-            statusCode: HttpStatus.FORBIDDEN,
-          });
-        }
-      }
-    }
-
-    const rawList = await this.prisma.leaveRequest.findMany({
-      where: {
-        ...(status ? { status } : { status: { not: LeaveStatus.CANCELLED } }),
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            orgAssignments: {
-              where: {
-                effectiveDate: { lte: todayDateOnly },
-                OR: [{ endDate: null }, { endDate: { gte: todayDateOnly } }],
-              },
-              orderBy: { effectiveDate: 'desc' },
-              take: 1,
-              select: {
-                role: true,
-                jobTitle: true,
-                function: true,
-                employmentStatus: true,
-              },
-            },
-          },
-        },
-        reviewedBy: { select: { id: true, fullName: true } },
-      },
-      orderBy: [{ createdAt: 'desc' }],
-    });
-
-    const list = (rawList || []).map((item: any) => {
-      const activeOrg = item.user?.orgAssignments?.[0];
-      if (!item.user) return item;
-      return {
-        ...item,
-        user: {
-          id: item.user.id,
-          fullName: item.user.fullName,
-          email: item.user.email,
-          role: activeOrg?.role || item.user.role,
-          jobTitle: activeOrg?.jobTitle || null,
-          function: activeOrg?.function || null,
-          employmentStatus: activeOrg?.employmentStatus || EmploymentStatus.PERMANENT,
-        },
-      };
-    });
-
-    if (!reviewerUserId) {
-      return list;
-    }
-
-    const accessible: typeof list = [];
-    for (const item of list) {
-      if (item.userId === reviewerUserId) {
-        continue;
-      }
-      const canReview = this.scopeResolverService.canReviewUser
-        ? await this.scopeResolverService.canReviewUser(reviewerUserId, item.userId)
-        : await this.scopeResolverService.canAccessUser(reviewerUserId, item.userId);
-      if (canReview) {
-        accessible.push(item);
-      }
-    }
-    return accessible;
-  }
-
-  /**
-   * Meninjau permohonan cuti (Approve / Reject) dengan rekonsiliasi retroaktif DEC-007.
-   */
-  async reviewLeaveRequest(
-    reviewerUserId: string,
+  async updateApprovedLeave(
+    actorUserId: string,
     id: string,
-    dto: ReviewLeaveRequestDto,
+    dto: UpdateApprovedLeaveDto,
   ) {
-    const leave = await this.prisma.leaveRequest.findUnique({
+    const existing = await this.prisma.leaveRequest.findUnique({
       where: { id },
-      include: { user: true },
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+      },
     });
 
-    if (!leave) {
+    if (!existing) {
       throw new AppException({
         code: ErrorCode.RESOURCE_NOT_FOUND,
-        message: 'Permohonan cuti tidak ditemukan.',
+        message: 'Catatan cuti tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
       });
     }
 
-    if (reviewerUserId === leave.userId) {
-      throw new AppException({
-        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
-        message:
-          'Pelanggaran tata kelola: Anda tidak diperkenankan meninjau atau menyetujui permohonan cuti milik Anda sendiri.',
-        statusCode: HttpStatus.FORBIDDEN,
-      });
-    }
+    const nextUserId = dto.userId ?? existing.userId;
+    const start = dto.startDate ? new Date(dto.startDate) : new Date(existing.startDate);
+    const end = dto.endDate ? new Date(dto.endDate) : new Date(existing.endDate);
+    const normalizedLeaveType =
+      dto.leaveType !== undefined ? dto.leaveType.trim() : existing.leaveType;
+    const trimmedReason =
+      dto.reason !== undefined ? dto.reason.trim() : existing.reason;
 
-    // Penegakan batas wewenang hierarki manajerial 3-Lapis (WP-EP03-TK006 / SAD IV.4 & DEC-010)
-    if (this.scopeResolverService.enforceReviewerScope) {
-      await this.scopeResolverService.enforceReviewerScope(reviewerUserId, leave.userId);
-    } else {
-      await this.scopeResolverService.enforceUserScope(reviewerUserId, leave.userId);
-    }
-
-    if (leave.status !== LeaveStatus.PENDING) {
-      throw new AppException({
-        code: ErrorCode.VALIDATION_FAILED,
-        message: 'Permohonan cuti sudah ditinjau sebelumnya.',
-        statusCode: HttpStatus.BAD_REQUEST,
-      });
-    }
-
-    const trimmedNote = dto.reviewNote?.trim() || '';
-    if (dto.decision === 'REJECT' && trimmedNote.length < 5) {
-      throw new AppException({
-        code: ErrorCode.VALIDATION_FAILED,
-        message: 'Catatan alasan penolakan wajib diisi minimal 5 karakter.',
-        statusCode: HttpStatus.BAD_REQUEST,
-      });
-    }
+    const { workingDays } = await this.validateLeavePayload({
+      userId: nextUserId,
+      start,
+      end,
+      leaveType: normalizedLeaveType,
+      reason: trimmedReason,
+      excludeLeaveId: id,
+    });
 
     const now = this.clockService.now();
-    const newStatus = dto.decision === 'APPROVE' ? LeaveStatus.APPROVED : LeaveStatus.REJECTED;
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.leaveRequest.update({
         where: { id },
         data: {
-          status: newStatus,
-          reviewedByUserId: reviewerUserId,
-          reviewNote: trimmedNote || null,
+          userId: nextUserId,
+          startDate: start,
+          endDate: end,
+          leaveType: normalizedLeaveType,
+          reason: trimmedReason,
+          status: LeaveStatus.APPROVED,
+          reviewedByUserId: actorUserId,
           reviewedAt: now,
         },
         include: {
           user: { select: { id: true, fullName: true, email: true } },
-          reviewedBy: { select: { id: true, fullName: true } },
+          reviewedBy: { select: { id: true, fullName: true, email: true } },
         },
       });
 
-      // DEC-007 Retroactive Reconciliation:
-      // Jika disetujui dan mencakup masa lalu / hari ini, hapus event kepatuhan yang mungkin tercatat
-      const leaveLabel = getLeaveTypeLabel(leave.leaveType);
-      const periodText = formatLeavePeriodId(leave.startDate, leave.endDate);
-
-      if (dto.decision === 'APPROVE') {
+      if (tx.complianceEvent?.deleteMany) {
         await tx.complianceEvent.deleteMany({
           where: {
-            userId: leave.userId,
-            eventDate: {
-              gte: leave.startDate,
-              lte: leave.endDate,
-            },
+            userId: nextUserId,
+            eventDate: { gte: start, lte: end },
           },
         });
+      }
 
-        // Kirim notifikasi persetujuan
+      if (tx.notification?.create) {
+        const leaveLabel = getLeaveTypeLabel(normalizedLeaveType);
+        const periodText = formatLeavePeriodId(start, end);
+        const actorName = updated.reviewedBy?.fullName || 'Tim HRGA / Pimpinan';
+
         await tx.notification.create({
           data: {
-            recipientUserId: leave.userId,
-            triggerType: 'LEAVE_APPROVED',
+            recipientUserId: nextUserId,
+            triggerType: 'LEAVE_UPDATED',
             channel: NotificationChannel.IN_APP_CENTER,
-            title: `Permohonan ${leaveLabel} Disetujui`,
-            message: `Permohonan ${leaveLabel} Anda untuk periode ${periodText} telah disetujui.`,
-            actionUrl: '/leave/my',
+            title: `Catatan ${leaveLabel} Diperbarui`,
+            message: `${actorName} memperbarui catatan ${leaveLabel} resmi Anda menjadi periode ${periodText} (${workingDays} hari kerja). Keterangan: ${trimmedReason}`,
+            actionUrl: '/daily/history',
             relatedEntityType: 'leave_requests',
-            relatedEntityId: leave.id,
-          },
-        });
-      } else {
-        // Notifikasi penolakan
-        await tx.notification.create({
-          data: {
-            recipientUserId: leave.userId,
-            triggerType: 'LEAVE_REJECTED',
-            channel: NotificationChannel.IN_APP_CENTER,
-            title: `Permohonan ${leaveLabel} Ditolak`,
-            message: `Permohonan ${leaveLabel} Anda (${periodText}) ditolak oleh peninjau: "${trimmedNote || 'Tidak ada alasan khusus'}".`,
-            actionUrl: '/leave/my',
-            relatedEntityType: 'leave_requests',
-            relatedEntityId: leave.id,
+            relatedEntityId: updated.id,
           },
         });
       }
@@ -601,45 +356,72 @@ export class LeaveService {
   }
 
   /**
-   * Membatalkan permohonan cuti mandiri yang masih berstatus PENDING (TC-LEAV-004).
+   * Menghapus catatan cuti resmi dari sistem (DEC-018).
    */
-  async cancelLeaveRequest(userId: string, id: string) {
-    const leave = await this.prisma.leaveRequest.findUnique({
+  async deleteApprovedLeave(actorUserId: string, id: string) {
+    const existing = await this.prisma.leaveRequest.findUnique({
       where: { id },
+      include: {
+        user: { select: { id: true, fullName: true } },
+      },
     });
 
-    if (!leave) {
+    if (!existing) {
       throw new AppException({
         code: ErrorCode.RESOURCE_NOT_FOUND,
-        message: 'Permohonan cuti tidak ditemukan.',
+        message: 'Catatan cuti tidak ditemukan.',
         statusCode: HttpStatus.NOT_FOUND,
       });
     }
 
-    if (leave.userId !== userId) {
-      throw new AppException({
-        code: ErrorCode.AUTH_FORBIDDEN_SCOPE,
-        message: 'Anda hanya dapat membatalkan permohonan cuti milik sendiri.',
-        statusCode: HttpStatus.FORBIDDEN,
-      });
-    }
-
-    if (leave.status !== LeaveStatus.PENDING) {
-      throw new AppException({
-        code: ErrorCode.VALIDATION_FAILED,
-        message: 'Hanya permohonan berstatus Menunggu Review yang dapat dibatalkan.',
-        statusCode: HttpStatus.BAD_REQUEST,
-      });
-    }
-
-    return this.prisma.leaveRequest.update({
+    await this.prisma.leaveRequest.delete({
       where: { id },
-      data: {
-        status: LeaveStatus.CANCELLED,
+    });
+
+    if (this.prisma.notification?.create) {
+      const actor = this.prisma.user?.findUnique
+        ? await this.prisma.user.findUnique({
+            where: { id: actorUserId },
+            select: { fullName: true },
+          })
+        : null;
+      const actorName = actor?.fullName || 'Tim HRGA / Pimpinan';
+      const leaveLabel = getLeaveTypeLabel(existing.leaveType);
+      const periodText = formatLeavePeriodId(
+        new Date(existing.startDate),
+        new Date(existing.endDate),
+      );
+
+      await this.prisma.notification.create({
+        data: {
+          recipientUserId: existing.userId,
+          triggerType: 'LEAVE_DELETED',
+          channel: NotificationChannel.IN_APP_CENTER,
+          title: `Catatan ${leaveLabel} Dihapus`,
+          message: `${actorName} menghapus catatan ${leaveLabel} resmi Anda untuk periode ${periodText}. Jadwal akuntabilitas harian normal berlaku kembali.`,
+          actionUrl: '/daily/history',
+          relatedEntityType: 'leave_requests',
+          relatedEntityId: id,
+        },
+      });
+    }
+
+    return { deleted: true, id };
+  }
+
+  /**
+   * Mengambil riwayat cuti resmi tercatat (read-only) untuk karyawan sendiri (DEC-018).
+   */
+  async getMyLeaveRequests(userId: string) {
+    return this.prisma.leaveRequest.findMany({
+      where: {
+        userId,
+        status: LeaveStatus.APPROVED,
       },
       include: {
-        user: { select: { id: true, fullName: true, email: true } },
+        reviewedBy: { select: { id: true, fullName: true } },
       },
+      orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
     });
   }
 }

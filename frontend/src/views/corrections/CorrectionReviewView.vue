@@ -14,7 +14,6 @@ import {
   FileCheck,
   Search,
   RotateCcw,
-  CalendarCheck2,
 } from 'lucide-vue-next';
 
 interface CorrectionRequestItem {
@@ -406,7 +405,7 @@ onMounted(() => {
 <template>
   <div class="review-layout">
     <!-- Topbar Navigation -->
-    <TopBar breadcrumb="Management / Review Koreksi & Cuti" />
+    <TopBar breadcrumb="Management / Review Koreksi" />
 
     <!-- Toasts -->
     <div v-if="toastMessage" class="toast-popup success" role="status">
@@ -423,15 +422,11 @@ onMounted(() => {
       <div class="page-heading">
         <div>
           <span class="eyebrow">Kewenangan Peninjauan &amp; Jendela Sanggahan</span>
-          <h1>Review Koreksi &amp; Cuti</h1>
+          <h1>Review Koreksi</h1>
           <p class="subtitle">
             Tinjau permohonan koreksi material yang diajukan anggota tim dalam masa jendela sanggahan 24 jam kerja.
           </p>
         </div>
-        <router-link to="/leave/queue" class="btn-leave-link" data-testid="link-leave-queue">
-          <CalendarCheck2 :size="16" />
-          <span>Buka Persetujuan Cuti</span>
-        </router-link>
       </div>
 
       <!-- 4 Metric Cards -->

@@ -28,8 +28,7 @@ import ExemptionManagementView from '../views/hrga/ExemptionManagementView.vue';
 import MorningCorrectionRequestView from '../views/corrections/MorningCorrectionRequestView.vue';
 import EodCorrectionRequestView from '../views/corrections/EodCorrectionRequestView.vue';
 import CorrectionReviewView from '../views/corrections/CorrectionReviewView.vue';
-import MyLeaveRequestView from '../views/leave/MyLeaveRequestView.vue';
-import LeaveApprovalQueueView from '../views/leave/LeaveApprovalQueueView.vue';
+import AdminLeaveRegistryView from '../views/admin/AdminLeaveRegistryView.vue';
 import NotificationCenterView from '../views/notifications/NotificationCenterView.vue';
 import NotificationChannelSetupView from '../views/admin/NotificationChannelSetupView.vue';
 import PulseDashboardView from '../views/dashboard/PulseDashboardView.vue';
@@ -174,16 +173,10 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true },
   },
   {
-    path: '/leave/my',
-    name: 'leave-my',
-    component: MyLeaveRequestView,
-    meta: { requiresAuth: true, roles: OPERATIONAL_ROLES },
-  },
-  {
-    path: '/leave/queue',
-    name: 'leave-queue',
-    component: LeaveApprovalQueueView,
-    meta: { requiresAuth: true, roles: HR_APPROVAL_ROLES, allowTemporaryReviewer: true },
+    path: '/admin/leaves',
+    name: 'admin-leaves',
+    component: AdminLeaveRegistryView,
+    meta: { requiresAuth: true, roles: ADMIN_LEVEL },
   },
   {
     path: '/notifications',

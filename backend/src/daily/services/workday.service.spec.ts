@@ -62,5 +62,36 @@ describe('WorkdayService (FR-11 & DEC-013 / Previous Workday Calculation)', () =
     const result = await service.getPreviousWorkday('usr-1', wednesday);
     expect(result).toBe('2026-10-26'); // Senin (Selasa dilewati karena cuti)
   });
+
+  it('skips bounded exemption dates (Dinas Luar / Pelatihan) for the specific user (DEC-018)', async () => {
+    const wednesday = new Date('2026-10-28T08:00:00.000Z');
+    mockPrisma.boundedExemption = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          userId: 'usr-1',
+          startDate: new Date('2026-10-27T00:00:00.000Z'),
+          endDate: new Date('2026-10-27T00:00:00.000Z'),
+          exemptionCategory: 'Dinas Luar',
+        },
+      ]),
+    };
+
+    const result = await service.getPreviousWorkday('usr-1', wednesday);
+    expect(result).toBe('2026-10-26'); // Senin (Selasa dilewati karena dispensasi resmi)
+  });
+
+  it('isWorkday returns false when user has an active bounded exemption', async () => {
+    mockPrisma.companyHoliday.findFirst.mockResolvedValue(null);
+    mockPrisma.leaveRequest.findFirst.mockResolvedValue(null);
+    mockPrisma.boundedExemption = {
+      findFirst: vi.fn().mockResolvedValue({
+        id: 'ex-1',
+        exemptionCategory: 'Dinas Luar',
+      }),
+    };
+
+    const result = await service.isWorkday(new Date('2026-10-28T00:00:00.000Z'), 'usr-1');
+    expect(result).toBe(false);
+  });
 });
 

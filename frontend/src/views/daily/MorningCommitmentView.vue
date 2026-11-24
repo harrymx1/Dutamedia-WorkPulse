@@ -4,6 +4,7 @@ import AccessLink from '../../components/AccessLink.vue';
 import { useAuthStore } from '../../stores/auth';
 import { getPromptHintForFunction, resolveUserFunction } from '../../config/prompts';
 import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { formatTimeWib, formatDateSpanWib, formatWeekdayDateWib } from '../../utils/dateTime';
 import { getBlockerStatusLabel } from '../../utils/blockerStatus';
@@ -72,6 +73,18 @@ interface ActiveLeave {
   reason: string;
 }
 
+interface ActiveExemption {
+  id: string;
+  exemptionCategory: string;
+  officialReferenceNumber?: string | null;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
+
+const route = useRoute();
+const router = useRouter();
+
 // State
 const loading = ref(false);
 const submitting = ref(false);
@@ -83,6 +96,7 @@ const morningOnTimeCutoff = ref('09:00');
 const morningLockCutoff = ref('09:30');
 const morningSubmittedAt = ref<string | null>(null);
 const activeLeave = ref<ActiveLeave | null>(null);
+const activeExemption = ref<ActiveExemption | null>(null);
 
 const isZeroCommitment = ref(false);
 const zeroCommitmentReason = ref('');
@@ -119,7 +133,8 @@ const isSubmittedSuccess = ref(false);
 const hasSubmittedMorning = computed(() => {
   return morningSubmittedAt.value !== null && morningSubmittedAt.value !== '';
 });
-const isFormLocked = computed(() => isMorningLocked.value || hasSubmittedMorning.value || Boolean(activeLeave.value));
+const isAutoExempted = computed(() => Boolean(activeLeave.value || activeExemption.value));
+const isFormLocked = computed(() => isMorningLocked.value || hasSubmittedMorning.value || isAutoExempted.value);
 
 function formatLeaveType(type?: string): string {
   switch (type) {
@@ -210,10 +225,12 @@ async function loadTodayState() {
       availableProjects?: ProjectOption[];
       activeBlockers?: ActiveBlockerOption[];
       activeLeave?: ActiveLeave | null;
+      activeExemption?: ActiveExemption | null;
     }>('/daily/today');
 
     const data = res.data;
     activeLeave.value = (data as any).activeLeave || null;
+    activeExemption.value = (data as any).activeExemption || null;
     workDate.value = data.workDate;
     currentTime.value = data.currentTime;
     morningOnTimeCutoff.value = data.cutoffTimings.morningOnTimeCutoff;
@@ -258,10 +275,11 @@ async function loadTodayState() {
     }
 
     // Pemulihan atau pembersihan draf lokal sesuai status formulir
-    if (morningSubmittedAt.value || isMorningLocked.value || activeLeave.value) {
+    if (morningSubmittedAt.value || isMorningLocked.value || isAutoExempted.value) {
       clearLocalDraft(true);
     } else {
       restoreLocalDraft();
+      await applyReturnedLinkedBlocker();
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat status komitmen hari ini.', true);
@@ -402,7 +420,7 @@ function getDraftStorageKey(): string {
   return `wp_morning_draft_${uid}_${dateKey}`;
 }
 
-function saveLocalDraft() {
+function saveLocalDraft(silent = false) {
   if (typeof window === 'undefined' || !window.localStorage) return;
   const savedAtIso = new Date().toISOString();
   const draftPayload = {
@@ -414,9 +432,71 @@ function saveLocalDraft() {
   try {
     window.localStorage.setItem(getDraftStorageKey(), JSON.stringify(draftPayload));
     draftSavedAt.value = savedAtIso;
-    showToast('Draf Morning Commitment berhasil disimpan secara lokal.');
+    if (!silent) {
+      showToast('Draf Morning Commitment berhasil disimpan secara lokal.');
+    }
   } catch {
-    showToast('Gagal menyimpan draf lokal pada peramban ini.', true);
+    if (!silent) {
+      showToast('Gagal menyimpan draf lokal pada peramban ini.', true);
+    }
+  }
+}
+
+async function applyReturnedLinkedBlocker() {
+  const linkedBlockerId =
+    typeof route?.query?.linkedBlockerId === 'string'
+      ? route.query.linkedBlockerId.trim()
+      : '';
+  if (!linkedBlockerId) return;
+
+  const rawSlot =
+    typeof route?.query?.slot === 'string'
+      ? route.query.slot
+      : (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wp_morning_return_slot') : null);
+  const parsedIdx = Number(rawSlot ?? 0);
+  const slotIdx =
+    Number.isFinite(parsedIdx) && parsedIdx >= 0 && parsedIdx < commitmentSlots.value.length
+      ? parsedIdx
+      : 0;
+
+  isZeroCommitment.value = false;
+  const slot = commitmentSlots.value[slotIdx];
+  if (slot) {
+    slot.linkedBlockerId = linkedBlockerId;
+    if (slot.initialRisk === 'GREEN') {
+      slot.initialRisk = 'RED';
+    }
+    handleHinderedByBlockerChange(slotIdx);
+    if (!slot.knownBlockerNote.trim()) {
+      slot.knownBlockerNote = `Terkait tiket Blocker #BLK-${linkedBlockerId.slice(0, 6).toUpperCase()}`;
+    }
+  }
+
+  saveLocalDraft(true);
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('wp_morning_return_slot');
+  }
+  showToast(`Tiket Blocker baru berhasil ditautkan ke Komitmen #${slotIdx + 1}.`);
+  if (router && typeof router.replace === 'function') {
+    await router.replace({ path: '/daily/morning' });
+  }
+}
+
+async function goToRaiseBlockerForSlot(slotIndex: number) {
+  saveLocalDraft(true);
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('wp_morning_return_slot', String(slotIndex));
+  }
+  const slot = commitmentSlots.value[slotIndex];
+  const query: Record<string, string> = {
+    returnTo: '/daily/morning',
+    slot: String(slotIndex),
+  };
+  if (slot?.projectCode) {
+    query.projectCode = slot.projectCode;
+  }
+  if (router && typeof router.push === 'function') {
+    await router.push({ path: '/raise-blockers', query });
   }
 }
 
@@ -554,11 +634,15 @@ async function submitMorningCheckin() {
         errorMessage.value = `Slot #${i + 1}: Deskripsi komitmen wajib diisi minimal 3 karakter.`;
         return;
       }
+      if (slot.initialRisk === 'RED' && !slot.linkedBlockerId.trim()) {
+        errorMessage.value = `Slot #${i + 1}: Komitmen berisiko RED wajib mengaitkan tiket Blocker aktif. Pilih tiket Blocker yang ada atau klik "+ Buat Tiket Blocker Sekarang".`;
+        return;
+      }
       if (
         (slot.initialRisk === 'AMBER' || slot.initialRisk === 'RED') &&
         slot.knownBlockerNote.trim().length === 0
       ) {
-        errorMessage.value = `Slot #${i + 1}: Komitmen dengan risiko ${slot.initialRisk} wajib menyertakan potensi kendala.`;
+        errorMessage.value = `Slot #${i + 1}: Komitmen dengan risiko ${slot.initialRisk} wajib menyertakan uraian potensi kendala.`;
         return;
       }
     }
@@ -708,7 +792,8 @@ onMounted(() => {
             <div class="context-item" data-testid="context-item-time-status">
               <span class="context-label">Status Waktu</span>
               <div class="context-value">
-                <span v-if="activeLeave" class="badge badge-active">CUTI RESMI (APPROVED LEAVE)</span>
+                <span v-if="activeLeave" class="badge badge-active">CUTI RESMI (TERCATAT)</span>
+                <span v-else-if="activeExemption" class="badge badge-active">DISPENSASI RESMI ({{ activeExemption.exemptionCategory.toUpperCase() }})</span>
                 <span v-else-if="hasSubmittedMorning" class="badge badge-active">SUBMITTED (Terkunci)</span>
                 <span v-else-if="isMorningLocked" class="badge badge-danger">LOCKED (Pasca Cut-Off)</span>
                 <span v-else-if="isLate" class="badge badge-late">Terlambat (LATE)</span>
@@ -719,6 +804,7 @@ onMounted(() => {
               <span class="context-label">Status Awal Hari (Initial Daily Status)</span>
               <div class="context-value">
                 <span v-if="activeLeave" class="badge badge-neutral">CUTI (DIKECUALIKAN)</span>
+                <span v-else-if="activeExemption" class="badge badge-neutral">DISPENSASI (DIKECUALIKAN)</span>
                 <span v-else-if="initialDailyStatus === 'GREEN'" class="badge badge-active">GREEN — Terkendali</span>
                 <span v-else-if="initialDailyStatus === 'AMBER'" class="badge badge-warning">AMBER — Berisiko</span>
                 <span v-else-if="initialDailyStatus === 'RED'" class="badge badge-danger">RED — Kritis</span>
@@ -729,23 +815,46 @@ onMounted(() => {
         </div>
       </section>
 
-      <!-- Alert Banner jika sedang dalam masa cuti resmi disetujui (DEC-008) -->
+      <!-- Alert Banner jika sedang dalam masa cuti resmi (DEC-008 & DEC-018) -->
       <div v-if="activeLeave" class="alert-banner leave" role="status" data-testid="leave-active-banner">
         <CalendarCheck :size="20" class="text-green" />
         <div class="submitted-banner-content">
           <div class="submitted-banner-title">
-            <strong>Masa Cuti Resmi Disetujui ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
+            <strong>Masa Cuti Resmi ({{ formatLeaveType(activeLeave.leaveType) }}):</strong>
             <span class="wp-datetime"> {{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</span>
           </div>
           <p class="submitted-banner-desc">
-            Anda sedang dalam masa cuti yang telah disetujui. Sesuai kebijakan perusahaan, Anda dibebaskan dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi hasil sore hari ini.
+            Anda sedang dalam masa cuti resmi yang tercatat di sistem. Anda dibebaskan secara otomatis dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi sore tanpa perlu memilih 0 komitmen.
           </p>
           <div v-if="activeLeave.reason" class="leave-banner-reason">
             Keterangan: {{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}
           </div>
           <div class="submitted-banner-actions">
-            <AccessLink to="/leave/my" class="btn btn-secondary btn-sm">
+            <AccessLink to="/daily/history" class="btn btn-secondary btn-sm">
               Lihat Riwayat Cuti Saya
+            </AccessLink>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Banner jika sedang dalam masa dispensasi resmi (DEC-018) -->
+      <div v-else-if="activeExemption" class="alert-banner leave" role="status" data-testid="exemption-active-banner">
+        <CalendarCheck :size="20" class="text-green" />
+        <div class="submitted-banner-content">
+          <div class="submitted-banner-title">
+            <strong>Masa Dispensasi Resmi ({{ activeExemption.exemptionCategory }}):</strong>
+            <span class="wp-datetime"> {{ formatLeaveDateRange(activeExemption.startDate, activeExemption.endDate) }}</span>
+          </div>
+          <p class="submitted-banner-desc">
+            Anda sedang dalam masa dispensasi resmi ({{ activeExemption.exemptionCategory }}). Anda dibebaskan secara otomatis dari seluruh kewajiban pengisian komitmen pagi, tugas tambahan, dan evaluasi sore tanpa perlu membuka formulir atau memilih 0 komitmen.
+          </p>
+          <div v-if="activeExemption.reason" class="leave-banner-reason">
+            <span v-if="activeExemption.officialReferenceNumber">No. Referensi: <strong>{{ activeExemption.officialReferenceNumber }}</strong> · </span>
+            Keterangan: {{ activeExemption.reason }}
+          </div>
+          <div class="submitted-banner-actions">
+            <AccessLink to="/daily/history" class="btn btn-secondary btn-sm">
+              Lihat Riwayat Dispensasi Saya
             </AccessLink>
           </div>
         </div>
@@ -788,14 +897,14 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Leave Notice Box saat cuti resmi aktif (DEC-008) -->
+      <!-- Leave Notice Box saat cuti resmi aktif (DEC-008 & DEC-018) -->
       <div v-if="activeLeave" class="leave-notice-box" data-testid="leave-notice-box">
         <div class="leave-notice-content">
           <CalendarCheck :size="32" class="text-green" />
           <div class="leave-notice-text">
-            <h3>Hari Bebas Komitmen Kerja (Cuti Disetujui)</h3>
+            <h3>Hari Bebas Komitmen Kerja (Cuti Resmi Tercatat)</h3>
             <p>
-              Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Disetujui (Bebas Kewajiban Check-In)</strong>. Anda tidak perlu menetapkan target komitmen harian, mencatat pekerjaan tambahan, maupun melaporkan evaluasi sore hari ini.
+              Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Tercatat (Bebas Kewajiban Otomatis)</strong>. Anda tidak perlu menetapkan target komitmen harian, memilih 0 komitmen, mencatat pekerjaan tambahan, maupun melaporkan evaluasi sore hari ini.
             </p>
             <div class="leave-notice-meta">
               <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
@@ -805,8 +914,32 @@ onMounted(() => {
           </div>
         </div>
         <div class="leave-notice-actions">
-          <AccessLink to="/leave/my" class="btn btn-secondary">
-            Lihat Permohonan Cuti Saya
+          <AccessLink to="/daily/history" class="btn btn-secondary">
+            Lihat Riwayat Cuti Saya
+          </AccessLink>
+        </div>
+      </div>
+
+      <!-- Exemption Notice Box saat dispensasi resmi aktif (DEC-018) -->
+      <div v-else-if="activeExemption" class="leave-notice-box" data-testid="exemption-notice-box">
+        <div class="leave-notice-content">
+          <CalendarCheck :size="32" class="text-green" />
+          <div class="leave-notice-text">
+            <h3>Hari Bebas Komitmen Kerja ({{ activeExemption.exemptionCategory }})</h3>
+            <p>
+              Sistem mencatat Anda sedang dalam masa <strong>Dispensasi Resmi ({{ activeExemption.exemptionCategory }})</strong>. Anda otomatis dibebaskan dari kewajiban check-in pagi, pekerjaan tambahan, dan evaluasi sore tanpa perlu memilih 0 komitmen.
+            </p>
+            <div class="leave-notice-meta">
+              <span>Kategori: <strong>{{ activeExemption.exemptionCategory }}</strong></span>
+              <span>Periode: <strong>{{ formatLeaveDateRange(activeExemption.startDate, activeExemption.endDate) }}</strong></span>
+              <span v-if="activeExemption.officialReferenceNumber">No. Surat: <strong>{{ activeExemption.officialReferenceNumber }}</strong></span>
+              <span v-if="activeExemption.reason">Alasan: <em>"{{ activeExemption.reason }}"</em></span>
+            </div>
+          </div>
+        </div>
+        <div class="leave-notice-actions">
+          <AccessLink to="/daily/history" class="btn btn-secondary">
+            Lihat Riwayat Dispensasi Saya
           </AccessLink>
         </div>
       </div>
@@ -1263,19 +1396,75 @@ onMounted(() => {
             <!-- Known Blocker & Support Needed (Muncul jika AMBER / RED) -->
             <div v-if="slot.initialRisk === 'AMBER' || slot.initialRisk === 'RED'" class="blocker-inputs-box">
               <div class="form-group">
-                <label class="form-label">Tiket Blocker Penyebab (Opsional)</label>
+                <label class="form-label">
+                  {{ slot.initialRisk === 'RED' ? 'Tiket Blocker Penyebab (Wajib untuk RED) *' : 'Tiket Blocker Penyebab (Opsional)' }}
+                </label>
                 <select
                   v-model="slot.linkedBlockerId"
                   class="input-control"
                   :disabled="isFormLocked"
+                  :required="slot.initialRisk === 'RED'"
                   :data-testid="`hindered-blocker-select-${idx}`"
                   @change="handleHinderedByBlockerChange(idx)"
                 >
-                  <option value="">-- Tidak Terkait Tiket Blocker Aktif --</option>
+                  <option value="">
+                    {{
+                      slot.initialRisk === 'RED'
+                        ? '-- Pilih Tiket Blocker Aktif (Wajib) --'
+                        : '-- Tidak Terkait Tiket Blocker Aktif (Risiko / Dependensi Ringan) --'
+                    }}
+                  </option>
                   <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
                     {{ blk.code }} [{{ blk.severity }}] — {{ truncateOptionText(blk.description, 65) }}
                   </option>
                 </select>
+
+                <!-- Panduan & Tombol Pintas Cara A untuk RED (DEC-020) -->
+                <div
+                  v-if="slot.initialRisk === 'RED' && !isFormLocked"
+                  class="blocker-cta-box red-cta"
+                  :data-testid="`red-blocker-cta-${idx}`"
+                >
+                  <div class="blocker-cta-text">
+                    <AlertTriangle :size="15" />
+                    <span>
+                      {{
+                        slot.linkedBlockerId
+                          ? 'Tiket Blocker aktif sudah tertaut sebagai penyebab RED.'
+                          : 'Status RED wajib dikaitkan ke tiket Blocker aktif agar langsung ditangani PIC. Belum ada tiketnya? Draf Anda akan tersimpan otomatis.'
+                      }}
+                    </span>
+                  </div>
+                  <button
+                    v-if="!slot.linkedBlockerId"
+                    type="button"
+                    class="btn-create-blocker-shortcut"
+                    :data-testid="`btn-create-blocker-for-slot-${idx}`"
+                    @click="goToRaiseBlockerForSlot(idx)"
+                  >
+                    + Buat Tiket Blocker Sekarang
+                  </button>
+                </div>
+
+                <!-- Panduan ringkas untuk AMBER (DEC-021) -->
+                <div
+                  v-else-if="slot.initialRisk === 'AMBER' && !isFormLocked"
+                  class="blocker-cta-box amber-cta"
+                  :data-testid="`amber-blocker-hint-${idx}`"
+                >
+                  <span>
+                    Opsional untuk <strong>AMBER</strong>: biarkan tanpa tiket jika sekadar antisipasi/carry-over dan pekerjaan masih bisa berjalan, atau kaitkan jika sudah ada tiket kendala terkait.
+                  </span>
+                  <button
+                    v-if="!slot.linkedBlockerId"
+                    type="button"
+                    class="btn-link-shortcut"
+                    :data-testid="`btn-optional-blocker-for-slot-${idx}`"
+                    @click="goToRaiseBlockerForSlot(idx)"
+                  >
+                    + Buat Tiket Blocker Baru
+                  </button>
+                </div>
               </div>
 
               <div class="form-group">
@@ -1349,7 +1538,7 @@ onMounted(() => {
               type="button"
               class="btn btn-secondary"
               :disabled="submitting"
-              @click="saveLocalDraft"
+              @click="saveLocalDraft(false)"
             >
               <Save :size="15" />
               <span>Simpan Draf</span>
@@ -2928,5 +3117,65 @@ select.input-control {
     max-width: 100%;
     box-sizing: border-box;
   }
+}
+
+.blocker-cta-box {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.blocker-cta-box.red-cta {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+}
+
+.blocker-cta-box.amber-cta {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+}
+
+.blocker-cta-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 260px;
+}
+
+.btn-create-blocker-shortcut {
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #B91C1C;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-create-blocker-shortcut:hover {
+  background: #991B1B;
+}
+
+.btn-link-shortcut {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #F59E0B;
+  background: #fff;
+  color: #92400E;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
 }
 </style>

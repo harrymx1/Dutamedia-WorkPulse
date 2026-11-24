@@ -30,7 +30,7 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     expect(links).toContain('/daily/morning');
     expect(links).not.toContain('/admin/users');
     expect(links).not.toContain('/reports');
-    expect(links).not.toContain('/leave/queue');
+    expect(links).not.toContain('/admin/leaves');
     expect(links).not.toContain('/coaching');
 
     const groups = navForRole({ role: 'EMPLOYEE', hasSubordinates: false }).map((g) => g.title);
@@ -41,6 +41,7 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     const adminPaths = [
       '/compliance',
       '/exemptions',
+      '/admin/leaves',
       '/admin/users',
       '/admin/invitations',
       '/admin/organization',
@@ -73,8 +74,8 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     }
   });
 
-  it('Poin 2: Menu Kepegawaian (/leave/queue & /corrections/review) hanya untuk HEAD, CEO_MANAGEMENT, atau Reviewer Sementara aktif', () => {
-    const hrPaths = ['/leave/queue', '/corrections/review'];
+  it('Poin 2: Menu Review Koreksi (/corrections/review) hanya untuk HEAD, CEO_MANAGEMENT, atau Reviewer Sementara aktif', () => {
+    const hrPaths = ['/corrections/review'];
 
     // HEAD & CEO_MANAGEMENT berhak melihat dan mengakses
     for (const role of ['HEAD', 'CEO_MANAGEMENT']) {
@@ -123,25 +124,32 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     }
   });
 
-  it('SYSTEM_ADMIN melihat menu administrasi dan manajemen, tetapi tidak melihat menu Workspace (IMP-026)', () => {
-    const links = flatten('SYSTEM_ADMIN');
-    expect(links).toContain('/admin/organization');
-    expect(links).toContain('/admin/users');
-    expect(links).toContain('/admin/policies');
-    expect(links).toContain('/reports');
-    expect(links).toContain('/dashboard');
+  it('SYSTEM_ADMIN & CEO_MANAGEMENT melihat menu administrasi dan manajemen, tetapi tidak melihat menu Workspace (IMP-026, DEC-019)', () => {
+    for (const execRole of ['SYSTEM_ADMIN', 'CEO_MANAGEMENT'] as const) {
+      const links = flatten(execRole);
+      expect(links).toContain('/admin/organization');
+      expect(links).toContain('/admin/users');
+      expect(links).toContain('/admin/policies');
+      expect(links).toContain('/admin/leaves');
+      expect(links).toContain('/reports');
+      expect(links).toContain('/dashboard');
 
-    expect(links).not.toContain('/daily/morning');
-    expect(links).not.toContain('/raise-blockers');
-    expect(links).not.toContain('/daily/history');
-    expect(links).not.toContain('/leave/my');
-    expect(links).not.toContain('/corrections/morning');
-    expect(links).not.toContain('/corrections/eod');
+      expect(links).not.toContain('/daily/morning');
+      expect(links).not.toContain('/raise-blockers');
+      expect(links).not.toContain('/daily/history');
+      expect(links).not.toContain('/corrections/morning');
+      expect(links).not.toContain('/corrections/eod');
+      expect(links).not.toContain('/notifications'); // Diakses melalui ikon lonceng + badge di TopBar
 
-    const adminGroups = navForRole('SYSTEM_ADMIN').map((g) => g.title);
-    expect(adminGroups).not.toContain('Workspace');
-    expect(adminGroups).toContain('Management');
-    expect(adminGroups).toContain('Administration');
+      const groups = navForRole(execRole).map((g) => g.title);
+      expect(groups).not.toContain('Workspace');
+      expect(groups).toContain('Management');
+      expect(groups).toContain('Administration');
+
+      // Tetap bisa mengakses /notifications & /profile via TopBar
+      expect(canAccessRoute('/notifications', execRole)).toBe(true);
+      expect(canAccessRoute('/profile', execRole)).toBe(true);
+    }
   });
 
   it('seluruh peran operasional tetap memiliki akses ke grup Workspace (IMP-026)', () => {
@@ -153,7 +161,7 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     }
   });
 
-  it('rute operasional dilindungi oleh OPERATIONAL_ROLES dan menolak SYSTEM_ADMIN (IMP-026, TC-AUTH-005)', () => {
+  it('rute operasional dilindungi oleh OPERATIONAL_ROLES dan menolak SYSTEM_ADMIN maupun CEO_MANAGEMENT (IMP-026, DEC-019)', () => {
     const operationalRoutes = [
       '/daily/morning',
       '/daily/additional-work',
@@ -162,7 +170,6 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
       '/raise-blockers',
       '/corrections/morning',
       '/corrections/eod',
-      '/leave/my',
     ];
 
     for (const path of operationalRoutes) {
@@ -172,8 +179,14 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
       expect(allowedRoles, `rute ${path} harus mendefinisikan roles`).toBeDefined();
       expect(allowedRoles).toEqual(OPERATIONAL_ROLES);
       expect(allowedRoles).not.toContain('SYSTEM_ADMIN');
+      expect(allowedRoles).not.toContain('CEO_MANAGEMENT');
       expect(canAccessRoute(path, 'SYSTEM_ADMIN')).toBe(false);
+      expect(canAccessRoute(path, 'CEO_MANAGEMENT')).toBe(false);
     }
+
+    // Rute cuti lama sudah dihapus dari sistem
+    expect(router.getRoutes().find((r) => r.path === '/leave/my')).toBeUndefined();
+    expect(router.getRoutes().find((r) => r.path === '/leave/queue')).toBeUndefined();
   });
 
   it('menu yang tampil di sidebar selalu diizinkan oleh canAccessRoute (Single Source of Truth)', () => {
@@ -232,7 +245,7 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     expect(canAccessRoute('/blockers/aging', categoryOwnerCtx)).toBe(true);
     // Menu manajerial lain tetap terkunci bagi staf biasa
     expect(links).not.toContain('/dashboard');
-    expect(links).not.toContain('/leave/queue');
+    expect(links).not.toContain('/corrections/review');
     expect(canAccessRoute('/dashboard', categoryOwnerCtx)).toBe(false);
   });
 

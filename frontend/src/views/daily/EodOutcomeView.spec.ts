@@ -796,9 +796,9 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
 
     expect(wrapper.find('[data-testid="leave-active-banner"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="leave-notice-box"]').exists()).toBe(true);
-    expect(wrapper.text()).toContain('CUTI RESMI (APPROVED LEAVE)');
+    expect(wrapper.text()).toContain('CUTI RESMI (TERCATAT)');
     expect(wrapper.text()).toContain('CUTI (DIKECUALIKAN)');
-    expect(wrapper.text()).toContain('Masa Cuti Resmi Disetujui (Cuti Sakit):');
+    expect(wrapper.text()).toContain('Masa Cuti Resmi (Cuti Sakit):');
     expect(wrapper.text()).not.toContain('Di Luar Jam Normal (Lembur Fleksibel)');
     expect(wrapper.text()).not.toContain('LATE (Lembur Fleksibel)');
     expect(wrapper.text()).not.toContain('Kirim Evaluasi EOD');

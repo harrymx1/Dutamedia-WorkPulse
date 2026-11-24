@@ -128,9 +128,85 @@ describe('ExemptionService (WP-EP08 / Exemption Management - Prototipe 12)', () 
           triggerType: 'EXEMPTION_GRANTED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: 'Dispensasi Resmi Didaftarkan (Dinas Luar)',
-          actionUrl: '/notifications',
+          actionUrl: '/daily/history',
           relatedEntityType: 'bounded_exemptions',
           relatedEntityId: 'ex-2',
+        }),
+      }),
+    );
+  });
+
+  it('updates existing bounded exemption and sends EXEMPTION_UPDATED notification (DEC-018)', async () => {
+    mockPrisma.boundedExemption.findUnique = vi.fn().mockResolvedValue({
+      id: 'ex-edit-1',
+      userId: 'usr-1',
+      startDate: new Date('2026-11-22'),
+      endDate: new Date('2026-11-22'),
+      exemptionCategory: 'Dinas Luar',
+      officialReferenceNumber: 'ST/01',
+      reason: 'Alasan awal',
+      user: { id: 'usr-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+    });
+    mockPrisma.boundedExemption.findFirst = vi.fn().mockResolvedValue(null);
+    mockPrisma.boundedExemption.update = vi.fn().mockResolvedValue({
+      id: 'ex-edit-1',
+      userId: 'usr-1',
+      startDate: new Date('2026-11-22'),
+      endDate: new Date('2026-11-23'),
+      exemptionCategory: 'Pelatihan Sertifikasi',
+      officialReferenceNumber: 'ST/02',
+      reason: 'Perubahan jadwal pelatihan resmi',
+      user: { id: 'usr-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+      createdByUser: { id: 'hrga-1', fullName: 'Dewi Lestari', email: 'hrga@dutamedia.com' },
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({ fullName: 'Dewi Lestari' });
+    mockPrisma.notification = { create: vi.fn() };
+
+    const res = await service.updateBoundedExemption('hrga-1', 'ex-edit-1', {
+      endDate: '2026-11-23',
+      exemptionCategory: 'Pelatihan Sertifikasi',
+      officialReferenceNumber: 'ST/02',
+      reason: 'Perubahan jadwal pelatihan resmi',
+    });
+
+    expect(res.exemptionCategory).toBe('Pelatihan Sertifikasi');
+    expect(mockPrisma.boundedExemption.update).toHaveBeenCalled();
+    expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          recipientUserId: 'usr-1',
+          triggerType: 'EXEMPTION_UPDATED',
+          actionUrl: '/daily/history',
+        }),
+      }),
+    );
+  });
+
+  it('deletes bounded exemption and notifies employee (DEC-018)', async () => {
+    mockPrisma.boundedExemption.findUnique = vi.fn().mockResolvedValue({
+      id: 'ex-del-1',
+      userId: 'usr-1',
+      startDate: new Date('2026-11-22'),
+      endDate: new Date('2026-11-22'),
+      exemptionCategory: 'Dinas Luar',
+      user: { id: 'usr-1', fullName: 'Budi Staf' },
+    });
+    mockPrisma.boundedExemption.delete = vi.fn().mockResolvedValue({ id: 'ex-del-1' });
+    mockPrisma.user.findUnique.mockResolvedValue({ fullName: 'Dewi Lestari' });
+    mockPrisma.notification = { create: vi.fn() };
+
+    const res = await service.deleteBoundedExemption('hrga-1', 'ex-del-1');
+
+    expect(res).toEqual({ deleted: true, id: 'ex-del-1' });
+    expect(mockPrisma.boundedExemption.delete).toHaveBeenCalledWith({
+      where: { id: 'ex-del-1' },
+    });
+    expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          recipientUserId: 'usr-1',
+          triggerType: 'EXEMPTION_DELETED',
+          actionUrl: '/daily/history',
         }),
       }),
     );

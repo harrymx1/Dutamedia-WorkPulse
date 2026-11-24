@@ -2,12 +2,14 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
+import { formatDateSpanWib } from '../../utils/dateTime';
 import {
   CheckCircle2,
   AlertCircle,
   FileSpreadsheet,
   ChevronDown,
   ChevronUp,
+  CalendarCheck,
 } from 'lucide-vue-next';
 
 interface CommitmentRecord {
@@ -63,9 +65,30 @@ interface HistoryKpi {
   redDays: number;
 }
 
+interface RecordedLeaveItem {
+  id: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  reviewedBy?: { id: string; fullName: string } | null;
+}
+
+interface RecordedExemptionItem {
+  id: string;
+  exemptionCategory: string;
+  officialReferenceNumber?: string | null;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  createdByUser?: { id: string; fullName: string } | null;
+}
+
 // State
 const loading = ref(false);
 const records = ref<DailyRecordRow[]>([]);
+const recordedLeaves = ref<RecordedLeaveItem[]>([]);
+const recordedExemptions = ref<RecordedExemptionItem[]>([]);
 const kpi = ref<HistoryKpi>({
   totalDays: 0,
   onTimeSubmissions: 0,
@@ -221,6 +244,29 @@ function escapeCsvCell(value: string | number): string {
   return str;
 }
 
+function formatLeaveTypeLabel(type?: string): string {
+  switch (type) {
+    case 'ANNUAL':
+      return 'Cuti Tahunan';
+    case 'SICK':
+      return 'Sakit';
+    case 'PERMIT':
+      return 'Izin Resmi';
+    case 'SPECIAL_LEAVE':
+      return 'Cuti Khusus';
+    case 'MATERNITY':
+      return 'Cuti Melahirkan';
+    case 'UNPAID':
+      return 'Cuti di Luar Tanggungan';
+    default:
+      return type || 'Cuti Resmi';
+  }
+}
+
+function formatDateRangeText(start: string, end: string): string {
+  return formatDateSpanWib(start, end, '');
+}
+
 async function loadHistory() {
   if (startDate.value && endDate.value && startDate.value > endDate.value) {
     dateRangeError.value = 'Dari Tanggal tidak boleh lebih akhir daripada Sampai Tanggal.';
@@ -239,9 +285,13 @@ async function loadHistory() {
       dateRange: { startDate: string; endDate: string };
       kpi: HistoryKpi;
       records: DailyRecordRow[];
+      recordedLeaves?: RecordedLeaveItem[];
+      recordedExemptions?: RecordedExemptionItem[];
     }>(`/daily/history?${query.toString()}`);
 
     records.value = res.data.records || [];
+    recordedLeaves.value = res.data.recordedLeaves || [];
+    recordedExemptions.value = res.data.recordedExemptions || [];
     kpi.value = res.data.kpi;
     if (!startDate.value) startDate.value = res.data.dateRange.startDate;
     if (!endDate.value) endDate.value = res.data.dateRange.endDate;
@@ -521,6 +571,59 @@ onMounted(() => {
               </template>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Riwayat Cuti & Dispensasi Resmi Tercatat (Read-Only - DEC-018) -->
+      <section class="panel readonly-absence-panel" data-testid="readonly-leave-exemption-panel">
+        <div class="panel-head">
+          <div>
+            <div class="kicker">Arsip Kehadiran Dikecualikan (Hanya Baca)</div>
+            <h2>Riwayat Cuti &amp; Dispensasi Resmi Tercatat</h2>
+          </div>
+          <span class="badge badge-neutral">Read-Only</span>
+        </div>
+        <div class="panel-body">
+          <p class="readonly-hint">
+            Data di bawah ini dicatat resmi oleh HRGA / Direktur / Admin setelah disetujui. Pada periode tercantum, Anda dibebaskan otomatis dari kewajiban check-in harian. Jika terdapat perbedaan data, silakan hubungi tim HRGA atau atasan Anda.
+          </p>
+
+          <div v-if="recordedLeaves.length === 0 && recordedExemptions.length === 0" class="readonly-empty">
+            <CalendarCheck :size="20" class="text-green" />
+            <span>Belum ada catatan cuti resmi maupun dispensasi terdaftar pada akun Anda.</span>
+          </div>
+
+          <div v-else class="absence-grid">
+            <div v-if="recordedLeaves.length > 0" class="absence-group">
+              <h3>Catatan Cuti Resmi ({{ recordedLeaves.length }})</h3>
+              <ul class="absence-list">
+                <li v-for="lv in recordedLeaves" :key="lv.id" class="absence-item" :data-testid="`readonly-leave-${lv.id}`">
+                  <div class="absence-top">
+                    <span class="badge badge-active">{{ formatLeaveTypeLabel(lv.leaveType) }}</span>
+                    <span class="absence-period wp-datetime">{{ formatDateRangeText(lv.startDate, lv.endDate) }}</span>
+                  </div>
+                  <p class="absence-reason">{{ lv.reason }}</p>
+                  <small v-if="lv.reviewedBy?.fullName" class="absence-actor">Dicatat oleh: {{ lv.reviewedBy.fullName }}</small>
+                </li>
+              </ul>
+            </div>
+
+            <div v-if="recordedExemptions.length > 0" class="absence-group">
+              <h3>Catatan Dispensasi Resmi ({{ recordedExemptions.length }})</h3>
+              <ul class="absence-list">
+                <li v-for="ex in recordedExemptions" :key="ex.id" class="absence-item" :data-testid="`readonly-exemption-${ex.id}`">
+                  <div class="absence-top">
+                    <span class="badge badge-warning">{{ ex.exemptionCategory }}</span>
+                    <span class="absence-period wp-datetime">{{ formatDateRangeText(ex.startDate, ex.endDate) }}</span>
+                  </div>
+                  <p class="absence-reason">
+                    <strong v-if="ex.officialReferenceNumber">[{{ ex.officialReferenceNumber }}] </strong>{{ ex.reason }}
+                  </p>
+                  <small v-if="ex.createdByUser?.fullName" class="absence-actor">Dicatat oleh: {{ ex.createdByUser.fullName }}</small>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -1065,5 +1168,84 @@ onMounted(() => {
   .history-table td {
     padding: 10px 12px;
   }
+}
+
+.readonly-absence-panel {
+  margin-top: 20px;
+}
+
+.readonly-hint {
+  font-size: 12.5px;
+  color: #5C6E68;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.readonly-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #5C6E68;
+  background: #FAFCFB;
+  border: 1px dashed #CBE0D6;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.absence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.absence-group h3 {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: #0E211B;
+}
+
+.absence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.absence-item {
+  border: 1px solid #DCE7E2;
+  background: #FAFCFB;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.absence-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.absence-period {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00674D;
+}
+
+.absence-reason {
+  font-size: 12.5px;
+  color: #0E211B;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.absence-actor {
+  font-size: 11px;
+  color: #5C6E68;
 }
 </style>

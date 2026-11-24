@@ -1049,5 +1049,173 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         endDate: '2026-11-10',
       });
     });
+
+    it('returns recordedLeaves and recordedExemptions for read-only employee history (DEC-018)', async () => {
+      mockPrisma.dailyAccountabilityRecord.findMany.mockResolvedValue([]);
+      mockPrisma.leaveRequest = {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'lv-1', leaveType: 'ANNUAL', status: 'APPROVED', reason: 'Cuti keluarga' },
+        ]),
+      };
+      mockPrisma.boundedExemption = {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'ex-1', exemptionCategory: 'Dinas Luar', reason: 'Kunjungan klien' },
+        ]),
+      };
+
+      const res = await service.getWeeklyHistory('usr-1', '2026-11-01', '2026-11-10');
+      expect((res as any).recordedLeaves).toHaveLength(1);
+      expect((res as any).recordedExemptions).toHaveLength(1);
+    });
+  });
+
+  describe('DEC-018 BoundedExemption Auto-Exemption & DEC-020/021 RED/AMBER Blocker Rules', () => {
+    it('returns activeExemption on getTodayState when bounded exemption is active today', async () => {
+      mockPrisma.boundedExemption = {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'ex-today',
+          exemptionCategory: 'Dinas Luar',
+          officialReferenceNumber: 'ST/HRGA/2026/XI/104',
+          startDate: new Date('2026-10-28T00:00:00.000Z'),
+          endDate: new Date('2026-10-29T00:00:00.000Z'),
+          reason: 'Kunjungan implementasi klien luar kota',
+        }),
+      };
+      mockPrisma.dailyAccountabilityRecord.findUnique.mockResolvedValue(null);
+
+      const res = await service.getTodayState('usr-1');
+      expect((res as any).activeExemption).toEqual({
+        id: 'ex-today',
+        exemptionCategory: 'Dinas Luar',
+        officialReferenceNumber: 'ST/HRGA/2026/XI/104',
+        startDate: '2026-10-28',
+        endDate: '2026-10-29',
+        reason: 'Kunjungan implementasi klien luar kota',
+      });
+    });
+
+    it('blocks submitMorningCheckin automatically when user has an active boundedExemption', async () => {
+      mockPrisma.boundedExemption = {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'ex-today',
+          exemptionCategory: 'Dinas Luar',
+        }),
+      };
+
+      await expect(
+        service.submitMorningCheckin('usr-1', {
+          workDate: '2026-10-28',
+          commitments: [{ taskText: 'Coba kirim komitmen', initialRisk: CommitmentRisk.GREEN }],
+        }),
+      ).rejects.toThrowError(/dispensasi resmi/);
+    });
+
+    it('rejects RED commitment without linkedBlockerId (DEC-020)', async () => {
+      await expect(
+        service.submitMorningCheckin('usr-1', {
+          workDate: '2026-10-28',
+          commitments: [
+            {
+              taskText: 'Rilis modul pembayaran ke staging',
+              initialRisk: CommitmentRisk.RED,
+              knownBlockerNote: 'Server staging error tanpa tiket blocker',
+            },
+          ],
+        }),
+      ).rejects.toThrowError(/RED wajib mengaitkan tiket Blocker aktif/);
+    });
+
+    it('rejects RED commitment when linked blocker is already RESOLVED/inactive (DEC-020)', async () => {
+      mockPrisma.blockerTicket = {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'blk-closed',
+          description: 'Sudah selesai',
+          status: 'RESOLVED',
+        }),
+      };
+
+      await expect(
+        service.submitMorningCheckin('usr-1', {
+          workDate: '2026-10-28',
+          commitments: [
+            {
+              taskText: 'Rilis modul pembayaran ke staging',
+              initialRisk: CommitmentRisk.RED,
+              linkedBlockerId: 'blk-closed',
+              knownBlockerNote: 'Blocker lama',
+            },
+          ],
+        }),
+      ).rejects.toThrowError(/tidak ditemukan atau sudah tidak aktif/);
+    });
+
+    it('accepts RED commitment when linked to an active blocker ticket (DEC-020)', async () => {
+      mockPrisma.blockerTicket = {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'blk-open-1',
+          description: 'Database staging connection timeout',
+          status: 'OPEN',
+        }),
+      };
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-red-1',
+        initialDailyStatus: DailyRiskStatus.RED,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+      });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-red-1',
+        initialDailyStatus: DailyRiskStatus.RED,
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      const res = await service.submitMorningCheckin('usr-1', {
+        workDate: '2026-10-28',
+        commitments: [
+          {
+            taskText: 'Selesaikan integrasi database staging',
+            initialRisk: CommitmentRisk.RED,
+            linkedBlockerId: 'blk-open-1',
+          },
+        ],
+      });
+
+      expect(res.initialDailyStatus).toBe(DailyRiskStatus.RED);
+      expect(mockPrisma.commitment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            initialRisk: CommitmentRisk.RED,
+            knownBlockerNote: expect.stringContaining('Database staging connection timeout'),
+          }),
+        }),
+      );
+    });
+
+    it('permits AMBER commitment without linkedBlockerId when knownBlockerNote is provided (DEC-021)', async () => {
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-amber-1',
+        initialDailyStatus: DailyRiskStatus.AMBER,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+      });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-amber-1',
+        initialDailyStatus: DailyRiskStatus.AMBER,
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      const res = await service.submitMorningCheckin('usr-1', {
+        workDate: '2026-10-28',
+        commitments: [
+          {
+            taskText: 'Lanjutkan refactoring modul analitik hari ke-2',
+            initialRisk: CommitmentRisk.AMBER,
+            knownBlockerNote: 'Ruang lingkup kompleks dan ada rapat sinkronisasi siang nanti',
+          },
+        ],
+      });
+
+      expect(res.initialDailyStatus).toBe(DailyRiskStatus.AMBER);
+    });
   });
 });

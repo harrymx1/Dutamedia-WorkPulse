@@ -758,7 +758,7 @@ function showToast(msg: string) {
                   </td>
                   <td>
                     <span class="func-pill">{{ d.targetFunction }}</span>
-                    <span class="auth-scope-text">Persetujuan Cuti, Koreksi &amp; Blocker</span>
+                    <span class="auth-scope-text">Review Koreksi &amp; Eskalasi Blocker</span>
                   </td>
                   <td>
                     <span class="date-text mono-num wp-datetime">
@@ -1018,7 +1018,7 @@ function showToast(msg: string) {
 
           <div class="alert-banner warning">
             <AlertTriangle :size="18" />
-            <span>Tindakan ini akan langsung menghentikan hak akses persetujuan cuti &amp; koreksi pejabat pengganti seketika.</span>
+            <span>Tindakan ini akan langsung menghentikan hak akses review koreksi &amp; eskalasi pejabat pengganti seketika.</span>
           </div>
 
           <div class="readonly-summary-card">

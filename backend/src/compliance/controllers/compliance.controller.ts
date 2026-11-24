@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -10,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { ComplianceService } from '../services/compliance.service';
 import { ExemptionService } from '../services/exemption.service';
-import { CreateBoundedExemptionDto } from '../dto/create-exemption.dto';
+import {
+  CreateBoundedExemptionDto,
+  UpdateBoundedExemptionDto,
+} from '../dto/create-exemption.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CsrfGuard } from '../../auth/guards/csrf.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -63,6 +68,20 @@ export class ComplianceController {
     @Body() dto: CreateBoundedExemptionDto,
   ) {
     return this.exemptionService.createBoundedExemption(req.user.id, dto);
+  }
+
+  @Patch('exemptions/:id')
+  async updateBoundedExemption(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateBoundedExemptionDto,
+  ) {
+    return this.exemptionService.updateBoundedExemption(req.user.id, id, dto);
+  }
+
+  @Delete('exemptions/:id')
+  async deleteBoundedExemption(@Req() req: any, @Param('id') id: string) {
+    return this.exemptionService.deleteBoundedExemption(req.user.id, id);
   }
 }
 

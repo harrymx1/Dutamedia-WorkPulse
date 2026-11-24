@@ -140,5 +140,82 @@ describe('ExemptionManagementView.vue (WP-EP08 / Prototipe 12 - Kelola Pengecual
     expect(wrapper.findAll('tbody tr')).toHaveLength(0);
     expect(wrapper.text()).toContain('Tidak Ada Dispensasi yang Cocok');
   });
+
+  it('supports editing and deleting existing bounded exemptions (DEC-018)', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string, opts?: any) => {
+      if (url.includes('/compliance/exemptions/') && opts?.method === 'PATCH') {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { id: 'ex-1' } }),
+        });
+      }
+      if (url.includes('/compliance/exemptions/') && opts?.method === 'DELETE') {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { deleted: true } }),
+        });
+      }
+      if (url.includes('/compliance/exemptions')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'ex-1',
+                userId: 'u-1',
+                startDate: '2026-10-29',
+                endDate: '2026-10-31',
+                exemptionCategory: 'Dinas Luar',
+                officialReferenceNumber: 'ST-042',
+                reason: 'Kunjungan kerja klien di Bandung',
+                user: { id: 'u-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+                createdByUser: { id: 'hrga-1', fullName: 'Siti HRGA' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [{ id: 'u-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' }],
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(ExemptionManagementView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // Edit exemption -> sends PATCH
+    await wrapper.find('[data-testid="edit-exemption-ex-1"]').trigger('click');
+    expect(wrapper.text()).toContain('Ubah Data Dispensasi');
+    await wrapper.find('#reasonInput').setValue('Perubahan jadwal kunjungan klien');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/compliance/exemptions/ex-1'),
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+
+    // Delete exemption -> sends DELETE
+    await wrapper.find('[data-testid="delete-exemption-ex-1"]').trigger('click');
+    await wrapper.find('[data-testid="confirm-delete-exemption"]').trigger('click');
+    await flushPromises();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/compliance/exemptions/ex-1'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
 });
 

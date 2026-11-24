@@ -1199,4 +1199,57 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     vi.unstubAllGlobals();
   });
+
+  it('shows Morning Commitment context banner and auto-redirects back with linkedBlockerId after submit (DEC-020 Cara A)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: any, init?: any) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.endsWith('/blockers') && init?.method === 'POST') {
+          return Promise.resolve({
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              data: { id: 'blk-created-999', status: 'OPEN' },
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    await router.push('/raise-blockers?returnTo=/daily/morning&slot=1&projectCode=PRJ-CORE');
+    await router.isReady();
+    const pushSpy = vi.spyOn(router, 'push');
+
+    const wrapper = mount(RaiseBlockerView, {
+      global: { plugins: [pinia, router] },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="morning-return-banner"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Membuat Tiket Blocker untuk Morning Commitment');
+
+    await wrapper.find('#blockerTitle').setValue('Server Staging Database Timeout Kritis');
+    await wrapper.find('#blockerType').setValue('INFRA');
+    await wrapper.find('[data-testid="impact-checkbox-PROJECT"]').setValue(true);
+    await wrapper.find('#blockerDesc').setValue('Koneksi ke database staging terputus sejak pukul 08:15 WIB saat pengujian.');
+    await wrapper.find('form.blocker-form').trigger('submit');
+    await flushPromises();
+
+    expect(pushSpy).toHaveBeenCalledWith({
+      path: '/daily/morning',
+      query: {
+        linkedBlockerId: 'blk-created-999',
+        slot: '1',
+      },
+    });
+
+    vi.unstubAllGlobals();
+  });
 });

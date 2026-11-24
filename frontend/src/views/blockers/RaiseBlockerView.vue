@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { formatTimeWib, formatShortDateTimeWib } from '../../utils/dateTime';
@@ -45,6 +45,14 @@ import {
 
 const authStore = useAuthStore();
 const route = useRoute();
+const router = useRouter();
+
+const isFromMorningCommitment = computed(() => route?.query?.returnTo === '/daily/morning');
+const morningReturnSlot = computed(() =>
+  typeof route?.query?.slot === 'string' && route.query.slot.trim()
+    ? route.query.slot.trim()
+    : '0',
+);
 
 // Tab State
 const activeTab = ref<'create' | 'mine'>(route?.query?.tab === 'mine' ? 'mine' : 'create');
@@ -697,6 +705,16 @@ async function submitBlocker() {
     submittedTicket.value = res.data;
     toastMessage.value = 'Tiket kendala berhasil diterbitkan dan dinotifikasi ke penanggung jawab.';
     loadMyBlockers();
+
+    if (isFromMorningCommitment.value && res.data?.id && router && typeof router.push === 'function') {
+      await router.push({
+        path: '/daily/morning',
+        query: {
+          linkedBlockerId: res.data.id,
+          slot: morningReturnSlot.value,
+        },
+      });
+    }
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal menerbitkan tiket kendala.';
   } finally {
@@ -1062,6 +1080,10 @@ async function submitDeleteTicket() {
 }
 
 onMounted(() => {
+  if (typeof route?.query?.projectCode === 'string' && route.query.projectCode.trim()) {
+    authorityContext.value = 'PROJECT_AUTHORITY';
+    projectCode.value = route.query.projectCode.trim();
+  }
   loadInitialData();
   loadMyBlockers();
   loadRoutingPreview();
@@ -1101,6 +1123,25 @@ onBeforeUnmount(() => {
         <ArrowLeft :size="15" />
         <span>Kembali ke Ruang Kerja My Today</span>
       </router-link>
+
+      <!-- Banner Konteks saat datang dari Morning Commitment RED (DEC-020 Cara A) -->
+      <div
+        v-if="isFromMorningCommitment"
+        class="morning-return-banner"
+        role="status"
+        data-testid="morning-return-banner"
+      >
+        <div class="morning-return-content">
+          <AlertTriangle :size="18" />
+          <div>
+            <strong>Membuat Tiket Blocker untuk Morning Commitment:</strong>
+            Draf komitmen pagi Anda sudah tersimpan otomatis. Setelah tiket ini dikirim, Anda akan langsung diarahkan kembali ke Morning Commitment dengan tiket baru sudah otomatis tertaut.
+          </div>
+        </div>
+        <router-link to="/daily/morning" class="btn-secondary btn-return-cancel">
+          Batal &amp; Kembali ke Morning Commitment
+        </router-link>
+      </div>
 
       <!-- Page Heading (IMP-041: No kicker, IMP-042: No antrean blocker aktif link) -->
       <div class="page-heading">
@@ -4041,5 +4082,33 @@ textarea:focus {
   .modal-foot {
     padding: 14px 16px;
   }
+}
+
+.morning-return-banner {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.morning-return-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1 1 320px;
+}
+
+.btn-return-cancel {
+  white-space: nowrap;
+  text-decoration: none;
 }
 </style>

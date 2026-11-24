@@ -1505,9 +1505,9 @@ async function main() {
     }
   }
 
-  // 6b. Pengajuan Cuti PENDING untuk Backend Dev (Siti Rahma - Divisi Engineering)
+  // 6b. Catatan Cuti Resmi (Ter-ACC) untuk Backend Dev (Siti Rahma - Divisi Engineering)
   const existingLeaveSiti = await prisma.leaveRequest.findFirst({
-    where: { userId: backendUser.id, status: 'PENDING' },
+    where: { userId: backendUser.id },
   });
   if (!existingLeaveSiti) {
     const tomorrow = new Date(workDate);
@@ -1522,14 +1522,17 @@ async function main() {
         endDate: dayAfter,
         leaveType: 'ANNUAL',
         reason: 'Cuti tahunan keperluan keluarga',
-        status: 'PENDING',
+        status: 'APPROVED',
+        reviewedByUserId: hrgaUser.id,
+        reviewedAt: new Date(),
+        reviewNote: 'Dicatat resmi sebagai cuti ter-ACC (DEC-018)',
       },
     });
   }
 
-  // 6c. Pengajuan Cuti PENDING untuk Principal Engineer R&D (Maya Putri - Divisi RnD)
+  // 6c. Catatan Cuti Resmi (Ter-ACC) untuk Principal Engineer R&D (Maya Putri - Divisi RnD)
   const existingLeaveMaya = await prisma.leaveRequest.findFirst({
-    where: { userId: rndPrincipalUser.id, status: 'PENDING' },
+    where: { userId: rndPrincipalUser.id },
   });
   if (!existingLeaveMaya) {
     const startLeave = new Date(workDate);
@@ -1543,15 +1546,18 @@ async function main() {
         startDate: startLeave,
         endDate: endLeave,
         leaveType: 'ANNUAL',
-        reason: 'Keperluan riset arsitektur sistem luar kota (UAT Test Data TD-SUPV-01)',
-        status: 'PENDING',
+        reason: 'Keperluan riset arsitektur sistem luar kota',
+        status: 'APPROVED',
+        reviewedByUserId: hrgaUser.id,
+        reviewedAt: new Date(),
+        reviewNote: 'Dicatat resmi sebagai cuti ter-ACC (DEC-018)',
       },
     });
   }
 
-  // 6c-2. Pengajuan Izin (PERMIT) PENDING untuk Anak Magang (Raka Pratama - Divisi Engineering) pada H+5
+  // 6c-2. Catatan Izin Resmi (PERMIT, Ter-ACC) untuk Anak Magang (Raka Pratama - Divisi Engineering) pada H+5
   const existingLeaveRaka = await prisma.leaveRequest.findFirst({
-    where: { userId: internFrontendUser.id, status: 'PENDING' },
+    where: { userId: internFrontendUser.id },
   });
   if (!existingLeaveRaka) {
     const internPermitDate = new Date(workDate);
@@ -1564,7 +1570,10 @@ async function main() {
         endDate: internPermitDate,
         leaveType: 'PERMIT',
         reason: 'Menghadiri seminar tugas akhir wajib di kampus (surat keterangan terlampir)',
-        status: 'PENDING',
+        status: 'APPROVED',
+        reviewedByUserId: hrgaUser.id,
+        reviewedAt: new Date(),
+        reviewNote: 'Dicatat resmi sebagai izin ter-ACC (DEC-018)',
       },
     });
   }

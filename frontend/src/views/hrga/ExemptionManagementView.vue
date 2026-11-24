@@ -8,6 +8,9 @@ import {
   CheckCircle2,
   AlertCircle,
   User,
+  Pencil,
+  Trash2,
+  X,
 } from 'lucide-vue-next';
 
 interface ExemptionItem {
@@ -23,13 +26,21 @@ interface ExemptionItem {
   createdByUser: { id: string; fullName: string };
 }
 
+function toInputDate(val?: string): string {
+  if (!val) return '';
+  return String(val).slice(0, 10);
+}
+
 // State
 const loading = ref(false);
 const submitting = ref(false);
+const deleting = ref(false);
 const exemptions = ref<ExemptionItem[]>([]);
 const availableUsers = ref<Array<{ id: string; fullName: string; email: string }>>([]);
 
-// Form
+// Form (Tambah / Edit)
+const editingId = ref<string | null>(null);
+const deletingTarget = ref<ExemptionItem | null>(null);
 const formUserId = ref('');
 const formStartDate = ref('');
 const formEndDate = ref('');
@@ -102,6 +113,57 @@ async function loadData() {
   }
 }
 
+function startEdit(item: ExemptionItem) {
+  editingId.value = item.id;
+  formUserId.value = item.userId;
+  formStartDate.value = toInputDate(item.startDate);
+  formEndDate.value = toInputDate(item.endDate);
+  formCategory.value = item.exemptionCategory || 'Dinas Luar';
+  formRefNo.value = item.officialReferenceNumber || '';
+  formReason.value = item.reason || '';
+}
+
+function cancelEdit() {
+  editingId.value = null;
+  if (availableUsers.value.length > 0) {
+    formUserId.value = availableUsers.value[0].id;
+  }
+  formStartDate.value = '';
+  formEndDate.value = '';
+  formCategory.value = 'Dinas Luar';
+  formRefNo.value = '';
+  formReason.value = '';
+}
+
+function openDeleteConfirm(item: ExemptionItem) {
+  deletingTarget.value = item;
+}
+
+function closeDeleteConfirm() {
+  deletingTarget.value = null;
+}
+
+async function confirmDeleteExemption() {
+  if (!deletingTarget.value) return;
+  deleting.value = true;
+  try {
+    const targetId = deletingTarget.value.id;
+    await apiClient(`/compliance/exemptions/${targetId}`, {
+      method: 'DELETE',
+    });
+    if (editingId.value === targetId) {
+      cancelEdit();
+    }
+    deletingTarget.value = null;
+    showToast('Catatan dispensasi berhasil dihapus. Jadwal akuntabilitas normal berlaku kembali.');
+    await loadData();
+  } catch (err: any) {
+    showToast(err.message || 'Gagal menghapus data dispensasi.', true);
+  } finally {
+    deleting.value = false;
+  }
+}
+
 async function submitExemption() {
   errorMessage.value = null;
 
@@ -124,26 +186,36 @@ async function submitExemption() {
 
   submitting.value = true;
   try {
-    await apiClient('/compliance/exemptions', {
-      method: 'POST',
-      body: JSON.stringify({
-        userId: formUserId.value,
-        startDate: formStartDate.value,
-        endDate: formEndDate.value,
-        exemptionCategory: formCategory.value,
-        officialReferenceNumber: formRefNo.value.trim() || undefined,
-        reason: formReason.value.trim(),
-      }),
-    });
+    const payload = {
+      userId: formUserId.value,
+      startDate: formStartDate.value,
+      endDate: formEndDate.value,
+      exemptionCategory: formCategory.value,
+      officialReferenceNumber: formRefNo.value.trim() || undefined,
+      reason: formReason.value.trim(),
+    };
 
-    showToast('Dispensasi akuntabilitas berhasil didaftarkan.');
-    formStartDate.value = '';
-    formEndDate.value = '';
-    formReason.value = '';
-    formRefNo.value = '';
+    if (editingId.value) {
+      await apiClient(`/compliance/exemptions/${editingId.value}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      showToast('Data dispensasi resmi berhasil diperbarui dan dinotifikasikan ke karyawan.');
+      cancelEdit();
+    } else {
+      await apiClient('/compliance/exemptions', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      showToast('Dispensasi akuntabilitas berhasil didaftarkan. Karyawan otomatis dibebaskan dari check-in.');
+      formStartDate.value = '';
+      formEndDate.value = '';
+      formReason.value = '';
+      formRefNo.value = '';
+    }
     await loadData();
   } catch (err: any) {
-    showToast(err.message || 'Gagal mendaftarkan dispensasi.', true);
+    showToast(err.message || 'Gagal menyimpan data dispensasi.', true);
   } finally {
     submitting.value = false;
   }
@@ -176,18 +248,20 @@ onMounted(() => {
           <span class="eyebrow">Tata Kelola Dispensasi &amp; Pengecualian</span>
           <h1>Manajemen Dispensasi &amp; Pengecualian Akuntabilitas</h1>
           <p class="subtitle">
-            Daftarkan dispensasi akuntabilitas individual (Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus). Hari dispensasi otomatis dikecualikan dari pemantauan pola keterlambatan.
+            Daftarkan dispensasi akuntabilitas individual yang sudah sah (Dinas Luar, Pelatihan Sertifikasi, Tugas Khusus) langsung oleh HRGA/Direktur/Admin tanpa alur pengajuan ulang. Karyawan otomatis dibebaskan dari kewajiban check-in harian tanpa perlu memilih 0 komitmen.
           </p>
         </div>
       </div>
 
       <!-- 2-Column Split: Form (Left) & Table (Right) -->
       <div class="split-layout">
-        <!-- Panel Form Pendaftaran -->
+        <!-- Panel Form Pendaftaran / Edit -->
         <section class="panel form-panel">
           <div class="panel-head">
-            <h2>Daftarkan Dispensasi Baru</h2>
-            <p class="panel-desc">Pengecualian resmi berbasis dokumen penugasan.</p>
+            <h2>{{ editingId ? 'Ubah Data Dispensasi' : 'Daftarkan Dispensasi Baru' }}</h2>
+            <p class="panel-desc">
+              {{ editingId ? 'Perbarui periode, kategori, atau alasan dispensasi resmi.' : 'Pengecualian resmi berbasis dokumen penugasan yang otomatis membebaskan check-in.' }}
+            </p>
           </div>
 
           <form class="panel-body" @submit.prevent="submitExemption">
@@ -255,14 +329,26 @@ onMounted(() => {
               ></textarea>
             </div>
 
-            <button
-              type="submit"
-              class="btn-submit"
-              :disabled="submitting"
-            >
-              <span v-if="submitting">Mendaftarkan...</span>
-              <span v-else>Daftarkan Dispensasi</span>
-            </button>
+            <div class="form-actions-row">
+              <button
+                type="submit"
+                class="btn-submit"
+                :disabled="submitting"
+                data-testid="submit-exemption-btn"
+              >
+                <span v-if="submitting">Menyimpan...</span>
+                <span v-else>{{ editingId ? 'Simpan Perubahan Dispensasi' : 'Daftarkan Dispensasi' }}</span>
+              </button>
+              <button
+                v-if="editingId"
+                type="button"
+                class="btn-cancel-edit"
+                data-testid="cancel-exemption-edit"
+                @click="cancelEdit"
+              >
+                Batal Edit
+              </button>
+            </div>
           </form>
         </section>
 
@@ -322,10 +408,11 @@ onMounted(() => {
                   <th>Kategori</th>
                   <th>No. Referensi &amp; Alasan</th>
                   <th>Dicatat Oleh</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in filteredExemptions" :key="item.id">
+                <tr v-for="item in filteredExemptions" :key="item.id" :data-testid="`exemption-row-${item.id}`">
                   <td class="col-user">
                     <div class="user-inline">
                       <User :size="14" />
@@ -347,6 +434,28 @@ onMounted(() => {
                   <td class="col-creator">
                     <small>{{ item.createdByUser.fullName }}</small>
                   </td>
+                  <td class="col-actions">
+                    <div class="row-actions">
+                      <button
+                        type="button"
+                        class="btn-row edit"
+                        :data-testid="`edit-exemption-${item.id}`"
+                        @click="startEdit(item)"
+                      >
+                        <Pencil :size="13" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-row delete"
+                        :data-testid="`delete-exemption-${item.id}`"
+                        @click="openDeleteConfirm(item)"
+                      >
+                        <Trash2 :size="13" />
+                        <span>Hapus</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -354,6 +463,40 @@ onMounted(() => {
         </section>
       </div>
     </main>
+
+    <!-- Modal Konfirmasi Hapus Dispensasi -->
+    <div v-if="deletingTarget" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Hapus Catatan Dispensasi?</h3>
+          <button type="button" class="close-btn" aria-label="Tutup" @click="closeDeleteConfirm">
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Anda akan menghapus dispensasi <strong>{{ deletingTarget.exemptionCategory }}</strong> milik
+            <strong>{{ deletingTarget.user.fullName }}</strong> periode
+            <strong>{{ formatPeriodLabel(deletingTarget.startDate, deletingTarget.endDate) }}</strong>.
+          </p>
+          <p class="modal-note">
+            Setelah dihapus, kewajiban akuntabilitas harian normal karyawan berlaku kembali dan pemberitahuan akan dikirim.
+          </p>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-cancel-edit" @click="closeDeleteConfirm">Batal</button>
+          <button
+            type="button"
+            class="btn-danger"
+            :disabled="deleting"
+            data-testid="confirm-delete-exemption"
+            @click="confirmDeleteExemption"
+          >
+            {{ deleting ? 'Menghapus...' : 'Ya, Hapus Dispensasi' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -548,8 +691,14 @@ textarea {
   width: 180px;
 }
 
+.form-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .btn-submit {
-  width: 100%;
+  flex: 1;
   padding: 10px;
   border-radius: 8px;
   border: none;
@@ -558,7 +707,100 @@ textarea {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 8px;
+}
+
+.btn-cancel-edit {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #DCE7E2;
+  background: #fff;
+  color: #475B54;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #DCE7E2;
+  background: #fff;
+}
+
+.btn-row.edit { color: #00674D; border-color: #CBE0D6; }
+.btn-row.edit:hover { background: #E6F4EE; }
+.btn-row.delete { color: #991B1B; border-color: #FECACA; }
+.btn-row.delete:hover { background: #FEF2F2; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 33, 27, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #DCE7E2;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #DCE7E2;
+  background: #FAFCFB;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #991B1B;
+}
+
+.close-btn { border: none; background: transparent; color: #5C6E68; cursor: pointer; }
+.modal-body { padding: 18px; font-size: 13px; line-height: 1.5; }
+.modal-note { color: #5C6E68; font-size: 12px; margin-top: 8px; margin-bottom: 0; }
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid #DCE7E2;
+  background: #FAFCFB;
+}
+.btn-danger {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #DC2626;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .btn-submit:disabled {
