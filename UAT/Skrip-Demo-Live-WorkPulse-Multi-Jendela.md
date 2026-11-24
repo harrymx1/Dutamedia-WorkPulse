@@ -113,33 +113,26 @@ Siapkan 6 jendela browser (pakai profil Chrome berbeda / Edge / Firefox / Incogn
 
 ---
 
-### BABAK 3 — SIKLUS LENGKAP BLOCKER: 16 KATEGORI, 9 DAMPAK, CUTI VERTIKAL, ANTI-SELF-ROUTING, KOLABORASI 4 JENDELA, DYNAMIC RE-ROUTING, TERIMA RISIKO, HAPUS, & AGING *(10 Menit · Jendela 2 ↔ Jendela 3 ↔ Jendela 4)*
+### BABAK 3 — SIKLUS LENGKAP BLOCKER: 16 KATEGORI, 9 DAMPAK, CUTI VERTIKAL, LAPOR BLOCKER SEBELUM KOMITMEN PAGI, KOLABORASI 4 JENDELA, DYNAMIC RE-ROUTING, TERIMA RISIKO, HAPUS, & AGING *(9 Menit · Jendela 6 ↔ Jendela 3 ↔ Jendela 4 ↔ Jendela 2)*
 
-1. **3A — Pratinjau Pengarahan Cerdas & Aturan Cuti Vertikal (`dev.frontend@dutamedia.com` di Jendela 2 → `/raise-blockers`)** *(Ambil **`WP-SS-11`** & **`WP-SS-12`**)*:
-   - **Tunjukkan Aturan Cuti Vertikal (`DEC-014` & `DEC-017`):** Pada dropdown Kategori, pilih dulu **`1. Teknis & Sistem` → `Hosting, Cloud & Domain`** → tunjuk **Panel Jalur Penanganan Otomatis**: karena `Achmad Noer` (PIC resminya) sedang **Cuti Resmi hari ini**, sistem otomatis menaikkannya ke atasan langsungnya (**`Gunawan Setiawan` — Head of Ops & Infra**)!
-   - Sekarang ubah kategori untuk membuat tiket demo utama (siap salin):
-     * **Judul:** `Server Staging Pembayaran Mengalami Connection Timeout Berulang`
-     * **Kategori:** **`Server & Rilis Sistem` (`INFRA`)** → Panel Jalur Otomatis langsung menunjuk staf spesialis **`Fakhrizal Asshiddiq`**.
-     * **Dampak:** Centang 3 kotak lalu tunjukkan 6 kotak lainnya otomatis terkunci (*batas 1–3 dari 9 dampak*), lalu sisakan 2 kotak: **`Layanan Langsung Pengguna`** & **`Target & Tenggat Waktu`**.
-     * **Keparahan:** **`High (Target 4 jam)`**.
-     * **Deskripsi:** `Sejak pukul 13:00 WIB aplikasi staging tidak dapat terhubung ke database PostgreSQL. Restart layanan lokal sudah dicoba namun koneksi pool tetap penuh.`
-   - Klik **`Kirim Laporan Blocker`** → muncul Kartu Konfirmasi Tiket Terbit!
-2. **3A-2 — Lapor Blocker Dulu Sebelum Komitmen Pagi → Tautkan ke `Tiket Blocker Penyebab` (`intern.frontend@dutamedia.com` — Raka Pratama di Jendela 6):**
-   - **Kalimat ke Atasan:** *"Bagaimana jika karyawan datang pagi-pagi langsung ketemu kendala sebelum sempat mengisi Komitmen Pagi? Di WorkPulse, Lapor Blocker bisa dibuat lebih dulu, lalu saat mengisi Komitmen Pagi tiket tersebut langsung bisa dikaitkan sebagai penyebab risiko."*
-   - Di Jendela 6, masuk sebagai **`intern.frontend@dutamedia.com`** *(Komitmen Pagi hari ini belum dikirim)* → buka **`/raise-blockers`** → buat tiket cepat (siap salin):
-     * **Judul:** `Monitor eksternal di meja kerja kedip-kedip dan kabel HDMI longgar`
-     * **Kategori:** **`2. Kantor & Perangkat` → `Perangkat Kerja` (`WORK_DEVICE`)** *(otomatis mengarah ke **`Rahian M. Suari` — IT Support**)*
-     * **Dampak:** Centang **`Tugas Pribadi`** | **Keparahan:** **`Medium (Target 8 jam)`**
-     * **Deskripsi:** `Layar monitor kedua di meja kerja sering padam mendadak sejak pagi sehingga menyulitkan pemeriksaan tampilan responsif.`
-     * Klik **`Kirim Laporan Blocker`**.
-   - Langsung klik menu **`My Today`** (`/daily/morning`) pada akun Raka → klik **`Lihat Draf`** pada `Draf Tugas Berlanjut dari Kemarin (1 Tersedia)` → salin ke Slot #1 → ubah tingkat risiko menjadi **`AMBER`** (atau **`RED`**) → isi potensi kendala singkat → buka dropdown **`Tiket Blocker Penyebab`** → **pilih tiket `Monitor eksternal...` yang baru saja dibuat 1 menit lalu!** → klik **`Kirim Morning Commitment`**. *(Membuktikan 3 hal sekaligus: Blocker boleh dibuat sebelum Komitmen Pagi, penautan `Tiket Blocker Penyebab` langsung tersambung otomatis, dan Anak Magang ikut melapor harian).*
-3. **3B — Siklus Penuh Lintas Jendela (Terima → Beri Bantuan → Membantu Sebagian → Selesaikan → Kembalikan → Tutup) (Jendela 3 `Fakhrizal` ↔ Jendela 2 `Aditya`):**
+1. **3A — Satu Alur Efektif: Pratinjau Cuti Vertikal, Buat 1 Tiket Blocker Dulu, Lalu Langsung Tautkan ke `Tiket Blocker Penyebab` di Komitmen Pagi (`intern.frontend@dutamedia.com` — Raka Pratama di Jendela 6)** *(Ambil **`WP-SS-11`** & **`WP-SS-12`**)*:
+   - Masuk sebagai **`intern.frontend@dutamedia.com`** *(Komitmen Pagi hari ini belum dikirim)* → buka **`/raise-blockers`**:
+     1. **Tunjukkan Aturan Cuti Vertikal (`DEC-014` & `DEC-017`):** Pilih dulu **`1. Teknis & Sistem` → `Hosting, Cloud & Domain`** → tunjuk **Panel Jalur Penanganan Otomatis**: karena `Achmad Noer` (PIC resminya) sedang **Cuti Resmi hari ini**, sistem otomatis menaikkannya ke atasan langsungnya (**`Gunawan Setiawan` — Head of Ops & Infra**)!
+     2. **Isi Tiket Utama Demo (1x Buat Saja — Siap Salin):**
+        * **Judul:** `Server Staging Pembayaran Mengalami Connection Timeout Berulang`
+        * **Kategori:** Ubah ke **`Server & Rilis Sistem` (`INFRA`)** → Panel Jalur Otomatis langsung menunjuk staf spesialis **`Fakhrizal Asshiddiq`**.
+        * **Dampak:** Centang 3 kotak lalu tunjukkan 6 kotak lainnya otomatis terkunci (*batas 1–3 dari 9 dampak*), lalu sisakan 2 kotak: **`Layanan Langsung Pengguna`** & **`Target & Tenggat Waktu`**.
+        * **Keparahan:** **`High (Target 4 jam)`**.
+        * **Deskripsi:** `Sejak pukul 13:00 WIB aplikasi staging tidak dapat terhubung ke database PostgreSQL. Restart layanan lokal sudah dicoba namun koneksi pool tetap penuh.`
+        * Klik **`Kirim Laporan Blocker`** → muncul Kartu Konfirmasi Tiket Terbit!
+     3. **Langsung Tautkan ke Komitmen Pagi:** Klik menu **`My Today`** (`/daily/morning`) masih di akun Raka → klik **`Lihat Draf`** pada `Draf Tugas Berlanjut dari Kemarin (1 Tersedia)` → salin ke Slot #1 → pilih risiko **`RED`** (atau **`AMBER`**) → isi potensi kendala singkat → buka dropdown **`Tiket Blocker Penyebab`** → **pilih tiket `Server Staging Pembayaran...` yang baru saja dibuat 30 detik lalu!** → klik **`Kirim Morning Commitment`**. *(Hemat waktu: 1 tiket langsung membuktikan Cuti Vertikal, 16 Kategori, 9 Dampak, Blocker sebelum Komitmen Pagi, penautan `Tiket Blocker Penyebab`, dan laporan harian Anak Magang!).*
+2. **3B — Siklus Penuh Lintas Jendela pada Tiket yang Sama (Terima → Beri Bantuan → Membantu Sebagian → Selesaikan → Kembalikan → Tutup) (Jendela 3 `Fakhrizal` ↔ Jendela 6 `Raka Pratama`):**
    - **Jendela 3 (`network.infra@dutamedia.com` di `/blockers`):** Tunjukkan bahwa `Fakhrizal` adalah staf biasa (`EMPLOYEE`), namun karena berstatus **`Penanggung Jawab Kategori`**, menu `/blockers` & `/blockers/aging` otomatis terbuka! *(Tunjukkan juga bila Fakhrizal membuka `/raise-blockers` dan memilih `INFRA` sendiri → **Anti-Self-Routing** otomatis menaikkannya ke `Gunawan Setiawan`!).*
-   - Pilih tiket barusan (`Tugas Anda`) → klik **`Terima & Tangani`** (`Sedang Ditangani`).
+   - Pilih tiket `Server Staging Pembayaran...` barusan (`Tugas Anda`) → klik **`Terima & Tangani`** (`Sedang Ditangani`).
    - Klik **`Beri Bantuan`** *(Ambil **`WP-SS-22`**)* → tindakan: `Menambah kapasitas koneksi pool database staging dan restart worker`, hasil: `Silakan dicoba ulang akses endpoint pembayaran` → simpan.
-   - **Jendela 2 (`Aditya` di tab `Blocker Saya`):** Tunjukkan 3 tombol tanggapan pelapor atas bantuan bertahap → klik **`Terima Bantuan (Membantu Sebagian)`** dengan catatan: `Endpoint utama sudah merespons, tetapi halaman laporan masih timeout`.
+   - **Jendela 6 (`Raka` di `/raise-blockers?tab=mine`):** Tunjukkan 3 tombol tanggapan pelapor atas bantuan bertahap → klik **`Terima Bantuan (Membantu Sebagian)`** dengan catatan: `Endpoint utama sudah merespons, tetapi halaman laporan masih timeout`.
    - **Jendela 3 (`Fakhrizal`):** Klik **`Selesaikan`** → solusi: `Batas koneksi database staging diperbesar permanen dan indeks query laporan telah dioptimasi` → **`Kirim Solusi`** (`Solusi Diberikan`).
-   - **Jendela 2 (`Aditya`):** Uji dulu tombol **`Belum Memadai (Kembalikan)`** (alasan: `Timeout masih muncul pada ekspor data lebih dari 100 baris`) → tiket kembali **`Sedang Ditangani`** di Jendela 3! Lalu di Jendela 3 `Fakhrizal` kirim solusi final lagi → di Jendela 2 `Aditya` klik **`Konfirmasi & Tutup Tiket`** → resmi **`Selesai Ditutup`**!
+   - **Jendela 6 (`Raka`):** Uji dulu tombol **`Belum Memadai (Kembalikan)`** (alasan: `Timeout masih muncul pada ekspor data lebih dari 100 baris`) → tiket kembali **`Sedang Ditangani`** di Jendela 3! Lalu di Jendela 3 `Fakhrizal` kirim solusi final lagi → di Jendela 6 `Raka` klik **`Konfirmasi & Tutup Tiket`** → resmi **`Selesai Ditutup`**!
 3. **3C — Bantuan Non-PIC (`Bantu Unblock` → `Feed Dukungan Lintas Fungsi`), `Terima sbg Penyelesaian`, & `Terima Risiko` (Jendela 4 `Arif Budiman` ↔ Jendela 2 `Aditya`):**
    - **Jendela 4 (`head.eng@dutamedia.com` di `/dashboard`):** Klik **`Bantu Unblock`** pada tiket aktif → langsung melompat ke `/blockers` *(Ambil **`WP-SS-21`**)* → kirim **`Beri Bantuan`** pada tiket `CI runner OOM` (meski PIC-nya Bambang) → tunjukkan bantuan Arif **langsung muncul di `Feed Dukungan Lintas Fungsi`** `/dashboard`!
    - Di Jendela 2 (`Aditya`), klik **`Terima sbg Penyelesaian (Tutup Tiket)`** pada bantuan tersebut → tiket langsung tuntas seketika!
