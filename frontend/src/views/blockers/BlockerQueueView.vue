@@ -93,6 +93,7 @@ const hasAppliedRouteTicket = ref(false);
 const loading = ref(false);
 const blockers = ref<BlockerTicketItem[]>([]);
 const selectedTicket = ref<BlockerTicketItem | null>(null);
+const toolbarRef = ref<HTMLElement | null>(null);
 const listSectionRef = ref<HTMLElement | null>(null);
 const detailSectionRef = ref<HTMLElement | null>(null);
 
@@ -218,7 +219,7 @@ async function scrollLeftCardIntoView(ticketId?: string) {
   }
 
   // 2. Posisikan halaman luar tepat pada filter bar di atas 2-panel agar header panel kanan (Tiket #... & tombol aksi) selalu utuh terlihat
-  const toolbarEl = document.querySelector('.filter-toolbar') as HTMLElement | null;
+  const toolbarEl = toolbarRef.value;
   if (toolbarEl && typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
     const topPos = toolbarEl.getBoundingClientRect().top + window.scrollY - 68;
     window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
@@ -824,7 +825,7 @@ onMounted(() => {
       </div>
 
       <!-- Filter Toolbar -->
-      <div class="toolbar">
+      <div ref="toolbarRef" class="toolbar">
         <div class="filter-group">
           <label for="status-filter">Status:</label>
           <select id="status-filter" v-model="statusFilter" data-testid="status-filter-select" @change="loadBlockers">
