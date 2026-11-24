@@ -44,17 +44,28 @@ Siapkan **5 jendela browser terpisah** (gunakan fitur *Chrome Profile* berbeda a
 
 ---
 
-### BABAK 1 — PENGALAMAN KARYAWAN BARU & ANAK MAGANG (`INVITED` → `ACTIVE` & `INTERN`) *(4 Menit · Jendela 5)*
+### BABAK 1 — ALUR UTUH KARYAWAN BARU (HRGA TERBITKAN UNDANGAN → AKTIVASI 72 JAM) & ANAK MAGANG (`INTERN`) *(5 Menit · Jendela 5)*
 
-> **Tujuan Babak Ini:** Menunjukkan keamanan undangan sekali pakai 72 jam serta pembedaan tegas antara Karyawan Tetap dan Anak Magang (`Intern`).
+> **Tujuan Babak Ini:** Menunjukkan alur utuh dari nol: mulai dari HRGA mendaftarkan karyawan baru dan menerbitkan tautan undangan sekali pakai 72 jam, hingga karyawan baru mengaktifkan akunnya sendiri tanpa berbagi kata sandi lewat pesan singkat, serta pembedaan tegas untuk Anak Magang (`Intern`).
 
-1. **Di Jendela 5 (Tab Incognito / Tamu):**
-   - Buka **`/login`** *(Latihan pagi: ambil **`WP-SS-01`**)*. Tunjukkan pesan validasi jika login akun belum aktif (`calon.karyawan@dutamedia.com` / `Password123!`) → ditolak jelas: *"Akun Anda belum diaktifkan"*.
-   - Buka **`/activate?token=wp_seed_invite_token_72h_demo_secret`** *(Latihan pagi: ambil **`WP-SS-02`** sebelum klik aktivasi)*.
-   - Tunjukkan **Kartu Pratinjau Akun** (*Fajar Ramadhan*) + 3 tanda centang keamanan kata sandi yang menyala hijau saat mengetik `Dutamedia2026!`.
-   - **Kalimat ke Atasan:** *"Karyawan baru tidak pernah diberi kata sandi lewat WhatsApp. Mereka mengaktifkan sendiri akunnya lewat tautan sekali pakai yang otomatis hangus setelah 72 jam."*
-   - *(Opsional saat demo: boleh klik **`Aktivasi Akun`** agar atasan melihat kartu sukses dan token langsung hangus).*
-2. **Masuk sebagai Anak Magang (`intern.frontend@dutamedia.com` — Raka Pratama):**
+1. **Di Jendela 5 — Tab 1 (HRGA — `hrga@dutamedia.com`) pada `/admin/users`:** *(Latihan pagi: ambil **`WP-SS-31`** & **`WP-SS-32`** di sini)*.
+   - Klik tombol hijau **`Undang Pengguna Baru`**.
+   - Isi formulir pendaftaran calon karyawan baru (siap salin):
+     * **Nama Lengkap:** `Budi Santoso`
+     * **Email Perusahaan:** `budi.santoso@dutamedia.com`
+     * **Peran Dasar:** `Karyawan (EMPLOYEE)`
+     * **Divisi:** `Engineering`
+     * **Jabatan:** `Backend Engineer`
+     * **Status Karyawan:** `Karyawan Tetap`
+   - **Kalimat ke Atasan:** *"Saat ada karyawan baru bergabung, HRGA cukup mendaftarkannya di sini tanpa perlu membuatkan atau mengirim kata sandi lewat WhatsApp. Begitu diklik kirim, sistem menerbitkan tautan aktivasi sekali pakai yang berlaku 72 jam."*
+   - Klik **`Kirim Undangan`** → pada kotak hasil yang muncul, klik tombol **`Salin Tautan Aktivasi`** *(tunjukkan bahwa status `Budi Santoso` di tabel sekarang **`Belum Aktif / INVITED`**, dan tersedia tombol `Kirim Ulang` maupun `Cabut` bila diperlukan)*.
+2. **Pindah ke Jendela 5 — Tab 2 (Incognito / Tamu):**
+   - Buka **`/login`** *(Latihan pagi: ambil **`WP-SS-01`**)* → coba masuk dengan `budi.santoso@dutamedia.com` / `Password123!` → tunjukkan pesan penolakan jelas: **`"Akun Anda belum diaktifkan"`**.
+   - **Tempel (*Paste*) tautan aktivasi** yang barusan disalin dari HRGA ke bilah alamat browser → tekan Enter *(Latihan pagi: ambil **`WP-SS-02`** sebelum klik tombol aktivasi)*.
+   - Tunjukkan **Kartu Pratinjau Akun** (*Budi Santoso — Engineering — UNDANGAN AKTIF*) + 3 tanda centang keamanan kata sandi yang menyala hijau saat mengetik `Dutamedia2026!`.
+   - Klik **`Aktivasi Akun`** → muncul kartu **Aktivasi Berhasil!** dan token tersebut langsung hangus (tidak bisa dipakai dua kali).
+   - Klik **`Lanjut ke Halaman Masuk`**, lalu masuk sebagai `budi.santoso@dutamedia.com` / `Dutamedia2026!` untuk membuktikan akun baru langsung aktif dan mendarat di `/daily/morning`, lalu klik **Keluar**.
+3. **Masuk sebagai Anak Magang (`intern.frontend@dutamedia.com` — Raka Pratama) di Tab Incognito:**
    - Buka **`/profile`**: tunjukkan pil ungu **`Intern`** dan baris **Tanggal Selesai Magang**.
    - Buka **`/leave/my`** *(Latihan pagi: ambil **`WP-SS-19`**)*: tunjukkan kotak ungu **`Aturan Izin Karyawan Magang`** yang hanya menyediakan 2 pilihan (**`Izin`** dan **`Sakit`**, tanpa jatah Cuti Tahunan 12 hari).
 
