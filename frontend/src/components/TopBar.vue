@@ -3,7 +3,10 @@ import { computed } from 'vue';
 import { getActivePinia } from 'pinia';
 import { useAuthStore } from '../stores/auth';
 import { getUserInitials } from '../utils/initials';
+import { useUnreadNotifications } from '../composables/useUnreadNotifications';
 import { Bell } from 'lucide-vue-next';
+
+const { globalUnreadCount } = useUnreadNotifications();
 
 interface Props {
   breadcrumb?: string | string[];
@@ -76,11 +79,18 @@ const breadcrumbSegments = computed<string[]>(() => {
       <router-link
         to="/notifications"
         class="topbar-btn notif-btn"
-        title="Notifikasi"
-        aria-label="Notifikasi"
+        :title="globalUnreadCount > 0 ? `Notifikasi (${globalUnreadCount} belum dibaca)` : 'Notifikasi'"
+        :aria-label="globalUnreadCount > 0 ? `Notifikasi (${globalUnreadCount} belum dibaca)` : 'Notifikasi'"
         data-testid="topbar-notifications"
       >
         <Bell :size="17" />
+        <span
+          v-if="globalUnreadCount > 0"
+          class="topbar-notif-badge"
+          data-testid="topbar-notif-unread-badge"
+        >
+          {{ globalUnreadCount > 99 ? '99+' : globalUnreadCount }}
+        </span>
       </router-link>
 
       <!-- Circular User Avatar (IMP-014 — Direct navigate ke /profile) -->
@@ -159,6 +169,7 @@ const breadcrumbSegments = computed<string[]>(() => {
 }
 
 .topbar-btn {
+  position: relative;
   width: 36px;
   height: 36px;
   border-radius: 8px;
@@ -170,6 +181,27 @@ const breadcrumbSegments = computed<string[]>(() => {
   text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.topbar-notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #DC2626;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.35);
+  pointer-events: none;
 }
 
 .topbar-btn:hover {

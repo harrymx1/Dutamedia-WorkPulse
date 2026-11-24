@@ -6,6 +6,7 @@ import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { canAccessRoute } from '../../router/navigation';
 import { formatTimeWib, formatDateTimeWib } from '../../utils/dateTime';
+import { useUnreadNotifications } from '../../composables/useUnreadNotifications';
 import {
   Bell,
   CheckCheck,
@@ -37,6 +38,7 @@ interface NotificationItem {
 const loading = ref(false);
 const notifications = ref<NotificationItem[]>([]);
 const unreadCount = ref(0);
+const { setUnreadCount } = useUnreadNotifications();
 
 // Active Tab: 'LIST' | 'CHANNELS'
 const activeMainTab = ref<'LIST' | 'CHANNELS'>('LIST');
@@ -91,6 +93,7 @@ async function loadNotifications() {
       countRes?.data?.unreadCount ??
       payload?.unreadCount ??
       notifications.value.filter((n) => !n.read).length;
+    setUnreadCount(unreadCount.value);
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat notifikasi.', true);
   } finally {
@@ -106,6 +109,7 @@ async function handleMarkAllAsRead() {
       n.read = true;
     });
     unreadCount.value = 0;
+    setUnreadCount(0);
     showToast('Seluruh notifikasi telah ditandai dibaca.');
   } catch (err: any) {
     showToast(err.message || 'Gagal menandai notifikasi.', true);
@@ -163,6 +167,7 @@ async function handleMarkAsRead(notif: NotificationItem) {
     await apiClient(`/notifications/${notif.id}/read`, { method: 'POST' });
     notif.read = true;
     if (unreadCount.value > 0) unreadCount.value--;
+    setUnreadCount(unreadCount.value);
   } catch (err: any) {
     // silently fail
   }

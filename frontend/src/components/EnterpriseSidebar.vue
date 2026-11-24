@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { navForRole } from '../router/navigation';
 import { useLayout } from '../composables/useLayout';
+import { useUnreadNotifications } from '../composables/useUnreadNotifications';
 import {
   Sunrise,
   PlusCircle,
@@ -39,8 +40,52 @@ const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const { isMobileSidebarOpen, closeSidebar } = useLayout();
+const { globalUnreadCount, refreshUnreadCount, resetUnreadCount } = useUnreadNotifications();
 
 const groups = computed(() => navForRole(auth.user));
+
+let unreadPollTimer: ReturnType<typeof setInterval> | null = null;
+
+function handleVisibilityRefresh() {
+  if (typeof document !== 'undefined' && document.visibilityState === 'visible' && auth.isAuthenticated) {
+    refreshUnreadCount();
+  }
+}
+
+onMounted(() => {
+  if (auth.isAuthenticated) {
+    refreshUnreadCount();
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', handleVisibilityRefresh);
+  }
+  unreadPollTimer = setInterval(() => {
+    if (auth.isAuthenticated) {
+      refreshUnreadCount();
+    }
+  }, 20000);
+});
+
+onUnmounted(() => {
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', handleVisibilityRefresh);
+  }
+  if (unreadPollTimer) {
+    clearInterval(unreadPollTimer);
+    unreadPollTimer = null;
+  }
+});
+
+watch(
+  () => auth.user?.id,
+  (newId) => {
+    if (newId) {
+      refreshUnreadCount();
+    } else {
+      resetUnreadCount();
+    }
+  },
+);
 
 const userDisplayName = computed(() => {
   const raw = auth.user?.fullName;
@@ -72,15 +117,19 @@ const userRoleFormatted = computed(() => {
   }
 });
 
-// Tutup drawer otomatis setiap kali navigasi rute berubah
+// Tutup drawer otomatis & segarkan jumlah notifikasi belum dibaca setiap kali navigasi rute berubah
 watch(
   () => route.fullPath,
   () => {
     closeSidebar();
+    if (auth.isAuthenticated) {
+      refreshUnreadCount();
+    }
   },
 );
 
 async function handleLogout() {
+  resetUnreadCount();
   await auth.logout();
   closeSidebar();
   router.push('/login');
@@ -176,7 +225,15 @@ function isItemActive(to: string): boolean {
           >
             <component :is="getIconComponent(item.iconName)" class="nav-icon" :size="17" />
             <span class="nav-text">{{ item.label }}</span>
-            <span v-if="item.badge" class="nav-badge" :class="item.badgeType || 'neutral'">
+            <span
+              v-if="item.to === '/notifications' && globalUnreadCount > 0"
+              class="nav-badge unread-pill"
+              data-testid="sidebar-notif-unread-badge"
+              :aria-label="`${globalUnreadCount} notifikasi belum dibaca`"
+            >
+              {{ globalUnreadCount > 99 ? '99+' : globalUnreadCount }}
+            </span>
+            <span v-else-if="item.badge" class="nav-badge" :class="item.badgeType || 'neutral'">
               {{ item.badge }}
             </span>
           </router-link>
@@ -404,6 +461,23 @@ function isItemActive(to: string): boolean {
 .nav-badge.red {
   background: #FEE2E2;
   color: #991B1B;
+}
+
+.nav-badge.unread-pill {
+  background: #DC2626;
+  color: #FFFFFF;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.35);
+  flex-shrink: 0;
 }
 
 .nav-badge.neutral {
