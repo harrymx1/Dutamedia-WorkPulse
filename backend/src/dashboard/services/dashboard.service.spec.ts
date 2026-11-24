@@ -191,7 +191,7 @@ describe('DashboardService (WP-EP12 / Executive Pulse Dashboard & Project Risk R
     expect(pulse.attentionItems[0].level).toBe('RED');
     expect(pulse.attentionItems[0].badgeLabel).toBe('Blocker Kritis (P0)');
     expect(pulse.attentionItems[0].projectCode).toBe('WP-CORE');
-    expect(pulse.attentionItems[0].actionUrl).toBe('/blockers');
+    expect(pulse.attentionItems[0].actionUrl).toBe('/blockers?ticketId=blocker-1');
   });
 
   it('correctly intersects division and project filters preventing cross-division leakage (IMP-068)', async () => {

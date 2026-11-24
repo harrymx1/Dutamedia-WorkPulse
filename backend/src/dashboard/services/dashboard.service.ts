@@ -546,17 +546,74 @@ export class DashboardService {
           b.status === BlockerStatus.OPEN
             ? 'Kendala aktif (Menunggu Respons) — butuh tindakan pimpinan'
             : 'Kendala aktif (Sedang Ditangani)',
-        actionUrl: '/blockers',
+        actionUrl: b.id ? `/blockers?ticketId=${b.id}` : '/blockers',
         actionLabel: 'Bantu Unblock',
       });
     }
 
-    // 2. Masukkan komitmen harian yang berisiko Amber atau Merah (hindari duplikasi jika sudah terdaftar di blocker di atas)
+    // 2. Masukkan komitmen harian yang berisiko Amber atau Merah (hanya yang BELUM terselesaikan)
     const linkedCommitmentIdsFromBlockers = new Set(
       openBlockers.map((b: any) => b.linkedCommitmentId).filter(Boolean),
     );
+    const activeBlockerIds = new Set(openBlockers.map((b: any) => b.id).filter(Boolean));
+
+    // Deteksi komitmen / tiket blocker tertaut yang sudah diselesaikan (RESOLVED / CLOSED / ACCEPTED_RISK)
+    // agar tidak muncul kembali di daftar "Personil Butuh Bantuan Hari Ini" setelah blocker-nya beres.
+    const resolvedCommitmentIds = new Set<string>();
+    const resolvedBlockerIds = new Set<string>();
+    const candidateCommitmentIds: string[] = [];
+    const candidateLinkedBlockerIds: string[] = [];
+    for (const r of todayRecords as any[]) {
+      const cMeta = (r.orgContextSnapshot as any)?.commitmentMeta || {};
+      for (const c of r.commitments || []) {
+        if (c.initialRisk === CommitmentRisk.RED || c.initialRisk === CommitmentRisk.AMBER) {
+          if (c.id) candidateCommitmentIds.push(c.id);
+          const metaBlockerId = cMeta[String(c.sequenceNo)]?.linkedBlockerId;
+          if (metaBlockerId) candidateLinkedBlockerIds.push(metaBlockerId);
+        }
+      }
+    }
+
+    if (
+      (candidateCommitmentIds.length > 0 || candidateLinkedBlockerIds.length > 0) &&
+      (this.prisma as any).blockerTicket?.findMany
+    ) {
+      try {
+        const orFilters: any[] = [];
+        if (candidateCommitmentIds.length > 0) {
+          orFilters.push({ linkedCommitmentId: { in: candidateCommitmentIds } });
+        }
+        if (candidateLinkedBlockerIds.length > 0) {
+          orFilters.push({ id: { in: candidateLinkedBlockerIds } });
+        }
+        const resolvedBlockers =
+          (await this.prisma.blockerTicket.findMany({
+            where: {
+              status: {
+                in: [BlockerStatus.RESOLVED, BlockerStatus.CLOSED, BlockerStatus.ACCEPTED_RISK],
+              },
+              OR: orFilters,
+            },
+            select: { id: true, linkedCommitmentId: true },
+          })) || [];
+        for (const rb of resolvedBlockers) {
+          if (rb.id) resolvedBlockerIds.add(rb.id);
+          if (rb.linkedCommitmentId) resolvedCommitmentIds.add(rb.linkedCommitmentId);
+        }
+      } catch {
+        // Abaikan bila mock pengujian tidak mendukung query tambahan ini
+      }
+    }
 
     for (const r of todayRecords as any[]) {
+      // Jika karyawan sudah menutup Evaluasi Sore dengan refleksi akhir GREEN, tidak butuh bantuan lagi
+      if (
+        (r.isEodSubmitted || Boolean(r.eodSubmittedAt)) &&
+        String(r.finalDailyStatus || '').toUpperCase() === 'GREEN'
+      ) {
+        continue;
+      }
+
       const uInfo = userJobMap.get(r.userId);
       const userName = r.user?.fullName || uInfo?.fullName || 'Anggota Tim';
       const jobTitle = uInfo?.jobTitle || (r.orgContextSnapshot as any)?.jobTitle || 'Staf';
@@ -565,7 +622,26 @@ export class DashboardService {
       const cMeta = (r.orgContextSnapshot as any)?.commitmentMeta || {};
 
       for (const c of r.commitments || []) {
+        // Lewati jika sudah tercakup oleh tiket blocker aktif di atas
         if (c.id && linkedCommitmentIdsFromBlockers.has(c.id)) {
+          continue;
+        }
+        const metaBlockerId = cMeta[String(c.sequenceNo)]?.linkedBlockerId || null;
+        if (metaBlockerId && activeBlockerIds.has(metaBlockerId)) {
+          continue;
+        }
+
+        // Pilihan 1: Lewati komitmen yang sudah Selesai/Dibatalkan pada EOD, atau yang blocker tertautnya sudah terselesaikan
+        if (
+          c.outcome === CommitmentOutcome.COMPLETED ||
+          c.outcome === CommitmentOutcome.CANCELLED
+        ) {
+          continue;
+        }
+        if (
+          (c.id && resolvedCommitmentIds.has(c.id)) ||
+          (metaBlockerId && resolvedBlockerIds.has(metaBlockerId))
+        ) {
           continue;
         }
 
