@@ -58,13 +58,13 @@ Siapkan **5 jendela browser terpisah** (gunakan fitur *Chrome Profile* berbeda a
      * **Jabatan:** `Backend Engineer`
      * **Status Karyawan:** `Karyawan Tetap`
    - **Kalimat ke Atasan:** *"Saat ada karyawan baru bergabung, HRGA cukup mendaftarkannya di sini tanpa perlu membuatkan atau mengirim kata sandi lewat WhatsApp. Begitu diklik kirim, sistem menerbitkan tautan aktivasi sekali pakai yang berlaku 72 jam."*
-   - Klik **`Kirim Undangan`** → pada kotak hasil yang muncul, klik tombol **`Salin Tautan Aktivasi`** *(tunjukkan bahwa status `Budi Santoso` di tabel sekarang **`Belum Aktif / INVITED`**, dan tersedia tombol `Kirim Ulang` maupun `Cabut` bila diperlukan)*.
+   - Klik **`Terbitkan Undangan (72 Jam)`** → pada kotak hasil yang muncul, klik tombol **`Salin Token Aktivasi`** *(tunjukkan bahwa status `Budi Santoso` di tabel sekarang **`Menunggu Aktivasi`**, dan tersedia tombol `Kirim Ulang` maupun `Cabut` bila token perlu dibatalkan & diterbitkan ulang)*.
 2. **Pindah ke Jendela 5 — Tab 2 (Incognito / Tamu):**
    - Buka **`/login`** *(Latihan pagi: ambil **`WP-SS-01`**)* → coba masuk dengan `budi.santoso@dutamedia.com` / `Password123!` → tunjukkan pesan penolakan jelas: **`"Akun Anda belum diaktifkan"`**.
-   - **Tempel (*Paste*) tautan aktivasi** yang barusan disalin dari HRGA ke bilah alamat browser → tekan Enter *(Latihan pagi: ambil **`WP-SS-02`** sebelum klik tombol aktivasi)*.
-   - Tunjukkan **Kartu Pratinjau Akun** (*Budi Santoso — Engineering — UNDANGAN AKTIF*) + 3 tanda centang keamanan kata sandi yang menyala hijau saat mengetik `Dutamedia2026!`.
+   - Klik tab **`Aktivasi Akun`** (`/activate`), lalu **tempel (*Paste*) kode token** yang barusan disalin dari HRGA ke kotak **`Token Aktivasi`** *(Latihan pagi: ambil **`WP-SS-02`** sebelum klik tombol aktivasi)*.
+   - Tunjukkan **Kartu Pratinjau Akun** (*Budi Santoso — Engineering — UNDANGAN AKTIF*) + 3 tanda centang keamanan kata sandi yang menyala hijau saat mengetik **`Password123!`**.
    - Klik **`Aktivasi Akun`** → muncul kartu **Aktivasi Berhasil!** dan token tersebut langsung hangus (tidak bisa dipakai dua kali).
-   - Klik **`Lanjut ke Halaman Masuk`**, lalu masuk sebagai `budi.santoso@dutamedia.com` / `Dutamedia2026!` untuk membuktikan akun baru langsung aktif dan mendarat di `/daily/morning`, lalu klik **Keluar**.
+   - Klik **`Lanjut ke Halaman Masuk`**, lalu masuk sebagai `budi.santoso@dutamedia.com` / **`Password123!`** untuk membuktikan akun baru langsung aktif dan mendarat di `/daily/morning`, lalu klik **Keluar**.
 3. **Masuk sebagai Anak Magang (`intern.frontend@dutamedia.com` — Raka Pratama) di Tab Incognito:**
    - Buka **`/profile`**: tunjukkan pil ungu **`Intern`** dan baris **Tanggal Selesai Magang**.
    - Buka **`/leave/my`** *(Latihan pagi: ambil **`WP-SS-19`**)*: tunjukkan kotak ungu **`Aturan Izin Karyawan Magang`** yang hanya menyediakan 2 pilihan (**`Izin`** dan **`Sakit`**, tanpa jatah Cuti Tahunan 12 hari).

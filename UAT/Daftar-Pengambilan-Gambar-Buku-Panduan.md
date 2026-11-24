@@ -41,7 +41,7 @@ flowchart TD
 | Kode | Nama Berkas (`.png`) | Alamat Halaman | Buku Panduan | Petunjuk Pengambilan Gambar | Aturan Tombol | Selesai |
 |---|---|---|---|---|---|:---:|
 | **`WP-SS-01`** | `WP-SS-01-auth-login.png` | `/login` | Versi 1 (Bab 1.4) | Isi email `dev.frontend@dutamedia.com` & sandi bertitik hitam, centang `Ingat email di perangkat ini`. | **`[JANGAN KLIK MASUK]`** | [ ] |
-| **`WP-SS-02`** | `WP-SS-02-auth-activate.png` | `/activate?token=wp_seed_invite_token_72h_demo_secret` | Versi 1 (Bab 1.3) | Tampilkan Kartu Pratinjau Akun + isi sandi baru `Dutamedia2026!` sampai 3 syarat centang hijau menyala. | **`[JANGAN KLIK AKTIFKAN]`** | [ ] |
+| **`WP-SS-02`** | `WP-SS-02-auth-activate.png` | `/activate` | Versi 1 (Bab 1.3) | Tempel token aktivasi di kotak `Token Aktivasi` hingga Kartu Pratinjau Akun muncul + isi sandi baru **`Password123!`** sampai 3 syarat centang hijau menyala. | **`[JANGAN KLIK AKTIFKAN]`** | [ ] |
 
 ---
 
