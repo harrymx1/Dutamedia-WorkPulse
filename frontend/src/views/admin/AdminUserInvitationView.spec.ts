@@ -233,8 +233,9 @@ describe('AdminUsersView & AdminUserInvitationView (Audit #25 - Kelola Pengguna 
     await wrapper.find('.modal-box-sm form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('/activate?token=new-token-72h-abc');
-    expect(wrapper.text()).toContain('Salin Tautan Aktivasi');
+    expect(wrapper.text()).toContain('new-token-72h-abc');
+    expect(wrapper.text()).not.toContain('/activate?token=');
+    expect(wrapper.text()).toContain('Salin Token Aktivasi');
     confirmSpy.mockRestore();
   });
 

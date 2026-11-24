@@ -32,8 +32,6 @@ const props = withDefaults(defineProps<{ mode?: 'users' | 'invitations' }>(), {
   mode: 'users',
 });
 
-const originUrl = typeof window !== 'undefined' ? window.location.origin : '';
-
 interface AdminUserRow {
   id: string;
   fullName: string;
@@ -648,9 +646,9 @@ async function copyToClipboard(text: string) {
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
     }
-    showToast('Tautan aktivasi berhasil disalin.');
+    showToast('Token aktivasi berhasil disalin.');
   } catch {
-    showToast('Tautan siap disalin secara manual dari kotak di atas.');
+    showToast('Token siap disalin secara manual dari kotak di atas.');
   }
 }
 </script>
@@ -1044,24 +1042,24 @@ async function copyToClipboard(text: string) {
             <span v-if="createdTargetEmail" class="mono-num">({{ createdTargetEmail }})</span>
           </p>
           <p class="token-validity">
-            Tautan aktivasi sekali pakai ini berlaku 72 jam
+            Token aktivasi sekali pakai ini berlaku 72 jam
             <template v-if="createdExpiresAt">
               hingga <span class="wp-datetime">{{ formatDateTimeWib(createdExpiresAt) }}</span>
             </template>.
           </p>
 
           <div class="token-display mono-num">
-            {{ `${originUrl}/activate?token=${createdToken}` }}
+            {{ createdToken }}
           </div>
 
           <div class="modal-footer modal-footer-center">
             <button
               type="button"
               class="btn btn-secondary"
-              @click="copyToClipboard(`${originUrl}/activate?token=${createdToken}`)"
+              @click="copyToClipboard(createdToken)"
             >
               <Copy :size="16" />
-              <span>Salin Tautan Aktivasi</span>
+              <span>Salin Token Aktivasi</span>
             </button>
             <button type="button" class="btn btn-primary" @click="closeModal">Selesai</button>
           </div>

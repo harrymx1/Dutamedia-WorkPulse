@@ -26,29 +26,8 @@ const openedWithQueryToken = ref(false);
 let lastPreviewedToken = '';
 let previewTimer: any = null;
 
-function extractActivationToken(rawInput: string): string {
-  const trimmed = (rawInput || '').trim();
-  if (!trimmed) return '';
-  // Jika pengguna menempelkan URL lengkap atau path dengan query ?token=...
-  if (trimmed.includes('token=')) {
-    try {
-      const parsed = new URL(trimmed.startsWith('http') ? trimmed : `https://dummy.local/${trimmed.replace(/^\/+/, '')}`);
-      const qToken = parsed.searchParams.get('token');
-      if (qToken && qToken.trim()) {
-        return qToken.trim();
-      }
-    } catch {
-      const match = trimmed.match(/[?&]token=([^&#\s]+)/i);
-      if (match && match[1]) {
-        return decodeURIComponent(match[1]).trim();
-      }
-    }
-  }
-  return trimmed;
-}
-
 async function fetchInvitationPreview(rawToken: string) {
-  const clean = extractActivationToken(rawToken);
+  const clean = (rawToken || '').trim();
   if (!clean) {
     invitationPreview.value = null;
     lastPreviewedToken = '';
@@ -57,11 +36,11 @@ async function fetchInvitationPreview(rawToken: string) {
   lastPreviewedToken = clean;
   try {
     const data = await authStore.previewInvitation(clean);
-    if (extractActivationToken(token.value) === clean) {
+    if (token.value.trim() === clean) {
       invitationPreview.value = data;
     }
   } catch {
-    if (extractActivationToken(token.value) === clean) {
+    if (token.value.trim() === clean) {
       invitationPreview.value = null;
     }
   }
@@ -69,10 +48,9 @@ async function fetchInvitationPreview(rawToken: string) {
 
 onMounted(() => {
   if (route.query.token && typeof route.query.token === 'string') {
-    const extracted = extractActivationToken(route.query.token);
-    token.value = extracted;
+    token.value = route.query.token;
     openedWithQueryToken.value = true;
-    fetchInvitationPreview(extracted);
+    fetchInvitationPreview(route.query.token);
   }
 });
 
@@ -82,25 +60,20 @@ onUnmounted(() => {
 
 watch(token, (newToken) => {
   if (previewTimer) clearTimeout(previewTimer);
-  const extracted = extractActivationToken(newToken);
-  if (extracted && extracted !== (newToken || '').trim()) {
-    // Otomatis bersihkan kotak input menjadi kode token murni jika pengguna menempelkan tautan lengkap
-    token.value = extracted;
-    return;
-  }
-  if (!extracted) {
+  const clean = (newToken || '').trim();
+  if (!clean) {
     invitationPreview.value = null;
     openedWithQueryToken.value = false;
     lastPreviewedToken = '';
     return;
   }
-  if (extracted === lastPreviewedToken) return;
-  if (extracted.length < 10) {
+  if (clean === lastPreviewedToken) return;
+  if (clean.length < 10) {
     invitationPreview.value = null;
     return;
   }
   previewTimer = setTimeout(() => {
-    fetchInvitationPreview(extracted);
+    fetchInvitationPreview(clean);
   }, 300);
 });
 
@@ -204,14 +177,10 @@ function validate(): boolean {
 }
 
 async function handleActivate() {
-  const cleanToken = extractActivationToken(token.value);
-  if (cleanToken && cleanToken !== token.value.trim()) {
-    token.value = cleanToken;
-  }
   if (!validate()) return;
 
   try {
-    const msg = await authStore.activate(cleanToken, password.value);
+    const msg = await authStore.activate(token.value.trim(), password.value);
     successMessage.value = msg || 'Akun Anda berhasil diaktifkan!';
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal mengaktifkan akun. Periksa token Anda.';
