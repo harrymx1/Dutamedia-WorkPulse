@@ -24,7 +24,7 @@ Setelah reset bersih + `prisma db seed` dijalankan hari ini, seluruh data beriku
 | **2 Peristiwa Kepatuhan HRGA** | `Siti Rahma` (`PATTERN_FLAG_3X` — **`OPEN`**) & `Nadia Kusuma` (`NO_SUBMISSION` — **`ADDRESSED`**) | `/compliance` langsung membuktikan tombol **`Tindak Lanjut`** (baris `OPEN`) sekaligus tombol **`Ubah Catatan`** (baris `ADDRESSED`). |
 | **2 Catatan Coaching Awal (2 Mode)** | `Aditya Nugroho` oleh `Arif Budiman` (**`Dibagikan ke Karyawan`** vs **`Rahasia Manajemen`**) | `/coaching` & `/notifications` langsung membuktikan catatan `Dibagikan` masuk ke akun karyawan, sementara `Rahasia Manajemen` 100% tersembunyi! |
 | **1 Dispensasi Resmi Aktif** | `Hari Wibowo` (`DINAS_LUAR`, `ST/HRGA/2026/XI/104`, `H+2 s/d H+3`) | Panel kanan `/exemptions` langsung terisi tabel dispensasi aktif + tombol **`Cabut`**! |
-| **5 Kebijakan Standar (`09:00 / 09:30 WIB`)** | Pemilik Kebijakan: Direktur, Admin, HRGA | **Babak 0** membuktikan formulir pagi benar-benar `LOCKED` lewat `09:30 WIB`, lalu digeser live di depan atasan! |
+| **5 Kebijakan Standar (`09:00 / 09:30 WIB`)** | Pemilik Kebijakan: Direktur, Admin, HRGA | **Babak 2A** membuktikan formulir pagi benar-benar `LOCKED` lewat `09:30 WIB`, lalu digeser live di depan atasan! |
 
 ---
 
@@ -34,36 +34,22 @@ Siapkan 6 jendela browser (pakai profil Chrome berbeda / Edge / Firefox / Incogn
 
 | Jendela | Peran & Akun Login (`Password123!`) | Halaman Awal | Dipakai di Babak |
 |---|---|---|---|
-| **Jendela 1** | **Direktur / CEO** — `direktur@dutamedia.com` *(Hendra Wijaya)* *(nanti di Babak 1 & 8 juga cek `admin@dutamedia.com`)* | `/admin/policies` | Babak 0, 7, 8, 9 |
-| **Jendela 2** | **Karyawan Utama** — Tab 1: `product@dutamedia.com` *(Dio Bayu)*; nanti ganti `dev.frontend@dutamedia.com` *(Aditya)* & `qa@dutamedia.com` *(Nadia)* | `/daily/morning` | Babak 0, 2, 3, 4, 5, 7 |
+| **Jendela 1** | **Direktur / CEO** — `direktur@dutamedia.com` *(Hendra Wijaya)* *(nanti di Babak 1 & 8 juga cek `admin@dutamedia.com`)* | `/admin/policies` | Babak 2, 7, 8, 9 |
+| **Jendela 2** | **Karyawan Utama** — Tab 1: `product@dutamedia.com` *(Dio Bayu)*; nanti ganti `dev.frontend@dutamedia.com` *(Aditya)* & `qa@dutamedia.com` *(Nadia)* | `/daily/morning` | Babak 2, 3, 4, 5, 7 |
 | **Jendela 3** | **Spesialis Kategori (`isCategoryOwner`)** — `network.infra@dutamedia.com` *(Fakhrizal Asshiddiq)* | `/blockers` | Babak 3 |
 | **Jendela 4** | **Kepala Divisi Engineering** — `head.eng@dutamedia.com` *(Arif Budiman)* *(juga cek `lead.tech@dutamedia.com` di Babak 7)* | `/dashboard` | Babak 3, 4, 5, 6, 7 |
 | **Jendela 5** | **HRGA** — `hrga@dutamedia.com` *(Dewi Lestari)* | `/admin/users` | Babak 1, 6, 8 |
-| **Jendela 6 (Incognito)** | **Tamu / Karyawan Baru / Anak Magang / Cuti / Reviewer Sementara** | `/login` | Babak 1 (`Budi`, `Raka`), Babak 2C (`Achmad Noer`), Babak 8C (`Rian Kurniawan`) |
+| **Jendela 6 (Incognito)** | **Tamu / Karyawan Baru / Anak Magang / Cuti / Reviewer Sementara** | `/login` | Babak 1 (`Budi`), Babak 2 (`Nadia`, `Achmad Noer`), Babak 5 (`Raka`), Babak 8 (`Rian Kurniawan`) |
 
 ---
 
-## 3. ALUR 10 BABAK DEMO LIVE — 100% SEMUA FLOW & KONDISI (SIAP SALIN)
+## 3. ALUR 9 BABAK DEMO LIVE — 100% SEMUA FLOW & KONDISI (SIAP SALIN)
 
 ---
 
-### BABAK 0 — PEMBUKTIAN KUNCI OTOMATIS (`LOCKED`) & PENYESUAIAN JAM KERJA TRANSPARAN *(3 Menit · Jendela 2 → Jendela 1 → Jendela 2)*
+### BABAK 1 — PEMBUKAAN: UNDANGAN 72 JAM, CABUT & KIRIM ULANG, TOKEN MURNI, AKTIVASI, LOGIN, PROFIL, 403/404, & PEMISAHAN TUGAS ADMIN *(6 Menit · Jendela 5 → Jendela 6)*
 
-1. **Buka Jendela 2 (`product@dutamedia.com`) di `/daily/morning`:**
-   - **Tunjukkan ke atasan:** Karena jam sekarang sudah melewati **`09:30 WIB`**, formulir Komitmen Pagi **benar-benar terkunci otomatis (`LOCKED`)** dengan spanduk merah — membuktikan karyawan tidak bisa curang mengisi mundur.
-   - **Tunjukkan Opsi A (`Komitmen Pagi Terlewat`):** Klik tab **`Additional Work`** (`/daily/additional-work`) — tunjukkan bahwa meskipun pagi terkunci, karyawan yang lupa isi pagi **tetap bisa mencatat pekerjaannya hari ini** karena sistem otomatis menyediakan alasan **`Komitmen Pagi Terlewat`** (sementara status pagi tetap jujur tercatat belum lapor).
-2. **Pindah ke Jendela 1 (`direktur@dutamedia.com`) di `/admin/policies`** *(Ambil **`WP-SS-35`**)*:
-   - **Kalimat ke Atasan:** *"Karena demo kita hari ini berlangsung di atas jam 09:30 WIB, saya tunjukkan bahwa Direktur/Pemilik Kebijakan dapat mengubah jam batas langsung dari sistem tanpa menyentuh kode program, dan setiap perubahan langsung tercatat di Jejak Audit."*
-   - Klik **`+ Buat Versi Kebijakan Baru`** → ubah **`Batas Tepat Waktu Pagi *`** ke **`15:00`** (latihan pagi: `12:00`) dan **`Batas Kunci Pengisian Pagi (Cut-Off) *`** ke **`16:00`** (latihan pagi: `12:30`), isi alasan (siap salin):
-     ```text
-     Penyesuaian sementara jam batas pagi untuk keperluan demonstrasi live sistem WorkPulse di hadapan manajemen
-     ```
-   - Klik simpan → tunjukkan perubahan langsung tercatat di **`Jejak Audit Perubahan Kebijakan`**.
-3. **Refresh Jendela 2 (`product@dutamedia.com`):** Formulir Komitmen Pagi **seketika terbuka (`ON-TIME`)**!
-
----
-
-### BABAK 1 — SIKLUS LENGKAP AKUN: UNDANGAN 72 JAM, CABUT & KIRIM ULANG, TOKEN MURNI, LOGIN, PROFIL, 403/404, & PEMISAHAN TUGAS ADMIN *(6 Menit · Jendela 5 → Jendela 6 → Jendela 1)*
+> **Mulai dari pintu depan sistem:** Tunjukkan bagaimana karyawan baru bergabung, mengaktifkan akun dengan aman, hingga berhasil masuk ke layar kerja.
 
 1. **Jendela 5 (HRGA — `/admin/users` & `/admin/invitations`)** *(Ambil **`WP-SS-31`** & **`WP-SS-32`**)*:
    - Klik **`Undang Pengguna Baru`** → isi data calon karyawan baru (siap salin):
@@ -76,35 +62,46 @@ Siapkan 6 jendela browser (pakai profil Chrome berbeda / Edge / Firefox / Incogn
    - Ketik sandi baru **`Password123!`** & konfirmasi **`Password123!`** (tunjukkan 3 syarat centang hijau menyala) → klik **`Aktivasi Akun`** → kartu **Aktivasi Berhasil!** → klik **`Lanjut ke Halaman Masuk`** → masuk `budi.santoso@dutamedia.com` / **`Password123!`** → mendarat otomatis di `/daily/morning`!
    - **Uji Layar `403` & `404`:** Ketik manual `/admin/policies` di address bar → dicegat ke **`403 — Akses Dibatasi`** *(Ambil **`WP-SS-18`**)* → ketik `/halaman-asal` → muncul **`404 — Halaman Tidak Ditemukan`**.
    - **Uji Profil & Ganti Kata Sandi (`/profile`)** *(Ambil **`WP-SS-17`**)*: Tunjukkan Panel 1 (identitas & atasan), Panel 2 (ganti sandi mandiri + centang *Akhiri seluruh sesi di perangkat lain*), dan Panel 3 (notifikasi perangkat) → klik **Keluar**.
-3. **Pemisahan Tugas Admin (`admin@dutamedia.com`)**: Jelaskan (atau login sekilas di Jendela 6) bahwa akun `SYSTEM_ADMIN` tidak punya menu `Workspace` dan bila mengetik `/daily/morning` langsung diblokir **`403`** agar data kinerja murni berisi personel kerja.
+3. **Pemisahan Tugas Admin (`admin@dutamedia.com`):** Jelaskan (atau login sekilas di Jendela 6) bahwa akun `SYSTEM_ADMIN` tidak punya menu `Workspace` dan bila mengetik `/daily/morning` langsung diblokir **`403`** agar data kinerja murni berisi personel kerja.
 
 ---
 
-### BABAK 2 — SIKLUS LENGKAP HARIAN: SEMUA KONDISI PAGI, `0 KOMITMEN`, CUTI RESMI, TUGAS TAMBAHAN, EOD, & RIWAYAT *(8 Menit · Jendela 2 & Jendela 6)*
+### BABAK 2 — KUNCI OTOMATIS PAGI (`LOCKED`), GESER JAM KERJA TRANSPARAN, & SIKLUS LENGKAP HARIAN (`PAGI`, `0 KOMITMEN`, `CUTI RESMI`, `TUGAS TAMBAHAN`, `EOD`, & `RIWAYAT`) *(10 Menit · Jendela 2 ↔ Jendela 1 ↔ Jendela 6)*
 
-1. **2A — Komitmen Pagi Lengkap dengan `Carry-Over`, `Simpan Draf`, Validasi, & Picker Blocker (`product@dutamedia.com` di `/daily/morning`)** *(Ambil **`WP-SS-03`** & **`WP-SS-04`**)*:
+1. **2A — Transisi Alami dari Login: Pembuktian Kunci Otomatis (`LOCKED`), Opsi A (`Komitmen Pagi Terlewat`), & Geser Jam Batas Pagi (`Jendela 2 → Jendela 1 → Jendela 2`):**
+   - Buka **Jendela 2 (`product@dutamedia.com`) di `/daily/morning`**: tunjukkan bahwa karena jam demo sudah melewati **`09:30 WIB`**, formulir Komitmen Pagi **otomatis terkunci (`LOCKED`)** dengan spanduk merah agar karyawan tidak bisa mengisi mundur.
+   - Klik tab **`Additional Work`** (`/daily/additional-work`) — tunjukkan **Opsi A (`Komitmen Pagi Terlewat`)**: meskipun pagi terkunci, karyawan yang lupa isi pagi tetap bisa mencatat pekerjaan siang/sore secara jujur (sementara status pagi tetap tercatat belum lapor).
+   - **Pindah ke Jendela 1 (`direktur@dutamedia.com`) di `/admin/policies`** *(Ambil **`WP-SS-35`**)*:
+     * **Kalimat ke Atasan:** *"Supaya kita bisa langsung mempraktikkan pengisian Komitmen Pagi hari ini di hadapan Bapak/Ibu, saya tunjukkan bahwa Direktur/Pemilik Kebijakan dapat menggeser jam batas pagi sementara langsung dari sistem tanpa ubah kode, dan tercatat otomatis di Jejak Audit."*
+     * Klik **`+ Buat Versi Kebijakan Baru`** → ubah **`Batas Tepat Waktu Pagi *`** ke **`15:00`** (latihan pagi: `12:00`) dan **`Batas Kunci Pengisian Pagi (Cut-Off) *`** ke **`16:00`** (latihan pagi: `12:30`), isi alasan (siap salin):
+       ```text
+       Penyesuaian sementara jam batas pagi untuk keperluan demonstrasi live sistem WorkPulse di hadapan manajemen
+       ```
+     * Klik simpan → tunjukkan perubahan langsung tercatat di **`Jejak Audit Perubahan Kebijakan`**.
+   - **Refresh Jendela 2 (`product@dutamedia.com`):** Formulir Komitmen Pagi **seketika terbuka (`ON-TIME`)**!
+2. **2B — Komitmen Pagi Lengkap dengan `Carry-Over`, `Simpan Draf`, Validasi, & Picker Blocker (`product@dutamedia.com` di `/daily/morning`)** *(Ambil **`WP-SS-03`** & **`WP-SS-04`**)*:
    - Tunjukkan kotak **`Prioritas Kemarin Sore`** & contoh kalimat panduan otomatis khusus divisi Delivery.
    - Klik **`Lihat Draf`** pada **`Draf Tugas Berlanjut dari Kemarin (2 Tersedia)`** → tunjukkan **`Carry-Over #2`** yang otomatis disarankan **`AMBER`** + terisi catatan potensi kendala dari kemarin! Centang keduanya → klik **`Gunakan Item Terpilih ke Slot Hari Ini`**.
    - Tambah **Slot #3** (tunjukkan batas maks. 3 slot): tulis `Review usulan desain fitur ekspor laporan`, pilih **`RED`** → tunjukkan wajib isi **`Potensi Kendala / Hambatan`** & beda tombol **`Pilih Blocker Aktif`** (tugas untuk membereskan tiket) vs **`Tiket Blocker Penyebab`** (tugas terhambat tiket). Kosongkan lagi Slot #3 atau isi lengkap.
    - Klik **`Simpan Draf`** → muat ulang (`F5`) untuk membuktikan ketikan aman tersimpan di browser!
    - Klik **`Kirim Morning Commitment`** → layar terkunci rapi (**`ON-TIME`**) + tombol **`Ajukan Koreksi Komitmen Pagi`** *(Ambil **`WP-SS-06`**)*.
-2. **2B — Kirim `0 Komitmen Hari Ini` Sampai Tuntas (`qa@dutamedia.com` di Jendela 6 → `/daily/morning`)** *(Ambil **`WP-SS-05`**)*:
+3. **2C — Kirim `0 Komitmen Hari Ini` Sampai Tuntas (`qa@dutamedia.com` di Jendela 6 → `/daily/morning`)** *(Ambil **`WP-SS-05`**)*:
    - Centang **`Hari ini tidak ada komitmen harian khusus (0 Komitmen)`** → isi alasan resmi (siap salin):
      ```text
      Mengikuti pelatihan sertifikasi pengujian otomatis dan audit mutu internal seharian penuh bersama tim HRGA
      ```
    - Klik **`Kirim Morning Commitment`** → tampil kartu hijau **`Status 0 Komitmen (Bebas Komitmen Kerja Hari Ini)`**! Keluar dari `qa`.
-3. **2C — Pembuktian Karyawan Sedang Cuti Resmi Disetujui (`specialist.it@dutamedia.com` — Achmad Noer di Jendela 6)**:
+4. **2D — Pembuktian Karyawan Sedang Cuti Resmi Disetujui (`specialist.it@dutamedia.com` — Achmad Noer di Jendela 6):**
    - Masuk sebagai `specialist.it@dutamedia.com` → langsung tampil **Spanduk Hijau `Masa Cuti Resmi Disetujui`** di `/daily/morning` (bebas Komitmen Pagi, Tugas Tambahan, & EOD!). Keluar.
-4. **2D — Pekerjaan Tambahan Siang Hari: Tambah, `Edit`, & `Hapus` (`product@dutamedia.com` di Jendela 2 → `/daily/additional-work`)** *(Ambil **`WP-SS-07`**)*:
+5. **2E — Pekerjaan Tambahan Siang Hari: Tambah, `Edit`, & `Hapus` (`product@dutamedia.com` di Jendela 2 → `/daily/additional-work`)** *(Ambil **`WP-SS-07`**)*:
    - Tambah Tugas Tambahan #1 (siap salin): `Investigasi timeout modul pembayaran staging bersama tim backend`, alasan **`Penugasan Baru dari Atasan`**, pilih atasan *(tunjukkan nama anak magang `Raka/Nisa` tidak muncul!)* → klik **`Tambahkan Pekerjaan`**.
    - Tambah Tugas Tambahan #2 singkat: `Bantu verifikasi data uji sementara`, lalu demonstrasikan klik **`Edit`** (simpan perubahan) dan klik **`Hapus`** (tunjukkan wajib mengisi alasan penghapusan min. 5 huruf: `Sudah digabungkan ke tugas utama #1` + atasan penugas otomatis menerima notifikasi).
-5. **2E — Evaluasi Sore (`/daily/eod`), Hak Pilih `GREEN` (`DEC-003`), & Penguncian Pasca-EOD (`product@dutamedia.com`)** *(Ambil **`WP-SS-08`** & **`WP-SS-09`**)*:
+6. **2F — Evaluasi Sore (`/daily/eod`), Hak Pilih `GREEN` (`DEC-003`), & Penguncian Pasca-EOD (`product@dutamedia.com`)** *(Ambil **`WP-SS-08`** & **`WP-SS-09`**)*:
    - Evaluasi semua tugas: Slot #1 **`Selesai Penuh`**, Slot #2 **`Selesai Sebagian`** → **`Lanjutkan Besok`** (`Menunggu konfirmasi akhir tim Finance besok pagi`), Tugas Tambahan **`Dibatalkan`** → isi alasan (`Sudah ditangani tim infrastruktur langsung`).
    - Tunjukkan pilihan **`Status Akhir Hari: GREEN`** tetap bisa diklik (`DEC-003`: sistem tidak memaksa status Merah/Kuning).
    - Isi **`Prioritas Utama Besok`**: `Finalisasi uji terima klien PRJ-PORTAL sebelum pukul 14:00 WIB`.
    - Klik **`Kirim Evaluasi EOD`** → kembali sebentar ke tab **`Additional Work`** untuk membuktikan formulir kini otomatis **`Terkunci Pasca-EOD`** (sedangkan tautan **`Lapor Blocker`** tetap buka 24 jam!).
-6. **2F — Riwayat Saya (`/daily/history`)** *(Ambil **`WP-SS-10`**)*:
+7. **2G — Riwayat Saya (`/daily/history`)** *(Ambil **`WP-SS-10`**)*:
    - Tunjukkan 4 kartu KPI, klik 1 baris tanggal agar rinciannya terbuka (*expand*), lalu klik **`Unduh CSV`**.
 
 ---
