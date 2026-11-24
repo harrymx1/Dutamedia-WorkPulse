@@ -338,11 +338,11 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
 
     const label = reasonGroup.find('label.form-label');
     expect(label.exists()).toBe(true);
-    expect(label.text()).toBe('Catatan Kelanjutan *');
+    expect(label.text()).toBe('Catatan Kelanjutan (Opsional)');
 
     const textarea = reasonGroup.find('textarea.input-control');
     expect(textarea.exists()).toBe(true);
-    expect(textarea.attributes('placeholder')).toBe('Jelaskan progres sisa dan rencana penuntasan besok...');
+    expect(textarea.attributes('placeholder')).toBe('Opsional: catatan progres sisa atau rencana penuntasan untuk pengingat besok pagi...');
     expect((textarea.element as HTMLTextAreaElement).value).toBe('Rencana tindak lanjut besok pagi');
   });
 
@@ -400,8 +400,8 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     // w-1 checks (PARTIALLY_COMPLETED with CONTINUE)
     expect(evalList.text()).toContain('Perbaikan bug login');
     expect(evalList.text()).toContain('Lanjutkan Besok (Tugas Berlanjut)');
-    expect(evalList.text()).toContain('Catatan Kelanjutan *');
-    const contTextarea = evalList.find('textarea[placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."]');
+    expect(evalList.text()).toContain('Catatan Kelanjutan (Opsional)');
+    const contTextarea = evalList.find('textarea[placeholder="Opsional: catatan progres sisa atau rencana penuntasan untuk pengingat besok pagi..."]');
     expect(contTextarea.exists()).toBe(true);
     expect((contTextarea.element as HTMLTextAreaElement).value).toBe('Lanjut selesaikan hotfix besok');
 

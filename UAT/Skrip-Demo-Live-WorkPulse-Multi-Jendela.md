@@ -101,7 +101,10 @@ Siapkan 6 jendela browser (pakai profil Chrome berbeda / Edge / Firefox / Incogn
    - Tambah Tugas Tambahan #1 (siap salin): `Investigasi timeout modul pembayaran staging bersama tim backend`, alasan **`Penugasan Baru dari Atasan`**, pilih atasan *(tunjukkan nama anak magang `Raka/Nisa` tidak muncul!)* → klik **`Tambahkan Pekerjaan`**.
    - Tambah Tugas Tambahan #2 singkat: `Bantu verifikasi data uji sementara`, lalu demonstrasikan klik **`Edit`** (simpan perubahan) dan klik **`Hapus`** (tunjukkan wajib mengisi alasan penghapusan min. 5 huruf: `Sudah digabungkan ke tugas utama #1` + atasan penugas otomatis menerima notifikasi).
 6. **2F — Evaluasi Sore (`/daily/eod`), Hak Pilih `GREEN` (`DEC-003`), & Penguncian Pasca-EOD (`product@dutamedia.com`)** *(Ambil **`WP-SS-08`** & **`WP-SS-09`**)*:
-   - Evaluasi semua tugas: Slot #1 **`Selesai Penuh`**, Slot #2 **`Selesai Sebagian`** → **`Lanjutkan Besok`** (`Menunggu konfirmasi akhir tim Finance besok pagi`), Tugas Tambahan **`Dibatalkan`** → isi alasan (`Sudah ditangani tim infrastruktur langsung`).
+   - Evaluasi semua tugas:
+     * Slot #1 **`Selesai`**: tuntas 100%.
+     * Slot #2 **`Sebagian`** → pilih **`Lanjutkan Besok (Tugas Berlanjut)`** (tunjukkan bahwa **Catatan Kelanjutan bersifat opsional**, misal isi: `Menunggu konfirmasi akhir tim Finance besok pagi`), dan tunjukkan bila memilih **`Tidak Dilanjutkan`** maka **wajib mengisi `Alasan Tidak Dilanjutkan *`** agar atasan tahu mengapa tugas yang belum selesai dihentikan.
+     * Tugas Tambahan **`Dibatalkan`** → wajib isi **`Alasan Pembatalan *`** (`Sudah ditangani tim infrastruktur langsung`).
    - Tunjukkan pilihan **`Status Akhir Hari: GREEN`** tetap bisa diklik (`DEC-003`: sistem tidak memaksa status Merah/Kuning).
    - Isi **`Prioritas Utama Besok`**: `Finalisasi uji terima klien PRJ-PORTAL sebelum pukul 14:00 WIB`.
    - Klik **`Kirim Evaluasi EOD`** → kembali sebentar ke tab **`Additional Work`** untuk membuktikan formulir kini otomatis **`Terkunci Pasca-EOD`** (sedangkan tautan **`Lapor Blocker`** tetap buka 24 jam!).

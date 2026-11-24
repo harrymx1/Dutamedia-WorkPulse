@@ -308,9 +308,11 @@ Di bagian atas formulir, perhatikan dua alat bantu praktis:
 #### Langkah Mengisi Evaluasi Sore:
 1. Klik tab langkah ke-3 **`EOD Outcome`** pada bilah atas `My Today` (atau buka `/daily/eod`).
 2. Untuk **setiap tugas** (Komitmen Pagi + Tugas Tambahan), pilih salah satu status hasil:
-   - **`Selesai Penuh`:** Tugas tuntas 100%.
-   - **`Selesai Sebagian`** atau **`Belum Selesai`:** Wajib memilih keputusan kelanjutan (**`Lanjutkan Besok`** atau **`Tidak Dilanjutkan`**) dan mengisi **`Catatan Progres / Alasan`** (catatan ini otomatis muncul besok pagi jika Anda memilih *Lanjutkan Besok*).
-   - **`Dibatalkan`:** Wajib mengisi **`Alasan Pembatalan`**.
+   - **`Selesai`:** Tugas tuntas 100%.
+   - **`Sebagian`** atau **`Belum Selesai`:** Wajib memilih keputusan kelanjutan:
+     * **`Lanjutkan Besok (Tugas Berlanjut)`:** Kolom **`Catatan Kelanjutan (Opsional)`** boleh diisi sebagai pengingat untuk besok pagi atau dikosongkan.
+     * **`Tidak Dilanjutkan`:** **Wajib** mengisi kolom **`Alasan Tidak Dilanjutkan *`** untuk menjelaskan mengapa tugas yang belum selesai diputuskan tidak dilanjutkan.
+   - **`Dibatalkan`:** **Wajib** mengisi **`Alasan Pembatalan Tugas *`**.
 3. Pilih **`Status Akhir Hari`** (`GREEN`, `AMBER`, atau `RED`). Pilihan **`GREEN` selalu terbuka** dan tidak pernah dikunci secara sepihak oleh sistem.
 4. *(Opsional)* Isi kolom **`Prioritas Utama Besok`** — catatan ini akan muncul sebagai pengingat di bagian atas layar Komitmen Pagi besok.
 5. Klik tombol hijau **`Kirim Evaluasi EOD`**.

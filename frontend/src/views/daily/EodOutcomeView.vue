@@ -441,10 +441,10 @@ async function submitEod(bypassMismatchConfirm = false) {
     }
     if (
       needsContinuation(item.outcome) &&
-      item.continuation === 'CONTINUE' &&
+      item.continuation === 'DO_NOT_CONTINUE' &&
       item.continuationReason.trim().length === 0
     ) {
-      errorMessage.value = `${item.label}: Alasan kelanjutan (Continuation) wajib diisi bila tugas dilanjutkan.`;
+      errorMessage.value = `${item.label}: Alasan tidak dilanjutkan wajib diisi bila tugas dipilih Tidak Dilanjutkan.`;
       return;
     }
   }
@@ -471,7 +471,7 @@ async function submitEod(bypassMismatchConfirm = false) {
         outcomeReason: c.outcome === 'CANCELLED' && c.outcomeReason.trim() ? c.outcomeReason.trim() : undefined,
         continuation: needsContinuation(c.outcome) ? c.continuation : undefined,
         continuationReason:
-          needsContinuation(c.outcome) && c.continuation === 'CONTINUE'
+          needsContinuation(c.outcome) && c.continuationReason.trim()
             ? c.continuationReason.trim()
             : undefined,
       })),
@@ -481,7 +481,7 @@ async function submitEod(bypassMismatchConfirm = false) {
         outcomeReason: w.outcome === 'CANCELLED' && w.outcomeReason.trim() ? w.outcomeReason.trim() : undefined,
         continuation: needsContinuation(w.outcome) ? w.continuation : undefined,
         continuationReason:
-          needsContinuation(w.outcome) && w.continuation === 'CONTINUE'
+          needsContinuation(w.outcome) && w.continuationReason.trim()
             ? w.continuationReason.trim()
             : undefined,
       })),
@@ -817,15 +817,21 @@ onMounted(() => {
                   </label>
                 </div>
 
-                <div v-if="c.continuation === 'CONTINUE'" class="mt-2 continuation-reason-group">
-                  <label class="form-label">Catatan Kelanjutan *</label>
+                <div class="mt-2 continuation-reason-group">
+                  <label class="form-label">
+                    {{ c.continuation === 'DO_NOT_CONTINUE' ? 'Alasan Tidak Dilanjutkan *' : 'Catatan Kelanjutan (Opsional)' }}
+                  </label>
                   <textarea
                     v-model="c.continuationReason"
                     class="input-control"
                     rows="2"
-                    placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."
+                    :placeholder="
+                      c.continuation === 'DO_NOT_CONTINUE'
+                        ? 'Jelaskan alasan mengapa tugas yang belum tuntas ini tidak dilanjutkan besok...'
+                        : 'Opsional: catatan progres sisa atau rencana penuntasan untuk pengingat besok pagi...'
+                    "
                     :disabled="isFormLocked"
-                    required
+                    :required="c.continuation === 'DO_NOT_CONTINUE'"
                   ></textarea>
                 </div>
               </div>
@@ -863,8 +869,8 @@ onMounted(() => {
                     <span class="summary-meta-label">Tindak Lanjut:</span>
                     <span class="summary-meta-val">{{ formatContinuationLabel(c.continuation) }}</span>
                   </div>
-                  <div v-if="c.continuation === 'CONTINUE' && c.continuationReason" class="summary-meta-row">
-                    <span class="summary-meta-label">Catatan / Alasan:</span>
+                  <div v-if="c.continuationReason" class="summary-meta-row">
+                    <span class="summary-meta-label">{{ c.continuation === 'DO_NOT_CONTINUE' ? 'Alasan Tidak Dilanjutkan:' : 'Catatan Kelanjutan:' }}</span>
                     <span class="summary-meta-val">{{ c.continuationReason }}</span>
                   </div>
                 </template>
@@ -943,15 +949,21 @@ onMounted(() => {
                   </label>
                 </div>
 
-                <div v-if="w.continuation === 'CONTINUE'" class="mt-2 continuation-reason-group">
-                  <label class="form-label">Catatan Kelanjutan *</label>
+                <div class="mt-2 continuation-reason-group">
+                  <label class="form-label">
+                    {{ w.continuation === 'DO_NOT_CONTINUE' ? 'Alasan Tidak Dilanjutkan *' : 'Catatan Kelanjutan (Opsional)' }}
+                  </label>
                   <textarea
                     v-model="w.continuationReason"
                     class="input-control"
                     rows="2"
-                    placeholder="Jelaskan progres sisa dan rencana penuntasan besok..."
+                    :placeholder="
+                      w.continuation === 'DO_NOT_CONTINUE'
+                        ? 'Jelaskan alasan mengapa pekerjaan tambahan yang belum tuntas ini tidak dilanjutkan besok...'
+                        : 'Opsional: catatan progres sisa atau rencana penuntasan untuk pengingat besok pagi...'
+                    "
                     :disabled="isFormLocked"
-                    required
+                    :required="w.continuation === 'DO_NOT_CONTINUE'"
                   ></textarea>
                 </div>
               </div>
@@ -984,8 +996,8 @@ onMounted(() => {
                     <span class="summary-meta-label">Tindak Lanjut:</span>
                     <span class="summary-meta-val">{{ formatContinuationLabel(w.continuation) }}</span>
                   </div>
-                  <div v-if="w.continuation === 'CONTINUE' && w.continuationReason" class="summary-meta-row">
-                    <span class="summary-meta-label">Catatan / Alasan:</span>
+                  <div v-if="w.continuationReason" class="summary-meta-row">
+                    <span class="summary-meta-label">{{ w.continuation === 'DO_NOT_CONTINUE' ? 'Alasan Tidak Dilanjutkan:' : 'Catatan Kelanjutan:' }}</span>
                     <span class="summary-meta-val">{{ w.continuationReason }}</span>
                   </div>
                 </template>

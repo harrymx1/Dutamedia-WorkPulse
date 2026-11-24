@@ -1293,12 +1293,12 @@ export class DailyService {
 
     if (
       allowsContinuation &&
-      item.continuation === ContinuationStatus.CONTINUE &&
+      item.continuation === ContinuationStatus.DO_NOT_CONTINUE &&
       (!item.continuationReason || !item.continuationReason.trim())
     ) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
-        message: `${itemLabel} yang dilanjutkan (CONTINUE) wajib menyertakan alasan kelanjutan.`,
+        message: `${itemLabel} yang tidak dilanjutkan (DO_NOT_CONTINUE) wajib menyertakan alasan tidak dilanjutkan.`,
         statusCode: HttpStatus.BAD_REQUEST,
       });
     }
@@ -1308,9 +1308,7 @@ export class DailyService {
       outcomeReason: item.outcomeReason?.trim() ? item.outcomeReason.trim() : null,
       continuation: allowsContinuation ? item.continuation || null : null,
       continuationReason:
-        allowsContinuation &&
-        item.continuation === ContinuationStatus.CONTINUE &&
-        item.continuationReason?.trim()
+        allowsContinuation && item.continuationReason?.trim()
           ? item.continuationReason.trim()
           : null,
       isEodLocked: true,
