@@ -560,7 +560,7 @@ Jika permohonan koreksi *Material* Anda ditolak oleh atasan (`REJECTED`), Anda a
 | **4. Pihak Luar, Uang & Hukum** | **Klien & Calon Klien** (`CLIENT`) | Klien lambat kirim data/umpan balik, jadwal demo diundur, penawaran belum dibalas | Proyek: PM → Head Delivery; Penawaran baru: Sales/BD → Head Sales |
 | | **Vendor & Pihak Ketiga** (`VENDOR`) | API/payment gateway error, lisensi habis, vendor cetak/jasa telat | Tim pengelola vendor terkait → Head Divisi terkait |
 | | **Keuangan & Pembayaran** (`FINANCE`) | Pencairan dana tertahan, tagihan server belum dibayar, kendala pajak/invoicing | Tim Finance → Penanggung Jawab Finance |
-| | **Hukum, Kontrak & Kepatuhan** (`LEGAL`) | Draft kontrak belum selesai, menunggu review NDA, aturan hukum/perizinan | HRGA & Corporate Legal → Direktur |
+| | **Hukum, Kontrak & Perizinan** (`LEGAL`) | Menunggu surat perjanjian (kontrak/MoU), surat kerahasiaan data, atau izin resmi selesai diurus | HRGA & Corporate Legal → Direktur |
 | **5. Lainnya** | **Kendala Lainnya** (`OTHER`) | Kendala pekerjaan di luar 15 kategori di atas (bukan keluhan pribadi) | Atasan Langsung → Head Divisi pelapor |
 
 ---

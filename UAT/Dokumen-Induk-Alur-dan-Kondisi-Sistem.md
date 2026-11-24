@@ -621,7 +621,7 @@ flowchart TD
 | **4. Pihak Luar, Uang & Hukum** | `CLIENT` — **Klien & Calon Klien** | Penanggung Jawab Kategori `CLIENT` (atau Pimpinan Proyek jika jalur Proyek) | **Hari Wibowo** *(Jika cuti/melapor → naik ke **Lukman Hakim**)* |
 | | `VENDOR` — **Vendor & Pihak Ketiga** | Atasan Langsung Pelapor (`directManagerId`) | **Arif Budiman** (Atasan Langsung Aditya) |
 | | `FINANCE` — **Keuangan & Pembayaran** | Penanggung Jawab Kategori `FINANCE` | **Oivi Deasepta** *(Jika cuti/melapor → naik ke **Ratna Sari**)* |
-| | `LEGAL` — **Hukum, Kontrak & Kepatuhan** | Tujuan Divisi `HRGA & Legal` (`BLOCKER_TYPE_DIVISION_ROUTING`) | **Dewi Lestari** *(Jika cuti/melapor → naik ke **Hendra Wijaya / Direktur**)* |
+| | `LEGAL` — **Hukum, Kontrak & Perizinan** | Tujuan Divisi `HRGA & Legal` (`BLOCKER_TYPE_DIVISION_ROUTING`) | **Dewi Lestari** *(Jika cuti/melapor → naik ke **Hendra Wijaya / Direktur**)* |
 | **5. Lainnya** | `OTHER` — **Kendala Lainnya** | Atasan Langsung Pelapor (`directManagerId`) | **Arif Budiman** (Atasan Langsung Aditya) |
 
 ---
@@ -678,7 +678,7 @@ Bagian ini menjawab pertanyaan paling penting bagi karyawan baru: ***"Kalau kerj
      4. Pilih **`Akses & Keamanan Digital`** (`ACCESS_SECURITY`) lalu **`Perangkat Kerja`** (`WORK_DEVICE`).
      5. Pilih **`Fasilitas & Sarana Kantor`** (`OFFICE_FACILITY`).
      6. Pilih **`Kebutuhan & Arahan Kerja`** (`REQUIREMENT`) lalu **`Klien & Calon Klien`** (`CLIENT`).
-     7. Pilih **`Keuangan & Pembayaran`** (`FINANCE`) lalu **`Hukum, Kontrak & Kepatuhan`** (`LEGAL`).
+     7. Pilih **`Keuangan & Pembayaran`** (`FINANCE`) lalu **`Hukum, Kontrak & Perizinan`** (`LEGAL`).
      8. Pilih **`Menunggu Tim / Rekan Lain`** (`CROSS_TEAM`) → amati dropdown baru yang muncul → pilih **`Divisi Operations & Infrastructure (IT, Server & Jaringan)`**.
      9. Pilih **`Persetujuan & Tanda Tangan`** (`APPROVAL`) (atau `RESOURCE` / `VENDOR` / `OTHER`).
    - **Hasil yang Diharapkan:**

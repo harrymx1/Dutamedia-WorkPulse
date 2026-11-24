@@ -187,9 +187,9 @@ export const BLOCKER_TYPE_GROUPS: ReadonlyArray<BlockerTypeGroup> = [
       },
       {
         value: 'LEGAL',
-        name: 'Hukum, Kontrak & Kepatuhan',
-        examples: 'Draft kontrak klien/vendor belum selesai, menunggu review NDA, kendala aturan hukum/perizinan',
-        label: 'Hukum, Kontrak & Kepatuhan — Draft kontrak belum selesai, menunggu review NDA, aturan hukum/perizinan',
+        name: 'Hukum, Kontrak & Perizinan',
+        examples: 'Menunggu surat perjanjian (kontrak/MoU), surat kerahasiaan data, atau izin resmi selesai diurus',
+        label: 'Hukum, Kontrak & Perizinan — Menunggu surat perjanjian (kontrak/MoU), surat kerahasiaan data, atau izin resmi selesai diurus',
       },
     ],
   },
