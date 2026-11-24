@@ -197,8 +197,20 @@ function showToast(msg: string, isError = false) {
   }
 }
 
+async function scrollLeftCardIntoView(ticketId?: string) {
+  if (!ticketId || typeof document === 'undefined') return;
+  await nextTick();
+  const cardEl = document.querySelector(
+    `[data-testid="ticket-card-${ticketId}"]`,
+  ) as HTMLElement | null;
+  if (cardEl && typeof cardEl.scrollIntoView === 'function') {
+    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }
+}
+
 async function loadBlockers() {
   loading.value = true;
+  let autoScrollTicketId = '';
   try {
     let url = '/blockers?';
     if (statusFilter.value !== 'ALL') url += `status=${statusFilter.value}&`;
@@ -215,7 +227,11 @@ async function loadBlockers() {
           typeof route?.query?.ticketId === 'string' ? route.query.ticketId : '';
         if (queryTicketId && !hasAppliedRouteTicket.value) {
           hasAppliedRouteTicket.value = true;
-          selectedTicket.value = visible.find((b) => b.id === queryTicketId) || visible[0];
+          const matched = visible.find((b) => b.id === queryTicketId);
+          selectedTicket.value = matched || visible[0];
+          if (matched) {
+            autoScrollTicketId = matched.id;
+          }
         } else {
           selectedTicket.value = visible[0];
         }
@@ -229,6 +245,9 @@ async function loadBlockers() {
     showToast(err.message || 'Gagal memuat antrean tiket kendala.', true);
   } finally {
     loading.value = false;
+    if (autoScrollTicketId) {
+      void scrollLeftCardIntoView(autoScrollTicketId);
+    }
   }
 }
 
