@@ -275,6 +275,42 @@ async function main() {
   ];
 
   const userMap: Record<string, any> = {};
+  const officialEmails = usersData.map((u) => u.email);
+
+  // Bersihkan seluruh data dinamis/latihan demo agar setiap kali seed dijalankan kondisi kembali 100% bersih
+  await prisma.notification.deleteMany({});
+  await prisma.correctionRequest.deleteMany({});
+  await prisma.blockerTicket.deleteMany({});
+  await prisma.complianceEvent.deleteMany({});
+  await prisma.managerNote.deleteMany({});
+  await prisma.temporaryReviewerAssignment.deleteMany({});
+  await prisma.leaveRequest.deleteMany({});
+  await prisma.boundedExemption.deleteMany({});
+  await prisma.policy.deleteMany({});
+  await prisma.policyOwnerAssignment.deleteMany({});
+
+  // Hapus akun tambahan di luar 25 akun resmi seed (mis. budi.santoso@dutamedia.com hasil latihan Babak 1)
+  const extraUsers = await prisma.user.findMany({
+    where: { email: { notIn: officialEmails } },
+    select: { id: true },
+  });
+  if (extraUsers.length > 0) {
+    const extraIds = extraUsers.map((u) => u.id);
+    await prisma.session.deleteMany({ where: { userId: { in: extraIds } } });
+    await prisma.userInvitation.deleteMany({ where: { userId: { in: extraIds } } });
+    await prisma.dailyAccountabilityRecord.deleteMany({ where: { userId: { in: extraIds } } });
+    await prisma.organizationalAssignment.deleteMany({ where: { userId: { in: extraIds } } });
+    await prisma.projectAuthorityMapping.deleteMany({
+      where: {
+        OR: [
+          { projectManagerId: { in: extraIds } },
+          { escalationReviewerId: { in: extraIds } },
+        ],
+      },
+    });
+    await prisma.blockerCategoryOwner.deleteMany({ where: { ownerUserId: { in: extraIds } } });
+    await prisma.user.deleteMany({ where: { id: { in: extraIds } } });
+  }
 
   for (const u of usersData) {
     const user = await prisma.user.upsert({
@@ -924,6 +960,20 @@ async function main() {
   console.log('📊 [6/6] Menyinkronkan Rekor Harian, Blocker Proyek & Pengajuan Cuti...');
 
   const workDate = todayDate;
+
+  // Pastikan rekaman Hari H Aditya Nugroho juga di-reset ulang ke baseline awal sebelum dibuat kembali
+  const existingAdityaToday = await prisma.dailyAccountabilityRecord.findUnique({
+    where: {
+      userId_workDate: {
+        userId: frontendUser.id,
+        workDate,
+      },
+    },
+    select: { id: true },
+  });
+  if (existingAdityaToday) {
+    await prisma.dailyAccountabilityRecord.delete({ where: { id: existingAdityaToday.id } });
+  }
 
   // 6a. Daily Accountability Record untuk Frontend Dev (Aditya Nugroho)
   const existingDaily = await prisma.dailyAccountabilityRecord.findUnique({
