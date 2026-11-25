@@ -444,10 +444,11 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
         }),
       };
       mockPrisma.leaveRequest = {
-        findFirst: vi
-          .fn()
-          .mockResolvedValueOnce({ id: 'lv-head', userId: 'head-on-leave', status: 'APPROVED' })
-          .mockResolvedValueOnce(null),
+        findFirst: vi.fn().mockImplementation(async ({ where }: any) =>
+          where?.userId === 'head-on-leave'
+            ? { id: 'lv-head', userId: 'head-on-leave', status: 'APPROVED' }
+            : null,
+        ),
       };
       mockPrisma.blockerTicket.create.mockResolvedValue({
         id: 'blk-crit-2',
@@ -2215,6 +2216,43 @@ describe('BlockerService (WP-EP05 / Blocker Lifecycle & Auto-Escalation SLA)', (
       ).rejects.toThrowError(/minimal 5 karakter/i);
 
       expect(mockPrisma.supportContribution.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects manual assignedOwnerId when the selected owner is on approved leave today (422)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'emp-gilang',
+        fullName: 'Gilang Ramadhan',
+      });
+      mockPrisma.organizationalAssignment = {
+        findFirst: vi.fn().mockResolvedValue({ employmentStatus: 'PERMANENT' }),
+      };
+      mockPrisma.leaveRequest = {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'lv-gilang',
+          userId: 'emp-gilang',
+          status: 'APPROVED',
+        }),
+      };
+
+      let caughtError: any = null;
+      try {
+        await service.raiseBlocker('usr-raka', {
+          type: BlockerType.HOSTING_DOMAIN,
+          severity: BlockerSeverity.HIGH,
+          impacts: [BlockerImpact.TASK],
+          description: 'SSL staging belum diperbarui sejak pagi',
+          ownerNeededType: AuthorityContext.ORGANIZATIONAL_AUTHORITY,
+          assignedOwnerId: 'emp-gilang',
+        } as any);
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(AppException);
+      expect(caughtError.code).toBe(ErrorCode.VALIDATION_FAILED);
+      expect(caughtError.getStatus()).toBe(422);
+      expect(caughtError.message).toContain('sedang dalam masa cuti resmi hari ini');
+      expect(mockPrisma.blockerTicket.create).not.toHaveBeenCalled();
     });
   });
 });

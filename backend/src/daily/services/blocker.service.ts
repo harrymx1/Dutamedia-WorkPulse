@@ -759,6 +759,18 @@ export class BlockerService {
 
     if (dto.assignedOwnerId) {
       await assertUserIsNotIntern(this.prisma, targetOwnerId, 'Penanggung Jawab (PIC) Kendala');
+      const todayDate = toJakartaDateOnly(this.clockService.now());
+      const isManuallySelectedOwnerOnLeave = await this.isUserOnApprovedLeave(
+        targetOwnerId,
+        todayDate,
+      );
+      if (isManuallySelectedOwnerOnLeave) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: `${assignedOwner.fullName} sedang dalam masa cuti resmi hari ini sehingga tidak dapat ditunjuk sebagai Penanggung Jawab. Biarkan pada opsi Otomatis agar sistem meneruskan ke atasannya, atau pilih penanggung jawab lain yang aktif.`,
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        });
+      }
     }
 
     // Target batas waktu respons kendala ditentukan oleh tingkat keparahan (satu sumber kebijakan)

@@ -266,9 +266,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > **Estimasi:** 10 menit · **Prasyarat:** `Raka` & `Aditya` punya form/tiket sesuai seed · **Dampak:** Tiket baru Raka & tiket OOM Aditya ditutup (`Selesai Ditutup`), tiket `APPROVAL` menjadi `Risiko Diterima`, tiket `CROSS_TEAM` pindah ke Ops, tiket `NETWORK` terhapus.
 
 #### `3A [INTI]` Karyawan Melaporkan Komitmen RED via Jalan Pintas Blocker (16 Kategori, 9 Dampak, & Cuti Vertikal)
-- **🪟 Jendela & Akun:** Pakai **Jendela 5 (Incognito)** · **🔄 Login di J5:** `intern.frontend@dutamedia.com` (**Raka Pratama**, `Password123!`) *(biarkan tetap login, langsung dipakai di langkah `3B`)*
+- **🪟 Jendela & Akun:** Pakai **Jendela 5 (Incognito)** & **Jendela 4 (`Dewi Lestari` — HRGA, untuk tunjuk bukti cuti Gilang)** · **🔄 Login di J5:** `intern.frontend@dutamedia.com` (**Raka Pratama**, `Password123!`) *(biarkan tetap login, langsung dipakai di langkah `3B`)*
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
-> *"Di sini ada tiga aturan penting. Pertama, komitmen pagi berstatus RED wajib ditautkan ke tiket blocker aktif supaya nggak ada 'RED siluman' yang hanya berupa status merah tanpa PIC dan target waktu penyelesaian — dan kami siapkan tombol jalan pintas agar draf paginya otomatis tersimpan tanpa harus ketik ulang. Kedua, 16 kategori kendala dan 1 sampai 3 pilihan dampak mengarahkan tiket ke Penanggung Jawab Kategori resmi. Ketiga, jika PIC sedang cuti resmi, sistem dilarang keras menunjuk rekan sejawat atau bawahan tanpa mandat — tiket otomatis naik vertikal ke atasannya sampai ke Direktur, kecuali ada Reviewer Sementara yang aktif."*
+> *"Di sini ada tiga aturan penting. Pertama, komitmen pagi berstatus RED wajib ditautkan ke tiket blocker aktif supaya nggak ada 'RED siluman' yang hanya berupa status merah tanpa PIC dan target waktu penyelesaian — dan kami siapkan tombol jalan pintas agar draf paginya otomatis tersimpan tanpa harus ketik ulang. Kedua, 16 kategori kendala dan 1 sampai 3 pilihan dampak mengarahkan tiket ke Penanggung Jawab Kategori resmi. Ketiga, jika PIC sedang cuti resmi, sistem dilarang keras menunjuk rekan sejawat atau bawahan tanpa mandat — tiket otomatis naik vertikal ke atasannya sampai ke Direktur, dan pelapor pun ditolak kalau memaksa memilih manual orang yang sedang cuti."*
 - **Aksi:**
   1. Login sebagai `intern.frontend@dutamedia.com` → di `/daily/morning`, klik **`Lihat Draf`** → klik **`Salin ke Slot`** pada tugas *`Implementasi tata letak kartu responsif...`* (`[WP-CORE]`).
   2. Ubah **`Tingkat Risiko Tugas Hari Ini *`** menjadi **`RED`**.
@@ -276,14 +276,13 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
      - *Lihat di layar:* Ditolak merah — tidak boleh ada status `RED` tanpa tiket blocker aktif!
   4. **`[INTI]` Jalan Pintas Buat Tiket Blocker dari Form Pagi:** Klik tombol **`+ Buat Tiket Blocker Sekarang`** di bawah dropdown.
      - *Lihat di layar:* Draf pagi otomatis tersimpan, halaman berpindah ke `/raise-blockers?returnTo=/daily/morning&slot=0` dengan spanduk konteks kembali ke Morning Commitment dan **`Project Authority` (`WP-CORE`)** otomatis terpilih karena berasal dari Slot #1 berproyek `WP-CORE`.
-  5. **`[CABANG]` Uji Aturan Cuti Vertikal PIC (Naik ke Atasan) & Batas 3/3 Dampak (sebelum kirim):**
-     - **PENTING — Ubah dulu Jalur Kewenangan ke `Organizational Authority (Struktural)`** *(karena kalau dibiarkan `Project Authority`, PIC akan tetap menuju Project Lead `WP-CORE`, bukan jalur kategori!)*.
+  5. **`[CABANG]` Uji Aturan Cuti Vertikal PIC (Naik ke Atasan) & Batas 3/3 Dampak:**
+     - **Buktikan dulu Gilang sedang cuti hari ini (tanpa keluar dari Raka di J5):** Tunjuk sebentar **`Jendela 4 — Dewi (HRGA)`** di menu **`Pencatatan Cuti Resmi`** (`/admin/leaves`) → tunjuk baris **`Gilang Ramadhan — Cuti Tahunan — Hari Ini`** *(sudah disetujui resmi)*.
+     - **Balik ke `Jendela 5 — Raka`:** **PENTING — Ubah dulu Jalur Kewenangan ke `Organizational Authority (Struktural)`** *(karena kalau dibiarkan `Project Authority`, PIC akan tetap menuju Project Lead `WP-CORE`, bukan jalur kategori!)*.
      - Pilih kategori **`1. Teknis & Sistem` → `Hosting, Cloud & Domain (HOSTING_DOMAIN)`** → tunjuk **Panel Jalur Penanganan Otomatis**: karena PIC resminya (`Gilang Ramadhan`) sedang cuti hari ini, tiket **tidak turun ke rekan/bawahan, tapi langsung naik vertikal ke atasannya (`Gunawan Setiawan` — Head Ops & Infra)**.
-     - Centang 3 kotak dampak untuk membuktikan kotak ke-4 s/d ke-9 otomatis terkunci (`3 / 3`), lalu lepas 1 sehingga tersisa **2 dampak**.
-  6. **`[INTI]` Lengkapi & Kirim Tiket Staging `WP-CORE`:**
+     - Centang 3 kotak dampak untuk membuktikan kotak ke-4 s/d ke-9 otomatis terkunci (`3 / 3`), lalu lepas 1 sehingga tersisa **2 dampak** (**`Target & Tenggat Waktu (MILESTONE)`** & **`Satu Tim / Divisi (TEAM)`**).
+  6. **`[INTI]` Lengkapi Form, Uji Paksa Pilih Manual `Gilang` (Ditolak), Lalu Kirim Tiket `INFRA`:**
      - **Judul Kendala *:** `Server Staging WP-CORE Error 502 Bad Gateway Saat Tes Halaman Riwayat`
-     - **Kategori *:** **`1. Teknis & Sistem` → `Server & Rilis Sistem (INFRA)`**
-     - **Dampak * (2 kotak):** **`Target & Tenggat Waktu (MILESTONE)`** & **`Satu Tim / Divisi (TEAM)`**
      - **Tingkat Keparahan *:** **`High (Target 4 jam)`**
      - **Deskripsi Kendala & Upaya Mandiri *:**
        ```text
@@ -293,8 +292,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        ```text
        Tolong restart container staging WP-CORE dan cek setting Nginx-nya
        ```
-     - **Jalur Kewenangan *:** Pastikan **`Organizational Authority (Struktural)`** → **Penanggung Jawab Khusus:** biarkan `-- Ditentukan Otomatis oleh Sistem --` (tunjuk panel pratinjau langsung mengarah ke **`Reza Mahendra`**).
-     - Klik **`Kirim Laporan Blocker`**.
+     - **`[CABANG]` Uji paksa pilih manual orang cuti (`Gilang Ramadhan`):** Pada dropdown **Penanggung Jawab Khusus (opsional)**, pilih manual **`Gilang Ramadhan`** → klik **`Kirim Laporan Blocker`**.
+       - *Lihat di layar:* **Ditolak merah oleh sistem** (`"Gilang Ramadhan sedang dalam masa cuti resmi hari ini sehingga tidak dapat ditunjuk sebagai Penanggung Jawab..."`) — jadi pelapor tidak bisa menyelipkan tugas ke orang yang sedang cuti!
+     - **`[INTI]` Kirim tiket sebenarnya:** Kembalikan **Penanggung Jawab Khusus** ke **`-- Ditentukan Otomatis oleh Sistem --`**, lalu ubah **Kategori \*** ke **`1. Teknis & Sistem` → `Server & Rilis Sistem (INFRA)`** *(tunjuk panel pratinjau langsung mengarah ke **`Reza Mahendra`**)* → klik **`Kirim Laporan Blocker`**.
 - **Lihat di layar:** **⚡** Setelah kirim, browser **otomatis balik ke `/daily/morning`** dengan draf Raka utuh & tiket barusan otomatis terpilih di Slot #1! Klik **`Kirim Morning Commitment`** → beres terkirim!
 - **Bilang singkat:** *"Draf pagi otomatis aman, tiket langsung punya PIC jelas, dan komitmen RED langsung terkirim dalam satu alur tanpa putus."*
 
