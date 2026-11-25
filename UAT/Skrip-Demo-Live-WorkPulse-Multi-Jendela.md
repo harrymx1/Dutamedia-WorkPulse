@@ -19,17 +19,17 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 
 | Jendela | Akun Login Awal (`Password123!`) | Halaman Awal | Ringkasan Perpindahan Akun |
 |---|---|---|---|
-| **Jendela 1** | `direktur@dutamedia.com` — **Hendra Wijaya** (`CEO_MANAGEMENT`) | `/admin/policies` | **0x ganti akun** (Babak `1C`, `2A`, `7A`, `7B`, `7D`, `8D`, `8E`, `9`) |
+| **Jendela 1** | `direktur@dutamedia.com` — **Hendra Wijaya** (`CEO_MANAGEMENT`) | `/admin/policies` | **0x ganti akun** (Babak `2A`, `7A`, `7B`, `7D`, `8D`, `8E`, `9`) |
 | **Jendela 2** | `product@dutamedia.com` — **Bagas Saputra** (`PROJECT_MANAGER`) | `/daily/morning` | **`Bagas`** (`2A`–`2G`) → **`🔄 3B: Reza`** (`network.infra@`) → **`🔄 3C–7A: Aditya`** (`dev.frontend@`) |
 | **Jendela 3** | `head.eng@dutamedia.com` — **Arif Budiman** (`HEAD` Engineering) | `/dashboard` | **0x ganti akun** (Babak `3C`, `3E`, `4B`, `6B`, `7B`, `7C`) |
 | **Jendela 4** | `hrga@dutamedia.com` — **Dewi Lestari** (`HRGA`) | `/admin/users` | **0x ganti akun** (Babak `1A`, `5A`–`5C`, `6A`, `8A`–`8D`) |
-| **Jendela 5 (Incognito)** | Akun tamu & cabang terpisah (selalu keluar sesi tiap selesai) | `/login` | **`1B: Budi`** → **`1C: Admin`** → **`2B: Nadia`** → **`2D: Gilang`** → **`3A–3B: Raka`** → **`5A–5C: Intan`** → **`8C: Rian`** |
+| **Jendela 5 (Incognito)** | Akun tamu & cabang terpisah (selalu keluar sesi tiap selesai) | `/login` | **`1A–1B: Budi`** → **`2B: Nadia`** → **`2D: Gilang`** → **`3A–3B: Raka`** → **`5A–5C: Intan`** → **`8C: Rian`** |
 
 ### Jadwal Ganti Akun Sepanjang Demo (`Jendela 1, 3, 4 = 0x Ganti`)
 | Momen Pindah | Jendela | Dari Akun | Ganti ke Akun (`Password123!`) | Dipakai Sampai |
 |---|---|---|---|---|
 | Awal Demo (Pra-Babak 1) | **J1–J4** | — | Login `Hendra` (**J1**), `Bagas` (**J2**), `Arif` (**J3**), `Dewi` (**J4**) sekaligus | J1, J3, J4 tetap sampai selesai |
-| **Babak 1B → 1C** | **J5** | `/activate` → `Budi` | Keluar `Budi` → Login `admin@dutamedia.com` → selesai `1C` **Keluar Sesi** | Hanya Babak `1B`–`1C` |
+| **Babak 1A–1B** | **J5** | kosong | Uji token `Budi` → aktivasi & login `budi.santoso@dutamedia.com` → selesai `1B` **Keluar Sesi** | Hanya Babak `1A`–`1B` |
 | **Babak 2B & 2D** | **J5** | kosong | `2B`: `qa@dutamedia.com` (`Nadia`) → **Keluar** · `2D`: `specialist.it@dutamedia.com` (`Gilang`) → **Keluar** | Hanya langkah masing-masing |
 | **Babak 3A** | **J5** | kosong | Login `intern.frontend@dutamedia.com` (**Raka**) | Tetap login sampai akhir `3B` → **Keluar** |
 | **Babak 3B** | **J2** | `Bagas Saputra` | Keluar `Bagas` → Login `network.infra@dutamedia.com` (**Reza**) | Hanya Babak `3B` |
@@ -65,9 +65,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 
 | Area / Fitur / Aturan / Percabangan | Dibuktikan di Babak |
 |---|---|
-| Undangan 72 jam + Cabut + Kirim Ulang + Aktivasi token 64 karakter + `/admin/invitations` | `1A`, `1A-C`, `1B` |
-| Tolak login `INVITED`, `Ingat email`, `Show/Hide`, kunci `429` (dijelaskan), `/profile`, `403` & `404` | `1B`, `1C` |
-| **Pemisahan Tugas CEO & Admin (Notifikasi Hybrid)** tanpa menu `Workspace` | `1C`, `7A` |
+| Undangan 72 jam + Uji Cabut & Hangus + Kirim Ulang + Aktivasi token 64 karakter + `/admin/invitations` | `1A`, `1B` |
+| Tolak login `INVITED`, `Ingat email`, `Show/Hide`, kunci `429` (dijelaskan), `/profile` | `1B` |
+| **Pemisahan Tugas CEO & Admin (Notifikasi Hybrid)** tanpa menu `Workspace` | `1B` *(dijelaskan)*, `7A` |
 | Jam Cut-Off `LOCKED` + Jalur Cadangan `Additional Work` (`Komitmen Pagi Terlewat`) + Geser Cut-Off live + audit trail | `2A`, `9` |
 | **Hari Bebas Komitmen (`0 Komitmen`)** | `2B` |
 | **Pengingat `Prioritas Kemarin Sore`** + `Carry-Over #2+ AMBER` + `Simpan Draf` + batas 3 slot | `2C` |
@@ -93,54 +93,47 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 
 ---
 
-### BABAK 1 — Pendaftaran Karyawan Baru, Aktivasi Akun, & Pembatasan Hak Akses
-> **Estimasi:** 5–6 menit · **Prasyarat:** Data hasil seed bersih · **Dampak:** Akun `Budi Santoso` aktif (total 25 user aktif).
+### BABAK 1 — Pendaftaran Karyawan Baru, Uji Cabut & Kirim Ulang Token, serta Aktivasi Akun
+> **Estimasi:** 5 menit · **Prasyarat:** Data hasil seed bersih · **Dampak:** Akun `Budi Santoso` aktif (total 25 user aktif).
 
-#### `1A [INTI]` HRGA Mengundang Karyawan Baru dengan Token Aktivasi 72 Jam
-- **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — `hrga@dutamedia.com`)** · **✅ Tanpa Ganti Akun**
+#### `1A [INTI]` HRGA Menerbitkan Undangan 72 Jam & Membuktikan Pencabutan Token Secara Langsung
+- **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — `hrga@dutamedia.com`)** & **Jendela 5 (Incognito — `/activate`)** · **✅ Tanpa Ganti Akun**
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
-> *"WorkPulse adalah sistem internal perusahaan, jadi sengaja tidak ada tombol daftar akun bebas dari luar, dan Admin atau HRGA pun tidak pernah membuatkan password untuk karyawan. Aksesnya hanya lewat undangan resmi berupa token 64 karakter sekali pakai yang berlaku 72 jam — kalau salah kirim atau bocor, token lama bisa langsung dicabut dan diterbitkan ulang."*
-- **Aksi:** Di menu **`Kelola Pengguna`** (`/admin/users`), klik **`Undang Pengguna Baru`**, lalu isi:
-  - **Nama Lengkap:** `Budi Santoso`
-  - **Alamat Email Perusahaan:** `budi.santoso@dutamedia.com`
-  - **Status Karyawan:** `Karyawan Tetap`
-  - **Peran:** `Karyawan`
-  - **Divisi:** `Engineering`
-  - **Jabatan:** `Backend Engineer`
-  - Klik **`Terbitkan Undangan (72 Jam)`**.
-- **Lihat di layar:** Keluar kode token 64 karakter + tombol **`Salin Token Aktivasi`**. Klik **`Salin Token Aktivasi`** → **`Selesai`**.
-- **Bilang singkat:** *"Begitu diterbitkan, token hanya muncul sekali ini untuk diserahkan ke karyawan yang bersangkutan."*
+> *"WorkPulse adalah sistem internal perusahaan, jadi sengaja tidak ada tombol daftar akun bebas dari luar, dan Admin atau HRGA pun tidak pernah membuatkan password untuk karyawan. Aksesnya hanya lewat undangan resmi berupa token 64 karakter sekali pakai yang berlaku 72 jam — kalau salah kirim atau bocor, token lama bisa langsung dicabut sehingga hangus dan diterbitkan ulang."*
+- **Aksi (bolak-balik cepat J4 ↔ J5):**
+  1. **Di `Jendela 4 — Dewi (HRGA)` (`/admin/users`):** Klik **`Undang Pengguna Baru`**, lalu isi:
+     - **Nama Lengkap:** `Budi Santoso`
+     - **Alamat Email Perusahaan:** `budi.santoso@dutamedia.com`
+     - **Status Karyawan:** `Karyawan Tetap`
+     - **Peran:** `Karyawan`
+     - **Divisi:** `Engineering`
+     - **Jabatan:** `Backend Engineer`
+     - Klik **`Terbitkan Undangan (72 Jam)`** → keluar kode token 64 karakter → klik **`Salin Token Aktivasi`** → **`Selesai`**.
+  2. **⚡ Pindah ke `Jendela 5 (Incognito)`:** Buka `/login` → klik tab **`Aktivasi Akun`** (`/activate`) → tempel token tadi ke kolom **Token Aktivasi**.
+     - *Lihat di layar:* Langsung muncul kartu pratinjau **`Budi Santoso · Engineering`** dengan tanda **`UNDANGAN AKTIF`** *(**JANGAN** klik `Aktifkan Akun Saya` dulu — ini hanya membuktikan token pertama memang aktif!)*.
+  3. **Balik ke `Jendela 4 — Dewi (HRGA)`:** Pada baris `Budi Santoso`, klik **`Cabut`** → di modal `Cabut Undangan Aktivasi` klik **`Ya, Cabut Undangan`**.
+     - *Lihat di layar:* Status berubah merah **`Dicabut`**. *(Opsional: klik sebentar menu **`Undangan Karyawan`** `/admin/invitations` untuk menunjukkan riwayat status undangan).*
+  4. **⚡ Balik ke `Jendela 5 (/activate)`:** Tekan **`F5`** (agar cek ulang ke server), lalu tempel ulang **token lama** tadi ke kolom **Token Aktivasi**.
+     - *Lihat di layar:* Langsung muncul kotak merah **`Undangan Tidak Berlaku`** — bukti nyata token yang sudah dicabut otomatis hangus!
+  5. **Balik ke `Jendela 4 — Dewi (HRGA)`:** Pada baris `Budi Santoso`, klik **`Kirim Ulang`** → di modal `Kirim Ulang Undangan Aktivasi` klik **`Terbitkan Tautan Baru`** → klik **`Salin Token Aktivasi`** *(pakai token baru ini untuk langkah `1B`!)* → **`Selesai`**.
+- **Bilang singkat:** *"Begitu diterbitkan ulang, token lama tetap mati dan hanya token terbaru yang berlaku."*
 
-#### `1A-C [CABANG]` HRGA Mencabut & Mengirim Ulang Token Undangan
-- **🪟 Jendela & Akun:** Tetap di **Jendela 4 (`Dewi Lestari` — HRGA)** · **✅ Tanpa Ganti Akun**
-- **Aksi:**
-  1. Pada baris `Budi Santoso`, klik **`Cabut`** → di modal `Cabut Undangan Aktivasi` klik **`Ya, Cabut Undangan`** → status berubah merah **`Dicabut`** (token lama hangus).
-  2. Klik **`Kirim Ulang`** → di modal `Kirim Ulang Undangan Aktivasi` klik **`Terbitkan Tautan Baru`** → klik **`Salin Token Aktivasi`** (pakai token baru ini!) → **`Selesai`**.
-  3. Klik menu **`Undangan Karyawan`** (`/admin/invitations`) sebentar buat nunjukin riwayat status undangan (*Menunggu*, *Dicabut*, *Sudah Diaktifkan*).
-- **Bilang singkat:** *"Statusnya langsung tercatat rapi dari Menunggu, Dicabut, sampai Sudah Diaktifkan — token yang dicabut otomatis hangus."*
-
-#### `1B [INTI]` Karyawan Baru Mengaktifkan Akun, Login Pertama Kali, & Mengecek Profil
-- **🪟 Jendela & Akun:** Pakai **Jendela 5 (Incognito)** · **🔄 Login Baru di J5:** uji gagal login lalu aktivasi & login `budi.santoso@dutamedia.com` (`Password123!`) *(biarkan tetap login untuk `1C`; jika `1C` dilewati, klik **Keluar Sesi** setelah langkah ini)*
+#### `1B [INTI]` Membuktikan Token Baru Aktif, Login Ditolak Sebelum Aktivasi, Aktivasi Akun, & Cek Profil
+- **🪟 Jendela & Akun:** Pakai **Jendela 5 (Incognito)** · **🔄 Login Baru di J5:** aktivasi lalu login `budi.santoso@dutamedia.com` (`Password123!`) · **🚪 Selesai Langkah:** Klik **Keluar Sesi** di **J5**
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
-> *"Akun yang belum diaktivasi akan ditolak otomatis saat mencoba masuk. Selain itu, kita sengaja tidak menyediakan fitur 'Lupa Kata Sandi' mandiri via email — pemulihan akun tetap dikendalikan lewat HRGA atau System Admin supaya keamanannya terjaga dan nggak bergantung ke server email luar."*
-- **Aksi:**
-  1. Buka `/login` (tab **`Masuk Sistem`**), ketik `budi.santoso@dutamedia.com` dan `Password123!` → klik tombol **`Masuk ke Sistem`**.
-     - *Lihat di layar:* Ditolak merah **`"Akun Anda belum diaktifkan..."`**. Tunjuk ikon mata, centang `Ingat email di perangkat ini`, dan info kontak HRGA jika lupa sandi.
-  2. Klik tab **`Aktivasi Akun`** (`/activate`): tempel token 64 karakter dari HRGA → isi sandi baru & konfirmasi `Password123!` → klik tombol **`Aktifkan Akun Saya`**.
-     - *Lihat di layar:* Muncul pratinjau `Budi Santoso · Engineering` sebelum simpan, 3 syarat centang hijau + meteran `Sangat Kuat`, lalu layar **`Aktivasi Berhasil!`**.
-  3. Klik **`Lanjut ke Halaman Masuk`**, login `budi.santoso@dutamedia.com` / `Password123!` → klik **`Masuk ke Sistem`** → mendarat otomatis di `/daily/morning`.
-  4. Klik avatar **`BS`** di pojok kanan atas (`/profile`): tunjukkan **1. Kartu Identitas & Penugasan Aktif**, isi pratinjau kolom ganti sandi (`DutamediaBaru2026!`) untuk nunjukin 3 syarat centang hijau & opsi *Akhiri seluruh sesi aktif di perangkat lain* **(JANGAN klik `Simpan Kata Sandi Baru` biar password tetap `Password123!`)**, dan **3. Ringkasan Kanal Notifikasi Perangkat Ini**.
-- **Bilang singkat:** *"Setelah aktivasi mandiri pakai token dan bikin sandi pribadi, karyawan baru bisa masuk ke halaman kerjanya dan kelola keamanan akunnya sendiri."*
+> *"Sekarang kita buktikan token barunya aktif, tapi selama karyawan belum menyelesaikan aktivasi dan membuat sandi pribadi, akunnya tetap ditolak saat mencoba masuk. Selain itu, kita sengaja tidak menyediakan fitur 'Lupa Kata Sandi' mandiri via email — pemulihan akun tetap dikendalikan lewat HRGA atau System Admin supaya keamanannya terjaga dan nggak bergantung ke server email luar."*
+- **Aksi (semua di `Jendela 5 — Incognito`):**
+  1. Di tab **`Aktivasi Akun`** (`/activate`): tempel **token baru** dari HRGA → tunjuk kartu **`Budi Santoso · Engineering`** kembali bertanda **`UNDANGAN AKTIF`** *(**JANGAN** klik `Aktifkan Akun Saya` dulu — biarkan token baru masih tersimpan di clipboard)*.
+  2. Pindah ke tab **`Masuk Sistem`** (`/login`): ketik `budi.santoso@dutamedia.com` dan `Password123!` → klik tombol **`Masuk ke Sistem`**.
+     - *Lihat di layar:* Ditolak merah **`"Akun Anda belum diaktifkan..."`**. Tunjuk sekilas ikon mata, centang `Ingat email di perangkat ini`, dan info kontak HRGA jika lupa sandi.
+  3. Balik ke tab **`Aktivasi Akun`** (`/activate`): tempel lagi **token baru** dari clipboard (muncul **`UNDANGAN AKTIF`**) → isi **Kata Sandi Baru** & **Konfirmasi** `Password123!` *(tunjuk 3 syarat centang hijau + meteran `Sangat Kuat`)* → klik **`Aktifkan Akun Saya`**.
+     - *Lihat di layar:* Muncul layar **`Aktivasi Berhasil!`**.
+  4. Klik **`Lanjut ke Halaman Masuk`**, login `budi.santoso@dutamedia.com` / `Password123!` → klik **`Masuk ke Sistem`** → mendarat otomatis di `/daily/morning`.
+  5. Klik avatar **`BS`** di pojok kanan atas (`/profile`): tunjukkan **1. Kartu Identitas & Penugasan Aktif**, isi pratinjau kolom ganti sandi (`DutamediaBaru2026!`) untuk nunjukin 3 syarat centang hijau & opsi *Akhiri seluruh sesi aktif di perangkat lain* **(JANGAN klik `Simpan Kata Sandi Baru` biar password tetap `Password123!`)**, dan **3. Ringkasan Kanal Notifikasi Perangkat Ini**, lalu klik **`Keluar Sesi`**.
+- **Bilang singkat:** *"Setelah aktivasi mandiri dan bikin sandi pribadi, barulah karyawan bisa masuk ke halaman kerjanya dan mengatur keamanan akunnya sendiri."*
 
-#### `1C [CABANG]` Membuktikan Pembatasan Akses Halaman (403/404) & Pemisahan Tugas Admin serta Direktur
-- **🪟 Jendela & Akun:** Pakai **Jendela 5 (Incognito)** & **Jendela 1 (`Hendra Wijaya` — Direktur)** · **🔄 Ganti Akun di J5:** keluar `Budi` → login `admin@dutamedia.com` (`Password123!`) · **🚪 Selesai Langkah:** Klik **Keluar Sesi** di **J5**
-> **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
-> *"Untuk Direktur dan System Admin, kami sengaja menghilangkan seluruh menu Workspace harian. Kenapa? Karena keduanya bukan peserta wajib lapor komitmen harian — kalau menu itu dibiarkan muncul, selain memenuhi layar, datanya berisiko mengotori metrik kepatuhan tim operasional. Untuk notifikasi, keduanya tetap punya akses cepat lewat ikon lonceng di pojok kanan atas."*
-- **Aksi:**
-  1. Masih sebagai **Budi (`Jendela 5`)**: ketik URL `/admin/policies` → tampil **`403 — Akses Dibatasi`** → klik **`Kembali ke Beranda`**. Ketik URL `/halaman-tidak-ada` → tampil **`404 — Halaman Tidak Ditemukan`** → klik **`Kembali ke Beranda`**, lalu klik **`Keluar Sesi`** (di `/profile` atau tombol keluar kiri bawah sidebar).
-  2. Login **`Jendela 5`** sebagai **`admin@dutamedia.com`** (`SYSTEM_ADMIN`) → tunjuk sidebar kiri **tidak ada grup `Workspace`**, ketik URL `/daily/morning` → ditolak **`403 — Akses Dibatasi`**, lalu **Keluar Sesi**.
-  3. Tunjuk **`Jendela 1` (`Hendra Wijaya` — Direktur / `CEO_MANAGEMENT`)**: tunjuk sidebar kiri **grup `Workspace` juga sudah dihilangkan**, buka `/blockers` sebentar → tombol **`+ Laporkan Blocker Baru` tersembunyi**, ketik URL `/daily/morning` → ditolak **`403`**, lalu klik **ikon lonceng di TopBar kanan atas** untuk masuk ke `/notifications`.
-- **Bilang singkat:** *"Pembatasannya dijaga di layar sekaligus di server — jadi meskipun URL-nya diketik langsung, tetap ditolak 403."*
+> **💬 Sampaikan Singkat (Pengecualian Admin & Direktur — Tidak Perlu Diuji Klik):**  
+> *"Sebagai catatan tambahan sebelum lanjut ke Babak 2: hak akses setiap halaman dijaga di layar sekaligus di server. Khusus **System Admin** dan **Direktur**, seluruh menu `Workspace` harian memang dikecualikan dan dihilangkan dari sidebar karena keduanya bukan peserta wajib lapor komitmen harian — supaya metrik kepatuhan murni mengukur tim operasional, sedangkan notifikasinya tetap mudah diakses lewat ikon lonceng di pojok kanan atas."*
 
 ---
 
@@ -190,7 +183,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > *"Komitmen pagi sengaja dibatasi maksimal 3 fokus utama agar pengisian cukup 2–3 menit dan bukan menjadi timesheet panjang. Tugas kemarin yang statusnya berlanjut otomatis masuk ke kotak draf pagi — bukan terkirim otomatis — dengan pengingat AMBER jika sudah tertunda 2 hari. Khusus risiko AMBER, karyawan cukup isi uraian kekhawatirannya tanpa wajib membuat tiket blocker dulu, supaya atasan tidak kebanjiran tiket kecil dan staf tetap jujur melapor AMBER alih-alih berpura-pura klik GREEN."*
 - **Aksi:**
   1. Tunjuk kotak kuning **`Prioritas Kemarin Sore`** di bagian atas form.
+     - **🗣️ Jelaskan ke audiens:** *"Kotak kuning ini adalah catatan Prioritas Utama Besok yang kemarin sore ditulis sendiri oleh karyawan waktu kirim Evaluasi Sore. Fungsinya menjadi pengingat fokus paling atas setiap pagi supaya rencana kerja antarhari tetap nyambung dan hal paling penting dari kemarin sore nggak langsung terlupakan saat mulai kerja — tanpa memaksa harus masuk jadi slot komitmen baru."*
   2. Klik **`Lihat Draf`** pada **`Draf Tugas Berlanjut dari Kemarin`** → tunjuk item **`Carry-Over #2 · Disarankan AMBER`** → centang kedua item → klik **`Gunakan Item Terpilih ke Slot Hari Ini`**.
+     - **🗣️ Jelaskan ke audiens:** *"Kalau kotak di atas tadi catatan prioritas dari sore, kotak Draf Tugas Berlanjut ini adalah daftar komitmen pagi kemarin yang pada evaluasi sorenya dipilih 'Lanjutkan Besok'. Fungsinya supaya karyawan tinggal centang untuk tarik ke slot hari ini tanpa ketik ulang dari nol, dan tidak pernah dikirim otomatis tanpa persetujuan karyawan. Kalau satu tugas sudah tertunda sampai hari ke-2 atau lebih, sistem otomatis memberi tanda **`Carry-Over #2 · Disarankan AMBER`** sebagai sinyal dini ke atasan."*
   3. Klik **`Tambah Slot Komitmen (2/3)`** untuk membuka **Komitmen #3** (tombol tambah langsung hilang karena maksimal 3 komitmen).
   4. **`[CABANG]` Uji 2 Penolakan Sebelum Kirim (aman, tidak mengubah DB):**
      - Ketik `Te` di **Komitmen #3** → klik **`Kirim Morning Commitment`** → ditolak merah **`"Slot #3: Deskripsi komitmen wajib diisi minimal 3 karakter."`**
