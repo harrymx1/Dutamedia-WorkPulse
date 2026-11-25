@@ -194,6 +194,15 @@ function resetForm() {
 }
 
 function prefillFromRejected(item: CorrectionHistoryItem) {
+  const targetId = item.targetCommitmentId || item.targetCommitment?.id;
+  if (targetId && todayCommitments.value.some((c) => c.id === targetId)) {
+    selectedCommitmentId.value = targetId;
+    handleCommitmentSelect();
+  }
+  if (item.classification === 'MINOR' || item.classification === 'MATERIAL') {
+    classification.value = item.classification;
+  }
+
   const requested = item.valueRequested || {};
   if (requested.outcome && DB_TO_FORM_OUTCOME[requested.outcome]) {
     newOutcome.value = DB_TO_FORM_OUTCOME[requested.outcome];
@@ -632,6 +641,17 @@ onMounted(() => {
 
                 <div v-if="item.reviewNote" class="hist-review-note" :class="item.status.toLowerCase()">
                   <strong>{{ item.reviewedByUser?.fullName ? `Catatan Peninjau (${item.reviewedByUser.fullName}):` : 'Catatan Peninjau:' }}</strong> {{ item.reviewNote }}
+                </div>
+
+                <div v-if="item.status === 'REJECTED'" style="margin-top: 10px;">
+                  <button
+                    type="button"
+                    class="btn-prefill-revision"
+                    :data-testid="`prefill-rejected-${item.id}`"
+                    @click="prefillFromRejected(item)"
+                  >
+                    Gunakan Draf Sebelumnya &amp; Sesuaikan
+                  </button>
                 </div>
               </div>
             </div>

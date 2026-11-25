@@ -378,11 +378,13 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
     expect(wrapper.text()).toContain('Batas Waktu Tinjauan 24 Jam:');
     expect(wrapper.text()).toContain('Catatan Peninjau (Arif Budiman):');
 
-    await wrapper.find('#eodSelect').setValue('com-2');
+    const rightCardPrefillBtn = wrapper.find('[data-testid="prefill-rejected-cr-eod-rejected"]');
+    expect(rightCardPrefillBtn.exists()).toBe(true);
+    await rightCardPrefillBtn.trigger('click');
+
+    expect((wrapper.find('#eodSelect').element as HTMLSelectElement).value).toBe('com-2');
     expect(wrapper.find('.in-flight-banner').exists()).toBe(false);
     expect(wrapper.find('.post-objection-banner').exists()).toBe(true);
-
-    await wrapper.find('.btn-prefill-revision').trigger('click');
     expect((wrapper.find('input[type="radio"][value="DONE"]').element as HTMLInputElement).checked).toBe(true);
     expect((wrapper.find('#outcomeReasonInput').element as HTMLTextAreaElement).value).toBe('Semua test lulus');
     expect((wrapper.find('#continuationSelect').element as HTMLSelectElement).value).toBe('ARCHIVE');

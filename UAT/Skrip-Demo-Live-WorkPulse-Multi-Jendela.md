@@ -533,8 +533,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
      ```
      → klik **`Konfirmasi Tolak`**.
   2. **`⚡` Pindah ke `Jendela 2 — Aditya`** (`/corrections/morning`):
-     - Tekan **`F5`** → pada dropdown **`Pilih Komitmen yang Ingin Dikoreksi *`**, pilih **`[Komitmen #2]`** *(maka di atas form langsung muncul kotak merah catatan penolakan Arif beserta tombol **`Gunakan Draf Sebelumnya & Sesuaikan`**)*.
-     - Klik tombol **`Gunakan Draf Sebelumnya & Sesuaikan`** *(teks draf sebelumnya otomatis dimuat kembali ke kolom input)*, lalu sesuaikan:
+     - Tekan **`F5`** → lihat kartu **`Komitmen #2 REJECTED MATERIAL`** di panel kanan (**`Riwayat Permohonan Koreksi`**), lalu klik tombol **`Gunakan Draf Sebelumnya & Sesuaikan`** langsung pada kartu tersebut *(otomatis memilih **`[Komitmen #2]`** & **`Perubahan Material`**, serta memuat kembali draf sebelumnya ke formulir kiri)*, kemudian sesuaikan:
        - **Deskripsi Komitmen Baru yang Diajukan \*:**
          ```text
          Optimasi code-splitting Vite [#245] biar penggunaan memori build frontend turun

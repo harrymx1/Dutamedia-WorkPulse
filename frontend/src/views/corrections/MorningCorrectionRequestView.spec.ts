@@ -346,12 +346,15 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(wrapper.text()).toContain('Catatan Peninjau (Arif Budiman):');
     expect(wrapper.text()).toContain('Batas Waktu Tinjauan 24 Jam:');
 
-    // Beralih ke Slot 2 yang terakhir REJECTED -> banner arahan & tombol prefill draf tampil
-    await wrapper.find('#comSelect').setValue('com-2');
+    // Tombol revisi langsung tersedia di kartu REJECTED panel kanan meskipun dropdown kiri masih di Slot 1
+    const rightCardPrefillBtn = wrapper.find('[data-testid="prefill-rejected-cr-rejected"]');
+    expect(rightCardPrefillBtn.exists()).toBe(true);
+    await rightCardPrefillBtn.trigger('click');
+
+    // Otomatis pindah ke Slot 2 (com-2), menampilkan banner arahan, dan memuat draf sebelumnya
+    expect((wrapper.find('#comSelect').element as HTMLSelectElement).value).toBe('com-2');
     expect(wrapper.find('.in-flight-banner').exists()).toBe(false);
     expect(wrapper.find('.post-objection-banner').exists()).toBe(true);
-
-    await wrapper.find('.btn-prefill-revision').trigger('click');
     expect((wrapper.find('#newTaskInput').element as HTMLTextAreaElement).value).toBe('Tugas Kedua Revisi');
     expect((wrapper.find('#newLinkInput').element as HTMLInputElement).value).toBe('https://github.com/pr/55');
   });
