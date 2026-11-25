@@ -39,53 +39,37 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 
 ---
 
-## 2. PEMISAHAN DATA UJI (`seed.ts`) & CHECKLIST 5 MENIT PRA-DEMO
+## 2. DAFTAR AKUN DEMO & PERSIAPAN 2 MENIT SEBELUM MULAI
 
-### A. Pemisahan Akun & Objek (`[INTI]` vs `[CABANG]`) — Anti-Bentrok State
-| Akun / Data di `seed.ts` | Dipakai untuk Jalur | Kondisi Awal Setelah Reset Bersih |
-|---|---|---|
-| `product@dutamedia.com` (**Bagas Saputra**) | **`[INTI]`** Siklus Harian | Form pagi kosong + `Prioritas Kemarin Sore` + `Carry-Over #2 AMBER` & `#1 GREEN` |
-| `dev.frontend@dutamedia.com` (**Aditya**) | **`[INTI]`** Blocker + Koreksi + Notif | Komitmen pagi sudah terkunci (`ON-TIME`) + tiket `OOM` (`WP-CORE`) + tiket `CROSS_TEAM` + tiket `NETWORK` + 2 catatan coaching |
-| `intern.frontend@dutamedia.com` (**Raka**, `Intern`) | **`[INTI]`** `RED` Wajib Blocker + Jalan Pintas + `Intern` | Form pagi kosong + `Carry-Over #1` `WP-CORE` + punya izin tercatat `H+5` (`PERMIT`) |
-| `specialist.it@dutamedia.com` (**Gilang**, PIC `HOSTING_DOMAIN`) | **`[INTI]`** Bukti Cuti Hari Ini + Cuti Vertikal | Cuti `APPROVED` hari ini → otomatis bebas check-in + blocker `HOSTING_DOMAIN` naik ke `Gunawan Setiawan` |
-| `qa@dutamedia.com` (**Nadia**) | **`[CABANG]`** Kirim `0 Komitmen` | Form pagi kosong + 1 baris kepatuhan `H-2` berstatus `Sudah Ditangani` |
-| `staff.finance@dutamedia.com` (**Intan**) | **`[CABANG]`** Uji live Cuti, Dispensasi, & Pengecualian Permanen | Form pagi kosong & jadwal normal → bisa dites dikunci sementara/permanen lalu di-Edit & di-Hapus kembali normal |
-| `Reza` / `Gunawan` / `Dharma` / `Bambang` | PIC & Non-PIC Blocker | 6 tiket lintas kategori siap demo + 1 tiket `CRITICAL` lewat batas waktu (`-2 jam` di `WP-CORE`) |
-| `Bayu Santoso` (`ST/HRGA/2026/XI/104`) | Data awal `/exemptions` | 1 dispensasi `Dinas Luar` (`H+2 s/d H+3`) siap tampil |
+### A. Daftar Akun yang Dipakai Selama Demo (Semua Sandi: `Password123!`)
+| Jendela | Nama & Jabatan di Layar | Email Login | Dipakai pada Babak |
+|---|---|---|---|
+| **Jendela 1** | **Hendra Wijaya** — Direktur Utama | `direktur@dutamedia.com` | Babak `2A`, `7A`, `7B`, `7D`, `8D`, `8E`, `9` |
+| **Jendela 2** | **Bagas Saputra** — Product Manager<br>*(lalu ganti ke **Reza Mahendra**, lalu **Aditya Nugroho**)* | `product@dutamedia.com`<br>`network.infra@dutamedia.com`<br>`dev.frontend@dutamedia.com` | `Bagas`: Babak `2A`–`2G`<br>`Reza`: Babak `3B`<br>`Aditya`: Babak `3C`–`7A` |
+| **Jendela 3** | **Arif Budiman** — Head of Engineering | `head.eng@dutamedia.com` | Babak `3C`, `3E`, `4B`, `6B`, `7B`, `7C` |
+| **Jendela 4** | **Dewi Lestari** — HRGA & Corporate Legal Lead | `hrga@dutamedia.com` | Babak `1A`, `3A`, `5A`–`5C`, `6A`, `8A`–`8D` |
+| **Jendela 5 (Incognito)** | Bergantian: **Budi Santoso** → **Nadia Kusuma** → **Gilang Ramadhan** → **Raka Pratama** → **Intan Permata** → **Rian Kurniawan** | `budi.santoso@dutamedia.com`<br>`qa@dutamedia.com`<br>`specialist.it@dutamedia.com`<br>`intern.frontend@dutamedia.com`<br>`staff.finance@dutamedia.com`<br>`lead.creative@dutamedia.com` | `Budi`: Babak `1A`–`1B`<br>`Nadia`: Babak `2B`<br>`Gilang`: Babak `2D`<br>`Raka`: Babak `3A`–`3B`<br>`Intan`: Babak `5A`–`5C`<br>`Rian`: Babak `8C` |
 
-### B. Checklist 5 Menit Sebelum Demo
-- [ ] Jalankan reset & seed bersih (`node backend/scripts/reset_live_seed.cjs` atau `npx prisma db seed`) agar seluruh nama akun terbaru, struktur pengecualian permanen, tanggal demo, dan catatan database yang bersih bebas kode internal langsung tersinkron di database live.
-- [ ] Buka 5 jendela Chrome sesuai tabel di Bagian 1, login **Jendela 1–4** sekaligus (`Jendela 5` dibuka di `/login` dalam kondisi belum login).
-- [ ] Cek cepat **Jendela 2** (`Bagas Saputra`): kalau ada sisa draf lokal dari latihan sebelumnya, klik **`Reset Draf`**.
-- [ ] Nyalakan *Do Not Disturb* / *Focus Assist* di laptop sebelum *share screen*.
+### B. Persiapan Singkat Sebelum Presentasi Dimulai
+- [ ] Buka 5 jendela Chrome sesuai tabel di Bagian 1, lalu login **Jendela 1 sampai Jendela 4** lebih dulu (**Jendela 5 Incognito** biarkan terbuka di halaman `/login`).
+- [ ] Di **Jendela 2 (`Bagas Saputra`)**, pastikan formulir komitmen pagi masih bersih (jika ada sisa ketikan latihan, klik **`Reset Draf`**).
+- [ ] Nyalakan *Do Not Disturb* / *Focus Assist* di laptop sebelum mulai *share screen*.
 
 ---
 
-## 3. MATRIKS CAKUPAN 100% (BUKTI TIDAK ADA YANG TERLEWAT)
+## 3. RINGKASAN ALUR 9 BABAK DEMO
 
-| Area / Fitur / Aturan / Percabangan | Dibuktikan di Babak |
+| Babak | Fokus Utama yang Ditunjukkan ke Audiens |
 |---|---|
-| Undangan 72 jam + Uji Cabut & Hangus + Kirim Ulang + Aktivasi token 64 karakter + `/admin/invitations` | `1A`, `1B` |
-| Tolak login `INVITED`, `Ingat email`, `Show/Hide`, kunci `429` (dijelaskan), `/profile` | `1B` |
-| **Pemisahan Tugas CEO & Admin (Notifikasi Hybrid)** tanpa menu `Workspace` | `1B` *(dijelaskan)*, `7A` |
-| Jam Cut-Off `LOCKED` + Jalur Cadangan `Additional Work` (`Komitmen Pagi Terlewat`) + Geser Cut-Off live + audit trail | `2A`, `9` |
-| **Hari Bebas Komitmen (`0 Komitmen`)** | `2B` |
-| **Pengingat `Prioritas Kemarin Sore`** + `Carry-Over #2+ AMBER` + `Simpan Draf` + batas 3 slot | `2C` |
-| Validasi `< 3` huruf (`400`), `AMBER` tanpa uraian (`400`), **Aturan `AMBER` Tidak Wajib Tiket Blocker** | `2C` |
-| **Pembebasan Check-In Otomatis (Cuti & Dispensasi)** mengunci `/daily/*` tanpa `0 komitmen` + **`Read-Only`** `/daily/history` | `2D`, `5A`, `5B`, `5C` |
-| `Additional Work`: tambah tugas atasan (`Intern` 0x di list) + `Edit` + `Hapus` wajib alasan | `2E` |
-| `EOD Outcome`: 4 hasil (`Selesai`, `Sebagian` → lanjut, `Belum Selesai` → stop wajib alasan, `Dibatalkan` → wajib alasan) + **Saran Status Akhir Hari Tanpa Paksaan** vs `Tetap Kirim sebagai AMBER` + kunci pasca-EOD | `2F` |
-| `Riwayat Saya` (`/daily/history`): KPI, *expand row*, panel read-only cuti/dispensasi, `Unduh CSV` | `2G`, `5A`, `5C` |
-| `RED` wajib blocker + tolak tanpa tiket + **Jalan Pintas Buat Tiket Blocker dari Form Pagi** (simpan draf → `/raise-blockers` → balik otomatis) | `3A` |
-| 16 Kategori (5 grup) + 9 Dampak (maks `3/3`) + **Aturan Cuti Vertikal PIC (Naik ke Atasan)** (`Organizational Authority`) + **Penanggung Jawab Kategori (Staf Spesialis)** | `3A`, `3B` |
-| Siklus Blocker penuh: `Terima & Tangani` → `Beri Bantuan` → `Membantu Sebagian` → `Selesaikan` → `Belum Memadai` → tutup; `Bantu Unblock` auto-scroll + non-PIC + `Feed Dukungan Lintas Fungsi` + `Terima Risiko` | `3B`, `3C` |
-| **Ubah Divisi Tujuan Otomatis (*Dynamic Re-Routing*) & Hapus Tiket** (3 preset) + Radar `Aging` | `3D`, `3E` |
-| Koreksi Pagi & EOD: `Minor` (`AUTO_APPLIED`) + `Material` (`Tolak` → revisi `Gunakan Draf Sebelumnya & Sesuaikan` → `Setujui`) | `4A`, `4B`, `4C` |
-| `/admin/leaves` (Tambah, `:min`, tolak Sabtu–Minggu `400`, bentrok `409`, `Intern` `400`, Edit, Hapus) + `/exemptions` (Tambah, **Pengecualian Permanen — Bebas Komitmen Harian, `Lapor Blocker` Tetap Aktif**, Edit, Hapus) | `5A`, `5B`, `5C` |
-| `/compliance` (`Tindak Lanjut`, validasi `< 5` huruf, `Ubah Catatan`) + `/coaching` (`Dibagikan` vs `Rahasia Manajemen`, template cepat) | `6A`, `6B` |
-| `/notifications` (lencana sidebar/TopBar, isolasi `Rahasia`, **Pengecekan Hak Akses Tautan Otomatis** sembunyikan tombol `/admin/policies`, tab `Pengaturan Kanal`) | `7A` |
-| `/dashboard` 3 cakupan (`PROJECT` / `DIVISION` / `COMPANY` + filter `Intern`) + `/projects/risk` + `/reports` (preset, filter `Kontrak`, CSV & PDF) | `7B`, `7C`, `7D` |
-| `/admin/users` (`Nonaktifkan`/`Aktifkan Kembali`, `Akun Anda`), `/admin/organization` (`Intern` 0x, anti-siklus `422`, angkat `Intern`, `Project Authority` tolak PM=Reviewer), `/admin/temporary-reviewers` (bukti login `Review Koreksi` + `Antrean Blocker`), `/admin/policies` multi-owner, `/admin/notifications` uji kirim 9 trigger | `8A`–`8E` |
+| **Babak 1** | HRGA mengundang karyawan baru (`Budi Santoso`), mencabut token lama hingga hangus, menerbitkan token baru, membuktikan login ditolak sebelum aktivasi, lalu aktivasi mandiri & cek halaman Profil. |
+| **Babak 2** | Form pagi terkunci setelah lewat jam batas (`09:30 WIB`), Direktur melonggarkan jam batas secara langsung, laporan `0 Komitmen` (`Nadia`), siklus kerja harian lengkap (`Bagas`: Komitmen Pagi → Pekerjaan Tambahan → Evaluasi Sore dengan saran status `RED` vs pilihan `AMBER` → Riwayat Saya), serta bukti karyawan cuti (`Gilang`) otomatis bebas lapor harian. |
+| **Babak 3** | Karyawan magang (`Raka`) melapor komitmen `RED` lewat tombol jalan pintas buat tiket blocker, bukti aturan cuti vertikal (`Gilang` cuti → otomatis naik ke atasannya `Gunawan` & tolak pilih manual `Gilang`), penanganan tiket oleh staf spesialis (`Reza`), bantuan lintas fungsi & Terima Risiko oleh Kepala Divisi (`Arif`), edit divisi tujuan & hapus tiket aktif (`Aditya`), serta Radar Penuaan & Eskalasi. |
+| **Babak 4** | Karyawan (`Aditya`) mengajukan Koreksi Komitmen Pagi: Perubahan Minor (langsung diterapkan otomatis) dan Perubahan Material (ditolak dulu oleh Kepala Divisi `Arif`, direvisi cepat dari draf sebelumnya, lalu disetujui). |
+| **Babak 5** | HRGA (`Dewi`) mencatat Cuti Resmi (uji tolak akhir pekan, bentrok jadwal, & cuti tahunan magang; catat cuti sakit `Intan`, edit, lalu hapus) serta mencatat Dispensasi Dinas Luar & Pengecualian Permanen (menu harian `Intan` hilang sementara `Lapor Blocker` tetap aktif, lalu dihapus hingga menu harian kembali normal). |
+| **Babak 6** | HRGA (`Dewi`) mencatat tindak lanjut pola keterlambatan di Antrean Kepatuhan, dan Kepala Divisi (`Arif`) mencatat bimbingan 1-on-1 di Catatan Coaching (`Dibagikan ke Karyawan` vs `Rahasia Manajemen`). |
+| **Babak 7** | Bukti keamanan Pusat Notifikasi (catatan rahasia tidak bocor ke staf & tombol halaman admin disembunyikan otomatis), perbandingan Dashboard Kepala Divisi vs Direktur, Radar Risiko Proyek, dan Laporan Eksekutif (CSV/PDF). |
+| **Babak 8** | Pengelolaan akun pengguna (nonaktifkan & aktifkan kembali), Struktur Organisasi (tolak atasan melingkar & angkat anak magang), Kewenangan Proyek (tolak PM merangkap Reviewer), Delegasi Reviewer Sementara (`Rian`), Pemilik Kebijakan, dan Uji Kirim Notifikasi. |
+| **Babak 9** | Direktur mengembalikan jam batas pengisian (Cut-Off) ke jadwal standar kantor (`09:00` / `09:30` & `17:00` / `21:00`) dan menunjukkan rekaman jejak auditnya. |
 
 ---
 
@@ -94,7 +78,6 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 ---
 
 ### BABAK 1 — Pendaftaran Karyawan Baru, Uji Cabut & Kirim Ulang Token, serta Aktivasi Akun
-> **Estimasi:** 5 menit · **Prasyarat:** Data hasil seed bersih · **Dampak:** Akun `Budi Santoso` aktif (total 25 user aktif).
 
 #### `1A [INTI]` HRGA Menerbitkan Undangan 72 Jam & Membuktikan Pencabutan Token Secara Langsung
 - **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — `hrga@dutamedia.com`)** & **Jendela 5 (Incognito — `/activate`)** · **✅ Tanpa Ganti Akun**
@@ -110,12 +93,12 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
      - **Nama Jabatan (Job Title) \*:** `Backend Engineer`
      - Klik **`Terbitkan Undangan (72 Jam)`** → keluar kode token 64 karakter → klik **`Salin Token Aktivasi`** → **`Selesai`**.
   2. **⚡ Pindah ke `Jendela 5 (Incognito)`:** Buka `/login` → klik tab **`Aktivasi Akun`** (`/activate`) → tempel token tadi ke kolom **Token Aktivasi**.
-     - *Lihat di layar:* Langsung muncul kartu pratinjau **`Budi Santoso · Engineering`** dengan tanda **`UNDANGAN AKTIF`** *(**JANGAN** klik `Aktifkan Akun Saya` dulu — ini hanya membuktikan token pertama memang aktif!)*.
+     - *Lihat di layar:* Langsung muncul kartu pratinjau **`Budi Santoso · Engineering`** dengan tanda **`UNDANGAN AKTIF`** *(**JANGAN** klik `Aktifkan Akun Saya` dulu — ini untuk membuktikan token pertama memang aktif!)*.
   3. **Balik ke `Jendela 4 — Dewi (HRGA)`:** Pada baris `Budi Santoso`, klik **`Cabut`** → di modal `Cabut Undangan Aktivasi` klik **`Ya, Cabut Undangan`**.
-     - *Lihat di layar:* Status berubah merah **`Dicabut`**. *(Opsional: klik sebentar menu **`Undangan Karyawan`** `/admin/invitations` untuk menunjukkan riwayat status undangan).*
-  4. **⚡ Balik ke `Jendela 5 (/activate)`:** Tekan **`F5`** (agar cek ulang ke server), lalu tempel ulang **token lama** tadi ke kolom **Token Aktivasi**.
+     - *Lihat di layar:* Status berubah merah **`Dicabut`**. *(Opsional: klik sebentar menu **`Undangan Karyawan`** `/admin/invitations` di sidebar kiri untuk menunjukkan tabel riwayat status undangan, lalu kembali ke **`Pengguna & Peran`** `/admin/users`).*
+  4. **⚡ Balik ke `Jendela 5 (/activate)`:** Tekan **`F5`** (refresh halaman), lalu tempel ulang **token lama** tadi ke kolom **Token Aktivasi**.
      - *Lihat di layar:* Langsung muncul kotak merah **`Undangan Tidak Berlaku`** — bukti nyata token yang sudah dicabut otomatis hangus!
-  5. **Balik ke `Jendela 4 — Dewi (HRGA)`:** Pada baris `Budi Santoso`, klik **`Kirim Ulang`** → di modal `Kirim Ulang Undangan Aktivasi` klik **`Terbitkan Tautan Baru`** → klik **`Salin Token Aktivasi`** *(pakai token baru ini untuk langkah `1B`!)* → **`Selesai`**.
+  5. **Balik ke `Jendela 4 — Dewi (HRGA)` (`/admin/users`):** Pada baris `Budi Santoso`, klik **`Kirim Ulang`** → di modal `Kirim Ulang Undangan Aktivasi` klik **`Terbitkan Tautan Baru`** → klik **`Salin Token Aktivasi`** *(token baru ini yang dipakai di langkah `1B`)* → klik **`Selesai`**.
 - **Bilang singkat:** *"Begitu diterbitkan ulang, token lama tetap mati dan hanya token terbaru yang berlaku."*
 
 #### `1B [INTI]` Membuktikan Token Baru Aktif, Login Ditolak Sebelum Aktivasi, Aktivasi Akun, & Cek Profil
@@ -132,7 +115,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
      - **Konfirmasi Kata Sandi Baru:** Ketik `Password123!`
      - Klik **`Aktifkan Akun Saya`** → muncul layar **`Aktivasi Berhasil!`**.
   4. Klik **`Lanjut ke Halaman Masuk`**, isi **Email Perusahaan** `budi.santoso@dutamedia.com` & **Kata Sandi** `Password123!` → klik **`Masuk ke Sistem`** → mendarat otomatis di `/daily/morning`.
-  5. Klik avatar **`BS`** di pojok kanan atas (`/profile`): tunjukkan **1. Kartu Identitas & Penugasan Aktif**, isi pratinjau kolom ganti sandi (`DutamediaBaru2026!`) untuk nunjukin 3 syarat centang hijau & opsi *Akhiri seluruh sesi aktif di perangkat lain* **(JANGAN klik `Simpan Kata Sandi Baru` biar password tetap `Password123!`)**, dan **3. Ringkasan Kanal Notifikasi Perangkat Ini**, lalu klik **`Keluar Sesi`**.
+  5. Klik bulatan inisial **`BS`** di pojok kanan atas (`/profile`): tunjukkan **1. Kartu Identitas & Penugasan Aktif**, ketik contoh `DutamediaBaru2026!` di kolom **Kata Sandi Baru** pada panel **2. Keamanan Akun & Ganti Kata Sandi** untuk menunjukkan 3 syarat centang hijau & kotak centang *Akhiri seluruh sesi aktif di perangkat lain* **(JANGAN klik `Simpan Kata Sandi Baru` agar sandi tetap `Password123!`)**, tunjuk panel **3. Ringkasan Kanal Notifikasi Perangkat Ini**, lalu klik tombol **`Keluar Sesi`** di pojok kanan atas.
 - **Bilang singkat:** *"Setelah aktivasi mandiri dan bikin sandi pribadi, barulah karyawan bisa masuk ke halaman kerjanya dan mengatur keamanan akunnya sendiri."*
 
 > **💬 Sampaikan Singkat (Pengecualian Admin & Direktur — Tidak Perlu Diuji Klik):**  
@@ -141,7 +124,6 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 ---
 
 ### BABAK 2 — Pengaturan Jam Cut-Off & Siklus Laporan Kerja Harian Lengkap
-> **Estimasi:** 10 menit · **Prasyarat:** `Bagas` & `Nadia` belum isi form hari ini; `Gilang` cuti resmi hari ini · **Dampak:** `Bagas` selesai 1 siklus penuh (Morning → AddWork → EOD → History); `Nadia` tercatat `0 Komitmen`.
 
 #### `2A [INTI]` Form Pagi Terkunci Lewat Jam Batas & Direktur Menggeser Jam Cut-Off
 - **🪟 Jendela & Akun:** Pakai **Jendela 2 (`Bagas Saputra` — `product@dutamedia.com`)** & **Jendela 1 (`Hendra Wijaya` — Direktur)** · **✅ Tanpa Ganti Akun**
@@ -149,25 +131,24 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > *"Aturan waktu lapor pagi dibagi tiga: Tepat Waktu, Terlambat di masa tenggang, dan Terkunci otomatis begitu melewati batas Cut-Off. Kenapa harus dikunci? Supaya komitmen pagi betul-betul mencerminkan rencana kerja di awal hari, bukan baru dikarang sore harinya. Tapi jam batasnya tidak kami matikan kaku di kode — Pemilik Kebijakan bisa mengaturnya kapan saja lengkap dengan jejak audit, dan karyawan yang terlewat tetap punya jalur pencatatan kerja siang lewat Additional Work."*
 - **Aksi:**
   1. Di **`Jendela 2 — Bagas Saputra` (`/daily/morning`)**:
-     - *Kalau jam demo sudah lewat `09:30 WIB` (paling sering):* langsung tampil spanduk merah **`LOCKED (Pasca Cut-Off)`**.
-     - *Kalau demo dilakukan pagi sebelum `09:30 WIB`:* di **`Jendela 1 — Direktur`** (`/admin/policies`), ubah dulu sebentar *Batas Tepat Waktu Pagi* & *Batas Kunci Pengisian Pagi (Cut-Off)* jadi 5 menit sebelum jam sekarang → refresh `Jendela 2` agar spanduk merah **`LOCKED (Pasca Cut-Off)`** muncul.
-  2. Klik tab **`2. Additional Work`** (`/daily/additional-work`) → tunjuk formulir tetap terbuka dengan alasan otomatis **`Komitmen Pagi Terlewat`**.
+     - Tunjukkan spanduk merah **`LOCKED (Pasca Cut-Off)`** karena waktu saat ini sudah melewati jam batas pagi standar kantor (`09:30 WIB`), sehingga formulir komitmen pagi terkunci.
+  2. Klik tab **`2. Additional Work`** (`/daily/additional-work`) → tunjukkan formulir pekerjaan tambahan tetap terbuka dengan pilihan alasan otomatis **`Komitmen Pagi Terlewat`**. Lalu kembali klik tab **`1. Morning Commitment`** (`/daily/morning`).
   3. Pindah ke **`Jendela 1 — Direktur` (`/admin/policies`)**:
-     - Klik **`+ Buat Versi Kebijakan Baru`**, lalu isi lengkap seluruh kolom di modal **`Buat Versi Kebijakan Baru`** dari atas ke bawah (ubah jam pagi biar longgar dari jam sekarang, misal demo malam jam 20:00 → set `23:40` & `23:50`; demo siang jam 13:00 → set `16:00` & `16:30`):
-       - **Kategori Kebijakan \*:** Biarkan **`1. Jam Kerja & Batas Waktu Check-In (Check-In Timing)`** *(default)*
-       - **Batas Tepat Waktu Pagi \*:** *(1–2 jam setelah jam sekarang, misal `23:40`)*
-       - **Batas Kunci Pengisian Pagi (Cut-Off) \*:** *(lebih akhir, misal `23:50`)*
-       - **Batas Tepat Waktu Sore (EOD) \*:** `23:55` *(atau `17:00` jika siang)*
-       - **Batas Kunci Pengisian Sore (Cut-Off) \*:** `23:59`
-       - **Tanggal Mulai Berlaku \*:** *(otomatis terisi hari ini WIB — tunjuk tanggal sebelum hari ini dikunci nonaktif)*
-       - **Tanggal Berakhir (Opsional):** *(biarkan kosong agar berlaku terus sampai diganti versi berikutnya)*
+     - Klik tombol **`+ Buat Versi Kebijakan Baru`**, lalu isi seluruh kolom di modal **`Buat Versi Kebijakan Baru`** dari atas ke bawah dengan angka berikut agar formulir pagi langsung terbuka untuk demo sore ini:
+       - **Kategori Kebijakan \*:** Biarkan **`1. Jam Kerja & Batas Waktu Check-In (Check-In Timing)`**
+       - **Batas Tepat Waktu Pagi \*:** Ketik `23:30`
+       - **Batas Kunci Pengisian Pagi (Cut-Off) \*:** Ketik `23:45`
+       - **Batas Tepat Waktu Sore (EOD) \*:** Ketik `23:50`
+       - **Batas Kunci Pengisian Sore (Cut-Off) \*:** Ketik `23:59`
+       - **Tanggal Mulai Berlaku \*:** *(biarkan otomatis terisi tanggal hari ini — tunjuk tanggal kemarin dikunci tidak bisa dipilih)*
+       - **Tanggal Berakhir (Opsional):** *(biarkan kosong)*
        - **Alasan Perubahan Kebijakan \*:**
          ```text
          Geser jam batas pengisian sebentar untuk keperluan demo live WorkPulse
          ```
      - Klik **`Simpan & Terapkan Versi Baru`**.
   4. Balik ke **`Jendela 2 — Bagas Saputra` (`/daily/morning`)**, tekan **`F5`**.
-- **Lihat di layar:** Status berubah hijau **`ON-TIME`** dan formulir terbuka. **⚡ Efek Lintas Jendela:** Lencana angka merah di menu sidebar **`Notifikasi`** & lonceng TopBar langsung nyala.
+- **Lihat di layar:** Status langsung berubah hijau **`ON-TIME`** dan formulir komitmen pagi terbuka. **⚡ Efek Lintas Jendela:** Lencana angka merah di menu sidebar **`Notifikasi`** & lonceng pojok kanan atas langsung menyala.
 - **Bilang singkat:** *"Begitu Direktur simpan versi kebijakan baru, form karyawan langsung kebuka sesuai jadwal baru dan semua staf langsung dapat notifikasinya."*
 
 #### `2B [CABANG]` Karyawan Melaporkan Hari Bebas Komitmen (0 Komitmen)
@@ -308,7 +289,6 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 ---
 
 ### BABAK 3 — Pelaporan Kendala (Blocker), Penanganan Lintas Tim, & Pemantauan Eskalasi
-> **Estimasi:** 10 menit · **Prasyarat:** `Raka` & `Aditya` punya form/tiket sesuai seed · **Dampak:** Tiket baru Raka & tiket OOM Aditya ditutup (`Selesai Ditutup`), tiket `APPROVAL` menjadi `Risiko Diterima`, tiket `CROSS_TEAM` pindah ke Ops, tiket `NETWORK` terhapus.
 
 #### `3A [INTI]` Karyawan Melaporkan Komitmen RED via Jalan Pintas Blocker (16 Kategori, 9 Dampak, & Cuti Vertikal)
 - **🪟 Jendela & Akun:** Pakai **Jendela 5 (Incognito)** & **Jendela 4 (`Dewi Lestari` — HRGA, untuk tunjuk bukti cuti Gilang)** · **🔄 Login di J5:** `intern.frontend@dutamedia.com` (**Raka Pratama**, `Password123!`) *(biarkan tetap login, langsung dipakai di langkah `3B`)*
@@ -316,7 +296,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > *"Di sini ada tiga aturan penting. Pertama, komitmen pagi berstatus RED wajib ditautkan ke tiket blocker aktif supaya nggak ada 'RED siluman' yang hanya berupa status merah tanpa PIC dan target waktu penyelesaian — dan kami siapkan tombol jalan pintas agar draf paginya otomatis tersimpan tanpa harus ketik ulang. Kedua, 16 kategori kendala dan 1 sampai 3 pilihan dampak mengarahkan tiket ke Penanggung Jawab Kategori resmi. Ketiga, jika PIC sedang cuti resmi, sistem dilarang keras menunjuk rekan sejawat atau bawahan tanpa mandat — tiket otomatis naik vertikal ke atasannya sampai ke Direktur, dan pelapor pun ditolak kalau memaksa memilih manual orang yang sedang cuti."*
 - **Aksi:**
   1. **Tarik Draf Tugas Pagi di `Jendela 5 — Raka` (`/daily/morning`):**
-     - Login sebagai `intern.frontend@dutamedia.com` → di `/daily/morning`, klik **`Lihat Draf`** pada kotak **`Draf Tugas Berlanjut dari Kemarin`** → klik **`Salin ke Slot`** pada tugas *`Implementasi tata letak kartu responsif pada halaman riwayat cuti dan dispensasi`* *(Slot Komitmen #1 otomatis terisi Teks Komitmen, Proyek `[WP-CORE] WorkPulse Platform Core 2026`, dan Tautan PR `.../pull/225`)*.
+     - Login sebagai `intern.frontend@dutamedia.com` → di `/daily/morning`, klik **`Lihat Draf`** pada kotak **`Draf Tugas Berlanjut dari Kemarin`** → klik **`Salin ke Slot`** pada tugas *`Implementasi tata letak kartu responsif pada halaman riwayat cuti dan dispensasi`* *(Slot Komitmen #1 otomatis terisi Teks Komitmen, Proyek `[WP-CORE] WorkPulse Platform Core 2026`, dan Tautan PR `https://github.com/dutamedia/workpulse/pull/225`)*.
   2. **Ubah Risiko Slot #1 ke `RED`:**
      - Pada **Tingkat Risiko Tugas Hari Ini \*** di Slot #1, klik kartu **`RED`** *(maka kolom **Tiket Blocker Penyebab (Wajib untuk RED) \***, **Uraian Resiko atau Potensi Kendala \***, dan **Tindakan / Bantuan yang Diharapkan (Opsional)** otomatis muncul)*.
   3. **`[CABANG]` Uji Validasi `RED` Wajib Blocker (sebelum buat tiket):**
@@ -336,7 +316,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        - Di **Panel 1**, pada dropdown **Kategori Kendala \***, pilih **`1. Teknis & Sistem` → `Hosting, Cloud & Domain (HOSTING_DOMAIN)`**.
        - *Lihat di Panel 2 (`Pratinjau Jalur Penanganan Otomatis`):* Karena PIC resmi `HOSTING_DOMAIN` (**`Gilang Ramadhan`**) sedang cuti hari ini, sistem **tidak menurunkan tiket ke rekan/bawahan**, melainkan **otomatis menaikkan vertikal ke atasan langsungnya: `Gunawan Setiawan` (`Head of Operations & Infrastructure`)**!
        - Pada **Dampak Kendala (Pilih 1–3 Dampak) \***, centang 3 kotak dampak sekaligus untuk menunjukkan penghitung berubah jadi **`3 / 3 dipilih`** dan kotak ke-4 s/d ke-9 otomatis terkunci nonaktif.
-  6. **`[INTI]` Isi Lengkap Seluruh Input Formulir `/raise-blockers` (Panel 1 & Panel 2 dari Atas ke Bawah), Uji Paksa Pilih Manual `Gilang` (`422`), Lalu Kirim Tiket `INFRA`:**
+  6. **`[INTI]` Isi Lengkap Seluruh Input Formulir `/raise-blockers` (Panel 1 & Panel 2 dari Atas ke Bawah), Uji Paksa Pilih Manual `Gilang`, Lalu Kirim Tiket `INFRA`:**
      - **Bagian 1 — `Detail Kendala, Taksonomi & Dampak`:**
        1. **Judul Kendala \* (min. 10 karakter):**
           ```text
@@ -360,7 +340,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        8. **Jalur Kewenangan \*:** Pastikan terpilih kartu **`Organizational Authority (Struktural)`** *(jika tadi melewati Aksi 5 `[CABANG]`, ubah dulu dari `Project Authority` ke **`Organizational Authority (Struktural)`** agar memakai jalur Penanggung Jawab Kategori `INFRA` ke **`Reza Mahendra`**)*.
        9. **Penanggung Jawab Khusus (opsional):**
           - **`[CABANG]` Uji paksa pilih manual orang yang sedang cuti (`Gilang Ramadhan`):** Buka dropdown **Penanggung Jawab Khusus (opsional)**, gulir ke grup **`── Lainnya ──`**, pilih **`Gilang Ramadhan — IT Systems & Cloud Specialist`** → klik **`Kirim Laporan Blocker`**.
-            - *Lihat di layar:* **Ditolak merah `422` oleh server** (`"Gilang Ramadhan sedang dalam masa cuti resmi hari ini sehingga tidak dapat ditunjuk sebagai Penanggung Jawab..."`).
+            - *Lihat di layar:* **Ditolak merah oleh server** (`"Gilang Ramadhan sedang dalam masa cuti resmi hari ini sehingga tidak dapat ditunjuk sebagai Penanggung Jawab..."`).
           - **`[INTI]` Kirim tiket sebenarnya ke PIC otomatis (`Reza Mahendra`):** Kembalikan dropdown **Penanggung Jawab Khusus (opsional)** ke pilihan paling atas **`— Ditentukan Otomatis: Reza Mahendra (Network & Infrastructure Engineer) —`** (pastikan **Kategori Kendala \*** tetap **`Server & Rilis Sistem (INFRA)`**) → klik **`Kirim Laporan Blocker`**.
   7. **`[INTI]` Otomatis Kembali ke `/daily/morning`, Lengkapi Slot #1 (`RED`), & Kirim Komitmen Pagi Raka:**
      - *Lihat di layar:* **⚡** Begitu tiket terkirim, browser **otomatis kembali ke `/daily/morning`** dengan spanduk hijau bahwa tiket blocker berhasil dibuat dan ditautkan ke **Komitmen #1**!
@@ -427,9 +407,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Di WorkPulse kami pegang prinsip 'primary ownership bukan exclusive ownership': meskipun PIC utama tiketnya adalah Tech Lead, atasan atau rekan lintas fungsi bisa langsung menyalurkan bantuan kapan saja tanpa harus menunggu PIC. Dan bila ada kendala yang secara keputusan bisnis memang harus ditunda dulu — bukan tidak dikerjakan — atasan bisa memilih 'Terima Risiko' dengan justifikasi dan rencana mitigasi tertulis."*
 - **Aksi:**
-  1. Di **`Jendela 2`**: pastikan sudah keluar dari Reza dan login **`dev.frontend@dutamedia.com`** (**Aditya Nugroho**).
-  2. Di **`Jendela 3 — Arif Budiman` (`/dashboard`)**: pada **`Personil Butuh Bantuan Hari Ini`**, klik **`Bantu Unblock`** pada kendala OOM milik Aditya.
-     - *Lihat di layar:* Langsung pindah ke `/blockers`, **panel kiri otomatis terscroll pas ke kartu tiket terbawah** sambil **header panel kanan tetap utuh terlihat**!
+  1. Di **`Jendela 2`**: keluar dari akun Reza, lalu login **`dev.frontend@dutamedia.com`** (**Aditya Nugroho**).
+  2. Di **`Jendela 3 — Arif Budiman` (`/dashboard`)**: pada daftar **`Personil Butuh Bantuan Hari Ini`**, klik tombol **`Bantu Unblock`** di baris **`Aditya Nugroho`** (tiket *`Gagal Build Pipeline Frontend di GitLab CI karena Out-of-Memory (OOM)`*).
+     - *Lihat di layar:* Langsung pindah ke `/blockers`, **panel kiri otomatis terscroll pas ke kartu tiket tersebut** sambil **header panel kanan tetap utuh terlihat**!
   3. Meskipun PIC tiketnya `Bambang Pratama`, Arif (non-PIC) langsung klik **`Beri Bantuan`** dan isi modal **`Catat Pemberian Bantuan (Assist)`**:
      - **Aksi Bantuan yang Diberikan \*:**
        ```text
@@ -440,8 +420,8 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        Build frontend sudah dites ulang dan lolos tanpa error OOM
        ```
      - Klik **`Simpan Kontribusi`**. Buka sebentar `/dashboard` → **⚡** bantuan Arif langsung muncul di **`Feed Dukungan Lintas Fungsi`**.
-  4. **`⚡` Pindah ke `Jendela 2 — Aditya` (`/raise-blockers?tab=mine`)**: pada kartu tiket OOM tersebut klik tombol **`Terima sbg Penyelesaian (Tutup Tiket)`** → tiket langsung `Selesai Ditutup`.
-  5. **`[CABANG]` Siklus `Terima Risiko` (`Jendela 3 — Arif` di `/blockers`):** Pilih tiket **`[Menunggu Persetujuan Rilis Arsitektur Database Baru]`** (`APPROVAL`, `WP-CORE`) → klik **`Terima & Tangani`** → klik **`Terima Risiko`** dan isi kedua kolom di modal **`Penerimaan Risiko Resmi (Accept Risk)`**:
+  4. **`⚡` Pindah ke `Jendela 2 — Aditya` (`/raise-blockers?tab=mine`)**: pada kartu tiket *`Gagal Build Pipeline Frontend di GitLab CI karena Out-of-Memory (OOM)`* tersebut klik tombol **`Terima sbg Penyelesaian (Tutup Tiket)`** → tiket langsung `Selesai Ditutup`.
+  5. **`[CABANG]` Siklus `Terima Risiko` (`Jendela 3 — Arif` di `/blockers`):** Pilih tiket **`Menunggu Persetujuan Rilis Arsitektur Database Baru`** (`APPROVAL`, `WP-CORE`) → klik **`Terima & Tangani`** → klik **`Terima Risiko`** dan isi kedua kolom di modal **`Penerimaan Risiko Resmi (Accept Risk)`**:
      - **Justifikasi Penerimaan Risiko \* (min. 10 karakter):**
        ```text
        Migrasi database tahap 2 kita geser ke rilis minggu depan supaya jadwal demo minggu ini tetap aman
@@ -458,7 +438,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Karyawan bisa saja salah pilih divisi tujuan, duplikat bikin tiket, atau kendalanya keburu beres sendiri. Agar antrean PIC tidak penuh tiket salah alamat dan memicu alarm terlambat palsu, pelapor diizinkan mengedit atau menghapus tiket **hanya selama tiket masih aktif**. Begitu divisi tujuan diganti saat edit, PIC otomatis berpindah ke divisi yang benar; saat dihapus wajib pilih alasan dan seluruh pihak terkait langsung dapat notifikasi — tidak ada penghapusan diam-diam."*
 - **Aksi:** Di `/raise-blockers?tab=mine`:
-  1. Pada kartu tiket **`[Menunggu Hasil Uji QA dari Tim Delivery]`** (`CROSS_TEAM`, PIC saat ini `Dharma Putra`), klik **`Edit Tiket`**, lalu periksa/ubah kolom di modal **`Edit Tiket Kendala`**:
+  1. Pada kartu tiket **`Menunggu Hasil Uji QA dari Tim Delivery`** (`CROSS_TEAM`, PIC saat ini `Dharma Putra`), klik **`Edit Tiket`**, lalu periksa/ubah kolom di modal **`Edit Tiket Kendala`**:
      - **Judul Kendala \* (min. 10 karakter):** *(biarkan judul yang sudah terisi)*
      - **Kategori Kendala \*:** Biarkan **`3. Orang & Keputusan` → `Menunggu Tim / Rekan Lain (CROSS_TEAM)`**
      - **Divisi yang Sedang Ditunggu \*:** Ubah dari `Product & Delivery` ke **`Operations & Infrastructure`**
@@ -471,27 +451,29 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
      - **Bantuan Konkret yang Diharapkan (opsional):** *(biarkan atau sesuaikan)*
      - Klik **`Simpan Perubahan`**.
      - *Lihat di layar:* PIC otomatis berpindah dari `Dharma Putra` ke **`Gunawan Setiawan`** (*Head Ops & Infra*).
-  2. Pada kartu tiket **`[Koneksi WiFi & VPN Ruang Kerja Lantai 2 Terputus]`**, klik **`Hapus Tiket`** → di modal **`Hapus Tiket Kendala`**, pada pilihan **`Kategori Alasan Penghapusan *`**, tunjuk 3 alasan preset (`Salah Input / Tiket Duplikat`, `Sudah Teratasi Mandiri`, `Kendala Tidak Jadi / Batal Relevan`) + `Alasan Lainnya` → klik **`Sudah Teratasi Mandiri`** *(kolom `Penjelasan Tambahan (opsional)` otomatis terisi kalimat preset)* → klik **`Konfirmasi Hapus Tiket`**.
+  2. Pada kartu tiket **`Koneksi WiFi & VPN Ruang Kerja Lantai 2 Terputus`**, klik **`Hapus Tiket`** → di modal **`Hapus Tiket Kendala`**, pada pilihan **`Kategori Alasan Penghapusan *`**, tunjuk 3 alasan preset (`Salah Input / Tiket Duplikat`, `Sudah Teratasi Mandiri`, `Kendala Tidak Jadi / Batal Relevan`) + `Alasan Lainnya` → klik **`Sudah Teratasi Mandiri`** *(kolom `Penjelasan Tambahan (opsional)` otomatis terisi kalimat preset)* → klik **`Konfirmasi Hapus Tiket`**.
 - **Bilang singkat:** *"Begitu tiket sudah masuk tahap Selesai atau Ditutup, tombol Edit dan Hapus otomatis dikunci agar arsip kerjanya tetap utuh."*
 
 #### `3E [INTI]` Kepala Divisi Memantau Tiket Kritis Lewat Batas Waktu di Radar Penuaan
 - **🪟 Jendela & Akun:** Pakai **Jendela 3 (`Arif Budiman` — Head Eng)** · **✅ Tanpa Ganti Akun**
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Prinsip utama WorkPulse adalah 'No Surprise' — masalah boleh terjadi di proyek, tapi tidak boleh menjadi kejutan di akhir minggu. Tiket dengan tingkat keparahan tinggi yang melewati target waktu penyelesaian langsung disorot merah di Radar Penuaan ini supaya pimpinan cepat turun tangan."*
-- **Aksi:** Buka **`Penuaan & Eskalasi`** (`/blockers/aging`), tunjuk kartu merah **`Lewat Batas Waktu: 1`** (tiket `CRITICAL` `WP-CORE`), centang **`Hanya Lewat Batas Waktu`**, klik **`Buka`**.
+- **Aksi:**
+  1. Di sidebar kiri, klik menu **`Penuaan & Eskalasi`** (`/blockers/aging`).
+  2. Tunjuk kartu ringkasan merah **`Lewat Batas Waktu: 1`** dan baris tiket **`[CRITICAL] Gangguan Koneksi Database Staging menyebabkan Pengujian Integrasi Terhenti`** (`WP-CORE`).
+  3. Centang kotak filter **`Hanya Lewat Batas Waktu`**, lalu klik tombol **`Buka`** di ujung kanan baris tiket tersebut untuk langsung masuk ke detail penanganannya.
 - **Bilang singkat:** *"Sekali klik 'Buka', atasan langsung dibawa ke tiket kritis yang paling butuh intervensi."*
 
 ---
 
 ### BABAK 4 — Permohonan & Persetujuan Koreksi Laporan yang Sudah Terkunci
-> **Estimasi:** 4 menit · **Prasyarat:** `Aditya` sudah punya komitmen pagi terkunci · **Dampak:** Komitmen #1 langsung diperbarui otomatis, Komitmen #2 terupdate via persetujuan Head.
 
 #### `4A [INTI]` Karyawan Mengajukan Koreksi Komitmen Pagi (Otomatis untuk Minor, Review untuk Material)
-- **🪟 Jendela & Akun:** Pakai **Jendela 2 (`Aditya Nugroho` — `dev.frontend@dutamedia.com`)** · **✅ Tanpa Ganti Akun** *(catatan: bila latihan mandiri melewati Babak 3, keluar `Bagas` dulu di J2 lalu login `dev.frontend@dutamedia.com`)*
+- **🪟 Jendela & Akun:** Pakai **Jendela 2 (`Aditya Nugroho` — `dev.frontend@dutamedia.com`)** · **✅ Tanpa Ganti Akun** *(sudah login sejak Babak `3C`)*
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Komitmen yang sudah terkunci tidak boleh diedit bebas supaya baseline pagi tetap jujur. Tapi supaya proses koreksi nggak terlalu birokratis dan nggak membebani atasan, kami bagi dua: Perubahan Minor (seperti salah ketik atau tambah tautan PR) langsung diterapkan otomatis dengan jejak audit, sedangkan Perubahan Material (mengubah target atau tingkat risiko) harus melewati persetujuan Kepala Divisi."*
 - **Aksi** (buka menu **`Koreksi Komitmen Pagi`** `/corrections/morning`):
-  1. **Ajukan Perubahan Minor (Otomatis `AUTO_APPLIED`):** Isi formulir kiri dari atas ke bawah:
+  1. **Ajukan Perubahan Minor (Langsung Diterapkan Otomatis):** Isi formulir kiri dari atas ke bawah:
      - **Pilih Komitmen yang Ingin Dikoreksi \*:** Pilih **`[Komitmen #1] Menyelesaikan implementasi komponen UI navigasi mobile... (Risiko: GREEN)`**
      - **Klasifikasi Perubahan \*:** Klik kartu **`Perubahan Minor`** (`Diterapkan Otomatis · Audit Log`)
      - **Deskripsi Komitmen Baru yang Diajukan \*:**
@@ -508,7 +490,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        Tambah link PR nomor 241 dan perjelas info ukuran layar
        ```
      - Klik **`Kirim Permohonan Koreksi`** → *Lihat di panel kanan:* langsung berstatus hijau **`Diterapkan Otomatis (AUTO_APPLIED)`**.
-  2. **Ajukan Perubahan Material (Butuh Persetujuan Head):** Isi kembali formulir kiri dari atas ke bawah:
+  2. **Ajukan Perubahan Material (Butuh Persetujuan Kepala Divisi):** Isi kembali formulir kiri dari atas ke bawah:
      - **Pilih Komitmen yang Ingin Dikoreksi \*:** Pilih **`[Komitmen #2] Investigasi dan perbaikan bug memory leak pada proses build frontend... (Risiko: RED)`**
      - **Klasifikasi Perubahan \*:** Klik kartu **`Perubahan Material`** (`Wajib Persetujuan Atasan`)
      - **Deskripsi Komitmen Baru yang Diajukan \*:**
@@ -553,43 +535,43 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 
 #### `4C [CABANG]` Menunjukkan Halaman Koreksi Evaluasi Sore (Batas 48 Jam Kerja)
 - **🪟 Jendela & Akun:** Pakai **Jendela 2 (`Aditya Nugroho`)** · **✅ Tanpa Ganti Akun**
-- **Aksi:** Klik sebentar menu **`Koreksi Evaluasi Sore`** (`/corrections/eod`) untuk nunjukin jendela sanggahan EOD (48 jam kerja) tersedia terpisah.
+- **Aksi:** Klik sebentar menu **`Koreksi Evaluasi Sore`** (`/corrections/eod`) di sidebar kiri untuk menunjukkan halaman permohonan koreksi laporan sore (batas waktu 48 jam kerja) tersedia terpisah.
 
 ---
 
 ### BABAK 5 — Pencatatan Cuti Resmi, Dispensasi Tugas, & Pengecualian Permanen
-> **Estimasi:** 6 menit · **Prasyarat:** `Intan Permata` (`staff.finance@dutamedia.com`) tidak punya cuti/dispensasi Hari Ini · **Dampak:** Di akhir babak, data uji `Intan` dihapus lagi biar bersih dan menu hariannya pulih normal.
-> *(Catatan praktis: Kalau latihan dilakukan pas hari Sabtu/Minggu, ganti "Hari Ini" di babak ini ke hari kerja Senin–Jumat terdekat karena cuti 0 hari kerja ditolak sistem).*
 
 #### `5A [INTI]` HRGA Mencatat Cuti Sakit Karyawan (Beserta 3 Pagar Pengaman) & Membuktikan Form Langsung Terkunci
 - **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — HRGA)** & **Jendela 5 (Incognito)** · **🔄 Login di J5:** `staff.finance@dutamedia.com` (**Intan Permata**, `Password123!`) *(biarkan tetap login untuk `5B` & `5C`)*
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"WorkPulse sengaja tidak membuat alur pengajuan dan persetujuan cuti baru di dalam aplikasi agar HRGA dan atasan tidak perlu input dua kali dengan prosedur HR yang sudah berjalan di kantor. Begitu cuti sudah disetujui di jalur kantor, HRGA cukup mencatatnya satu pintu di sini dan akun karyawan otomatis dibebaskan — lengkap dengan pagar pengaman untuk menolak cuti akhir pekan (0 hari kerja), jadwal bentrok, serta pengajuan Cuti Tahunan bagi anak magang."*
 - **Aksi:**
-  1. Di **`Jendela 4 — HRGA`**, buka menu **`Pencatatan Cuti Resmi`** (`/admin/leaves`): tunjuk semua catatan langsung berstatus resmi (`Disetujui`), termasuk **`Raka Pratama` (`Izin Resmi`)** dan **`Gilang Ramadhan`**.
+  1. Di **`Jendela 4 — Dewi (HRGA)`**, buka menu **`Pencatatan Cuti Resmi`** (`/admin/leaves`): tunjuk tabel kanan di mana semua catatan langsung berstatus resmi **`Disetujui`**, termasuk **`Raka Pratama` (`Izin Resmi`)** dan **`Gilang Ramadhan` (`Cuti Tahunan`)**.
   2. **`[CABANG]` Uji 3 Pagar Pengaman di Form Kiri `Catat Cuti Resmi Baru` (tanpa merusak data):**
-     - **Uji `:min` & Tolak Akhir Pekan (`400`):** Pilih **Karyawan \*:** `Intan Permata`, pilih **Tanggal Mulai \*** hari ini → buka kalender **Tanggal Selesai \*** dan tunjuk tanggal sebelum Tanggal Mulai otomatis nonaktif (`:min`). Lalu ubah **Tanggal Mulai \*** & **Tanggal Selesai \*** ke hari **Sabtu–Minggu** terdekat, **Jenis Cuti / Izin \*:** `Cuti Tahunan`, **Keterangan Resmi / Dasar Persetujuan \*:** `Tes akhir pekan` → klik **`Daftarkan Cuti Resmi`** → ditolak **`400`** (*0 hari kerja*).
-     - **Uji Bentrok Jadwal (`409`):** Pilih **Karyawan \*:** `Gilang Ramadhan`, **Tanggal Mulai \*** & **Tanggal Selesai \*:** **Hari Ini**, **Jenis Cuti / Izin \*:** `Cuti Tahunan`, **Keterangan Resmi / Dasar Persetujuan \*:** `Tes bentrok cuti` → klik **`Daftarkan Cuti Resmi`** → ditolak **`409`** (bentrok dengan cuti aktif Gilang).
-     - **Uji `Intern` Ditolak Cuti Tahunan (`400`):** Pilih **Karyawan \*:** `Raka Pratama` (`Intern`), **Tanggal Mulai \*** & **Tanggal Selesai \*:** **hari kerja H+10**, **Jenis Cuti / Izin \*:** `Cuti Tahunan`, **Keterangan Resmi / Dasar Persetujuan \*:** `Tes hak cuti magang` → klik **`Daftarkan Cuti Resmi`** → ditolak **`400`** (`Intern` tidak berhak Cuti Tahunan).
-  3. **`[INTI]` Catat Cuti Sakit Hari Ini untuk Intan (isi seluruh kolom form kiri dari atas ke bawah):**
+     - **Uji Tanggal Mundur & Tolak Akhir Pekan:** Pilih **Karyawan \*:** `Intan Permata (staff.finance@dutamedia.com)` → pilih **Tanggal Mulai \*:** **Hari Ini** → buka kalender **Tanggal Selesai \*** dan tunjukkan tanggal kemarin otomatis terkunci tidak bisa dipilih. Lalu ubah **Tanggal Mulai \*** & **Tanggal Selesai \*** ke hari **Sabtu dan Minggu minggu ini**, pilih **Jenis Cuti / Izin \*:** `Cuti Tahunan`, isi **Keterangan Resmi / Dasar Persetujuan \*:** `Tes akhir pekan` → klik **`Daftarkan Cuti Resmi`** → ditolak merah (*0 hari kerja*).
+     - **Uji Bentrok Jadwal Cuti:** Pilih **Karyawan \*:** `Gilang Ramadhan (specialist.it@dutamedia.com)`, **Tanggal Mulai \*** & **Tanggal Selesai \*:** **Hari Ini**, **Jenis Cuti / Izin \*:** `Cuti Tahunan`, **Keterangan Resmi / Dasar Persetujuan \*:** `Tes bentrok cuti` → klik **`Daftarkan Cuti Resmi`** → ditolak merah (bentrok dengan jadwal cuti aktif Gilang).
+     - **Uji Anak Magang (`Intern`) Ditolak Cuti Tahunan:** Pilih **Karyawan \*:** `Raka Pratama (intern.frontend@dutamedia.com)`, **Tanggal Mulai \*** & **Tanggal Selesai \*:** **Senin depan**, **Jenis Cuti / Izin \*:** `Cuti Tahunan`, **Keterangan Resmi / Dasar Persetujuan \*:** `Tes hak cuti magang` → klik **`Daftarkan Cuti Resmi`** → ditolak merah (*karyawan berstatus Intern tidak berhak mengambil Cuti Tahunan*).
+  3. **`[INTI]` Catat Cuti Sakit Hari Ini untuk Intan Permata (isi seluruh kolom form kiri dari atas ke bawah):**
      - **Karyawan \*:** Pilih **`Intan Permata (staff.finance@dutamedia.com)`**
-     - **Tanggal Mulai \*:** **Hari Ini**
-     - **Tanggal Selesai \*:** **Hari Ini**
+     - **Tanggal Mulai \*:** Pilih **tanggal hari ini**
+     - **Tanggal Selesai \*:** Pilih **tanggal hari ini**
      - **Jenis Cuti / Izin \*:** Pilih **`Sakit`**
      - **Keterangan Resmi / Dasar Persetujuan \* (min. 5 karakter):**
        ```text
        Surat sakit dari klinik, sudah ACC atasan & HRGA
        ```
      - Klik **`Daftarkan Cuti Resmi`**.
-- **⚡ Efek Lintas Jendela (`Jendela 5`):** Login **`staff.finance@dutamedia.com`** (**Intan**): buka `/daily/morning`, `2. Additional Work`, `3. EOD Outcome` → semua **otomatis terkunci** menampilkan **`Masa Cuti Resmi (Cuti Sakit)`** tanpa perlu pilih `0 komitmen`! Buka **`Riwayat Saya`** (`/daily/history`) → muncul di panel **`Riwayat Cuti & Dispensasi Resmi Tercatat` (`Read-Only`)**, plus notifikasi masuk.
+  4. **⚡ Buktikan di `Jendela 5 (Incognito)`:** Login sebagai **`staff.finance@dutamedia.com`** (**Intan Permata**, `Password123!`):
+     - Buka `/daily/morning`, klik tab `2. Additional Work` dan `3. EOD Outcome` → ketiganya **otomatis terkunci** menampilkan spanduk hijau **`Masa Cuti Resmi (Cuti Sakit)`** tanpa Intan perlu memilih `0 komitmen`.
+     - Klik menu **`Riwayat Saya`** (`/daily/history`) → catatan cutinya langsung muncul di panel **`Riwayat Cuti & Dispensasi Resmi Tercatat` (`Read-Only`)**, dan notifikasi masuk di lonceng pojok kanan atas.
 - **Bilang singkat:** *"Seketika setelah dicatat HRGA, seluruh jadwal pengisian harian karyawan terkunci aman dan notifikasi langsung terkirim ke akun yang bersangkutan."*
 
 #### `5B [INTI]` HRGA Mengedit & Menghapus Catatan Cuti Agar Jadwal Karyawan Aktif Kembali
 - **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — HRGA)** & **Jendela 5 (masih `Intan Permata`)** · **✅ Tanpa Ganti Akun**
 - **Aksi:**
-  1. Di **`Jendela 4` (`/admin/leaves`)**: pada baris **`Intan Permata`**, klik **`Edit`** → di form kiri (`Edit Catatan Cuti Resmi`), ubah **Keterangan Resmi / Dasar Persetujuan \*** menjadi `Surat sakit dari klinik, sudah ACC atasan & HRGA (revisi HRGA)` → klik **`Simpan Perubahan Cuti`**.
-  2. Klik **`Hapus`** pada baris `Intan Permata` → di modal **`Hapus Catatan Cuti Resmi?`** klik **`Ya, Hapus Catatan`**.
-- **⚡ Efek Lintas Jendela:** Di **`Jendela 5 — Intan` (`/daily/morning`)**, tekan **`F5`** → form pagi langsung **terbuka kembali** normal!
+  1. Di **`Jendela 4 — Dewi (HRGA)` (`/admin/leaves`)**: pada baris **`Intan Permata`**, klik tombol **`Edit`** → di form kiri (`Edit Catatan Cuti Resmi`), ubah **Keterangan Resmi / Dasar Persetujuan \*** menjadi `Surat sakit dari klinik, sudah ACC atasan & HRGA (revisi HRGA)` → klik **`Simpan Perubahan Cuti`**.
+  2. Masih pada baris **`Intan Permata`**, klik tombol **`Hapus`** → di jendela konfirmasi **`Hapus Catatan Cuti Resmi?`** klik **`Ya, Hapus Catatan`**.
+  3. **⚡ Buktikan di `Jendela 5 — Intan` (`/daily/morning`)**: tekan **`F5`** → formulir komitmen pagi Intan langsung **terbuka kembali** seperti normal!
 - **Bilang singkat:** *"Kalau ada salah tanggal atau batal cuti, tinggal edit atau hapus di sini dan jadwal check-in karyawan langsung aktif lagi."*
 
 #### `5C [INTI]` HRGA Mendaftarkan Dispensasi Dinas Luar, Menguji Pengecualian Permanen, Lalu Menghapusnya
@@ -597,12 +579,12 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Dispensasi seperti Dinas Luar, pelatihan sertifikasi, atau penugasan khusus eksekutif dipisahkan dari 0 Komitmen karena ini adalah penugasan resmi perusahaan berbasis surat tugas. Selain dispensasi bertanggal, kami juga menambahkan fitur **Pengecualian Permanen** (berlaku terus tanpa tanggal berakhir sampai diubah atau dihapus Admin): tujuannya jika ada individu atau peran tertentu yang memang dibebaskan seterusnya dari komitmen harian, HRGA/Admin tidak perlu menginput ulang berulang-ulang — menu komitmen harian & koreksinya otomatis disembunyikan, sementara `Lapor Blocker` sengaja tetap aktif supaya mereka tetap bisa melapor bila menghadapi kendala kerja."*
 - **Aksi:**
-  1. Di **`Jendela 4 — HRGA`**, buka **`Manajemen Dispensasi`** (`/exemptions`): tunjuk tabel kanan sudah ada **`Bayu Santoso` (`Dinas Luar`, `ST/HRGA/2026/XI/104`)**.
-  2. Isi seluruh kolom pada form kiri **`Tambah Dispensasi Resmi`** untuk **`Intan Permata`**:
+  1. Di **`Jendela 4 — Dewi (HRGA)`**, buka menu **`Manajemen Dispensasi`** (`/exemptions`): tunjuk di tabel kanan sudah ada contoh **`Bayu Santoso` (`Dinas Luar`, `ST/HRGA/2026/XI/104`)**.
+  2. Isi seluruh kolom pada form kiri **`Tambah Dispensasi Resmi`** dari atas ke bawah:
      - **Karyawan Penerima Dispensasi \*:** Pilih **`Intan Permata (staff.finance@dutamedia.com)`**
-     - **Tanggal Mulai \*:** **Hari Ini**
-     - **Tanggal Selesai \*:** **Hari Ini**
-     - **Kotak centang `Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)`:** *(biarkan tidak dicentang dulu untuk uji dispensasi bertanggal)*
+     - **Tanggal Mulai \*:** Pilih **tanggal hari ini**
+     - **Tanggal Selesai \*:** Pilih **tanggal hari ini**
+     - **Kotak centang `Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)`:** *(biarkan tidak dicentang dulu untuk mendemokan dispensasi bertanggal)*
      - **Kategori Pengecualian \*:** Pilih **`Dinas Luar (Penugasan Luar Kantor / Klien)`**
      - **Nomor Surat Tugas / Referensi (opsional):** Ketik `ST/HRGA/2026/XI/112`
      - **Alasan Resmi Dispensasi \* (min. 5 karakter):**
@@ -610,25 +592,24 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        Dampingi audit faktur dan rekonsiliasi pajak di kantor klien Surabaya
        ```
      - Klik **`Daftarkan Dispensasi`**.
-  3. **⚡** Refresh **`Jendela 5 — Intan` (`/daily/morning`)** → form harian langsung terkunci dengan spanduk **`Masa Dispensasi Resmi (Dinas Luar)`** & muncul read-only di `/daily/history`.
+  3. **⚡ Buktikan di `Jendela 5 — Intan` (`/daily/morning`)**: tekan **`F5`** → formulir harian langsung terkunci dengan spanduk **`Masa Dispensasi Resmi (Dinas Luar)`** dan tercatat di `/daily/history`.
   4. **`[CABANG]` Uji Pengecualian Permanen (Bebas Komitmen Harian, `Lapor Blocker` Tetap Aktif):**
-     - Di **`Jendela 4 — HRGA`** (`/exemptions`), pada baris `Intan Permata`, klik **`Edit`** → di form kiri (`Edit Dispensasi Resmi`):
+     - Di **`Jendela 4 — Dewi (HRGA)`** (`/exemptions`), pada baris **`Intan Permata`**, klik tombol **`Edit`** → di form kiri (`Edit Dispensasi Resmi`):
        - Centang kotak **`Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)`** *(perhatikan kolom **Tanggal Selesai** otomatis nonaktif & muncul petunjuk: "Aktif terus mulai Tanggal Mulai. Menu komitmen harian & koreksi disembunyikan, sementara Lapor Blocker tetap aktif.")*.
        - Ubah **Kategori Pengecualian \*** ke **`Pengecualian Permanen (Bebas Komitmen Harian)`**.
        - Klik **`Simpan Perubahan Dispensasi`**.
-     - *Lihat di tabel kanan `/exemptions`:* kolom Periode berubah menjadi **`Mulai <tanggal> (Permanen)`**.
-     - **⚡ Efek Lintas Jendela (`Jendela 5 — Intan`):** Tekan **`F5`** (atau keluar & login ulang `staff.finance@dutamedia.com`):
-       - Saat login langsung mendarat di **`/raise-blockers`** (bukan `/daily/morning`).
-       - Di sidebar kiri, menu **`My Today`**, **`Koreksi Komitmen Pagi`**, dan **`Koreksi Evaluasi Sore`** **otomatis hilang** (jika URL `/daily/morning` atau `/corrections/morning` diketik manual → ditolak **`403 — Akses Dibatasi`**).
-       - Menu **`Lapor Blocker`**, **`Riwayat Saya`** (menampilkan **`Mulai ... (Permanen)`** pada panel read-only), dan **`Notifikasi`** **tetap aktif**.
-       - Buka sebentar **`/profile`** (Kartu Identitas): baris status dispensasi menampilkan **`Pengecualian Permanen: Pengecualian Permanen (Mulai ...) · Lapor Blocker tetap aktif`**.
-  5. **Bersihkan kembali (`Hapus`):** Balik ke **`Jendela 4 — HRGA`**, pada baris `Intan` klik **`Hapus`** → di modal **`Hapus Catatan Dispensasi?`** klik **`Ya, Hapus Dispensasi`**. Refresh `Jendela 5` → seluruh menu harian Intan aktif normal kembali, lalu **Keluar Sesi**.
+     - *Lihat di tabel kanan `/exemptions`:* kolom Periode berubah menjadi **`Mulai [Tanggal Hari Ini] (Permanen)`**.
+     - **⚡ Buktikan di `Jendela 5 — Intan`:** Tekan **`F5`** (atau keluar & login ulang `staff.finance@dutamedia.com`):
+       - Halaman langsung diarahkan ke **`/raise-blockers`** (bukan `/daily/morning`).
+       - Di sidebar kiri, menu **`My Today`**, **`Koreksi Komitmen Pagi`**, dan **`Koreksi Evaluasi Sore`** **otomatis hilang** (jika alamat `/daily/morning` diketik manual di browser → muncul halaman **`403 — Akses Dibatasi`**).
+       - Menu **`Lapor Blocker`**, **`Riwayat Saya`**, dan **`Notifikasi`** **tetap aktif**.
+       - Klik bulatan profil di pojok kanan atas (`/profile`): pada Kartu Identitas tertulis **`Pengecualian Permanen · Lapor Blocker tetap aktif`**.
+  5. **Hapus Dispensasi Intan (Membuktikan Menu Harian Aktif Kembali):** Balik ke **`Jendela 4 — Dewi (HRGA)`** (`/exemptions`), pada baris **`Intan Permata`** klik tombol **`Hapus`** → di jendela konfirmasi **`Hapus Catatan Dispensasi?`** klik **`Ya, Hapus Dispensasi`**. Kembali ke **`Jendela 5 — Intan`**, tekan **`F5`** → tunjukkan seluruh menu komitmen harian Intan langsung muncul kembali, lalu klik **`Keluar Sesi`**.
 - **Bilang singkat:** *"Begitu pengecualian permanennya dicabut atau dihapus Admin, menu komitmen harian karyawan langsung aktif kembali normal seketika."*
 
 ---
 
 ### BABAK 6 — Tindak Lanjut Kepatuhan HRGA & Catatan Pembinaan (Coaching) Atasan
-> **Estimasi:** 4 menit · **Prasyarat:** `Siti Rahma` (Belum Ditangani) & `Nadia` (Sudah Ditangani) di `/compliance`; `Aditya` di `/coaching` · **Dampak:** `Siti Rahma` selesai ditindaklanjuti, catatan coaching baru tersimpan.
 
 #### `6A [INTI]` HRGA Menindaklanjuti Pola Terlambat Karyawan di Antrean Kepatuhan
 - **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — HRGA)** · **✅ Tanpa Ganti Akun**
@@ -663,43 +644,54 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 ---
 
 ### BABAK 7 — Pusat Notifikasi, Dashboard Pemantauan, Radar Proyek, & Laporan Eksekutif
-> **Estimasi:** 5 menit · **Prasyarat:** Semua notifikasi & skor sudah terbentuk dari babak sebelumnya · **Dampak:** Read-only & tandai dibaca notifikasi.
 
 #### `7A [INTI]` Membuktikan Privasi Catatan Rahasia, Sembunyinya Tautan Admin, & Notifikasi Lonceng Direktur
 - **🪟 Jendela & Akun:** Pakai **Jendela 2 (`Aditya Nugroho`)** & **Jendela 1 (`Hendra Wijaya` — Direktur)** · **✅ Tanpa Ganti Akun**
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Di Pusat Notifikasi, sistem menjaga dua keamanan sekaligus: catatan `Rahasia Manajemen` tidak pernah bocor ke layar staf, dan tautan di dalam notifikasi — misalnya pemberitahuan perubahan kebijakan oleh Direktur — otomatis menyembunyikan tombol menuju `/admin/policies` bagi staf biasa agar karyawan tidak salah klik menuju halaman `403`."*
 - **Aksi:**
-  1. Di **`Jendela 2 — Aditya`**, buka **`Notifikasi`** (`/notifications`):
-     - Tunjuk catatan **`Dibagikan ke Karyawan`** muncul, sedangkan **`Rahasia Manajemen`** **0% bocor**.
-     - Klik notifikasi perubahan kebijakan cut-off: badge merah di sidebar **`Notifikasi`** & ikon lonceng langsung **berkurang 1**, dan tombol menuju `/admin/policies` **otomatis disembunyikan**.
-     - Tunjuk tab **`Pengaturan Kanal & Perangkat`** & tombol **`Tandai semua dibaca`**.
-  2. Tunjuk **`Jendela 1 — Direktur`**: buka `/notifications` lewat **ikon lonceng di TopBar** (akses notifikasi pola Hybrid).
+  1. Di **`Jendela 2 — Aditya`**, klik menu **`Notifikasi`** (`/notifications`) di sidebar kiri:
+     - Tunjukkan notifikasi catatan pembinaan **`Dibagikan ke Karyawan`** muncul, sedangkan catatan **`Rahasia Manajemen`** sama sekali tidak muncul di layar karyawan.
+     - Klik kartu notifikasi perubahan kebijakan cut-off: tunjukkan angka merah di sidebar **`Notifikasi`** & ikon lonceng pojok kanan atas langsung **berkurang 1**, dan tombol menuju halaman `/admin/policies` **otomatis disembunyikan** karena Aditya bukan Admin/Direktur.
+     - Klik sebentar tab **`Pengaturan Kanal & Perangkat`** dan tunjuk tombol **`Tandai semua dibaca`**.
+  2. Pindah ke **`Jendela 1 — Direktur`**: klik **ikon lonceng di pojok kanan atas (TopBar)** untuk menunjukkan Direktur mengakses halaman **`Notifikasi`** (`/notifications`) langsung dari lonceng atas tanpa menu `Workspace`.
 
 #### `7B [INTI]` Membandingkan Tampilan Dashboard Kepala Divisi vs Direktur (Seluruh Perusahaan)
 - **🪟 Jendela & Akun:** Pakai **Jendela 3 (`Arif Budiman` — Head Eng)** & **Jendela 1 (`Hendra Wijaya` — Direktur)** · **✅ Tanpa Ganti Akun**
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
-> *"Dashboard ini kami rancang berbasis pengecualian (exception-first), bukan papan peringkat atau leaderboard jumlah tugas, supaya karyawan tidak terjebak mengejar jumlah tugas palsu demi skor. Aksesnya juga terisolasi ketat per peran: Head hanya melihat divisinya sendiri, sedangkan Direktur melihat gambaran seluruh perusahaan — lengkap dengan pemisahan antara jumlah karyawan aktif dan karyawan yang benar-benar wajib lapor hari itu."*
+> *"Dashboard ini kami rancang fokus menyoroti kendala dan anggota yang butuh perhatian, bukan papan peringkat jumlah tugas, supaya karyawan tidak terjebak mengejar jumlah tugas palsu demi skor. Aksesnya juga terisolasi ketat per peran: Head hanya melihat divisinya sendiri, sedangkan Direktur melihat gambaran seluruh perusahaan — lengkap dengan pemisahan antara jumlah karyawan aktif dan karyawan yang benar-benar wajib lapor hari itu."*
 - **Aksi:**
-  1. **`Jendela 3 — Arif`** (`/dashboard`): cakupan terkunci **`Divisi Saya`** (`Engineering`), tidak bisa mengintip divisi lain.
-  2. **`Jendela 1 — Direktur`** (`/dashboard`): cakupan **`Seluruh Perusahaan`** (**25 karyawan aktif** setelah Budi aktivasi; **24 wajib lapor** karena 1 orang — Gilang — sedang cuti resmi hari ini), coba filter **`Status Karyawan`** ke **`Intern`** (hanya tampil `Raka Pratama` & `Nisa Amelia`) → kembalikan ke **`Semua Status Karyawan`**.
+  1. Di **`Jendela 3 — Arif (Head Engineering)`**, klik menu **`Dashboard`** (`/dashboard`): tunjukkan pilihan cakupan data terkunci pada **`Divisi Saya`** (`Engineering`) sehingga Kepala Divisi tidak bisa melihat data divisi lain.
+  2. Pindah ke **`Jendela 1 — Direktur`**, klik menu **`Dashboard`** (`/dashboard`):
+     - Tunjukkan cakupan data **`Seluruh Perusahaan`** yang menampilkan **25 karyawan aktif** (setelah Budi Santoso aktivasi di Babak 1) dan **24 karyawan wajib lapor** (karena 1 orang — Gilang Ramadhan — sedang cuti resmi hari ini).
+     - Pada dropdown filter **`Status Karyawan`**, pilih **`Intern`** (tabel langsung menyaring hanya 2 anak magang: `Raka Pratama` & `Nisa Amelia`), lalu kembalikan ke **`Semua Status Karyawan`**.
 
 #### `7C [INTI]` Kepala Divisi Memantau Kesehatan Proyek & Kendala Kritis di Radar Risiko Proyek
 - **🪟 Jendela & Akun:** Pakai **Jendela 3 (`Arif Budiman` — Head Eng)** · **✅ Tanpa Ganti Akun**
-- **Aksi:** Di `/projects/risk`, ketik `Engineering` di kotak cari → klik **`Rincian`** pada **`WP-CORE`** → tunjukkan skor kesehatan & sorotan kendala `CRITICAL` lewat batas waktu + tombol **`Buka Antrean Blocker Terkait`**.
+- **Aksi:**
+  1. Di **`Jendela 3 — Arif`**, klik menu **`Radar Risiko Proyek`** (`/projects/risk`) di sidebar kiri.
+  2. Ketik `Engineering` pada kotak pencarian proyek, lalu pada baris proyek **`WP-CORE (WorkPulse Platform Core 2026)`** klik tombol **`Rincian`**.
+  3. Tunjukkan skor kesehatan proyek, sorotan kendala `CRITICAL` yang lewat batas waktu, serta tombol **`Buka Antrean Blocker Terkait`**.
 
 #### `7D [INTI]` Direktur Meninjau Laporan Eksekutif, Menguji Filter Status, & Mengunduh CSV/PDF
 - **🪟 Jendela & Akun:** Pakai **Jendela 1 (`Hendra Wijaya` — Direktur)** · **✅ Tanpa Ganti Akun**
-- **Aksi:** Di `/reports`, klik preset `Hari Ini` → `Pekan Ini` → `Bulan Ini` → `Kuartal Ini`. `[CABANG]` Pilih filter status **`Kontrak`** (tampil pesan kosong ramah: **`"Belum ada data karyawan untuk penyaring yang dipilih."`**), kembalikan ke **`Semua`**. Klik **`Unduh Laporan (CSV)`** dan tunjuk tombol **`Cetak / PDF`**.
+- **Aksi:**
+  1. Di **`Jendela 1 — Direktur`**, klik menu **`Laporan Eksekutif`** (`/reports`) di sidebar kiri.
+  2. Klik tombol rentang waktu secara berurutan: **`Hari Ini`** → **`Pekan Ini`** → **`Bulan Ini`** → **`Kuartal Ini`**.
+  3. **`[CABANG]` Uji Filter Status Karyawan Kosong:** Pada filter status karyawan, pilih **`Kontrak`** → tunjukkan pesan ramah **`"Belum ada data karyawan untuk penyaring yang dipilih."`**, lalu kembalikan ke **`Semua`**.
+  4. Klik tombol **`Unduh Laporan (CSV)`** dan tunjuk tombol **`Cetak / PDF`** di sebelahnya.
 
 ---
 
 ### BABAK 8 — Pengaturan Master Data, Struktur Organisasi, Delegasi, & Kanal Notifikasi
-> **Estimasi:** 7 menit · **Prasyarat:** `Rian` tidak punya delegasi aktif · **Dampak:** Semua aksi uji dikembalikan / dibatalkan bersih di akhir babak.
 
 #### `8A [CABANG]` HRGA Menonaktifkan & Mengaktifkan Kembali Akun Karyawan
 - **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — HRGA)** · **✅ Tanpa Ganti Akun**
-- **Aksi:** Di `/admin/users`, pada baris **`Budi Santoso`**, klik **`Nonaktifkan`** → klik **`Ya, Nonaktifkan Akun`** (status `Nonaktif`, sesi otomatis putus) → klik **`Aktifkan Kembali`** → klik **`Ya, Aktifkan Kembali`**. Tunjuk baris **`Dewi Lestari`** bertanda **`Akun Anda`** (tidak bisa menonaktifkan diri sendiri).
+- **Aksi:**
+  1. Di **`Jendela 4 — Dewi (HRGA)`**, buka menu **`Pengguna & Peran`** (`/admin/users`).
+  2. Pada baris **`Budi Santoso`**, klik tombol **`Nonaktifkan`** → di jendela konfirmasi klik **`Ya, Nonaktifkan Akun`** (status berubah menjadi `Nonaktif` dan sesi aktifnya otomatis diputus).
+  3. Masih pada baris **`Budi Santoso`**, klik tombol **`Aktifkan Kembali`** → klik **`Ya, Aktifkan Kembali`** (status kembali `Aktif`).
+  4. Tunjuk baris **`Dewi Lestari`** sendiri yang bertanda **`Akun Anda`** (tombol nonaktifkan dikunci agar admin tidak bisa menonaktifkan dirinya sendiri).
 
 #### `8B [INTI]` HRGA Mengelola Struktur Organisasi, Aturan Anti-Siklus, Status Magang, & Wewenang Proyek
 - **🪟 Jendela & Akun:** Pakai **Jendela 4 (`Dewi Lestari` — HRGA)** · **✅ Tanpa Ganti Akun**
@@ -707,7 +699,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 > *"Tata kelola organisasi dijaga oleh tiga pagar pengaman. Pertama, seluruh perubahan jabatan atau atasan berlaku mulai hari ini ke depan (anti-backdating) agar konteks laporan masa lalu tetap jujur sesuai kondisi saat itu. Kedua, sistem menolak penugasan melingkar dan menolak Project Manager merangkap Escalation Reviewer di proyek yang sama demi prinsip check-and-balance. Ketiga, akun Intern otomatis dikecualikan dari peran atasan, PM, maupun Reviewer sampai resmi diangkat menjadi karyawan tetap."*
 - **Aksi** (di menu **`Struktur Organisasi`** `/admin/organization`):
   1. **Tab 1 (`Struktur & Penugasan Karyawan`):** Klik tombol **`Atur Penugasan Baru`**, lalu di modal **`Atur Penugasan Organisasi`**:
-     - Buka dropdown **`Atasan Langsung (Direct Manager)`** → tunjuk **`Raka Pratama` & `Nisa Amelia` (`Intern`) 0x muncul**.
+     - Buka dropdown **`Atasan Langsung (Direct Manager)`** → tunjukkan bahwa nama anak magang (**`Raka Pratama`** & **`Nisa Amelia`**) tidak muncul di daftar pilihan atasan.
      - **`[CABANG]` Uji anti-siklus atasan melingkar (`422`):** Isi seluruh kolom wajib di modal tersebut dari atas ke bawah:
        - **Karyawan:** Pilih **`Arif Budiman (head.eng@dutamedia.com)`**
        - **Nama Jabatan (Job Title) \*:** Ketik `Head of Engineering` *(wajib diisi!)*
@@ -717,10 +709,10 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
        - **Atasan Langsung (Direct Manager):** Pilih **`Aditya Nugroho (Senior Frontend Developer)`** *(bawahannya sendiri!)*
        - **Tanggal Efektif Penugasan:** *(otomatis hari ini WIB)*
        - **Alasan Penugasan (Audit Log) \*:** Ketik `Tes cek validasi atasan melingkar` *(wajib diisi!)*
-       - Klik **`Simpan Penugasan`** → **ditolak merah `422`** (siklus garis atasan melingkar terdeteksi).
+       - Klik **`Simpan Penugasan`** → **ditolak merah** (siklus garis atasan melingkar terdeteksi).
      - **Pratinjau angkat `Intern`:** Ubah **Karyawan** ke **`Raka Pratama (intern.frontend@dutamedia.com)`**, ubah **Status Karyawan** ke **`Karyawan Tetap`** → jelaskan bahwa saat anak magang diangkat menjadi karyawan tetap, hak jabatan struktural & cuti tahunannya langsung terbuka tanpa merusak riwayat magang masa lalunya → klik **`Batal`**.
   2. **Tab 2 (`Kewenangan Proyek (Project Authority)`):** Klik tombol **`Tetapkan Wewenang Proyek`**, lalu di modal **`Tetapkan Kewenangan Proyek`**:
-     - Buka dropdown **`Project Manager *`** & **`Escalation Reviewer *`** → tunjuk akun **`Intern` 0x muncul**.
+     - Buka dropdown **`Project Manager *`** & **`Escalation Reviewer *`** → tunjukkan bahwa nama anak magang (`Intern`) tidak muncul di daftar pilihan.
      - **`[CABANG]` Uji tolak PM merangkap Escalation Reviewer di proyek yang sama:** Isi seluruh kolom wajib di modal tersebut dari atas ke bawah:
        - **Kode Proyek \*:** Ketik `WP-CORE`
        - **Nama Proyek \*:** Ketik `WorkPulse Platform Core 2026`
@@ -741,9 +733,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
   1. Di **`Jendela 4 — HRGA` (`/admin/temporary-reviewers`)**: klik tombol **`Delegasikan Reviewer Baru`**, lalu isi seluruh kolom di modal **`Delegasikan Reviewer Sementara`** dari atas ke bawah:
      - **1. Pejabat yang Berhalangan (Yang Digantikan) \*:** Pilih **`Gunawan Setiawan — Head of Operations & Infrastructure (Operations & Infrastructure)`**
      - **2. Divisi Wewenang Peninjauan (Otomatis):** *(otomatis terisi `Operations & Infrastructure` mengikuti pejabat yang digantikan)*
-     - **3. Pejabat Pengganti Sementara (Penerima Delegasi) \*:** Pilih **`Rian Kurniawan — Creative & UI/UX Lead (Engineering)`** *(tunjuk `Sistem Administrator` & akun `Intern` 0x muncul di list!)*
-     - **Tanggal Efektif Mulai \*:** **Hari Ini**
-     - **Batas Tanggal Kedaluwarsa \*:** **Besok**
+     - **3. Pejabat Pengganti Sementara (Penerima Delegasi) \*:** Pilih **`Rian Kurniawan — Creative & UI/UX Lead (Engineering)`** *(tunjukkan bahwa `Sistem Administrator` dan anak magang tidak muncul di daftar pilihan)*
+     - **Tanggal Efektif Mulai \*:** Pilih **tanggal hari ini**
+     - **Batas Tanggal Kedaluwarsa \*:** Pilih **tanggal besok**
      - **Alasan Delegasi (Audit Trail) \*:**
        ```text
        Gantikan review koreksi dan eskalasi kendala selama Head Ops audit luar kota
@@ -762,7 +754,9 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 - **🪟 Jendela & Akun:** Pakai **Jendela 1 (`Hendra Wijaya` — Direktur)** & **Jendela 4 (`Dewi Lestari` — HRGA)** · **✅ Tanpa Ganti Akun**
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
 > *"Kewenangan mengatur aturan sistem sengaja dibagi ke beberapa Pemilik Kebijakan sesuai kategorinya — bukan dipegang tunggal oleh satu Admin. Setiap kategori tidak boleh dibiarkan kosong tanpa pemilik aktif, dan tanggal mulai berlaku kebijakan maupun penugasan pemilik tidak pernah bisa diubah surut ke masa lampau."*
-- **Aksi:** Di **`Jendela 1`** (`/admin/policies`) tunjuk seksi **`Penugasan Pemilik Kebijakan (Policy Owners)`** (bisa `Tetapkan Pemilik`/`Ubah`/`Cabut`, dan menolak pencabutan pemilik terakhir) + tombol **`Unduh Audit CSV`**. Di **`Jendela 4`** (`/admin/policies`) tunjuk HRGA hanya bisa mengubah kategori miliknya dan tabel pemilik berstatus **`Hanya Lihat (Direktur/Admin)`**.
+- **Aksi:**
+  1. Di **`Jendela 1 — Direktur`**, buka menu **`Kebijakan & Cut-off`** (`/admin/policies`): gulir ke bagian **`Penugasan Pemilik Kebijakan (Policy Owners)`** → tunjukkan Direktur bisa klik **`+ Tetapkan Pemilik`**, **`Ubah`**, atau **`Cabut`** (sistem otomatis menolak jika seseorang mencoba mencabut pemilik aktif terakhir di suatu kategori), serta tombol **`Unduh Audit CSV`** di bagian bawah.
+  2. Bandingkan dengan **`Jendela 4 — Dewi (HRGA)`** di halaman **`Kebijakan & Cut-off`** (`/admin/policies`): tunjukkan HRGA hanya bisa membuat versi kebijakan pada kategori yang menjadi wewenangnya, sedangkan tabel penugasan pemilik di bawahnya terkunci **`Hanya Lihat (Direktur/Admin)`**.
 
 #### `8E [INTI]` Direktur Memeriksa Status Saluran Notifikasi & Melakukan Uji Kirim
 - **🪟 Jendela & Akun:** Pakai **Jendela 1 (`Hendra Wijaya` — Direktur)** · **✅ Tanpa Ganti Akun**
@@ -777,7 +771,6 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 ---
 
 ### BABAK 9 — Penutupan: Direktur Mengembalikan Jam Cut-Off ke Jadwal Standar Kantor
-> **Estimasi:** 1 menit
 
 - **🪟 Jendela & Akun:** Pakai **Jendela 1 (`Hendra Wijaya` — Direktur)** · **✅ Tanpa Ganti Akun**
 - **Aksi:** Di **`Kebijakan & Cut-off`** (`/admin/policies`), klik **`+ Buat Versi Kebijakan Baru`**, lalu isi seluruh kolom modal **`Buat Versi Kebijakan Baru`** dari atas ke bawah:
@@ -786,8 +779,8 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
   - **Batas Kunci Pengisian Pagi (Cut-Off) \*:** `09:30`
   - **Batas Tepat Waktu Sore (EOD) \*:** `17:00`
   - **Batas Kunci Pengisian Sore (Cut-Off) \*:** `21:00`
-  - **Tanggal Mulai Berlaku \*:** *(hari ini WIB)*
-  - **Tanggal Berakhir (Opsional):** *(kosongkan)*
+  - **Tanggal Mulai Berlaku \*:** *(biarkan otomatis terisi tanggal hari ini)*
+  - **Tanggal Berakhir (Opsional):** *(biarkan kosong)*
   - **Alasan Perubahan Kebijakan \*:**
     ```text
     Kembalikan jam cut-off pagi ke jadwal normal kantor setelah demo selesai
