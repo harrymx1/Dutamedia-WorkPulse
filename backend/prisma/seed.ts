@@ -349,7 +349,7 @@ async function main() {
       function: CanonicalFunction.OperationsInfrastructure,
       directManagerId: null,
       effectiveDate: todayDate,
-      assignmentReason: 'System Administration & SecOps governance (IMP-026)',
+      assignmentReason: 'System Administration & SecOps governance',
       createdByUserId: adminUser.id,
     },
     // 1. Divisi Engineering: Head of Engineering membawahi sejajar Tech Lead 1 & para Developer
@@ -1546,7 +1546,7 @@ async function main() {
         status: 'APPROVED',
         reviewedByUserId: hrgaUser.id,
         reviewedAt: new Date(),
-        reviewNote: 'Dicatat resmi sebagai cuti ter-ACC (DEC-018)',
+        reviewNote: 'Dicatat resmi sebagai cuti yang telah disetujui',
       },
     });
   }
@@ -1571,7 +1571,7 @@ async function main() {
         status: 'APPROVED',
         reviewedByUserId: hrgaUser.id,
         reviewedAt: new Date(),
-        reviewNote: 'Dicatat resmi sebagai cuti ter-ACC (DEC-018)',
+        reviewNote: 'Dicatat resmi sebagai cuti yang telah disetujui',
       },
     });
   }
@@ -1594,7 +1594,7 @@ async function main() {
         status: 'APPROVED',
         reviewedByUserId: hrgaUser.id,
         reviewedAt: new Date(),
-        reviewNote: 'Dicatat resmi sebagai izin ter-ACC (DEC-018)',
+        reviewNote: 'Dicatat resmi sebagai izin yang telah disetujui',
       },
     });
   }

@@ -1536,7 +1536,7 @@ export class DailyService {
       if (updateResult.count === 0) {
         throw new AppException({
           code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message: 'Evaluasi EOD Outcome hari ini telah ditutup secara resmi dan terkunci (FR-26). Perubahan data wajib melalui alur permohonan koreksi EOD.',
+          message: 'Evaluasi EOD Outcome hari ini telah ditutup secara resmi dan terkunci. Perubahan data wajib melalui alur permohonan koreksi EOD.',
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         });
       }

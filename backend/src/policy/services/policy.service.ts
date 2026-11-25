@@ -415,7 +415,7 @@ export class PolicyService {
     if (inputEffectiveStr < todayStr) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_BACKDATING_FORBIDDEN,
-        message: `Tanggal mulai berlaku kebijakan tidak boleh di masa lampau (${inputEffectiveStr} < ${todayStr}) sesuai DEC-008.`,
+        message: `Tanggal mulai berlaku kebijakan tidak boleh di masa lampau (${inputEffectiveStr} < ${todayStr}).`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
@@ -931,7 +931,7 @@ export class PolicyService {
       ) {
         throw new AppException({
           code: ErrorCode.BUSINESS_RULE_BACKDATING_FORBIDDEN,
-          message: `Tanggal penugasan pemilik kebijakan tidak boleh diubah surut ke masa lampau (${nextEffectiveStr} < ${todayStr}) sesuai DEC-008.`,
+          message: `Tanggal penugasan pemilik kebijakan tidak boleh diubah surut ke masa lampau (${nextEffectiveStr} < ${todayStr}).`,
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         });
       }
@@ -1071,7 +1071,7 @@ export class PolicyService {
     if (inputEffectiveStr < todayStr) {
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_BACKDATING_FORBIDDEN,
-        message: `Tanggal penugasan pemilik kebijakan tidak boleh di masa lampau (${inputEffectiveStr} < ${todayStr}) sesuai DEC-008.`,
+        message: `Tanggal penugasan pemilik kebijakan tidak boleh di masa lampau (${inputEffectiveStr} < ${todayStr}).`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }

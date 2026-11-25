@@ -222,7 +222,7 @@ export class LeaveService {
           status: LeaveStatus.APPROVED,
           reviewedByUserId: actorUserId,
           reviewedAt: now,
-          reviewNote: 'Dicatat resmi sebagai cuti ter-ACC (DEC-018)',
+          reviewNote: 'Dicatat resmi sebagai cuti/izin yang telah disetujui',
         },
         include: {
           user: { select: { id: true, fullName: true, email: true } },
