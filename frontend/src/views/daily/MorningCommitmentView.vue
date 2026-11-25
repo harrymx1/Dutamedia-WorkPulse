@@ -6,7 +6,7 @@ import { getPromptHintForFunction, resolveUserFunction } from '../../config/prom
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
-import { formatTimeWib, formatDateSpanWib, formatWeekdayDateWib } from '../../utils/dateTime';
+import { formatTimeWib, formatDateSpanWib, formatDateWib, formatWeekdayDateWib } from '../../utils/dateTime';
 import { getBlockerStatusLabel } from '../../utils/blockerStatus';
 import {
   Clock,
@@ -78,7 +78,8 @@ interface ActiveExemption {
   exemptionCategory: string;
   officialReferenceNumber?: string | null;
   startDate: string;
-  endDate: string;
+  endDate?: string | null;
+  isPermanent?: boolean;
   reason: string;
 }
 
@@ -155,7 +156,11 @@ function formatLeaveType(type?: string): string {
   }
 }
 
-function formatLeaveDateRange(startStr?: string, endStr?: string): string {
+function formatLeaveDateRange(startStr?: string, endStr?: string | null): string {
+  if (startStr && !endStr) {
+    const sLabel = formatDateWib(startStr, '');
+    return sLabel ? `Mulai ${sLabel} (Permanen)` : 'Permanen';
+  }
   return formatDateSpanWib(startStr, endStr, '');
 }
 

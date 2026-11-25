@@ -7,6 +7,7 @@ import {
   OPERATIONAL_ROLES,
   ADMIN_LEVEL,
   canAccessRoute,
+  getLandingRouteForRole,
   UserAccessContext,
 } from './navigation';
 import { router } from './index';
@@ -264,5 +265,37 @@ describe('Navigasi & RBAC frontend (Aturan Poin 1, 2, dan 3)', () => {
     await router.push('/halaman-tidak-ditemukan-uji-404');
     expect(fetchMeSpy).toHaveBeenCalledTimes(1);
     fetchMeSpy.mockRestore();
+  });
+
+  it('pengecualian permanen menyembunyikan menu & memblokir rute komitmen harian namun tetap membuka Lapor Blocker (DEC-022)', () => {
+    const permanentExemptCtx: UserAccessContext = {
+      role: 'EMPLOYEE',
+      activeExemption: {
+        type: 'PERMANENT',
+        category: 'Pengecualian Permanen',
+        startDate: '2026-11-25',
+        endDate: null,
+      },
+    };
+
+    const links = flatten(permanentExemptCtx);
+    expect(links).not.toContain('/daily/morning');
+    expect(links).not.toContain('/corrections/morning');
+    expect(links).not.toContain('/corrections/eod');
+    expect(links).toContain('/raise-blockers');
+    expect(links).toContain('/daily/history');
+    expect(links).toContain('/notifications');
+
+    expect(canAccessRoute('/daily/morning', permanentExemptCtx)).toBe(false);
+    expect(canAccessRoute('/daily/additional-work', permanentExemptCtx)).toBe(false);
+    expect(canAccessRoute('/daily/eod', permanentExemptCtx)).toBe(false);
+    expect(canAccessRoute('/corrections/morning', permanentExemptCtx)).toBe(false);
+    expect(canAccessRoute('/corrections/eod', permanentExemptCtx)).toBe(false);
+    expect(canAccessRoute('/raise-blockers', permanentExemptCtx)).toBe(true);
+    expect(canAccessRoute('/daily/history', permanentExemptCtx)).toBe(true);
+    expect(canAccessRoute('/notifications', permanentExemptCtx)).toBe(true);
+
+    expect(getLandingRouteForRole(permanentExemptCtx)).toBe('/raise-blockers');
+    expect(getLandingRouteForRole('EMPLOYEE')).toBe('/daily/morning');
   });
 });

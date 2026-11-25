@@ -1,10 +1,12 @@
 import {
+  IsBoolean,
   IsDateString,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateBoundedExemptionDto {
@@ -14,8 +16,14 @@ export class CreateBoundedExemptionDto {
   @IsDateString({}, { message: 'Tanggal mulai harus berformat YYYY-MM-DD' })
   startDate!: string;
 
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null && value !== undefined && value !== '')
   @IsDateString({}, { message: 'Tanggal selesai harus berformat YYYY-MM-DD' })
-  endDate!: string;
+  endDate?: string | null;
+
+  @IsOptional()
+  @IsBoolean({ message: 'Status permanen harus berupa boolean' })
+  isPermanent?: boolean;
 
   @IsString({ message: 'Kategori pengecualian wajib diisi' })
   @IsNotEmpty({ message: 'Kategori pengecualian tidak boleh kosong' })
@@ -41,8 +49,13 @@ export class UpdateBoundedExemptionDto {
   startDate?: string;
 
   @IsOptional()
+  @ValidateIf((_, value) => value !== null && value !== undefined && value !== '')
   @IsDateString({}, { message: 'Tanggal selesai harus berformat YYYY-MM-DD' })
-  endDate?: string;
+  endDate?: string | null;
+
+  @IsOptional()
+  @IsBoolean({ message: 'Status permanen harus berupa boolean' })
+  isPermanent?: boolean;
 
   @IsOptional()
   @IsString({ message: 'Kategori pengecualian wajib diisi' })

@@ -719,7 +719,7 @@ model BoundedExemption {
   id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                  String    @map("user_id") @db.Uuid
   startDate               DateTime  @map("start_date") @db.Date
-  endDate                 DateTime  @map("end_date") @db.Date
+  endDate                 DateTime? @map("end_date") @db.Date
   exemptionCategory       String    @map("exemption_category") @db.VarChar(100)
   officialReferenceNumber String?   @map("official_reference_number") @db.VarChar(100)
   reason                  String    @db.Text

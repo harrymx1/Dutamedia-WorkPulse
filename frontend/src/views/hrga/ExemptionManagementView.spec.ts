@@ -217,5 +217,71 @@ describe('ExemptionManagementView.vue (WP-EP08 / Prototipe 12 - Kelola Pengecual
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
+
+  it('supports creating permanent exemptions without endDate and shows Permanen badge (DEC-022)', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string, opts?: any) => {
+      if (url.includes('/compliance/exemptions') && opts?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { id: 'ex-perm' } }),
+        });
+      }
+      if (url.includes('/compliance/exemptions')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'ex-perm',
+                userId: 'u-1',
+                startDate: '2026-11-25',
+                endDate: null,
+                exemptionCategory: 'Pengecualian Permanen',
+                reason: 'Komisaris perusahaan non-operasional',
+                user: { id: 'u-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' },
+                createdByUser: { id: 'admin-1', fullName: 'Sistem Administrator' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [{ id: 'u-1', fullName: 'Budi Staf', email: 'budi@dutamedia.com' }],
+        }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(ExemptionManagementView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('(Permanen)');
+
+    await wrapper.find('#empSelect').setValue('u-1');
+    await wrapper.find('#startDateInput').setValue('2026-11-25');
+    await wrapper.find('[data-testid="permanent-exemption-checkbox"]').setValue(true);
+    expect((wrapper.find('#endDateInput').element as HTMLInputElement).disabled).toBe(true);
+    await wrapper.find('#catSelect').setValue('Pengecualian Permanen');
+    await wrapper.find('#reasonInput').setValue('Penasihat non-operasional perusahaan');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    const postCall = fetchMock.mock.calls.find(
+      (c: any[]) => String(c[0]).includes('/compliance/exemptions') && c[1]?.method === 'POST',
+    );
+    expect(postCall).toBeDefined();
+    const body = JSON.parse(postCall![1].body);
+    expect(body.isPermanent).toBe(true);
+    expect(body.endDate).toBeNull();
+  });
 });
 

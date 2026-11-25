@@ -3,7 +3,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted, watch } from 'vue';
 import { apiClient } from '../../api/client';
-import { formatTimeWib, formatDateSpanWib, formatWeekdayDateWib } from '../../utils/dateTime';
+import { formatTimeWib, formatDateSpanWib, formatDateWib, formatWeekdayDateWib } from '../../utils/dateTime';
 import {
   CheckCircle2,
   AlertCircle,
@@ -26,7 +26,8 @@ interface ActiveExemption {
   exemptionCategory: string;
   officialReferenceNumber?: string | null;
   startDate: string;
-  endDate: string;
+  endDate?: string | null;
+  isPermanent?: boolean;
   reason: string;
 }
 
@@ -115,7 +116,11 @@ function formatLeaveType(type?: string): string {
   }
 }
 
-function formatLeaveDateRange(startStr?: string, endStr?: string): string {
+function formatLeaveDateRange(startStr?: string, endStr?: string | null): string {
+  if (startStr && !endStr) {
+    const sLabel = formatDateWib(startStr, '');
+    return sLabel ? `Mulai ${sLabel} (Permanen)` : 'Permanen';
+  }
   return formatDateSpanWib(startStr, endStr, '');
 }
 

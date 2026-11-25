@@ -194,6 +194,10 @@ const formattedExemption = computed(() => {
       ex.startDate && ex.endDate ? ` (${formatDateRangeWib(ex.startDate, ex.endDate)})` : '';
     return `Dispensasi Aktif: ${ex.category}${rangeText}`;
   }
+  if (ex?.type === 'PERMANENT') {
+    const startText = ex.startDate ? ` (Mulai ${formatDateWib(ex.startDate)})` : '';
+    return `Pengecualian Permanen: ${ex.category}${startText} · Lapor Blocker tetap aktif`;
+  }
   const r = authStore.user?.role;
   if (ex?.type === 'ROLE_INDEFINITE' || r === 'CEO_MANAGEMENT' || r === 'CEO') {
     return 'Pengecualian Peran Eksekutif (Pengisian Opsional)';

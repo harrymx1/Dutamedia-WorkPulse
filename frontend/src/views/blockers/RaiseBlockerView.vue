@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
+import { canAccessRoute } from '../../router/navigation';
 import { formatTimeWib, formatShortDateTimeWib } from '../../utils/dateTime';
 import { isInternStatus } from '../../utils/employmentStatus';
 import {
@@ -1115,6 +1116,7 @@ onBeforeUnmount(() => {
     <main class="main-content">
       <!-- Back Navigation Link (IMP-041) -->
       <router-link
+        v-if="!authStore.user || canAccessRoute('/daily/morning', authStore.user)"
         to="/daily/morning"
         class="back-nav-link"
         data-testid="back-nav-link"

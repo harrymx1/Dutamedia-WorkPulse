@@ -2,7 +2,7 @@
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
-import { formatDateSpanWib } from '../../utils/dateTime';
+import { formatDateSpanWib, formatDateWib } from '../../utils/dateTime';
 import {
   CheckCircle2,
   AlertCircle,
@@ -79,7 +79,7 @@ interface RecordedExemptionItem {
   exemptionCategory: string;
   officialReferenceNumber?: string | null;
   startDate: string;
-  endDate: string;
+  endDate?: string | null;
   reason: string;
   createdByUser?: { id: string; fullName: string } | null;
 }
@@ -263,7 +263,11 @@ function formatLeaveTypeLabel(type?: string): string {
   }
 }
 
-function formatDateRangeText(start: string, end: string): string {
+function formatDateRangeText(start: string, end?: string | null): string {
+  if (!end) {
+    const sLabel = formatDateWib(start, '');
+    return sLabel ? `Mulai ${sLabel} (Permanen)` : 'Permanen';
+  }
   return formatDateSpanWib(start, end, '');
 }
 

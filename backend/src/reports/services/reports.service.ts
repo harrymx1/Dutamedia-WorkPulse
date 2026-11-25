@@ -67,7 +67,7 @@ export interface ExecutiveReportData {
 
 interface DateRangeBound {
   startStr: string;
-  endStr: string;
+  endStr: string | null;
 }
 
 @Injectable()
@@ -341,7 +341,7 @@ export class ReportsService {
                     where: {
                       userId: { in: filteredUserIds },
                       startDate: { lte: range.endDate },
-                      endDate: { gte: range.startDate },
+                      OR: [{ endDate: null }, { endDate: { gte: range.startDate } }],
                     },
                     select: { userId: true, startDate: true, endDate: true },
                   })
@@ -388,7 +388,7 @@ export class ReportsService {
         const list = exemptRangesByUser.get(item.userId) || [];
         list.push({
           startStr: this.toDateOnlyString(item.startDate),
-          endStr: this.toDateOnlyString(item.endDate),
+          endStr: item.endDate ? this.toDateOnlyString(item.endDate) : null,
         });
         exemptRangesByUser.set(item.userId, list);
       }
@@ -396,7 +396,9 @@ export class ReportsService {
       const isUserExemptOnDate = (uid: string, dayStr: string): boolean => {
         const ranges = exemptRangesByUser.get(uid);
         if (!ranges || ranges.length === 0) return false;
-        return ranges.some((rg) => rg.startStr <= dayStr && dayStr <= rg.endStr);
+        return ranges.some(
+          (rg) => rg.startStr <= dayStr && (!rg.endStr || dayStr <= rg.endStr),
+        );
       };
 
       const deptGroups = new Map<string, { functionCode: string; deptName: string; memberIds: string[] }>();

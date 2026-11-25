@@ -67,7 +67,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 | Siklus Blocker penuh: `Terima & Tangani` → `Beri Bantuan` → `Membantu Sebagian` → `Selesaikan` → `Belum Memadai` → tutup; `Bantu Unblock` auto-scroll + non-PIC + `Feed Dukungan Lintas Fungsi` + `Terima Risiko` | `3B`, `3C` |
 | **`DEC-016`** `Edit Tiket` (*Dynamic Re-Routing*) + `Hapus Tiket` (3 preset) + Radar `Aging` | `3D`, `3E` |
 | Koreksi Pagi & EOD: `Minor` (`AUTO_APPLIED`) + `Material` (`Tolak` → revisi `Gunakan Draf Sebelumnya & Sesuaikan` → `Setujui`) | `4A`, `4B`, `4C` |
-| **`DEC-018`** `/admin/leaves` (Tambah, kunci kalender `:min`, tolak Sabtu–Minggu `400`, tolak bentrok `409`, tolak `Intern` tanpa `Cuti Tahunan` `400`, Edit, Hapus) + `/exemptions` (Tambah, Edit, Hapus) | `5A`, `5B`, `5C` |
+| **`DEC-018` & `DEC-022`** `/admin/leaves` (Tambah, `:min`, tolak Sabtu–Minggu `400`, bentrok `409`, `Intern` `400`, Edit, Hapus) + `/exemptions` (Tambah, **Permanen tanpa batas (`Lapor Blocker` tetap aktif)**, Edit, Hapus) | `5A`, `5B`, `5C` |
 | `/compliance` (`Tindak Lanjut`, validasi `< 5` huruf, `Ubah Catatan`) + `/coaching` (`Dibagikan` vs `Rahasia Manajemen`, template cepat) | `6A`, `6B` |
 | `/notifications` (lencana sidebar/TopBar, isolasi `Rahasia`, `canUserAccess` sembunyikan tombol `/admin/policies`, tab `Pengaturan Kanal`) | `7A` |
 | `/dashboard` 3 cakupan (`PROJECT` / `DIVISION` / `COMPANY` + filter `Intern`) + `/projects/risk` + `/reports` (preset, filter `Kontrak`, CSV & PDF) | `7B`, `7C`, `7D` |
@@ -361,7 +361,7 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
 - **⚡ Efek Lintas Jendela:** Di **`Jendela 5 — Intan` (`/daily/morning`)**, tekan **`F5`** → form pagi langsung **terbuka kembali** normal!
 - **Bilang singkat:** *"Kalau ada salah tanggal atau batal cuti, tinggal edit atau hapus di sini dan jadwal check-in karyawan langsung aktif lagi."*
 
-#### `5C [INTI]` Manajemen Dispensasi (`/exemptions`): Tambah, Pembebasan Otomatis, `Edit`, & `Hapus` `[Jendela 4 — HRGA ↔ Jendela 5 — Intan]`
+#### `5C [INTI]` Manajemen Dispensasi (`/exemptions`): Tambah, Pengecualian Permanen (`DEC-022`), `Edit`, & `Hapus` `[Jendela 4 — HRGA ↔ Jendela 5 — Intan]`
 - **Aksi:**
   1. Buka **`Manajemen Dispensasi`** (`/exemptions`): tunjuk tabel kanan sudah ada **`Bayu Santoso` (`Dinas Luar`, `ST/HRGA/2026/XI/104`)**.
   2. Isi form kiri untuk **`Intan Permata`**:
@@ -371,8 +371,11 @@ Buka maksimal 5 jendela Chrome (boleh 4 profil Chrome + 1 Incognito) biar minim 
      - **Alasan Resmi Dispensasi \*:** `Dampingi audit faktur dan rekonsiliasi pajak di kantor klien Surabaya`
      - Klik **`Daftarkan Dispensasi`**.
   3. **⚡** Refresh **`Jendela 5 — Intan` (`/daily/morning`)** → form harian langsung terkunci dengan spanduk **`Masa Dispensasi Resmi (Dinas Luar)`** & muncul read-only di `/daily/history`.
-  4. Balik ke **`Jendela 4 — HRGA`**: pada baris `Intan`, klik **`Edit`** → ubah nomor referensi menjadi `ST/HRGA/2026/XI/112-REV` → **`Simpan Perubahan Dispensasi`**, lalu klik **`Hapus`** → di modal **`Hapus Catatan Dispensasi?`** klik **`Ya, Hapus Dispensasi`**. (Refresh Intan kembali normal, lalu klik **`Keluar Sesi`** / keluar di `Jendela 5`).
-- **Bilang singkat:** *"Dispensasi dinas luar atau sertifikasi juga sama — bisa ditambah, diedit, atau dihapus langsung, dan otomatis membebaskan check-in karyawan tanpa pilih 0 komitmen."*
+  4. **`[CABANG]` Uji Pengecualian Permanen (`DEC-022` — `Lapor Blocker` Tetap Aktif):**
+     - Di **`Jendela 4 — HRGA`**, pada baris `Intan`, klik **`Edit`** → centang **`Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)`** (perhatikan `Tanggal Selesai` otomatis mati!), ubah Kategori ke **`Pengecualian Permanen (Bebas Komitmen Harian)`** → klik **`Simpan Perubahan Dispensasi`**.
+     - **⚡ Efek Lintas Jendela (`Jendela 5 — Intan`):** Tekan **`F5`** (atau keluar & login ulang `staff.finance@dutamedia.com`): menu **`My Today`**, **`Koreksi Komitmen Pagi`**, dan **`Koreksi Evaluasi Sore`** **hilang dari sidebar** (`403` jika diketik manual; saat login langsung mendarat di `/raise-blockers`), sementara **`Lapor Blocker`**, **`Riwayat Saya`** (*`Mulai ... (Permanen)`*), dan **`Notifikasi`** **tetap aktif**!
+  5. **Bersihkan kembali (`Hapus`):** Balik ke **`Jendela 4 — HRGA`**, pada baris `Intan` klik **`Hapus`** → di modal **`Hapus Catatan Dispensasi?`** klik **`Ya, Hapus Dispensasi`**. Refresh `Jendela 5` → menu harian Intan aktif normal kembali, lalu keluar akun di `Jendela 5`.
+- **Bilang singkat:** *"Di Manajemen Dispensasi, Admin/HRGA/Direktur bisa kasih pengecualian sementara maupun permanen tanpa tanggal selesai — menu harian otomatis hilang, tapi karyawan masih bisa Lapor Blocker kalau nemu kendala. Kalau sudah nggak perlu dikecualikan, tinggal hapus dan normal lagi."*
 
 ---
 

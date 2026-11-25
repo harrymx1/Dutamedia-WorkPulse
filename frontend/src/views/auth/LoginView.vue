@@ -130,7 +130,7 @@ async function handleLogin() {
     const redirect = route.query.redirect;
     const safeRedirect =
       typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : null;
-    const landing = getLandingRouteForRole(authStore.user?.role);
+    const landing = getLandingRouteForRole(authStore.user);
     router.push(safeRedirect || landing);
   } catch (err: any) {
     if (err?.code === 'SERVER_HIBERNATING') {

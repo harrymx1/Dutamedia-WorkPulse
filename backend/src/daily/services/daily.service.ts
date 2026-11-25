@@ -278,7 +278,10 @@ export class DailyService {
             exemptionCategory: activeExemption.exemptionCategory,
             officialReferenceNumber: activeExemption.officialReferenceNumber || null,
             startDate: activeExemption.startDate.toISOString().split('T')[0],
-            endDate: activeExemption.endDate.toISOString().split('T')[0],
+            endDate: activeExemption.endDate
+              ? activeExemption.endDate.toISOString().split('T')[0]
+              : null,
+            isPermanent: !activeExemption.endDate,
             reason: activeExemption.reason,
           }
         : null,
@@ -742,7 +745,7 @@ export class DailyService {
         where: {
           userId,
           startDate: { lte: targetDate },
-          endDate: { gte: targetDate },
+          OR: [{ endDate: null }, { endDate: { gte: targetDate } }],
         },
         select: {
           id: true,
@@ -775,9 +778,12 @@ export class DailyService {
       });
     }
     if (activeExemption) {
+      const label = !activeExemption.endDate
+        ? `pengecualian permanen (${activeExemption.exemptionCategory})`
+        : `masa dispensasi resmi (${activeExemption.exemptionCategory})`;
       throw new AppException({
         code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-        message: `Anda sedang dalam masa dispensasi resmi (${activeExemption.exemptionCategory}). Pengisian ${activityLabel} dinonaktifkan otomatis tanpa perlu memilih 0 komitmen.`,
+        message: `Anda mendapat ${label}. Pengisian ${activityLabel} dinonaktifkan otomatis tanpa perlu memilih 0 komitmen.`,
         statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }

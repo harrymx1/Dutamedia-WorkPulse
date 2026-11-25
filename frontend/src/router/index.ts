@@ -247,14 +247,14 @@ router.beforeEach(async (to, _from, next) => {
   // Rute akar: sudah login -> rute pendaratan sesuai peran, belum -> login
   if (to.path === '/') {
     if (authStore.isAuthenticated) {
-      return next(getLandingRouteForRole(authStore.user?.role));
+      return next(getLandingRouteForRole(authStore.user));
     }
     return next({ name: 'login' });
   }
 
   // Pengguna yang sudah login tidak perlu melihat halaman login/aktivasi
   if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return next(getLandingRouteForRole(authStore.user?.role));
+    return next(getLandingRouteForRole(authStore.user));
   }
 
   if (to.meta.requiresAuth) {

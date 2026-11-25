@@ -217,7 +217,7 @@ export class DashboardService {
         (await (this.prisma as any).boundedExemption.findMany({
           where: {
             startDate: { lte: range.startDate },
-            endDate: { gte: range.endDate },
+            OR: [{ endDate: null }, { endDate: { gte: range.endDate } }],
             user: { status: UserStatus.ACTIVE },
           },
           select: { userId: true },

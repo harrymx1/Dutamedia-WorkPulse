@@ -47,7 +47,7 @@ export class WorkdayService {
             where: {
               userId,
               startDate: { lte: curDate },
-              endDate: { gte: minScanDate },
+              OR: [{ endDate: null }, { endDate: { gte: minScanDate } }],
             },
           })
         : Promise.resolve([]),
@@ -71,8 +71,8 @@ export class WorkdayService {
       });
       const isExempted = (boundedExemptions || []).some((ex: any) => {
         const start = new Date(ex.startDate).toISOString().split('T')[0];
-        const end = new Date(ex.endDate).toISOString().split('T')[0];
-        return dateStr >= start && dateStr <= end;
+        const end = ex.endDate ? new Date(ex.endDate).toISOString().split('T')[0] : null;
+        return dateStr >= start && (!end || dateStr <= end);
       });
 
       if (!isWeekend && !isHoliday && !isApprovedLeave && !isExempted) {
@@ -118,7 +118,7 @@ export class WorkdayService {
           where: {
             userId,
             startDate: { lte: targetDate },
-            endDate: { gte: targetDate },
+            OR: [{ endDate: null }, { endDate: { gte: targetDate } }],
           },
         });
         if (exemption) return false;

@@ -12,7 +12,7 @@ const blockedPath = computed(() => (route.query.from as string) || '');
 
 const homeRoute = computed(() => {
   if (!auth.isAuthenticated) return '/login';
-  return getLandingRouteForRole(auth.user?.role);
+  return getLandingRouteForRole(auth.user);
 });
 
 const homeLabel = computed(() => {

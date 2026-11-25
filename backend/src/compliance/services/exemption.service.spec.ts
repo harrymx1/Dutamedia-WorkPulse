@@ -211,5 +211,69 @@ describe('ExemptionService (WP-EP08 / Exemption Management - Prototipe 12)', () 
       }),
     );
   });
+
+  it('creates, updates, and deletes permanent exemption with null endDate (DEC-022)', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'usr-perm', fullName: 'Staf Khusus' });
+    mockPrisma.boundedExemption.findFirst = vi.fn().mockResolvedValue(null);
+    mockPrisma.boundedExemption.create.mockResolvedValue({
+      id: 'ex-perm-1',
+      userId: 'usr-perm',
+      startDate: new Date('2026-11-25'),
+      endDate: null,
+      exemptionCategory: 'Pengecualian Permanen',
+      reason: 'Komisaris / penasihat non-operasional',
+      createdByUser: { id: 'admin-1', fullName: 'Sistem Administrator', email: 'admin@dutamedia.com' },
+    });
+    mockPrisma.notification = { create: vi.fn() };
+
+    const created = await service.createBoundedExemption('admin-1', {
+      userId: 'usr-perm',
+      startDate: '2026-11-25',
+      endDate: null,
+      isPermanent: true,
+      exemptionCategory: 'Pengecualian Permanen',
+      reason: 'Komisaris / penasihat non-operasional',
+    });
+
+    expect(created.endDate).toBeNull();
+    expect(mockPrisma.boundedExemption.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'usr-perm',
+          endDate: null,
+        }),
+      }),
+    );
+    expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          triggerType: 'EXEMPTION_GRANTED',
+          message: expect.stringContaining('Lapor Blocker'),
+        }),
+      }),
+    );
+
+    // Update dari permanen ke sementara tanpa tanggal selesai harus ditolak 400
+    mockPrisma.boundedExemption.findUnique = vi.fn().mockResolvedValue({
+      id: 'ex-perm-1',
+      userId: 'usr-perm',
+      startDate: new Date('2026-11-25'),
+      endDate: null,
+      exemptionCategory: 'Pengecualian Permanen',
+      reason: 'Komisaris / penasihat non-operasional',
+      user: { id: 'usr-perm', fullName: 'Staf Khusus' },
+    });
+
+    await expect(
+      service.updateBoundedExemption('admin-1', 'ex-perm-1', {
+        isPermanent: false,
+      }),
+    ).rejects.toThrowError(AppException);
+
+    // Hapus pengecualian permanen aman dengan endDate = null
+    mockPrisma.boundedExemption.delete = vi.fn().mockResolvedValue({ id: 'ex-perm-1' });
+    const deleted = await service.deleteBoundedExemption('admin-1', 'ex-perm-1');
+    expect(deleted).toEqual({ deleted: true, id: 'ex-perm-1' });
+  });
 });
 

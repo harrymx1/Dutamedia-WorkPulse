@@ -17,7 +17,7 @@ interface ExemptionItem {
   id: string;
   userId: string;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   exemptionCategory: string;
   officialReferenceNumber?: string;
   reason: string;
@@ -44,6 +44,7 @@ const deletingTarget = ref<ExemptionItem | null>(null);
 const formUserId = ref('');
 const formStartDate = ref('');
 const formEndDate = ref('');
+const formIsPermanent = ref(false);
 const formCategory = ref('Dinas Luar');
 const formRefNo = ref('');
 const formReason = ref('');
@@ -72,8 +73,11 @@ const filteredExemptions = computed(() => {
   });
 });
 
-function formatPeriodLabel(startDate: string, endDate: string): string {
+function formatPeriodLabel(startDate: string, endDate?: string | null): string {
   const startLabel = formatDateWib(startDate);
+  if (!endDate) {
+    return `Mulai ${startLabel} (Permanen)`;
+  }
   const endLabel = formatDateWib(endDate);
   if (startLabel === endLabel) {
     return startLabel;
@@ -117,7 +121,8 @@ function startEdit(item: ExemptionItem) {
   editingId.value = item.id;
   formUserId.value = item.userId;
   formStartDate.value = toInputDate(item.startDate);
-  formEndDate.value = toInputDate(item.endDate);
+  formIsPermanent.value = !item.endDate;
+  formEndDate.value = item.endDate ? toInputDate(item.endDate) : '';
   formCategory.value = item.exemptionCategory || 'Dinas Luar';
   formRefNo.value = item.officialReferenceNumber || '';
   formReason.value = item.reason || '';
@@ -130,6 +135,7 @@ function cancelEdit() {
   }
   formStartDate.value = '';
   formEndDate.value = '';
+  formIsPermanent.value = false;
   formCategory.value = 'Dinas Luar';
   formRefNo.value = '';
   formReason.value = '';
@@ -171,13 +177,19 @@ async function submitExemption() {
     showToast('Pilih karyawan penerima dispensasi.', true);
     return;
   }
-  if (!formStartDate.value || !formEndDate.value) {
-    showToast('Tanggal mulai dan selesai wajib diisi.', true);
+  if (!formStartDate.value) {
+    showToast('Tanggal mulai wajib diisi.', true);
     return;
   }
-  if (new Date(formEndDate.value) < new Date(formStartDate.value)) {
-    showToast('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.', true);
-    return;
+  if (!formIsPermanent.value) {
+    if (!formEndDate.value) {
+      showToast('Tanggal selesai wajib diisi kecuali berlaku permanen.', true);
+      return;
+    }
+    if (new Date(formEndDate.value) < new Date(formStartDate.value)) {
+      showToast('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.', true);
+      return;
+    }
   }
   if (formReason.value.trim().length < 5) {
     showToast('Alasan resmi dispensasi wajib diisi minimal 5 karakter.', true);
@@ -189,7 +201,8 @@ async function submitExemption() {
     const payload = {
       userId: formUserId.value,
       startDate: formStartDate.value,
-      endDate: formEndDate.value,
+      endDate: formIsPermanent.value ? null : formEndDate.value,
+      isPermanent: formIsPermanent.value,
       exemptionCategory: formCategory.value,
       officialReferenceNumber: formRefNo.value.trim() || undefined,
       reason: formReason.value.trim(),
@@ -207,9 +220,14 @@ async function submitExemption() {
         method: 'POST',
         body: JSON.stringify(payload),
       });
-      showToast('Dispensasi akuntabilitas berhasil didaftarkan. Karyawan otomatis dibebaskan dari check-in.');
+      showToast(
+        formIsPermanent.value
+          ? 'Pengecualian permanen berhasil didaftarkan. Menu komitmen harian otomatis dinonaktifkan (Lapor Blocker tetap aktif).'
+          : 'Dispensasi akuntabilitas berhasil didaftarkan. Karyawan otomatis dibebaskan dari check-in.',
+      );
       formStartDate.value = '';
       formEndDate.value = '';
+      formIsPermanent.value = false;
       formReason.value = '';
       formRefNo.value = '';
     }
@@ -283,15 +301,34 @@ onMounted(() => {
                 <input id="startDateInput" v-model="formStartDate" type="date" required />
               </div>
               <div class="form-group">
-                <label for="endDateInput">Tanggal Selesai <span class="req">*</span></label>
+                <label for="endDateInput">
+                  Tanggal Selesai <span v-if="!formIsPermanent" class="req">*</span>
+                </label>
                 <input
                   id="endDateInput"
                   v-model="formEndDate"
                   type="date"
                   :min="formStartDate || undefined"
-                  required
+                  :disabled="formIsPermanent"
+                  :required="!formIsPermanent"
                 />
               </div>
+            </div>
+
+            <!-- Toggle Pengecualian Permanen (DEC-022) -->
+            <div class="permanent-toggle-box">
+              <label class="permanent-checkbox-label" for="permanentCheck">
+                <input
+                  id="permanentCheck"
+                  v-model="formIsPermanent"
+                  type="checkbox"
+                  data-testid="permanent-exemption-checkbox"
+                />
+                <span>Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)</span>
+              </label>
+              <p v-if="formIsPermanent" class="permanent-hint">
+                Aktif terus mulai Tanggal Mulai. Menu komitmen harian &amp; koreksi disembunyikan, sementara Lapor Blocker tetap aktif.
+              </p>
             </div>
 
             <!-- Kategori Pengecualian -->
@@ -302,6 +339,7 @@ onMounted(() => {
                 <option value="Pelatihan Sertifikasi">Pelatihan / Sertifikasi Profesional</option>
                 <option value="Cuti Khusus">Cuti Khusus / Dispensasi Resmi Perusahaan</option>
                 <option value="Tugas Khusus">Tugas Khusus Manajemen Eksekutif</option>
+                <option value="Pengecualian Permanen">Pengecualian Permanen (Bebas Komitmen Harian)</option>
               </select>
             </div>
 
@@ -379,6 +417,7 @@ onMounted(() => {
                 <option value="Pelatihan Sertifikasi">Pelatihan Sertifikasi</option>
                 <option value="Cuti Khusus">Cuti Khusus</option>
                 <option value="Tugas Khusus">Tugas Khusus</option>
+                <option value="Pengecualian Permanen">Pengecualian Permanen</option>
               </select>
             </div>
           </div>
@@ -918,6 +957,38 @@ textarea {
 .cat-pill {
   display: inline-block;
   white-space: nowrap;
+}
+
+.permanent-toggle-box {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #CBE0D6;
+  background: #F4FAF7;
+}
+
+.permanent-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0E211B;
+  cursor: pointer;
+}
+
+.permanent-checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin-top: 2px;
+  accent-color: #00674D;
+}
+
+.permanent-hint {
+  margin: 6px 0 0 22px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #00674D;
 }
 
 @media (max-width: 1180px) {

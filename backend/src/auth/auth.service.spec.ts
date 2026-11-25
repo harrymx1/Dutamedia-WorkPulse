@@ -208,6 +208,46 @@ describe('AuthService (EP02-TK002 & EP02-TK003)', () => {
         eodOnTimeCutoff: '17:30',
       });
     });
+
+    it('returns activeExemption with type PERMANENT when boundedExemption has null endDate (DEC-022)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'usr-perm',
+        email: 'perm@dutamedia.com',
+        fullName: 'Penasihat Teknis',
+        status: 'ACTIVE',
+        passwordHash: '$argon2id$valid',
+      });
+      mockPasswordHasher.verify.mockResolvedValue(true);
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+        jobTitle: 'Technical Advisor',
+        function: 'RnD',
+        effectiveDate: new Date('2026-03-10T00:00:00.000Z'),
+      });
+      mockPrisma.boundedExemption = {
+        findFirst: vi.fn().mockResolvedValue({
+          exemptionCategory: 'Pengecualian Permanen',
+          startDate: new Date('2026-11-25T00:00:00.000Z'),
+          endDate: null,
+        }),
+      };
+      mockPrisma.session.create.mockResolvedValue({
+        id: 'sess-perm',
+        expiresAt: new Date(Date.now() + 86400000),
+      });
+
+      const result = await authService.login({
+        email: 'perm@dutamedia.com',
+        password: 'Password123!',
+      });
+
+      expect(result.user.activeExemption).toEqual({
+        type: 'PERMANENT',
+        category: 'Pengecualian Permanen',
+        startDate: '2026-11-25',
+        endDate: null,
+      });
+    });
   });
 
   describe('activate (WP-EP02-TK003: Token 72 Jam & Sekali Pakai)', () => {

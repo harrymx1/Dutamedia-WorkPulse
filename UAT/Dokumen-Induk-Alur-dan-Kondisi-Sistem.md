@@ -1619,3 +1619,17 @@ Bagian ini mendokumentasikan secara resmi **alasan logis, kritis, dan empatis** 
      - **`RED`:** Terhambat nyata / kritis — mustahil diselesaikan tanpa bantuan/keputusan, sehingga **wajib** berpasangan dengan tiket blocker resmi agar segera diproses sesuai batas waktu penanganan & jalur eskalasi.
 - **Alternatif yang Ditolak:**
   - *Mewajibkan `AMBER` juga membuat tiket blocker:* Ditolak karena menghilangkan pembeda fungsional antara `AMBER` dan `RED`, menimbulkan *alert fatigue*, berisiko merusak mekanisme `Carry-Over #2+ AMBER`, serta mendorong perilaku menghindari pelaporan risiko (`false GREEN`).
+
+---
+
+## 5. `DEC-022` — Pengecualian Permanen Akuntabilitas Harian (`Lapor Blocker` Tetap Aktif)
+
+- **Masalah Awal yang Ditemukan:**
+  - Sebelumnya, pengecualian permanen (tanpa tanggal berakhir) hanya terkunci di level role untuk `CEO_MANAGEMENT` dan `SYSTEM_ADMIN`. Padahal dalam praktik perusahaan, HRGA/Admin/Direktur perlu dapat menetapkan, mengubah, atau mencabut pengecualian permanen secara dinamis per individu (misal komisaris, penasihat teknis, atau staf khusus non-rutin) sampai Admin mengubahnya.
+- **Keputusan Resmi (`DEC-022`):**
+  1. Memperluas tabel `bounded_exemptions` (`end_date` menjadi *nullable*) dan menu **`Manajemen Dispensasi` (`/exemptions`)** dengan opsi **`Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)`**.
+  2. Karyawan dengan pengecualian permanen aktif (`activeExemption.type === 'PERMANENT'`) otomatis dibebaskan dari Morning Commitment, Additional Work, EOD Outcome, serta deteksi `ComplianceEvent` / target laporan, dan menu kerja rutin harian (`My Today`, `Koreksi Komitmen Pagi`, `Koreksi Evaluasi Sore`) disembunyikan & diblokir (`403`).
+  3. Sesuai keputusan pemilik produk (Harry, 25/11/2026), **`Lapor Blocker` (`/raise-blockers`), `Riwayat Saya` (`/daily/history`), dan `Notifikasi` (`/notifications`) tetap dibuka** agar yang bersangkutan tetap bisa melaporkan kendala bila suatu saat dibutuhkan; saat login sebagai `EMPLOYEE`, sistem mengarahkan langsung ke `/raise-blockers`.
+- **Pertanggungjawaban Logis & Empatis:**
+  - **Satu sumber kebenaran di `/exemptions`:** Admin tidak perlu menghafal dua menu berbeda untuk dispensasi sementara vs permanen — cukup satu tabel terpadu dengan fitur Tambah, Edit (ubah sementara ↔ permanen), dan Hapus/Cabut.
+  - **Fleksibilitas `Lapor Blocker`:** Membebaskan kewajiban laporan rutin bukan berarti menutup jalur pelaporan kendala lintas tim. Membiarkan `/raise-blockers` tetap terbuka menjaga kolaborasi tanpa membebani komitmen harian.

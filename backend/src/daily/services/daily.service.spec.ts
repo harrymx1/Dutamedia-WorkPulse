@@ -1090,6 +1090,7 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         officialReferenceNumber: 'ST/HRGA/2026/XI/104',
         startDate: '2026-10-28',
         endDate: '2026-10-29',
+        isPermanent: false,
         reason: 'Kunjungan implementasi klien luar kota',
       });
     });
@@ -1099,6 +1100,7 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
         findFirst: vi.fn().mockResolvedValue({
           id: 'ex-today',
           exemptionCategory: 'Dinas Luar',
+          endDate: new Date('2026-10-29T00:00:00.000Z'),
         }),
       };
 
@@ -1108,6 +1110,23 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
           commitments: [{ taskText: 'Coba kirim komitmen', initialRisk: CommitmentRisk.GREEN }],
         }),
       ).rejects.toThrowError(/dispensasi resmi/);
+    });
+
+    it('blocks submitMorningCheckin automatically when user has permanent exemption with null endDate (DEC-022)', async () => {
+      mockPrisma.boundedExemption = {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'ex-perm',
+          exemptionCategory: 'Pengecualian Permanen',
+          endDate: null,
+        }),
+      };
+
+      await expect(
+        service.submitMorningCheckin('usr-1', {
+          workDate: '2026-10-28',
+          commitments: [{ taskText: 'Coba kirim komitmen', initialRisk: CommitmentRisk.GREEN }],
+        }),
+      ).rejects.toThrowError(/pengecualian permanen/);
     });
 
     it('rejects RED commitment without linkedBlockerId (DEC-020)', async () => {

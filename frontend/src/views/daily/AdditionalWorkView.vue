@@ -4,7 +4,7 @@ import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { getBlockerStatusLabel } from '../../utils/blockerStatus';
-import { formatDateSpanWib } from '../../utils/dateTime';
+import { formatDateSpanWib, formatDateWib } from '../../utils/dateTime';
 import { isInternStatus } from '../../utils/employmentStatus';
 import {
   Plus,
@@ -34,7 +34,8 @@ interface ActiveExemption {
   exemptionCategory: string;
   officialReferenceNumber?: string | null;
   startDate: string;
-  endDate: string;
+  endDate?: string | null;
+  isPermanent?: boolean;
   reason: string;
 }
 
@@ -154,7 +155,11 @@ function formatLeaveType(type?: string): string {
   }
 }
 
-function formatLeaveDateRange(startStr?: string, endStr?: string): string {
+function formatLeaveDateRange(startStr?: string, endStr?: string | null): string {
+  if (startStr && !endStr) {
+    const sLabel = formatDateWib(startStr, '');
+    return sLabel ? `Mulai ${sLabel} (Permanen)` : 'Permanen';
+  }
   return formatDateSpanWib(startStr, endStr, '');
 }
 

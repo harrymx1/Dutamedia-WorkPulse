@@ -26,6 +26,12 @@ export interface UserAccessContext {
   ownedPolicyCategories?: string[];
   isCategoryOwner?: boolean;
   ownedBlockerCategories?: string[];
+  activeExemption?: {
+    type?: string;
+    category?: string;
+    startDate?: string | null;
+    endDate?: string | null;
+  } | null;
 }
 
 export interface ResolvedAccessContext {
@@ -35,7 +41,15 @@ export interface ResolvedAccessContext {
   isProjectLead: boolean;
   isPolicyOwner: boolean;
   isCategoryOwner: boolean;
+  isPermanentlyDailyExempt: boolean;
 }
+
+/** Rute kerja harian rutin yang disembunyikan & diblokir jika pengguna dikecualikan permanen (DEC-022). Lapor Blocker tetap terbuka. */
+export const DAILY_ROUTINE_EXEMPT_PATHS = [
+  '/daily/morning',
+  '/corrections/morning',
+  '/corrections/eod',
+];
 
 export interface NavItem {
   label: string;
@@ -144,6 +158,7 @@ export function resolveAccessContext(
       isProjectLead: false,
       isPolicyOwner: false,
       isCategoryOwner: false,
+      isPermanentlyDailyExempt: false,
     };
   }
   if (typeof userOrRole === 'string') {
@@ -156,6 +171,7 @@ export function resolveAccessContext(
       isPolicyOwner:
         role === 'SYSTEM_ADMIN' || role === 'CEO_MANAGEMENT' || role === 'HRGA',
       isCategoryOwner: false,
+      isPermanentlyDailyExempt: false,
     };
   }
   const role = (userOrRole.role as RoleName) || null;
@@ -188,11 +204,16 @@ export function resolveAccessContext(
       typeof userOrRole.isCategoryOwner === 'boolean'
         ? userOrRole.isCategoryOwner
         : hasOwnedBlockerCategories,
+    isPermanentlyDailyExempt: userOrRole.activeExemption?.type === 'PERMANENT',
   };
 }
 
 export function canAccessNavItem(item: NavItem, ctx: ResolvedAccessContext): boolean {
   if (!ctx.role) return false;
+
+  if (ctx.isPermanentlyDailyExempt && DAILY_ROUTINE_EXEMPT_PATHS.includes(item.to)) {
+    return false;
+  }
 
   // Aturan Poin 3: Catatan Coaching murni untuk siapapun yang memiliki bawahan langsung aktif (tidak terbatas role/jabatan)
   if (item.requiresSubordinates) {
@@ -256,6 +277,10 @@ export function canAccessRoute(
     }
   }
 
+  if (ctx.isPermanentlyDailyExempt && DAILY_ROUTINE_EXEMPT_PATHS.includes(normalizedPath)) {
+    return false;
+  }
+
   for (const group of navGroups) {
     for (const item of group.items) {
       if (item.to === normalizedPath) {
@@ -296,10 +321,13 @@ export function navForRole(
  * - HRGA -> /compliance (Antrean Kepatuhan)
  * - SYSTEM_ADMIN -> /admin/organization (Struktur Organisasi)
  */
-export function getLandingRouteForRole(role: string | undefined | null): string {
-  switch (role) {
+export function getLandingRouteForRole(
+  userOrRole: UserAccessContext | string | undefined | null,
+): string {
+  const ctx = resolveAccessContext(userOrRole);
+  switch (ctx.role) {
     case 'EMPLOYEE':
-      return '/daily/morning';
+      return ctx.isPermanentlyDailyExempt ? '/raise-blockers' : '/daily/morning';
     case 'SUPERVISOR':
     case 'HEAD':
     case 'CEO_MANAGEMENT':
@@ -310,6 +338,6 @@ export function getLandingRouteForRole(role: string | undefined | null): string 
     case 'SYSTEM_ADMIN':
       return '/admin/organization';
     default:
-      return '/daily/morning';
+      return ctx.isPermanentlyDailyExempt ? '/raise-blockers' : '/daily/morning';
   }
 }

@@ -22,7 +22,7 @@ export interface UserProfile {
   isCategoryOwner?: boolean;
   ownedBlockerCategories?: string[];
   activeExemption?: {
-    type: 'BOUNDED' | 'ROLE_INDEFINITE';
+    type: 'BOUNDED' | 'PERMANENT' | 'ROLE_INDEFINITE';
     category: string;
     startDate: string | null;
     endDate: string | null;

@@ -93,5 +93,22 @@ describe('WorkdayService (FR-11 & DEC-013 / Previous Workday Calculation)', () =
     const result = await service.isWorkday(new Date('2026-10-28T00:00:00.000Z'), 'usr-1');
     expect(result).toBe(false);
   });
+
+  it('skips permanent exemption dates when endDate is null (DEC-022)', async () => {
+    const wednesday = new Date('2026-10-28T08:00:00.000Z');
+    mockPrisma.boundedExemption = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          userId: 'usr-1',
+          startDate: new Date('2026-10-27T00:00:00.000Z'),
+          endDate: null,
+          exemptionCategory: 'Pengecualian Permanen',
+        },
+      ]),
+    };
+
+    const result = await service.getPreviousWorkday('usr-1', wednesday);
+    expect(result).toBe('2026-10-26');
+  });
 });
 

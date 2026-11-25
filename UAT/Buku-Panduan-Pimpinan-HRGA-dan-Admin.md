@@ -211,9 +211,11 @@ Selain peran dasar di atas, sistem otomatis membuka atau menutup menu sesuai 5 p
 *Hak Akses:* HRGA, Direktur, dan Admin Sistem *(tanpa proses pengajuan di sistem — hanya mencatat dinas luar/pelatihan/tugas khusus yang sudah sah)*.
 
 1. Buka menu **`Manajemen Dispensasi`** (`/exemptions`).
-2. Pilih **Karyawan Penerima Dispensasi**, **Rentang Tanggal Mulai–Selesai**, **Kategori** (*Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus, Tugas Khusus*), **Nomor Surat Tugas** *(opsional)*, dan **Alasan Resmi** (min. 5 karakter).
-3. Klik **`Daftarkan Dispensasi`**. Karyawan pada rentang tersebut **otomatis dibebaskan penuh** dari kewajiban check-in pagi/tambahan/sore **tanpa perlu memilih `0 Komitmen`**, dikecualikan dari deteksi pelanggaran, dan menerima notifikasi.
-4. **Mengedit atau Menghapus:** Klik tombol **`Edit`** pada baris tabel untuk memperbarui tanggal/kategori/alasan (`Simpan Perubahan Dispensasi`), atau klik **`Hapus`** lalu konfirmasi di jendela modal apabila data perlu dihapus.
+2. Pilih **Karyawan Penerima Dispensasi** dan **Tanggal Mulai**.
+   - **Untuk dispensasi sementara:** isi **Tanggal Selesai** dan pilih kategori (*Dinas Luar, Pelatihan Sertifikasi, Cuti Khusus, Tugas Khusus*).
+   - **Untuk pengecualian permanen (`DEC-022`):** centang **`Berlaku Permanen (tanpa tanggal berakhir, sampai diubah/dihapus Admin)`** dan pilih kategori *Pengecualian Permanen* (kolom Tanggal Selesai otomatis nonaktif). Selama aktif, menu komitmen harian & koreksi karyawan otomatis disembunyikan sementara **`Lapor Blocker` tetap aktif**.
+3. Isi **Nomor Surat Tugas** *(opsional)* dan **Alasan Resmi** (min. 5 karakter), lalu klik **`Daftarkan Dispensasi`**. Karyawan pada periode tersebut **otomatis dibebaskan penuh** dari kewajiban check-in pagi/tambahan/sore **tanpa perlu memilih `0 Komitmen`**, dikecualikan dari deteksi pelanggaran, dan menerima notifikasi.
+4. **Mengedit atau Menghapus:** Klik tombol **`Edit`** pada baris tabel untuk memperbarui tanggal, mengubah status sementara ↔ permanen, kategori, atau alasan (`Simpan Perubahan Dispensasi`), atau klik **`Hapus`** lalu konfirmasi di jendela modal apabila pengecualian perlu dicabut.
 
 ---
 

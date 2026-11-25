@@ -1242,7 +1242,7 @@ async function main() {
     where: {
       userId: staffFinanceUser.id,
       startDate: { lte: workDate },
-      endDate: { gte: workDate },
+      OR: [{ endDate: null }, { endDate: { gte: workDate } }],
     },
   });
 

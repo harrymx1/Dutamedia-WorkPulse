@@ -2,7 +2,7 @@ import { PolicyCategory } from '@prisma/client';
 import { CANONICAL_POLICY_FALLBACKS } from '../../policy/policy.constants';
 
 export interface ActiveExemptionInfo {
-  type: 'BOUNDED' | 'ROLE_INDEFINITE';
+  type: 'BOUNDED' | 'PERMANENT' | 'ROLE_INDEFINITE';
   category: string;
   startDate: string | null;
   endDate: string | null;
@@ -50,9 +50,9 @@ export async function resolveUserProfileExtras(
       where: {
         userId,
         startDate: { lte: today },
-        endDate: { gte: today },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
       },
-      orderBy: { endDate: 'desc' },
+      orderBy: { startDate: 'desc' },
       select: {
         exemptionCategory: true,
         startDate: true,
@@ -61,7 +61,7 @@ export async function resolveUserProfileExtras(
     });
     if (ex) {
       activeExemption = {
-        type: 'BOUNDED',
+        type: ex.endDate ? 'BOUNDED' : 'PERMANENT',
         category: String(ex.exemptionCategory || 'Dispensasi Kerja'),
         startDate: toIsoDateOnly(ex.startDate),
         endDate: toIsoDateOnly(ex.endDate),

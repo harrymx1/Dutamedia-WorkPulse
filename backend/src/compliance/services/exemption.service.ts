@@ -9,7 +9,7 @@ import {
   UpdateBoundedExemptionDto,
 } from '../dto/create-exemption.dto';
 
-function formatExemptionPeriod(start: Date, end: Date): string {
+function formatExemptionPeriod(start: Date, end?: Date | null): string {
   const fmt = new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta',
     day: 'numeric',
@@ -17,6 +17,9 @@ function formatExemptionPeriod(start: Date, end: Date): string {
     year: 'numeric',
   });
   const startLabel = fmt.format(start);
+  if (!end) {
+    return `Mulai ${startLabel} (Permanen)`;
+  }
   const endLabel = fmt.format(end);
   return startLabel === endLabel ? startLabel : `${startLabel} s/d ${endLabel}`;
 }
@@ -29,16 +32,17 @@ export class ExemptionService {
   ) {}
 
   /**
-   * Mendaftarkan dispensasi akuntabilitas individual (Dinas Luar, Pelatihan, dll - Prototipe 12).
+   * Mendaftarkan dispensasi sementara atau pengecualian permanen (DEC-018 & DEC-022).
    */
   async createBoundedExemption(
     createdByUserId: string,
     dto: CreateBoundedExemptionDto,
   ) {
     const start = new Date(dto.startDate);
-    const end = new Date(dto.endDate);
+    const isPermanent = Boolean(dto.isPermanent) || !dto.endDate;
+    const end = isPermanent ? null : new Date(dto.endDate as string);
 
-    if (end < start) {
+    if (end && end < start) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
         message: 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
@@ -71,15 +75,15 @@ export class ExemptionService {
       const overlapping = await this.prisma.boundedExemption.findFirst({
         where: {
           userId: dto.userId,
-          startDate: { lte: end },
-          endDate: { gte: start },
+          ...(end ? { startDate: { lte: end } } : {}),
+          OR: [{ endDate: null }, { endDate: { gte: start } }],
         },
       });
       if (overlapping) {
         throw new AppException({
           code: ErrorCode.RESOURCE_CONFLICT,
           message:
-            'Karyawan tersebut sudah memiliki dispensasi pada rentang tanggal yang bertumpuk.',
+            'Karyawan tersebut sudah memiliki dispensasi atau pengecualian aktif pada periode yang bertumpuk.',
           statusCode: HttpStatus.CONFLICT,
         });
       }
@@ -103,17 +107,32 @@ export class ExemptionService {
       },
     });
 
+    if ((this.prisma as any).complianceEvent?.deleteMany) {
+      await (this.prisma as any).complianceEvent.deleteMany({
+        where: {
+          userId: dto.userId,
+          eventDate: end ? { gte: start, lte: end } : { gte: start },
+        },
+      });
+    }
+
     if (this.prisma.notification?.create) {
       const periodLabel = formatExemptionPeriod(start, end);
       const creatorName = created.createdByUser?.fullName || 'Tim HRGA / Pimpinan';
+      const titleText = isPermanent
+        ? `Pengecualian Permanen Ditetapkan (${trimmedCategory})`
+        : `Dispensasi Resmi Didaftarkan (${trimmedCategory})`;
+      const blockerNote = isPermanent
+        ? ' Anda tetap dapat mengakses Lapor Blocker jika perlu melaporkan kendala.'
+        : '';
 
       await this.prisma.notification.create({
         data: {
           recipientUserId: dto.userId,
           triggerType: 'EXEMPTION_GRANTED',
           channel: NotificationChannel.IN_APP_CENTER,
-          title: `Dispensasi Resmi Didaftarkan (${trimmedCategory})`,
-          message: `${creatorName} mendaftarkan dispensasi ${trimmedCategory} untuk Anda pada periode ${periodLabel}. Anda dibebaskan otomatis dari pengisian komitmen harian. Alasan: ${trimmedReason}`,
+          title: titleText,
+          message: `${creatorName} mendaftarkan ${isPermanent ? 'pengecualian permanen' : 'dispensasi'} ${trimmedCategory} untuk Anda (${periodLabel}). Anda dibebaskan otomatis dari pengisian komitmen harian.${blockerNote} Alasan: ${trimmedReason}`,
           actionUrl: '/daily/history',
           relatedEntityType: 'bounded_exemptions',
           relatedEntityId: created.id,
@@ -125,7 +144,7 @@ export class ExemptionService {
   }
 
   /**
-   * Mengubah catatan dispensasi resmi yang sudah terdaftar (DEC-018).
+   * Mengubah catatan dispensasi / pengecualian permanen yang sudah terdaftar (DEC-018 & DEC-022).
    */
   async updateBoundedExemption(
     actorUserId: string,
@@ -149,9 +168,23 @@ export class ExemptionService {
 
     const nextUserId = dto.userId ?? existing.userId;
     const start = dto.startDate ? new Date(dto.startDate) : new Date(existing.startDate);
-    const end = dto.endDate ? new Date(dto.endDate) : new Date(existing.endDate);
 
-    if (end < start) {
+    let end: Date | null;
+    if (dto.isPermanent === true || dto.endDate === null || dto.endDate === '') {
+      end = null;
+    } else if (dto.endDate) {
+      end = new Date(dto.endDate);
+    } else if (dto.isPermanent === false && !existing.endDate) {
+      throw new AppException({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: 'Tanggal selesai wajib diisi jika bukan pengecualian permanen.',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    } else {
+      end = existing.endDate ? new Date(existing.endDate) : null;
+    }
+
+    if (end && end < start) {
       throw new AppException({
         code: ErrorCode.VALIDATION_FAILED,
         message: 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
@@ -186,8 +219,8 @@ export class ExemptionService {
         where: {
           id: { not: id },
           userId: nextUserId,
-          startDate: { lte: end },
-          endDate: { gte: start },
+          ...(end ? { startDate: { lte: end } } : {}),
+          OR: [{ endDate: null }, { endDate: { gte: start } }],
         },
       });
       if (overlapping) {
@@ -219,6 +252,15 @@ export class ExemptionService {
       },
     });
 
+    if ((this.prisma as any).complianceEvent?.deleteMany) {
+      await (this.prisma as any).complianceEvent.deleteMany({
+        where: {
+          userId: nextUserId,
+          eventDate: end ? { gte: start, lte: end } : { gte: start },
+        },
+      });
+    }
+
     if (this.prisma.notification?.create) {
       const actor = this.prisma.user?.findUnique
         ? await this.prisma.user.findUnique({
@@ -235,7 +277,7 @@ export class ExemptionService {
           triggerType: 'EXEMPTION_UPDATED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: `Data Dispensasi Diperbarui (${trimmedCategory})`,
-          message: `${actorName} memperbarui data dispensasi ${trimmedCategory} Anda menjadi periode ${periodLabel}. Alasan: ${trimmedReason}`,
+          message: `${actorName} memperbarui data dispensasi ${trimmedCategory} Anda menjadi ${periodLabel}. Alasan: ${trimmedReason}`,
           actionUrl: '/daily/history',
           relatedEntityType: 'bounded_exemptions',
           relatedEntityId: updated.id,
@@ -247,7 +289,7 @@ export class ExemptionService {
   }
 
   /**
-   * Menghapus catatan dispensasi resmi dari sistem (DEC-018).
+   * Menghapus catatan dispensasi resmi dari sistem (DEC-018 & DEC-022).
    */
   async deleteBoundedExemption(actorUserId: string, id: string) {
     const existing = await this.prisma.boundedExemption.findUnique({
@@ -279,7 +321,7 @@ export class ExemptionService {
       const actorName = actor?.fullName || 'Tim HRGA / Pimpinan';
       const periodLabel = formatExemptionPeriod(
         new Date(existing.startDate),
-        new Date(existing.endDate),
+        existing.endDate ? new Date(existing.endDate) : null,
       );
 
       await this.prisma.notification.create({
@@ -288,7 +330,7 @@ export class ExemptionService {
           triggerType: 'EXEMPTION_DELETED',
           channel: NotificationChannel.IN_APP_CENTER,
           title: `Catatan Dispensasi Dihapus (${existing.exemptionCategory})`,
-          message: `${actorName} menghapus catatan dispensasi ${existing.exemptionCategory} Anda untuk periode ${periodLabel}. Jadwal akuntabilitas harian normal berlaku kembali.`,
+          message: `${actorName} menghapus catatan dispensasi ${existing.exemptionCategory} Anda (${periodLabel}). Jadwal akuntabilitas harian normal berlaku kembali.`,
           actionUrl: '/daily/history',
           relatedEntityType: 'bounded_exemptions',
           relatedEntityId: id,
