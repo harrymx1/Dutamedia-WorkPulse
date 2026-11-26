@@ -529,13 +529,34 @@ async function submitEod(bypassMismatchConfirm = false) {
   }
 }
 
+let toastAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+let errorAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(errorMessage, (msg) => {
+  if (errorAutoDismissTimer) {
+    clearTimeout(errorAutoDismissTimer);
+    errorAutoDismissTimer = null;
+  }
+  if (msg) {
+    errorAutoDismissTimer = setTimeout(() => {
+      errorMessage.value = null;
+      errorAutoDismissTimer = null;
+    }, 15000);
+  }
+});
+
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    setTimeout(() => { errorMessage.value = null; }, 4000);
   } else {
+    if (toastAutoDismissTimer) {
+      clearTimeout(toastAutoDismissTimer);
+    }
     toastMessage.value = msg;
-    setTimeout(() => { toastMessage.value = null; }, 3800);
+    toastAutoDismissTimer = setTimeout(() => {
+      toastMessage.value = null;
+      toastAutoDismissTimer = null;
+    }, 3800);
   }
 }
 

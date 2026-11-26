@@ -1152,4 +1152,52 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(selectEl.value).toBe('blk-new-77');
     expect(wrapper.text()).toContain('Tiket Blocker baru berhasil ditautkan ke Komitmen #1');
   });
+
+  it('menghilangkan notifikasi toast error validasi secara otomatis setelah 15 detik', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            workDate: '2026-11-26',
+            currentTime: '08:20',
+            cutoffTimings: {
+              morningOnTimeCutoff: '09:00',
+              morningLockCutoff: '09:30',
+              isMorningLocked: false,
+            },
+            record: null,
+            availableCarryOvers: [],
+            activeBlockers: [],
+          },
+        }),
+      }));
+
+      await router.push('/daily/morning');
+      await router.isReady();
+
+      const wrapper = mount(MorningCommitmentView, {
+        global: { plugins: [router] },
+      });
+      await vi.advanceTimersByTimeAsync(50);
+
+      const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Kirim Morning Commitment'));
+      expect(submitBtn).toBeDefined();
+      await submitBtn!.trigger('click');
+
+      expect(wrapper.find('.toast-popup.error').exists()).toBe(true);
+
+      // Masih tampil sebelum 15 detik (mis. detik ke-10)
+      await vi.advanceTimersByTimeAsync(10000);
+      expect(wrapper.find('.toast-popup.error').exists()).toBe(true);
+
+      // Hilang otomatis setelah melewati 15 detik
+      await vi.advanceTimersByTimeAsync(5100);
+      expect(wrapper.find('.toast-popup.error').exists()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

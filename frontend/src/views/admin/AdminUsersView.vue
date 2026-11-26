@@ -386,7 +386,7 @@ async function loadUsers() {
     users.value = rows;
     summary.value = res.meta?.summary || payload?.summary || computeFallbackSummary(rows);
   } catch (err: any) {
-    errorMessage.value = err.message || 'Gagal memuat daftar pengguna.';
+    showToast(err.message || 'Gagal memuat daftar pengguna.', true);
   } finally {
     isLoading.value = false;
   }

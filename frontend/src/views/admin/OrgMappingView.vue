@@ -219,7 +219,7 @@ async function loadData() {
     projectAuthorities.value = paRes.data.data || (paRes.data as any) || [];
     availableUsers.value = usersRes.data.data || (usersRes.data as any) || [];
   } catch (err: any) {
-    errorMessage.value = err.message || 'Gagal memuat data struktur organisasi.';
+    showToast(err.message || 'Gagal memuat data struktur organisasi.', true);
   } finally {
     isLoading.value = false;
   }

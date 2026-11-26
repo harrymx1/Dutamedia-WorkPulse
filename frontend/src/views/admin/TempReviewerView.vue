@@ -347,6 +347,9 @@ async function loadData() {
     availableUsers.value = usersRes.data.data || (usersRes.data as any) || [];
   } catch (err: any) {
     errorMessage.value = err.message || 'Gagal memuat data reviewer sementara.';
+    setTimeout(() => {
+      errorMessage.value = null;
+    }, 15000);
   } finally {
     isLoading.value = false;
   }
