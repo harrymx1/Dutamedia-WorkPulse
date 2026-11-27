@@ -139,35 +139,59 @@ describe('ManagerNoteCoachingView.vue (WP-EP07 / Prototipe 10 - Catatan Evaluasi
     expect(wrapper.text()).toContain('Rahasia Manajemen');
   });
 
-  it('applies coaching quick template when template button is clicked', async () => {
+  it('applies coaching quick template as neutral frame and allows switching empty frames without overwrite confirm', async () => {
     const wrapper = mount(ManagerNoteCoachingView, {
       global: { plugins: [router] },
     });
 
     await flushPromises();
 
-    const templateBtn = wrapper.findAll('.btn-template').find(b => b.text().includes('Bimbingan 1-on-1'));
+    const templateBtn = wrapper.findAll('.btn-template').find((b) => b.text().includes('Bimbingan 1-on-1'));
     expect(templateBtn).toBeDefined();
     await templateBtn!.trigger('click');
 
-    expect(wrapper.find('textarea').element.value).toContain('[Fokus Pengembangan]');
+    const textarea = wrapper.find('textarea');
+    expect(textarea.element.value).toContain('[Fokus Pengembangan]:');
+    expect(textarea.element.value).toContain('[Fakta Objektif]:');
+    expect(textarea.element.value).toContain('[Saran Perbaikan]:');
+    expect(textarea.element.value).toContain('[Target Evaluasi]:');
+    expect(textarea.element.value).not.toContain('integrasi API');
+    expect(wrapper.find('[data-testid="template-fill-hint"]').exists()).toBe(true);
+    expect((wrapper.find('button[type="submit"]').element as HTMLButtonElement).disabled).toBe(true);
+
+    // Switching to another template while frame is still unfilled should replace immediately without confirm dialog
+    const correctiveBtn = wrapper.findAll('.btn-template').find((b) => b.text().includes('Tindakan Korektif'));
+    await correctiveBtn!.trigger('click');
+    expect(wrapper.find('.template-confirm-box').exists()).toBe(false);
+    expect(textarea.element.value).toContain('[Hal yang Perlu Diperbaiki]:');
+    expect(textarea.element.value).toContain('[Langkah Korektif & Target Waktu]:');
+    expect(textarea.element.value).not.toContain('09:30');
+
+    // Filling >= 10 meaningful chars after label activates submit
+    await textarea.setValue('[Hal yang Perlu Diperbaiki]: Perlu konfirmasi kendala lebih awal sebelum melewati cut-off.');
+    expect(wrapper.find('[data-testid="template-fill-hint"]').exists()).toBe(false);
+    expect((wrapper.find('button[type="submit"]').element as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('applies recognition quick template in clean Indonesian without SLA or production jargon', async () => {
+  it('applies recognition quick template as neutral frame without fictitious domain jargon', async () => {
     const wrapper = mount(ManagerNoteCoachingView, {
       global: { plugins: [router] },
     });
 
     await flushPromises();
 
-    const recognitionBtn = wrapper.findAll('.btn-template').find(b => b.text().includes('Apresiasi'));
+    const recognitionBtn = wrapper.findAll('.btn-template').find((b) => b.text().includes('Apresiasi'));
     expect(recognitionBtn).toBeDefined();
     await recognitionBtn!.trigger('click');
 
     const val = wrapper.find('textarea').element.value;
-    expect(val).toContain('[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit).');
+    expect(val).toContain('[Pencapaian / Kontribusi]:');
+    expect(val).toContain('[Dampak Positif]:');
+    expect(val).toContain('[Umpan Balik]:');
     expect(val).not.toContain('SLA');
     expect(val).not.toContain('production');
+    expect(val).not.toContain('pembayaran');
+    expect((wrapper.find('button[type="submit"]').element as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('uses getUserInitials for avatar and directs employees to Notifikasi page', async () => {

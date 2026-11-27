@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
-import { ref, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
 import { formatDateWib } from '../../utils/dateTime';
@@ -48,7 +48,37 @@ const formSubjectId = ref<string>('');
 const formNoteType = ref<'COACHING' | 'RECOGNITION' | 'CORRECTIVE'>('COACHING');
 const formVisibility = ref<'CONFIDENTIAL_MANAGER_ONLY' | 'SHARED_WITH_EMPLOYEE'>('SHARED_WITH_EMPLOYEE');
 const formContent = ref('');
+const noteContentRef = ref<HTMLTextAreaElement | null>(null);
 const pendingTemplateType = ref<'coaching' | 'recognition' | 'corrective' | null>(null);
+
+const COACHING_TEMPLATES: Record<'coaching' | 'recognition' | 'corrective', string> = {
+  coaching: [
+    '[Fokus Pengembangan]: ',
+    '[Fakta Objektif]: ',
+    '[Saran Perbaikan]: ',
+    '[Target Evaluasi]: ',
+  ].join('\n'),
+  recognition: [
+    '[Pencapaian / Kontribusi]: ',
+    '[Dampak Positif]: ',
+    '[Umpan Balik]: ',
+  ].join('\n'),
+  corrective: [
+    '[Hal yang Perlu Diperbaiki]: ',
+    '[Fakta / Kejadian]: ',
+    '[Langkah Korektif & Target Waktu]: ',
+  ].join('\n'),
+};
+
+const meaningfulContent = computed(() =>
+  formContent.value
+    .replace(/^\[[^\]]+\]:\s*/gm, '')
+    .trim(),
+);
+const isContentValid = computed(() => meaningfulContent.value.length >= 10);
+const isUnfilledTemplate = computed(
+  () => formContent.value.trim().length > 0 && meaningfulContent.value.length < 10,
+);
 
 // Toast
 const toastMessage = ref<string | null>(null);
@@ -118,29 +148,27 @@ async function handleFormSubjectChange() {
 function applyTemplateNow(templateType: 'coaching' | 'recognition' | 'corrective') {
   if (templateType === 'coaching') {
     formNoteType.value = 'COACHING';
-    formContent.value =
-`[Fokus Pengembangan]: Peningkatan akurasi estimasi waktu komitmen harian.
-[Fakta Objektif]: Terdapat 3 carry-over berturut-turut pada tugas integrasi API.
-[Saran Perbaikan]: Pecah tugas besar menjadi sub-komitmen dengan estimasi maksimal 3 jam.
-[Target Evaluasi]: Ditinjau kembali pada sesi 1-on-1 minggu depan.`;
   } else if (templateType === 'recognition') {
     formNoteType.value = 'RECOGNITION';
     formVisibility.value = 'SHARED_WITH_EMPLOYEE';
-    formContent.value =
-`[Apresiasi Prestasi]: Penanganan cepat kendala kritis layanan aktif (waktu respon < 45 menit).
-[Dampak Positif]: Klien tidak mengalami gangguan transaksi pembayaran.
-[Umpan Balik]: Inisiatif kolaborasi lintas tim berjalan sangat baik. Terima kasih atas dedikasinya!`;
   } else {
     formNoteType.value = 'CORRECTIVE';
-    formContent.value =
-`[Pelanggaran / Deviasi]: Keterlambatan check-in pagi tanpa justifikasi izin resmi.
-[Fakta]: Terlewat batas waktu cut-off 09:30 WIB sebanyak 2 kali dalam minggu ini.
-[Langkah Korektif]: Wajib menyampaikan permohonan dispensasi resmi jika terjadi keadaan kahar.`;
   }
+
+  formContent.value = COACHING_TEMPLATES[templateType];
+
+  void nextTick(() => {
+    const el = noteContentRef.value;
+    if (!el) return;
+    const firstBreak = formContent.value.indexOf('\n');
+    const pos = firstBreak >= 0 ? firstBreak : formContent.value.length;
+    el.focus();
+    el.setSelectionRange?.(pos, pos);
+  });
 }
 
 function applyTemplate(templateType: 'coaching' | 'recognition' | 'corrective') {
-  if (formContent.value.trim().length > 0) {
+  if (meaningfulContent.value.length > 0) {
     pendingTemplateType.value = templateType;
     return;
   }
@@ -167,8 +195,8 @@ async function submitNote() {
     showToast('Pilih karyawan subjek pembinaan.', true);
     return;
   }
-  if (formContent.value.trim().length < 10) {
-    showToast('Isi catatan pembinaan minimal 10 karakter berbasis fakta objektif.', true);
+  if (!isContentValid.value) {
+    showToast('Lengkapi isi catatan pembinaan minimal 10 karakter (tidak termasuk judul kerangka).', true);
     return;
   }
 
@@ -375,7 +403,7 @@ onMounted(() => {
 
             <div v-if="pendingTemplateType" class="template-confirm-box" role="alertdialog">
               <p class="template-confirm-text">
-                Isi catatan saat ini akan diganti dengan teks contoh. Lanjutkan?
+                Isi catatan saat ini akan diganti dengan kerangka baru. Lanjutkan?
               </p>
               <div class="template-confirm-actions">
                 <button type="button" class="btn-confirm-replace" @click="confirmReplaceTemplate">
@@ -392,18 +420,25 @@ onMounted(() => {
               <label for="noteContent">Isi Catatan Pembinaan <span class="req">*</span></label>
               <textarea
                 id="noteContent"
+                ref="noteContentRef"
                 v-model="formContent"
                 rows="6"
                 minlength="10"
                 placeholder="Tuliskan catatan berbasis fakta nyata, saran perbaikan, atau apresiasi konkret (min. 10 karakter)..."
                 required
               ></textarea>
+              <p v-if="isUnfilledTemplate" class="content-hint warning" data-testid="template-fill-hint">
+                Lengkapi isi di belakang label kerangka (minimal 10 karakter) sebelum menyimpan.
+              </p>
+              <p v-else class="content-hint">
+                Klik tombol Template Cepat untuk menyisipkan kerangka terstruktur, atau tulis catatan bebas berbasis fakta.
+              </p>
             </div>
 
             <button
               type="submit"
               class="btn-submit"
-              :disabled="submitting || formContent.trim().length < 10"
+              :disabled="submitting || !isContentValid"
             >
               <span v-if="submitting">Menyimpan Catatan...</span>
               <span v-else>Simpan Catatan Pembinaan</span>
@@ -816,6 +851,18 @@ textarea:focus {
 .btn-template:hover {
   background: #E6F4EE;
   border-color: #00674D;
+}
+
+.content-hint {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: #5C6E68;
+  line-height: 1.4;
+}
+
+.content-hint.warning {
+  color: #B45309;
+  font-weight: 600;
 }
 
 .btn-submit {
