@@ -285,7 +285,9 @@ describe('MyHistoryView.vue (Audit #6 Verification)', () => {
 
     const panel = wrapper.find('[data-testid="readonly-leave-exemption-panel"]');
     expect(panel.exists()).toBe(true);
-    expect(panel.text()).toContain('Read-Only');
+    expect(panel.text()).toContain('Riwayat Cuti & Dispensasi Resmi Tercatat');
+    expect(panel.text()).not.toContain('Read-Only');
+    expect(panel.text()).not.toContain('(Hanya Baca)');
     expect(panel.text()).toContain('Cuti Tahunan');
     expect(panel.text()).toContain('Dinas Luar');
     expect(panel.text()).toContain('ST/HRGA/104');

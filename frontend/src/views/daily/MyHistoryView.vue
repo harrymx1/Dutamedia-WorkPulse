@@ -578,20 +578,18 @@ onMounted(() => {
         </div>
       </section>
 
-      <!-- Riwayat Cuti & Dispensasi Resmi Tercatat (Read-Only - DEC-018) -->
+      <!-- Riwayat Cuti & Dispensasi Resmi Tercatat -->
       <section class="panel readonly-absence-panel" data-testid="readonly-leave-exemption-panel">
         <div class="panel-head">
           <div>
-            <div class="kicker">Arsip Kehadiran Dikecualikan (Hanya Baca)</div>
+            <div class="kicker">Arsip Kehadiran Dikecualikan</div>
             <h2>Riwayat Cuti &amp; Dispensasi Resmi Tercatat</h2>
+            <p class="panel-subtitle">
+              Data di bawah ini dicatat resmi oleh HRGA / Direktur / Admin setelah disetujui. Pada periode tercantum, Anda dibebaskan otomatis dari kewajiban check-in harian. Jika terdapat perbedaan data, silakan hubungi tim HRGA atau atasan Anda.
+            </p>
           </div>
-          <span class="badge badge-neutral">Read-Only</span>
         </div>
         <div class="panel-body">
-          <p class="readonly-hint">
-            Data di bawah ini dicatat resmi oleh HRGA / Direktur / Admin setelah disetujui. Pada periode tercantum, Anda dibebaskan otomatis dari kewajiban check-in harian. Jika terdapat perbedaan data, silakan hubungi tim HRGA atau atasan Anda.
-          </p>
-
           <div v-if="recordedLeaves.length === 0 && recordedExemptions.length === 0" class="readonly-empty">
             <CalendarCheck :size="20" class="text-green" />
             <span>Belum ada catatan cuti resmi maupun dispensasi terdaftar pada akun Anda.</span>
@@ -836,6 +834,18 @@ onMounted(() => {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
+}
+
+.panel-subtitle {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 78ch;
+}
+
+.panel-body {
+  padding: 16px 20px 20px;
 }
 
 .table-wrap {
@@ -1133,6 +1143,14 @@ onMounted(() => {
     font-size: 22px;
   }
 
+  .panel-head {
+    padding: 14px 16px;
+  }
+
+  .panel-body {
+    padding: 14px 16px 16px;
+  }
+
   .toast-popup {
     left: 16px;
     right: 16px;
@@ -1175,14 +1193,7 @@ onMounted(() => {
 }
 
 .readonly-absence-panel {
-  margin-top: 20px;
-}
-
-.readonly-hint {
-  font-size: 12.5px;
-  color: #5C6E68;
-  margin: 0 0 14px;
-  line-height: 1.5;
+  margin-top: 0;
 }
 
 .readonly-empty {

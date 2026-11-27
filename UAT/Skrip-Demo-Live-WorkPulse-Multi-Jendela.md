@@ -478,7 +478,7 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
 - **🖱️ Langkah Klik & Input (Semua di `Jendela 2 — Bagas Saputra`):**
   1. Di sidebar kiri, klik menu **`Riwayat Saya`** (`/daily/history`).
   2. Tunjuk **4 kartu ringkasan KPI** di bagian atas halaman.
-  3. Tunjuk panel **`Riwayat Cuti & Dispensasi Resmi Tercatat` (`Read-Only`)**.
+  3. Tunjuk panel **`Riwayat Cuti & Dispensasi Resmi Tercatat`**.
   4. Pada baris rekor kerja **hari ini** di tabel bawah, klik tombol **`Detail`** untuk membuka rincian 3 komitmen pagi, 1 pekerjaan tambahan, dan evaluasi sore yang baru saja dikirim oleh Bagas.
   5. Klik tombol **`Unduh CSV`** di kanan atas tabel.
 
@@ -543,7 +543,7 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
        ```
   2. Di halaman `/daily/morning`, tunjukkan formulir pagi **otomatis terkunci** menampilkan spanduk hijau **`Masa Cuti Resmi (Cuti Tahunan)`**.
   3. Klik sekilas tab **`2. Additional Work`** dan tab **`3. EOD Outcome`** → tunjukkan keduanya juga otomatis terkunci hijau selama masa cuti.
-  4. Klik menu **`Riwayat Saya`** (`/daily/history`) di sidebar kiri → tunjukkan masa cuti Gilang tampil di panel **`Riwayat Cuti & Dispensasi Resmi Tercatat` (`Read-Only`)**.
+  4. Klik menu **`Riwayat Saya`** (`/daily/history`) di sidebar kiri → tunjukkan masa cuti Gilang tampil di panel **`Riwayat Cuti & Dispensasi Resmi Tercatat`**.
   5. Klik tombol **`Keluar Sesi`** di pojok kanan atas **Jendela 5**.
 
 - **💬 Kalimat Penutup Singkat:**  
@@ -1070,7 +1070,7 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
          ```
      - **👀 Tunjukkan di layar:**
        - Halaman `/daily/morning`, tab `2. Additional Work`, dan tab `3. EOD Outcome` milik Intan **langsung terkunci hijau** menampilkan **`Masa Cuti Resmi (Cuti Sakit)`**.
-       - Buka menu **`Riwayat Saya`** (`/daily/history`) → catatan cuti sakitnya langsung tampil di panel **`Riwayat Cuti & Dispensasi Resmi Tercatat` (`Read-Only`)**.
+       - Buka menu **`Riwayat Saya`** (`/daily/history`) → catatan cuti sakitnya langsung tampil di panel **`Riwayat Cuti & Dispensasi Resmi Tercatat`**.
        - Lencana notifikasi di pojok kanan atas juga langsung bertambah.
 
 - **💬 Kalimat Penutup Singkat:**  
