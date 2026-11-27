@@ -300,12 +300,22 @@ onMounted(() => {
                   Tanggal Selesai <span v-if="!formIsPermanent" class="req">*</span>
                 </label>
                 <input
+                  v-if="formIsPermanent"
+                  id="endDateInput"
+                  type="text"
+                  value="Tanpa batas (Permanen)"
+                  disabled
+                  readonly
+                  class="input-permanent-disabled"
+                  data-testid="end-date-permanent-display"
+                />
+                <input
+                  v-else
                   id="endDateInput"
                   v-model="formEndDate"
                   type="date"
                   :min="formStartDate || undefined"
-                  :disabled="formIsPermanent"
-                  :required="!formIsPermanent"
+                  required
                 />
               </div>
             </div>
@@ -701,6 +711,15 @@ textarea {
   background: #fff;
   color: #0E211B;
   box-sizing: border-box;
+}
+
+input:disabled,
+.input-permanent-disabled {
+  background: #F1F5F3;
+  color: #5C6E68;
+  border-color: #D5E0DC;
+  cursor: not-allowed;
+  font-style: italic;
 }
 
 .table-panel-head {

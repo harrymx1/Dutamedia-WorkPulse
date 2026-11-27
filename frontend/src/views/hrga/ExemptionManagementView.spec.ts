@@ -268,6 +268,18 @@ describe('ExemptionManagementView.vue (WP-EP08 / Prototipe 12 - Kelola Pengecual
 
     await wrapper.find('#empSelect').setValue('u-1');
     await wrapper.find('#startDateInput').setValue('2026-11-25');
+    await wrapper.find('#endDateInput').setValue('2026-11-30');
+    await wrapper.find('[data-testid="permanent-exemption-checkbox"]').setValue(true);
+    const permanentEndDateEl = wrapper.find('#endDateInput').element as HTMLInputElement;
+    expect(permanentEndDateEl.disabled).toBe(true);
+    expect(permanentEndDateEl.value).toBe('Tanpa batas (Permanen)');
+
+    await wrapper.find('[data-testid="permanent-exemption-checkbox"]').setValue(false);
+    const restoredEndDateEl = wrapper.find('#endDateInput').element as HTMLInputElement;
+    expect(restoredEndDateEl.type).toBe('date');
+    expect(restoredEndDateEl.disabled).toBe(false);
+    expect(restoredEndDateEl.value).toBe('2026-11-30');
+
     await wrapper.find('[data-testid="permanent-exemption-checkbox"]').setValue(true);
     expect((wrapper.find('#endDateInput').element as HTMLInputElement).disabled).toBe(true);
     await wrapper.find('#catSelect').setValue('Pengecualian Permanen');
