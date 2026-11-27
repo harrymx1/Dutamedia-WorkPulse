@@ -132,10 +132,9 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     // Default pendaratan HEAD adalah Divisi Saya dengan judul konsisten Management Dashboard
     expect(wrapper.find('h1').text()).toBe('Management Dashboard');
     expect(wrapper.find('[data-testid="active-scope-badge"]').text()).toBe('Divisi Engineering');
-    // Hanya tab Divisi Saya yang muncul (tidak ada Tim Proyek jika bukan Project Lead, dan tidak ada Seluruh Perusahaan)
+    // Head non-Project Lead hanya punya 1 mode sehingga bar tab pengalih tidak ditampilkan
     const tabs = wrapper.findAll('.scope-tab');
-    expect(tabs.length).toBe(1);
-    expect(tabs[0].text()).toContain('Divisi Saya');
+    expect(tabs).toHaveLength(0);
     expect(wrapper.text()).not.toContain('Seluruh Perusahaan');
     // Filter Proyek tidak ditampilkan pada tab Divisi Saya
     expect(wrapper.find('[data-testid="filter-project-select"]').exists()).toBe(false);
@@ -195,7 +194,7 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     expect(tabs[1].text()).toContain('Divisi Saya');
   });
 
-  it('restricts tabs for SUPERVISOR / Project Lead role: shows only Tim (Proyek) tab with project filter and defaults to Team Pulse', async () => {
+  it('restricts tabs for SUPERVISOR / Project Lead role: hides single-option tab and shows project filter defaulting to Team Pulse', async () => {
     const authStore = (await import('../../stores/auth')).useAuthStore();
     authStore.user = {
       id: 'spv-id',
@@ -216,10 +215,40 @@ describe('PulseDashboardView.vue (Prototipe 08 / EP12 - Pulse Dashboard & Except
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(wrapper.find('h1').text()).toBe('Management Dashboard');
-    const tabs = wrapper.findAll('.scope-tab');
-    expect(tabs.length).toBe(1);
-    expect(tabs[0].text()).toContain('Tim (Proyek)');
+    expect(wrapper.findAll('.scope-tab')).toHaveLength(0);
+    expect(wrapper.find('[data-testid="active-scope-badge"]').text()).toBe('Tim Proyek Aktif');
     expect(wrapper.find('[data-testid="filter-project-select"]').exists()).toBe(true);
+  });
+
+  it('hides single-option scope tab for CEO_MANAGEMENT and dynamically updates active-scope-badge when division filter changes', async () => {
+    const authStore = (await import('../../stores/auth')).useAuthStore();
+    authStore.user = {
+      id: 'ceo-id',
+      email: 'ceo@dutamedia.com',
+      fullName: 'Hendra Wijaya',
+      role: 'CEO_MANAGEMENT',
+      function: 'Management',
+      status: 'ACTIVE',
+    } as any;
+
+    const wrapper = mount(PulseDashboardView, {
+      global: {
+        plugins: [router],
+        stubs: { RouterLink: true },
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.findAll('.scope-tab')).toHaveLength(0);
+    expect(wrapper.find('[data-testid="filter-division-select"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="filter-project-select"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="active-scope-badge"]').text()).toBe('PT Dutamedia Mandiri Pratama');
+
+    await wrapper.find('[data-testid="filter-division-select"]').setValue('Engineering');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('[data-testid="active-scope-badge"]').text()).toBe('Divisi Engineering');
   });
 
   it('reloads metrics and feed with period parameter when period selector changes and updates panel label', async () => {

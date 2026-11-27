@@ -359,7 +359,7 @@ onMounted(() => {
 
       <!-- Scope Switcher & Filter Bar -->
       <div class="scope-bar">
-        <div v-if="allowedScopes.length >= 1" class="scope-tabs" role="tablist">
+        <div v-if="allowedScopes.length > 1" class="scope-tabs" role="tablist">
           <button
             v-if="allowedScopes.includes('team')"
             type="button"
