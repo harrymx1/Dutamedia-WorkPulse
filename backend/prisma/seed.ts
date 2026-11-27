@@ -1258,10 +1258,11 @@ async function main() {
   const h1Morning = new Date(prevWorkdayDate.getTime() + 1.5 * 3600 * 1000); // 08:30 WIB
   const h1Eod = new Date(prevWorkdayDate.getTime() + 10 * 3600 * 1000); // 17:00 WIB
 
-  // Pastikan formulir Hari H terbuka siap diisi untuk Bagas Saputra, Raka Pratama, Nadia Kusuma, & Intan Permata
+  // Pastikan formulir Hari H terbuka siap diisi untuk Bagas Saputra, Raka Pratama, Siti Rahma, Nadia Kusuma, & Intan Permata
   for (const openFormUserId of [
     productManagerUser.id,
     internFrontendUser.id,
+    backendUser.id,
     qaUser.id,
     staffFinanceUser.id,
   ]) {

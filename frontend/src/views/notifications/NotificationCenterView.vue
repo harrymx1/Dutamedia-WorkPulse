@@ -295,6 +295,8 @@ function formatNotificationTypeLabel(type?: string): string {
     case 'ADDITIONAL_WORK_UPDATED':
     case 'ADDITIONAL_WORK_DELETED':
       return 'Pekerjaan Tambahan';
+    case 'ZERO_COMMITMENT_SUBMITTED':
+      return 'Laporan 0 Komitmen';
     case 'COMPLIANCE_PATTERN_ALERT':
       return 'Peringatan Kepatuhan';
     case 'TEST_SIMULATION':

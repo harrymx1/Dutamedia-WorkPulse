@@ -526,9 +526,11 @@ export class DailyService {
       });
     }
 
+    let savedRecord: any;
+
     // Jika record sudah ada dengan morningSubmittedAt == null (misal dari pre-seeding atau cuti)
     if (existing) {
-      return this.executeMorningUpdate(
+      savedRecord = await this.executeMorningUpdate(
         existing.id,
         timingConfig,
         orgContextSnapshot,
@@ -537,92 +539,107 @@ export class DailyService {
         dto.zeroCommitmentReason,
         resolvedCommitments,
       );
-    }
-
-    // 2. Jika record belum ada: jalankan transaksi pembuatan baru dengan proteksi P2002 bersih di luar tx
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const created = await tx.dailyAccountabilityRecord.create({
-          data: {
-            userId,
-            workDate,
-            orgContextSnapshot,
-            policySnapshot: timingConfig,
-            morningSubmittedAt: this.clockService.now(),
-            morningTiming,
-            initialDailyStatus,
-            zeroCommitmentReason: dto.zeroCommitmentReason ? dto.zeroCommitmentReason.trim() : null,
-          },
-        });
-
-        for (const c of resolvedCommitments) {
-          await tx.commitment.create({
+    } else {
+      // 2. Jika record belum ada: jalankan transaksi pembuatan baru dengan proteksi P2002 bersih di luar tx
+      try {
+        savedRecord = await this.prisma.$transaction(async (tx) => {
+          const created = await tx.dailyAccountabilityRecord.create({
             data: {
-              dailyRecordId: created.id,
-              sequenceNo: c.sequenceNo,
-              taskText: c.taskText,
-              referenceLink: c.referenceLink,
-              initialRisk: c.initialRisk,
-              knownBlockerNote: c.knownBlockerNote,
-              supportNeeded: c.supportNeeded,
-              isCarryOver: c.isCarryOver,
-              carryOverDaysCount: c.carryOverDaysCount,
-              originCommitmentId: c.originCommitmentId,
-            },
-          });
-        }
-
-        return tx.dailyAccountabilityRecord.findUniqueOrThrow({
-          where: { id: created.id },
-          include: {
-            commitments: {
-              orderBy: { sequenceNo: 'asc' },
-            },
-            additionalWorks: true,
-          },
-        });
-      });
-    } catch (err: any) {
-      if (err.code === 'P2002') {
-        // Transaksi gagal telah di-rollback penuh oleh Prisma.
-        // Query di bawah dijalankan di luar transaksi pada koneksi bersih:
-        const conflicting = await this.prisma.dailyAccountabilityRecord.findUnique({
-          where: {
-            userId_workDate: {
               userId,
               workDate,
+              orgContextSnapshot,
+              policySnapshot: timingConfig,
+              morningSubmittedAt: this.clockService.now(),
+              morningTiming,
+              initialDailyStatus,
+              zeroCommitmentReason: dto.zeroCommitmentReason ? dto.zeroCommitmentReason.trim() : null,
             },
-          },
-        });
-
-        if (conflicting && conflicting.morningSubmittedAt != null) {
-          throw new AppException({
-            code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-            message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           });
-        }
 
-        if (conflicting && conflicting.morningSubmittedAt == null) {
-          return this.executeMorningUpdate(
-            conflicting.id,
-            timingConfig,
-            orgContextSnapshot,
-            morningTiming,
-            initialDailyStatus,
-            dto.zeroCommitmentReason,
-            resolvedCommitments,
-          );
-        }
+          for (const c of resolvedCommitments) {
+            await tx.commitment.create({
+              data: {
+                dailyRecordId: created.id,
+                sequenceNo: c.sequenceNo,
+                taskText: c.taskText,
+                referenceLink: c.referenceLink,
+                initialRisk: c.initialRisk,
+                knownBlockerNote: c.knownBlockerNote,
+                supportNeeded: c.supportNeeded,
+                isCarryOver: c.isCarryOver,
+                carryOverDaysCount: c.carryOverDaysCount,
+                originCommitmentId: c.originCommitmentId,
+              },
+            });
+          }
 
-        throw new AppException({
-          code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
-          message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
-          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          return tx.dailyAccountabilityRecord.findUniqueOrThrow({
+            where: { id: created.id },
+            include: {
+              commitments: {
+                orderBy: { sequenceNo: 'asc' },
+              },
+              additionalWorks: true,
+            },
+          });
         });
+      } catch (err: any) {
+        if (err.code === 'P2002') {
+          // Transaksi gagal telah di-rollback penuh oleh Prisma.
+          // Query di bawah dijalankan di luar transaksi pada koneksi bersih:
+          const conflicting = await this.prisma.dailyAccountabilityRecord.findUnique({
+            where: {
+              userId_workDate: {
+                userId,
+                workDate,
+              },
+            },
+          });
+
+          if (conflicting && conflicting.morningSubmittedAt != null) {
+            throw new AppException({
+              code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+              message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
+              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            });
+          }
+
+          if (conflicting && conflicting.morningSubmittedAt == null) {
+            savedRecord = await this.executeMorningUpdate(
+              conflicting.id,
+              timingConfig,
+              orgContextSnapshot,
+              morningTiming,
+              initialDailyStatus,
+              dto.zeroCommitmentReason,
+              resolvedCommitments,
+            );
+          } else {
+            throw new AppException({
+              code: ErrorCode.BUSINESS_RULE_ALREADY_SUBMITTED,
+              message: 'Morning Commitment hari ini telah diserahkan dan terkunci. Perubahan data wajib melalui alur permohonan koreksi resmi.',
+              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            });
+          }
+        } else {
+          throw err;
+        }
       }
-      throw err;
     }
+
+    if (resolvedCommitments.length === 0 && dto.zeroCommitmentReason?.trim()) {
+      await this.notifyZeroCommitmentToManager({
+        actorUserId: userId,
+        directManagerId: orgContextSnapshot.directManagerId,
+        jobTitle: orgContextSnapshot.jobTitle,
+        workDate,
+        workDateStr: dto.workDate,
+        reason: dto.zeroCommitmentReason.trim(),
+        recordId: savedRecord.id,
+      });
+    }
+
+    return savedRecord;
   }
 
   /**
@@ -940,6 +957,81 @@ export class DailyService {
       });
     } catch {
       // Abaikan jika pembuatan notifikasi gagal agar operasi utama tetap aman
+    }
+  }
+
+  private async notifyZeroCommitmentToManager(params: {
+    actorUserId: string;
+    directManagerId?: string | null;
+    jobTitle: string;
+    workDate: Date;
+    workDateStr: string;
+    reason: string;
+    recordId: string;
+  }) {
+    if (!params.directManagerId || params.directManagerId === params.actorUserId) return;
+    if (!(this.prisma as any).notification?.create) return;
+
+    let actorName = 'Anggota Tim';
+    if ((this.prisma as any).user?.findUnique) {
+      try {
+        const actor = await (this.prisma as any).user.findUnique({
+          where: { id: params.actorUserId },
+          select: { fullName: true },
+        });
+        if (actor?.fullName) {
+          actorName = actor.fullName;
+        }
+      } catch {
+        // Gunakan nama bawaan jika lookup gagal
+      }
+    }
+
+    const recipientIds = new Set<string>([params.directManagerId]);
+    if ((this.prisma as any).temporaryReviewer?.findMany) {
+      try {
+        const activeDelegations = await (this.prisma as any).temporaryReviewer.findMany({
+          where: {
+            originalManagerId: params.directManagerId,
+            status: 'ACTIVE',
+            startDate: { lte: params.workDate },
+            endDate: { gte: params.workDate },
+          },
+          select: { reviewerUserId: true },
+        });
+        for (const del of activeDelegations || []) {
+          if (del?.reviewerUserId && del.reviewerUserId !== params.actorUserId) {
+            recipientIds.add(del.reviewerUserId);
+          }
+        }
+      } catch {
+        // Abaikan jika lookup delegasi gagal
+      }
+    }
+
+    const rawTitle = `0 Komitmen Dilaporkan: ${actorName}`;
+    const safeTitle = rawTitle.length <= 200 ? rawTitle : `${rawTitle.slice(0, 197)}...`;
+    const message = `${actorName} (${params.jobTitle}) melaporkan 0 Komitmen (Bebas Komitmen) untuk tanggal ${params.workDateStr} dengan alasan: "${params.reason}"`;
+
+    for (const recipientUserId of recipientIds) {
+      try {
+        await (this.prisma as any).notification.create({
+          data: {
+            recipientUserId,
+            triggerType: 'ZERO_COMMITMENT_SUBMITTED',
+            channel: NotificationChannel.IN_APP_CENTER,
+            title: safeTitle,
+            message,
+            actionUrl: '/dashboard',
+            relatedEntityType: 'daily_accountability_records',
+            relatedEntityId: params.recordId,
+            status: NotificationStatus.SENT,
+            sentAt: this.clockService.now(),
+          },
+        });
+      } catch {
+        // Abaikan jika pembuatan notifikasi gagal agar operasi utama tetap aman
+      }
     }
   }
 

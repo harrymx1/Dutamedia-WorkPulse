@@ -134,6 +134,87 @@ describe('DailyService (WP-EP05 / Daily Accountability Core Logic)', () => {
       );
     });
 
+    it('mengirim notifikasi ke atasan langsung saat karyawan melaporkan 0 Komitmen', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+        function: 'ENGINEERING',
+        jobTitle: 'Backend Developer',
+        directManagerId: 'mgr-head-eng',
+      });
+      mockPrisma.user = {
+        findUnique: vi.fn().mockResolvedValue({ fullName: 'Siti Rahma' }),
+      };
+      mockPrisma.notification = {
+        create: vi.fn().mockResolvedValue({ id: 'notif-zero-1' }),
+      };
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-zero-notif',
+        initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+      });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-zero-notif',
+        initialDailyStatus: DailyRiskStatus.NOT_APPLICABLE_NO_COMMITMENT,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+        commitments: [],
+        additionalWorks: [],
+      });
+
+      await service.submitMorningCheckin('usr-siti', {
+        workDate: '2026-10-28',
+        commitments: [],
+        zeroCommitmentReason: 'Ikut pelatihan keamanan aplikasi dan audit mutu bareng HRGA seharian penuh',
+      });
+
+      expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'mgr-head-eng',
+            triggerType: 'ZERO_COMMITMENT_SUBMITTED',
+            actionUrl: '/dashboard',
+            relatedEntityType: 'daily_accountability_records',
+            relatedEntityId: 'rec-zero-notif',
+            title: expect.stringContaining('Siti Rahma'),
+            message: expect.stringContaining('Ikut pelatihan keamanan aplikasi'),
+          }),
+        }),
+      );
+    });
+
+    it('tidak mengirim notifikasi 0 Komitmen saat karyawan mengirim komitmen normal', async () => {
+      mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
+        role: 'EMPLOYEE',
+        function: 'ENGINEERING',
+        jobTitle: 'Backend Developer',
+        directManagerId: 'mgr-head-eng',
+      });
+      mockPrisma.notification = {
+        create: vi.fn(),
+      };
+      mockPrisma.dailyAccountabilityRecord.create.mockResolvedValue({
+        id: 'rec-normal-1',
+        initialDailyStatus: DailyRiskStatus.GREEN,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+      });
+      mockPrisma.dailyAccountabilityRecord.findUniqueOrThrow.mockResolvedValue({
+        id: 'rec-normal-1',
+        initialDailyStatus: DailyRiskStatus.GREEN,
+        morningSubmittedAt: new Date('2026-10-28T01:30:00.000Z'),
+        commitments: [{ id: 'c-1', sequenceNo: 1 }],
+        additionalWorks: [],
+      });
+
+      await service.submitMorningCheckin('usr-siti', {
+        workDate: '2026-10-28',
+        commitments: [
+          { taskText: 'Menyelesaikan endpoint laporan harian', initialRisk: CommitmentRisk.GREEN },
+        ],
+      });
+
+      expect(mockPrisma.notification.create).not.toHaveBeenCalled();
+    });
+
     it('evaluates carry-over chain and increments carryOverDaysCount (DEC-013)', async () => {
       const dto = {
         workDate: '2026-10-28',

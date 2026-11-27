@@ -23,7 +23,7 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
 | **Jendela 2** | `product@dutamedia.com`<br>**Bagas Saputra** (`PROJECT_MANAGER`) | `/daily/morning` | • **Babak `2A`–`2E`:** tetap **Bagas Saputra**<br>• **Babak `3B`:** ganti ke **Reza Mahendra** (`network.infra@dutamedia.com`)<br>• **Babak `3C`–`7A`:** ganti ke **Aditya Nugroho** (`dev.frontend@dutamedia.com`) |
 | **Jendela 3** | `head.eng@dutamedia.com`<br>**Arif Budiman** (`HEAD` Engineering) | `/dashboard` | **0x ganti akun** (Tetap Arif di Babak `3C`, `3E`, `4B`, `6B`, `7B`, `7C`) |
 | **Jendela 4** | `hrga@dutamedia.com`<br>**Dewi Lestari** (`HRGA`) | `/admin/users` | **0x ganti akun** (Tetap Dewi di Babak `1A`, `3A`, `5A`–`5C`, `6A`, `8A`–`8D`) |
-| **Jendela 5 (Incognito)** | Belum login (`/login`)<br>*(Akun tamu/cabang, keluar sesi tiap selesai)* | `/login` | • **Babak `1A`–`1B`:** **Budi Santoso** (`budi.santoso@dutamedia.com`)<br>• **Babak `2F`:** **Nadia Kusuma** (`qa@dutamedia.com`)<br>• **Babak `2G`:** **Gilang Ramadhan** (`specialist.it@dutamedia.com`)<br>• **Babak `3A`–`3B`:** **Raka Pratama** (`intern.frontend@dutamedia.com`)<br>• **Babak `5A`–`5C`:** **Intan Permata** (`staff.finance@dutamedia.com`)<br>• **Babak `8C`:** **Rian Kurniawan** (`lead.creative@dutamedia.com`) |
+| **Jendela 5 (Incognito)** | Belum login (`/login`)<br>*(Akun tamu/cabang, keluar sesi tiap selesai)* | `/login` | • **Babak `1A`–`1B`:** **Budi Santoso** (`budi.santoso@dutamedia.com`)<br>• **Babak `2F`:** **Siti Rahma** (`dev.backend@dutamedia.com`)<br>• **Babak `2G`:** **Gilang Ramadhan** (`specialist.it@dutamedia.com`)<br>• **Babak `3A`–`3B`:** **Raka Pratama** (`intern.frontend@dutamedia.com`)<br>• **Babak `5A`–`5C`:** **Intan Permata** (`staff.finance@dutamedia.com`)<br>• **Babak `8C`:** **Rian Kurniawan** (`lead.creative@dutamedia.com`) |
 
 ### Jadwal Ganti Akun Sepanjang Demo (`Jendela 1, 3, 4 = Tidak Pernah Ganti Akun`)
 
@@ -31,7 +31,7 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
 |---|---|---|---|---|
 | **Sebelum Mulai** | **Jendela 1 – 4** | — | Login **Hendra** (J1), **Bagas** (J2), **Arif** (J3), **Dewi** (J4) | J1, J3, J4 tetap sampai Babak 9 |
 | **Babak `1A`–`1B`** | **Jendela 5** | Belum login | Aktivasi & login `budi.santoso@dutamedia.com` (**Budi**) | Akhir `1B` → klik **Keluar Sesi** |
-| **Babak `2F`** | **Jendela 5** | Belum login | Login `qa@dutamedia.com` (**Nadia**) | Akhir `2F` → klik **Keluar Sesi** |
+| **Babak `2F`** | **Jendela 5** | Belum login | Login `dev.backend@dutamedia.com` (**Siti Rahma**) | Akhir `2F` → klik **Keluar Sesi** |
 | **Babak `2G`** | **Jendela 5** | Belum login | Login `specialist.it@dutamedia.com` (**Gilang**) | Akhir `2G` → klik **Keluar Sesi** |
 | **Babak `3A`** | **Jendela 5** | Belum login | Login `intern.frontend@dutamedia.com` (**Raka**) | Tetap login sampai akhir `3B` → **Keluar Sesi** |
 | **Babak `3B`** | **Jendela 2** | **Bagas Saputra** | Keluar Bagas → Login `network.infra@dutamedia.com` (**Reza**) | Hanya selama Babak `3B` |
@@ -56,7 +56,7 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
 | Babak | Fokus Utama yang Ditunjukkan |
 |---|---|
 | **Babak 1** | HRGA mengundang karyawan baru (`Budi Santoso`), mencabut token pertama hingga hangus, menerbitkan token baru, membuktikan login ditolak sebelum aktivasi, lalu aktivasi mandiri & cek halaman Profil. |
-| **Babak 2** | Pengaturan jam Cut-Off oleh Direktur (`Hendra`), lalu **1 siklus harian penuh tanpa putus** di akun `Bagas Saputra` (Komitmen Pagi → Pekerjaan Tambahan Siang → Evaluasi Sore dengan saran status `RED` vs pilihan `AMBER` → Riwayat Saya), diikuti contoh `0 Komitmen` (`Nadia`) dan contoh karyawan sedang Cuti Resmi (`Gilang`). |
+| **Babak 2** | Pengaturan jam Cut-Off oleh Direktur (`Hendra`), lalu **1 siklus harian penuh tanpa putus** di akun `Bagas Saputra` (Komitmen Pagi → Pekerjaan Tambahan Siang → Evaluasi Sore dengan saran status `RED` vs pilihan `AMBER` → Riwayat Saya), diikuti contoh `0 Komitmen` (`Siti Rahma` + bukti notifikasi langsung masuk ke atasannya `Arif`) dan contoh karyawan sedang Cuti Resmi (`Gilang`). |
 | **Babak 3** | Karyawan magang (`Raka`) melapor komitmen `RED` lewat tombol jalan pintas buat tiket blocker, bukti aturan cuti vertikal (`Gilang` cuti → otomatis naik ke atasannya `Gunawan` & tolak pilih manual `Gilang`), penanganan tiket oleh staf spesialis (`Reza`), bantuan lintas fungsi & Terima Risiko oleh Kepala Divisi (`Arif`), edit divisi tujuan & hapus tiket aktif (`Aditya`), serta Radar Penuaan & Eskalasi. |
 | **Babak 4** | Karyawan (`Aditya`) mengajukan Koreksi Komitmen Pagi: Perubahan Minor (langsung diterapkan otomatis) dan Perubahan Material (ditolak dulu oleh Kepala Divisi `Arif`, direvisi cepat dari draf sebelumnya, lalu disetujui). |
 | **Babak 5** | HRGA (`Dewi`) mencatat Cuti Resmi (uji tolak akhir pekan, bentrok jadwal, & cuti tahunan magang; catat cuti sakit `Intan`, edit, lalu hapus) serta mencatat Dispensasi Dinas Luar & Pengecualian Permanen (menu harian `Intan` disembunyikan sementara `Lapor Blocker` tetap aktif, lalu dihapus hingga menu harian aktif kembali). |
@@ -487,21 +487,21 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
 
 ---
 
-#### `2F [CABANG]` Karyawan Melaporkan Hari Bebas Komitmen (`0 Komitmen`)
+#### `2F [CABANG]` Karyawan Melaporkan Hari Bebas Komitmen (`0 Komitmen`) & Notifikasi Masuk ke Atasannya
 
-- **🪟 Jendela Aktif:** **Jendela 5 (Incognito)**
+- **🪟 Jendela Aktif:** **Jendela 5 (Incognito)** & **Jendela 3 (`Arif Budiman` — Atasan Langsung)**
 - **🔄 Perpindahan Akun:**
-  - **Login di Jendela 5:** `qa@dutamedia.com` (**Nadia Kusuma**, `Password123!`)
+  - **Login di Jendela 5:** `dev.backend@dutamedia.com` (**Siti Rahma**, `Password123!`)
   - **🚪 Di Akhir Langkah `2F`:** Klik **`Keluar Sesi`** di **Jendela 5**
 
 > **🎯 Sampaikan di Awal (Alasan & Aturan Sistem):**  
-> *"Bagaimana kalau hari ini karyawan mengikuti pelatihan seharian atau agenda non-operasional tanpa target tugas harian biasa? Daripada memaksa mereka mengarang tugas palsu sekadar menggugurkan absen, sistem mengizinkan 0 Komitmen — syaratnya wajib isi alasan tertulis, dan statusnya dicatat netral sebagai Bebas Komitmen, bukan pelanggaran."*
+> *"Bagaimana kalau hari ini karyawan mengikuti pelatihan seharian atau agenda non-operasional tanpa target tugas harian biasa? Daripada memaksa mereka mengarang tugas palsu sekadar menggugurkan absen, sistem mengizinkan 0 Komitmen — syaratnya wajib isi alasan tertulis, statusnya dicatat netral sebagai Bebas Komitmen bukan pelanggaran, dan notifikasinya langsung dikirim ke atasan langsungnya supaya atasan tetap tahu."*
 
-- **🖱️ Langkah Klik & Input (Semua di `Jendela 5 — Incognito`):**
-  1. Login di `/login` sebagai:
+- **🖱️ Langkah Klik & Input:**
+  1. **Di `Jendela 5 (Incognito)`, login sebagai `Siti Rahma` (`dev.backend@dutamedia.com`):**
      - **Email Perusahaan:**
        ```text
-       qa@dutamedia.com
+       dev.backend@dutamedia.com
        ```
      - **Kata Sandi:**
        ```text
@@ -513,11 +513,14 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
      Ikut pelatihan keamanan aplikasi dan audit mutu bareng HRGA seharian penuh
      ```
   4. Klik tombol **`Kirim Morning Commitment`**.
-  5. **👀 Tunjukkan di layar:** Muncul kartu hijau **`Status 0 Komitmen (Bebas Komitmen Kerja Hari Ini)`**.
-  6. Klik tombol **`Keluar Sesi`** di pojok kanan atas **Jendela 5**.
+  5. **👀 Lihat di layar (`Jendela 5`):** Muncul kartu hijau **`Status 0 Komitmen (Bebas Komitmen Kerja Hari Ini)`**.
+  6. **⚡ Buktikan Notifikasi Masuk ke Atasan di `Jendela 3 — Arif Budiman` (`Head of Engineering`, atasan langsung Siti Rahma):**
+     - Pindah ke **`Jendela 3 — Arif Budiman`**, lalu tekan **`F5`** atau klik menu **`Notifikasi`** (`/notifications`) di sidebar kiri (atau ikon lonceng di pojok kanan atas).
+     - **👀 Lihat di layar (`Jendela 3`):** Lencana angka merah notifikasi menyala dan muncul kartu **`0 Komitmen Dilaporkan: Siti Rahma`** berlabel **`Laporan 0 Komitmen`** lengkap dengan alasan yang barusan diisi Siti!
+  7. Kembali ke **`Jendela 5`**, klik tombol **`Keluar Sesi`** di pojok kanan atas (kembali ke `/login`).
 
 - **💬 Kalimat Penutup Singkat:**  
-  *"Statusnya tercatat rapi sebagai Bebas Komitmen tanpa mengotori metrik risiko hijau-kuning-merah."*
+  *"Statusnya tercatat rapi sebagai Bebas Komitmen tanpa mengotori metrik risiko hijau-kuning-merah, dan atasan langsungnya seketika mendapat pemberitahuan."*
 
 ---
 
