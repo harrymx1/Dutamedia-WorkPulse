@@ -71,11 +71,17 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     await flushPromises();
 
     expect(wrapper.text()).toContain('Permohonan Koreksi Komitmen Pagi');
-    expect(wrapper.text()).toContain('Baseline Tersimpan (Locked)');
+    expect(wrapper.text()).toContain('Komitmen Awal Tersimpan (Terkunci)');
     expect(wrapper.text()).toContain('Menyelesaikan endpoint authenikasi');
     expect(wrapper.text()).toContain('Perubahan Minor');
     expect(wrapper.text()).toContain('Perubahan Material');
-    expect(wrapper.text()).toContain('AUTO_APPLIED');
+    expect(wrapper.text()).toContain('Diterapkan Otomatis');
+    expect(wrapper.text()).not.toContain('AUTO_APPLIED');
+    expect(wrapper.text()).not.toContain('Anti-Backdating');
+    expect(wrapper.text()).not.toContain('append-only');
+
+    const firstOption = wrapper.find('#comSelect option');
+    expect(firstOption.text()).toContain('GREEN (Lancar)');
   });
 
   it('filters out EOD_OUTCOME entries from morning correction history', async () => {
@@ -357,6 +363,50 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(wrapper.find('.post-objection-banner').exists()).toBe(true);
     expect((wrapper.find('#newTaskInput').element as HTMLTextAreaElement).value).toBe('Tugas Kedua Revisi');
     expect((wrapper.find('#newLinkInput').element as HTMLInputElement).value).toBe('https://github.com/pr/55');
+  });
+
+  it('truncates long commitment titles inside dropdown options while preserving full text in the locked snapshot', async () => {
+    const longTask =
+      'Menyelesaikan implementasi komponen antarmuka navigasi mobile responsif lintas lima ukuran layar desktop dan seluler';
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              record: {
+                commitments: [
+                  {
+                    id: 'com-long-1',
+                    sequenceNo: 1,
+                    taskText: longTask,
+                    initialRisk: 'GREEN',
+                    referenceLink: null,
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    }));
+
+    const wrapper = mount(MorningCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    const optText = wrapper.find('#comSelect option').text();
+    expect(optText).toContain('…');
+    expect(optText.length).toBeLessThan(85);
+    expect(wrapper.find('.base-task').text()).toBe(longTask);
   });
 });
 

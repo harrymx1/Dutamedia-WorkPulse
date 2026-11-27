@@ -6,6 +6,11 @@ import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatDateWib } from '../../utils/dateTime';
 import {
+  truncateOptionText,
+  formatCorrectionStatusLabel,
+  formatCorrectionClassificationLabel,
+} from '../../utils/correctionLabels';
+import {
   AlertCircle,
   History,
   ShieldCheck,
@@ -274,9 +279,9 @@ async function submitCorrection() {
     });
 
     if (res.data?.status === 'AUTO_APPLIED') {
-      showToast('Koreksi minor berhasil diterapkan seketika (AUTO_APPLIED).');
+      showToast('Koreksi minor berhasil diterapkan otomatis dan tercatat di riwayat audit.');
     } else {
-      showToast('Permohonan koreksi material telah diajukan. Jendela keberatan aktif 24 jam.');
+      showToast('Permohonan koreksi material telah diajukan dan menunggu tinjauan Atasan Berwenang.');
     }
 
     reason.value = '';
@@ -310,10 +315,10 @@ onMounted(() => {
       <!-- Heading -->
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Pengecualian Formal &amp; Jejak Audit Anti-Backdating</span>
+          <span class="eyebrow">Koreksi Resmi &amp; Jejak Audit</span>
           <h1>Permohonan Koreksi Komitmen Pagi</h1>
           <p class="subtitle">
-            Gunakan formulir resmi ini jika Anda memerlukan perbaikan komitmen pagi setelah batas waktu cut-off terkunci. Perubahan minor diterapkan seketika, sedangkan perubahan material ditinjau oleh Atasan Langsung.
+            Gunakan formulir resmi ini jika Anda memerlukan perbaikan komitmen pagi setelah batas waktu cut-off terkunci. Perubahan minor diterapkan langsung secara otomatis, sedangkan perubahan material ditinjau oleh Atasan Berwenang.
           </p>
         </div>
       </div>
@@ -345,7 +350,7 @@ onMounted(() => {
         <section class="panel form-panel">
           <div class="panel-head">
             <h2>Formulir Pengajuan Koreksi Komparatif</h2>
-            <p class="panel-desc">Perbandingan baseline tersimpan dan perubahan yang diajukan.</p>
+            <p class="panel-desc">Perbandingan data komitmen awal dan usulan perubahan.</p>
           </div>
 
           <form class="panel-body" @submit.prevent="submitCorrection">
@@ -354,17 +359,17 @@ onMounted(() => {
               <label for="comSelect">Pilih Komitmen yang Ingin Dikoreksi <span class="req">*</span></label>
               <select id="comSelect" v-model="selectedCommitmentId" @change="handleCommitmentSelect" required>
                 <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
-                  [Komitmen #{{ c.sequenceNo }}] {{ c.taskText }} ({{ c.initialRisk }})
+                  [Komitmen #{{ c.sequenceNo }}] {{ truncateOptionText(c.taskText, 44) }} ({{ formatRiskLabel(c.initialRisk) }})
                 </option>
               </select>
             </div>
 
             <!-- Baseline Snapshot Box -->
             <div v-if="selectedCommitment" class="baseline-box">
-              <span class="baseline-tag">Baseline Tersimpan (Locked)</span>
+              <span class="baseline-tag">Komitmen Awal Tersimpan (Terkunci)</span>
               <div class="base-task">{{ selectedCommitment.taskText }}</div>
               <div class="base-meta">
-                <span>Risiko Awal: <strong>{{ selectedCommitment.initialRisk }}</strong></span>
+                <span>Risiko Awal: <strong>{{ formatRiskLabel(selectedCommitment.initialRisk) }}</strong></span>
                 <span v-if="selectedCommitment.referenceLink">· Link: {{ selectedCommitment.referenceLink }}</span>
               </div>
             </div>
@@ -419,7 +424,7 @@ onMounted(() => {
                     <ShieldCheck :size="16" />
                     <strong>Perubahan Minor</strong>
                   </div>
-                  <p>Koreksi salah ketik (typo) atau perbaikan tautan referensi. Diterapkan seketika secara otomatis (AUTO_APPLIED).</p>
+                  <p>Koreksi salah ketik (typo) atau perbaikan tautan referensi. Diterapkan langsung secara otomatis dan tercatat di riwayat audit.</p>
                 </label>
 
                 <label class="class-card" :class="{ selected: classification === 'MATERIAL' }">
@@ -428,7 +433,7 @@ onMounted(() => {
                     <AlertTriangle :size="16" />
                     <strong>Perubahan Material</strong>
                   </div>
-                  <p>Perubahan substansial target komitmen atau risiko. Membuka jendela sanggahan 24 jam untuk review Atasan.</p>
+                  <p>Perubahan substansial target komitmen atau risiko. Membuka jendela tinjauan 24 jam oleh Atasan Berwenang.</p>
                 </label>
               </div>
             </div>
@@ -527,7 +532,7 @@ onMounted(() => {
         <section class="panel history-panel">
           <div class="panel-head">
             <h2>Riwayat Permohonan Koreksi</h2>
-            <p class="panel-desc">Jejak audit append-only yang tidak dapat dimanipulasi.</p>
+            <p class="panel-desc">Riwayat permanen seluruh pengajuan koreksi yang tidak dapat diubah.</p>
           </div>
 
           <div class="panel-body">
@@ -549,9 +554,9 @@ onMounted(() => {
                       Komitmen #{{ getCommitmentSequenceNo(item) }}
                     </span>
                     <span class="status-badge" :class="item.status.toLowerCase()">
-                      {{ item.status }}
+                      {{ formatCorrectionStatusLabel(item.status) }}
                     </span>
-                    <span class="class-pill">{{ item.classification }}</span>
+                    <span class="class-pill">{{ formatCorrectionClassificationLabel(item.classification) }}</span>
                   </div>
                   <span class="hist-date wp-datetime">
                     {{ formatDateWib(item.createdAt) }}
@@ -820,6 +825,21 @@ textarea {
   font-size: 13px;
   background: #fff;
   box-sizing: border-box;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6E68' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 16px 16px;
 }
 
 .baseline-box {

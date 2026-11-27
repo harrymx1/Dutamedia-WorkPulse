@@ -6,6 +6,11 @@ import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatDateWib } from '../../utils/dateTime';
 import {
+  truncateOptionText,
+  formatCorrectionStatusLabel,
+  formatCorrectionClassificationLabel,
+} from '../../utils/correctionLabels';
+import {
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -248,7 +253,7 @@ async function loadData(syncSelectedForm = false) {
       myCorrections.value = historyRes.data.filter((h: any) => h.scopeType === 'EOD_OUTCOME');
     }
   } catch (err: any) {
-    showToast(err.message || 'Gagal memuat baseline EOD.', true);
+    showToast(err.message || 'Gagal memuat data evaluasi sore.', true);
   } finally {
     loading.value = false;
   }
@@ -300,9 +305,9 @@ async function submitCorrection() {
     });
 
     if (res.data?.status === 'AUTO_APPLIED') {
-      showToast('Koreksi minor EOD berhasil diterapkan seketika (AUTO_APPLIED).');
+      showToast('Koreksi minor evaluasi sore berhasil diterapkan otomatis dan tercatat di riwayat audit.');
     } else {
-      showToast('Permohonan koreksi material EOD diajukan. Jendela sanggahan 24 jam dibuka.');
+      showToast('Permohonan koreksi material EOD diajukan dan menunggu tinjauan Atasan Berwenang.');
     }
 
     reason.value = '';
@@ -336,7 +341,7 @@ onMounted(() => {
       <!-- Heading -->
       <div class="page-heading">
         <div>
-          <span class="eyebrow">Pengecualian Formal &amp; Hasil Akhir Harian</span>
+          <span class="eyebrow">Koreksi Resmi &amp; Hasil Akhir Harian</span>
           <h1>Permohonan Koreksi Evaluasi Sore (EOD)</h1>
           <p class="subtitle">
             Koreksi hasil capaian EOD setelah batas waktu cut-off {{ eodLockCutoff }} WIB terkunci. Pilihan hasil akhir tetap memberikan ruang refleksi mandiri secara objektif.
@@ -392,14 +397,14 @@ onMounted(() => {
               <label for="eodSelect">Pilih Komitmen / Tugas Target <span class="req">*</span></label>
               <select id="eodSelect" v-model="selectedCommitmentId" @change="handleCommitmentSelect" required>
                 <option v-for="c in todayCommitments" :key="c.id" :value="c.id">
-                  [Tugas #{{ c.sequenceNo }}] {{ c.taskText }} (Hasil: {{ formatOutcomeLabel(c.outcome) }})
+                  [Tugas #{{ c.sequenceNo }}] {{ truncateOptionText(c.taskText, 42) }} ({{ formatOutcomeLabel(c.outcome) }})
                 </option>
               </select>
             </div>
 
             <!-- Baseline Snapshot -->
             <div v-if="selectedCommitment" class="baseline-box">
-              <span class="baseline-tag">Baseline EOD Tersimpan</span>
+              <span class="baseline-tag">Evaluasi Sore Tersimpan (Terkunci)</span>
               <div class="base-task">{{ selectedCommitment.taskText }}</div>
               <div class="base-meta">
                 <span>Hasil: <strong>{{ formatOutcomeLabel(selectedCommitment.outcome) }}</strong></span>
@@ -458,7 +463,7 @@ onMounted(() => {
                     <ShieldCheck :size="16" />
                     <strong>Perubahan Minor</strong>
                   </div>
-                  <p>Penjelasan redaksional tambahan atau koreksi kecil. Diterapkan otomatis (AUTO_APPLIED).</p>
+                  <p>Penjelasan redaksional tambahan atau koreksi kecil. Diterapkan langsung secara otomatis dan tercatat di riwayat audit.</p>
                 </label>
 
                 <label class="class-card" :class="{ selected: classification === 'MATERIAL' }">
@@ -467,7 +472,7 @@ onMounted(() => {
                     <AlertTriangle :size="16" />
                     <strong>Perubahan Material</strong>
                   </div>
-                  <p>Perubahan status capaian (misal dari BLOCKED ke DONE). Membuka 24 jam Objection Window.</p>
+                  <p>Perubahan status capaian (misal dari Terhambat ke Tuntas). Membuka jendela tinjauan 24 jam oleh Atasan Berwenang.</p>
                 </label>
               </div>
             </div>
@@ -571,7 +576,7 @@ onMounted(() => {
         <section class="panel history-panel">
           <div class="panel-head">
             <h2>Riwayat Permohonan Koreksi EOD</h2>
-            <p class="panel-desc">Audit trail resmi permohonan koreksi hasil akhir.</p>
+            <p class="panel-desc">Riwayat permanen seluruh pengajuan koreksi evaluasi sore yang tidak dapat diubah.</p>
           </div>
 
           <div class="panel-body">
@@ -592,8 +597,8 @@ onMounted(() => {
                     <span v-if="getCommitmentSequenceNo(item)" class="seq-pill">
                       Tugas #{{ getCommitmentSequenceNo(item) }}
                     </span>
-                    <span class="status-badge" :class="item.status.toLowerCase()">{{ item.status }}</span>
-                    <span class="class-pill">{{ item.classification }}</span>
+                    <span class="status-badge" :class="item.status.toLowerCase()">{{ formatCorrectionStatusLabel(item.status) }}</span>
+                    <span class="class-pill">{{ formatCorrectionClassificationLabel(item.classification) }}</span>
                   </div>
                   <span class="hist-date wp-datetime">
                     {{ formatDateWib(item.createdAt) }}
@@ -860,6 +865,21 @@ textarea {
   font-size: 13px;
   background: #fff;
   box-sizing: border-box;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6E68' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 16px 16px;
 }
 
 .baseline-box {

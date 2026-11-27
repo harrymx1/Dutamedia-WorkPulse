@@ -63,11 +63,13 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
     await flushPromises();
 
     expect(wrapper.text()).toContain('Permohonan Koreksi Evaluasi Sore (EOD)');
-    expect(wrapper.text()).toContain('Baseline EOD Tersimpan');
+    expect(wrapper.text()).toContain('Evaluasi Sore Tersimpan (Terkunci)');
     expect(wrapper.text()).toContain('Deployment staging environment');
     expect(wrapper.text()).toContain('DONE (Tuntas)');
     expect(wrapper.text()).toContain('IN_PROGRESS');
     expect(wrapper.text()).toContain('BLOCKED');
+    expect(wrapper.text()).not.toContain('AUTO_APPLIED');
+    expect(wrapper.text()).not.toContain('Objection Window');
   });
 
   it('shows empty state card when user has no commitments today', async () => {
