@@ -1111,7 +1111,10 @@ onBeforeUnmount(() => {
             Draf komitmen pagi Anda sudah tersimpan otomatis. Setelah tiket ini dikirim, Anda akan langsung diarahkan kembali ke Morning Commitment dengan tiket baru sudah otomatis tertaut.
           </div>
         </div>
-        <router-link to="/daily/morning" class="btn-secondary btn-return-cancel">
+        <router-link
+          :to="{ path: '/daily/morning', query: { returnSlot: morningReturnSlot } }"
+          class="btn-secondary btn-return-cancel"
+        >
           Batal &amp; Kembali ke Morning Commitment
         </router-link>
       </div>

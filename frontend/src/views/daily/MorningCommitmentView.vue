@@ -4,7 +4,7 @@ import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { useAuthStore } from '../../stores/auth';
 import { getPromptHintForFunction, resolveUserFunction } from '../../config/prompts';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { formatTimeWib, formatDateSpanWib, formatDateWib, formatWeekdayDateWib } from '../../utils/dateTime';
@@ -216,6 +216,7 @@ const initialDailyStatus = computed(() => {
 
 async function loadTodayState() {
   loading.value = true;
+  let pendingScrollTarget: { slotIdx: number; highlight: boolean } | null = null;
   try {
     const res = await apiClient<{
       workDate: string;
@@ -284,12 +285,16 @@ async function loadTodayState() {
       clearLocalDraft(true);
     } else {
       restoreLocalDraft();
-      await applyReturnedLinkedBlocker();
+      pendingScrollTarget = await applyReturnedLinkedBlocker();
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat status komitmen hari ini.', true);
   } finally {
     loading.value = false;
+  }
+
+  if (pendingScrollTarget) {
+    await scrollToCommitmentSlot(pendingScrollTarget.slotIdx, pendingScrollTarget.highlight);
   }
 }
 
@@ -447,22 +452,73 @@ function saveLocalDraft(silent = false) {
   }
 }
 
-async function applyReturnedLinkedBlocker() {
+const slotCardElements = ref<Record<number, HTMLElement | null>>({});
+const highlightedSlotIdx = ref<number | null>(null);
+let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+function setSlotCardRef(idx: number, el: unknown) {
+  slotCardElements.value[idx] = el instanceof HTMLElement ? el : null;
+}
+
+async function scrollToCommitmentSlot(slotIdx: number, highlight = false) {
+  await nextTick();
+  const slotEl = slotCardElements.value[slotIdx];
+  if (slotEl && typeof slotEl.scrollIntoView === 'function') {
+    slotEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  if (slotEl) {
+    const selectEl = slotEl.querySelector(
+      `[data-testid="hindered-blocker-select-${slotIdx}"]`,
+    ) as HTMLElement | null;
+    if (selectEl && typeof selectEl.focus === 'function') {
+      selectEl.focus({ preventScroll: true });
+    }
+  }
+  if (highlight) {
+    highlightedSlotIdx.value = slotIdx;
+    if (highlightTimer) clearTimeout(highlightTimer);
+    highlightTimer = setTimeout(() => {
+      highlightedSlotIdx.value = null;
+      highlightTimer = null;
+    }, 3500);
+  }
+}
+
+function clampSlotIndex(raw: unknown): number {
+  const parsedIdx = Number(raw ?? 0);
+  if (Number.isFinite(parsedIdx) && parsedIdx >= 0 && parsedIdx < commitmentSlots.value.length) {
+    return parsedIdx;
+  }
+  return 0;
+}
+
+async function applyReturnedLinkedBlocker(): Promise<{ slotIdx: number; highlight: boolean } | null> {
   const linkedBlockerId =
     typeof route?.query?.linkedBlockerId === 'string'
       ? route.query.linkedBlockerId.trim()
       : '';
-  if (!linkedBlockerId) return;
+  const returnSlotParam =
+    typeof route?.query?.returnSlot === 'string' ? route.query.returnSlot.trim() : '';
+
+  if (!linkedBlockerId && !returnSlotParam) return null;
+
+  if (!linkedBlockerId) {
+    const slotIdx = clampSlotIndex(returnSlotParam);
+    isZeroCommitment.value = false;
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('wp_morning_return_slot');
+    }
+    if (router && typeof router.replace === 'function') {
+      await router.replace({ path: '/daily/morning' });
+    }
+    return { slotIdx, highlight: false };
+  }
 
   const rawSlot =
     typeof route?.query?.slot === 'string'
       ? route.query.slot
       : (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wp_morning_return_slot') : null);
-  const parsedIdx = Number(rawSlot ?? 0);
-  const slotIdx =
-    Number.isFinite(parsedIdx) && parsedIdx >= 0 && parsedIdx < commitmentSlots.value.length
-      ? parsedIdx
-      : 0;
+  const slotIdx = clampSlotIndex(rawSlot);
 
   isZeroCommitment.value = false;
   const slot = commitmentSlots.value[slotIdx];
@@ -485,6 +541,7 @@ async function applyReturnedLinkedBlocker() {
   if (router && typeof router.replace === 'function') {
     await router.replace({ path: '/daily/morning' });
   }
+  return { slotIdx, highlight: true };
 }
 
 async function goToRaiseBlockerForSlot(slotIndex: number) {
@@ -716,6 +773,13 @@ onMounted(() => {
     window.addEventListener('resize', updateViewport);
   }
   loadTodayState();
+});
+
+onUnmounted(() => {
+  if (highlightTimer) {
+    clearTimeout(highlightTimer);
+    highlightTimer = null;
+  }
 });
 </script>
 
@@ -1230,8 +1294,15 @@ onMounted(() => {
           <div
             v-for="(slot, idx) in commitmentSlots"
             :key="idx"
+            :id="`commitment-slot-${idx + 1}`"
+            :ref="(el) => setSlotCardRef(idx, el)"
             class="slot-card"
-            :class="{ 'amber-slot': slot.initialRisk === 'AMBER', 'red-slot': slot.initialRisk === 'RED' }"
+            :class="{
+              'amber-slot': slot.initialRisk === 'AMBER',
+              'red-slot': slot.initialRisk === 'RED',
+              'slot-linked-highlight': highlightedSlotIdx === idx,
+            }"
+            :data-testid="`commitment-slot-card-${idx}`"
           >
             <div class="slot-header">
               <div class="slot-num-badge">
@@ -2425,6 +2496,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  scroll-margin-top: 88px;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.slot-card.slot-linked-highlight {
+  border-color: #00674D;
+  box-shadow: 0 0 0 4px rgba(0, 103, 77, 0.18);
 }
 
 .slot-card.amber-slot {

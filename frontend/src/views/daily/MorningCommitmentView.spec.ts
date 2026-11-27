@@ -1143,14 +1143,131 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     await router.push('/daily/morning?linkedBlockerId=blk-new-77&slot=0');
     await router.isReady();
 
-    const wrapper = mount(MorningCommitmentView, {
-      global: { plugins: [router] },
-    });
-    await new Promise((r) => setTimeout(r, 40));
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
 
-    const selectEl = wrapper.find('[data-testid="hindered-blocker-select-0"]').element as HTMLSelectElement;
-    expect(selectEl.value).toBe('blk-new-77');
-    expect(wrapper.text()).toContain('Tiket Blocker baru berhasil ditautkan ke Komitmen #1');
+    try {
+      const wrapper = mount(MorningCommitmentView, {
+        global: { plugins: [router] },
+      });
+      await new Promise((r) => setTimeout(r, 40));
+
+      const selectEl = wrapper.find('[data-testid="hindered-blocker-select-0"]').element as HTMLSelectElement;
+      expect(selectEl.value).toBe('blk-new-77');
+      expect(wrapper.text()).toContain('Tiket Blocker baru berhasil ditautkan ke Komitmen #1');
+
+      const slotCard = wrapper.find('[data-testid="commitment-slot-card-0"]');
+      expect(slotCard.exists()).toBe(true);
+      expect(slotCard.classes()).toContain('slot-linked-highlight');
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+    } finally {
+      HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+    }
+  });
+
+  it('auto-scrolls and highlights Komitmen #2 cleanly when returning with slot=1, and supports returnSlot cancel flow', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-return-2',
+      email: 'dev@dutamedia.com',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      status: 'ACTIVE',
+    } as any;
+
+    window.localStorage.setItem(
+      'wp_morning_draft_usr-return-2_2026-11-24',
+      JSON.stringify({
+        isZeroCommitment: false,
+        zeroCommitmentReason: '',
+        commitmentSlots: [
+          {
+            taskText: 'Selesaikan unit test modul auth',
+            referenceLink: '',
+            projectCode: 'PRJ-CORE',
+            linkedBlockerId: '',
+            initialRisk: 'GREEN',
+            knownBlockerNote: '',
+            supportNeeded: '',
+            carryOverDaysCount: 0,
+          },
+          {
+            taskText: 'Deploy API ke server staging',
+            referenceLink: '',
+            projectCode: 'PRJ-CORE',
+            linkedBlockerId: '',
+            initialRisk: 'RED',
+            knownBlockerNote: '',
+            supportNeeded: '',
+            carryOverDaysCount: 0,
+          },
+        ],
+        savedAt: '2026-11-24T01:30:00.000Z',
+      }),
+    );
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          workDate: '2026-11-24',
+          currentTime: '08:35',
+          cutoffTimings: {
+            morningOnTimeCutoff: '09:00',
+            morningLockCutoff: '09:30',
+            isMorningLocked: false,
+          },
+          record: null,
+          availableCarryOvers: [],
+          activeBlockers: [
+            {
+              id: 'blk-slot-2',
+              code: '#BLK-SLOT2',
+              description: 'Credential staging expired',
+              severity: 'CRITICAL',
+              projectCodeReference: 'PRJ-CORE',
+              status: 'OPEN',
+            },
+          ],
+        },
+      }),
+    }));
+
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+
+    try {
+      await router.push('/daily/morning?linkedBlockerId=blk-slot-2&slot=1');
+      await router.isReady();
+
+      const wrapper = mount(MorningCommitmentView, {
+        global: { plugins: [router] },
+      });
+      await new Promise((r) => setTimeout(r, 40));
+
+      const select2 = wrapper.find('[data-testid="hindered-blocker-select-1"]').element as HTMLSelectElement;
+      expect(select2.value).toBe('blk-slot-2');
+      expect(wrapper.find('[data-testid="commitment-slot-card-0"]').classes()).not.toContain('slot-linked-highlight');
+      expect(wrapper.find('[data-testid="commitment-slot-card-1"]').classes()).toContain('slot-linked-highlight');
+      expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+
+      // Cancel flow with returnSlot=1 scrolls back without highlight or success toast
+      scrollIntoViewMock.mockClear();
+      await router.push('/daily/morning?returnSlot=1');
+      const wrapperCancel = mount(MorningCommitmentView, {
+        global: { plugins: [router] },
+      });
+      await new Promise((r) => setTimeout(r, 40));
+
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+      expect(wrapperCancel.find('[data-testid="commitment-slot-card-1"]').classes()).not.toContain('slot-linked-highlight');
+    } finally {
+      HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+    }
   });
 
   it('menghilangkan notifikasi toast error validasi secara adaptif (6-10 detik), menjeda saat hover, dan mendukung tutup manual', async () => {
