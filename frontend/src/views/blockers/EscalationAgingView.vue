@@ -64,12 +64,10 @@ async function loadAgingMetrics(showRefreshToast = false) {
       data.value = res.data;
       if (showRefreshToast) {
         toastMessage.value = 'Data penuaan kendala berhasil diperbarui.';
-        setTimeout(() => { toastMessage.value = null; }, 2500);
       }
     }
   } catch (err: any) {
     errorMessage.value = err?.message || 'Gagal memuat data penuaan kendala.';
-    setTimeout(() => { errorMessage.value = null; }, 4000);
   } finally {
     loading.value = false;
   }
@@ -112,6 +110,29 @@ function resetFilters() {
   severityFilter.value = 'ALL';
   breachOnlyFilter.value = false;
   searchQuery.value = '';
+}
+
+function selectAllMetric() {
+  severityFilter.value = 'ALL';
+  breachOnlyFilter.value = false;
+}
+
+function toggleBreachMetric() {
+  if (breachOnlyFilter.value && severityFilter.value === 'ALL') {
+    breachOnlyFilter.value = false;
+  } else {
+    breachOnlyFilter.value = true;
+    severityFilter.value = 'ALL';
+  }
+}
+
+function toggleCriticalMetric() {
+  if (severityFilter.value === 'CRITICAL' && !breachOnlyFilter.value) {
+    severityFilter.value = 'ALL';
+  } else {
+    severityFilter.value = 'CRITICAL';
+    breachOnlyFilter.value = false;
+  }
 }
 
 function formatSeverityLabel(severity: string): string {
@@ -186,25 +207,46 @@ onMounted(() => {
 
       <!-- Metrics Grid -->
       <div class="metrics-grid">
-        <div class="metric-card">
+        <button
+          type="button"
+          class="metric-card metric-card-action"
+          :class="{ active: !breachOnlyFilter && severityFilter === 'ALL' }"
+          :aria-pressed="!breachOnlyFilter && severityFilter === 'ALL'"
+          data-testid="metric-card-total"
+          @click="selectAllMetric"
+        >
           <div class="metric-label">Total Kendala Tertahan</div>
           <div class="metric-value">{{ data?.summary.totalOpen ?? 0 }}</div>
           <div class="metric-sub">Tiket kendala belum terselesaikan</div>
-        </div>
+        </button>
 
-        <div class="metric-card alert-breach">
+        <button
+          type="button"
+          class="metric-card metric-card-action alert-breach"
+          :class="{ active: breachOnlyFilter && severityFilter === 'ALL' }"
+          :aria-pressed="breachOnlyFilter && severityFilter === 'ALL'"
+          data-testid="metric-card-breach"
+          @click="toggleBreachMetric"
+        >
           <div class="metric-label">Lewat Batas Waktu</div>
           <div class="metric-value">{{ data?.summary.breachedCount ?? 0 }}</div>
           <div class="metric-sub">Tiket melampaui target batas penanganan</div>
-        </div>
+        </button>
 
-        <div class="metric-card alert-critical">
+        <button
+          type="button"
+          class="metric-card metric-card-action alert-critical"
+          :class="{ active: severityFilter === 'CRITICAL' && !breachOnlyFilter }"
+          :aria-pressed="severityFilter === 'CRITICAL' && !breachOnlyFilter"
+          data-testid="metric-card-critical"
+          @click="toggleCriticalMetric"
+        >
           <div class="metric-label">Prioritas Kritis</div>
           <div class="metric-value">{{ data?.summary.criticalCount ?? 0 }}</div>
           <div class="metric-sub">Kendala dengan dampak terhenti total</div>
-        </div>
+        </button>
 
-        <div class="metric-card rate-card">
+        <div class="metric-card rate-card" data-testid="metric-card-rate">
           <div class="metric-label">Tingkat Ketepatan Waktu</div>
           <div class="metric-value">{{ data?.summary.slaComplianceRate ?? 100 }}%</div>
           <div class="metric-sub">Persentase tiket terselesaikan tepat waktu</div>
@@ -496,6 +538,44 @@ h1 {
   border: 1px solid #DCE7E2;
   border-radius: 12px;
   padding: 18px 20px;
+}
+
+.metric-card-action {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.metric-card-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+}
+
+.metric-card-action:focus-visible {
+  outline: 2px solid #00674D;
+  outline-offset: 2px;
+}
+
+.metric-card-action.active {
+  border-color: #00674D;
+  box-shadow: 0 0 0 3px rgba(0, 103, 77, 0.14);
+  background: #F4FBF8;
+}
+
+.metric-card-action.alert-breach.active {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+  background: #FEF7F7;
+}
+
+.metric-card-action.alert-critical.active {
+  border-color: #EA580C;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.14);
+  background: #FFF8F3;
 }
 
 .metric-card.alert-breach { border-left: 4px solid #DC2626; }
