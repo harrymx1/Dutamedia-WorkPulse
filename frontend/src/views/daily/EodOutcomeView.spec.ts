@@ -798,7 +798,7 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(wrapper.find('[data-testid="leave-active-banner"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="leave-notice-box"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="leave-notice-box"]').exists()).toBe(false);
     expect(wrapper.text()).toContain('CUTI RESMI (TERCATAT)');
     expect(wrapper.text()).toContain('CUTI (DIKECUALIKAN)');
     expect(wrapper.text()).toContain('Masa Cuti Resmi (Cuti Sakit):');

@@ -499,28 +499,6 @@ onMounted(() => {
             </div>
           </div>
         </div>
-
-        <div class="leave-notice-box" data-testid="leave-notice-box">
-          <div class="leave-notice-content">
-            <CalendarCheck :size="32" class="text-green" />
-            <div class="leave-notice-text">
-              <h3>Hari Bebas Pekerjaan Tambahan (Cuti Resmi Tercatat)</h3>
-              <p>
-                Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Tercatat (Bebas Kewajiban Otomatis)</strong>. Anda tidak perlu mencatat pekerjaan tambahan hari ini.
-              </p>
-              <div class="leave-notice-meta">
-                <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
-                <span>Periode: <strong>{{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</strong></span>
-                <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}"</em></span>
-              </div>
-            </div>
-          </div>
-          <div class="leave-notice-actions">
-            <AccessLink to="/daily/history" class="btn btn-secondary">
-              Lihat Riwayat Cuti Saya
-            </AccessLink>
-          </div>
-        </div>
       </template>
 
       <!-- Alert Banner & Notice Box jika sedang dalam masa dispensasi resmi (DEC-018) -->
@@ -769,7 +747,7 @@ onMounted(() => {
       </section>
 
       <!-- Daftar Pekerjaan Tambahan Hari Ini -->
-      <section v-if="!activeLeave" class="panel">
+      <section v-if="!isAutoExempted" class="panel">
         <div class="panel-head">
           <div>
             <div class="kicker">Daftar Hari Ini</div>

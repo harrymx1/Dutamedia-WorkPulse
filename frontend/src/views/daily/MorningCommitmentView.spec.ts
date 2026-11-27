@@ -1014,7 +1014,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     await new Promise((r) => setTimeout(r, 30));
 
     expect(wrapper.find('[data-testid="exemption-active-banner"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="exemption-notice-box"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="exemption-notice-box"]').exists()).toBe(false);
     expect(wrapper.text()).toContain('Dinas Luar');
     expect(wrapper.text()).toContain('ST/HRGA/2026/XI/104');
     expect(wrapper.find('[data-testid="btn-submit-morning"]').exists()).toBe(false);

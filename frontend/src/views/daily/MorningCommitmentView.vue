@@ -963,52 +963,8 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Leave Notice Box saat cuti resmi aktif (DEC-008 & DEC-018) -->
-      <div v-if="activeLeave" class="leave-notice-box" data-testid="leave-notice-box">
-        <div class="leave-notice-content">
-          <CalendarCheck :size="32" class="text-green" />
-          <div class="leave-notice-text">
-            <h3>Hari Bebas Komitmen Kerja (Cuti Resmi Tercatat)</h3>
-            <p>
-              Sistem mencatat kehadiran Anda sebagai <strong>Cuti Resmi Tercatat (Bebas Kewajiban Otomatis)</strong>. Anda tidak perlu menetapkan target komitmen harian, memilih 0 komitmen, mencatat pekerjaan tambahan, maupun melaporkan evaluasi sore hari ini.
-            </p>
-            <div class="leave-notice-meta">
-              <span>Jenis Cuti: <strong>{{ formatLeaveType(activeLeave.leaveType) }}</strong></span>
-              <span>Periode: <strong>{{ formatLeaveDateRange(activeLeave.startDate, activeLeave.endDate) }}</strong></span>
-              <span v-if="activeLeave.reason">Alasan: <em>"{{ activeLeave.reason.replace(/\s*\(uji rekonsiliasi Superseded by Approved Leave\)/gi, '').trim() }}"</em></span>
-            </div>
-          </div>
-        </div>
-        <div class="leave-notice-actions">
-          <AccessLink to="/daily/history" class="btn btn-secondary">
-            Lihat Riwayat Cuti Saya
-          </AccessLink>
-        </div>
-      </div>
-
-      <!-- Exemption Notice Box saat dispensasi resmi aktif (DEC-018) -->
-      <div v-else-if="activeExemption" class="leave-notice-box" data-testid="exemption-notice-box">
-        <div class="leave-notice-content">
-          <CalendarCheck :size="32" class="text-green" />
-          <div class="leave-notice-text">
-            <h3>Hari Bebas Komitmen Kerja ({{ activeExemption.exemptionCategory }})</h3>
-            <p>
-              Sistem mencatat Anda sedang dalam masa <strong>Dispensasi Resmi ({{ activeExemption.exemptionCategory }})</strong>. Anda otomatis dibebaskan dari kewajiban check-in pagi, pekerjaan tambahan, dan evaluasi sore tanpa perlu memilih 0 komitmen.
-            </p>
-            <div class="leave-notice-meta">
-              <span>Kategori: <strong>{{ activeExemption.exemptionCategory }}</strong></span>
-              <span>Periode: <strong>{{ formatLeaveDateRange(activeExemption.startDate, activeExemption.endDate) }}</strong></span>
-              <span v-if="activeExemption.officialReferenceNumber">No. Surat: <strong>{{ activeExemption.officialReferenceNumber }}</strong></span>
-              <span v-if="activeExemption.reason">Alasan: <em>"{{ activeExemption.reason }}"</em></span>
-            </div>
-          </div>
-        </div>
-        <div class="leave-notice-actions">
-          <AccessLink to="/daily/history" class="btn btn-secondary">
-            Lihat Riwayat Dispensasi Saya
-          </AccessLink>
-        </div>
-      </div>
+      <!-- Status cuti/dispensasi sudah ditampilkan pada banner hijau di atas; tahan rantai v-else-if agar form/ringkasan tidak muncul -->
+      <template v-if="isAutoExempted" />
 
       <!-- Mode 1: Komitmen Pagi Telah Terkunci (Baseline Locked / Read-Only Summary Mode) -->
       <template v-else-if="hasSubmittedMorning">
