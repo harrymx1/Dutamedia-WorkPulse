@@ -69,6 +69,7 @@ const newOutcome = ref<'DONE' | 'IN_PROGRESS' | 'BLOCKED' | 'DROPPED'>('DONE');
 const newOutcomeReason = ref('');
 const newContinuation = ref<'CONTINUE_TOMORROW' | 'ARCHIVE' | 'HANDOVER'>('ARCHIVE');
 const reason = ref('');
+const prefilledFromRequestId = ref<string | null>(null);
 
 // Toast
 const toastMessage = ref<string | null>(null);
@@ -184,6 +185,7 @@ function hasOutcomeReasonDiff(item: CorrectionHistoryItem): boolean {
 }
 
 function handleCommitmentSelect() {
+  prefilledFromRequestId.value = null;
   if (selectedCommitment.value) {
     newOutcome.value = DB_TO_FORM_OUTCOME[selectedCommitment.value.outcome || ''] || 'DONE';
     newOutcomeReason.value = selectedCommitment.value.outcomeReason || '';
@@ -220,6 +222,7 @@ function prefillFromRejected(item: CorrectionHistoryItem) {
   if (!reason.value.trim()) {
     reason.value = 'Penyesuaian permohonan atas arahan atasan: ';
   }
+  prefilledFromRequestId.value = item.id;
   showToast('Draf sebelumnya berhasil dimuat. Silakan sesuaikan kembali sebelum mengirim.');
 }
 
@@ -311,6 +314,7 @@ async function submitCorrection() {
     }
 
     reason.value = '';
+    prefilledFromRequestId.value = null;
     await loadData(true);
   } catch (err: any) {
     showToast(err.message || 'Gagal mengajukan koreksi EOD.', true);
@@ -444,12 +448,21 @@ onMounted(() => {
                   Permohonan koreksi sebelumnya ditolak oleh atasan. Sesuaikan kembali usulan Anda sebelum mengirim ulang.
                 </p>
                 <button
+                  v-if="prefilledFromRequestId !== latestRejectedForSelected.id"
                   type="button"
                   class="btn-prefill-revision"
+                  data-testid="banner-prefill-rejected-btn"
                   @click="prefillFromRejected(latestRejectedForSelected)"
                 >
                   Gunakan Draf Sebelumnya &amp; Sesuaikan
                 </button>
+                <span
+                  v-else
+                  class="prefill-loaded-badge"
+                  data-testid="banner-prefill-loaded-badge"
+                >
+                  ✓ Draf sebelumnya sudah dimuat ke formulir di bawah
+                </span>
               </div>
             </div>
 
@@ -647,6 +660,7 @@ onMounted(() => {
 
                 <div v-if="item.status === 'REJECTED'" style="margin-top: 10px;">
                   <button
+                    v-if="prefilledFromRequestId !== item.id"
                     type="button"
                     class="btn-prefill-revision"
                     :data-testid="`prefill-rejected-${item.id}`"
@@ -654,6 +668,13 @@ onMounted(() => {
                   >
                     Gunakan Draf Sebelumnya &amp; Sesuaikan
                   </button>
+                  <span
+                    v-else
+                    class="prefill-loaded-badge"
+                    :data-testid="`prefill-loaded-${item.id}`"
+                  >
+                    ✓ Draf sedang dimuat di formulir
+                  </span>
                 </div>
               </div>
             </div>
@@ -1371,6 +1392,19 @@ select {
     right: 14px;
     top: 64px;
   }
+}
+.prefill-loaded-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #ECFDF5;
+  border: 1px solid #6EE7B7;
+  color: #065F46;
+  font-size: 12px;
+  font-weight: 700;
 }
 </style>
 

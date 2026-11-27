@@ -390,6 +390,15 @@ describe('EodCorrectionRequestView.vue (WP-EP09 / Prototipe 16b - Koreksi Evalua
     expect((wrapper.find('input[type="radio"][value="DONE"]').element as HTMLInputElement).checked).toBe(true);
     expect((wrapper.find('#outcomeReasonInput').element as HTMLTextAreaElement).value).toBe('Semua test lulus');
     expect((wrapper.find('#continuationSelect').element as HTMLSelectElement).value).toBe('ARCHIVE');
+
+    expect(wrapper.find('[data-testid="banner-prefill-rejected-btn"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="banner-prefill-loaded-badge"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="prefill-rejected-cr-eod-rejected"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="prefill-loaded-cr-eod-rejected"]').exists()).toBe(true);
+
+    await wrapper.find('.btn-reset').trigger('click');
+    expect(wrapper.find('[data-testid="banner-prefill-rejected-btn"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="prefill-rejected-cr-eod-rejected"]').exists()).toBe(true);
   });
 });
 

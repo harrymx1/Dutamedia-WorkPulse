@@ -363,6 +363,17 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(wrapper.find('.post-objection-banner').exists()).toBe(true);
     expect((wrapper.find('#newTaskInput').element as HTMLTextAreaElement).value).toBe('Tugas Kedua Revisi');
     expect((wrapper.find('#newLinkInput').element as HTMLInputElement).value).toBe('https://github.com/pr/55');
+
+    // Tombol duplikat berganti menjadi status konfirmasi bahwa draf sudah dimuat
+    expect(wrapper.find('[data-testid="banner-prefill-rejected-btn"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="banner-prefill-loaded-badge"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="prefill-rejected-cr-rejected"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="prefill-loaded-cr-rejected"]').exists()).toBe(true);
+
+    // Reset Isian mengembalikan tombol Gunakan Draf Sebelumnya & Sesuaikan
+    await wrapper.find('.btn-reset').trigger('click');
+    expect(wrapper.find('[data-testid="banner-prefill-rejected-btn"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="prefill-rejected-cr-rejected"]').exists()).toBe(true);
   });
 
   it('truncates long commitment titles inside dropdown options while preserving full text in the locked snapshot', async () => {
