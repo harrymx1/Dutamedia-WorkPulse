@@ -169,21 +169,62 @@ async function handleMarkAsRead(notif: NotificationItem) {
   }
 }
 
+function isCoachingNoteNotification(notif?: NotificationItem | null): boolean {
+  if (!notif) return false;
+  const type = notif.type || '';
+  const title = notif.title || '';
+  return (
+    type === 'MANAGER_NOTE_SHARED' ||
+    type.includes('COACHING') ||
+    title.includes('Catatan Manajerial') ||
+    title.includes('Catatan Bimbingan') ||
+    title.includes('Catatan Apresiasi') ||
+    title.includes('Catatan Tindakan Korektif')
+  );
+}
+
+interface CoachingNoteParsedLine {
+  label?: string;
+  value: string;
+}
+
+function parseCoachingNoteContent(content?: string): {
+  isStructured: boolean;
+  lines: CoachingNoteParsedLine[];
+} {
+  if (!content) return { isStructured: false, lines: [] };
+  const rawLines = content
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const parsed: CoachingNoteParsedLine[] = [];
+  let labeledCount = 0;
+
+  for (const line of rawLines) {
+    const match = line.match(/^\[([^\]]+)\]\s*:\s*(.*)$/);
+    if (match) {
+      labeledCount++;
+      parsed.push({ label: match[1].trim(), value: match[2].trim() });
+    } else {
+      parsed.push({ value: line });
+    }
+  }
+
+  return {
+    isStructured: labeledCount > 0,
+    lines: parsed,
+  };
+}
+
 async function openDetail(notif: NotificationItem) {
   selectedNotification.value = notif;
   sharedNoteDetail.value = null;
   handleMarkAsRead(notif);
 
   // Jika notifikasi adalah catatan pembinaan (MANAGER_NOTE_SHARED), muat rincian isi catatan agar karyawan dapat membaca langsung
-  if (
-    (notif.type === 'MANAGER_NOTE_SHARED' ||
-      notif.type.includes('COACHING') ||
-      notif.title.includes('Catatan Manajerial') ||
-      notif.title.includes('Catatan Bimbingan') ||
-      notif.title.includes('Catatan Apresiasi') ||
-      notif.title.includes('Catatan Tindakan Korektif')) &&
-    authStore.user?.id
-  ) {
+  if (isCoachingNoteNotification(notif) && authStore.user?.id) {
     loadingNoteDetail.value = true;
     try {
       const res = await apiClient<any[]>(`/coaching/users/${authStore.user.id}`);
@@ -389,6 +430,9 @@ function isDelegationNotification(notifOrType?: NotificationItem | string | null
       notifOrType.includes('BLOCKER')
     );
   }
+  if (isCoachingNoteNotification(notifOrType)) {
+    return false;
+  }
   const t = notifOrType.type || '';
   const title = notifOrType.title || '';
   const msg = notifOrType.message || '';
@@ -397,7 +441,6 @@ function isDelegationNotification(notifOrType?: NotificationItem | string | null
     t.includes('POLICY') ||
     (t.includes('BLOCKER') && msg.includes('\n')) ||
     title.includes('Kebijakan') ||
-    msg.includes('\n') ||
     msg.includes('Kategori Kebijakan:')
   );
 }
@@ -1020,8 +1063,8 @@ onUnmounted(() => {
           </div>
           <div class="modal-body">
             <h4 class="modal-title">{{ selectedNotification.title }}</h4>
-            <!-- Teks deskripsi umum HANYA jika bukan notifikasi terstruktur -->
-            <p v-if="!isDelegationNotification(selectedNotification)" class="modal-desc">
+            <!-- Teks deskripsi umum HANYA jika bukan notifikasi terstruktur atau coaching callout -->
+            <p v-if="!isDelegationNotification(selectedNotification) && !sharedNoteDetail" class="modal-desc">
               {{ selectedNotification.message }}
             </p>
 
@@ -1031,7 +1074,21 @@ onUnmounted(() => {
                 <Sparkles :size="16" class="callout-icon" />
                 <strong>{{ formatNoteTypeLabel(sharedNoteDetail.noteType) }} dari {{ sharedNoteDetail.authorUser?.fullName || 'Atasan' }}</strong>
               </div>
-              <p class="callout-body">"{{ sharedNoteDetail.content }}"</p>
+              <div
+                v-if="parseCoachingNoteContent(sharedNoteDetail.content).isStructured"
+                class="coaching-structured-list"
+                data-testid="coaching-structured-content"
+              >
+                <div
+                  v-for="(line, idx) in parseCoachingNoteContent(sharedNoteDetail.content).lines"
+                  :key="idx"
+                  class="coaching-structured-item"
+                >
+                  <span v-if="line.label" class="coaching-item-label">{{ line.label }}</span>
+                  <p class="coaching-item-value">{{ line.value }}</p>
+                </div>
+              </div>
+              <p v-else class="callout-body">{{ sharedNoteDetail.content }}</p>
             </div>
 
             <!-- Box Rincian Khusus Pendelegasian Wewenang & Perubahan Kebijakan -->
@@ -1713,7 +1770,9 @@ h1 {
   color: #166534;
   font-size: 13px;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #BBF7D0;
 }
 
 .coaching-note-callout .callout-icon {
@@ -1723,9 +1782,35 @@ h1 {
 .coaching-note-callout .callout-body {
   margin: 0;
   color: #1E293B;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.coaching-structured-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coaching-structured-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coaching-item-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.coaching-item-value {
+  margin: 0;
+  font-size: 13.5px;
   line-height: 1.5;
-  font-style: italic;
+  color: #1E293B;
+  white-space: pre-line;
 }
 
 .delegation-note-callout {

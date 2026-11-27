@@ -857,5 +857,91 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
 
     vi.unstubAllGlobals();
   });
+
+  it('renders structured multi-line coaching note notification cleanly without delegation card duplication', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-aditya',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+    } as any;
+
+    const structuredNoteContent = [
+      '[Fokus Pengembangan]: Peningkatan konsistensi pelaporan blocker sebelum batas waktu pagi.',
+      '[Fakta Objektif]: Koordinasi kendala runner CI di pagi hari sudah berjalan baik dan terdokumentasi di tiket blocker.',
+      '[Saran Perbaikan]: Pertahankan komunikasi proaktif lebih awal bila ada hambatan lingkungan staging.',
+      '[Target Evaluasi]: Ditinjau kembali pada sesi 1-on-1 pekan depan.',
+    ].join('\n');
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 1 } }),
+        });
+      }
+      if (url.includes('/coaching/users/usr-aditya')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: [
+              {
+                id: 'note-202',
+                noteType: 'COACHING',
+                content: structuredNoteContent,
+                authorUser: { fullName: 'Arif Budiman' },
+              },
+            ],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-coaching-structured',
+              title: 'Catatan Bimbingan Baru dari Atasan',
+              message: `Arif Budiman membagikan catatan bimbingan: "${structuredNoteContent}"`,
+              type: 'MANAGER_NOTE_SHARED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/coaching',
+              relatedEntityId: 'note-202',
+              createdAt: '2026-11-27T16:35:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    await wrapper.find('.notif-item').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect(wrapper.find('.coaching-note-callout').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="coaching-structured-content"]').exists()).toBe(true);
+    expect(wrapper.findAll('.coaching-structured-item')).toHaveLength(4);
+    expect(wrapper.text()).toContain('Fokus Pengembangan');
+    expect(wrapper.text()).toContain('Fakta Objektif');
+    expect(wrapper.text()).toContain('Saran Perbaikan');
+    expect(wrapper.text()).toContain('Target Evaluasi');
+
+    expect(wrapper.find('.delegation-note-callout').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Mandat Wewenang & Tata Kelola Delegasi Reviewer');
+    expect(wrapper.find('.modal-desc').exists()).toBe(false);
+
+    vi.unstubAllGlobals();
+  });
 });
 
