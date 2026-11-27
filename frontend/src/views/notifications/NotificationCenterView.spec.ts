@@ -68,6 +68,7 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
         { path: '/corrections/eod', component: { template: '<div>EOD Correction</div>' } },
         { path: '/corrections/review', component: { template: '<div>Correction Review</div>' } },
         { path: '/daily/history', component: { template: '<div>My History</div>' } },
+        { path: '/raise-blockers', component: { template: '<div>Raise Blocker</div>' } },
         { path: '/blockers', component: { template: '<div>Blocker Queue</div>' } },
       ],
     });
@@ -764,6 +765,95 @@ describe('NotificationCenterView.vue (Prototipe 07 / EP11 - Web Notification Cen
     expect(wrapper.find('[data-testid="push-enable-btn"]').text()).toContain('Ditolak di Peramban');
     expect(wrapper.text()).toContain('Saluran Notifikasi');
     expect(wrapper.text()).not.toContain('Admin Notification Setup');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('appends ticketId query param to blocker notification action link so clicking Lihat & Konfirmasi Tiket Saya scrolls to exact ticket', async () => {
+    const authStore = useAuthStore();
+    authStore.user = {
+      id: 'usr-aditya',
+      fullName: 'Aditya Nugroho',
+      role: 'EMPLOYEE',
+      hasSubordinates: false,
+    } as any;
+
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: { unreadCount: 2 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'notif-support-1',
+              title: 'Bantuan Kendala Diberikan: CI runner mengalami OOM',
+              message: [
+                'Arif Budiman telah memberikan kontribusi bantuan pada tiket kendala Anda.',
+                'Judul Kendala: CI runner mengalami OOM',
+              ].join('\n'),
+              type: 'BLOCKER_SUPPORT_CONTRIBUTED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/raise-blockers?tab=mine',
+              relatedEntityId: 'blk-oom-99',
+              relatedEntityType: 'blocker_tickets',
+              createdAt: '2026-11-27T08:56:00Z',
+            },
+            {
+              id: 'notif-queue-1',
+              title: 'Kendala Baru Dialokasikan',
+              message: 'Tiket baru dialokasikan.\nJudul Kendala: Server Error 502',
+              type: 'BLOCKER_RAISED',
+              channel: 'IN_APP',
+              read: false,
+              actionUrl: '/blockers',
+              relatedEntityId: 'blk-q-77',
+              relatedEntityType: 'blocker_tickets',
+              createdAt: '2026-11-27T08:55:00Z',
+            },
+          ],
+        }),
+      });
+    }));
+
+    const wrapper = mount(NotificationCenterView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const items = wrapper.findAll('.notif-item');
+    await items[0].trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    const link1 = wrapper.find('[data-testid="notification-action-link"]');
+    expect(link1.exists()).toBe(true);
+    expect(link1.text()).toContain('Lihat & Konfirmasi Tiket Saya');
+    expect(link1.attributes('href')).toBe('/raise-blockers?tab=mine&ticketId=blk-oom-99');
+
+    // Verify /blockers notification deep-links with ?ticketId=... as well (e.g. for HEAD role)
+    authStore.user = {
+      id: 'usr-arif',
+      fullName: 'Arif Budiman',
+      role: 'HEAD',
+      hasSubordinates: true,
+    } as any;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await wrapper.vm.$nextTick();
+    await items[1].trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    const link2 = wrapper.find('[data-testid="notification-action-link"]');
+    expect(link2.exists()).toBe(true);
+    expect(link2.text()).toContain('Buka Antrean Eskalasi Blocker');
+    expect(link2.attributes('href')).toBe('/blockers?ticketId=blk-q-77');
 
     vi.unstubAllGlobals();
   });

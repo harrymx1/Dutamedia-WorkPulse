@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
@@ -57,7 +57,9 @@ const morningReturnSlot = computed(() =>
 );
 
 // Tab State
-const activeTab = ref<'create' | 'mine'>(route?.query?.tab === 'mine' ? 'mine' : 'create');
+const activeTab = ref<'create' | 'mine'>(
+  route?.query?.tab === 'mine' || !!route?.query?.ticketId ? 'mine' : 'create',
+);
 
 // Form Data
 const title = ref('');
@@ -401,6 +403,34 @@ const defaultProjectLeadName = computed(() => {
 const myBlockers = ref<any[]>([]);
 const loadingBlockers = ref(false);
 const blockerFilter = ref<'all' | 'open' | 'handling' | 'resolved' | 'closed'>('all');
+const myBlockerCardElements = ref<Record<string, HTMLElement | null>>({});
+const highlightedTicketId = ref<string | null>(null);
+let ticketHighlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+function setMyBlockerCardRef(ticketId: string, el: unknown) {
+  myBlockerCardElements.value[ticketId] = el instanceof HTMLElement ? el : null;
+}
+
+async function focusTicketFromQuery(ticketId: string) {
+  const trimmed = ticketId.trim();
+  if (!trimmed) return;
+  activeTab.value = 'mine';
+  blockerFilter.value = 'all';
+  await nextTick();
+  const cardEl = myBlockerCardElements.value[trimmed];
+  if (cardEl && typeof cardEl.scrollIntoView === 'function') {
+    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  highlightedTicketId.value = trimmed;
+  if (ticketHighlightTimer) clearTimeout(ticketHighlightTimer);
+  ticketHighlightTimer = setTimeout(() => {
+    highlightedTicketId.value = null;
+    ticketHighlightTimer = null;
+  }, 3500);
+  if (router && typeof router.replace === 'function' && route?.query?.ticketId) {
+    await router.replace({ path: '/raise-blockers', query: { tab: 'mine' } });
+  }
+}
 const closingId = ref<string | null>(null);
 const closingConfirmTicket = ref<any | null>(null);
 const reopeningId = ref<string | null>(null);
@@ -616,7 +646,23 @@ async function loadMyBlockers() {
   } finally {
     loadingBlockers.value = false;
   }
+
+  const targetTicketId =
+    typeof route?.query?.ticketId === 'string' ? route.query.ticketId.trim() : '';
+  if (targetTicketId && myBlockers.value.some((b) => b.id === targetTicketId)) {
+    await focusTicketFromQuery(targetTicketId);
+  }
 }
+
+watch(
+  () => route?.query?.ticketId,
+  async (val) => {
+    const targetTicketId = typeof val === 'string' ? val.trim() : '';
+    if (targetTicketId && !loadingBlockers.value && myBlockers.value.some((b) => b.id === targetTicketId)) {
+      await focusTicketFromQuery(targetTicketId);
+    }
+  },
+);
 
 async function submitBlocker() {
   errorMessage.value = null;
@@ -1079,6 +1125,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (tickTimer) clearInterval(tickTimer);
+  if (ticketHighlightTimer) clearTimeout(ticketHighlightTimer);
 });
 </script>
 
@@ -1766,8 +1813,12 @@ onBeforeUnmount(() => {
           <div
             v-for="b in filteredBlockers"
             :key="b.id"
+            :ref="(el) => setMyBlockerCardRef(b.id, el)"
             class="blocker-item-card"
-            :class="{ resolved: b.status === 'RESOLVED' }"
+            :class="{
+              resolved: b.status === 'RESOLVED',
+              'ticket-target-highlight': highlightedTicketId === b.id,
+            }"
             :data-ticket-id="b.id"
           >
             <div class="blocker-item-head">
@@ -3158,7 +3209,13 @@ textarea:focus {
   border-radius: 12px;
   padding: 18px 20px;
   margin-bottom: 14px;
-  transition: border-color 0.15s ease;
+  scroll-margin-top: 88px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.blocker-item-card.ticket-target-highlight {
+  border-color: #00674D;
+  box-shadow: 0 0 0 4px rgba(0, 103, 77, 0.18);
 }
 
 .blocker-item-card:hover {

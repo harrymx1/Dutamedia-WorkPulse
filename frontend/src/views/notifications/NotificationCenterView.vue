@@ -32,6 +32,8 @@ interface NotificationItem {
   channel: string;
   read: boolean;
   actionUrl?: string;
+  relatedEntityId?: string | null;
+  relatedEntityType?: string | null;
   createdAt: string;
 }
 
@@ -498,9 +500,30 @@ const ACTION_BUTTON_LABELS: Record<string, string> = {
 
 function getActionButtonLabel(actionUrl?: string): string {
   if (!actionUrl) return 'Buka Halaman Terkait';
+  const basePath = actionUrl.split('?')[0];
   if (ACTION_BUTTON_LABELS[actionUrl]) return ACTION_BUTTON_LABELS[actionUrl];
-  if (actionUrl.startsWith('/raise-blockers')) return 'Lihat & Konfirmasi Tiket Saya';
+  if (ACTION_BUTTON_LABELS[basePath]) return ACTION_BUTTON_LABELS[basePath];
+  if (basePath === '/raise-blockers') return 'Lihat & Konfirmasi Tiket Saya';
   return 'Buka Halaman Terkait';
+}
+
+function resolveNotificationActionUrl(notif?: NotificationItem | null): string {
+  const raw = notif?.actionUrl;
+  if (!raw) return '';
+  const basePath = raw.split('?')[0];
+  const entityId = notif?.relatedEntityId ? String(notif.relatedEntityId).trim() : '';
+  if (
+    entityId &&
+    !raw.includes('ticketId=') &&
+    (basePath === '/raise-blockers' || basePath === '/blockers')
+  ) {
+    const sep = raw.includes('?') ? '&' : '?';
+    if (basePath === '/raise-blockers' && !raw.includes('tab=')) {
+      return `${raw}${sep}tab=mine&ticketId=${encodeURIComponent(entityId)}`;
+    }
+    return `${raw}${sep}ticketId=${encodeURIComponent(entityId)}`;
+  }
+  return raw;
 }
 
 function getDelegationHeading(notifOrType?: NotificationItem | string | null): string {
@@ -1050,7 +1073,11 @@ onUnmounted(() => {
               v-if="selectedNotification.actionUrl && selectedNotification.actionUrl !== '/notifications' && canUserAccess(selectedNotification.actionUrl)"
               class="action-link-wrap"
             >
-              <AccessLink :to="selectedNotification.actionUrl" class="btn btn-primary">
+              <AccessLink
+                :to="resolveNotificationActionUrl(selectedNotification)"
+                class="btn btn-primary"
+                data-testid="notification-action-link"
+              >
                 <ExternalLink :size="15" />
                 <span>{{ getActionButtonLabel(selectedNotification.actionUrl) }}</span>
               </AccessLink>

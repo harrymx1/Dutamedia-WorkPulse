@@ -1275,4 +1275,74 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
 
     vi.unstubAllGlobals();
   });
+
+  it('auto-switches to Blocker Saya, scrolls smoothly, and highlights target ticket when ?ticketId query param is present', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: any) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/blockers?mine=raised')) {
+          return Promise.resolve({
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              data: [
+                {
+                  id: 'blk-other-1',
+                  description: '[Menunggu QA] Uji regresi modul laporan',
+                  type: 'CROSS_TEAM',
+                  severity: 'MEDIUM',
+                  impacts: ['TEAM'],
+                  status: 'OPEN',
+                  raisedAt: '2026-11-27T08:00:00Z',
+                  assignedOwner: { id: 'o-1', fullName: 'Dharma Putra', email: 'delivery@dutamedia.com' },
+                },
+                {
+                  id: 'blk-target-2',
+                  description: '[CI runner mengalami Out Of Memory] Pipeline build frontend gagal',
+                  type: 'TECHNICAL',
+                  severity: 'HIGH',
+                  impacts: ['PROJECT'],
+                  status: 'ACKNOWLEDGED',
+                  raisedAt: '2026-11-27T07:00:00Z',
+                  assignedOwner: { id: 'o-2', fullName: 'Bambang Pratama', email: 'lead.tech@dutamedia.com' },
+                },
+              ],
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({ success: true, data: [] }),
+        });
+      }),
+    );
+
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+
+    try {
+      await router.push('/raise-blockers?tab=mine&ticketId=blk-target-2');
+      await router.isReady();
+
+      const wrapper = mount(RaiseBlockerView, {
+        global: { plugins: [pinia, router] },
+      });
+      await flushPromises();
+
+      const otherCard = wrapper.find('[data-ticket-id="blk-other-1"]');
+      const targetCard = wrapper.find('[data-ticket-id="blk-target-2"]');
+      expect(otherCard.exists()).toBe(true);
+      expect(targetCard.exists()).toBe(true);
+      expect(otherCard.classes()).not.toContain('ticket-target-highlight');
+      expect(targetCard.classes()).toContain('ticket-target-highlight');
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+    } finally {
+      HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+      vi.unstubAllGlobals();
+    }
+  });
 });
