@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
@@ -14,7 +15,6 @@ import {
   Building2,
   FolderGit2,
   Plus,
-  CheckCircle2,
   AlertCircle,
   Search,
   X,
@@ -376,10 +376,8 @@ async function confirmEndPa() {
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    setTimeout(() => { errorMessage.value = null; }, 4000);
   } else {
     toastMessage.value = msg;
-    setTimeout(() => { toastMessage.value = null; }, 3800);
   }
 }
 </script>
@@ -389,14 +387,12 @@ function showToast(msg: string, isError = false) {
     <TopBar breadcrumb="Administration / Pemetaan Organisasi" />
 
     <!-- Toast Notification -->
-    <div v-if="toastMessage" class="toast-popup success">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="content-container">
       <div class="page-header">

@@ -1153,7 +1153,7 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
     expect(wrapper.text()).toContain('Tiket Blocker baru berhasil ditautkan ke Komitmen #1');
   });
 
-  it('menghilangkan notifikasi toast error validasi secara otomatis setelah 15 detik', async () => {
+  it('menghilangkan notifikasi toast error validasi secara adaptif (6-10 detik), menjeda saat hover, dan mendukung tutup manual', async () => {
     vi.useFakeTimers();
     try {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
@@ -1187,14 +1187,24 @@ describe('MorningCommitmentView.vue (WP-EP05-TK006 / Prototipe 02 & DEF-001 Veri
       expect(submitBtn).toBeDefined();
       await submitBtn!.trigger('click');
 
+      const errorToast = wrapper.find('.toast-popup.error');
+      expect(errorToast.exists()).toBe(true);
+      expect(wrapper.find('.toast-popup.error [data-testid="toast-close-btn"]').exists()).toBe(true);
+
+      // Pause on hover keeps toast visible even past 10 seconds
+      await errorToast.trigger('mouseenter');
+      await vi.advanceTimersByTimeAsync(12000);
       expect(wrapper.find('.toast-popup.error').exists()).toBe(true);
 
-      // Masih tampil sebelum 15 detik (mis. detik ke-10)
-      await vi.advanceTimersByTimeAsync(10000);
-      expect(wrapper.find('.toast-popup.error').exists()).toBe(true);
+      // Resumes and auto-dismisses after leaving hover within adaptive window (<= 10s)
+      await errorToast.trigger('mouseleave');
+      await vi.advanceTimersByTimeAsync(10100);
+      expect(wrapper.find('.toast-popup.error').exists()).toBe(false);
 
-      // Hilang otomatis setelah melewati 15 detik
-      await vi.advanceTimersByTimeAsync(5100);
+      // Re-trigger validation error and close immediately via manual button
+      await submitBtn!.trigger('click');
+      expect(wrapper.find('.toast-popup.error').exists()).toBe(true);
+      await wrapper.find('.toast-popup.error [data-testid="toast-close-btn"]').trigger('click');
       expect(wrapper.find('.toast-popup.error').exists()).toBe(false);
     } finally {
       vi.useRealTimers();

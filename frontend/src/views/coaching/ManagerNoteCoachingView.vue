@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -6,8 +7,6 @@ import { useAuthStore } from '../../stores/auth';
 import { formatDateWib } from '../../utils/dateTime';
 import { getUserInitials } from '../../utils/initials';
 import {
-  CheckCircle2,
-  AlertCircle,
   Eye,
   EyeOff,
   Award,
@@ -58,10 +57,8 @@ const errorMessage = ref<string | null>(null);
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    setTimeout(() => { errorMessage.value = null; }, 4000);
   } else {
     toastMessage.value = msg;
-    setTimeout(() => { toastMessage.value = null; }, 3500);
   }
 }
 
@@ -241,14 +238,12 @@ onMounted(() => {
     <TopBar breadcrumb="Management / Catatan Coaching" />
 
     <!-- Toasts -->
-    <div v-if="toastMessage" class="toast-popup success" role="status">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="main-content">
       <!-- Page Heading -->

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -146,8 +147,6 @@ const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-let toastTimer: ReturnType<typeof setTimeout> | null = null;
-let errorTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Modal 1: Undang Pengguna Baru & Pratinjau Tautan Aktivasi
 const isModalOpen = ref(false);
@@ -463,8 +462,6 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-  if (toastTimer) clearTimeout(toastTimer);
-  if (errorTimer) clearTimeout(errorTimer);
 });
 
 function handleKeydown(e: KeyboardEvent) {
@@ -627,17 +624,9 @@ async function submitLifecycleAction() {
 
 function showToast(msg: string, isError = false) {
   if (isError) {
-    if (errorTimer) clearTimeout(errorTimer);
     errorMessage.value = msg;
-    errorTimer = setTimeout(() => {
-      errorMessage.value = null;
-    }, 4500);
   } else {
-    if (toastTimer) clearTimeout(toastTimer);
     toastMessage.value = msg;
-    toastTimer = setTimeout(() => {
-      toastMessage.value = null;
-    }, 4000);
   }
 }
 
@@ -657,14 +646,12 @@ async function copyToClipboard(text: string) {
   <div class="admin-layout">
     <TopBar :breadcrumb="pageBreadcrumb" />
 
-    <div v-if="toastMessage" class="toast-popup success" role="status" aria-live="polite">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="content-container">
       <div class="page-header">

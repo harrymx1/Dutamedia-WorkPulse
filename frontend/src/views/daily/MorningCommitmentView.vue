@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { useAuthStore } from '../../stores/auth';
 import { getPromptHintForFunction, resolveUserFunction } from '../../config/prompts';
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiClient } from '../../api/client';
 import { formatTimeWib, formatDateSpanWib, formatDateWib, formatWeekdayDateWib } from '../../utils/dateTime';
@@ -14,7 +15,6 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  AlertCircle,
   AlertTriangle,
   Link as LinkIcon,
   ExternalLink,
@@ -699,34 +699,12 @@ async function submitMorningCheckin() {
   }
 }
 
-let toastAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
-let errorAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
-
-watch(errorMessage, (msg) => {
-  if (errorAutoDismissTimer) {
-    clearTimeout(errorAutoDismissTimer);
-    errorAutoDismissTimer = null;
-  }
-  if (msg) {
-    errorAutoDismissTimer = setTimeout(() => {
-      errorMessage.value = null;
-      errorAutoDismissTimer = null;
-    }, 15000);
-  }
-});
 
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
   } else {
-    if (toastAutoDismissTimer) {
-      clearTimeout(toastAutoDismissTimer);
-    }
     toastMessage.value = msg;
-    toastAutoDismissTimer = setTimeout(() => {
-      toastMessage.value = null;
-      toastAutoDismissTimer = null;
-    }, 3800);
   }
 }
 
@@ -777,14 +755,12 @@ onMounted(() => {
     </nav>
 
     <!-- Toasts -->
-    <div v-if="toastMessage" class="toast-popup success" role="status">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="main-content">
       <div class="page-heading">

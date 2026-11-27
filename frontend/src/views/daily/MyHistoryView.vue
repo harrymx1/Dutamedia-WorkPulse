@@ -1,11 +1,10 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatDateSpanWib, formatDateWib } from '../../utils/dateTime';
 import {
-  CheckCircle2,
-  AlertCircle,
   FileSpreadsheet,
   ChevronDown,
   ChevronUp,
@@ -341,10 +340,8 @@ function exportCsv() {
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    setTimeout(() => { errorMessage.value = null; }, 4000);
   } else {
     toastMessage.value = msg;
-    setTimeout(() => { toastMessage.value = null; }, 3800);
   }
 }
 
@@ -359,14 +356,12 @@ onMounted(() => {
     <TopBar breadcrumb="Workspace / My History" />
 
     <!-- Toasts -->
-    <div v-if="toastMessage" class="toast-popup success" role="status">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="main-content">
       <div class="page-heading">

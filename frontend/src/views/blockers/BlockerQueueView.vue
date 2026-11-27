@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
@@ -177,24 +178,12 @@ function setModalValidationError(msg: string) {
   showToast(msg, true);
 }
 
-let toastTimer: ReturnType<typeof setTimeout> | null = null;
-let errorTimer: ReturnType<typeof setTimeout> | null = null;
 
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    if (errorTimer) clearTimeout(errorTimer);
-    errorTimer = setTimeout(() => {
-      errorMessage.value = null;
-      errorTimer = null;
-    }, 6000);
   } else {
     toastMessage.value = msg;
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toastMessage.value = null;
-      toastTimer = null;
-    }, 6000);
   }
 }
 
@@ -773,14 +762,12 @@ onMounted(() => {
     <TopBar breadcrumb="Management / Antrean Eskalasi Blocker" />
 
     <!-- Toasts -->
-    <div v-if="toastMessage" class="toast-popup success" role="status">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="main-content">
       <!-- Page Heading & Metric Summary Cards -->

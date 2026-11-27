@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted } from 'vue';
 import { apiClient } from '../../api/client';
@@ -8,8 +9,6 @@ import {
   Download,
   Printer,
   Clock,
-  CheckCircle2,
-  AlertCircle,
   TrendingUp,
   Info,
 } from 'lucide-vue-next';
@@ -109,14 +108,8 @@ const errorMessage = ref('');
 function showToast(msg: string, isError = false) {
   if (isError) {
     errorMessage.value = msg;
-    setTimeout(() => {
-      errorMessage.value = '';
-    }, 4000);
   } else {
     toastMessage.value = msg;
-    setTimeout(() => {
-      toastMessage.value = '';
-    }, 4000);
   }
 }
 
@@ -298,14 +291,12 @@ onMounted(() => {
     <TopBar breadcrumb="Management / Laporan Eksekutif" />
 
     <!-- Toasts -->
-    <div v-if="toastMessage" class="toast-popup success" role="status">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = ''"
+      @clear-error="errorMessage = ''"
+    />
 
     <main class="main-content">
       <!-- Page Header + Actions -->

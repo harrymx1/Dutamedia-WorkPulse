@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -518,34 +519,6 @@ function appendExpectedHelp(chipText: string) {
   }
 }
 
-let toastAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
-let errorAutoDismissTimer: ReturnType<typeof setTimeout> | null = null;
-
-watch(toastMessage, (msg) => {
-  if (toastAutoDismissTimer) {
-    clearTimeout(toastAutoDismissTimer);
-    toastAutoDismissTimer = null;
-  }
-  if (msg) {
-    toastAutoDismissTimer = setTimeout(() => {
-      toastMessage.value = null;
-      toastAutoDismissTimer = null;
-    }, 6000);
-  }
-});
-
-watch(errorMessage, (msg) => {
-  if (errorAutoDismissTimer) {
-    clearTimeout(errorAutoDismissTimer);
-    errorAutoDismissTimer = null;
-  }
-  if (msg) {
-    errorAutoDismissTimer = setTimeout(() => {
-      errorMessage.value = null;
-      errorAutoDismissTimer = null;
-    }, 6000);
-  }
-});
 
 function resetForm() {
   title.value = '';
@@ -1104,14 +1077,12 @@ onBeforeUnmount(() => {
     <TopBar breadcrumb="Workspace / Blocker" />
 
     <!-- Toasts -->
-    <div v-if="toastMessage" class="toast-popup success" role="status">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error" role="alert">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="main-content">
       <!-- Back Navigation Link (IMP-041) -->

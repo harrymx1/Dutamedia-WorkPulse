@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth';
@@ -7,7 +8,6 @@ import { formatDateWib, getTodayIsoWib } from '../../utils/dateTime';
 import { isInternStatus } from '../../utils/employmentStatus';
 import {
   Plus,
-  CheckCircle2,
   AlertCircle,
   X,
   Clock,
@@ -608,11 +608,12 @@ function getDelegateSubtext(delegateUser: any): string {
   return delegateUser.email || '-';
 }
 
-function showToast(msg: string) {
-  toastMessage.value = msg;
-  setTimeout(() => {
-    toastMessage.value = null;
-  }, 3800);
+function showToast(msg: string, isError = false) {
+  if (isError) {
+    errorMessage.value = msg;
+  } else {
+    toastMessage.value = msg;
+  }
 }
 </script>
 
@@ -620,14 +621,12 @@ function showToast(msg: string) {
   <div class="admin-layout">
     <TopBar breadcrumb="Administration / Reviewer Sementara" />
 
-    <div v-if="toastMessage" class="toast-popup success">
-      <CheckCircle2 :size="18" />
-      <span>{{ toastMessage }}</span>
-    </div>
-    <div v-if="errorMessage" class="toast-popup error">
-      <AlertCircle :size="18" />
-      <span>{{ errorMessage }}</span>
-    </div>
+    <ToastPopup
+      :toast-message="toastMessage"
+      :error-message="errorMessage"
+      @clear-toast="toastMessage = null"
+      @clear-error="errorMessage = null"
+    />
 
     <main class="content-container">
       <div class="page-header">
