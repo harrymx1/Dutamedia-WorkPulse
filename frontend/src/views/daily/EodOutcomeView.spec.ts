@@ -8,6 +8,9 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
   let router: any;
 
   beforeEach(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.clear();
+    }
     setActivePinia(createPinia());
     router = createRouter({
       history: createWebHistory(),
@@ -1162,5 +1165,119 @@ describe('EodOutcomeView.vue (WP-EP05-TK007 / Prototipe 04 & DEF-002 Verificatio
         body: expect.stringContaining('"finalDailyStatus":"GREEN"'),
       }),
     );
+  });
+
+  it('menyimpan draf EOD ke localStorage, memulihkannya saat reload, mereset lewat Reset Draf, dan menghapus otomatis saat submit', async () => {
+    const todayPayload = {
+      success: true,
+      data: {
+        workDate: '2026-11-27',
+        currentTime: '16:15',
+        cutoffTimings: {
+          eodOnTimeCutoff: '23:50',
+          eodLockCutoff: '23:59',
+          isEodLocked: false,
+        },
+        myActiveBlockers: [],
+        record: {
+          id: 'rec-eod-draft-1',
+          commitments: [
+            {
+              id: 'c-draft-1',
+              sequenceNo: 1,
+              taskText: 'Finalisasi API modul laporan',
+              initialRisk: 'GREEN',
+              carryOverDaysCount: 0,
+            },
+          ],
+          additionalWorks: [
+            {
+              id: 'w-draft-1',
+              taskText: 'Revisi hak akses portal klien',
+              reason: 'NEWLY_ASSIGNED',
+            },
+          ],
+          eodSubmittedAt: null,
+        },
+      },
+    };
+
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/daily/eod')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: { eodSubmittedAt: '2026-11-27T09:30:00.000Z' },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => todayPayload,
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    // 1. Isi form EOD & klik Simpan Draf
+    const wrapper1 = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    await wrapper1.find('input[name="outcome-c-draft-1"][value="NOT_COMPLETED"]').setValue();
+    await wrapper1.find('input[name="cont-c-draft-1"][value="DO_NOT_CONTINUE"]').setValue();
+    const textareas1 = wrapper1.findAll('textarea');
+    await textareas1[0].setValue('Diambil alih oleh tim Finance');
+
+    await wrapper1.find('input[name="w-outcome-w-draft-1"][value="CANCELLED"]').setValue();
+    await wrapper1.findAll('textarea')[1].setValue('Ditunda oleh klien');
+
+    await wrapper1.find('input[type="radio"][value="AMBER"]').setValue();
+    await wrapper1.find('#daily-risk-explanation').setValue('Penjelasan draf EOD yang disimpan lokal oleh karyawan');
+    await wrapper1.find('#tomorrow-priority-input').setValue('Lanjutkan uji integrasi besok pagi');
+
+    await wrapper1.find('[data-testid="btn-save-eod-draft"]').trigger('click');
+
+    expect(wrapper1.find('[data-testid="eod-draft-saved-status"]').exists()).toBe(true);
+    expect(wrapper1.text()).toContain('Draf tersimpan pukul');
+    const storageKey = 'wp_eod_draft_default_2026-11-27';
+    expect(window.localStorage.getItem(storageKey)).toBeTruthy();
+
+    // 2. Simulasikan F5 (remount komponen) -> semua isian draf pulih otomatis
+    wrapper1.unmount();
+    const wrapper2 = mount(EodOutcomeView, {
+      global: { plugins: [router] },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    expect((wrapper2.find('input[name="outcome-c-draft-1"][value="NOT_COMPLETED"]').element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper2.find('input[name="cont-c-draft-1"][value="DO_NOT_CONTINUE"]').element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper2.find('input[name="w-outcome-w-draft-1"][value="CANCELLED"]').element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper2.find('input[type="radio"][value="AMBER"]').element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper2.find('#daily-risk-explanation').element as HTMLTextAreaElement).value).toBe('Penjelasan draf EOD yang disimpan lokal oleh karyawan');
+    expect((wrapper2.find('#tomorrow-priority-input').element as HTMLTextAreaElement).value).toBe('Lanjutkan uji integrasi besok pagi');
+    expect(wrapper2.find('[data-testid="eod-draft-saved-status"]').exists()).toBe(true);
+
+    // 3. Klik Reset Draf -> hapus localStorage & kembalikan nilai form ke default
+    await wrapper2.find('[data-testid="btn-clear-eod-draft"]').trigger('click');
+    expect(window.localStorage.getItem(storageKey)).toBeNull();
+    expect(wrapper2.find('[data-testid="eod-draft-saved-status"]').exists()).toBe(false);
+    expect((wrapper2.find('input[type="radio"][value="GREEN"]').element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper2.find('#tomorrow-priority-input').element as HTMLTextAreaElement).value).toBe('');
+
+    // 4. Simpan draf ulang lalu Kirim Evaluasi EOD -> draf lokal otomatis terhapus saat submit sukses
+    await wrapper2.find('[data-testid="btn-save-eod-draft"]').trigger('click');
+    expect(window.localStorage.getItem(storageKey)).toBeTruthy();
+
+    await wrapper2.find('[data-testid="btn-submit-eod"]').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/daily/eod'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(window.localStorage.getItem(storageKey)).toBeNull();
   });
 });

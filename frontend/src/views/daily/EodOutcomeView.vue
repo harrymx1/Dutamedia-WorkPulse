@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
+import { useAuthStore } from '../../stores/auth';
 import { ref, computed, onMounted, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatTimeWib, formatDateSpanWib, formatDateWib, formatWeekdayDateWib } from '../../utils/dateTime';
@@ -11,6 +12,7 @@ import {
   AlertTriangle,
   CalendarCheck,
   Info,
+  Save,
 } from 'lucide-vue-next';
 
 interface ActiveLeave {
@@ -63,6 +65,7 @@ interface AdditionalWorkOutcomeItem {
 }
 
 // State
+const authStore = useAuthStore();
 const loading = ref(false);
 const submitting = ref(false);
 const workDate = ref('');
@@ -241,6 +244,7 @@ const showMismatchConfirm = ref(false);
 const toastMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 const isSubmittedSuccess = ref(false);
+const draftSavedAt = ref<string | null>(null);
 
 function needsContinuation(outcome: CommitmentOutcomeItem['outcome']): boolean {
   return outcome === 'PARTIALLY_COMPLETED' || outcome === 'NOT_COMPLETED';
@@ -342,6 +346,190 @@ watch([finalDailyStatus, () => statusSuggestion.value?.status], () => {
   showMismatchConfirm.value = false;
 });
 
+type EodOutcomeType = CommitmentOutcomeItem['outcome'];
+type EodContinuationType = CommitmentOutcomeItem['continuation'];
+
+const VALID_OUTCOMES: EodOutcomeType[] = [
+  'COMPLETED',
+  'PARTIALLY_COMPLETED',
+  'NOT_COMPLETED',
+  'CANCELLED',
+];
+const VALID_CONTINUATIONS: EodContinuationType[] = ['CONTINUE', 'DO_NOT_CONTINUE'];
+
+function isValidOutcome(val: unknown): val is EodOutcomeType {
+  return typeof val === 'string' && VALID_OUTCOMES.includes(val as EodOutcomeType);
+}
+
+function isValidContinuation(val: unknown): val is EodContinuationType {
+  return typeof val === 'string' && VALID_CONTINUATIONS.includes(val as EodContinuationType);
+}
+
+function getDraftStorageKey(): string {
+  const uid = authStore.user?.id || 'default';
+  const dateKey = workDate.value || 'today';
+  return `wp_eod_draft_${uid}_${dateKey}`;
+}
+
+function saveLocalDraft(silent = false) {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  const savedAtIso = new Date().toISOString();
+  const commitmentsMap: Record<
+    string,
+    {
+      outcome: EodOutcomeType;
+      outcomeReason: string;
+      continuation: EodContinuationType;
+      continuationReason: string;
+    }
+  > = {};
+  for (const c of commitments.value) {
+    commitmentsMap[c.id] = {
+      outcome: c.outcome,
+      outcomeReason: c.outcomeReason,
+      continuation: c.continuation,
+      continuationReason: c.continuationReason,
+    };
+  }
+
+  const additionalWorksMap: Record<
+    string,
+    {
+      outcome: EodOutcomeType;
+      outcomeReason: string;
+      continuation: EodContinuationType;
+      continuationReason: string;
+    }
+  > = {};
+  for (const w of additionalWorks.value) {
+    additionalWorksMap[w.id] = {
+      outcome: w.outcome,
+      outcomeReason: w.outcomeReason,
+      continuation: w.continuation,
+      continuationReason: w.continuationReason,
+    };
+  }
+
+  const draftPayload = {
+    commitments: commitmentsMap,
+    additionalWorks: additionalWorksMap,
+    finalDailyStatus: finalDailyStatus.value,
+    dailyRiskExplanation: dailyRiskExplanation.value,
+    tomorrowPriority: tomorrowPriority.value,
+    savedAt: savedAtIso,
+  };
+
+  try {
+    window.localStorage.setItem(getDraftStorageKey(), JSON.stringify(draftPayload));
+    draftSavedAt.value = savedAtIso;
+    if (!silent) {
+      showToast('Draf Evaluasi EOD berhasil disimpan secara lokal.');
+    }
+  } catch {
+    if (!silent) {
+      showToast('Gagal menyimpan draf lokal pada peramban ini.', true);
+    }
+  }
+}
+
+function restoreLocalDraft() {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    const raw = window.localStorage.getItem(getDraftStorageKey());
+    if (!raw) {
+      draftSavedAt.value = null;
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return;
+
+    if (parsed.commitments && typeof parsed.commitments === 'object') {
+      commitments.value = commitments.value.map((c) => {
+        const saved = parsed.commitments[c.id];
+        if (!saved || typeof saved !== 'object') return c;
+        return {
+          ...c,
+          outcome: isValidOutcome(saved.outcome) ? saved.outcome : c.outcome,
+          outcomeReason: typeof saved.outcomeReason === 'string' ? saved.outcomeReason : c.outcomeReason,
+          continuation: isValidContinuation(saved.continuation) ? saved.continuation : c.continuation,
+          continuationReason:
+            typeof saved.continuationReason === 'string'
+              ? saved.continuationReason
+              : c.continuationReason,
+        };
+      });
+    }
+
+    if (parsed.additionalWorks && typeof parsed.additionalWorks === 'object') {
+      additionalWorks.value = additionalWorks.value.map((w) => {
+        const saved = parsed.additionalWorks[w.id];
+        if (!saved || typeof saved !== 'object') return w;
+        return {
+          ...w,
+          outcome: isValidOutcome(saved.outcome) ? saved.outcome : w.outcome,
+          outcomeReason: typeof saved.outcomeReason === 'string' ? saved.outcomeReason : w.outcomeReason,
+          continuation: isValidContinuation(saved.continuation) ? saved.continuation : w.continuation,
+          continuationReason:
+            typeof saved.continuationReason === 'string'
+              ? saved.continuationReason
+              : w.continuationReason,
+        };
+      });
+    }
+
+    if (
+      parsed.finalDailyStatus === 'GREEN' ||
+      parsed.finalDailyStatus === 'AMBER' ||
+      parsed.finalDailyStatus === 'RED'
+    ) {
+      finalDailyStatus.value = parsed.finalDailyStatus;
+    }
+    if (typeof parsed.dailyRiskExplanation === 'string') {
+      dailyRiskExplanation.value = parsed.dailyRiskExplanation;
+    }
+    if (typeof parsed.tomorrowPriority === 'string') {
+      tomorrowPriority.value = parsed.tomorrowPriority;
+    }
+    if (typeof parsed.savedAt === 'string') {
+      draftSavedAt.value = parsed.savedAt;
+    }
+  } catch {
+    // Abaikan draf rusak jika gagal diparsing
+  }
+}
+
+function clearLocalDraft(silent = false) {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.removeItem(getDraftStorageKey());
+    } catch {
+      // Abaikan kegagalan hapus storage
+    }
+  }
+  draftSavedAt.value = null;
+  if (!silent) {
+    commitments.value = commitments.value.map((c) => ({
+      ...c,
+      outcome: 'COMPLETED',
+      outcomeReason: '',
+      continuation: 'DO_NOT_CONTINUE',
+      continuationReason: '',
+    }));
+    additionalWorks.value = additionalWorks.value.map((w) => ({
+      ...w,
+      outcome: 'COMPLETED',
+      outcomeReason: '',
+      continuation: 'DO_NOT_CONTINUE',
+      continuationReason: '',
+    }));
+    finalDailyStatus.value = 'GREEN';
+    dailyRiskExplanation.value = '';
+    tomorrowPriority.value = '';
+    showMismatchConfirm.value = false;
+    showToast('Draf lokal evaluasi EOD berhasil dihapus.');
+  }
+}
+
 async function loadTodayState() {
   loading.value = true;
   try {
@@ -414,6 +602,12 @@ async function loadTodayState() {
       dailyRiskExplanation.value = (data.record.orgContextSnapshot as any)?.dailyRiskExplanation || '';
       tomorrowPriority.value = (data.record.orgContextSnapshot as any)?.tomorrowPriority || '';
       isSubmittedSuccess.value = !!eodSubmittedAt.value;
+
+      if (isFormLocked.value) {
+        clearLocalDraft(true);
+      } else {
+        restoreLocalDraft();
+      }
     } else {
       recordId.value = null;
       morningTiming.value = null;
@@ -423,6 +617,7 @@ async function loadTodayState() {
       tomorrowPriority.value = '';
       eodSubmittedAt.value = null;
       isSubmittedSuccess.value = false;
+      draftSavedAt.value = null;
     }
   } catch (err: any) {
     showToast(err.message || 'Gagal memuat evaluasi EOD.', true);
@@ -516,6 +711,7 @@ async function submitEod(bypassMismatchConfirm = false) {
       body: JSON.stringify(payload),
     });
 
+    clearLocalDraft(true);
     showToast('Evaluasi EOD Outcome berhasil dikirim dan dicatat.');
     eodSubmittedAt.value = res.data?.eodSubmittedAt
       ? new Date(res.data.eodSubmittedAt).toISOString()
@@ -1308,16 +1504,46 @@ onMounted(() => {
       <!-- Action Footer -->
       <div v-if="!isFormLocked" class="action-footer">
         <div class="footer-info">
-          Pastikan hasil evaluasi telah diverifikasi sebelum jam penguncian {{ eodLockCutoff }} WIB.
+          <span class="footer-info-text">
+            Pastikan hasil evaluasi telah diverifikasi sebelum jam penguncian {{ eodLockCutoff }} WIB.
+          </span>
+          <div v-if="draftSavedAt" class="draft-status-row" data-testid="eod-draft-saved-status">
+            <span class="badge badge-info">
+              Draf tersimpan pukul {{ formatTime(draftSavedAt) }}
+            </span>
+            <button
+              type="button"
+              class="btn-link-reset"
+              data-testid="btn-clear-eod-draft"
+              @click="clearLocalDraft(false)"
+            >
+              Reset Draf
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          class="btn btn-primary"
-          :disabled="submitting"
-          @click="submitEod(false)"
-        >
-          <span>{{ submitting ? 'Mengirim...' : 'Kirim Evaluasi EOD' }}</span>
-        </button>
+        <div class="footer-btns">
+          <button
+            id="btn-save-eod-draft"
+            data-testid="btn-save-eod-draft"
+            type="button"
+            class="btn btn-secondary"
+            :disabled="submitting"
+            @click="saveLocalDraft(false)"
+          >
+            <Save :size="15" />
+            <span>Simpan Draf</span>
+          </button>
+          <button
+            id="btn-submit-eod"
+            data-testid="btn-submit-eod"
+            type="button"
+            class="btn btn-primary"
+            :disabled="submitting"
+            @click="submitEod(false)"
+          >
+            <span>{{ submitting ? 'Mengirim...' : 'Kirim Evaluasi EOD' }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Success Banner -->
@@ -1845,11 +2071,50 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .footer-info {
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
   color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footer-info-text {
+  line-height: 1.4;
+}
+
+.draft-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-link-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-status-red-fg);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.btn-link-reset:hover {
+  opacity: 0.8;
+}
+
+.footer-btns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -1877,6 +2142,10 @@ onMounted(() => {
   background: #fff;
   border-color: var(--color-border-subtle);
   color: var(--color-text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface-subtle);
 }
 
 .form-group {
@@ -2423,6 +2692,11 @@ textarea.input-control {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+  }
+
+  .footer-btns {
+    justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .post-submit-panel .btn {

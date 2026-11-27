@@ -455,7 +455,8 @@ Buka maksimal **5 jendela Chrome** (4 profil Chrome biasa + 1 jendela Incognito)
        Beresin dokumen syarat terima SSO dan dampingi tes PRJ-PORTAL bareng QA
        ```
 
-  8. **Kirim Evaluasi Sore & Konfirmasi Pilihan `AMBER`:**
+  8. **Simpan Draf, Kirim Evaluasi Sore, & Konfirmasi Pilihan `AMBER`:**
+     - *(Opsional cepat: klik **`Simpan Draf`** → tekan **`F5`** untuk membuktikan seluruh pilihan hasil evaluasi dan catatan tetap tersimpan aman sebelum dikirim).*
      - Klik tombol **`Kirim Evaluasi EOD`**.
      - **👀 Tunjukkan di layar:** Muncul jendela **`Konfirmasi Pilihan Status Akhir Hari`** dengan dua tombol: **`Ubah ke Saran (RED)`** atau **`Tetap Kirim sebagai AMBER`**.
      - Klik tombol **`Tetap Kirim sebagai AMBER`**.
