@@ -234,13 +234,36 @@ describe('RaiseBlockerView.vue (Cycle 2 / Group 4: SOL-BLKR-FORM - IMP-041, IMP-
     expect(closeBtn.exists()).toBe(true);
     expect(wrapper.find('[data-testid="reopen-ticket-blk-awaiting-confirm"]').exists()).toBe(true);
 
+    // Klik Konfirmasi & Tutup Tiket membuka modal konfirmasi terlebih dahulu (belum memanggil API close)
     await closeBtn.trigger('click');
     await flushPromises();
+    expect(wrapper.find('[data-testid="close-blocker-confirm-modal"]').exists()).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-awaiting-confirm/close'),
+      expect.anything(),
+    );
 
+    // Klik Batal menutup modal tanpa memanggil API close
+    await wrapper.find('[data-testid="cancel-close-blocker"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="close-blocker-confirm-modal"]').exists()).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining('/blockers/blk-awaiting-confirm/close'),
+      expect.anything(),
+    );
+
+    // Buka modal lagi lalu konfirmasi penutupan permanen
+    await closeBtn.trigger('click');
+    await flushPromises();
+    await wrapper.find('[data-testid="confirm-close-blocker-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="close-blocker-confirm-modal"]').exists()).toBe(false);
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/blockers/blk-awaiting-confirm/close'),
       expect.objectContaining({ method: 'POST' }),
     );
+    expect(wrapper.find('.toast-popup.success').text()).toContain('dikonfirmasi dan ditutup permanen');
   });
 
   it('separates Menunggu Respons (OPEN) and Sedang Ditangani (ACKNOWLEDGED) filter pills accurately', async () => {

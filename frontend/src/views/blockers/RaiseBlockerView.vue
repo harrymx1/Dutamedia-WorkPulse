@@ -402,6 +402,7 @@ const myBlockers = ref<any[]>([]);
 const loadingBlockers = ref(false);
 const blockerFilter = ref<'all' | 'open' | 'handling' | 'resolved' | 'closed'>('all');
 const closingId = ref<string | null>(null);
+const closingConfirmTicket = ref<any | null>(null);
 const reopeningId = ref<string | null>(null);
 const reopenReasonMap = ref<Record<string, string>>({});
 const submittingReopenId = ref<string | null>(null);
@@ -758,11 +759,21 @@ function getTicketExpectedHelp(ticket: any): string | null {
   return match?.[1]?.trim() || null;
 }
 
+function openCloseConfirmModal(ticket: any) {
+  closingConfirmTicket.value = ticket;
+}
+
+function closeCloseConfirmModal() {
+  if (closingId.value) return;
+  closingConfirmTicket.value = null;
+}
+
 async function confirmAndCloseTicket(ticketId: string) {
   closingId.value = ticketId;
   errorMessage.value = null;
   try {
     await apiClient(`/blockers/${ticketId}/close`, { method: 'POST' });
+    closingConfirmTicket.value = null;
     toastMessage.value = 'Tiket kendala telah dikonfirmasi dan ditutup permanen.';
     await loadMyBlockers();
   } catch (err: any) {
@@ -2028,7 +2039,7 @@ onBeforeUnmount(() => {
                   class="btn-confirm-close"
                   :disabled="closingId === b.id"
                   :data-testid="`close-ticket-${b.id}`"
-                  @click="confirmAndCloseTicket(b.id)"
+                  @click="openCloseConfirmModal(b)"
                 >
                   <CheckCircle2 :size="14" />
                   <span>{{ closingId === b.id ? 'Menutup Tiket...' : 'Konfirmasi & Tutup Tiket' }}</span>
@@ -2341,6 +2352,62 @@ onBeforeUnmount(() => {
             @click="submitDeleteTicket"
           >
             {{ submittingDelete ? 'Menghapus...' : 'Konfirmasi Hapus Tiket' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Penutupan Tiket Blocker -->
+    <div
+      v-if="closingConfirmTicket"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      data-testid="close-blocker-confirm-modal"
+      @click.self="closeCloseConfirmModal"
+    >
+      <div class="modal-card modal-card-sm">
+        <div class="modal-head">
+          <h3>Konfirmasi Penutupan Tiket #{{ closingConfirmTicket.id.slice(0, 8) }}</h3>
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Tutup"
+            :disabled="closingId === closingConfirmTicket.id"
+            @click="closeCloseConfirmModal"
+          >
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Anda akan menandai kendala <strong>"{{ getTicketTitle(closingConfirmTicket) }}"</strong> sebagai selesai. Dengan mengonfirmasi penutupan ini, Anda menyatakan bahwa solusi atau arahan mitigasi sudah berjalan sesuai harapan.
+          </p>
+          <div class="close-confirm-note">
+            <AlertTriangle :size="16" />
+            <span>
+              Status tiket akan berubah menjadi <strong>Selesai Ditutup</strong> secara permanen dan tidak dapat dibuka kembali maupun diubah.
+            </span>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button
+            type="button"
+            class="btn-secondary"
+            data-testid="cancel-close-blocker"
+            :disabled="closingId === closingConfirmTicket.id"
+            @click="closeCloseConfirmModal"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            data-testid="confirm-close-blocker-submit"
+            :disabled="closingId === closingConfirmTicket.id"
+            @click="confirmAndCloseTicket(closingConfirmTicket.id)"
+          >
+            {{ closingId === closingConfirmTicket.id ? 'Menutup Tiket...' : 'Ya, Tutup Tiket Permanen' }}
           </button>
         </div>
       </div>
@@ -4086,5 +4153,23 @@ textarea:focus {
 .btn-return-cancel {
   white-space: nowrap;
   text-decoration: none;
+}
+
+.modal-card-sm {
+  max-width: 480px;
+}
+
+.close-confirm-note {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  color: #92400E;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 </style>

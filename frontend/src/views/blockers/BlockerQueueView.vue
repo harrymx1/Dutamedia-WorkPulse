@@ -141,6 +141,7 @@ const queueDeleteReason = ref('');
 const submittingQueueDelete = ref(false);
 
 const submittingClose = ref(false);
+const isCloseConfirmModalOpen = ref(false);
 const acknowledging = ref(false);
 const respondingSupportId = ref<string | null>(null);
 const rejectingSupportId = ref<string | null>(null);
@@ -523,10 +524,20 @@ async function submitAcceptRisk() {
 }
 
 // Close & Reopen Actions (Reporter Confirmation)
+function openCloseConfirmModal() {
+  isCloseConfirmModalOpen.value = true;
+}
+
+function closeCloseConfirmModal() {
+  if (submittingClose.value) return;
+  isCloseConfirmModalOpen.value = false;
+}
+
 async function handleCloseTicket(ticketId: string) {
   submittingClose.value = true;
   try {
     await apiClient(`/blockers/${ticketId}/close`, { method: 'POST' });
+    isCloseConfirmModalOpen.value = false;
     await loadBlockers();
     showToast(`Tiket kendala telah dikonfirmasi dan berstatus ${getBlockerStatusLabel('CLOSED')}.`);
   } catch (err: any) {
@@ -1064,8 +1075,9 @@ onMounted(() => {
                   "
                   type="button"
                   class="btn-action close"
+                  data-testid="queue-close-ticket-btn"
                   :disabled="submittingClose"
-                  @click="handleCloseTicket(selectedTicket.id)"
+                  @click="openCloseConfirmModal()"
                 >
                   <CheckCircle2 :size="15" />
                   <span>{{ submittingClose ? 'Menutup...' : 'Konfirmasi & Tutup' }}</span>
@@ -1785,6 +1797,62 @@ onMounted(() => {
             @click="submitQueueDelete"
           >
             {{ submittingQueueDelete ? 'Menghapus...' : 'Konfirmasi Hapus Tiket' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Penutupan Tiket Blocker -->
+    <div
+      v-if="isCloseConfirmModalOpen && selectedTicket"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      data-testid="queue-close-blocker-confirm-modal"
+      @click.self="closeCloseConfirmModal"
+    >
+      <div class="modal-card modal-card-sm">
+        <div class="modal-head">
+          <h3>Konfirmasi Penutupan Tiket #{{ selectedTicket.id.substring(0, 8) }}</h3>
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Tutup"
+            :disabled="submittingClose"
+            @click="closeCloseConfirmModal"
+          >
+            <X :size="18" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">
+            Anda akan menandai kendala <strong>"{{ parsedSelectedTicket.title }}"</strong> sebagai selesai. Dengan mengonfirmasi penutupan ini, Anda menyatakan bahwa solusi atau arahan mitigasi sudah berjalan sesuai harapan.
+          </p>
+          <div class="close-confirm-note">
+            <AlertTriangle :size="16" />
+            <span>
+              Status tiket akan berubah menjadi <strong>Selesai Ditutup</strong> secara permanen dan tidak dapat dibuka kembali maupun diubah.
+            </span>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button
+            type="button"
+            class="btn-secondary"
+            data-testid="cancel-queue-close-blocker"
+            :disabled="submittingClose"
+            @click="closeCloseConfirmModal"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            data-testid="confirm-queue-close-blocker-submit"
+            :disabled="submittingClose"
+            @click="handleCloseTicket(selectedTicket.id)"
+          >
+            {{ submittingClose ? 'Menutup Tiket...' : 'Ya, Tutup Tiket Permanen' }}
           </button>
         </div>
       </div>
@@ -3206,5 +3274,23 @@ h1 {
   .modal-foot {
     padding: 14px 16px;
   }
+}
+
+.modal-card-sm {
+  max-width: 480px;
+}
+
+.close-confirm-note {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  color: #92400E;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 </style>
