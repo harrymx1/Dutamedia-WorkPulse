@@ -210,11 +210,62 @@ function buildDiffPairs(item: CorrectionRequestItem): DiffPair[] {
       });
     }
 
+    const beforeProject = (before.projectCode || '').trim();
+    const afterProject =
+      after.projectCode !== undefined ? String(after.projectCode || '').trim() : beforeProject;
+    if (after.projectCode !== undefined && afterProject !== beforeProject) {
+      pairs.push({
+        label: 'Proyek Terkait',
+        before: beforeProject || 'Non-Proyek',
+        after: afterProject || 'Non-Proyek',
+      });
+    }
+
     if (after.initialRisk && after.initialRisk !== before.initialRisk) {
       pairs.push({
         label: 'Tingkat Risiko',
         before: formatRiskLabel(before.initialRisk),
         after: formatRiskLabel(after.initialRisk),
+      });
+    }
+
+    const beforeBlocker = (before.linkedBlockerId || '').trim();
+    const afterBlocker =
+      after.linkedBlockerId !== undefined
+        ? String(after.linkedBlockerId || '').trim()
+        : beforeBlocker;
+    if (after.linkedBlockerId !== undefined && afterBlocker !== beforeBlocker) {
+      const fmtBlk = (id: string) => (id ? `#BLK-${id.slice(0, 6).toUpperCase()}` : 'Tidak ada');
+      pairs.push({
+        label: 'Tiket Blocker Penyebab',
+        before: fmtBlk(beforeBlocker),
+        after: fmtBlk(afterBlocker),
+      });
+    }
+
+    const beforeNote = (before.knownBlockerNote || '').trim();
+    const afterNote =
+      after.knownBlockerNote !== undefined
+        ? String(after.knownBlockerNote || '').trim()
+        : beforeNote;
+    if (after.knownBlockerNote !== undefined && afterNote !== beforeNote) {
+      pairs.push({
+        label: 'Uraian Risiko / Kendala',
+        before: beforeNote || 'Tidak ada',
+        after: afterNote || 'Dikosongkan',
+      });
+    }
+
+    const beforeSupport = (before.supportNeeded || '').trim();
+    const afterSupport =
+      after.supportNeeded !== undefined
+        ? String(after.supportNeeded || '').trim()
+        : beforeSupport;
+    if (after.supportNeeded !== undefined && afterSupport !== beforeSupport) {
+      pairs.push({
+        label: 'Bantuan Diharapkan',
+        before: beforeSupport || 'Tidak ada',
+        after: afterSupport || 'Dikosongkan',
       });
     }
 

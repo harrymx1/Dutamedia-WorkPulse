@@ -64,9 +64,14 @@ export class CorrectionService {
     dailyRecordId: string | undefined,
     requestedChange: Record<string, any>,
     fallbackReason: string,
+    sequenceNo?: number | null,
   ) {
     const mappedOutcome = mapRequestedOutcome(requestedChange.outcome);
     const mappedContinuation = mapRequestedContinuation(requestedChange.continuation);
+    const isNextGreen = requestedChange.initialRisk === CommitmentRisk.GREEN;
+    const isNextRisky =
+      requestedChange.initialRisk === CommitmentRisk.AMBER ||
+      requestedChange.initialRisk === CommitmentRisk.RED;
 
     await tx.commitment.update({
       where: { id: commitmentId },
@@ -77,10 +82,22 @@ export class CorrectionService {
         }),
         ...(requestedChange.initialRisk && {
           initialRisk: requestedChange.initialRisk,
-          ...(['AMBER', 'RED'].includes(requestedChange.initialRisk) && {
-            knownBlockerNote: requestedChange.knownBlockerNote || fallbackReason,
-          }),
         }),
+        ...(isNextGreen
+          ? {
+              knownBlockerNote: null,
+              supportNeeded: null,
+            }
+          : {
+              ...(requestedChange.knownBlockerNote !== undefined
+                ? { knownBlockerNote: requestedChange.knownBlockerNote?.trim() || null }
+                : isNextRisky
+                  ? { knownBlockerNote: fallbackReason || null }
+                  : {}),
+              ...(requestedChange.supportNeeded !== undefined && {
+                supportNeeded: requestedChange.supportNeeded?.trim() || null,
+              }),
+            }),
         ...(mappedOutcome && { outcome: mappedOutcome }),
         ...(requestedChange.outcomeReason !== undefined && {
           outcomeReason: requestedChange.outcomeReason?.trim() || null,
@@ -99,7 +116,70 @@ export class CorrectionService {
     });
 
     if (
-      requestedChange.initialRisk &&
+      dailyRecordId &&
+      sequenceNo &&
+      tx.dailyAccountabilityRecord?.update &&
+      (requestedChange.projectCode !== undefined ||
+        requestedChange.linkedBlockerId !== undefined ||
+        isNextGreen)
+    ) {
+      let currentSnap: Record<string, any> = {};
+      if (tx.dailyAccountabilityRecord?.findUnique) {
+        const dr = await tx.dailyAccountabilityRecord.findUnique({
+          where: { id: dailyRecordId },
+          select: { orgContextSnapshot: true },
+        });
+        if (dr?.orgContextSnapshot && typeof dr.orgContextSnapshot === 'object') {
+          currentSnap = { ...dr.orgContextSnapshot };
+        }
+      }
+      const prevMetaMap =
+        currentSnap.commitmentMeta && typeof currentSnap.commitmentMeta === 'object'
+          ? { ...currentSnap.commitmentMeta }
+          : {};
+      const slotKey = String(sequenceNo);
+      const prevSlotMeta =
+        prevMetaMap[slotKey] && typeof prevMetaMap[slotKey] === 'object'
+          ? { ...prevMetaMap[slotKey] }
+          : {};
+
+      const nextProjectCode =
+        requestedChange.projectCode !== undefined
+          ? String(requestedChange.projectCode || '').trim() || null
+          : (prevSlotMeta.projectCode ?? null);
+      const nextLinkedBlockerId = isNextGreen
+        ? null
+        : requestedChange.linkedBlockerId !== undefined
+          ? String(requestedChange.linkedBlockerId || '').trim() || null
+          : (prevSlotMeta.linkedBlockerId ?? null);
+
+      prevMetaMap[slotKey] = {
+        projectCode: nextProjectCode,
+        linkedBlockerId: nextLinkedBlockerId,
+      };
+      await tx.dailyAccountabilityRecord.update({
+        where: { id: dailyRecordId },
+        data: {
+          orgContextSnapshot: {
+            ...currentSnap,
+            commitmentMeta: prevMetaMap,
+          },
+        },
+      });
+    }
+
+    if (!isNextGreen && requestedChange.linkedBlockerId && tx.blockerTicket?.updateMany) {
+      await tx.blockerTicket.updateMany({
+        where: {
+          id: String(requestedChange.linkedBlockerId).trim(),
+          linkedCommitmentId: null,
+        },
+        data: { linkedCommitmentId: commitmentId },
+      });
+    }
+
+    if (
+      (requestedChange.initialRisk || requestedChange.linkedBlockerId !== undefined) &&
       dailyRecordId &&
       tx.commitment?.findMany &&
       tx.dailyAccountabilityRecord?.update
@@ -145,7 +225,10 @@ export class CorrectionService {
   ) {
     const commitment = await this.prisma.commitment.findUnique({
       where: { id: dto.targetCommitmentId },
-      include: { dailyRecord: true },
+      include: {
+        dailyRecord: true,
+        blockers: { select: { id: true } },
+      },
     });
 
     if (!commitment) {
@@ -183,6 +266,9 @@ export class CorrectionService {
       }
     }
 
+    let normalizedRequestedChange: Record<string, any> = dto.requestedChange || {};
+    let resolvedValueBefore: Record<string, any>;
+
     if (dto.scopeType === CorrectionScopeType.MORNING_COMMITMENT) {
       const reqChange = dto.requestedChange || {};
       if (
@@ -196,6 +282,11 @@ export class CorrectionService {
         });
       }
 
+      const currentMeta =
+        (commitment.dailyRecord?.orgContextSnapshot as any)?.commitmentMeta?.[
+          String(commitment.sequenceNo)
+        ] || {};
+
       const currentTask = (commitment.taskText || '').trim();
       const nextTask =
         reqChange.taskText !== undefined
@@ -206,6 +297,13 @@ export class CorrectionService {
         reqChange.referenceLink !== undefined
           ? String(reqChange.referenceLink || '').trim() || null
           : currentLink;
+      const currentProjectCode =
+        (currentMeta.projectCode || '').trim() || null;
+      const nextProjectCode =
+        reqChange.projectCode !== undefined
+          ? String(reqChange.projectCode || '').trim() || null
+          : currentProjectCode;
+
       const currentRisk = commitment.initialRisk;
       const nextRisk =
         reqChange.initialRisk !== undefined
@@ -213,9 +311,95 @@ export class CorrectionService {
           : currentRisk;
 
       if (
+        dto.classification === CorrectionClassification.MINOR &&
+        nextRisk !== currentRisk
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message:
+            'Perubahan tingkat risiko wajib diajukan melalui Perubahan Material untuk ditinjau Atasan Berwenang.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      const currentLinkedBlockerId =
+        (currentMeta.linkedBlockerId || commitment.blockers?.[0]?.id || '').trim() ||
+        null;
+      const rawNextBlockerId =
+        reqChange.linkedBlockerId !== undefined
+          ? String(reqChange.linkedBlockerId || '').trim() || null
+          : currentLinkedBlockerId;
+      const nextLinkedBlockerId =
+        nextRisk === CommitmentRisk.GREEN ? null : rawNextBlockerId;
+
+      const currentKnownBlockerNote =
+        (commitment.knownBlockerNote || '').trim() || null;
+      let nextKnownBlockerNote =
+        nextRisk === CommitmentRisk.GREEN
+          ? null
+          : reqChange.knownBlockerNote !== undefined
+            ? String(reqChange.knownBlockerNote || '').trim() || null
+            : currentKnownBlockerNote;
+
+      const currentSupportNeeded =
+        (commitment.supportNeeded || '').trim() || null;
+      const nextSupportNeeded =
+        nextRisk === CommitmentRisk.GREEN
+          ? null
+          : reqChange.supportNeeded !== undefined
+            ? String(reqChange.supportNeeded || '').trim() || null
+            : currentSupportNeeded;
+
+      if (nextRisk === CommitmentRisk.RED) {
+        if (!nextLinkedBlockerId) {
+          throw new AppException({
+            code: ErrorCode.VALIDATION_FAILED,
+            message:
+              'Komitmen dengan tingkat risiko RED wajib mengaitkan tiket Blocker aktif. Buat tiket Blocker terlebih dahulu lalu kaitkan sebagai penyebab.',
+            statusCode: HttpStatus.BAD_REQUEST,
+          });
+        }
+
+        if ((this.prisma as any).blockerTicket?.findUnique) {
+          const blocker = await (this.prisma as any).blockerTicket.findUnique({
+            where: { id: nextLinkedBlockerId },
+            select: { id: true, description: true, status: true },
+          });
+          const activeStatuses = ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS'];
+          if (!blocker || !activeStatuses.includes(String(blocker.status))) {
+            throw new AppException({
+              code: ErrorCode.VALIDATION_FAILED,
+              message:
+                'Tiket Blocker yang dikaitkan tidak ditemukan atau sudah tidak aktif. Pilih tiket Blocker yang masih berjalan.',
+              statusCode: HttpStatus.BAD_REQUEST,
+            });
+          }
+          if (!nextKnownBlockerNote) {
+            const blkCode = `#BLK-${String(blocker.id).slice(0, 6).toUpperCase()}`;
+            nextKnownBlockerNote = `Terkait kendala aktif ${blkCode}: ${blocker.description}`;
+          }
+        }
+      }
+
+      if (
+        (nextRisk === CommitmentRisk.AMBER || nextRisk === CommitmentRisk.RED) &&
+        (!nextKnownBlockerNote || nextKnownBlockerNote.length === 0)
+      ) {
+        throw new AppException({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: `Komitmen dengan risiko ${nextRisk} wajib menyertakan uraian potensi kendala.`,
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+
+      if (
         nextTask === currentTask &&
         nextLink === currentLink &&
-        nextRisk === currentRisk
+        nextProjectCode === currentProjectCode &&
+        nextRisk === currentRisk &&
+        nextLinkedBlockerId === currentLinkedBlockerId &&
+        nextKnownBlockerNote === currentKnownBlockerNote &&
+        nextSupportNeeded === currentSupportNeeded
       ) {
         throw new AppException({
           code: ErrorCode.VALIDATION_FAILED,
@@ -224,6 +408,25 @@ export class CorrectionService {
           statusCode: HttpStatus.BAD_REQUEST,
         });
       }
+
+      resolvedValueBefore = {
+        taskText: commitment.taskText,
+        referenceLink: commitment.referenceLink,
+        projectCode: currentProjectCode,
+        initialRisk: commitment.initialRisk,
+        linkedBlockerId: currentLinkedBlockerId,
+        knownBlockerNote: currentKnownBlockerNote,
+        supportNeeded: currentSupportNeeded,
+      };
+      normalizedRequestedChange = {
+        taskText: nextTask,
+        referenceLink: nextLink,
+        projectCode: nextProjectCode,
+        initialRisk: nextRisk,
+        linkedBlockerId: nextLinkedBlockerId,
+        knownBlockerNote: nextKnownBlockerNote,
+        supportNeeded: nextSupportNeeded,
+      };
     } else if (dto.scopeType === CorrectionScopeType.EOD_OUTCOME) {
       if (
         commitment.dailyRecord.eodSubmittedAt === null &&
@@ -278,21 +481,17 @@ export class CorrectionService {
           statusCode: HttpStatus.BAD_REQUEST,
         });
       }
+
+      resolvedValueBefore = {
+        outcome: commitment.outcome,
+        outcomeReason: commitment.outcomeReason,
+        continuation: commitment.continuation,
+      };
+    } else {
+      resolvedValueBefore = {};
     }
 
-    // Ambil nilai sebelum (snapshot value before)
-    const valueBefore: Record<string, any> =
-      dto.scopeType === CorrectionScopeType.MORNING_COMMITMENT
-        ? {
-            taskText: commitment.taskText,
-            referenceLink: commitment.referenceLink,
-            initialRisk: commitment.initialRisk,
-          }
-        : {
-            outcome: commitment.outcome,
-            outcomeReason: commitment.outcomeReason,
-            continuation: commitment.continuation,
-          };
+    const valueBefore: Record<string, any> = resolvedValueBefore;
 
     const policy = await this.policyService.getActivePolicy('CHECKIN_TIMING');
     const now = this.clockService.now();
@@ -308,7 +507,7 @@ export class CorrectionService {
             classification: dto.classification,
             reason: dto.reason.trim(),
             valueBefore,
-            valueRequested: dto.requestedChange,
+            valueRequested: normalizedRequestedChange,
             policySnapshot: policy?.configurationValues || {},
             status: CorrectionStatus.AUTO_APPLIED,
             appliedAt: now,
@@ -321,8 +520,9 @@ export class CorrectionService {
           tx,
           dto.targetCommitmentId,
           commitment.dailyRecordId,
-          dto.requestedChange,
+          normalizedRequestedChange,
           (dto.reason || '').trim(),
+          commitment.sequenceNo,
         );
 
         // Rekam Audit Log (DEC-008)
@@ -333,7 +533,7 @@ export class CorrectionService {
             relatedEntityType: 'commitments',
             relatedEntityId: dto.targetCommitmentId,
             valueBefore,
-            valueAfter: dto.requestedChange,
+            valueAfter: normalizedRequestedChange,
           },
         });
 
@@ -351,7 +551,7 @@ export class CorrectionService {
           classification: dto.classification,
           reason: dto.reason.trim(),
           valueBefore,
-          valueRequested: dto.requestedChange,
+          valueRequested: normalizedRequestedChange,
           policySnapshot: policy?.configurationValues || {},
           status: CorrectionStatus.PENDING,
           objectionWindowEndsAt,
@@ -651,6 +851,7 @@ export class CorrectionService {
           req.targetCommitment?.dailyRecordId,
           valReq,
           (req.reason || '').trim(),
+          req.targetCommitment?.sequenceNo,
         );
 
         const updatedReq = await tx.correctionRequest.update({

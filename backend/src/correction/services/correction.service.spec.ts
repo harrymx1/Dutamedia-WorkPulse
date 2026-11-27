@@ -117,6 +117,13 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
       mockPrisma.organizationalAssignment.findFirst.mockResolvedValue({
         directManagerId: 'mgr-1',
       });
+      mockPrisma.blockerTicket = {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'blk-prod-1',
+          status: 'OPEN',
+          description: 'Insiden auth bypass di production',
+        }),
+      };
 
       mockPrisma.correctionRequest.create.mockResolvedValue({
         id: 'cr-2',
@@ -131,6 +138,8 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
         requestedChange: {
           taskText: 'Investigasi & patch insiden production auth bypass',
           initialRisk: CommitmentRisk.RED,
+          linkedBlockerId: 'blk-prod-1',
+          knownBlockerNote: 'Endpoint auth mengalami error kritis sejak pagi',
         },
       });
 
@@ -273,7 +282,7 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
       });
     });
 
-    it('recalculates initialDailyStatus immediately on MINOR risk correction', async () => {
+    it('rejects MINOR correction attempting to change initialRisk (must use MATERIAL)', async () => {
       mockPrisma.commitment.findUnique.mockResolvedValue({
         id: 'com-1',
         dailyRecordId: 'dr-1',
@@ -282,33 +291,142 @@ describe('CorrectionService (WP-EP09 / Correction Request State Machine - SAD 2.
         referenceLink: null,
         initialRisk: CommitmentRisk.GREEN,
         dailyRecord: { userId: 'usr-1' },
+        blockers: [],
       });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-1',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          classification: CorrectionClassification.MINOR,
+          reason: 'Coba ubah risiko lewat jalur minor agar otomatis lolos',
+          requestedChange: {
+            taskText: 'Tugas A',
+            initialRisk: CommitmentRisk.AMBER,
+            knownBlockerNote: 'Ada kendala kecil',
+          },
+        }),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('rejects MATERIAL correction to RED without an active linkedBlockerId (DEC-020)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-1',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 1,
+        taskText: 'Tugas A',
+        referenceLink: null,
+        initialRisk: CommitmentRisk.GREEN,
+        dailyRecord: { userId: 'usr-1' },
+        blockers: [],
+      });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-1',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          classification: CorrectionClassification.MATERIAL,
+          reason: 'Ubah status tugas jadi kritis karena server mati',
+          requestedChange: {
+            taskText: 'Tugas A',
+            initialRisk: CommitmentRisk.RED,
+            knownBlockerNote: 'Server staging tidak bisa diakses',
+          },
+        }),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('rejects MATERIAL correction to AMBER without knownBlockerNote (DEC-021)', async () => {
+      mockPrisma.commitment.findUnique.mockResolvedValue({
+        id: 'com-1',
+        dailyRecordId: 'dr-1',
+        sequenceNo: 1,
+        taskText: 'Tugas A',
+        referenceLink: null,
+        initialRisk: CommitmentRisk.GREEN,
+        dailyRecord: { userId: 'usr-1' },
+        blockers: [],
+      });
+
+      await expect(
+        service.createCorrectionRequest('usr-1', {
+          targetCommitmentId: 'com-1',
+          scopeType: CorrectionScopeType.MORNING_COMMITMENT,
+          classification: CorrectionClassification.MATERIAL,
+          reason: 'Ubah status risiko menjadi AMBER',
+          requestedChange: {
+            taskText: 'Tugas A',
+            initialRisk: CommitmentRisk.AMBER,
+            knownBlockerNote: '',
+          },
+        }),
+      ).rejects.toThrowError(AppException);
+    });
+
+    it('persists knownBlockerNote, supportNeeded, and commitmentMeta when MATERIAL correction with risk details is APPROVED', async () => {
       mockPrisma.commitment.findMany = vi.fn().mockResolvedValue([
-        { initialRisk: CommitmentRisk.AMBER, blockers: [] },
+        { initialRisk: CommitmentRisk.RED, blockers: [] },
       ]);
       mockPrisma.dailyAccountabilityRecord = {
+        findUnique: vi.fn().mockResolvedValue({
+          orgContextSnapshot: { commitmentMeta: { '1': { projectCode: 'PRJ-OLD', linkedBlockerId: null } } },
+        }),
         update: vi.fn().mockResolvedValue({}),
       };
-      mockPrisma.correctionRequest.create.mockResolvedValue({
-        id: 'cr-minor-amber',
-        status: CorrectionStatus.AUTO_APPLIED,
-      });
+      mockPrisma.blockerTicket = {
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      };
 
-      await service.createCorrectionRequest('usr-1', {
+      mockPrisma.correctionRequest.findUnique.mockResolvedValue({
+        id: 'cr-mat-full',
         targetCommitmentId: 'com-1',
-        scopeType: CorrectionScopeType.MORNING_COMMITMENT,
-        classification: CorrectionClassification.MINOR,
-        reason: 'Menyesuaikan status risiko menjadi waspada',
-        requestedChange: {
+        requestedByUserId: 'usr-1',
+        reason: 'Eskalasi risiko dan tautkan blocker aktif',
+        status: CorrectionStatus.PENDING,
+        valueBefore: { taskText: 'Tugas A', initialRisk: CommitmentRisk.GREEN },
+        valueRequested: {
           taskText: 'Tugas A',
-          initialRisk: CommitmentRisk.AMBER,
+          initialRisk: CommitmentRisk.RED,
+          projectCode: 'WP-CORE',
+          linkedBlockerId: 'blk-101',
+          knownBlockerNote: 'Menunggu restart container Nginx staging',
+          supportNeeded: 'Tim Network restart Nginx segera',
         },
+        targetCommitment: { sequenceNo: 1, dailyRecordId: 'dr-1' },
       });
 
-      expect(mockPrisma.dailyAccountabilityRecord.update).toHaveBeenCalledWith({
-        where: { id: 'dr-1' },
-        data: { initialDailyStatus: DailyRiskStatus.AMBER },
+      mockPrisma.correctionRequest.update.mockResolvedValue({
+        id: 'cr-mat-full',
+        status: CorrectionStatus.APPROVED,
       });
+
+      await service.reviewCorrectionRequest('mgr-1', 'cr-mat-full', {
+        decision: 'APPROVE',
+        reviewNote: 'Disetujui sesuai kondisi kendala lapangan.',
+      });
+
+      expect(mockPrisma.commitment.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'com-1' },
+          data: expect.objectContaining({
+            initialRisk: CommitmentRisk.RED,
+            knownBlockerNote: 'Menunggu restart container Nginx staging',
+            supportNeeded: 'Tim Network restart Nginx segera',
+          }),
+        }),
+      );
+      expect(mockPrisma.dailyAccountabilityRecord.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'dr-1' },
+          data: {
+            orgContextSnapshot: {
+              commitmentMeta: {
+                '1': { projectCode: 'WP-CORE', linkedBlockerId: 'blk-101' },
+              },
+            },
+          },
+        }),
+      );
     });
 
     it('populates continuationReason when EOD correction sets continuation to CONTINUE', async () => {

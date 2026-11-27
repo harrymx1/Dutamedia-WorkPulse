@@ -408,5 +408,113 @@ describe('MorningCorrectionRequestView.vue (WP-EP09 / Prototipe 16a - Koreksi Ko
     expect(optText.length).toBeLessThan(85);
     expect(wrapper.find('.base-task').text()).toBe(longTask);
   });
+
+  it('locks risk selection on MINOR and enforces DEC-020/021 blocker + risk note fields on MATERIAL RED/AMBER corrections', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string, init?: any) => {
+      if (url.includes('/daily/today')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: {
+              availableProjects: [
+                { projectCode: 'WP-CORE', projectName: 'WorkPulse Platform Core' },
+              ],
+              activeBlockers: [
+                {
+                  id: 'blk-staging-1',
+                  code: '#BLK-STG01',
+                  description: 'Server staging Nginx error 502',
+                  severity: 'HIGH',
+                  status: 'OPEN',
+                },
+              ],
+              record: {
+                commitments: [
+                  {
+                    id: 'com-1',
+                    sequenceNo: 1,
+                    taskText: 'Implementasi modul laporan eksekutif',
+                    projectCode: null,
+                    initialRisk: 'GREEN',
+                    referenceLink: null,
+                  },
+                ],
+              },
+            },
+          }),
+        });
+      }
+      if (url.includes('/correction-requests') && init?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            success: true,
+            data: { id: 'cr-new', status: 'PENDING' },
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: [] }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const wrapper = mount(MorningCorrectionRequestView, {
+      global: { plugins: [router] },
+    });
+    await flushPromises();
+
+    // 1. Default MINOR locks risk radios
+    const redRadio = wrapper.find('input[type="radio"][value="RED"]');
+    const amberRadio = wrapper.find('input[type="radio"][value="AMBER"]');
+    expect((redRadio.element as HTMLInputElement).disabled).toBe(true);
+    expect((amberRadio.element as HTMLInputElement).disabled).toBe(true);
+
+    // 2. Switch to MATERIAL -> unlocks risk radios
+    await wrapper.find('input[type="radio"][value="MATERIAL"]').setValue(true);
+    expect((redRadio.element as HTMLInputElement).disabled).toBe(false);
+
+    // 3. Select AMBER without knownBlockerNote -> blocked client-side
+    await amberRadio.setValue(true);
+    expect(wrapper.find('[data-testid="correction-risk-details"]').exists()).toBe(true);
+    await wrapper.find('#reasonInput').setValue('Ada kendala teknis pada lingkungan pengujian.');
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+    expect(wrapper.find('.toast-popup.error').text()).toContain('AMBER wajib menyertakan uraian potensi kendala');
+
+    // 4. Select RED without linkedBlockerId -> blocked client-side (DEC-020)
+    await redRadio.setValue(true);
+    await wrapper.find('#newKnownBlockerNoteInput').setValue('Server staging 502 sejak pagi.');
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+    expect(wrapper.find('.toast-popup.error').text()).toContain('RED wajib menautkan tiket Blocker aktif');
+
+    // 5. Fill active blocker, project, and support -> submits full payload cleanly
+    await wrapper.find('#newProjectSelect').setValue('WP-CORE');
+    await wrapper.find('[data-testid="correction-blocker-select"]').setValue('blk-staging-1');
+    await wrapper.find('#newSupportNeededInput').setValue('Mohon restart container Nginx staging.');
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    const postCall = fetchMock.mock.calls.find(
+      ([u, init]) => String(u).includes('/correction-requests') && init?.method === 'POST',
+    );
+    expect(postCall).toBeDefined();
+    const sentBody = JSON.parse(postCall![1].body);
+    expect(sentBody.requestedChange).toEqual(
+      expect.objectContaining({
+        projectCode: 'WP-CORE',
+        initialRisk: 'RED',
+        linkedBlockerId: 'blk-staging-1',
+        knownBlockerNote: 'Server staging 502 sejak pagi.',
+        supportNeeded: 'Mohon restart container Nginx staging.',
+      }),
+    );
+  });
 });
 

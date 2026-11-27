@@ -2,7 +2,7 @@
 import ToastPopup from '../../components/ToastPopup.vue';
 import TopBar from '../../components/TopBar.vue';
 import AccessLink from '../../components/AccessLink.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { apiClient } from '../../api/client';
 import { formatDateWib } from '../../utils/dateTime';
 import {
@@ -25,7 +25,25 @@ interface CommitmentItem {
   sequenceNo: number;
   taskText: string;
   referenceLink?: string;
+  projectCode?: string | null;
+  linkedBlockerId?: string | null;
   initialRisk: 'GREEN' | 'AMBER' | 'RED';
+  knownBlockerNote?: string | null;
+  supportNeeded?: string | null;
+}
+
+interface ProjectOption {
+  projectCode: string;
+  projectName: string;
+}
+
+interface ActiveBlockerOption {
+  id: string;
+  code: string;
+  description: string;
+  severity: string;
+  projectCodeReference?: string | null;
+  status: string;
 }
 
 interface CorrectionHistoryItem {
@@ -56,14 +74,20 @@ interface CorrectionHistoryItem {
 const loading = ref(false);
 const submitting = ref(false);
 const todayCommitments = ref<CommitmentItem[]>([]);
+const availableProjects = ref<ProjectOption[]>([]);
+const activeBlockers = ref<ActiveBlockerOption[]>([]);
 const myCorrections = ref<CorrectionHistoryItem[]>([]);
 
 // Form fields
 const selectedCommitmentId = ref<string>('');
 const classification = ref<'MINOR' | 'MATERIAL'>('MINOR');
 const newTaskText = ref('');
+const newProjectCode = ref('');
 const newReferenceLink = ref('');
 const newInitialRisk = ref<'GREEN' | 'AMBER' | 'RED'>('GREEN');
+const newLinkedBlockerId = ref('');
+const newKnownBlockerNote = ref('');
+const newSupportNeeded = ref('');
 const reason = ref('');
 
 // Toast
@@ -108,11 +132,27 @@ const hasRequestedDiff = computed(() => {
   const base = selectedCommitment.value;
   if (!base) return false;
   const taskChanged = newTaskText.value.trim() !== (base.taskText || '').trim();
+  const projectChanged =
+    (newProjectCode.value.trim() || null) !== ((base.projectCode || '').trim() || null);
   const linkChanged =
     (newReferenceLink.value.trim() || null) !==
     ((base.referenceLink || '').trim() || null);
   const riskChanged = newInitialRisk.value !== base.initialRisk;
-  return taskChanged || linkChanged || riskChanged;
+  const effBlocker = newInitialRisk.value === 'GREEN' ? null : (newLinkedBlockerId.value.trim() || null);
+  const effNote = newInitialRisk.value === 'GREEN' ? null : (newKnownBlockerNote.value.trim() || null);
+  const effSupport = newInitialRisk.value === 'GREEN' ? null : (newSupportNeeded.value.trim() || null);
+  const blockerChanged = effBlocker !== ((base.linkedBlockerId || '').trim() || null);
+  const noteChanged = effNote !== ((base.knownBlockerNote || '').trim() || null);
+  const supportChanged = effSupport !== ((base.supportNeeded || '').trim() || null);
+  return (
+    taskChanged ||
+    projectChanged ||
+    linkChanged ||
+    riskChanged ||
+    blockerChanged ||
+    noteChanged ||
+    supportChanged
+  );
 });
 
 function formatRiskLabel(risk?: string): string {
@@ -146,11 +186,65 @@ function hasLinkDiff(item: CorrectionHistoryItem): boolean {
   return beforeLink !== afterLink && Boolean(beforeLink || afterLink);
 }
 
+function formatBlockerShortLabel(blockerId?: string | null): string {
+  const id = (blockerId || '').trim();
+  if (!id) return 'Tidak ada';
+  const matched = activeBlockers.value.find((b) => b.id === id);
+  if (matched) return `${matched.code} (${truncateOptionText(matched.description, 45)})`;
+  return `#BLK-${id.slice(0, 6).toUpperCase()}`;
+}
+
+function hasProjectDiff(item: CorrectionHistoryItem): boolean {
+  const b = (item.valueBefore?.projectCode || '').trim();
+  const a = (item.valueRequested?.projectCode || '').trim();
+  return item.valueRequested?.projectCode !== undefined && b !== a;
+}
+
+function hasBlockerDiff(item: CorrectionHistoryItem): boolean {
+  const b = (item.valueBefore?.linkedBlockerId || '').trim();
+  const a = (item.valueRequested?.linkedBlockerId || '').trim();
+  return item.valueRequested?.linkedBlockerId !== undefined && b !== a;
+}
+
+function hasBlockerNoteDiff(item: CorrectionHistoryItem): boolean {
+  const b = (item.valueBefore?.knownBlockerNote || '').trim();
+  const a = (item.valueRequested?.knownBlockerNote || '').trim();
+  return item.valueRequested?.knownBlockerNote !== undefined && b !== a;
+}
+
+function hasSupportDiff(item: CorrectionHistoryItem): boolean {
+  const b = (item.valueBefore?.supportNeeded || '').trim();
+  const a = (item.valueRequested?.supportNeeded || '').trim();
+  return item.valueRequested?.supportNeeded !== undefined && b !== a;
+}
+
+function handleLinkedBlockerChange() {
+  const id = newLinkedBlockerId.value.trim();
+  if (!id) return;
+  const blk = activeBlockers.value.find((b) => b.id === id);
+  if (blk && !newKnownBlockerNote.value.trim()) {
+    newKnownBlockerNote.value = `Terkait kendala aktif ${blk.code}: ${blk.description}`;
+  }
+}
+
+watch(classification, (nextCls) => {
+  if (nextCls === 'MINOR' && selectedCommitment.value) {
+    newInitialRisk.value = selectedCommitment.value.initialRisk;
+    newLinkedBlockerId.value = selectedCommitment.value.linkedBlockerId || '';
+    newKnownBlockerNote.value = selectedCommitment.value.knownBlockerNote || '';
+    newSupportNeeded.value = selectedCommitment.value.supportNeeded || '';
+  }
+});
+
 function handleCommitmentSelect() {
   if (selectedCommitment.value) {
     newTaskText.value = selectedCommitment.value.taskText;
+    newProjectCode.value = selectedCommitment.value.projectCode || '';
     newReferenceLink.value = selectedCommitment.value.referenceLink || '';
     newInitialRisk.value = selectedCommitment.value.initialRisk;
+    newLinkedBlockerId.value = selectedCommitment.value.linkedBlockerId || '';
+    newKnownBlockerNote.value = selectedCommitment.value.knownBlockerNote || '';
+    newSupportNeeded.value = selectedCommitment.value.supportNeeded || '';
   }
 }
 
@@ -177,6 +271,10 @@ function prefillFromRejected(item: CorrectionHistoryItem) {
     newTaskText.value = selectedCommitment.value.taskText;
   }
 
+  if (requested.projectCode !== undefined) {
+    newProjectCode.value = requested.projectCode || '';
+  }
+
   if (requested.referenceLink !== undefined) {
     newReferenceLink.value = requested.referenceLink || '';
   }
@@ -187,6 +285,18 @@ function prefillFromRejected(item: CorrectionHistoryItem) {
     requested.initialRisk === 'RED'
   ) {
     newInitialRisk.value = requested.initialRisk;
+  }
+
+  if (requested.linkedBlockerId !== undefined) {
+    newLinkedBlockerId.value = requested.linkedBlockerId || '';
+  }
+
+  if (requested.knownBlockerNote !== undefined) {
+    newKnownBlockerNote.value = requested.knownBlockerNote || '';
+  }
+
+  if (requested.supportNeeded !== undefined) {
+    newSupportNeeded.value = requested.supportNeeded || '';
   }
 
   if (!reason.value.trim()) {
@@ -200,9 +310,20 @@ async function loadData(syncSelectedForm = false) {
   loading.value = true;
   try {
     const [todayRes, historyRes] = await Promise.all([
-      apiClient<{ record?: { commitments?: CommitmentItem[] } }>('/daily/today'),
+      apiClient<{
+        record?: { commitments?: CommitmentItem[] };
+        availableProjects?: ProjectOption[];
+        activeBlockers?: ActiveBlockerOption[];
+      }>('/daily/today'),
       apiClient<CorrectionHistoryItem[]>('/correction-requests?mode=mine'),
     ]);
+
+    if (Array.isArray(todayRes.data?.availableProjects)) {
+      availableProjects.value = todayRes.data.availableProjects;
+    }
+    if (Array.isArray(todayRes.data?.activeBlockers)) {
+      activeBlockers.value = todayRes.data.activeBlockers;
+    }
 
     if (todayRes.data?.record?.commitments) {
       todayCommitments.value = todayRes.data.record.commitments;
@@ -244,6 +365,31 @@ async function submitCorrection() {
     showToast('Deskripsi komitmen baru minimal 3 karakter.', true);
     return;
   }
+  if (
+    classification.value === 'MINOR' &&
+    selectedCommitment.value &&
+    newInitialRisk.value !== selectedCommitment.value.initialRisk
+  ) {
+    showToast('Perubahan tingkat risiko wajib diajukan melalui Perubahan Material.', true);
+    return;
+  }
+  if (newInitialRisk.value === 'RED' && !newLinkedBlockerId.value.trim()) {
+    showToast(
+      'Komitmen dengan risiko RED wajib menautkan tiket Blocker aktif terlebih dahulu.',
+      true,
+    );
+    return;
+  }
+  if (
+    (newInitialRisk.value === 'AMBER' || newInitialRisk.value === 'RED') &&
+    !newKnownBlockerNote.value.trim()
+  ) {
+    showToast(
+      `Komitmen dengan risiko ${newInitialRisk.value} wajib menyertakan uraian potensi kendala.`,
+      true,
+    );
+    return;
+  }
   if (!hasRequestedDiff.value) {
     showToast(
       'Perubahan yang diajukan masih sama dengan data komitmen saat ini. Silakan ubah minimal satu isian komitmen.',
@@ -258,6 +404,7 @@ async function submitCorrection() {
 
   submitting.value = true;
   try {
+    const isGreen = newInitialRisk.value === 'GREEN';
     const payload = {
       targetCommitmentId: selectedCommitmentId.value,
       scopeType: 'MORNING_COMMITMENT',
@@ -265,11 +412,12 @@ async function submitCorrection() {
       reason: reason.value.trim(),
       requestedChange: {
         taskText: newTaskText.value.trim(),
+        projectCode: newProjectCode.value.trim() || null,
         referenceLink: newReferenceLink.value.trim() || null,
         initialRisk: newInitialRisk.value,
-        ...(['AMBER', 'RED'].includes(newInitialRisk.value) && {
-          knownBlockerNote: reason.value.trim(),
-        }),
+        linkedBlockerId: isGreen ? null : newLinkedBlockerId.value.trim() || null,
+        knownBlockerNote: isGreen ? null : newKnownBlockerNote.value.trim() || null,
+        supportNeeded: isGreen ? null : newSupportNeeded.value.trim() || null,
       },
     };
 
@@ -370,7 +518,19 @@ onMounted(() => {
               <div class="base-task">{{ selectedCommitment.taskText }}</div>
               <div class="base-meta">
                 <span>Risiko Awal: <strong>{{ formatRiskLabel(selectedCommitment.initialRisk) }}</strong></span>
-                <span v-if="selectedCommitment.referenceLink">· Link: {{ selectedCommitment.referenceLink }}</span>
+                <span v-if="selectedCommitment.projectCode"> · Proyek: <strong>{{ selectedCommitment.projectCode }}</strong></span>
+                <span v-if="selectedCommitment.referenceLink"> · Link: {{ selectedCommitment.referenceLink }}</span>
+              </div>
+              <div v-if="selectedCommitment.linkedBlockerId || selectedCommitment.knownBlockerNote || selectedCommitment.supportNeeded" class="base-risk-meta">
+                <div v-if="selectedCommitment.linkedBlockerId">
+                  <strong>Tiket Blocker:</strong> {{ formatBlockerShortLabel(selectedCommitment.linkedBlockerId) }}
+                </div>
+                <div v-if="selectedCommitment.knownBlockerNote">
+                  <strong>Uraian Kendala:</strong> {{ selectedCommitment.knownBlockerNote }}
+                </div>
+                <div v-if="selectedCommitment.supportNeeded">
+                  <strong>Bantuan Diharapkan:</strong> {{ selectedCommitment.supportNeeded }}
+                </div>
               </div>
             </div>
 
@@ -451,6 +611,21 @@ onMounted(() => {
               ></textarea>
             </div>
 
+            <!-- Proyek Terkait Baru -->
+            <div class="form-group">
+              <label for="newProjectSelect">Proyek Terkait <span class="opt">(opsional)</span></label>
+              <select id="newProjectSelect" v-model="newProjectCode">
+                <option value="">-- Non-Proyek / Operasional Rutin --</option>
+                <option
+                  v-for="prj in availableProjects"
+                  :key="prj.projectCode"
+                  :value="prj.projectCode"
+                >
+                  [{{ prj.projectCode }}] {{ truncateOptionText(prj.projectName, 40) }}
+                </option>
+              </select>
+            </div>
+
             <!-- Link Referensi Baru -->
             <div class="form-group">
               <label for="newLinkInput">Tautan Referensi Baru <span class="opt">(opsional)</span></label>
@@ -466,18 +641,115 @@ onMounted(() => {
             <div class="form-group">
               <label>Tingkat Risiko Baru</label>
               <div class="risk-options">
-                <label class="risk-label green" :class="{ selected: newInitialRisk === 'GREEN' }">
-                  <input type="radio" v-model="newInitialRisk" value="GREEN" />
+                <label
+                  class="risk-label green"
+                  :class="{ selected: newInitialRisk === 'GREEN', 'disabled-option': classification === 'MINOR' }"
+                >
+                  <input
+                    type="radio"
+                    v-model="newInitialRisk"
+                    value="GREEN"
+                    :disabled="classification === 'MINOR'"
+                  />
                   <span>GREEN (Lancar)</span>
                 </label>
-                <label class="risk-label amber" :class="{ selected: newInitialRisk === 'AMBER' }">
-                  <input type="radio" v-model="newInitialRisk" value="AMBER" />
+                <label
+                  class="risk-label amber"
+                  :class="{ selected: newInitialRisk === 'AMBER', 'disabled-option': classification === 'MINOR' }"
+                >
+                  <input
+                    type="radio"
+                    v-model="newInitialRisk"
+                    value="AMBER"
+                    :disabled="classification === 'MINOR'"
+                  />
                   <span>AMBER (Waspada)</span>
                 </label>
-                <label class="risk-label red" :class="{ selected: newInitialRisk === 'RED' }">
-                  <input type="radio" v-model="newInitialRisk" value="RED" />
+                <label
+                  class="risk-label red"
+                  :class="{ selected: newInitialRisk === 'RED', 'disabled-option': classification === 'MINOR' }"
+                >
+                  <input
+                    type="radio"
+                    v-model="newInitialRisk"
+                    value="RED"
+                    :disabled="classification === 'MINOR'"
+                  />
                   <span>RED (Kritis)</span>
                 </label>
+              </div>
+              <p v-if="classification === 'MINOR'" class="field-hint">
+                Tingkat risiko terkunci saat Perubahan Minor. Pilih <strong>Perubahan Material</strong> bila ingin mengubah risiko atau detail kendala.
+              </p>
+            </div>
+
+            <!-- Detail Risiko & Kendala (DEC-020 & DEC-021 — Setara Halaman Harian) -->
+            <div
+              v-if="newInitialRisk === 'AMBER' || newInitialRisk === 'RED'"
+              class="risk-details-box"
+              data-testid="correction-risk-details"
+            >
+              <div class="form-group">
+                <label for="newLinkedBlockerSelect">
+                  {{ newInitialRisk === 'RED' ? 'Tiket Blocker Penyebab (Wajib untuk RED)' : 'Tiket Blocker Penyebab' }}
+                  <span v-if="newInitialRisk === 'RED'" class="req">*</span>
+                  <span v-else class="opt">(opsional)</span>
+                </label>
+                <select
+                  id="newLinkedBlockerSelect"
+                  v-model="newLinkedBlockerId"
+                  data-testid="correction-blocker-select"
+                  :disabled="classification === 'MINOR'"
+                  :required="newInitialRisk === 'RED'"
+                  @change="handleLinkedBlockerChange"
+                >
+                  <option value="">
+                    {{
+                      newInitialRisk === 'RED'
+                        ? '-- Pilih Tiket Blocker Aktif (Wajib) --'
+                        : '-- Tidak Terkait Tiket Blocker Aktif --'
+                    }}
+                  </option>
+                  <option v-for="blk in activeBlockers" :key="blk.id" :value="blk.id">
+                    {{ blk.code }} [{{ blk.severity }}] — {{ truncateOptionText(blk.description, 45) }}
+                  </option>
+                </select>
+                <div
+                  v-if="newInitialRisk === 'RED' && !newLinkedBlockerId"
+                  class="blocker-shortcut-hint"
+                >
+                  <span>Belum punya tiket Blocker aktif? Buat tiket terlebih dahulu di halaman Lapor Blocker.</span>
+                  <AccessLink to="/raise-blockers" class="blocker-shortcut-link">
+                    + Buat Tiket Blocker
+                  </AccessLink>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="newKnownBlockerNoteInput">
+                  Uraian Risiko atau Potensi Kendala <span class="req">*</span>
+                </label>
+                <textarea
+                  id="newKnownBlockerNoteInput"
+                  v-model="newKnownBlockerNote"
+                  rows="2"
+                  :disabled="classification === 'MINOR'"
+                  :required="newInitialRisk === 'AMBER' || newInitialRisk === 'RED'"
+                  placeholder="Jelaskan potensi hambatan atau kendala yang memengaruhi penyelesaian komitmen..."
+                ></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="newSupportNeededInput">
+                  Tindakan / Bantuan yang Diharapkan <span class="opt">(opsional)</span>
+                </label>
+                <textarea
+                  id="newSupportNeededInput"
+                  v-model="newSupportNeeded"
+                  rows="2"
+                  :disabled="classification === 'MINOR'"
+                  placeholder="Tuliskan dukungan spesifik dari atasan atau tim terkait..."
+                ></textarea>
               </div>
             </div>
 
@@ -575,7 +847,16 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <div v-if="hasRiskDiff(item) || hasLinkDiff(item)" class="hist-extra-changes">
+                <div
+                  v-if="hasRiskDiff(item) || hasLinkDiff(item) || hasProjectDiff(item) || hasBlockerDiff(item) || hasBlockerNoteDiff(item) || hasSupportDiff(item)"
+                  class="hist-extra-changes"
+                >
+                  <div v-if="hasProjectDiff(item)" class="extra-change-row">
+                    <strong>Proyek Terkait:</strong>
+                    <span>{{ item.valueBefore?.projectCode || '(non-proyek)' }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ item.valueRequested?.projectCode || '(non-proyek)' }}</span>
+                  </div>
                   <div v-if="hasRiskDiff(item)" class="extra-change-row">
                     <strong>Tingkat Risiko:</strong>
                     <span>{{ formatRiskLabel(item.valueBefore?.initialRisk) }}</span>
@@ -587,6 +868,24 @@ onMounted(() => {
                     <span>{{ item.valueBefore?.referenceLink || '(kosong)' }}</span>
                     <ArrowRight :size="12" />
                     <span>{{ item.valueRequested?.referenceLink || '(dihapus)' }}</span>
+                  </div>
+                  <div v-if="hasBlockerDiff(item)" class="extra-change-row">
+                    <strong>Tiket Blocker:</strong>
+                    <span>{{ formatBlockerShortLabel(item.valueBefore?.linkedBlockerId) }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ formatBlockerShortLabel(item.valueRequested?.linkedBlockerId) }}</span>
+                  </div>
+                  <div v-if="hasBlockerNoteDiff(item)" class="extra-change-row">
+                    <strong>Uraian Kendala:</strong>
+                    <span>{{ item.valueBefore?.knownBlockerNote || '(kosong)' }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ item.valueRequested?.knownBlockerNote || '(dihapus)' }}</span>
+                  </div>
+                  <div v-if="hasSupportDiff(item)" class="extra-change-row">
+                    <strong>Bantuan Diharapkan:</strong>
+                    <span>{{ item.valueBefore?.supportNeeded || '(kosong)' }}</span>
+                    <ArrowRight :size="12" />
+                    <span>{{ item.valueRequested?.supportNeeded || '(dihapus)' }}</span>
                   </div>
                 </div>
 
@@ -1000,6 +1299,58 @@ select {
 .risk-label.green.selected { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
 .risk-label.amber.selected { background: #FEF3C7; color: #92400E; border-color: #FCD34D; }
 .risk-label.red.selected { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+.risk-label.disabled-option {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: #5C6E68;
+  line-height: 1.4;
+}
+
+.base-risk-meta {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #CBD9D3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #334840;
+}
+
+.risk-details-box {
+  background: #F8FBFA;
+  border: 1px solid #DCE7E2;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.blocker-shortcut-hint {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: #92400E;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.blocker-shortcut-link {
+  font-weight: 700;
+  color: #92400E;
+  text-decoration: underline;
+  white-space: nowrap;
+}
 
 .form-actions {
   display: flex;
